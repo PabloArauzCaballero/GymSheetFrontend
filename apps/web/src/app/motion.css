@@ -1,0 +1,162 @@
+/* ----------------------------------------------------------------------------
+ * Utilidades de movimiento reutilizables (clases). Los keyframes viven en
+ * `animations.css`. Sin dependencias externas para mantener el bundle liviano.
+ * -------------------------------------------------------------------------- */
+
+/* Entrada de página/sección: se dispara al montar. */
+.reveal {
+  animation: reveal-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Escalonado para grillas/listas: aplica --i en el elemento y hereda el retardo. */
+.stagger > * {
+  animation: reveal-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+.animate-pop {
+  animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Entrada de página: se dispara al montar (remontado por `key={pathname}`). */
+.page-enter {
+  animation: page-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-glow {
+  animation: glow-breathe 2.8s ease-in-out infinite;
+}
+
+/* Brillo animado del botón primario: barre al pasar el cursor. */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  z-index: -1;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  transform: translateX(-160%) skewX(-12deg);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.btn-shine:hover::after {
+  opacity: 1;
+  animation: sheen 0.7s ease-out;
+}
+
+/* Revelado por scroll: estado oculto inicial + estado visible al entrar en viewport.
+ * El observador (componente Reveal) añade `.is-visible`. */
+.reveal-scroll {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Barra de progreso de navegación: la span se remonta por `key={pathname}` y
+ * repite el barrido en cada cambio de ruta. */
+.route-progress-bar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 2.5px;
+  z-index: 60;
+  overflow: hidden;
+  pointer-events: none;
+}
+.route-progress-bar > span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--volt) 40%, transparent), var(--volt));
+  box-shadow: 0 0 12px rgb(195 244 0 / 0.7);
+  transform: translateX(-100%);
+  animation: route-sweep 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Punto de carga que aparece en el enlace de navegación pulsado (useLinkStatus). */
+.link-pending {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: volt-pulse 1s ease-in-out infinite;
+}
+
+/* Radix Dialog: estados data-state para entrada/salida suaves. */
+.dialog-overlay[data-state='open'] {
+  animation: overlay-in 0.25s ease-out;
+}
+.dialog-overlay[data-state='closed'] {
+  animation: overlay-in 0.2s ease-in reverse;
+}
+.dialog-panel[data-state='open'] {
+  animation: dialog-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dialog-panel[data-state='closed'] {
+  animation: dialog-out 0.2s ease-in;
+}
+
+/* Realce al presionar para tarjetas de acción. */
+.pressable {
+  transition:
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+}
+.pressable:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Elevación al pasar el cursor: tarjetas y superficies interactivas. */
+.hover-lift {
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+  border-color: var(--border);
+  box-shadow: 0 24px 60px -32px rgb(195 244 0 / 0.35);
+}
+
+/* Realce táctil para enlaces/filas: respuesta inmediata al presionar. */
+.tap {
+  transition:
+    transform 0.16s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.16s ease,
+    color 0.16s ease;
+}
+.tap:active {
+  transform: scale(0.98);
+}
+
+/* Barrido de brillo para el placeholder de carga de imágenes. */
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.06), transparent);
+  animation: shimmer 1.6s ease-in-out infinite;
+}

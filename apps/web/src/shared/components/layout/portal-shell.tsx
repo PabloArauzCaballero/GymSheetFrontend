@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link, { useLinkStatus } from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, type ReactNode } from 'react';
 import type { SessionPrincipal } from '@/shared/api/contracts';
@@ -8,6 +8,13 @@ import { cn } from '@/shared/lib/cn';
 import { Brand } from './brand';
 import { adminNavigation, canSee, primaryNavigation } from './nav-config';
 import { LogoutButton } from './logout-button';
+import { RouteProgress } from './route-progress';
+
+/** Instant pending indicator for the link being navigated to. */
+function LinkPending() {
+  const { pending } = useLinkStatus();
+  return pending ? <span aria-hidden className="link-pending ml-auto" /> : null;
+}
 
 function NavigationLinks({
   session,
@@ -60,6 +67,7 @@ function NavigationLinks({
                 className={cn('size-4 transition-transform', active && 'animate-pop')}
               />
               {item.label}
+              <LinkPending />
             </Link>
           );
         }
@@ -83,6 +91,7 @@ function NavigationLinks({
               )}
             />
             {item.label}
+            <LinkPending />
           </Link>
         );
       })}
@@ -97,6 +106,7 @@ export function PortalShell({
   const pathname = usePathname();
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
+      <RouteProgress />
       <aside className="sticky top-0 hidden h-dvh border-r border-[var(--border-subtle)] bg-[#050505] p-5 lg:flex lg:flex-col">
         <Brand />
         <div className="mt-10 flex-1 overflow-y-auto">
@@ -130,7 +140,7 @@ export function PortalShell({
           </div>
         </header>
         <main
-          className="reveal mx-auto w-full max-w-[1440px] px-4 py-7 sm:px-8 sm:py-10 lg:px-12 lg:py-12"
+          className="page-enter mx-auto w-full max-w-[1440px] px-4 py-7 sm:px-8 sm:py-10 lg:px-12 lg:py-12"
           key={pathname}
         >
           {children}

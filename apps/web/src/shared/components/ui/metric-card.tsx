@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { CountUp } from '@/shared/components/motion/count-up';
 import { cn } from '@/shared/lib/cn';
 
 export function MetricCard({
@@ -51,7 +52,7 @@ export function MetricCard({
           accent && 'text-[var(--volt)]',
         )}
       >
-        {value}
+        {typeof value === 'number' ? <CountUp value={value} /> : value}
         {suffix ? (
           <span className="ml-2 text-sm font-semibold tracking-normal text-[var(--text-muted)]">
             {suffix}
