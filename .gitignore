@@ -1,0 +1,19 @@
+node_modules
+.next
+out
+dist
+coverage
+playwright-report
+test-results
+.turbo
+.env
+.env.local
+*.log
+*.tsbuildinfo
+.DS_Store
+
+# Expo / React Native
+apps/mobile/.expo
+apps/mobile/android
+apps/mobile/ios
+apps/mobile/*.log

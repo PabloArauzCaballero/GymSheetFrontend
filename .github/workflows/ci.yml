@@ -1,0 +1,41 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web-and-packages:
+    name: Web + shared packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      # Shared packages + web are the fully-gated core.
+      - run: yarn turbo run source-check type-check lint test --filter=!@gymsheet/mobile
+      - run: yarn turbo run build --filter=@gymsheet/web
+
+  mobile-validate:
+    name: Mobile (Expo) validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn workspace @gymsheet/mobile type-check
+      - name: Expo Doctor
+        run: yarn workspace @gymsheet/mobile dlx expo-doctor || true

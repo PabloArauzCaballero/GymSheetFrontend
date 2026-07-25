@@ -1,0 +1,47 @@
+{
+  "name": "@gymsheet/mobile",
+  "version": "1.0.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "type-check": "tsc --noEmit",
+    "lint": "expo lint",
+    "test": "jest --passWithNoTests"
+  },
+  "dependencies": {
+    "@gymsheet/api-client": "*",
+    "@gymsheet/auth": "*",
+    "@gymsheet/design-tokens": "*",
+    "@gymsheet/domain": "*",
+    "@gymsheet/observability": "*",
+    "@gymsheet/schemas": "*",
+    "@gymsheet/types": "*",
+    "@hookform/resolvers": "^5.2.0",
+    "@sentry/react-native": "~6.10.0",
+    "@tanstack/react-query": "^5.90.0",
+    "expo": "~53.0.0",
+    "expo-constants": "~17.1.0",
+    "expo-linking": "~7.1.0",
+    "expo-router": "~5.1.0",
+    "expo-secure-store": "~14.2.0",
+    "expo-status-bar": "~2.2.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-hook-form": "^7.62.0",
+    "react-native": "0.79.5",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-reanimated": "~3.17.0",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.11.0",
+    "zod": "^4.1.0",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@gymsheet/tsconfig": "*",
+    "@types/react": "~19.0.0",
+    "typescript": "^5.7.0"
+  }
+}

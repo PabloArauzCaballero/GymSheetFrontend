@@ -1,0 +1,175 @@
+/* ----------------------------------------------------------------------------
+ * Movimiento: keyframes y utilidades reutilizables. Sin dependencias externas;
+ * todo se apoya en CSS para mantener el bundle liviano y el build determinista.
+ * -------------------------------------------------------------------------- */
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -46%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes dialog-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -46%) scale(0.96);
+  }
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes volt-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(195 244 0 / 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgb(195 244 0 / 0);
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Entrada de página/sección: se dispara al montar. */
+.reveal {
+  animation: reveal-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Escalonado para grillas/listas: aplica --i en el elemento y hereda el retardo. */
+.stagger > * {
+  animation: reveal-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+.animate-pop {
+  animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Radix Dialog: estados data-state para entrada/salida suaves. */
+.dialog-overlay[data-state='open'] {
+  animation: overlay-in 0.25s ease-out;
+}
+.dialog-overlay[data-state='closed'] {
+  animation: overlay-in 0.2s ease-in reverse;
+}
+.dialog-panel[data-state='open'] {
+  animation: dialog-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dialog-panel[data-state='closed'] {
+  animation: dialog-out 0.2s ease-in;
+}
+
+/* Realce al presionar para tarjetas de acción. */
+.pressable {
+  transition:
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+}
+.pressable:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Elevación al pasar el cursor: tarjetas y superficies interactivas. */
+.hover-lift {
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+  border-color: var(--border);
+  box-shadow: 0 24px 60px -32px rgb(195 244 0 / 0.35);
+}
+
+/* Realce táctil para enlaces/filas: respuesta inmediata al presionar. */
+.tap {
+  transition:
+    transform 0.16s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.16s ease,
+    color 0.16s ease;
+}
+.tap:active {
+  transform: scale(0.98);
+}
+
+/* Barrido de brillo para el placeholder de carga de imágenes. */
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.06), transparent);
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

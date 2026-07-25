@@ -1,0 +1,42 @@
+{
+  "name": "gymsheet",
+  "version": "1.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "packageManager": "yarn@1.22.22",
+  "engines": {
+    "node": ">=20 <24"
+  },
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
+    "nohoist": [
+      "@gymsheet/mobile",
+      "@gymsheet/mobile/**"
+    ]
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "type-check": "turbo run type-check",
+    "source-check": "turbo run source-check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify": "turbo run source-check type-check lint test build",
+    "web": "yarn workspace @gymsheet/web",
+    "mobile": "yarn workspace @gymsheet/mobile"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "eslint": "^9.17.0",
+    "globals": "^15.14.0",
+    "prettier": "^3.4.0",
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.20.0"
+  }
+}

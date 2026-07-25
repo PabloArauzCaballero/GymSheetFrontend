@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "GymSheet",
+    "slug": "gymsheet",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "gymsheet",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.gymsheet.mobile"
+    },
+    "android": {
+      "package": "app.gymsheet.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "gymsheet",
+          "project": "mobile"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "00000000-0000-0000-0000-000000000000"
+      }
+    }
+  }
+}

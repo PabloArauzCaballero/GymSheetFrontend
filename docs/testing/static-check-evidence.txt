@@ -1,0 +1,11 @@
+GymSheet Frontend static verification
+Generated: 2026-07-20T14:08:59Z
+
+Source check passed.
+Syntax transpilation: 142 files, 0 errors
+Local import resolution: 141 files, 0 missing
+BFF allowlist: 56 approved routes checked, 0 unexpected denials
+BFF denylist probes: passed
+JSON parsing: passed
+Manual source line limit: 0 violations
+Secret-pattern scan: 0 findings

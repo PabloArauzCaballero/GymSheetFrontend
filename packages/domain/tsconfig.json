@@ -1,0 +1,4 @@
+{
+  "extends": "@gymsheet/tsconfig/library.json",
+  "include": ["src"]
+}
