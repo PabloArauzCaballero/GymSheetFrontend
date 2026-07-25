@@ -14,7 +14,9 @@
     ],
     "nohoist": [
       "@gymsheet/mobile",
-      "@gymsheet/mobile/**"
+      "@gymsheet/mobile/**",
+      "@gymsheet/web/@testing-library/jest-dom",
+      "@gymsheet/web/@testing-library/jest-dom/**"
     ]
   },
   "scripts": {
@@ -29,6 +31,10 @@
     "verify": "turbo run source-check type-check lint test build",
     "web": "yarn workspace @gymsheet/web",
     "mobile": "yarn workspace @gymsheet/mobile"
+  },
+  "resolutions": {
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

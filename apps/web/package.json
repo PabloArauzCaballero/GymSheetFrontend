@@ -25,6 +25,7 @@
     "@gymsheet/auth": "*",
     "@gymsheet/design-tokens": "*",
     "@gymsheet/domain": "*",
+    "@gymsheet/hooks": "*",
     "@gymsheet/observability": "*",
     "@gymsheet/schemas": "*",
     "@gymsheet/types": "*",

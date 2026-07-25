@@ -43,8 +43,33 @@ instancias duplicadas de React/React Native.
 **Decisión**: Expo (managed) con Expo Router (file-based), TanStack Query, Zustand,
 react-hook-form + Zod, Sentry. Alinea stack con la web y permite EAS Build/Update.
 
+## ADR-008 — `@gymsheet/hooks` solo contiene el contrato de query-keys
+
+**Contexto**: se quería compartir hooks de TanStack Query entre web y móvil, pero la app
+móvil está `nohoist` (ADR-006). Un hook que importe React/react-query desde este paquete
+(hoisteado) usaría una instancia distinta a la del bundle móvil → "invalid hook call".
+**Decisión**: `@gymsheet/hooks` exporta **solo** `queryKeys` (contrato de claves de caché,
+sin React), garantizando que ambas apps leen/invalidan las mismas entradas. Los hooks
+acoplados a React viven por app hasta deduplicar React/react-query en Metro
+(`resolver.extraNodeModules`).
+**Estado**: implementado; `queryKeys` movido al paquete, web lo consume vía shim.
+
+## ADR-009 — React unificado a 19.2.0 en todo el monorepo
+
+**Contexto**: web usa React 19.2.0 (Next 16) y Expo SDK 53 fija React 19.0.0. Con Yarn 1
+el hoisting mezcló ambas versiones (React duplicado + `react-dom` emparejado con la versión
+equivocada) → renders vacíos en los tests de web.
+**Decisión**: `resolutions: { react: 19.2.0, react-dom: 19.2.0 }` en la raíz; el móvil declara
+19.2.0. Una sola instancia de React hoistea limpiamente y web queda verificado.
+**Consecuencia**: el runtime nativo del móvil (RN 0.79 espera 19.0.0) debe validarse en
+dispositivo; si Expo lo requiere, fijar la versión exacta del SDK vía `resolutions` por app.
+Además, `@testing-library/jest-dom` se `nohoist`ea en web para co-ubicarse con `vitest`, y
+`vitest.config.ts` castea el plugin de React a `PluginOption` por la posible duplicación de
+`vite` (misma versión, copias físicas distintas).
+**Estado**: implementado y verificado (21 tests, type-check, lint y build de web en verde).
+
 ## Decisiones pendientes
 
-- `@gymsheet/hooks`: extraer hooks de TanStack Query compartidos (hoy en `services/` web).
+- Deduplicar React/react-query en Metro para poder compartir hooks acoplados a UI.
 - Estrategia offline (ver `roadmap.md`): empezar por nivel básico/intermedio.
 - Endpoints específicos móvil si hay overfetching de vistas pensadas para tablas web.

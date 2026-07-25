@@ -12,6 +12,9 @@ test-results
 *.tsbuildinfo
 .DS_Store
 
+# Generated knowledge-graph output (graphify)
+graphify-out
+
 # Expo / React Native
 apps/mobile/.expo
 apps/mobile/android

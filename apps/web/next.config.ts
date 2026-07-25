@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
     '@gymsheet/schemas',
     '@gymsheet/api-client',
     '@gymsheet/domain',
+    '@gymsheet/hooks',
     '@gymsheet/auth',
     '@gymsheet/design-tokens',
     '@gymsheet/observability',

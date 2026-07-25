@@ -7,7 +7,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
-import { z } from 'zod';
+import {
+  cleanOptional,
+  emptyExerciseFormValues,
+  exerciseFormSchema,
+  type ExerciseFormValues,
+} from './exercise-form-model';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
@@ -18,38 +23,6 @@ import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { Field } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
-
-const formSchema = z.object({
-  nombre: z.string().trim().min(2, 'Usa al menos 2 caracteres.').max(160),
-  grupoMuscular: z.string().trim().min(2, 'Especifica el grupo muscular.').max(120),
-  descripcion: z.string().trim().max(2000).optional(),
-  bodyPart: z.string().trim().max(100).optional(),
-  targetMuscle: z.string().trim().max(120).optional(),
-  synergistMuscleGroup: z.string().trim().max(120).optional(),
-  secondaryMusclesText: z.string().max(1500).optional(),
-  instructionsText: z.string().max(6000).optional(),
-  stepsText: z.string().max(8000).optional(),
-  equipoIds: z.array(z.string().uuid()).max(30),
-});
-type FormValues = z.infer<typeof formSchema>;
-
-const emptyValues: FormValues = {
-  nombre: '',
-  grupoMuscular: '',
-  descripcion: '',
-  bodyPart: '',
-  targetMuscle: '',
-  synergistMuscleGroup: '',
-  secondaryMusclesText: '',
-  instructionsText: '',
-  stepsText: '',
-  equipoIds: [],
-};
-
-function clean(value: string | undefined) {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : null;
-}
 
 export function ExerciseForm({
   exerciseId,
@@ -67,9 +40,9 @@ export function ExerciseForm({
     queryFn: () => exerciseService.get(exerciseId ?? ''),
     enabled: editing,
   });
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: emptyValues,
+  const form = useForm<ExerciseFormValues>({
+    resolver: zodResolver(exerciseFormSchema),
+    defaultValues: emptyExerciseFormValues,
   });
   const selectedEquipmentIds = useWatch({ control: form.control, name: 'equipoIds' });
 
@@ -106,7 +79,7 @@ export function ExerciseForm({
     onError: (error: Error) => form.setError('root', { message: error.message }),
   });
 
-  function submit(values: FormValues) {
+  function submit(values: ExerciseFormValues) {
     const secondaryMuscles =
       values.secondaryMusclesText
         ?.split(',')
@@ -120,10 +93,10 @@ export function ExerciseForm({
     save.mutate({
       nombre: values.nombre.trim(),
       grupoMuscular: values.grupoMuscular.trim(),
-      descripcion: clean(values.descripcion),
-      bodyPart: clean(values.bodyPart),
-      targetMuscle: clean(values.targetMuscle),
-      synergistMuscleGroup: clean(values.synergistMuscleGroup),
+      descripcion: cleanOptional(values.descripcion),
+      bodyPart: cleanOptional(values.bodyPart),
+      targetMuscle: cleanOptional(values.targetMuscle),
+      synergistMuscleGroup: cleanOptional(values.synergistMuscleGroup),
       secondaryMuscles,
       equipoIds: values.equipoIds,
       instructions: values.instructionsText?.trim()

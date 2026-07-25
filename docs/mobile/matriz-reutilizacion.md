@@ -17,8 +17,8 @@ navegador), **Exclusivo web** (HTML/DOM), **Exclusivo móvil** (APIs nativas).
 | Tokens visuales (colores, spacing, radios) | Compartible | `@gymsheet/design-tokens` | ✅ Extraído de `globals.css` |
 | Logger / analítica / redacción | Compartible | `@gymsheet/observability` | ✅ Nuevo |
 | Schemas de formularios (login/registro) | Compartible | `@gymsheet/schemas` (`forms.ts`) | ✅ Nuevo |
-| `shared/api/query-keys.ts` | Compartible con adaptación | Candidato a `@gymsheet/hooks` | ⏳ Pendiente |
-| Hooks TanStack Query por feature | Compartible con adaptación | Candidato a `@gymsheet/hooks` | ⏳ Pendiente (viven en `services/`) |
+| `shared/api/query-keys.ts` | Compartible | `@gymsheet/hooks` | ✅ Extraído (contrato de caché) |
+| Hooks TanStack Query por feature | Exclusivo por app (dual-package RN) | Por app hasta dedupe en Metro | ⏳ Ver ADR-008 |
 | `shared/server/*` (cookies, CSRF, sesión) | Exclusivo web | `apps/web` | ⛔ No migra |
 | `shared/components/ui/*` (Radix, Tailwind) | Exclusivo web | `apps/web` | ⛔ Reimplementado nativo en `apps/mobile/src/components` |
 | `shared/components/layout/*` (portal shell, sidebar) | Exclusivo web | `apps/web` | ⛔ Navegación móvil propia (tabs) |
