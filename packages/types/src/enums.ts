@@ -30,6 +30,15 @@ export type EquipmentStatus = (typeof equipmentStatuses)[number];
 export const workoutStatuses = ['EN_PROGRESO', 'FINALIZADA', 'CANCELADA'] as const;
 export type WorkoutStatus = (typeof workoutStatuses)[number];
 
+export const routineVisibilities = ['PRIVATE', 'SHARED', 'TEMPLATE'] as const;
+export type RoutineVisibility = (typeof routineVisibilities)[number];
+
+export const routineStatuses = ['ACTIVE', 'ARCHIVED'] as const;
+export type RoutineStatus = (typeof routineStatuses)[number];
+
+export const routineAssignmentStatuses = ['ACTIVE', 'COMPLETED', 'CANCELLED'] as const;
+export type RoutineAssignmentStatus = (typeof routineAssignmentStatuses)[number];
+
 export const membershipStatuses = ['ACTIVE', 'SUSPENDED', 'CANCELLED', 'EXPIRED'] as const;
 export type MembershipStatus = (typeof membershipStatuses)[number];
 

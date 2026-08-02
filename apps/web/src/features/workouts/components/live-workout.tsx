@@ -1,9 +1,19 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Activity, Ban, CheckCircle2, Clock3, Dumbbell, Gauge, Weight } from 'lucide-react';
+import {
+  Activity,
+  Ban,
+  CheckCircle2,
+  Clock3,
+  Dumbbell,
+  Gauge,
+  ListChecks,
+  Rows3,
+  Weight,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { toast } from 'sonner';
 import { workoutService } from '@/features/workouts/services/workout-service';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -15,12 +25,14 @@ import { Button } from '@/shared/components/ui/button';
 import { MetricCard } from '@/shared/components/ui/metric-card';
 import { formatDateTime, formatDuration } from '@/shared/lib/date';
 import { AddExerciseDialog } from './add-exercise-dialog';
+import { GuidedWorkout } from './guided-workout';
 import { RestTimer } from './rest-timer';
 import { WorkoutExercisePanel } from './workout-exercise-panel';
 
 export function LiveWorkout({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [guided, setGuided] = useState(true);
   const query = useQuery({
     queryKey: queryKeys.workout(id),
     queryFn: () => workoutService.get(id),
@@ -76,10 +88,16 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
         actions={
           editable ? (
             <>
-              <AddExerciseDialog
-                nextOrder={Math.max(0, ...workout.ejercicios.map((item) => item.orden)) + 1}
-                workoutId={workout.id}
-              />
+              <Button onClick={() => setGuided((value) => !value)} variant="ghost">
+                {guided ? <Rows3 className="size-4" /> : <ListChecks className="size-4" />}
+                {guided ? 'Modo clásico' : 'Modo guiado'}
+              </Button>
+              {!guided ? (
+                <AddExerciseDialog
+                  nextOrder={Math.max(0, ...workout.ejercicios.map((item) => item.orden)) + 1}
+                  workoutId={workout.id}
+                />
+              ) : null}
               <Button
                 loading={finish.isPending}
                 onClick={() => finish.mutate()}
@@ -123,9 +141,17 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
           value={averageRir.toFixed(1)}
         />
       </section>
-      {editable ? <RestTimer /> : null}
-      <section className="stagger grid gap-5">
-        {workout.ejercicios.length ? (
+      {editable && guided ? (
+        <GuidedWorkout
+          finishing={finish.isPending}
+          onFinish={() => finish.mutate()}
+          workout={workout}
+        />
+      ) : (
+        <>
+          {editable ? <RestTimer /> : null}
+          <section className="stagger grid gap-5">
+            {workout.ejercicios.length ? (
           workout.ejercicios.map((item, position) => (
             <div key={item.id} style={{ '--i': position } as CSSProperties}>
               <WorkoutExercisePanel editable={editable} item={item} workoutId={workout.id} />
@@ -146,8 +172,10 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
               ) : null}
             </div>
           </div>
-        )}
-      </section>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 }

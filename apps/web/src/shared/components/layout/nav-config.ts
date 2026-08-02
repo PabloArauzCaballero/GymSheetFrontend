@@ -2,6 +2,8 @@ import {
   Activity,
   Bell,
   Building2,
+  CalendarCheck,
+  ClipboardList,
   Dumbbell,
   Gauge,
   IdCard,
@@ -22,6 +24,8 @@ export type NavigationItem = {
 export const primaryNavigation: NavigationItem[] = [
   { href: '/dashboard', label: 'Panel', icon: Gauge },
   { href: '/workouts', label: 'Entrenamientos', icon: Activity },
+  { href: '/plans', label: 'Mis planes', icon: CalendarCheck },
+  { href: '/routines', label: 'Rutinas', icon: ClipboardList },
   { href: '/exercises', label: 'Ejercicios', icon: Dumbbell },
   { href: '/membership', label: 'Membresía', icon: IdCard },
   { href: '/access', label: 'Acceso', icon: KeyRound },

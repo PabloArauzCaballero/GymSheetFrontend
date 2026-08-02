@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2 } from 'lucide-react';
+import { Download, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -23,6 +23,17 @@ import { Input } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
 import { Table, TableCell, TableContainer, TableHead } from '@/shared/components/ui/table';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { downloadCsv, downloadJson, type CsvColumn } from '@/shared/lib/data-transfer';
+import type { Equipment } from '@/shared/api/contracts';
+import { EquipmentBulkImport } from './equipment-bulk-import';
+
+const exportColumns: CsvColumn<Equipment>[] = [
+  { key: 'id', header: 'id', value: (item) => item.id },
+  { key: 'nombre', header: 'nombre', value: (item) => item.nombre },
+  { key: 'tipo', header: 'tipo', value: (item) => item.tipo },
+  { key: 'estado', header: 'estado', value: (item) => item.estado },
+  { key: 'descripcion', header: 'descripcion', value: (item) => item.descripcion ?? '' },
+];
 
 const schema = z.object({
   nombre: z.string().trim().min(2).max(140),
@@ -73,14 +84,36 @@ export function EquipmentAdmin({ canManage }: Readonly<{ canManage: boolean }>) 
     <div className="grid gap-8">
       <PageHeader
         actions={
-          canManage ? (
-            <Dialog onOpenChange={setOpen} open={open}>
-              <DialogTrigger asChild>
-                <Button variant="primary">
-                  <Plus className="size-4" />
-                  Nuevo equipo
-                </Button>
-              </DialogTrigger>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              disabled={!query.data?.length}
+              onClick={() =>
+                downloadCsv(query.data ?? [], exportColumns, 'gymsheet-equipos.csv')
+              }
+              size="sm"
+              variant="ghost"
+            >
+              <Download className="size-4" />
+              CSV
+            </Button>
+            <Button
+              disabled={!query.data?.length}
+              onClick={() => downloadJson(query.data ?? [], 'gymsheet-equipos.json')}
+              size="sm"
+              variant="ghost"
+            >
+              <Download className="size-4" />
+              JSON
+            </Button>
+            {canManage ? <EquipmentBulkImport /> : null}
+            {canManage ? (
+              <Dialog onOpenChange={setOpen} open={open}>
+                <DialogTrigger asChild>
+                  <Button variant="primary">
+                    <Plus className="size-4" />
+                    Nuevo equipo
+                  </Button>
+                </DialogTrigger>
               <DialogContent
                 description="Los equipos nuevos quedan disponibles y pueden asociarse a ejercicios y salas."
                 title="Registrar equipo"
@@ -122,9 +155,10 @@ export function EquipmentAdmin({ canManage }: Readonly<{ canManage: boolean }>) 
                     </Button>
                   </div>
                 </form>
-              </DialogContent>
-            </Dialog>
-          ) : null
+                </DialogContent>
+              </Dialog>
+            ) : null}
+          </div>
         }
         description="La lista pública del backend devuelve únicamente equipos disponibles. Al cambiar a mantenimiento o inactivo, el registro deja de aparecer en esta vista."
         eyebrow="Activos físicos"
