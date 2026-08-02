@@ -265,7 +265,7 @@ export function ExerciseForm({
           </Card>
           {form.formState.errors.root?.message ? (
             <p
-              className="rounded-[4px] border border-[#63302c] bg-[#160c0b] p-3 text-sm text-[#ffb4ab]"
+              className="rounded-[4px] border border-[var(--danger-border)] bg-[var(--danger-surface)] p-3 text-sm text-[var(--danger-text)]"
               role="alert"
             >
               {form.formState.errors.root.message}

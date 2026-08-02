@@ -38,7 +38,7 @@ export function WorkoutExercisePanel({
   const volume = item.series.reduce((total, set) => total + set.pesoKg * set.repeticiones, 0);
   return (
     <article className="panel overflow-hidden transition-colors duration-200 hover:border-[var(--border)]">
-      <header className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[#080808] p-5 sm:flex-row sm:items-start sm:justify-between">
+      <header className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--surface-lowest)] p-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex flex-wrap gap-2">
             <Badge>Orden {item.orden}</Badge>
@@ -65,7 +65,7 @@ export function WorkoutExercisePanel({
             <Button
               aria-label="Alternar énfasis"
               aria-pressed={item.esEnfasis}
-              className={item.esEnfasis ? 'text-[var(--volt)]' : undefined}
+              className={item.esEnfasis ? 'text-[var(--accent-ink)]' : undefined}
               loading={toggleEmphasis.isPending}
               onClick={() => toggleEmphasis.mutate()}
               size="icon"

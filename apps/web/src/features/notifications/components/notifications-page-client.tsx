@@ -66,7 +66,7 @@ export function NotificationsPageClient() {
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex gap-3">
                           <span className="mt-1 grid size-9 shrink-0 place-items-center rounded-[4px] border border-[var(--border)]">
-                            <Bell className="size-4 text-[var(--volt)]" />
+                            <Bell className="size-4 text-[var(--accent-ink)]" />
                           </span>
                           <div>
                             <div className="flex flex-wrap items-center gap-2">

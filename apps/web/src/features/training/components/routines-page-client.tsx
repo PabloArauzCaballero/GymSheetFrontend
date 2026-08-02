@@ -113,7 +113,7 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
                     </Field>
                   </div>
                   {form.formState.errors.root?.message ? (
-                    <p className="text-sm text-[#ffb4ab]">{form.formState.errors.root.message}</p>
+                    <p className="text-sm text-[var(--danger-text)]">{form.formState.errors.root.message}</p>
                   ) : null}
                   <div className="flex justify-end gap-2">
                     <DialogClose asChild>
@@ -148,12 +148,12 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
               key={routine.id}
             >
               <div className="flex items-start justify-between gap-3">
-                <ClipboardList className="size-5 text-[var(--volt)]" />
+                <ClipboardList className="size-5 text-[var(--accent-ink)]" />
                 <Badge tone={routine.visibilidad === 'TEMPLATE' ? 'info' : 'neutral'}>
                   {routine.visibilidad}
                 </Badge>
               </div>
-              <h2 className="text-lg font-bold tracking-[-0.02em] group-hover:text-[var(--volt)]">
+              <h2 className="text-lg font-bold tracking-[-0.02em] group-hover:text-[var(--accent-ink)]">
                 {routine.nombre}
               </h2>
               <p className="line-clamp-2 min-h-10 text-sm text-[var(--text-muted)]">

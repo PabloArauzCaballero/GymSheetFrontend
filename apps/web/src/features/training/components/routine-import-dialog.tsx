@@ -114,7 +114,7 @@ export function RoutineImportDialog() {
             />
           </Field>
           {error ? (
-            <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-[4px] border border-[#63302c] bg-[#160c0b] p-3 text-xs text-[#ffb4ab]">
+            <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-[4px] border border-[var(--danger-border)] bg-[var(--danger-surface)] p-3 text-xs text-[var(--danger-text)]">
               {error}
             </pre>
           ) : null}

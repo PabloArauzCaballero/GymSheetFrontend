@@ -10,7 +10,7 @@ export function PageHeader({
     <header className="reveal flex flex-col gap-5 border-b border-[var(--border-subtle)] pb-8 sm:flex-row sm:items-end sm:justify-between">
       <div className="max-w-3xl">
         {eyebrow ? (
-          <p className="data-label mb-3 inline-flex items-center gap-2 text-[var(--volt)]">
+          <p className="data-label mb-3 inline-flex items-center gap-2 text-[var(--accent-ink)]">
             <span
               aria-hidden
               className="h-3 w-1 rounded-full bg-[var(--volt)] shadow-[0_0_8px_var(--volt)]"

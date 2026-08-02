@@ -45,7 +45,7 @@
   left: 0;
   width: 45%;
   z-index: -1;
-  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  background: linear-gradient(90deg, transparent, var(--sheen), transparent);
   transform: translateX(-160%) skewX(-12deg);
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -157,6 +157,11 @@
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.06), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--text) 7%, transparent),
+    transparent
+  );
   animation: shimmer 1.6s ease-in-out infinite;
 }

@@ -85,7 +85,7 @@ export function OnboardingForm({ initial }: Readonly<{ initial: OnboardingState 
   return (
     <main className="mx-auto grid w-full max-w-2xl gap-6 px-4 py-8 sm:py-12">
       <div>
-        <p className="data-label text-[var(--volt)]">Configuración inicial</p>
+        <p className="data-label text-[var(--accent-ink)]">Configuración inicial</p>
         <h1 className="mt-2 text-3xl font-bold">Personaliza tu experiencia</h1>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
           Paso {step} de 4 · Tu progreso se guarda en tu cuenta.

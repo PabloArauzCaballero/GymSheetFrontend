@@ -47,15 +47,15 @@ export function ExerciseCard({
       <div className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="data-label text-[var(--volt)]">{exercise.grupoMuscular}</p>
-            <h2 className="mt-2 break-words text-xl font-bold tracking-[-0.03em] transition-colors duration-200 group-hover:text-[var(--volt)]">
+            <p className="data-label text-[var(--accent-ink)]">{exercise.grupoMuscular}</p>
+            <h2 className="mt-2 break-words text-xl font-bold tracking-[-0.03em] transition-colors duration-200 group-hover:text-[var(--accent-ink)]">
               <Link href={`/exercises/${exercise.id}`}>{exercise.nombre}</Link>
             </h2>
           </div>
           <Button
             aria-label={favorite ? 'Quitar de frecuentes' : 'Agregar a frecuentes'}
             aria-pressed={favorite}
-            className={favorite ? 'text-[var(--volt)]' : undefined}
+            className={favorite ? 'text-[var(--accent-ink)]' : undefined}
             disabled={busy}
             onClick={onToggleFavorite}
             size="icon"

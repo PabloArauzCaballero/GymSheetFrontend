@@ -16,10 +16,11 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary:
     'btn-shine border-[var(--volt)] bg-[var(--volt)] text-black hover:bg-[var(--volt-dim)] hover:shadow-[0_8px_28px_-8px_rgb(195_244_0/0.55)]',
   secondary:
-    'border-[var(--border)] bg-[var(--surface-low)] text-white hover:border-[#3a3a3a] hover:bg-[var(--surface)]',
-  danger: 'border-[#63302c] bg-[#241211] text-[#ffb4ab] hover:bg-[#351816]',
+    'border-[var(--border)] bg-[var(--surface-low)] text-[var(--text)] hover:border-[var(--text-disabled)] hover:bg-[var(--surface)]',
+  danger:
+    'border-[var(--danger-border)] bg-[var(--danger-bg)] text-[var(--danger-text)] hover:border-[var(--danger-text)]',
   ghost:
-    'border-transparent bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface)] hover:text-white',
+    'border-transparent bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface)] hover:text-[var(--text)]',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

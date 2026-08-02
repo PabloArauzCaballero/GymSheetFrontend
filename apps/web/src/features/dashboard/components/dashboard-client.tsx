@@ -141,7 +141,7 @@ export function DashboardClient() {
                     href={`/workouts/${session.id}`}
                     key={session.id}
                   >
-                    <span className="grid size-10 shrink-0 place-items-center rounded-[8px] border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--volt)] transition-all duration-200 group-hover:scale-110 group-hover:border-[var(--volt)]">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-[8px] border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--accent-ink)] transition-all duration-200 group-hover:scale-110 group-hover:border-[var(--volt)]">
                       <Activity className="size-4" />
                     </span>
                     <div className="min-w-0 flex-1">
@@ -162,7 +162,7 @@ export function DashboardClient() {
                     >
                       {session.estado}
                     </Badge>
-                    <ChevronRight className="size-4 shrink-0 text-[var(--text-disabled)] transition-transform duration-200 group-hover:translate-x-1 group-hover:text-[var(--volt)]" />
+                    <ChevronRight className="size-4 shrink-0 text-[var(--text-disabled)] transition-transform duration-200 group-hover:translate-x-1 group-hover:text-[var(--accent-ink)]" />
                   </Link>
                 ))}
               </div>
@@ -183,7 +183,7 @@ export function DashboardClient() {
                         Vence en {membership.data.membership.diasRestantes} días
                       </p>
                     </div>
-                    <IdCard className="size-5 text-[var(--volt)]" />
+                    <IdCard className="size-5 text-[var(--accent-ink)]" />
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-[var(--surface-high)]">
                     <div

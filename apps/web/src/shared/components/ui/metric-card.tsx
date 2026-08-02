@@ -38,8 +38,8 @@ export function MetricCard({
             className={cn(
               'grid size-9 place-items-center rounded-[6px] border border-[var(--border-subtle)] bg-[var(--surface-low)] transition-all duration-300 group-hover:scale-110',
               accent
-                ? 'text-[var(--volt)] group-hover:border-[var(--volt)]'
-                : 'text-[var(--text-muted)] group-hover:text-white',
+                ? 'text-[var(--accent-ink)] group-hover:border-[var(--volt)]'
+                : 'text-[var(--text-muted)] group-hover:text-[var(--text)]',
             )}
           >
             {icon}
@@ -49,7 +49,7 @@ export function MetricCard({
       <div
         className={cn(
           'data-value mt-5 text-3xl font-extrabold tracking-[-0.04em] sm:text-4xl',
-          accent && 'text-[var(--volt)]',
+          accent && 'text-[var(--accent-ink)]',
         )}
       >
         {typeof value === 'number' ? <CountUp value={value} /> : value}

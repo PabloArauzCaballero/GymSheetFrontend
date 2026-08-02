@@ -157,7 +157,7 @@ export function NotificationPreferenceForm({
         </Field>
       </div>
       {form.formState.errors.root?.message ? (
-        <p className="text-sm text-[#ffb4ab]" role="alert">
+        <p className="text-sm text-[var(--danger-text)]" role="alert">
           {form.formState.errors.root.message}
         </p>
       ) : null}

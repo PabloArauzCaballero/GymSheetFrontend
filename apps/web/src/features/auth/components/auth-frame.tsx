@@ -9,7 +9,7 @@ export function AuthFrame({
 }: Readonly<{ eyebrow: string; title: string; description: string; children: ReactNode }>) {
   return (
     <main className="tech-grid grid min-h-dvh lg:grid-cols-[minmax(0,1.1fr)_minmax(420px,0.9fr)]">
-      <section className="hidden border-r border-[var(--border-subtle)] bg-[#030303] p-12 lg:flex lg:flex-col lg:justify-between xl:p-16">
+      <section className="hidden border-r border-[var(--border-subtle)] bg-[var(--surface-sidebar)] p-12 lg:flex lg:flex-col lg:justify-between xl:p-16">
         <div className="inline-flex items-center gap-3 text-lg font-black tracking-[-0.04em]">
           <span className="grid size-9 place-items-center rounded-[4px] bg-[var(--volt)] text-sm text-black">
             GS
@@ -17,7 +17,7 @@ export function AuthFrame({
           GYMSHEET
         </div>
         <div className="max-w-2xl">
-          <p className="data-label text-[var(--volt)]">Elite performance system</p>
+          <p className="data-label text-[var(--accent-ink)]">Elite performance system</p>
           <h2 className="mt-5 text-5xl font-extrabold leading-[1.03] tracking-[-0.05em] xl:text-7xl">
             Cada serie.
             <br />
@@ -40,7 +40,7 @@ export function AuthFrame({
               className="hover-lift group rounded-[8px] border border-[var(--border-subtle)] bg-[var(--surface-lowest)] p-4"
               key={label}
             >
-              <span className="grid size-9 place-items-center rounded-[6px] border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--volt)] transition-transform duration-300 group-hover:scale-110">
+              <span className="grid size-9 place-items-center rounded-[6px] border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--accent-ink)] transition-transform duration-300 group-hover:scale-110">
                 <Icon className="size-5" />
               </span>
               <p className="mt-5 text-sm font-bold">{label}</p>
@@ -59,7 +59,7 @@ export function AuthFrame({
               GYMSHEET
             </div>
           </div>
-          <p className="data-label inline-flex items-center gap-2 text-[var(--volt)]">
+          <p className="data-label inline-flex items-center gap-2 text-[var(--accent-ink)]">
             <span
               aria-hidden
               className="h-3 w-1 rounded-full bg-[var(--volt)] shadow-[0_0_8px_var(--volt)]"

@@ -125,7 +125,7 @@ export function MembershipExperience({ compact = false }: Readonly<{ compact?: b
               <ul className="grid gap-2 border-t border-[var(--border-subtle)] pt-4 text-sm">
                 {membership.plan.beneficios.map((benefit) => (
                   <li className="flex gap-2" key={benefit}>
-                    <Check className="size-4 text-[var(--volt)]" />
+                    <Check className="size-4 text-[var(--accent-ink)]" />
                     {benefit}
                   </li>
                 ))}
@@ -186,7 +186,7 @@ export function MembershipExperience({ compact = false }: Readonly<{ compact?: b
                         key={access.code}
                       >
                         <p className="flex items-center gap-2 font-semibold">
-                          <ShieldCheck className="size-4 text-[var(--volt)]" />
+                          <ShieldCheck className="size-4 text-[var(--accent-ink)]" />
                           {access.name}
                         </p>
                         <p className="mt-1 text-sm text-[var(--text-muted)]">
@@ -275,7 +275,7 @@ function PlanCard({
         <ul className="grid gap-2 text-sm">
           {plan.beneficios.map((benefit) => (
             <li className="flex gap-2" key={benefit}>
-              <Check className="size-4 text-[var(--volt)]" />
+              <Check className="size-4 text-[var(--accent-ink)]" />
               {benefit}
             </li>
           ))}

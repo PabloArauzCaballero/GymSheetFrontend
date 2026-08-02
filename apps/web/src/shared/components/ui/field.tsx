@@ -22,7 +22,7 @@ export function Field({
         {label}
       </label>
       {children}
-      {error ? <p className="text-sm text-[#ffb4ab]">{error}</p> : null}
+      {error ? <p className="text-sm text-[var(--danger-text)]">{error}</p> : null}
       {!error && hint ? <p className="text-xs leading-5 text-[var(--text-muted)]">{hint}</p> : null}
     </div>
   );

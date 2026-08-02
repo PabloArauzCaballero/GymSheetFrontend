@@ -104,7 +104,7 @@ export function EquipmentBulkImport() {
           <input
             accept=".csv,.json,text/csv,application/json"
             aria-label="Archivo CSV o JSON"
-            className="text-sm text-[var(--text-muted)] file:mr-3 file:rounded-[4px] file:border file:border-[var(--border)] file:bg-[var(--surface)] file:px-3 file:py-1.5 file:text-white"
+            className="text-sm text-[var(--text-muted)] file:mr-3 file:rounded-[4px] file:border file:border-[var(--border)] file:bg-[var(--surface)] file:px-3 file:py-1.5 file:text-[var(--text)]"
             onChange={onFile}
             type="file"
           />
@@ -118,7 +118,7 @@ export function EquipmentBulkImport() {
             />
           </Field>
           {error ? (
-            <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-[4px] border border-[#63302c] bg-[#160c0b] p-3 text-xs text-[#ffb4ab]">
+            <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-[4px] border border-[var(--danger-border)] bg-[var(--danger-surface)] p-3 text-xs text-[var(--danger-text)]">
               {error}
             </pre>
           ) : null}

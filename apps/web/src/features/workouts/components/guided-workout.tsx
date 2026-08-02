@@ -75,7 +75,7 @@ export function GuidedWorkout({
         <div className="border-b border-[var(--border-subtle)] p-5">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="data-label text-[var(--volt)]">
+              <p className="data-label text-[var(--accent-ink)]">
                 {current.ejercicio?.grupoMuscular ?? 'Ejercicio'}
               </p>
               <h2 className="mt-1 break-words text-2xl font-bold tracking-[-0.03em]">
@@ -118,7 +118,7 @@ export function GuidedWorkout({
 
       {resting ? <RestTimer /> : null}
 
-      <div className="sticky bottom-4 z-10 flex flex-wrap gap-3 rounded-[10px] border border-[var(--border-subtle)] bg-black/85 p-3 backdrop-blur-lg">
+      <div className="sticky bottom-4 z-10 flex flex-wrap gap-3 rounded-[10px] border border-[var(--border-subtle)] bg-[var(--header-bg)] p-3 backdrop-blur-lg">
         <Button
           className="flex-1"
           onClick={() => setResting((value) => !value)}

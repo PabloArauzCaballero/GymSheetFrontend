@@ -68,7 +68,7 @@ export function LoginForm() {
       </Field>
       {form.formState.errors.root?.message ? (
         <p
-          className="rounded-[4px] border border-[#63302c] bg-[#160c0b] p-3 text-sm text-[#ffb4ab]"
+          className="rounded-[4px] border border-[var(--danger-border)] bg-[var(--danger-surface)] p-3 text-sm text-[var(--danger-text)]"
           role="alert"
         >
           {form.formState.errors.root.message}
@@ -86,7 +86,7 @@ export function LoginForm() {
       <p className="text-center text-sm text-[var(--text-muted)]">
         ¿Aún no tienes cuenta?{' '}
         <Link
-          className="font-semibold text-white underline decoration-[var(--volt)] underline-offset-4"
+          className="font-semibold text-[var(--text)] underline decoration-[var(--volt)] underline-offset-4"
           href="/register"
         >
           Regístrate

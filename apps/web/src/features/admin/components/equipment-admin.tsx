@@ -142,7 +142,7 @@ export function EquipmentAdmin({ canManage }: Readonly<{ canManage: boolean }>) 
                     <Textarea id="equipment-description" {...form.register('descripcion')} />
                   </Field>
                   {form.formState.errors.root?.message ? (
-                    <p className="text-sm text-[#ffb4ab]">{form.formState.errors.root.message}</p>
+                    <p className="text-sm text-[var(--danger-text)]">{form.formState.errors.root.message}</p>
                   ) : null}
                   <div className="flex justify-end gap-2">
                     <DialogClose asChild>

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Hanken_Grotesk } from 'next/font/google';
 import type { ReactNode } from 'react';
 import { serverEnv } from '@/shared/config/env';
+import { themeInitScript } from '@/shared/theme/theme-script';
 import { Providers } from './providers';
 import './globals.css';
 
@@ -29,6 +30,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       lang="es-BO"
       suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body>
         <Providers>{children}</Providers>
       </body>

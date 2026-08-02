@@ -44,7 +44,7 @@ export function WorkoutSetRow({
   if (editing) {
     return (
       <div className="grid grid-cols-[44px_repeat(3,minmax(70px,1fr))_92px] items-center gap-2 border-t border-[var(--border-subtle)] p-3">
-        <span className="data-value text-center text-[var(--volt)]">{set.numeroSerie}</span>
+        <span className="data-value text-center text-[var(--accent-ink)]">{set.numeroSerie}</span>
         <Input
           aria-label="Peso en kg"
           className="text-center"
@@ -101,7 +101,7 @@ export function WorkoutSetRow({
   }
   return (
     <div className="group grid grid-cols-[44px_repeat(3,minmax(70px,1fr))_92px] items-center gap-2 border-t border-[var(--border-subtle)] px-3 py-4 text-center transition-colors duration-150 hover:bg-[var(--surface-low)]">
-      <span className="data-value grid size-7 place-items-center justify-self-center rounded-full border border-[var(--border-subtle)] text-[var(--volt)] transition-colors group-hover:border-[var(--volt)]">
+      <span className="data-value grid size-7 place-items-center justify-self-center rounded-full border border-[var(--border-subtle)] text-[var(--accent-ink)] transition-colors group-hover:border-[var(--volt)]">
         {set.numeroSerie}
       </span>
       <span className="data-value">{set.pesoKg}</span>

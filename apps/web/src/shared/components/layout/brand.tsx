@@ -15,7 +15,7 @@ export function Brand() {
           className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-700 group-hover:translate-x-full"
         />
       </span>
-      <span className="text-base font-extrabold tracking-[-0.05em] transition-colors group-hover:text-[var(--volt)]">
+      <span className="text-base font-extrabold tracking-[-0.05em] transition-colors group-hover:text-[var(--accent-ink)]">
         GYMSHEET
       </span>
     </Link>

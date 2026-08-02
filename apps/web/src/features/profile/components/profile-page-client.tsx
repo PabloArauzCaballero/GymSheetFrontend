@@ -168,7 +168,7 @@ export function ProfilePageClient() {
                 </Select>
               </Field>
               {form.formState.errors.root?.message ? (
-                <p className="text-sm text-[#ffb4ab] sm:col-span-2" role="alert">
+                <p className="text-sm text-[var(--danger-text)] sm:col-span-2" role="alert">
                   {form.formState.errors.root.message}
                 </p>
               ) : null}
@@ -190,7 +190,7 @@ export function ProfilePageClient() {
             <CardHeader title="Identidad" />
             <CardContent className="grid gap-4">
               <div className="flex items-center gap-3">
-                <UserRound className="size-5 text-[var(--volt)]" />
+                <UserRound className="size-5 text-[var(--accent-ink)]" />
                 <div>
                   <p className="font-semibold">{user.data?.nombreCompleto ?? 'Usuario'}</p>
                   <p className="text-sm text-[var(--text-muted)]">{user.data?.email}</p>

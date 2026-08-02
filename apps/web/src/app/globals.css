@@ -2,27 +2,163 @@
 @import './animations.css';
 @import './motion.css';
 
+/* Sistema de tokens (fuente única del tema web). El tema OSCURO "volt" es la
+ * identidad por defecto (`:root`); el CLARO se aplica con `[data-theme='light']`
+ * en <html> (lo fija el script anti-FOUC antes del primer pintado). Casi todo el
+ * estilo consume `var(--...)`, así que el cambio de tema se propaga desde aquí. */
+
 :root {
   color-scheme: dark;
+
+  /* Superficies (elevación: de fondo a más alta) */
   --background: #000000;
   --surface-lowest: #080808;
   --surface-low: #0d0d0d;
   --surface: #131313;
   --surface-high: #1f1f1f;
   --surface-highest: #2a2a2a;
+  --surface-sidebar: #050505;
+
+  /* Bordes */
   --border-subtle: #1a1a1a;
   --border: #262626;
+
+  /* Texto */
   --text: #f5f5f5;
   --text-muted: #8c8c8c;
   --text-disabled: #4d4d4d;
+
+  /* Acento "volt": --volt es el relleno vívido (texto negro encima);
+   * --accent-ink es el acento legible para TEXTO/iconos sobre superficies. */
   --volt: #c3f400;
   --volt-dim: #abd600;
+  --accent-ink: #c3f400;
+
+  /* Estados (color plano para texto/iconos) */
   --danger: #ff6b63;
   --warning: #d7a944;
   --success: #c3f400;
+
+  /* Tonos semánticos (fondo / borde / texto) para badges, alertas, chips */
+  --success-bg: #182000;
+  --success-border: #526800;
+  --success-text: #c3f400;
+  --warning-bg: #241c0c;
+  --warning-border: #5b4820;
+  --warning-text: #e0b65f;
+  --danger-bg: #241211;
+  --danger-border: #63302c;
+  --danger-text: #ffb4ab;
+  --danger-surface: #160c0b;
+  --info-bg: #111b21;
+  --info-border: #344654;
+  --info-text: #a8d4ee;
+
+  /* Cromo de la app */
+  --header-bg: rgb(0 0 0 / 0.9);
+  --overlay: rgb(0 0 0 / 0.8);
+  --focus-ring: #ffffff;
+  --grid-line: rgb(255 255 255 / 0.02);
+  --page-glow: rgb(195 244 0 / 0.045);
+  --sheen: rgb(255 255 255 / 0.45);
+
+  /* Elevación */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 12px 32px -18px rgb(0 0 0 / 0.7);
+  --shadow-lg: 0 40px 120px -40px rgb(0 0 0 / 0.9);
+
+  /* Radios */
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
+  --radius-xl: 14px;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --background: #f3f4f0;
+  --surface-lowest: #ffffff;
+  --surface-low: #fafbf8;
+  --surface: #ffffff;
+  --surface-high: #f0f1ec;
+  --surface-highest: #e6e8e0;
+  --surface-sidebar: #ffffff;
+
+  --border-subtle: #e8e9e3;
+  --border: #d5d7ce;
+
+  --text: #14160e;
+  --text-muted: #5c6053;
+  --text-disabled: #a6a99d;
+
+  --volt: #c3f400;
+  --volt-dim: #b4e300;
+  --accent-ink: #55730a;
+
+  --danger: #c23b30;
+  --warning: #8a6410;
+  --success: #4d6b00;
+
+  --success-bg: #eef6cf;
+  --success-border: #c0d766;
+  --success-text: #4d6b00;
+  --warning-bg: #fbf1d6;
+  --warning-border: #e6cd82;
+  --warning-text: #8a6410;
+  --danger-bg: #fdeceb;
+  --danger-border: #f0b3ad;
+  --danger-text: #b23a30;
+  --danger-surface: #fdf3f2;
+  --info-bg: #e9f2fb;
+  --info-border: #aacdee;
+  --info-text: #235d88;
+
+  --header-bg: rgb(255 255 255 / 0.82);
+  --overlay: rgb(20 22 14 / 0.4);
+  --focus-ring: #14160e;
+  --grid-line: rgb(20 22 14 / 0.04);
+  --page-glow: rgb(195 244 0 / 0.12);
+  --sheen: rgb(255 255 255 / 0.65);
+
+  --shadow-sm: 0 1px 2px rgb(20 22 14 / 0.08);
+  --shadow-md: 0 12px 32px -18px rgb(20 22 14 / 0.18);
+  --shadow-lg: 0 40px 120px -40px rgb(20 22 14 / 0.26);
+}
+
+/* ----------------------------------------------------------------------------
+ * Registro en Tailwind (@theme inline): expone utilidades que emiten `var(--x)`
+ * para que sigan siendo reactivas al tema. Habilita `bg-surface`, `text-muted`,
+ * `border-line`, `text-accent`, etc. sin perder el cambio de tema en runtime.
+ * -------------------------------------------------------------------------- */
+@theme inline {
+  --color-background: var(--background);
+  --color-surface-lowest: var(--surface-lowest);
+  --color-surface-low: var(--surface-low);
+  --color-surface: var(--surface);
+  --color-surface-high: var(--surface-high);
+  --color-surface-highest: var(--surface-highest);
+  --color-sidebar: var(--surface-sidebar);
+
+  --color-line-subtle: var(--border-subtle);
+  --color-line: var(--border);
+
+  --color-fg: var(--text);
+  --color-muted: var(--text-muted);
+  --color-disabled: var(--text-disabled);
+
+  --color-volt: var(--volt);
+  --color-volt-dim: var(--volt-dim);
+  --color-accent: var(--accent-ink);
+
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
 }
 
 * {
@@ -40,7 +176,7 @@ body {
   min-height: 100dvh;
   margin: 0;
   background:
-    radial-gradient(circle at 50% -20%, rgb(195 244 0 / 0.045), transparent 34rem),
+    radial-gradient(circle at 50% -20%, var(--page-glow), transparent 34rem),
     var(--background);
   color: var(--text);
   font-family:
@@ -57,6 +193,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.011em;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 ::selection {
@@ -65,7 +204,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid #fff;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 3px;
 }
 
@@ -95,8 +234,8 @@ p {
 
 .tech-grid {
   background-image:
-    linear-gradient(rgb(255 255 255 / 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 0.02) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
@@ -124,7 +263,7 @@ p {
 }
 
 .text-gradient-volt {
-  background: linear-gradient(100deg, var(--text) 0%, var(--text) 45%, var(--volt) 130%);
+  background: linear-gradient(100deg, var(--text) 0%, var(--text) 45%, var(--accent-ink) 130%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

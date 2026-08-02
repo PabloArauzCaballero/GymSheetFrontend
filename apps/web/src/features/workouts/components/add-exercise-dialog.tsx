@@ -88,7 +88,7 @@ export function AddExerciseDialog({
                           src={media.thumbnailUrl ?? media.url}
                         />
                       ) : (
-                        <Dumbbell className="size-4 text-[var(--volt)]" />
+                        <Dumbbell className="size-4 text-[var(--accent-ink)]" />
                       )}
                     </span>
                     <span className="min-w-0">

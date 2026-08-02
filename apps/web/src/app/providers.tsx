@@ -5,6 +5,7 @@ import { ApiError } from '@/shared/api/api-error';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Toaster } from 'sonner';
+import { ThemeProvider } from '@/shared/theme/theme-provider';
 
 export function Providers({ children }: Readonly<{ children: ReactNode }>) {
   const [queryClient] = useState(
@@ -28,18 +29,20 @@ export function Providers({ children }: Readonly<{ children: ReactNode }>) {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: '#0d0d0d',
-            border: '1px solid #262626',
-            color: '#f5f5f5',
-          },
-        }}
-      />
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        {children}
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: 'var(--surface-low)',
+              border: '1px solid var(--border)',
+              color: 'var(--text)',
+            },
+          }}
+        />
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

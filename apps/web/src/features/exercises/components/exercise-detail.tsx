@@ -155,7 +155,7 @@ export function ExerciseDetail({
               </Badge>
               <Badge>{item.dataSource}</Badge>
             </div>
-            <p className="data-label mt-7 text-[var(--volt)]">{item.grupoMuscular}</p>
+            <p className="data-label mt-7 text-[var(--accent-ink)]">{item.grupoMuscular}</p>
             <h1 className="mt-3 break-words text-3xl font-extrabold tracking-[-0.04em] sm:text-5xl">
               {item.nombre}
             </h1>
@@ -169,7 +169,7 @@ export function ExerciseDetail({
             <CardHeader title="Objetivo técnico" />
             <CardContent className="grid gap-4">
               <div className="flex items-center gap-3">
-                <Target className="size-5 text-[var(--volt)]" />
+                <Target className="size-5 text-[var(--accent-ink)]" />
                 <div>
                   <p className="text-sm font-semibold">{item.targetMuscle ?? 'No especificado'}</p>
                   <p className="text-xs text-[var(--text-muted)]">Músculo objetivo</p>
@@ -177,10 +177,10 @@ export function ExerciseDetail({
               </div>
               <div className="border-t border-[var(--border-subtle)] pt-4 text-sm text-[var(--text-muted)]">
                 <p>
-                  Parte corporal: <span className="text-white">{item.bodyPart ?? '—'}</span>
+                  Parte corporal: <span className="text-[var(--text)]">{item.bodyPart ?? '—'}</span>
                 </p>
                 <p className="mt-2">
-                  Sinergista: <span className="text-white">{item.synergistMuscleGroup ?? '—'}</span>
+                  Sinergista: <span className="text-[var(--text)]">{item.synergistMuscleGroup ?? '—'}</span>
                 </p>
               </div>
             </CardContent>
@@ -221,7 +221,7 @@ export function ExerciseDetail({
               <ol className="grid gap-4">
                 {steps.map((step, index) => (
                   <li className="flex gap-4 text-sm leading-7" key={`${index}-${step}`}>
-                    <span className="data-value grid size-7 shrink-0 place-items-center rounded-[4px] bg-[var(--surface-high)] text-[var(--volt)]">
+                    <span className="data-value grid size-7 shrink-0 place-items-center rounded-[4px] bg-[var(--surface-high)] text-[var(--accent-ink)]">
                       {index + 1}
                     </span>
                     <span className="text-[var(--text-muted)]">{step}</span>

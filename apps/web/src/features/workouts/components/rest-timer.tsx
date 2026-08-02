@@ -29,12 +29,12 @@ export function RestTimer() {
   const circumference = 2 * Math.PI * 45;
   const finished = remaining === 0;
   const accent = finished
-    ? '#c3f400'
+    ? 'var(--volt)'
     : remaining <= 10
-      ? '#ff6b63'
+      ? 'var(--danger)'
       : remaining <= 30
-        ? '#d7a944'
-        : '#c3f400';
+        ? 'var(--warning)'
+        : 'var(--volt)';
   function adjust(delta: number) {
     setTarget((value) => Math.max(15, Math.min(600, value + delta)));
     setRemaining((value) => Math.max(15, Math.min(600, value + delta)));
@@ -53,7 +53,7 @@ export function RestTimer() {
         className={`relative mt-8 grid size-52 place-items-center transition-transform duration-300 ${finished ? 'animate-pop' : running ? 'scale-[1.02]' : 'scale-100'}`}
       >
         <svg aria-hidden className="absolute inset-0 size-full -rotate-90" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" fill="none" r="45" stroke="#1f1f1f" strokeWidth="2" />
+          <circle cx="50" cy="50" fill="none" r="45" stroke="var(--surface-high)" strokeWidth="2" />
           <circle
             cx="50"
             cy="50"

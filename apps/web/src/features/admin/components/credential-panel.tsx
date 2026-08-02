@@ -105,9 +105,9 @@ export function CredentialPanel() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
                         {credential.tipo === 'PIN' ? (
-                          <KeyRound className="size-4 text-[var(--volt)]" />
+                          <KeyRound className="size-4 text-[var(--accent-ink)]" />
                         ) : (
-                          <Fingerprint className="size-4 text-[var(--volt)]" />
+                          <Fingerprint className="size-4 text-[var(--accent-ink)]" />
                         )}
                         <div>
                           <p className="font-semibold">{credential.tipo}</p>

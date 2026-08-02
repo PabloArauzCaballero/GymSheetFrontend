@@ -47,7 +47,7 @@ export function SetEntryForm({
   });
   return (
     <form
-      className="grid gap-3 border-t border-[var(--border-subtle)] bg-[#080808] p-4 sm:grid-cols-5 sm:items-end"
+      className="grid gap-3 border-t border-[var(--border-subtle)] bg-[var(--surface-lowest)] p-4 sm:grid-cols-5 sm:items-end"
       onSubmit={form.handleSubmit((values) => addSet.mutate(values))}
     >
       <Field error={form.formState.errors.numeroSerie?.message} label="Serie">
@@ -88,7 +88,7 @@ export function SetEntryForm({
         Registrar
       </Button>
       {form.formState.errors.root?.message ? (
-        <p className="text-sm text-[#ffb4ab] sm:col-span-5" role="alert">
+        <p className="text-sm text-[var(--danger-text)] sm:col-span-5" role="alert">
           {form.formState.errors.root.message}
         </p>
       ) : null}

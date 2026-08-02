@@ -133,7 +133,7 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
                           const active = weekdays.includes(day);
                           return (
                             <button
-                              className={`min-h-9 rounded-[6px] border px-3 text-sm ${active ? 'border-[var(--volt)] bg-[var(--surface-high)] text-white' : 'border-[var(--border-subtle)] text-[var(--text-muted)]'}`}
+                              className={`min-h-9 rounded-[6px] border px-3 text-sm ${active ? 'border-[var(--volt)] bg-[var(--surface-high)] text-[var(--text)]' : 'border-[var(--border-subtle)] text-[var(--text-muted)]'}`}
                               key={label}
                               onClick={() =>
                                 setWeekdays((current) =>
@@ -184,7 +184,7 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
           <ul className="divide-y divide-[var(--border-subtle)]">
             {routine.ejercicios.map((item) => (
               <li className="flex items-center gap-4 p-4" key={item.id}>
-                <span className="grid size-8 shrink-0 place-items-center rounded-[6px] border border-[var(--border-subtle)] text-sm font-bold text-[var(--volt)]">
+                <span className="grid size-8 shrink-0 place-items-center rounded-[6px] border border-[var(--border-subtle)] text-sm font-bold text-[var(--accent-ink)]">
                   {item.orden}
                 </span>
                 <div className="min-w-0 flex-1">
@@ -211,7 +211,7 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
           <p className="p-5 text-sm text-[var(--text-muted)]">Aún no hay ejercicios en esta rutina.</p>
         )}
         <form
-          className="flex flex-wrap items-end gap-3 border-t border-[var(--border-subtle)] bg-[#080808] p-4"
+          className="flex flex-wrap items-end gap-3 border-t border-[var(--border-subtle)] bg-[var(--surface-lowest)] p-4"
           onSubmit={(event) => {
             event.preventDefault();
             if (exName.trim().length >= 2) addExercise.mutate(nextOrder);

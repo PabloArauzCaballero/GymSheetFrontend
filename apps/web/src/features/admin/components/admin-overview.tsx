@@ -59,12 +59,12 @@ export function AdminOverview({ role }: Readonly<{ role: UserRole }>) {
               href={module.href}
               key={module.href}
             >
-              <Icon className="size-7 text-[var(--volt)]" />
+              <Icon className="size-7 text-[var(--accent-ink)]" />
               <h2 className="mt-10 text-2xl font-bold tracking-[-0.03em]">{module.title}</h2>
               <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">
                 {module.description}
               </p>
-              <p className="data-label mt-6 group-hover:text-[var(--volt)]">Abrir módulo →</p>
+              <p className="data-label mt-6 group-hover:text-[var(--accent-ink)]">Abrir módulo →</p>
             </Link>
           );
         })}

@@ -44,7 +44,7 @@ export function AccessEventLookup() {
           </Button>
         </form>
         {event.isError ? (
-          <p className="text-sm text-[#ffb4ab]" role="alert">
+          <p className="text-sm text-[var(--danger-text)]" role="alert">
             {event.error.message}
           </p>
         ) : null}
