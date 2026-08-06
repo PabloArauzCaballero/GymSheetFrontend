@@ -10,10 +10,10 @@ import { tutorialProgressService } from './tutorial-progress-service';
 
 /**
  * Coordinates the backend (source of truth for authenticated users) with the
- * localStorage mirror (offline cache / fallback). When the backend endpoints
- * are unavailable — not implemented yet, offline, or a transient outage — the
- * gateway degrades to local storage so the help feature keeps working, and it
- * always mirrors successful backend reads/writes locally.
+ * in-memory mirror (offline cache / fallback). When the backend endpoints are
+ * unavailable — not implemented yet, offline, or a transient outage — the
+ * gateway degrades to the in-memory mirror so the help feature keeps working,
+ * and it always mirrors successful backend reads/writes there.
  */
 
 export type ProgressSource = 'remote' | 'local';

@@ -3,14 +3,10 @@
 @import './motion.css';
 @import './background.css';
 
-/* Sistema de tokens (fuente única del tema web). El tema OSCURO "volt" es la
- * identidad por defecto (`:root`); el CLARO se aplica con `[data-theme='light']`
- * en <html> (lo fija el script anti-FOUC antes del primer pintado). Casi todo el
- * estilo consume `var(--...)`, así que el cambio de tema se propaga desde aquí. */
-
+/* Tokens: fuente única del tema. Oscuro "volt" por defecto (:root); claro con
+ * [data-theme='light']. El estilo consume var(--...); el tema se propaga aquí. */
 :root {
   color-scheme: dark;
-
   /* Superficies (elevación: de fondo a más alta) */
   --background: #000000;
   --surface-lowest: #080808;
@@ -19,27 +15,21 @@
   --surface-high: #1f1f1f;
   --surface-highest: #2a2a2a;
   --surface-sidebar: #050505;
-
   /* Bordes */
   --border-subtle: #1a1a1a;
   --border: #262626;
-
   /* Texto */
   --text: #f5f5f5;
   --text-muted: #8c8c8c;
   --text-disabled: #4d4d4d;
-
-  /* Acento "volt": --volt es el relleno vívido (texto negro encima);
-   * --accent-ink es el acento legible para TEXTO/iconos sobre superficies. */
+  /* Acento: --volt relleno vívido (texto negro); --accent-ink texto/iconos. */
   --volt: #c3f400;
   --volt-dim: #abd600;
   --accent-ink: #c3f400;
-
   /* Estados (color plano para texto/iconos) */
   --danger: #ff6b63;
   --warning: #d7a944;
   --success: #c3f400;
-
   /* Tonos semánticos (fondo / borde / texto) para badges, alertas, chips */
   --success-bg: #182000;
   --success-border: #526800;
@@ -54,7 +44,6 @@
   --info-bg: #111b21;
   --info-border: #344654;
   --info-text: #a8d4ee;
-
   /* Cromo de la app */
   --header-bg: rgb(0 0 0 / 0.9);
   --overlay: rgb(0 0 0 / 0.8);
@@ -62,23 +51,18 @@
   --grid-line: rgb(255 255 255 / 0.02);
   --page-glow: rgb(195 244 0 / 0.045);
   --sheen: rgb(255 255 255 / 0.45);
-
-  /* Sistema de fondos ambientales (aurora). Cada capa es una luz difusa de baja
-   * opacidad; combinadas dan profundidad sin restar contraste al contenido.
-   * `--aurora-1` es el acento volt; 2/3 aportan matices frío/violeta para que el
-   * ambiente no sea monocromo. `--ambient-strength` escala el conjunto por variante. */
+  /* Fondos ambientales (aurora): luces difusas de baja opacidad; volt + matices
+   * frío/violeta. --ambient-strength escala el conjunto por variante. */
   --aurora-1: rgb(195 244 0 / 0.14);
   --aurora-2: rgb(56 189 172 / 0.12);
   --aurora-3: rgb(120 110 255 / 0.1);
   --aurora-spot: rgb(195 244 0 / 0.09);
   --noise-opacity: 0.028;
   --ambient-strength: 1;
-
   /* Elevación */
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --shadow-md: 0 12px 32px -18px rgb(0 0 0 / 0.7);
   --shadow-lg: 0 40px 120px -40px rgb(0 0 0 / 0.9);
-
   /* Radios */
   --radius-sm: 4px;
   --radius-md: 6px;

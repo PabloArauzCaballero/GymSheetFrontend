@@ -10,8 +10,8 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
-// Force the backend to be "unavailable" so progress persists to localStorage
-// synchronously (no network in tests).
+// Force the backend to be "unavailable" so progress persists to the in-memory
+// fallback synchronously (no network in tests).
 vi.mock('@/features/tutorials/storage/tutorial-progress-service', () => ({
   tutorialProgressService: {
     list: vi.fn().mockRejectedValue(new ApiError({ message: 'x', status: 404, kind: 'not-found' })),
