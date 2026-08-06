@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import './animations.css';
 @import './motion.css';
+@import './background.css';
 
 /* Sistema de tokens (fuente única del tema web). El tema OSCURO "volt" es la
  * identidad por defecto (`:root`); el CLARO se aplica con `[data-theme='light']`
@@ -62,6 +63,17 @@
   --page-glow: rgb(195 244 0 / 0.045);
   --sheen: rgb(255 255 255 / 0.45);
 
+  /* Sistema de fondos ambientales (aurora). Cada capa es una luz difusa de baja
+   * opacidad; combinadas dan profundidad sin restar contraste al contenido.
+   * `--aurora-1` es el acento volt; 2/3 aportan matices frío/violeta para que el
+   * ambiente no sea monocromo. `--ambient-strength` escala el conjunto por variante. */
+  --aurora-1: rgb(195 244 0 / 0.14);
+  --aurora-2: rgb(56 189 172 / 0.12);
+  --aurora-3: rgb(120 110 255 / 0.1);
+  --aurora-spot: rgb(195 244 0 / 0.09);
+  --noise-opacity: 0.028;
+  --ambient-strength: 1;
+
   /* Elevación */
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --shadow-md: 0 12px 32px -18px rgb(0 0 0 / 0.7);
@@ -120,6 +132,15 @@
   --grid-line: rgb(20 22 14 / 0.04);
   --page-glow: rgb(195 244 0 / 0.12);
   --sheen: rgb(255 255 255 / 0.65);
+
+  /* Aurora en modo claro: más pastel y con menor opacidad para no ensuciar el
+   * lienzo claro ni comprometer la legibilidad. */
+  --aurora-1: rgb(154 196 0 / 0.16);
+  --aurora-2: rgb(45 160 148 / 0.1);
+  --aurora-3: rgb(120 110 255 / 0.08);
+  --aurora-spot: rgb(120 150 0 / 0.08);
+  --noise-opacity: 0.02;
+  --ambient-strength: 1;
 
   --shadow-sm: 0 1px 2px rgb(20 22 14 / 0.08);
   --shadow-md: 0 12px 32px -18px rgb(20 22 14 / 0.18);

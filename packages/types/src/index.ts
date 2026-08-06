@@ -3,3 +3,4 @@ export * from './enums';
 export * from './operations';
 export * from './workouts';
 export * from './training';
+export * from './tutorials';

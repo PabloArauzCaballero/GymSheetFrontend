@@ -1,0 +1,183 @@
+/* ----------------------------------------------------------------------------
+ * Sistema de fondos ambientales ("aurora"). Arquitectura por capas reutilizable,
+ * theme-aware y de bajo coste (solo transform/opacity + gradientes radiales, sin
+ * filtros ni canvas). Consumido por el componente <AmbientBackground>.
+ *
+ * Capas (de atrás hacia delante):
+ *   1. Color base            → lo aporta <body>/superficie contenedora
+ *   2/3. Orbes de aurora     → .ambient__orb (luces difusas en deriva lenta)
+ *   4. Rejilla tecnológica   → .ambient__grid (reutiliza --grid-line)
+ *   5. Spotlight reactivo    → .ambient__spot (sigue al cursor vía --mx/--my)
+ *   6. Textura/ruido         → .ambient__noise (rompe el banding de gradientes)
+ *   7. Capa de contraste     → .ambient__scrim (protege la legibilidad)
+ * Todas: pointer-events:none, contain, y sin repintar el contenido.
+ * -------------------------------------------------------------------------- */
+
+.ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+  /* Escala global del ambiente por variante (auth = más expresivo). */
+  --_k: var(--ambient-strength, 1);
+}
+
+/* Variante fija: cubre el viewport completo (dashboard/portal). */
+.ambient--fixed {
+  position: fixed;
+}
+
+/* Variante "detrás": z negativo dentro del contexto de apilamiento del layout
+ * (contenedor con `isolate`). Garantiza que el contenido en flujo normal pinte
+ * por encima sin tener que posicionar cada hijo. */
+.ambient--behind {
+  z-index: -1;
+}
+
+/* Orbe de aurora: luz difusa mediante gradiente radial con caída transparente
+ * (más barato que filter:blur). La deriva anima solo `transform` (compositor). */
+.ambient__orb {
+  position: absolute;
+  border-radius: 9999px;
+  opacity: var(--_k);
+  will-change: transform;
+}
+
+.ambient__orb--1 {
+  top: -18%;
+  left: -10%;
+  width: clamp(28rem, 55vw, 52rem);
+  height: clamp(28rem, 55vw, 52rem);
+  background: radial-gradient(circle at 50% 50%, var(--aurora-1), transparent 68%);
+  animation: aurora-drift-a 34s ease-in-out infinite;
+}
+
+.ambient__orb--2 {
+  right: -14%;
+  bottom: -20%;
+  width: clamp(26rem, 50vw, 48rem);
+  height: clamp(26rem, 50vw, 48rem);
+  background: radial-gradient(circle at 50% 50%, var(--aurora-2), transparent 68%);
+  animation: aurora-drift-b 42s ease-in-out infinite;
+}
+
+.ambient__orb--3 {
+  top: 30%;
+  right: 22%;
+  width: clamp(20rem, 38vw, 36rem);
+  height: clamp(20rem, 38vw, 36rem);
+  background: radial-gradient(circle at 50% 50%, var(--aurora-3), transparent 70%);
+  animation: aurora-drift-c 52s ease-in-out infinite;
+}
+
+/* Rejilla tecnológica sutil como capa (comparte el token --grid-line). */
+.ambient__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  /* Se desvanece hacia los bordes para no encajonar el contenido. */
+  mask-image: radial-gradient(ellipse 90% 80% at 50% 35%, #000 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 35%, #000 40%, transparent 100%);
+}
+
+/* Spotlight reactivo al cursor. --mx/--my (0–100%) los actualiza el componente;
+ * por defecto queda centrado para funcionar sin JS. */
+.ambient__spot {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle 26rem at var(--mx, 50%) var(--my, 30%),
+    var(--aurora-spot),
+    transparent 60%
+  );
+  opacity: var(--_k);
+  transition: background-position 0.2s ease;
+}
+
+/* Ruido: SVG feTurbulence embebido (data-uri) para romper el banding sin pedir
+ * red. Muy baja opacidad; se multiplica sobre las capas inferiores. */
+.ambient__noise {
+  position: absolute;
+  inset: 0;
+  opacity: var(--noise-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Capa de contraste: degradado tenue que asienta el contenido sobre el ambiente. */
+.ambient__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--background) 22%, transparent) 100%
+  );
+}
+
+/* Deriva de los orbes: desplazamientos de pocos px + escala leve, siempre
+ * compuestos en GPU. Lentos y continuos para leerse como "ambiente vivo". */
+@keyframes aurora-drift-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(6%, 4%, 0) scale(1.08);
+  }
+}
+
+@keyframes aurora-drift-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(-5%, -6%, 0) scale(1);
+  }
+}
+
+@keyframes aurora-drift-c {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(-4%, 5%, 0) scale(1.1);
+  }
+  66% {
+    transform: translate3d(4%, -3%, 0) scale(0.96);
+  }
+}
+
+/* Rendimiento en móvil: menos capas y sin deriva pesada. */
+@media (max-width: 640px) {
+  .ambient__orb--3,
+  .ambient__grid {
+    display: none;
+  }
+  .ambient__orb {
+    animation: none;
+  }
+}
+
+/* Movimiento reducido: se conserva la profundidad estática, se anula la deriva
+ * y el spotlight deja de seguir al cursor. */
+@media (prefers-reduced-motion: reduce) {
+  .ambient__orb {
+    animation: none !important;
+  }
+  .ambient__spot {
+    transition: none;
+  }
+}
+
+/* Pausa el ambiente cuando la pestaña no está activa (lo marca el componente)
+ * para no gastar GPU/batería en segundo plano. */
+.ambient[data-paused='true'] .ambient__orb {
+  animation-play-state: paused;
+}

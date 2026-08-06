@@ -89,6 +89,7 @@ export function ProfilePageClient() {
         description="Datos antropométricos propios con unidades canónicas del backend: kilogramos y centímetros."
         eyebrow="Cuenta"
         title="Perfil"
+        tutorialId="page:profile"
       />
       <nav aria-label="Secciones del perfil" className="flex gap-2 overflow-x-auto pb-2 text-sm">
         <a
@@ -190,10 +191,10 @@ export function ProfilePageClient() {
             <CardHeader title="Identidad" />
             <CardContent className="grid gap-4">
               <div className="flex items-center gap-3">
-                <UserRound className="size-5 text-[var(--accent-ink)]" />
-                <div>
-                  <p className="font-semibold">{user.data?.nombreCompleto ?? 'Usuario'}</p>
-                  <p className="text-sm text-[var(--text-muted)]">{user.data?.email}</p>
+                <UserRound className="size-5 shrink-0 text-[var(--accent-ink)]" />
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">{user.data?.nombreCompleto ?? 'Usuario'}</p>
+                  <p className="truncate text-sm text-[var(--text-muted)]">{user.data?.email}</p>
                 </div>
               </div>
               <div className="flex justify-between border-t border-[var(--border-subtle)] pt-4">

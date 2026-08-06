@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Dumbbell,
   Gauge,
+  GraduationCap,
   IdCard,
   KeyRound,
   Settings,
@@ -31,6 +32,7 @@ export const primaryNavigation: NavigationItem[] = [
   { href: '/access', label: 'Acceso', icon: KeyRound },
   { href: '/notifications', label: 'Avisos', icon: Bell },
   { href: '/profile', label: 'Mi perfil', icon: Settings },
+  { href: '/tutorials', label: 'Centro de ayuda', icon: GraduationCap },
 ];
 
 export const adminNavigation: NavigationItem[] = [

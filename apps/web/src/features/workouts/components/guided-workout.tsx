@@ -51,10 +51,10 @@ export function GuidedWorkout({
   return (
     <div className="grid gap-6">
       <div className="flex items-center justify-between gap-3">
-        <span className="data-label">
+        <span className="data-label shrink-0">
           Ejercicio {position + 1} de {exercises.length}
         </span>
-        <div className="flex gap-1.5">
+        <div className="flex min-w-0 flex-wrap justify-end gap-1.5">
           {exercises.map((exercise, dotIndex) => (
             <span
               aria-hidden

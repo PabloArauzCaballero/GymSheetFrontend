@@ -6,7 +6,7 @@ export function ChoiceGroup({
   setSelected,
 }: Readonly<{ options: string[]; selected: string[]; setSelected: (items: string[]) => void }>) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:grid-cols-3">
       {options.map((item) => (
         <button
           className={`min-h-12 rounded-lg border px-3 text-sm ${selected.includes(item) ? 'border-[var(--volt)] bg-[var(--surface-high)]' : 'border-[var(--border-subtle)]'}`}

@@ -8,7 +8,9 @@ import type { WorkoutExercise } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
+import { cn } from '@/shared/lib/cn';
 import { SetEntryForm } from './set-entry-form';
+import { SET_GRID_COLS } from './set-grid';
 import { WorkoutSetRow } from './workout-set-row';
 
 export function WorkoutExercisePanel({
@@ -91,7 +93,12 @@ export function WorkoutExercisePanel({
           </div>
         ) : null}
       </header>
-      <div className="grid grid-cols-[44px_repeat(3,minmax(70px,1fr))_92px] gap-2 bg-[var(--surface-low)] px-3 py-3 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+      <div
+        className={cn(
+          SET_GRID_COLS,
+          'bg-[var(--surface-low)] px-3 py-3 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]',
+        )}
+      >
         <span>Set</span>
         <span>KG</span>
         <span>Reps</span>

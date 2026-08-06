@@ -232,7 +232,7 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
         </form>
       </section>
 
-      <p className="text-xs text-[var(--text-disabled)]">Rutina de {owner}</p>
+      <p className="break-all text-xs text-[var(--text-disabled)]">Rutina de {owner}</p>
     </div>
   );
 }

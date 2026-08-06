@@ -75,23 +75,27 @@ export function DashboardClient() {
     <div className="grid gap-10">
       <PageHeader
         actions={
-          active ? (
-            <ButtonLink href={`/workouts/${active.id}`} variant="primary">
-              Continuar sesión
-            </ButtonLink>
-          ) : (
-            <ButtonLink href="/workouts/new" variant="primary">
-              Iniciar entrenamiento
-            </ButtonLink>
-          )
+          <span data-tutorial-id="dashboard:start-workout">
+            {active ? (
+              <ButtonLink href={`/workouts/${active.id}`} variant="primary">
+                Continuar sesión
+              </ButtonLink>
+            ) : (
+              <ButtonLink href="/workouts/new" variant="primary">
+                Iniciar entrenamiento
+              </ButtonLink>
+            )}
+          </span>
         }
         description="Tu superficie operativa: entrenamiento activo, progreso reciente y señales que requieren atención."
         eyebrow="Centro de rendimiento"
         title="Precisión antes que ruido."
+        tutorialId="page:dashboard"
       />
 
       <section
         aria-label="Indicadores"
+        data-tutorial-id="dashboard:metrics"
         className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
       >
         <MetricCard

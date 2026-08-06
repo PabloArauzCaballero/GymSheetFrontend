@@ -49,6 +49,7 @@ export function AdminOverview({ role }: Readonly<{ role: UserRole }>) {
         description="Superficie operativa limitada por roles del backend. FRONT_DESK puede consultar y ejecutar solo las operaciones autorizadas."
         eyebrow="Operaciones"
         title="Administración"
+        tutorialId="page:admin"
       />
       <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {visibleModules.map((module) => {

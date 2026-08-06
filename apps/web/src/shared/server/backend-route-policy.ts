@@ -37,6 +37,8 @@ const allowedPathPatterns = [
   /^\/me\/membership$/u,
   /^\/me\/membership\/(options|renewal-intent|extension-intent)$/u,
   /^\/me\/accesses$/u,
+  /^\/me\/tutorial-progress$/u,
+  new RegExp(`^/me/tutorial-progress/${resourceId}$`, 'u'),
   /^\/notifications\/me$/u,
   /^\/notifications\/preferences\/me$/u,
   new RegExp(`^/notifications/${resourceId}/read$`, 'u'),

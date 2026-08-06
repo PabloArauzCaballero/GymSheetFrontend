@@ -73,6 +73,10 @@ export function DomainImage({
       <img
         alt={alt}
         className={cn(
+          // Defaults seguros: la imagen llena el contenedor sin deformarse ni
+          // desbordar aunque el `className` del llamador los omita. El llamador
+          // puede sobrescribir (p. ej. `object-contain`) porque va después.
+          'size-full max-w-full object-cover',
           className,
           'transition-opacity duration-500 ease-out',
           loaded ? 'opacity-100' : 'opacity-0',

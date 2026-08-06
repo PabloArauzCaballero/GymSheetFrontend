@@ -19,6 +19,7 @@ export const queryKeys = {
   credentials: ['credentials', 'me'] as const,
   notifications: (page: number) => ['notifications', page] as const,
   notificationPreference: ['notifications', 'preference'] as const,
+  tutorialProgress: ['tutorials', 'progress', 'me'] as const,
   admin: {
     branches: (page: number) => ['admin', 'branches', page] as const,
     rooms: (page: number) => ['admin', 'rooms', page] as const,

@@ -62,18 +62,21 @@ export function ExerciseList() {
     <div className="grid gap-8">
       <PageHeader
         actions={
-          <ButtonLink href="/exercises/new" variant="primary">
-            <Plus className="size-4" />
-            Ejercicio personal
-          </ButtonLink>
+          <span data-tutorial-id="exercises:new">
+            <ButtonLink href="/exercises/new" variant="primary">
+              <Plus className="size-4" />
+              Ejercicio personal
+            </ButtonLink>
+          </span>
         }
         description="Catálogo global y ejercicios personales visibles para tu cuenta."
         eyebrow="Biblioteca técnica"
         title="Ejercicios"
+        tutorialId="page:exercises"
       />
       <section className="panel grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_240px]">
         <Field htmlFor="exercise-search" label="Buscar">
-          <div className="relative">
+          <div className="relative" data-tutorial-id="exercises:search">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]" />
             <Input
               className="pl-10"
@@ -88,7 +91,7 @@ export function ExerciseList() {
           </div>
         </Field>
         <Field htmlFor="muscle-group" label="Grupo muscular">
-          <div className="relative">
+          <div className="relative" data-tutorial-id="exercises:filter">
             <SlidersHorizontal className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]" />
             <Select
               className="pl-10"

@@ -82,3 +82,6 @@ export type AccessOutcome = (typeof accessOutcomes)[number];
 
 export const notificationStatuses = ['PENDING', 'SENT', 'FAILED', 'DEAD_LETTER', 'READ'] as const;
 export type NotificationStatus = (typeof notificationStatuses)[number];
+
+export const tutorialProgressStatuses = ['IN_PROGRESS', 'COMPLETED', 'SKIPPED'] as const;
+export type TutorialProgressStatus = (typeof tutorialProgressStatuses)[number];

@@ -15,7 +15,14 @@ export function ThemeToggle() {
   const label = isLight ? 'Cambiar a tema oscuro' : 'Cambiar a tema claro';
 
   return (
-    <Button aria-label={label} onClick={toggleTheme} size="icon" title={label} variant="ghost">
+    <Button
+      aria-label={label}
+      data-tutorial-id="theme-toggle"
+      onClick={toggleTheme}
+      size="icon"
+      title={label}
+      variant="ghost"
+    >
       <Sun className={isLight ? 'hidden size-4' : 'size-4'} />
       <Moon className={isLight ? 'size-4' : 'hidden size-4'} />
     </Button>

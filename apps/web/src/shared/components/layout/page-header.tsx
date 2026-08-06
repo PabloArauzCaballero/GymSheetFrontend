@@ -5,9 +5,20 @@ export function PageHeader({
   title,
   description,
   actions,
-}: Readonly<{ eyebrow?: string; title: string; description?: string; actions?: ReactNode }>) {
+  tutorialId,
+}: Readonly<{
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+  /** Stable anchor for the tutorial engine (rendered as data-tutorial-id). */
+  tutorialId?: string;
+}>) {
   return (
-    <header className="reveal flex flex-col gap-5 border-b border-[var(--border-subtle)] pb-8 sm:flex-row sm:items-end sm:justify-between">
+    <header
+      data-tutorial-id={tutorialId}
+      className="reveal flex flex-col gap-5 border-b border-[var(--border-subtle)] pb-8 sm:flex-row sm:items-end sm:justify-between"
+    >
       <div className="max-w-3xl">
         {eyebrow ? (
           <p className="data-label mb-3 inline-flex items-center gap-2 text-[var(--accent-ink)]">

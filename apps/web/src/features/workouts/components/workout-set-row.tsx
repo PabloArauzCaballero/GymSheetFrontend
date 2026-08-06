@@ -9,6 +9,8 @@ import type { WorkoutSet } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { cn } from '@/shared/lib/cn';
+import { SET_GRID_COLS } from './set-grid';
 
 export function WorkoutSetRow({
   workoutId,
@@ -43,7 +45,7 @@ export function WorkoutSetRow({
   });
   if (editing) {
     return (
-      <div className="grid grid-cols-[44px_repeat(3,minmax(70px,1fr))_92px] items-center gap-2 border-t border-[var(--border-subtle)] p-3">
+      <div className={cn(SET_GRID_COLS, 'border-t border-[var(--border-subtle)] p-3')}>
         <span className="data-value text-center text-[var(--accent-ink)]">{set.numeroSerie}</span>
         <Input
           aria-label="Peso en kg"
@@ -100,7 +102,12 @@ export function WorkoutSetRow({
     );
   }
   return (
-    <div className="group grid grid-cols-[44px_repeat(3,minmax(70px,1fr))_92px] items-center gap-2 border-t border-[var(--border-subtle)] px-3 py-4 text-center transition-colors duration-150 hover:bg-[var(--surface-low)]">
+    <div
+      className={cn(
+        SET_GRID_COLS,
+        'group border-t border-[var(--border-subtle)] px-3 py-4 text-center transition-colors duration-150 hover:bg-[var(--surface-low)]',
+      )}
+    >
       <span className="data-value grid size-7 place-items-center justify-self-center rounded-full border border-[var(--border-subtle)] text-[var(--accent-ink)] transition-colors group-hover:border-[var(--volt)]">
         {set.numeroSerie}
       </span>

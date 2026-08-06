@@ -50,23 +50,28 @@ export function WorkoutList() {
       <PageHeader
         actions={
           <>
-            <Button loading={exporting === 'json'} onClick={() => exportHistory('json')}>
-              <FileJson className="size-4" />
-              JSON
-            </Button>
-            <Button loading={exporting === 'csv'} onClick={() => exportHistory('csv')}>
-              <Download className="size-4" />
-              CSV
-            </Button>
-            <ButtonLink href="/workouts/new" variant="primary">
-              <Plus className="size-4" />
-              Nueva sesión
-            </ButtonLink>
+            <span data-tutorial-id="workouts:export" className="inline-flex gap-2">
+              <Button loading={exporting === 'json'} onClick={() => exportHistory('json')}>
+                <FileJson className="size-4" />
+                JSON
+              </Button>
+              <Button loading={exporting === 'csv'} onClick={() => exportHistory('csv')}>
+                <Download className="size-4" />
+                CSV
+              </Button>
+            </span>
+            <span data-tutorial-id="workouts:new">
+              <ButtonLink href="/workouts/new" variant="primary">
+                <Plus className="size-4" />
+                Nueva sesión
+              </ButtonLink>
+            </span>
           </>
         }
         description="Historial propio, paginado y exportable sin cargar datos ilimitados en memoria."
         eyebrow="Trazabilidad"
         title="Entrenamientos"
+        tutorialId="page:workouts"
       />
       {query.isLoading ? (
         <LoadingPanel rows={7} />

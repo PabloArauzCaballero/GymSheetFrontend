@@ -5,6 +5,12 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, type ReactNode } from 'react';
 import type { SessionPrincipal } from '@/shared/api/contracts';
 import { cn } from '@/shared/lib/cn';
+import { AmbientBackground } from '@/shared/components/background/ambient-background';
+import {
+  TutorialLauncher,
+  TutorialOverlay,
+  TutorialProvider,
+} from '@/features/tutorials';
 import { Brand } from './brand';
 import { adminNavigation, canSee, primaryNavigation } from './nav-config';
 import { LogoutButton } from './logout-button';
@@ -59,6 +65,7 @@ function NavigationLinks({
                   ? 'border-[var(--volt)] bg-[var(--volt)] text-black shadow-[0_6px_20px_-8px_rgb(195_244_0/0.6)]'
                   : 'border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text-muted)]',
               )}
+              data-tutorial-id={`nav:${item.href}`}
               href={item.href}
               key={item.href}
               ref={active ? activeLinkRef : undefined}
@@ -80,6 +87,7 @@ function NavigationLinks({
               active &&
                 'border-[var(--border)] bg-[var(--surface-low)] text-[var(--text)] before:absolute before:left-0 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-full before:bg-[var(--volt)] before:shadow-[0_0_10px_var(--volt)] before:content-[""]',
             )}
+            data-tutorial-id={`nav:${item.href}`}
             href={item.href}
             key={item.href}
             ref={active ? activeLinkRef : undefined}
@@ -106,7 +114,9 @@ export function PortalShell({
 }: Readonly<{ session: SessionPrincipal; children: ReactNode }>) {
   const pathname = usePathname();
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
+    <TutorialProvider role={session.role} userId={session.id}>
+    <div className="relative isolate min-h-dvh lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
+      <AmbientBackground variant="portal" fixed behind />
       <RouteProgress />
       <aside className="sticky top-0 hidden h-dvh border-r border-[var(--border-subtle)] bg-[var(--surface-sidebar)] p-5 lg:flex lg:flex-col">
         <Brand />
@@ -120,8 +130,8 @@ export function PortalShell({
           <p className="mt-1 text-xs text-[var(--text-muted)]">{session.role}</p>
         </div>
       </aside>
-      <div className="min-w-0">
-        <header className="sticky top-0 z-40 border-b border-[var(--border-subtle)] bg-[var(--header-bg)] backdrop-blur-lg">
+      <div className="min-w-0 pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+        <header className="sticky top-0 z-40 border-b border-[var(--border-subtle)] bg-[var(--header-bg)] pt-[env(safe-area-inset-top)] backdrop-blur-lg">
           <div className="flex h-16 items-center justify-between px-5 lg:px-8">
             <div className="lg:hidden">
               <Brand />
@@ -133,6 +143,7 @@ export function PortalShell({
                   {session.role}
                 </p>
               </div>
+              <TutorialLauncher />
               <ThemeToggle />
               <LogoutButton />
             </div>
@@ -142,12 +153,14 @@ export function PortalShell({
           </div>
         </header>
         <main
-          className="page-enter mx-auto w-full max-w-[1440px] px-4 py-7 sm:px-8 sm:py-10 lg:px-12 lg:py-12"
+          className="page-enter mx-auto w-full max-w-[1440px] px-4 py-7 pb-[calc(1.75rem+env(safe-area-inset-bottom))] sm:px-8 sm:py-10 sm:pb-[calc(2.5rem+env(safe-area-inset-bottom))] lg:px-12 lg:py-12 lg:pb-[calc(3rem+env(safe-area-inset-bottom))]"
           key={pathname}
         >
           {children}
         </main>
       </div>
+      <TutorialOverlay />
     </div>
+    </TutorialProvider>
   );
 }

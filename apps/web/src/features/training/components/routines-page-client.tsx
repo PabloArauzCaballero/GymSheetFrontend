@@ -69,8 +69,9 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
   return (
     <div className="grid gap-8">
       <PageHeader
+        tutorialId="page:routines"
         actions={
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" data-tutorial-id="routines:actions">
             <RoutineImportDialog />
             <Dialog onOpenChange={setOpen} open={open}>
               <DialogTrigger asChild>

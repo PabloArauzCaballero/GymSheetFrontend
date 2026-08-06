@@ -8,6 +8,7 @@ export function MembershipPageClient() {
         description="Consulta tu plan, accesos reales, historial y opciones disponibles."
         eyebrow="Mi cuenta"
         title="Membresía"
+        tutorialId="page:membership"
       />
       <MembershipExperience />
     </div>

@@ -53,9 +53,11 @@ export function StartWorkoutForm() {
         description="El backend permite una sola sesión en progreso por usuario."
         eyebrow="Entrenamiento en vivo"
         title="Iniciar sesión"
+        tutorialId="page:workout-new"
       />
       <form
         className="mx-auto grid w-full max-w-2xl gap-5"
+        data-tutorial-id="workouts:start-form"
         onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
       >
         <Card>

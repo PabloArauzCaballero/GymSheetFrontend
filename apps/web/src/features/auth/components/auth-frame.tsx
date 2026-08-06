@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Activity, BarChart3, ShieldCheck } from 'lucide-react';
+import { AmbientBackground } from '@/shared/components/background/ambient-background';
 
 export function AuthFrame({
   eyebrow,
@@ -8,8 +9,9 @@ export function AuthFrame({
   children,
 }: Readonly<{ eyebrow: string; title: string; description: string; children: ReactNode }>) {
   return (
-    <main className="tech-grid grid min-h-dvh lg:grid-cols-[minmax(0,1.1fr)_minmax(420px,0.9fr)]">
-      <section className="hidden border-r border-[var(--border-subtle)] bg-[var(--surface-sidebar)] p-12 lg:flex lg:flex-col lg:justify-between xl:p-16">
+    <main className="relative isolate grid min-h-dvh lg:grid-cols-[minmax(0,1.1fr)_minmax(420px,0.9fr)]">
+      <AmbientBackground variant="auth" reactive fixed />
+      <section className="relative hidden border-r border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--surface-sidebar)_82%,transparent)] p-12 backdrop-blur-sm lg:flex lg:flex-col lg:justify-between xl:p-16">
         <div className="inline-flex items-center gap-3 text-lg font-black tracking-[-0.04em]">
           <span className="grid size-9 place-items-center rounded-[4px] bg-[var(--volt)] text-sm text-black">
             GS
@@ -49,7 +51,7 @@ export function AuthFrame({
           ))}
         </div>
       </section>
-      <section className="flex items-center justify-center px-5 py-10 sm:px-8 lg:px-12">
+      <section className="relative flex items-center justify-center px-5 py-10 sm:px-8 lg:px-12">
         <div className="reveal w-full max-w-md">
           <div className="mb-10 lg:hidden">
             <div className="inline-flex items-center gap-3 text-lg font-black tracking-[-0.04em]">
