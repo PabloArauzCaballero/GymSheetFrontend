@@ -8,21 +8,30 @@ services:
     image: gymsheet-web:latest
     container_name: gymsheet-web
     ports:
-      - '3001:3001'
+      # Host 3002 → contenedor 3001. NO publiques en 3001 del host: ahí ya expone su
+      # API el backend (gymsheetbackend-api). 3002 es el puerto canónico de la web (APP_URL).
+      - '3002:3001'
     environment:
       NODE_ENV: production
       PORT: '3001'
       HOSTNAME: 0.0.0.0
-      # Autoridad de autorización (backend). Ajusta según tu despliegue.
-      BACKEND_API_URL: ${BACKEND_API_URL:-http://host.docker.internal:3000/api/v1}
-      APP_URL: ${APP_URL:-http://localhost:3001}
+      # URL del backend VISTA DESDE DENTRO del contenedor. El backend corre en otro
+      # compose y publica su API en el puerto 3001 del host, así que se alcanza por
+      # host.docker.internal:3001 (NO 'localhost', que dentro del contenedor es la
+      # propia web). Se usa una variable WEB_* propia para NO heredar el
+      # BACKEND_API_URL del .env raíz, que apunta a localhost y sólo sirve para dev en host.
+      BACKEND_API_URL: ${WEB_BACKEND_API_URL:-http://host.docker.internal:3001/api/v1}
+      APP_URL: ${WEB_APP_URL:-http://localhost:3002}
       BACKEND_REQUEST_TIMEOUT_MS: ${BACKEND_REQUEST_TIMEOUT_MS:-15000}
     extra_hosts:
       # Permite alcanzar un backend que corre en el host anfitrión.
       - 'host.docker.internal:host-gateway'
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:3001/api/health']
+      # 127.0.0.1 (no 'localhost'): en Alpine 'localhost' resuelve primero a ::1
+      # (IPv6) y el server standalone de Next escucha en 0.0.0.0 (IPv4), por lo que
+      # 'localhost' da "connection refused" y el healthcheck quedaría siempre unhealthy.
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://127.0.0.1:3001/api/health']
       interval: 30s
       timeout: 5s
       retries: 3
