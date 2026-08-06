@@ -1,0 +1,34 @@
+# Deja fuera del contexto de build todo lo que no se necesita para compilar la web.
+**/node_modules
+**/.next
+**/.turbo
+**/dist
+**/out
+**/coverage
+**/*.tsbuildinfo
+**/playwright-report
+**/test-results
+
+.git
+.github
+.vscode
+.idea
+
+# App móvil (Expo): no participa en el build de la web.
+apps/mobile
+
+# Salida del grafo de conocimiento (graphify) y scratch.
+graphify-out
+prompt
+
+# Secretos y locales (se inyectan en runtime), conservando los ejemplos.
+**/.env
+**/.env.*
+!**/.env.example
+
+# Docker y varios.
+Dockerfile
+.dockerignore
+docker-compose*.yml
+**/*.log
+**/.DS_Store
