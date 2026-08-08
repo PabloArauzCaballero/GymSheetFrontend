@@ -8,12 +8,15 @@ services:
     image: gymsheet-web:latest
     container_name: gymsheet-web
     ports:
-      # Host 3002 → contenedor 3001. NO publiques en 3001 del host: ahí ya expone su
-      # API el backend (gymsheetbackend-api). 3002 es el puerto canónico de la web (APP_URL).
-      - '3002:3001'
+      # MISMO puerto host:contenedor (3002:3002), a propósito. Sin traducción de
+      # puertos: así Host/Origin del navegador == request.nextUrl.origin, que es lo
+      # que exige la comprobación CSRF (isTrustedMutation). Con 3002:3001 el origin
+      # interno no coincidía y toda mutación (login incluido) daba 403. No uses 3001
+      # en el host: ahí ya expone su API el backend (gymsheetbackend-api).
+      - '3002:3002'
     environment:
       NODE_ENV: production
-      PORT: '3001'
+      PORT: '3002'
       HOSTNAME: 0.0.0.0
       # URL del backend VISTA DESDE DENTRO del contenedor. El backend corre en otro
       # compose y publica su API en el puerto 3001 del host, así que se alcanza por
@@ -31,7 +34,7 @@ services:
       # 127.0.0.1 (no 'localhost'): en Alpine 'localhost' resuelve primero a ::1
       # (IPv6) y el server standalone de Next escucha en 0.0.0.0 (IPv4), por lo que
       # 'localhost' da "connection refused" y el healthcheck quedaría siempre unhealthy.
-      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://127.0.0.1:3001/api/health']
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://127.0.0.1:3002/api/health']
       interval: 30s
       timeout: 5s
       retries: 3
