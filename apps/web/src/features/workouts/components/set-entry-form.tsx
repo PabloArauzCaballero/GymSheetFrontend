@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { z } from 'zod';
 import { workoutService } from '@/features/workouts/services/workout-service';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -41,7 +41,7 @@ export function SetEntryForm({
     mutationFn: (values: FormValues) => workoutService.addSet(sessionExerciseId, values),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.workout(workoutId) });
-      toast.success('Serie registrada.');
+      notify.success('Serie registrada.');
     },
     onError: (error: Error) => form.setError('root', { message: error.message }),
   });

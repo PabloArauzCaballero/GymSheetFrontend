@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Check, Pencil, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { confirmDelete, notify } from '@/shared/notifications';
 import { workoutService } from '@/features/workouts/services/workout-service';
 import type { WorkoutSet } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -31,17 +31,17 @@ export function WorkoutSetRow({
     onSuccess: async () => {
       await refresh();
       setEditing(false);
-      toast.success('Serie actualizada.');
+      notify.success('Serie actualizada.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const remove = useMutation({
     mutationFn: () => workoutService.removeSet(set.id),
     onSuccess: async () => {
       await refresh();
-      toast.success('Serie eliminada.');
+      notify.success('Serie eliminada.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   if (editing) {
     return (
@@ -128,7 +128,13 @@ export function WorkoutSetRow({
             <Button
               aria-label="Eliminar serie"
               loading={remove.isPending}
-              onClick={() => remove.mutate()}
+              onClick={async () => {
+                const result = await confirmDelete({
+                  entity: 'serie',
+                  name: `#${set.numeroSerie}`,
+                });
+                if (result.confirmed) remove.mutate();
+              }}
               size="icon"
               variant="ghost"
             >

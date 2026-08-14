@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { facilitiesAdminService } from '@/features/admin/services/facilities-admin-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
@@ -43,9 +43,9 @@ export function AccessPointPanel({ canManage }: Readonly<{ canManage: boolean }>
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['admin', 'access-points'] });
       setOpen(false);
-      toast.success('Punto de acceso creado.');
+      notify.success('Punto de acceso creado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   return (
     <section className="grid gap-4">

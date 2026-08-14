@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { accessAdminService } from '@/features/admin/services/access-admin-service';
 import { facilitiesAdminService } from '@/features/admin/services/facilities-admin-service';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -44,18 +44,18 @@ export function AccessDevicePanel({ canManage }: Readonly<{ canManage: boolean }
     onSuccess: async () => {
       await refresh();
       setOpen(false);
-      toast.success('Dispositivo creado.');
+      notify.success('Dispositivo creado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const update = useMutation({
     mutationFn: ({ id, estado }: { id: string; estado: (typeof statuses)[number] }) =>
       accessAdminService.updateDeviceStatus(id, estado),
     onSuccess: async () => {
       await refresh();
-      toast.success('Estado actualizado.');
+      notify.success('Estado actualizado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   return (
     <section className="grid gap-4">

@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Dumbbell, Heart, Pencil, Play, Target, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { confirm, notify } from '@/shared/notifications';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
 import { ExerciseMediaManager } from '@/features/exercises/components/exercise-media-manager';
 import type { UserRole } from '@/shared/api/contracts';
@@ -13,7 +13,6 @@ import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button, ButtonLink } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
-import { Dialog, DialogClose, DialogContent, DialogTrigger } from '@/shared/components/ui/dialog';
 import { DomainImage } from '@/shared/components/media/domain-image';
 
 export function ExerciseDetail({
@@ -34,18 +33,18 @@ export function ExerciseDetail({
       favorite ? exerciseService.removeFavorite(id) : exerciseService.addFavorite(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.favorites });
-      toast.success('Frecuentes actualizados.');
+      notify.success('Frecuentes actualizados.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const inactivate = useMutation({
     mutationFn: () => exerciseService.inactivatePersonal(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['exercises'] });
-      toast.success('Ejercicio personal inactivado.');
+      notify.success('Ejercicio personal inactivado.');
       router.replace('/exercises');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
 
   if (exercise.isLoading) return <LoadingPanel rows={6} />;
@@ -86,31 +85,23 @@ export function ExerciseDetail({
             </ButtonLink>
           ) : null}
           {ownsPersonalExercise ? (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="danger">
-                  <Trash2 className="size-4" />
-                  Inactivar
-                </Button>
-              </DialogTrigger>
-              <DialogContent
-                title="Inactivar ejercicio"
-                description="El registro se conserva para auditoría y deja de estar disponible para nuevas sesiones."
-              >
-                <div className="flex justify-end gap-2">
-                  <DialogClose asChild>
-                    <Button variant="ghost">Cancelar</Button>
-                  </DialogClose>
-                  <Button
-                    loading={inactivate.isPending}
-                    onClick={() => inactivate.mutate()}
-                    variant="danger"
-                  >
-                    Confirmar
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button
+              loading={inactivate.isPending}
+              onClick={async () => {
+                const result = await confirm({
+                  title: 'Inactivar ejercicio',
+                  message:
+                    'El registro se conserva para auditoría y deja de estar disponible para nuevas sesiones.',
+                  severity: 'danger',
+                  confirmLabel: 'Inactivar',
+                });
+                if (result.confirmed) inactivate.mutate();
+              }}
+              variant="danger"
+            >
+              <Trash2 className="size-4" />
+              Inactivar
+            </Button>
           ) : null}
           <Button
             loading={toggle.isPending}

@@ -6,7 +6,7 @@ import { ArrowLeft, Check, Dumbbell } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import {
   cleanOptional,
   emptyExerciseFormValues,
@@ -73,7 +73,7 @@ export function ExerciseForm({
         queryClient.invalidateQueries({ queryKey: ['exercises'] }),
         queryClient.invalidateQueries({ queryKey: ['exercise', saved.id] }),
       ]);
-      toast.success(editing ? 'Ejercicio actualizado.' : 'Ejercicio personal creado.');
+      notify.success(editing ? 'Ejercicio actualizado.' : 'Ejercicio personal creado.');
       router.replace(`/exercises/${saved.id}`);
     },
     onError: (error: Error) => form.setError('root', { message: error.message }),

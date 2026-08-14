@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bell, Check } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { notificationService } from '@/features/notifications/services/notification-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
@@ -32,9 +32,9 @@ export function NotificationsPageClient() {
     mutationFn: notificationService.markRead,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      toast.success('Aviso marcado como leído.');
+      notify.success('Aviso marcado como leído.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   if (notifications.isLoading || preference.isLoading) return <LoadingPanel rows={7} />;
   return (

@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { membershipAdminService } from '@/features/admin/services/membership-admin-service';
 import { membershipStatuses } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -47,18 +47,18 @@ export function MembershipPanel() {
     onSuccess: async () => {
       await refresh();
       setOpen(false);
-      toast.success('Membresía creada.');
+      notify.success('Membresía creada.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const changeStatus = useMutation({
     mutationFn: ({ id, estado }: { id: string; estado: (typeof membershipStatuses)[number] }) =>
       membershipAdminService.changeStatus(id, estado),
     onSuccess: async () => {
       await refresh();
-      toast.success('Estado actualizado.');
+      notify.success('Estado actualizado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   return (
     <section className="grid gap-4">

@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { z } from 'zod';
 import { notificationService } from '@/features/notifications/services/notification-service';
 import type { NotificationPreference } from '@/shared/api/contracts';
@@ -92,7 +92,7 @@ export function NotificationPreferenceForm({
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.notificationPreference });
-      toast.success('Preferencias actualizadas.');
+      notify.success('Preferencias actualizadas.');
     },
     onError: (error: Error) => form.setError('root', { message: error.message }),
   });

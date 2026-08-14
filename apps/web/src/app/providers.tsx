@@ -5,6 +5,7 @@ import { ApiError } from '@/shared/api/api-error';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Toaster } from 'sonner';
+import { ConfirmRoot } from '@/shared/notifications';
 import { ThemeProvider } from '@/shared/theme/theme-provider';
 
 export function Providers({ children }: Readonly<{ children: ReactNode }>) {
@@ -32,6 +33,7 @@ export function Providers({ children }: Readonly<{ children: ReactNode }>) {
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         {children}
+        <ConfirmRoot />
         <Toaster
           position="top-right"
           toastOptions={{

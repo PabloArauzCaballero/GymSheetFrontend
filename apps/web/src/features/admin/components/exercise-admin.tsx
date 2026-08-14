@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Database, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { confirm, notify } from '@/shared/notifications';
 import { z } from 'zod';
 import { exerciseAdminService } from '@/features/admin/services/exercise-admin-service';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
@@ -70,7 +70,7 @@ export function ExerciseAdmin() {
       await refresh();
       form.reset();
       setOpen(false);
-      toast.success('Ejercicio global creado.');
+      notify.success('Ejercicio global creado.');
     },
     onError: (error: Error) => form.setError('root', { message: error.message }),
   });
@@ -78,14 +78,14 @@ export function ExerciseAdmin() {
     mutationFn: exerciseAdminService.inactivateGlobal,
     onSuccess: async () => {
       await refresh();
-      toast.success('Ejercicio inactivado.');
+      notify.success('Ejercicio inactivado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const importDataset = useMutation({
     mutationFn: exerciseAdminService.importDataset,
-    onSuccess: () => toast.success('Solicitud de importación procesada.'),
-    onError: (error: Error) => toast.error(error.message),
+    onSuccess: () => notify.success('Solicitud de importación procesada.'),
+    onError: (error: Error) => notify.error(error),
   });
   if (query.isLoading) return <LoadingPanel rows={7} />;
   return (
@@ -201,7 +201,15 @@ export function ExerciseAdmin() {
                           <Button
                             aria-label={`Inactivar ${item.nombre}`}
                             loading={inactivate.isPending}
-                            onClick={() => inactivate.mutate(item.id)}
+                            onClick={async () => {
+                              const result = await confirm({
+                                title: 'Inactivar ejercicio',
+                                message: `«${item.nombre}» dejará de estar disponible en el catálogo global.`,
+                                severity: 'warning',
+                                confirmLabel: 'Inactivar',
+                              });
+                              if (result.confirmed) inactivate.mutate(item.id);
+                            }}
                             size="icon"
                             variant="ghost"
                           >

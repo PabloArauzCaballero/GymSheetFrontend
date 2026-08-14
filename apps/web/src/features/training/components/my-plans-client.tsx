@@ -3,7 +3,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { CalendarClock, Play } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { trainingService } from '@/features/training/services/training-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
@@ -25,10 +25,10 @@ export function MyPlansClient() {
   const start = useMutation({
     mutationFn: (routineId: string) => trainingService.start(routineId),
     onSuccess: (workout) => {
-      toast.success('Sesión iniciada desde tu plan.');
+      notify.success('Sesión iniciada desde tu plan.');
       router.push(`/workouts/${workout.id}`);
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
 
   if (query.isLoading) return <LoadingPanel rows={5} />;

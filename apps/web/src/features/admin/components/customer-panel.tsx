@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { membershipAdminService } from '@/features/admin/services/membership-admin-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
@@ -39,9 +39,9 @@ export function CustomerPanel() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['admin', 'customers'] });
       setOpen(false);
-      toast.success('Cliente creado.');
+      notify.success('Cliente creado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   return (
     <section className="grid gap-4">

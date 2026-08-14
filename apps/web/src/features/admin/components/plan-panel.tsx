@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { facilitiesAdminService } from '@/features/admin/services/facilities-admin-service';
 import { membershipAdminService } from '@/features/admin/services/membership-admin-service';
 import { PlanScopeEditButton } from './plan-scope-edit-button';
@@ -56,18 +56,18 @@ export function PlanPanel() {
     onSuccess: async () => {
       await refresh();
       setOpen(false);
-      toast.success('Plan creado.');
+      notify.success('Plan creado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const update = useMutation({
     mutationFn: ({ id, estado }: { id: string; estado: 'ACTIVE' | 'INACTIVE' }) =>
       membershipAdminService.updatePlan(id, { estado }),
     onSuccess: async () => {
       await refresh();
-      toast.success('Estado del plan actualizado.');
+      notify.success('Estado del plan actualizado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   return (
     <section className="grid gap-4">

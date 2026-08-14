@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, Play, Plus } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { facilitiesAdminService } from '@/features/admin/services/facilities-admin-service';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
 import { maintenanceTypes } from '@/shared/api/contracts';
@@ -47,17 +47,17 @@ export function MaintenancePanel() {
     onSuccess: async () => {
       await refresh();
       setScheduleOpen(false);
-      toast.success('Mantenimiento programado.');
+      notify.success('Mantenimiento programado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const start = useMutation({
     mutationFn: facilitiesAdminService.startMaintenance,
     onSuccess: async () => {
       await refresh();
-      toast.success('Mantenimiento iniciado.');
+      notify.success('Mantenimiento iniciado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const complete = useMutation({
     mutationFn: ({ id, form }: { id: string; form: FormData }) =>
@@ -70,9 +70,9 @@ export function MaintenancePanel() {
     onSuccess: async () => {
       await refresh();
       setCompleteId(null);
-      toast.success('Mantenimiento completado.');
+      notify.success('Mantenimiento completado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   return (
     <section className="grid gap-4">

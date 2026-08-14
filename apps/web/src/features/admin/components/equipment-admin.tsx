@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Download, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { confirm, notify } from '@/shared/notifications';
 import { z } from 'zod';
 import { equipmentAdminService } from '@/features/admin/services/equipment-admin-service';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
@@ -58,7 +58,7 @@ export function EquipmentAdmin({ canManage }: Readonly<{ canManage: boolean }>) 
       await refresh();
       form.reset();
       setOpen(false);
-      toast.success('Equipo creado.');
+      notify.success('Equipo creado.');
     },
     onError: (error: Error) => form.setError('root', { message: error.message }),
   });
@@ -67,17 +67,17 @@ export function EquipmentAdmin({ canManage }: Readonly<{ canManage: boolean }>) 
       equipmentAdminService.update(id, { estado }),
     onSuccess: async () => {
       await refresh();
-      toast.success('Estado actualizado.');
+      notify.success('Estado actualizado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const remove = useMutation({
     mutationFn: equipmentAdminService.inactivate,
     onSuccess: async () => {
       await refresh();
-      toast.success('Equipo inactivado.');
+      notify.success('Equipo inactivado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   if (query.isLoading) return <LoadingPanel rows={7} />;
   return (
@@ -221,7 +221,15 @@ export function EquipmentAdmin({ canManage }: Readonly<{ canManage: boolean }>) 
                         <Button
                           aria-label={`Inactivar ${item.nombre}`}
                           loading={remove.isPending}
-                          onClick={() => remove.mutate(item.id)}
+                          onClick={async () => {
+                            const result = await confirm({
+                              title: 'Inactivar equipo',
+                              message: `«${item.nombre}» dejará de estar disponible para asignaciones.`,
+                              severity: 'warning',
+                              confirmLabel: 'Inactivar',
+                            });
+                            if (result.confirmed) remove.mutate(item.id);
+                          }}
                           size="icon"
                           variant="ghost"
                         >

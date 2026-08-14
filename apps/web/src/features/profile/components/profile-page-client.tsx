@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ruler, Save, Scale, ShieldCheck, UserRound } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { z } from 'zod';
 import { profileService } from '@/features/profile/services/profile-service';
 import { onboardingService } from '@/features/onboarding/services/onboarding-service';
@@ -77,7 +77,7 @@ export function ProfilePageClient() {
       profile.data ? profileService.updateProfile(values) : profileService.createProfile(values),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.profile });
-      toast.success('Perfil actualizado.');
+      notify.success('Perfil actualizado.');
     },
     onError: (error: Error) => form.setError('root', { message: error.message }),
   });

@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { UserCog } from 'lucide-react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { facilitiesAdminService } from '@/features/admin/services/facilities-admin-service';
 import { membershipAdminService } from '@/features/admin/services/membership-admin-service';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -26,8 +26,8 @@ export function StaffPanel() {
         accesoIlimitado: form.get('accesoIlimitado') === 'on',
         sedes: [String(form.get('sedeId'))],
       }),
-    onSuccess: () => toast.success('Perfil de personal creado.'),
-    onError: (error: Error) => toast.error(error.message),
+    onSuccess: () => notify.success('Perfil de personal creado.'),
+    onError: (error: Error) => notify.error(error),
   });
   const update = useMutation({
     mutationFn: (form: FormData) =>
@@ -35,8 +35,8 @@ export function StaffPanel() {
         estadoLaboral: String(form.get('estadoLaboral')) as 'ACTIVE' | 'SUSPENDED' | 'TERMINATED',
         terminadoEl: String(form.get('terminadoEl') || '') || null,
       }),
-    onSuccess: () => toast.success('Estado laboral actualizado.'),
-    onError: (error: Error) => toast.error(error.message),
+    onSuccess: () => notify.success('Estado laboral actualizado.'),
+    onError: (error: Error) => notify.error(error),
   });
   return (
     <section className="grid gap-5 xl:grid-cols-2">

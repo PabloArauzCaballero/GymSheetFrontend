@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Fingerprint, KeyRound, Search, ShieldX } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { confirm, notify } from '@/shared/notifications';
 import { accessAdminService } from '@/features/admin/services/access-admin-service';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { Badge } from '@/shared/components/ui/badge';
@@ -34,9 +34,9 @@ export function CredentialPanel() {
       }),
     onSuccess: async () => {
       await refresh();
-      toast.success('Credencial PIN creada.');
+      notify.success('Credencial PIN creada.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const createExternal = useMutation({
     mutationFn: (form: FormData) =>
@@ -53,17 +53,17 @@ export function CredentialPanel() {
       }),
     onSuccess: async () => {
       await refresh();
-      toast.success('Credencial externa creada.');
+      notify.success('Credencial externa creada.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const revoke = useMutation({
     mutationFn: (id: string) => accessAdminService.revokeCredential(id),
     onSuccess: async () => {
       await refresh();
-      toast.success('Credencial revocada.');
+      notify.success('Credencial revocada.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   return (
     <section className="grid gap-5 xl:grid-cols-[1fr_1fr]">
@@ -124,7 +124,16 @@ export function CredentialPanel() {
                       <Button
                         className="mt-4"
                         loading={revoke.isPending}
-                        onClick={() => revoke.mutate(credential.id)}
+                        onClick={async () => {
+                          const result = await confirm({
+                            title: 'Revocar credencial',
+                            message:
+                              'La credencial dejará de conceder acceso de inmediato. Esta acción no se puede deshacer.',
+                            severity: 'danger',
+                            confirmLabel: 'Revocar',
+                          });
+                          if (result.confirmed) revoke.mutate(credential.id);
+                        }}
                         size="sm"
                         variant="danger"
                       >

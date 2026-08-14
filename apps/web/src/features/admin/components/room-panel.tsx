@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { facilitiesAdminService } from '@/features/admin/services/facilities-admin-service';
 import { roomTypes } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -41,9 +41,9 @@ export function RoomPanel({ canManage }: Readonly<{ canManage: boolean }>) {
     onSuccess: async () => {
       await refresh();
       setOpen(false);
-      toast.success('Sala creada.');
+      notify.success('Sala creada.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const update = useMutation({
     mutationFn: ({
@@ -55,9 +55,9 @@ export function RoomPanel({ canManage }: Readonly<{ canManage: boolean }>) {
     }) => facilitiesAdminService.updateRoom(id, { estado }),
     onSuccess: async () => {
       await refresh();
-      toast.success('Estado de sala actualizado.');
+      notify.success('Estado de sala actualizado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   return (
     <section className="grid gap-4">

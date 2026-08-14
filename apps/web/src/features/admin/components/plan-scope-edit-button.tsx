@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { facilitiesAdminService } from '@/features/admin/services/facilities-admin-service';
 import { membershipAdminService } from '@/features/admin/services/membership-admin-service';
 import type { MembershipPlan, PlanScope } from '@/shared/api/contracts';
@@ -29,9 +29,9 @@ export function PlanScopeEditButton({ plan }: Readonly<{ plan: MembershipPlan }>
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.admin.plans });
       setOpen(false);
-      toast.success('Alcances reemplazados.');
+      notify.success('Alcances reemplazados.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
 
   function updateScope(index: number, change: Partial<PlanScope>) {

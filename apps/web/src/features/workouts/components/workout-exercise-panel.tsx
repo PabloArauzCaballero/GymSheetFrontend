@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Flame, MoreHorizontal, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { confirmDelete, notify } from '@/shared/notifications';
 import { workoutService } from '@/features/workouts/services/workout-service';
 import type { WorkoutExercise } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -24,17 +24,17 @@ export function WorkoutExercisePanel({
     mutationFn: () => workoutService.updateExercise(item.id, { esEnfasis: !item.esEnfasis }),
     onSuccess: async () => {
       await refresh();
-      toast.success('Énfasis actualizado.');
+      notify.success('Énfasis actualizado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const remove = useMutation({
     mutationFn: () => workoutService.removeExercise(item.id),
     onSuccess: async () => {
       await refresh();
-      toast.success('Ejercicio retirado.');
+      notify.success('Ejercicio retirado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const exercise = item.ejercicio;
   const volume = item.series.reduce((total, set) => total + set.pesoKg * set.repeticiones, 0);
@@ -81,7 +81,14 @@ export function WorkoutExercisePanel({
             <Button
               aria-label="Eliminar ejercicio"
               loading={remove.isPending}
-              onClick={() => remove.mutate()}
+              onClick={async () => {
+                const result = await confirmDelete({
+                  entity: 'ejercicio',
+                  name: exercise?.nombre,
+                  message: 'Se perderán las series registradas para este ejercicio.',
+                });
+                if (result.confirmed) remove.mutate();
+              }}
               size="icon"
               variant="ghost"
             >
