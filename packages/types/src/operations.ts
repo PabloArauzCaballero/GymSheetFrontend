@@ -2,13 +2,59 @@ import type {
   AccessOutcome,
   CredentialStatus,
   CredentialType,
+  EmploymentStatus,
   MaintenanceStatus,
   MaintenanceType,
   MembershipStatus,
   NotificationStatus,
   PlanType,
   RoomType,
+  StaffPosition,
+  UserRole,
 } from './enums';
+
+/**
+ * Archivo del repositorio de medios administrado por el gimnasio. Se
+ * identifica por `codigo` (kebab-case estable), de modo que reemplazar la
+ * imagen —por ejemplo el QR de cobro de un plan— no cambia la referencia.
+ */
+export type MediaFile = {
+  id: string;
+  publicId: string;
+  codigo: string;
+  nombre: string;
+  tipo: string;
+  mimeType: string;
+  proveedor: string;
+  origen: string;
+  url: string;
+  altText: string;
+  width: number | null;
+  height: number | null;
+  licencia: string;
+  atribucion: string;
+  estado: string;
+  creadoEl: string;
+  actualizadoEl: string;
+};
+
+export type StaffProfile = {
+  id: string;
+  usuarioId: string;
+  cargo: StaffPosition;
+  estadoLaboral: EmploymentStatus;
+  contratadoEl: string;
+  terminadoEl: string | null;
+  accesoIlimitado: boolean;
+  sedes: string[];
+  usuario?: {
+    id: string;
+    email: string;
+    nombreCompleto: string;
+    rol: UserRole;
+    estado: string;
+  };
+};
 
 export type Branch = {
   id: string;

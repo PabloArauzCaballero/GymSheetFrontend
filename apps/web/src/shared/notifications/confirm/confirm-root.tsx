@@ -5,7 +5,7 @@ import { AlertTriangle, HelpCircle, Info } from 'lucide-react';
 import { useRef, useSyncExternalStore } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/cn';
-import { confirmStore, type ActiveConfirmation } from './confirm-store';
+import { confirmStore, type ActiveConfirmation } from '@gymsheet/notifications';
 
 const SEVERITY_ICON = {
   danger: AlertTriangle,

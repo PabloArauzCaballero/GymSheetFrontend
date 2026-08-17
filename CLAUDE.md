@@ -6,8 +6,9 @@ Monorepo Yarn Workspaces + Turborepo. Dos apps que comparten lógica vía `packa
   navegador consume únicamente rutas BFF `/api/*`; el JWT permanece en cookie HttpOnly y el
   backend NestJS hermano es la autoridad de autorización.
 - `apps/mobile` — Expo (React Native), iOS & Android. Token bearer en Expo SecureStore.
-- `packages/*` — `types, schemas, api-client, domain, auth, design-tokens, observability,
-  tsconfig`. Fuente única de verdad de la lógica; **no** importan desde `apps/*`.
+- `packages/*` — `types, schemas, api-client, domain, auth, hooks, notifications,
+  design-tokens, observability, tsconfig`. Fuente única de verdad de la lógica;
+  **no** importan desde `apps/*`.
 
 ## Validación
 

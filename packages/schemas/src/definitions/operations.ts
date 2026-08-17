@@ -3,13 +3,62 @@ import {
   accessOutcomes,
   credentialStatuses,
   credentialTypes,
+  employmentStatuses,
   maintenanceStatuses,
   maintenanceTypes,
   membershipStatuses,
   notificationStatuses,
   planTypes,
   roomTypes,
+  staffPositions,
+  userRoles,
 } from '@gymsheet/types';
+
+/**
+ * Archivo del repositorio de medios. `creadoEl`/`actualizadoEl` llegan como
+ * fecha ISO serializada por el backend; se validan como cadena porque el resto
+ * de contratos del monorepo tratan las fechas igual.
+ */
+export const mediaFileSchema = z.object({
+  id: z.string().uuid(),
+  publicId: z.string().uuid(),
+  codigo: z.string(),
+  nombre: z.string(),
+  tipo: z.string(),
+  mimeType: z.string(),
+  proveedor: z.string(),
+  origen: z.string(),
+  url: z.string(),
+  altText: z.string(),
+  width: z.number().int().nullable(),
+  height: z.number().int().nullable(),
+  licencia: z.string(),
+  atribucion: z.string(),
+  estado: z.string(),
+  creadoEl: z.string(),
+  actualizadoEl: z.string(),
+});
+
+export const staffProfileSchema = z.object({
+  id: z.string().uuid(),
+  usuarioId: z.string().uuid(),
+  cargo: z.enum(staffPositions),
+  estadoLaboral: z.enum(employmentStatuses),
+  contratadoEl: z.string(),
+  terminadoEl: z.string().nullable(),
+  accesoIlimitado: z.boolean(),
+  sedes: z.array(z.string().uuid()),
+  // Ausente cuando la consulta no adjunta la cuenta (alta por `usuarioId`).
+  usuario: z
+    .object({
+      id: z.string().uuid(),
+      email: z.string(),
+      nombreCompleto: z.string(),
+      rol: z.enum(userRoles),
+      estado: z.string(),
+    })
+    .optional(),
+});
 
 export const branchSchema = z.object({
   id: z.string().uuid(),
@@ -92,9 +141,22 @@ export const membershipAccessSchema = z.object({
   endsAt: z.string().nullable(),
 });
 
+/**
+ * Payment QR the gym administers itself: it is uploaded through the media
+ * endpoint under a fixed code, so replacing the image never touches a client.
+ * Nullable because a gym that has not uploaded one yet is a valid state, not
+ * an error — the UI falls back to contacting reception.
+ */
+export const paymentQrSchema = z.object({
+  url: z.string().url(),
+  altText: z.string(),
+  code: z.string(),
+});
+
 export const membershipOptionsSchema = z.object({
   membershipStatus: z.enum(membershipStatuses).nullable(),
   plans: z.array(membershipPlanSchema),
+  paymentQr: paymentQrSchema.nullable().default(null),
 });
 
 export const membershipIntentSchema = z.object({

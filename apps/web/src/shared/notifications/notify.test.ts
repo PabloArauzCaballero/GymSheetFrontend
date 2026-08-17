@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/shared/api/api-error';
-import type { ToastAdapter } from './adapters/toast-adapter';
-import type { NotificationRequest } from './core/types';
-import { NotificationEngine } from './notify';
+import {
+  NotificationEngine,
+  type NotificationRequest,
+  type ToastAdapter,
+} from '@gymsheet/notifications';
 
 function fakeAdapter() {
   const shown: NotificationRequest[] = [];

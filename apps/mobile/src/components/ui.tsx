@@ -2,19 +2,53 @@ import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
+  type StyleProp,
   type TextInputProps,
+  type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, fontSizes, minTouchTarget, radii, spacing } from '@/theme';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
+import { AmbientBackground } from '@/components/ambient';
+import { colors, fontSizes, maxContentWidth, minTouchTarget, radii, spacing } from '@/theme';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 /** Full-screen container that respects the safe area and applies the base background. */
 export function Screen({ children }: { children: ReactNode }) {
+  const { width } = useWindowDimensions();
+  // The auth forms are short. Left at full width and pinned to the top they
+  // occupy the first third of a tablet and leave the rest black, so the column
+  // is capped and the whole block is centred.
+  const gutter = Math.max(spacing.lg, (width - maxContentWidth) / 2);
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={{ flex: 1, padding: spacing.lg, gap: spacing.md }}>{children}</View>
+      {/* The auth screens used to be the only ones without it, which made the
+          very first screen of the app the flattest one — plain black behind a
+          form, while every screen after it was lit. */}
+      <AmbientBackground />
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          paddingHorizontal: gutter,
+          paddingVertical: spacing.lg,
+          gap: spacing.md,
+        }}
+      >
+        {children}
+      </View>
     </SafeAreaView>
   );
 }
@@ -34,40 +68,139 @@ export function AppText({
   return <Text style={style}>{children}</Text>;
 }
 
+export type ButtonVariant = 'primary' | 'danger' | 'ghost';
+
+/**
+ * Fill per variant. The filled ones are gradients rather than flat colour: a
+ * single hex reads as a printed rectangle, while a slight ramp across the face
+ * gives it a lit edge and a body. `ghost` stays flat — it is the quiet option
+ * and should not compete with the action next to it.
+ */
+const BUTTON_TONE: Record<
+  ButtonVariant,
+  { gradient: readonly [string, string] | null; background: string; ink: string; border: string }
+> = {
+  primary: {
+    gradient: ['#d8ff33', '#a8d400'] as const,
+    background: colors.volt,
+    ink: colors.background,
+    border: colors.volt,
+  },
+  danger: {
+    gradient: ['#ff8a80', '#e04f45'] as const,
+    background: colors.danger,
+    ink: colors.background,
+    border: colors.danger,
+  },
+  ghost: { gradient: null, background: 'transparent', ink: colors.text, border: colors.border },
+};
+
+/**
+ * Press spring for the primary action surface. Slightly livelier than the one
+ * used for cards: a button is the thing the user came to hit, so it may answer
+ * with more energy than a row that merely happens to be tappable. Still clamped
+ * against overshoot, so it stays inside the app's Premium motion identity.
+ */
+const BUTTON_SPRING = { damping: 22, stiffness: 380, mass: 0.5, overshootClamping: true } as const;
+
+/**
+ * The action surface. Three things answer a touch at once — scale, a brightness
+ * lift and a haptic tick — because a button that only fades reads as a picture
+ * of a button. All three are compositor-level or off-thread, so none of them
+ * moves the layout around it.
+ */
 export function Button({
   label,
   onPress,
   loading = false,
   disabled = false,
+  variant = 'primary',
+  style,
 }: {
   label: string;
   onPress: () => void;
   loading?: boolean;
   disabled?: boolean;
+  variant?: ButtonVariant;
+  style?: StyleProp<ViewStyle>;
 }) {
   const isDisabled = disabled || loading;
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      disabled={isDisabled}
+  const tone = BUTTON_TONE[variant];
+  const pressed = useSharedValue(0);
+  const reduceMotion = useReducedMotion();
+
+  const animated = useAnimatedStyle(() => ({
+    transform: [{ scale: reduceMotion ? 1 : 1 - pressed.value * 0.04 }],
+  }));
+
+  // A white veil laid over the fill, not a reduction of it. Fading the gradient
+  // out only reveals the darker base underneath, which reads as "disabled for a
+  // moment"; adding light reads as the surface taking the charge.
+  const flare = useAnimatedStyle(() => ({ opacity: pressed.value * 0.22 }));
+
+  const content = loading ? (
+    <ActivityIndicator color={tone.ink} />
+  ) : (
+    <Text
       style={{
-        minHeight: minTouchTarget,
-        borderRadius: radii.md,
-        backgroundColor: isDisabled ? colors.surfaceHigh : colors.volt,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: spacing.lg,
+        color: isDisabled ? colors.textDisabled : tone.ink,
+        fontSize: fontSizes.md,
+        fontWeight: '700',
+        letterSpacing: 0.2,
       }}
     >
-      {loading ? (
-        <ActivityIndicator color={colors.background} />
-      ) : (
-        <Text style={{ color: colors.background, fontSize: fontSizes.md, fontWeight: '600' }}>
-          {label}
-        </Text>
+      {label}
+    </Text>
+  );
+
+  return (
+    <AnimatedPressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
+      disabled={isDisabled}
+      onPress={onPress}
+      onPressIn={() => {
+        if (isDisabled) return;
+        pressed.value = withSpring(1, BUTTON_SPRING);
+        // Fired on contact, not on release: the phone should answer the finger
+        // at the moment of touch, not after the action resolves.
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }}
+      onPressOut={() => {
+        pressed.value = withSpring(0, BUTTON_SPRING);
+      }}
+      style={[
+        {
+          minHeight: minTouchTarget,
+          borderRadius: radii.md,
+          overflow: 'hidden',
+          borderWidth: 1,
+          borderColor: isDisabled ? colors.surfaceHigh : tone.border,
+          backgroundColor: isDisabled ? colors.surfaceHigh : tone.background,
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: spacing.lg,
+        },
+        animated,
+        style,
+      ]}
+    >
+      {tone.gradient && !isDisabled ? (
+        <LinearGradient
+          colors={tone.gradient}
+          end={{ x: 1, y: 1 }}
+          start={{ x: 0, y: 0 }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
+      {isDisabled ? null : (
+        <Animated.View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { backgroundColor: '#ffffff' }, flare]}
+        />
       )}
-    </Pressable>
+      {content}
+    </AnimatedPressable>
   );
 }
 

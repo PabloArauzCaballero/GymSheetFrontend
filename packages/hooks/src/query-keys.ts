@@ -25,6 +25,8 @@ export const queryKeys = {
     rooms: (page: number) => ['admin', 'rooms', page] as const,
     maintenance: (page: number) => ['admin', 'maintenance', page] as const,
     plans: ['admin', 'plans'] as const,
+    media: ['admin', 'media'] as const,
+    staff: (page: number, position: string) => ['admin', 'staff', page, position] as const,
     customers: (page: number) => ['admin', 'customers', page] as const,
     memberships: (page: number) => ['admin', 'memberships', page] as const,
     accessDevices: ['admin', 'access-devices'] as const,

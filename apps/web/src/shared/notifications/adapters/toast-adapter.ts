@@ -1,16 +1,11 @@
+import type { NotificationRequest, NotificationSeverity, ToastAdapter } from '@gymsheet/notifications';
 import { toast } from 'sonner';
-import type { NotificationRequest, NotificationSeverity } from '../core/types';
 
 /**
- * Boundary between the engine and the visual toast provider. Swapping libraries
+ * Web binding of the shared {@link ToastAdapter} contract. Swapping libraries
  * (sonner → notistack, react-hot-toast, …) means reimplementing only this file;
  * no feature code imports the provider directly.
  */
-export interface ToastAdapter {
-  show(request: NotificationRequest): string | number;
-  dismiss(id?: string | number): void;
-}
-
 const SONNER_METHOD: Record<NotificationSeverity, 'success' | 'info' | 'warning' | 'error'> = {
   success: 'success',
   info: 'info',

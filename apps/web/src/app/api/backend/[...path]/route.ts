@@ -18,13 +18,17 @@ async function forward(request: NextRequest, parts: string[]) {
   if (contentType) headers.set('Content-Type', contentType);
   headers.set('Accept', request.headers.get('accept') ?? 'application/json');
   const query = request.nextUrl.search;
-  const body = ['GET', 'HEAD'].includes(request.method) ? undefined : await request.text();
+  // El cuerpo se reenvía como bytes, no como texto: las cargas de media viajan
+  // en `multipart/form-data` y decodificarlas a string corrompe el binario.
+  const body = ['GET', 'HEAD'].includes(request.method)
+    ? undefined
+    : await request.arrayBuffer();
   const backendResponse = await backendRequest(`${path}${query}`, {
     method: request.method,
-    timeoutMs: path.startsWith('/export/') ? 60_000 : undefined,
+    timeoutMs: path.startsWith('/export/') || path === '/admin/media' ? 60_000 : undefined,
     headers,
     token,
-    ...(body ? { body } : {}),
+    ...(body && body.byteLength > 0 ? { body } : {}),
   });
   const responseHeaders = new Headers();
   for (const key of ['content-type', 'content-disposition', 'x-request-id']) {

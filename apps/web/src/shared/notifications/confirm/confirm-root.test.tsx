@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { confirm, confirmDelete, confirmStore } from './confirm-store';
+import { confirm, confirmDelete, confirmStore } from '@gymsheet/notifications';
 import { ConfirmRoot } from './confirm-root';
 
 afterEach(() => {

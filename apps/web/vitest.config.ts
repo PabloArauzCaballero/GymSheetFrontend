@@ -18,6 +18,7 @@ export default defineConfig({
       '@gymsheet/api-client': pkg('api-client'),
       '@gymsheet/domain': pkg('domain'),
       '@gymsheet/hooks': pkg('hooks'),
+      '@gymsheet/notifications': pkg('notifications'),
       '@gymsheet/auth': pkg('auth'),
       '@gymsheet/design-tokens': pkg('design-tokens'),
       '@gymsheet/observability': pkg('observability'),

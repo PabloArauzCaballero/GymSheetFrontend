@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginInput } from '@gymsheet/schemas';
@@ -6,12 +5,12 @@ import { ApiError } from '@gymsheet/api-client';
 import { Link } from 'expo-router';
 import { View } from 'react-native';
 import { Screen, AppText, Button, Input } from '@/components/ui';
+import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { spacing, colors } from '@/theme';
 
 export default function LoginScreen() {
   const login = useAuthStore((state) => state.login);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     control,
     handleSubmit,
@@ -22,13 +21,17 @@ export default function LoginScreen() {
   });
 
   const onSubmit = handleSubmit(async (values) => {
-    setSubmitError(null);
     try {
       await login(values);
     } catch (error) {
-      setSubmitError(
-        error instanceof ApiError ? error.message : 'No se pudo iniciar sesión. Intenta de nuevo.',
-      );
+      // A 401 here means wrong credentials, not an expired session — the
+      // generic copy for `unauthorized` would misinform. Everything else goes
+      // through the engine, which maps it to user-safe copy plus telemetry.
+      if (error instanceof ApiError && error.kind === 'unauthorized') {
+        notify.error('Correo o contraseña incorrectos.');
+        return;
+      }
+      notify.error(error);
     }
   });
 
@@ -68,8 +71,6 @@ export default function LoginScreen() {
           />
         )}
       />
-
-      {submitError ? <AppText variant="muted">{submitError}</AppText> : null}
 
       <Button label="Iniciar sesión" onPress={onSubmit} loading={isSubmitting} />
 

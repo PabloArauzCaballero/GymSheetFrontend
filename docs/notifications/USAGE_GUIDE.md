@@ -1,10 +1,15 @@
 # Guía de uso
 
-Import único:
+Import único, según el cliente:
 
 ```ts
-import { notify, confirm, confirmDelete } from '@/shared/notifications';
+import { notify, confirm, confirmDelete } from '@/shared/notifications'; // apps/web
+import { notify, confirm, confirmDelete } from '@/notifications';        // apps/mobile
 ```
+
+La API es idéntica en ambos: lo único que cambia es la ruta del barril y el
+renderer que hay detrás. Nunca importes `sonner`, un diálogo de Radix, `Alert`
+de React Native ni `@gymsheet/notifications` desde una feature.
 
 ## API
 
@@ -109,6 +114,34 @@ onClick={async () => {
 ```
 
 `mutation.isPending` sigue deshabilitando el botón, evitando doble envío.
+
+## Específico de móvil (iOS/Android)
+
+- **Montaje.** `NotificationRoot` ya se monta en `src/providers/app-providers.tsx`.
+  Una pantalla nunca renderiza un toast ni un diálogo por su cuenta.
+- **Nada de `Alert`.** `Alert.alert` de React Native bloquea la app, no admite la
+  copia ni la política del motor y no se puede probar. Usa `confirm()`.
+- **Errores de red.** En un teléfono son el fallo más frecuente: pasa siempre el
+  error al motor (`notify.error(error)`) en vez de escribir tu propia copia; el
+  mapeo distingue red, permisos, validación y conflicto.
+- **Descarte.** Un toast se va solo o al tocarlo. Sólo los `loading` (persistentes)
+  esperan a `notify.dismiss(id)` o a que `notify.promise` los reemplace.
+- **Sesión caída.** `src/api/client.ts` ya avisa una sola vez en `onUnauthorized`
+  (con `deduplicationKey: 'session-expired'`); no lo repitas en cada pantalla.
+- **Duraciones.** El móvil usa `nativePolicy`, con tiempos algo mayores que la web.
+  Ajusta ahí, no toast por toast.
+
+```tsx
+// Patrón de pantalla: acción destructiva + resultado
+const onDelete = async () => {
+  const result = await confirmDelete({ entity: 'rutina', name: routine.nombre });
+  if (!result.confirmed) return;
+  await notify.promise(routineService.remove(routine.id), {
+    loading: 'Eliminando rutina…',
+    success: 'Rutina eliminada.',
+  });
+};
+```
 
 ## Añadir un caso nuevo
 

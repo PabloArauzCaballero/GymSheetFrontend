@@ -1,8 +1,9 @@
 /**
- * Centralized user-communication engine for the web app.
+ * Centralized user-communication surface for the web app.
  *
- * Feature code imports ONLY from here — never from `sonner` or a Radix dialog
- * directly. That keeps the visual provider swappable behind a single boundary.
+ * Feature code imports ONLY from here — never from `sonner`, a Radix dialog or
+ * `@gymsheet/notifications` directly. The shared engine (copy, policy, dedupe,
+ * confirmation queue) lives in the package; this barrel adds the web renderer.
  *
  * @example
  * import { notify, confirmDelete } from '@/shared/notifications';
@@ -14,12 +15,17 @@
  *   success: 'Serie eliminada.',
  * });
  */
-export { notify, NotificationEngine } from './notify';
-export { confirm, confirmDelete } from './confirm/confirm-store';
+export { notify } from './notify';
 export { ConfirmRoot } from './confirm/confirm-root';
-export { resolveError } from './core/messages';
-export { setTelemetrySink } from './core/telemetry';
-export { defaultPolicy, type NotificationPolicy } from './core/policy';
+export {
+  NotificationEngine,
+  confirm,
+  confirmDelete,
+  resolveError,
+  setTelemetrySink,
+  defaultPolicy,
+  type NotificationPolicy,
+} from '@gymsheet/notifications';
 export type {
   ConfirmationRequest,
   ConfirmationResult,
@@ -28,4 +34,4 @@ export type {
   NotificationSeverity,
   PromiseMessages,
   ResolvedError,
-} from './core/types';
+} from '@gymsheet/notifications';

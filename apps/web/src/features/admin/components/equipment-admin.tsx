@@ -26,6 +26,7 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { downloadCsv, downloadJson, type CsvColumn } from '@/shared/lib/data-transfer';
 import type { Equipment } from '@/shared/api/contracts';
 import { EquipmentBulkImport } from './equipment-bulk-import';
+import { EquipmentEditButton } from './equipment-edit-button';
 
 const exportColumns: CsvColumn<Equipment>[] = [
   { key: 'id', header: 'id', value: (item) => item.id },
@@ -218,23 +219,26 @@ export function EquipmentAdmin({ canManage }: Readonly<{ canManage: boolean }>) 
                     </TableCell>
                     <TableCell className="text-right">
                       {canManage ? (
-                        <Button
-                          aria-label={`Inactivar ${item.nombre}`}
-                          loading={remove.isPending}
-                          onClick={async () => {
-                            const result = await confirm({
-                              title: 'Inactivar equipo',
-                              message: `«${item.nombre}» dejará de estar disponible para asignaciones.`,
-                              severity: 'warning',
-                              confirmLabel: 'Inactivar',
-                            });
-                            if (result.confirmed) remove.mutate(item.id);
-                          }}
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <EquipmentEditButton equipment={item} />
+                          <Button
+                            aria-label={`Inactivar ${item.nombre}`}
+                            loading={remove.isPending}
+                            onClick={async () => {
+                              const result = await confirm({
+                                title: 'Inactivar equipo',
+                                message: `«${item.nombre}» dejará de estar disponible para asignaciones.`,
+                                severity: 'warning',
+                                confirmLabel: 'Inactivar',
+                              });
+                              if (result.confirmed) remove.mutate(item.id);
+                            }}
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
                       ) : (
                         '—'
                       )}

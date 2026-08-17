@@ -113,6 +113,64 @@ export async function apiRequest<T>(
   }
 }
 
+/**
+ * Cargas `multipart/form-data` a través del mismo BFF. No reutiliza
+ * `apiRequest` porque este serializa el cuerpo a JSON y fija `Content-Type`:
+ * en multipart el navegador debe escribir esa cabecera él mismo para incluir
+ * el `boundary`.
+ */
+export async function apiUpload<T>(
+  path: string,
+  schema: z.ZodType<T>,
+  form: FormData,
+  options: { timeoutMs?: number; signal?: AbortSignal | null } = {},
+): Promise<T> {
+  const requestController = createRequestController(options.signal, options.timeoutMs ?? 60_000);
+  try {
+    const response = await fetch(`/api/backend${path}`, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'X-Request-ID': crypto.randomUUID() },
+      body: form,
+      credentials: 'same-origin',
+      signal: requestController.signal,
+    });
+    if (!response.ok) throw await readError(response);
+    const envelope = successEnvelopeSchema.safeParse(await response.json());
+    if (!envelope.success) {
+      throw new ApiError({
+        message: 'El servidor devolvió un contrato inválido.',
+        status: 502,
+        kind: 'contract',
+      });
+    }
+    const parsed = schema.safeParse(envelope.data.data);
+    if (!parsed.success) {
+      throw new ApiError({
+        message: 'La respuesta no coincide con el contrato esperado.',
+        status: 502,
+        kind: 'contract',
+      });
+    }
+    return parsed.data;
+  } catch (error: unknown) {
+    if (error instanceof ApiError) throw error;
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new ApiError({
+        message: 'La carga agotó el tiempo de espera.',
+        status: 408,
+        kind: 'network',
+      });
+    }
+    throw new ApiError({
+      message: 'No se pudo conectar con el servicio.',
+      status: 0,
+      kind: 'network',
+    });
+  } finally {
+    requestController.dispose();
+  }
+}
+
 export async function downloadFromApi(path: string, filename: string) {
   const requestController = createRequestController(undefined, 60_000);
   try {
