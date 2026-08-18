@@ -3,7 +3,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { CalendarDays, Check, Clock3, ExternalLink, Plus, ShieldCheck } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { toast } from 'sonner';
+import { confirm, notify } from '@/shared/notifications';
 import type { MembershipPlan } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
@@ -31,12 +31,13 @@ export function MembershipExperience({ compact = false }: Readonly<{ compact?: b
   });
   const intent = useMutation({
     mutationFn: async ({ plan, type }: { plan: MembershipPlan; type: 'RENEWAL' | 'EXTENSION' }) => {
-      if (
-        !window.confirm(
-          `${type === 'EXTENSION' ? 'Añadir tiempo al' : 'Solicitar el'} plan ${plan.nombre}? La membresía no se activará hasta confirmar el pago.`,
-        )
-      )
-        throw new Error('CANCELLED');
+      const decision = await confirm({
+        title: type === 'EXTENSION' ? 'Añadir tiempo' : 'Solicitar plan',
+        message: `Se ${type === 'EXTENSION' ? 'añadirá tiempo al' : 'solicitará el'} plan ${plan.nombre}. La membresía no se activará hasta confirmar el pago.`,
+        severity: 'info',
+        confirmLabel: 'Continuar',
+      });
+      if (!decision.confirmed) throw new Error('CANCELLED');
       const popup = window.open('about:blank', '_blank');
       if (popup) popup.opener = null;
       const input = { planId: plan.id, months: 1, idempotencyKey: crypto.randomUUID() };
@@ -54,9 +55,9 @@ export function MembershipExperience({ compact = false }: Readonly<{ compact?: b
       }
     },
     onSuccess: () =>
-      toast.success('Solicitud registrada. Continuarás en WhatsApp; el acceso sigue pendiente.'),
+      notify.success('Solicitud registrada. Continuarás en WhatsApp; el acceso sigue pendiente.'),
     onError: (error: Error) => {
-      if (error.message !== 'CANCELLED') toast.error(error.message);
+      if (error.message !== 'CANCELLED') notify.error(error);
     },
   });
   if (projection.isLoading || accesses.isLoading || options.isLoading)

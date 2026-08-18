@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dumbbell, Plus, Search } from 'lucide-react';
 import { useState, type CSSProperties } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
 import { workoutService } from '@/features/workouts/services/workout-service';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -31,11 +31,11 @@ export function AddExerciseDialog({
       workoutService.addExercise(workoutId, { ejercicioId: exerciseId, orden: nextOrder }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.workout(workoutId) });
-      toast.success('Ejercicio agregado a la sesión.');
+      notify.success('Ejercicio agregado a la sesión.');
       setOpen(false);
       setSearch('');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
 
   return (
@@ -98,7 +98,7 @@ export function AddExerciseDialog({
                       </span>
                     </span>
                   </span>
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--text-muted)] transition-colors group-hover:border-[var(--volt)] group-hover:bg-[var(--volt)] group-hover:text-black">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--text-muted)] transition-colors group-hover:border-[var(--volt)] group-hover:bg-[var(--volt)] group-hover:text-[var(--accent-contrast)]">
                     <Plus className="size-4" />
                   </span>
                 </button>

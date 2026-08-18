@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Upload } from 'lucide-react';
 import { useState, type ChangeEvent } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { equipmentAdminService } from '@/features/admin/services/equipment-admin-service';
 import { equipmentTypes, type EquipmentType } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -68,11 +68,11 @@ export function EquipmentBulkImport() {
     onSuccess: async ({ created, failures, total }) => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.equipment });
       if (failures.length === 0) {
-        toast.success(`${created} equipos creados.`);
+        notify.success(`${created} equipos creados.`);
         setRaw('');
         setOpen(false);
       } else {
-        toast.warning(`${created}/${total} creados. ${failures.length} con error.`);
+        notify.warning(`${created}/${total} creados. ${failures.length} con error.`);
         setError(failures.slice(0, 8).join('\n'));
       }
     },

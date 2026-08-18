@@ -26,6 +26,7 @@
     "@gymsheet/design-tokens": "*",
     "@gymsheet/domain": "*",
     "@gymsheet/hooks": "*",
+    "@gymsheet/notifications": "*",
     "@gymsheet/observability": "*",
     "@gymsheet/schemas": "*",
     "@gymsheet/types": "*",

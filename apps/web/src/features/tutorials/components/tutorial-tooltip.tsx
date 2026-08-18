@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Check, RotateCcw, SkipForward, X } from 'lucide-
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/cn';
+import { useBrandCopy } from '@/shared/theme/brand-provider';
 import { TUTORIAL_Z } from '../constants';
 import type { ActiveRun } from '../engine/tutorial-context';
 import type { PositionedTooltip } from '../engine/positioning';
@@ -34,6 +35,7 @@ export const TutorialTooltip = forwardRef<HTMLDivElement, TutorialTooltipProps>(
   ) {
     const { step, tutorial, stepIndex, phase, canAdvance, isFirst, isLast } = run;
     const missing = phase === 'target-missing';
+    const copy = useBrandCopy();
 
     return (
       <div
@@ -43,13 +45,13 @@ export const TutorialTooltip = forwardRef<HTMLDivElement, TutorialTooltipProps>(
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
         className={cn(
-          'panel fixed w-[min(360px,calc(100vw-2rem))] p-5 shadow-[0_40px_120px_-40px_rgb(0_0_0/0.9)]',
+          'panel fixed w-[min(360px,calc(100vw-2rem))] p-5 shadow-[var(--shadow-dialog)]',
           !reducedMotion && 'animate-pop',
         )}
         style={{ top: position.top, left: position.left, zIndex: TUTORIAL_Z + 2 }}
       >
         <div className="mb-3 flex items-center justify-between gap-3">
-          <Badge tone="info">{tutorial.title}</Badge>
+          <Badge tone="info">{copy(tutorial.title)}</Badge>
           <button
             type="button"
             aria-label="Cerrar tutorial"
@@ -61,10 +63,10 @@ export const TutorialTooltip = forwardRef<HTMLDivElement, TutorialTooltipProps>(
         </div>
 
         <h2 id={titleId} className="text-lg font-bold tracking-[-0.02em]">
-          {step.title}
+          {copy(step.title)}
         </h2>
         <p id={descriptionId} className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
-          {step.description}
+          {copy(step.description)}
         </p>
 
         {step.expectedAction ? (

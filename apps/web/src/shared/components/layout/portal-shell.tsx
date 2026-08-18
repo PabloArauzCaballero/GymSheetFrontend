@@ -62,7 +62,7 @@ function NavigationLinks({
               className={cn(
                 'tap flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-full border px-4 text-sm font-semibold',
                 active
-                  ? 'border-[var(--volt)] bg-[var(--volt)] text-black shadow-[0_6px_20px_-8px_rgb(195_244_0/0.6)]'
+                  ? 'border-[var(--volt)] bg-[var(--volt)] text-[var(--accent-contrast)] shadow-[0_6px_20px_-8px_rgb(var(--accent-channels)/0.6)]'
                   : 'border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text-muted)]',
               )}
               data-tutorial-id={`nav:${item.href}`}

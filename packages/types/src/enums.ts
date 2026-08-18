@@ -71,6 +71,12 @@ export type MaintenanceType = (typeof maintenanceTypes)[number];
 export const maintenanceStatuses = ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const;
 export type MaintenanceStatus = (typeof maintenanceStatuses)[number];
 
+export const staffPositions = ['COACH', 'FRONT_DESK', 'ADMINISTRATION'] as const;
+export type StaffPosition = (typeof staffPositions)[number];
+
+export const employmentStatuses = ['ACTIVE', 'SUSPENDED', 'TERMINATED'] as const;
+export type EmploymentStatus = (typeof employmentStatuses)[number];
+
 export const credentialTypes = ['PIN', 'FACE', 'FINGERPRINT'] as const;
 export type CredentialType = (typeof credentialTypes)[number];
 

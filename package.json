@@ -20,6 +20,7 @@
     ]
   },
   "scripts": {
+    "postinstall": "node scripts/dedupe-react.mjs",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
@@ -32,17 +33,18 @@
     "web": "yarn workspace @gymsheet/web",
     "mobile": "yarn workspace @gymsheet/mobile"
   },
-  "resolutions": {
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
-  },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "eslint": "^9.17.0",
     "globals": "^15.14.0",
+    "next": "16.2.0",
     "prettier": "^3.4.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
     "turbo": "^2.3.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.20.0"
-  }
+  },
+  "//react": "Declared at the root ONLY to pin the hoisted copy to the version apps/web (Next 16) needs, so `next` and `eslint-config-next` stay hoisted together. apps/mobile is in `nohoist` and keeps its own React 19.0.0, the version react-native 0.79 / Expo SDK 53 is built against — a global `resolutions` entry would force one version on both and break one of them.",
+  "//next": "Declared at the root ONLY to pin the hoisted copy alongside `eslint-config-next`, which apps/web declares and Yarn hoists here. If `next` lands in apps/web instead, the root config cannot resolve `next/dist/compiled/babel/eslint-parser` and ESLint dies on every file."
 }

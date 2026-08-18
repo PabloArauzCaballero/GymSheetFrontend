@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Play, Trash2, UserPlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { confirm, notify } from '@/shared/notifications';
 import { isStaff } from '@gymsheet/domain';
 import { trainingService } from '@/features/training/services/training-service';
 import type { UserRole } from '@/shared/api/contracts';
@@ -38,25 +38,25 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
     onSuccess: async () => {
       await refresh();
       setExName('');
-      toast.success('Ejercicio agregado.');
+      notify.success('Ejercicio agregado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const removeExercise = useMutation({
     mutationFn: (routineExerciseId: string) => trainingService.removeExercise(routineExerciseId),
     onSuccess: async () => {
       await refresh();
-      toast.success('Ejercicio quitado.');
+      notify.success('Ejercicio quitado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const start = useMutation({
     mutationFn: () => trainingService.start(id),
     onSuccess: (workout) => {
-      toast.success('Sesión iniciada desde la rutina.');
+      notify.success('Sesión iniciada desde la rutina.');
       router.push(`/workouts/${workout.id}`);
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const assign = useMutation({
     mutationFn: () =>
@@ -71,9 +71,9 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
       setClientId('');
       setScheduledFor('');
       setWeekdays([]);
-      toast.success('Rutina asignada al cliente.');
+      notify.success('Rutina asignada al cliente.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
 
   if (query.isLoading) return <LoadingPanel rows={6} />;
@@ -198,7 +198,15 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
                 <Button
                   aria-label="Quitar ejercicio"
                   loading={removeExercise.isPending}
-                  onClick={() => removeExercise.mutate(item.id)}
+                  onClick={async () => {
+                    const result = await confirm({
+                      title: 'Quitar ejercicio',
+                      message: `Se quitará «${item.ejercicio?.nombre ?? 'Ejercicio'}» de la rutina.`,
+                      severity: 'danger',
+                      confirmLabel: 'Quitar',
+                    });
+                    if (result.confirmed) removeExercise.mutate(item.id);
+                  }}
                   size="icon"
                   variant="ghost"
                 >

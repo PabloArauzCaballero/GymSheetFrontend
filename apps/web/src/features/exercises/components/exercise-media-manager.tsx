@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ImagePlus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { confirm, notify } from '@/shared/notifications';
 import type { ExerciseMedia } from '@/shared/api/contracts';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
 import { Badge } from '@/shared/components/ui/badge';
@@ -37,17 +37,17 @@ export function ExerciseMediaManager({
     onSuccess: async () => {
       await refresh();
       setOpen(false);
-      toast.success('Medio agregado.');
+      notify.success('Medio agregado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const remove = useMutation({
     mutationFn: exerciseService.removeMedia,
     onSuccess: async () => {
       await refresh();
-      toast.success('Medio retirado.');
+      notify.success('Medio retirado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
 
   return (
@@ -129,7 +129,15 @@ export function ExerciseMediaManager({
                 <Button
                   aria-label={`Retirar ${entry.altText}`}
                   loading={remove.isPending}
-                  onClick={() => remove.mutate(entry.id)}
+                  onClick={async () => {
+                    const result = await confirm({
+                      title: 'Retirar medio',
+                      message: `Se retirará «${entry.altText}» de este ejercicio.`,
+                      severity: 'danger',
+                      confirmLabel: 'Retirar',
+                    });
+                    if (result.confirmed) remove.mutate(entry.id);
+                  }}
                   size="icon"
                   variant="ghost"
                 >

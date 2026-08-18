@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Link2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { facilitiesAdminService } from '@/features/admin/services/facilities-admin-service';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -28,8 +28,8 @@ export function EquipmentAssignmentPanel() {
         salaId: String(form.get('salaId')),
         notas: String(form.get('notas') || '') || null,
       }),
-    onSuccess: () => toast.success('Equipo asignado a la sala.'),
-    onError: (error: Error) => toast.error(error.message),
+    onSuccess: () => notify.success('Equipo asignado a la sala.'),
+    onError: (error: Error) => notify.error(error),
   });
   return (
     <Card>

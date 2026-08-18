@@ -10,6 +10,20 @@ const allowedFetchFiles = new Set([
   'src/shared/server/media-proxy.ts',
 ]);
 const sourceExtensions = new Set(['.ts', '.tsx', '.css']);
+
+/**
+ * Los colores son configurables por inquilino: viven en las paletas de
+ * `src/shared/theme/` y llegan al documento como variables CSS. Un literal
+ * fuera de ahí vuelve a clavar la identidad de una marca en el código y escapa
+ * a la configuración, así que se trata como error.
+ *
+ * Se detectan hex (`#c3f400`) y funciones de color con canales numéricos
+ * (`rgb(195 244 0 / .5)`); `rgb(var(--x) / .5)` no cumple el patrón y queda
+ * permitido, que es justo la forma correcta de componer una opacidad.
+ */
+const themeSourceDirectory = 'src/shared/theme/';
+const literalColorPattern =
+  /#[0-9a-fA-F]{3,8}\b|\b(?:rgb|rgba|hsl|hsla)\(\s*[0-9.]/u;
 const findings = [];
 
 async function walk(directory) {
@@ -37,6 +51,18 @@ for (const absolute of await walk(sourceRoot)) {
   }
   if (/(@ts-ignore|@ts-nocheck|\bas any\b)/u.test(content)) {
     findings.push(`${relative}: unsafe TypeScript suppression or cast`);
+  }
+  if (!relative.startsWith(themeSourceDirectory) && !relative.endsWith('.test.ts')) {
+    for (const [index, line] of content.split(/\r?\n/u).entries()) {
+      // En una máscara el color no es identidad sino opacidad: `#000` significa
+      // "conserva este píxel". Tematizarlo rompería el efecto.
+      if (/mask-image\s*:/u.test(line)) continue;
+      if (literalColorPattern.test(line)) {
+        findings.push(
+          `${relative}:${index + 1}: literal color outside ${themeSourceDirectory} — use a theme variable`,
+        );
+      }
+    }
   }
 }
 

@@ -9,6 +9,7 @@ import {
   GraduationCap,
   IdCard,
   KeyRound,
+  ScanFace,
   Settings,
   ShieldCheck,
   Users,
@@ -51,6 +52,12 @@ export const adminNavigation: NavigationItem[] = [
     roles: ['ADMIN', 'FRONT_DESK'],
   },
   { href: '/admin/membership', label: 'Clientes', icon: Users, roles: ['ADMIN', 'FRONT_DESK'] },
+  {
+    href: '/admin/people',
+    label: 'Registrar persona',
+    icon: ScanFace,
+    roles: ['ADMIN', 'FRONT_DESK'],
+  },
   {
     href: '/admin/access',
     label: 'Control de acceso',

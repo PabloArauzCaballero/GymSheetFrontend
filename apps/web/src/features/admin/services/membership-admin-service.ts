@@ -2,21 +2,42 @@ import { z } from 'zod';
 import { apiRequest } from '@/shared/api/api-client';
 import type {
   Customer,
+  EmploymentStatus,
   Membership,
   MembershipPlan,
   MembershipStatus,
   Page,
   PlanScope,
   PlanType,
+  StaffPosition,
+  StaffProfile,
 } from '@/shared/api/contracts';
 import {
   customerSchema,
   membershipPlanSchema,
   membershipSchema,
   pageSchema,
+  staffProfileSchema,
 } from '@/shared/api/schemas';
 
-export type PlanInput = {
+/**
+ * Atributos comerciales del plan. Se envían solo si el formulario los define:
+ * omitir una clave en un PATCH deja el valor actual intacto, mientras que
+ * enviarla como `null` la borra deliberadamente.
+ */
+export type PlanCommercialInput = {
+  precio?: number | null;
+  moneda?: string | null;
+  beneficios?: string[];
+  orden?: number;
+  disponibleNuevo?: boolean;
+  disponibleRenovacion?: boolean;
+  disponibleExtension?: boolean;
+  /** Archivo de medios que ilustra el plan; es donde vive su QR de cobro. */
+  imagenId?: string | null;
+};
+
+export type PlanInput = PlanCommercialInput & {
   codigo: string;
   nombre: string;
   descripcion?: string | null;
@@ -25,6 +46,17 @@ export type PlanInput = {
   diasRecordatorio?: number[];
   alcances: PlanScope[];
   metadata?: Record<string, unknown>;
+};
+
+export type StaffUserInput = {
+  email: string;
+  password: string;
+  nombreCompleto: string;
+  cargo: StaffPosition;
+  contratadoEl: string;
+  accesoIlimitado?: boolean;
+  sedes: string[];
+  pinAcceso?: string | null;
 };
 
 export type CustomerInput = {
@@ -91,22 +123,34 @@ export const membershipAdminService = {
       method: 'PATCH',
       body: { estado, motivo },
     }),
+  /** Vincula un perfil laboral a una cuenta que ya existe. */
   createStaff: (input: {
     usuarioId: string;
-    cargo: 'COACH' | 'FRONT_DESK' | 'ADMINISTRATION';
+    cargo: StaffPosition;
     contratadoEl: string;
     accesoIlimitado?: boolean;
     sedes: string[];
   }) =>
-    apiRequest('/admin/membership/staff', z.record(z.string(), z.unknown()), {
+    apiRequest<StaffProfile>('/admin/membership/staff', staffProfileSchema, {
       method: 'POST',
       body: input,
     }),
+  /** Alta completa: crea la cuenta con su rol y el perfil laboral en un paso. */
+  createStaffUser: (input: StaffUserInput) =>
+    apiRequest<StaffProfile>('/admin/membership/staff-users', staffProfileSchema, {
+      method: 'POST',
+      body: input,
+    }),
+  listStaff: (page = 1, cargo?: StaffPosition) =>
+    apiRequest<Page<StaffProfile>>(
+      `/admin/membership/staff?page=${page}&pageSize=25${cargo ? `&cargo=${cargo}` : ''}`,
+      pageSchema(staffProfileSchema),
+    ),
   updateStaffStatus: (
     userId: string,
-    input: { estadoLaboral: 'ACTIVE' | 'SUSPENDED' | 'TERMINATED'; terminadoEl?: string | null },
+    input: { estadoLaboral: EmploymentStatus; terminadoEl?: string | null },
   ) =>
-    apiRequest(`/admin/membership/staff/${userId}/status`, z.record(z.string(), z.unknown()), {
+    apiRequest<StaffProfile>(`/admin/membership/staff/${userId}/status`, staffProfileSchema, {
       method: 'PATCH',
       body: input,
     }),

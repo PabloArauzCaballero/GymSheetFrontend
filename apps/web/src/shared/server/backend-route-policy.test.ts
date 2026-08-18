@@ -10,12 +10,16 @@ const allowedCases: Array<[string[], string]> = [
     `/admin/facilities/maintenance/${id}/complete`,
   ],
   [['notifications', 'preferences', 'me'], '/notifications/preferences/me'],
+  [['admin', 'media'], '/admin/media'],
+  [['admin', 'membership', 'staff-users'], '/admin/membership/staff-users'],
+  [['admin', 'membership', 'staff'], '/admin/membership/staff'],
 ];
 const blockedCases: Array<[string[]]> = [
   [['admin', 'access', 'mock', 'events']],
   [['admin', 'unknown']],
   [['..', 'secrets']],
   [['gateway', 'events']],
+  [['admin', 'media', id]],
 ];
 
 describe('backend route policy', () => {

@@ -20,4 +20,21 @@ config.resolver.nodeModulesPaths = [
 // Prevent duplicate React / React Native instances across the workspace.
 config.resolver.disableHierarchicalLookup = true;
 
+// Watching the monorepo root also puts the web app's build output under the
+// file watcher. Those directories are rewritten and deleted wholesale on every
+// Next.js build, and when a watched path vanishes mid-scan Metro dies with
+// `ENOENT: watch .../.next/export/_next` — taking the running mobile app down
+// with it. Nothing in there is ever imported by the mobile bundle, so it is
+// excluded from both watching and resolution.
+const IGNORED_PATHS = [
+  /\/apps\/web\/\.next\/.*/,
+  /\\apps\\web\\\.next\\.*/,
+  /\/apps\/web\/click-evidence\/.*/,
+  /\\apps\\web\\click-evidence\\.*/,
+];
+
+config.resolver.blockList = Array.isArray(config.resolver.blockList)
+  ? [...config.resolver.blockList, ...IGNORED_PATHS]
+  : [config.resolver.blockList, ...IGNORED_PATHS].filter(Boolean);
+
 module.exports = config;

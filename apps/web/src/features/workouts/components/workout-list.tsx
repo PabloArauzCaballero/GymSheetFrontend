@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Download, FileJson, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { workoutService } from '@/features/workouts/services/workout-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
@@ -37,9 +37,9 @@ export function WorkoutList() {
     setExporting(type);
     try {
       await (type === 'csv' ? workoutService.exportCsv() : workoutService.exportJson());
-      toast.success('Exportación preparada.');
+      notify.success('Exportación preparada.');
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo exportar.');
+      notify.error(error instanceof Error ? error.message : 'No se pudo exportar.');
     } finally {
       setExporting(null);
     }

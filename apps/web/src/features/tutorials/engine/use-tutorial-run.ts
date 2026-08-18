@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import type { UserRole } from '@/shared/api/contracts';
 import type { TutorialProgressRecord, TutorialProgressUpsert } from '@/shared/api/contracts';
 import type { TutorialRegistry } from '../registry';
@@ -73,7 +73,7 @@ export function useTutorialRun({ registry, role, pathname, progress, save, reset
     (tutorialId: string, options?: { restart?: boolean }) => {
       const tutorial = registry.resolveForRole(tutorialId, role);
       if (!tutorial) {
-        toast.error('Este tutorial no está disponible para tu perfil.');
+        notify.error('Este tutorial no está disponible para tu perfil.');
         return;
       }
       const record = progress[tutorialId];
@@ -104,7 +104,8 @@ export function useTutorialRun({ registry, role, pathname, progress, save, reset
       repeatCount: (record?.repeatCount ?? 0) + (alreadyCompleted ? 1 : 0),
     });
     clearRun();
-    toast.success('Tutorial completado.', {
+    notify.success({
+      message: 'Tutorial completado.',
       description: activeTutorial.next
         ? 'Puedes continuar con el tutorial recomendado desde el Centro de ayuda.'
         : undefined,

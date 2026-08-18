@@ -3,7 +3,7 @@ import type { TutorialDefinition } from '../../model/types';
 export const platformIntro: TutorialDefinition = {
   id: 'platform-intro',
   version: '1.0.0',
-  title: 'Bienvenido a GymSheet',
+  title: 'Bienvenido a {marca}',
   description: 'Un recorrido de un minuto por las zonas clave de la plataforma.',
   category: 'INTRODUCTION',
   difficulty: 'BEGINNER',
@@ -16,7 +16,7 @@ export const platformIntro: TutorialDefinition = {
       id: 'welcome',
       title: '¡Hola! 👋',
       description:
-        'Te mostraremos cómo moverte por GymSheet en unos pasos breves. Puedes cerrar esta guía cuando quieras y retomarla desde el Centro de ayuda.',
+        'Te mostraremos cómo moverte por {marca} en unos pasos breves. Puedes cerrar esta guía cuando quieras y retomarla desde el Centro de ayuda.',
       placement: 'center',
     },
     {

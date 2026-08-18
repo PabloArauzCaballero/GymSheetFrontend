@@ -1,0 +1,3698 @@
+{
+  "base": "http://localhost:3002",
+  "mode": "admin",
+  "routes": [
+    {
+      "route": "/admin",
+      "landed": "/admin",
+      "total": 28,
+      "clicks": [
+        {
+          "index": 0,
+          "name": "Ir al panel",
+          "tag": "a",
+          "role": "",
+          "href": "/dashboard",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\003_01-a-ir-al-panel.png"
+        },
+        {
+          "index": 1,
+          "name": "Panel",
+          "tag": "a",
+          "role": "",
+          "href": "/dashboard",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\004_02-a-panel.png"
+        },
+        {
+          "index": 2,
+          "name": "Entrenamientos",
+          "tag": "a",
+          "role": "",
+          "href": "/workouts",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\005_03-a-entrenamientos.png"
+        },
+        {
+          "index": 3,
+          "name": "Mis planes",
+          "tag": "a",
+          "role": "",
+          "href": "/plans",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\006_04-a-mis-planes.png"
+        },
+        {
+          "index": 4,
+          "name": "Rutinas",
+          "tag": "a",
+          "role": "",
+          "href": "/routines",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\007_05-a-rutinas.png"
+        },
+        {
+          "index": 5,
+          "name": "Ejercicios",
+          "tag": "a",
+          "role": "",
+          "href": "/exercises",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\008_06-a-ejercicios.png"
+        },
+        {
+          "index": 6,
+          "name": "Membresía",
+          "tag": "a",
+          "role": "",
+          "href": "/membership",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\009_07-a-membres-a.png"
+        },
+        {
+          "index": 7,
+          "name": "Acceso",
+          "tag": "a",
+          "role": "",
+          "href": "/access",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\010_08-a-acceso.png"
+        },
+        {
+          "index": 8,
+          "name": "Avisos",
+          "tag": "a",
+          "role": "",
+          "href": "/notifications",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\011_09-a-avisos.png"
+        },
+        {
+          "index": 9,
+          "name": "Mi perfil",
+          "tag": "a",
+          "role": "",
+          "href": "/profile",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\012_10-a-mi-perfil.png"
+        },
+        {
+          "index": 10,
+          "name": "Centro de ayuda",
+          "tag": "a",
+          "role": "",
+          "href": "/tutorials",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\013_11-a-centro-de-ayuda.png"
+        },
+        {
+          "index": 11,
+          "name": "Operaciones",
+          "tag": "a",
+          "role": "",
+          "href": "/admin",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\014_12-a-operaciones.png"
+        },
+        {
+          "index": 12,
+          "name": "Equipamiento",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/equipment",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\015_13-a-equipamiento.png"
+        },
+        {
+          "index": 13,
+          "name": "Catálogo global",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/exercises",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\016_14-a-cat-logo-global.png"
+        },
+        {
+          "index": 14,
+          "name": "Instalaciones",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/facilities",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\017_15-a-instalaciones.png"
+        },
+        {
+          "index": 15,
+          "name": "Clientes",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/membership",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\018_16-a-clientes.png"
+        },
+        {
+          "index": 16,
+          "name": "Control de acceso",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/access",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\019_17-a-control-de-acceso.png"
+        },
+        {
+          "index": 17,
+          "name": "Iniciar guía: Panel de operaciones",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\020_18-button-iniciar-gu-a-panel-de-operaciones.png"
+        },
+        {
+          "index": 18,
+          "name": "Cambiar a tema oscuro",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\021_19-button-cambiar-a-tema-oscuro.png"
+        },
+        {
+          "index": 19,
+          "name": "EquipamientoInventario visible y operaciones autorizadas por rol.Abrir módulo →",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/equipment",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\022_20-a-equipamientoinventario-visible-y-operacione.png"
+        },
+        {
+          "index": 20,
+          "name": "Catálogo globalEjercicios globales e importación controlada de dataset.Abrir módulo →",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/exercises",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\023_21-a-cat-logo-globalejercicios-globales-e-import.png"
+        },
+        {
+          "index": 21,
+          "name": "InstalacionesSedes, salas, puntos de acceso y mantenimiento.Abrir módulo →",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/facilities",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\024_22-a-instalacionessedes-salas-puntos-de-acceso-y.png"
+        },
+        {
+          "index": 22,
+          "name": "MembresíasPlanes, clientes, vigencias y personal.Abrir módulo →",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/membership",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\025_23-a-membres-asplanes-clientes-vigencias-y-perso.png"
+        },
+        {
+          "index": 23,
+          "name": "Control de accesoDispositivos, decisiones y credenciales.Abrir módulo →",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/access",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\026_24-a-control-de-accesodispositivos-decisiones-y-.png"
+        },
+        {
+          "index": 24,
+          "name": "Open Next.js Dev Tools",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\027_25-button-open-next-js-dev-tools.png"
+        },
+        {
+          "index": 25,
+          "name": "Cerrar tutorial",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\028_26-button-cerrar-tutorial.png"
+        },
+        {
+          "index": 26,
+          "name": "Omitir",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\029_27-button-omitir.png"
+        },
+        {
+          "index": 27,
+          "name": "Siguiente",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin\\030_28-button-siguiente.png"
+        }
+      ]
+    },
+    {
+      "route": "/admin/equipment",
+      "landed": "/admin/equipment",
+      "total": 25,
+      "clicks": [
+        {
+          "index": 0,
+          "name": "Ir al panel",
+          "tag": "a",
+          "role": "",
+          "href": "/dashboard",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\032_01-a-ir-al-panel.png"
+        },
+        {
+          "index": 1,
+          "name": "Panel",
+          "tag": "a",
+          "role": "",
+          "href": "/dashboard",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\033_02-a-panel.png"
+        },
+        {
+          "index": 2,
+          "name": "Entrenamientos",
+          "tag": "a",
+          "role": "",
+          "href": "/workouts",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\034_03-a-entrenamientos.png"
+        },
+        {
+          "index": 3,
+          "name": "Mis planes",
+          "tag": "a",
+          "role": "",
+          "href": "/plans",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\035_04-a-mis-planes.png"
+        },
+        {
+          "index": 4,
+          "name": "Rutinas",
+          "tag": "a",
+          "role": "",
+          "href": "/routines",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\036_05-a-rutinas.png"
+        },
+        {
+          "index": 5,
+          "name": "Ejercicios",
+          "tag": "a",
+          "role": "",
+          "href": "/exercises",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\037_06-a-ejercicios.png"
+        },
+        {
+          "index": 6,
+          "name": "Membresía",
+          "tag": "a",
+          "role": "",
+          "href": "/membership",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\038_07-a-membres-a.png"
+        },
+        {
+          "index": 7,
+          "name": "Acceso",
+          "tag": "a",
+          "role": "",
+          "href": "/access",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\039_08-a-acceso.png"
+        },
+        {
+          "index": 8,
+          "name": "Avisos",
+          "tag": "a",
+          "role": "",
+          "href": "/notifications",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\040_09-a-avisos.png"
+        },
+        {
+          "index": 9,
+          "name": "Mi perfil",
+          "tag": "a",
+          "role": "",
+          "href": "/profile",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\041_10-a-mi-perfil.png"
+        },
+        {
+          "index": 10,
+          "name": "Centro de ayuda",
+          "tag": "a",
+          "role": "",
+          "href": "/tutorials",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\042_11-a-centro-de-ayuda.png"
+        },
+        {
+          "index": 11,
+          "name": "Operaciones",
+          "tag": "a",
+          "role": "",
+          "href": "/admin",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\043_12-a-operaciones.png"
+        },
+        {
+          "index": 12,
+          "name": "Equipamiento",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/equipment",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\044_13-a-equipamiento.png"
+        },
+        {
+          "index": 13,
+          "name": "Catálogo global",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/exercises",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\045_14-a-cat-logo-global.png"
+        },
+        {
+          "index": 14,
+          "name": "Instalaciones",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/facilities",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\046_15-a-instalaciones.png"
+        },
+        {
+          "index": 15,
+          "name": "Clientes",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/membership",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\047_16-a-clientes.png"
+        },
+        {
+          "index": 16,
+          "name": "Control de acceso",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/access",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\048_17-a-control-de-acceso.png"
+        },
+        {
+          "index": 17,
+          "name": "Abrir el Centro de ayuda",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\049_18-button-abrir-el-centro-de-ayuda.png"
+        },
+        {
+          "index": 18,
+          "name": "Cambiar a tema oscuro",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\050_19-button-cambiar-a-tema-oscuro.png"
+        },
+        {
+          "index": 19,
+          "name": "Carga masiva",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\051_20-button-carga-masiva.png"
+        },
+        {
+          "index": 20,
+          "name": "Nuevo equipo",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\052_21-button-nuevo-equipo.png"
+        },
+        {
+          "index": 21,
+          "name": "Open Next.js Dev Tools",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\053_22-button-open-next-js-dev-tools.png"
+        },
+        {
+          "index": 22,
+          "name": "Cerrar tutorial",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\054_23-button-cerrar-tutorial.png"
+        },
+        {
+          "index": 23,
+          "name": "Omitir",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\055_24-button-omitir.png"
+        },
+        {
+          "index": 24,
+          "name": "Siguiente",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-equipment\\056_25-button-siguiente.png"
+        }
+      ]
+    },
+    {
+      "route": "/admin/exercises",
+      "landed": "/admin/exercises",
+      "total": 225,
+      "clicks": [
+        {
+          "index": 0,
+          "name": "Ir al panel",
+          "tag": "a",
+          "role": "",
+          "href": "/dashboard",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\058_01-a-ir-al-panel.png"
+        },
+        {
+          "index": 1,
+          "name": "Panel",
+          "tag": "a",
+          "role": "",
+          "href": "/dashboard",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\059_02-a-panel.png"
+        },
+        {
+          "index": 2,
+          "name": "Entrenamientos",
+          "tag": "a",
+          "role": "",
+          "href": "/workouts",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\060_03-a-entrenamientos.png"
+        },
+        {
+          "index": 3,
+          "name": "Mis planes",
+          "tag": "a",
+          "role": "",
+          "href": "/plans",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\061_04-a-mis-planes.png"
+        },
+        {
+          "index": 4,
+          "name": "Rutinas",
+          "tag": "a",
+          "role": "",
+          "href": "/routines",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\062_05-a-rutinas.png"
+        },
+        {
+          "index": 5,
+          "name": "Ejercicios",
+          "tag": "a",
+          "role": "",
+          "href": "/exercises",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\063_06-a-ejercicios.png"
+        },
+        {
+          "index": 6,
+          "name": "Membresía",
+          "tag": "a",
+          "role": "",
+          "href": "/membership",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\064_07-a-membres-a.png"
+        },
+        {
+          "index": 7,
+          "name": "Acceso",
+          "tag": "a",
+          "role": "",
+          "href": "/access",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\065_08-a-acceso.png"
+        },
+        {
+          "index": 8,
+          "name": "Avisos",
+          "tag": "a",
+          "role": "",
+          "href": "/notifications",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\066_09-a-avisos.png"
+        },
+        {
+          "index": 9,
+          "name": "Mi perfil",
+          "tag": "a",
+          "role": "",
+          "href": "/profile",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\067_10-a-mi-perfil.png"
+        },
+        {
+          "index": 10,
+          "name": "Centro de ayuda",
+          "tag": "a",
+          "role": "",
+          "href": "/tutorials",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\068_11-a-centro-de-ayuda.png"
+        },
+        {
+          "index": 11,
+          "name": "Operaciones",
+          "tag": "a",
+          "role": "",
+          "href": "/admin",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\069_12-a-operaciones.png"
+        },
+        {
+          "index": 12,
+          "name": "Equipamiento",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/equipment",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\070_13-a-equipamiento.png"
+        },
+        {
+          "index": 13,
+          "name": "Catálogo global",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/exercises",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\071_14-a-cat-logo-global.png"
+        },
+        {
+          "index": 14,
+          "name": "Instalaciones",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/facilities",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\072_15-a-instalaciones.png"
+        },
+        {
+          "index": 15,
+          "name": "Clientes",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/membership",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\073_16-a-clientes.png"
+        },
+        {
+          "index": 16,
+          "name": "Control de acceso",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/access",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\074_17-a-control-de-acceso.png"
+        },
+        {
+          "index": 17,
+          "name": "Abrir el Centro de ayuda",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\075_18-button-abrir-el-centro-de-ayuda.png"
+        },
+        {
+          "index": 18,
+          "name": "Cambiar a tema oscuro",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\076_19-button-cambiar-a-tema-oscuro.png"
+        },
+        {
+          "index": 19,
+          "name": "Dry run dataset",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\077_20-button-dry-run-dataset.png"
+        },
+        {
+          "index": 20,
+          "name": "Ejercicio global",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\078_21-button-ejercicio-global.png"
+        },
+        {
+          "index": 21,
+          "name": "Editar 3/4 sit-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\079_22-button-editar-3-4-sit-up.png"
+        },
+        {
+          "index": 22,
+          "name": "Inactivar 3/4 sit-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\080_23-button-inactivar-3-4-sit-up.png"
+        },
+        {
+          "index": 23,
+          "name": "Editar 45° side bend",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\081_24-button-editar-45-side-bend.png"
+        },
+        {
+          "index": 24,
+          "name": "Inactivar 45° side bend",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\082_25-button-inactivar-45-side-bend.png"
+        },
+        {
+          "index": 25,
+          "name": "Editar air bike",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\083_26-button-editar-air-bike.png"
+        },
+        {
+          "index": 26,
+          "name": "Inactivar air bike",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\084_27-button-inactivar-air-bike.png"
+        },
+        {
+          "index": 27,
+          "name": "Editar all fours squad stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\085_28-button-editar-all-fours-squad-stretch.png"
+        },
+        {
+          "index": 28,
+          "name": "Inactivar all fours squad stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\086_29-button-inactivar-all-fours-squad-stretch.png"
+        },
+        {
+          "index": 29,
+          "name": "Editar alternate heel touchers",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\087_30-button-editar-alternate-heel-touchers.png"
+        },
+        {
+          "index": 30,
+          "name": "Inactivar alternate heel touchers",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\088_31-button-inactivar-alternate-heel-touchers.png"
+        },
+        {
+          "index": 31,
+          "name": "Editar alternate lateral pulldown",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\089_32-button-editar-alternate-lateral-pulldown.png"
+        },
+        {
+          "index": 32,
+          "name": "Inactivar alternate lateral pulldown",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\090_33-button-inactivar-alternate-lateral-pulldown.png"
+        },
+        {
+          "index": 33,
+          "name": "Editar ankle circles",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\091_34-button-editar-ankle-circles.png"
+        },
+        {
+          "index": 34,
+          "name": "Inactivar ankle circles",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\092_35-button-inactivar-ankle-circles.png"
+        },
+        {
+          "index": 35,
+          "name": "Editar archer pull up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\093_36-button-editar-archer-pull-up.png"
+        },
+        {
+          "index": 36,
+          "name": "Inactivar archer pull up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\094_37-button-inactivar-archer-pull-up.png"
+        },
+        {
+          "index": 37,
+          "name": "Editar archer push up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\095_38-button-editar-archer-push-up.png"
+        },
+        {
+          "index": 38,
+          "name": "Inactivar archer push up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\096_39-button-inactivar-archer-push-up.png"
+        },
+        {
+          "index": 39,
+          "name": "Editar arm slingers hanging bent knee legs",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\097_40-button-editar-arm-slingers-hanging-bent-knee-.png"
+        },
+        {
+          "index": 40,
+          "name": "Inactivar arm slingers hanging bent knee legs",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\098_41-button-inactivar-arm-slingers-hanging-bent-kn.png"
+        },
+        {
+          "index": 41,
+          "name": "Editar arm slingers hanging straight legs",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\099_42-button-editar-arm-slingers-hanging-straight-l.png"
+        },
+        {
+          "index": 42,
+          "name": "Inactivar arm slingers hanging straight legs",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\100_43-button-inactivar-arm-slingers-hanging-straigh.png"
+        },
+        {
+          "index": 43,
+          "name": "Editar arms apart circular toe touch (male)",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\101_44-button-editar-arms-apart-circular-toe-touch-m.png"
+        },
+        {
+          "index": 44,
+          "name": "Inactivar arms apart circular toe touch (male)",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\102_45-button-inactivar-arms-apart-circular-toe-touc.png"
+        },
+        {
+          "index": 45,
+          "name": "Editar arms overhead full sit-up (male)",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\103_46-button-editar-arms-overhead-full-sit-up-male.png"
+        },
+        {
+          "index": 46,
+          "name": "Inactivar arms overhead full sit-up (male)",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\104_47-button-inactivar-arms-overhead-full-sit-up-ma.png"
+        },
+        {
+          "index": 47,
+          "name": "Editar assisted chest dip (kneeling)",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\105_48-button-editar-assisted-chest-dip-kneeling.png"
+        },
+        {
+          "index": 48,
+          "name": "Inactivar assisted chest dip (kneeling)",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\106_49-button-inactivar-assisted-chest-dip-kneeling.png"
+        },
+        {
+          "index": 49,
+          "name": "Editar assisted hanging knee raise",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\107_50-button-editar-assisted-hanging-knee-raise.png"
+        },
+        {
+          "index": 50,
+          "name": "Inactivar assisted hanging knee raise",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\108_51-button-inactivar-assisted-hanging-knee-raise.png"
+        },
+        {
+          "index": 51,
+          "name": "Editar assisted hanging knee raise with throw down",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\109_52-button-editar-assisted-hanging-knee-raise-wit.png"
+        },
+        {
+          "index": 52,
+          "name": "Inactivar assisted hanging knee raise with throw down",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\110_53-button-inactivar-assisted-hanging-knee-raise-.png"
+        },
+        {
+          "index": 53,
+          "name": "Editar assisted lying calves stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\111_54-button-editar-assisted-lying-calves-stretch.png"
+        },
+        {
+          "index": 54,
+          "name": "Inactivar assisted lying calves stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\112_55-button-inactivar-assisted-lying-calves-stretc.png"
+        },
+        {
+          "index": 55,
+          "name": "Editar assisted lying glutes stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\113_56-button-editar-assisted-lying-glutes-stretch.png"
+        },
+        {
+          "index": 56,
+          "name": "Inactivar assisted lying glutes stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\114_57-button-inactivar-assisted-lying-glutes-stretc.png"
+        },
+        {
+          "index": 57,
+          "name": "Editar assisted lying gluteus and piriformis stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\115_58-button-editar-assisted-lying-gluteus-and-piri.png"
+        },
+        {
+          "index": 58,
+          "name": "Inactivar assisted lying gluteus and piriformis stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\116_59-button-inactivar-assisted-lying-gluteus-and-p.png"
+        },
+        {
+          "index": 59,
+          "name": "Editar assisted lying leg raise with lateral throw down",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\117_60-button-editar-assisted-lying-leg-raise-with-l.png"
+        },
+        {
+          "index": 60,
+          "name": "Inactivar assisted lying leg raise with lateral throw down",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\118_61-button-inactivar-assisted-lying-leg-raise-wit.png"
+        },
+        {
+          "index": 61,
+          "name": "Editar assisted lying leg raise with throw down",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\119_62-button-editar-assisted-lying-leg-raise-with-t.png"
+        },
+        {
+          "index": 62,
+          "name": "Inactivar assisted lying leg raise with throw down",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\120_63-button-inactivar-assisted-lying-leg-raise-wit.png"
+        },
+        {
+          "index": 63,
+          "name": "Editar assisted motion russian twist",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\121_64-button-editar-assisted-motion-russian-twist.png"
+        },
+        {
+          "index": 64,
+          "name": "Inactivar assisted motion russian twist",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\122_65-button-inactivar-assisted-motion-russian-twis.png"
+        },
+        {
+          "index": 65,
+          "name": "Editar assisted parallel close grip pull-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\123_66-button-editar-assisted-parallel-close-grip-pu.png"
+        },
+        {
+          "index": 66,
+          "name": "Inactivar assisted parallel close grip pull-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\124_67-button-inactivar-assisted-parallel-close-grip.png"
+        },
+        {
+          "index": 67,
+          "name": "Editar assisted prone hamstring",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\125_68-button-editar-assisted-prone-hamstring.png"
+        },
+        {
+          "index": 68,
+          "name": "Inactivar assisted prone hamstring",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\126_69-button-inactivar-assisted-prone-hamstring.png"
+        },
+        {
+          "index": 69,
+          "name": "Editar assisted prone lying quads stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\127_70-button-editar-assisted-prone-lying-quads-stre.png"
+        },
+        {
+          "index": 70,
+          "name": "Inactivar assisted prone lying quads stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\128_71-button-inactivar-assisted-prone-lying-quads-s.png"
+        },
+        {
+          "index": 71,
+          "name": "Editar assisted prone rectus femoris stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\129_72-button-editar-assisted-prone-rectus-femoris-s.png"
+        },
+        {
+          "index": 72,
+          "name": "Inactivar assisted prone rectus femoris stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\130_73-button-inactivar-assisted-prone-rectus-femori.png"
+        },
+        {
+          "index": 73,
+          "name": "Editar assisted pull-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\131_74-button-editar-assisted-pull-up.png"
+        },
+        {
+          "index": 74,
+          "name": "Inactivar assisted pull-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\132_75-button-inactivar-assisted-pull-up.png"
+        },
+        {
+          "index": 75,
+          "name": "Editar assisted seated pectoralis major stretch with stability ball",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\133_76-button-editar-assisted-seated-pectoralis-majo.png"
+        },
+        {
+          "index": 76,
+          "name": "Inactivar assisted seated pectoralis major stretch with stability ball",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\134_77-button-inactivar-assisted-seated-pectoralis-m.png"
+        },
+        {
+          "index": 77,
+          "name": "Editar assisted side lying adductor stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\135_78-button-editar-assisted-side-lying-adductor-st.png"
+        },
+        {
+          "index": 78,
+          "name": "Inactivar assisted side lying adductor stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\136_79-button-inactivar-assisted-side-lying-adductor.png"
+        },
+        {
+          "index": 79,
+          "name": "Editar assisted sit-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\137_80-button-editar-assisted-sit-up.png"
+        },
+        {
+          "index": 80,
+          "name": "Inactivar assisted sit-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\138_81-button-inactivar-assisted-sit-up.png"
+        },
+        {
+          "index": 81,
+          "name": "Editar assisted standing chin-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\139_82-button-editar-assisted-standing-chin-up.png"
+        },
+        {
+          "index": 82,
+          "name": "Inactivar assisted standing chin-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\140_83-button-inactivar-assisted-standing-chin-up.png"
+        },
+        {
+          "index": 83,
+          "name": "Editar assisted standing pull-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\141_84-button-editar-assisted-standing-pull-up.png"
+        },
+        {
+          "index": 84,
+          "name": "Inactivar assisted standing pull-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\142_85-button-inactivar-assisted-standing-pull-up.png"
+        },
+        {
+          "index": 85,
+          "name": "Editar assisted standing triceps extension (with towel)",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\143_86-button-editar-assisted-standing-triceps-exten.png"
+        },
+        {
+          "index": 86,
+          "name": "Inactivar assisted standing triceps extension (with towel)",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\144_87-button-inactivar-assisted-standing-triceps-ex.png"
+        },
+        {
+          "index": 87,
+          "name": "Editar assisted triceps dip (kneeling)",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\145_88-button-editar-assisted-triceps-dip-kneeling.png"
+        },
+        {
+          "index": 88,
+          "name": "Inactivar assisted triceps dip (kneeling)",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\146_89-button-inactivar-assisted-triceps-dip-kneelin.png"
+        },
+        {
+          "index": 89,
+          "name": "Editar assisted wide-grip chest dip (kneeling)",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\147_90-button-editar-assisted-wide-grip-chest-dip-kn.png"
+        },
+        {
+          "index": 90,
+          "name": "Inactivar assisted wide-grip chest dip (kneeling)",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\148_91-button-inactivar-assisted-wide-grip-chest-dip.png"
+        },
+        {
+          "index": 91,
+          "name": "Editar astride jumps (male)",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\149_92-button-editar-astride-jumps-male.png"
+        },
+        {
+          "index": 92,
+          "name": "Inactivar astride jumps (male)",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\150_93-button-inactivar-astride-jumps-male.png"
+        },
+        {
+          "index": 93,
+          "name": "Editar back and forth step",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\151_94-button-editar-back-and-forth-step.png"
+        },
+        {
+          "index": 94,
+          "name": "Inactivar back and forth step",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\152_95-button-inactivar-back-and-forth-step.png"
+        },
+        {
+          "index": 95,
+          "name": "Editar back extension on exercise ball",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\153_96-button-editar-back-extension-on-exercise-ball.png"
+        },
+        {
+          "index": 96,
+          "name": "Inactivar back extension on exercise ball",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\154_97-button-inactivar-back-extension-on-exercise-b.png"
+        },
+        {
+          "index": 97,
+          "name": "Editar back lever",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\155_98-button-editar-back-lever.png"
+        },
+        {
+          "index": 98,
+          "name": "Inactivar back lever",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\156_99-button-inactivar-back-lever.png"
+        },
+        {
+          "index": 99,
+          "name": "Editar back pec stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\157_100-button-editar-back-pec-stretch.png"
+        },
+        {
+          "index": 100,
+          "name": "Inactivar back pec stretch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\158_101-button-inactivar-back-pec-stretch.png"
+        },
+        {
+          "index": 101,
+          "name": "Editar backward jump",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\159_102-button-editar-backward-jump.png"
+        },
+        {
+          "index": 102,
+          "name": "Inactivar backward jump",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\160_103-button-inactivar-backward-jump.png"
+        },
+        {
+          "index": 103,
+          "name": "Editar balance board",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\161_104-button-editar-balance-board.png"
+        },
+        {
+          "index": 104,
+          "name": "Inactivar balance board",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\162_105-button-inactivar-balance-board.png"
+        },
+        {
+          "index": 105,
+          "name": "Editar band alternating biceps curl",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\163_106-button-editar-band-alternating-biceps-curl.png"
+        },
+        {
+          "index": 106,
+          "name": "Inactivar band alternating biceps curl",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\164_107-button-inactivar-band-alternating-biceps-cur.png"
+        },
+        {
+          "index": 107,
+          "name": "Editar band alternating v-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\165_108-button-editar-band-alternating-v-up.png"
+        },
+        {
+          "index": 108,
+          "name": "Inactivar band alternating v-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\166_109-button-inactivar-band-alternating-v-up.png"
+        },
+        {
+          "index": 109,
+          "name": "Editar band assisted pull-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\167_110-button-editar-band-assisted-pull-up.png"
+        },
+        {
+          "index": 110,
+          "name": "Inactivar band assisted pull-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\168_111-button-inactivar-band-assisted-pull-up.png"
+        },
+        {
+          "index": 111,
+          "name": "Editar band assisted wheel rollerout",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\169_112-button-editar-band-assisted-wheel-rollerout.png"
+        },
+        {
+          "index": 112,
+          "name": "Inactivar band assisted wheel rollerout",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\170_113-button-inactivar-band-assisted-wheel-rollero.png"
+        },
+        {
+          "index": 113,
+          "name": "Editar band bench press",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\171_114-button-editar-band-bench-press.png"
+        },
+        {
+          "index": 114,
+          "name": "Inactivar band bench press",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\172_115-button-inactivar-band-bench-press.png"
+        },
+        {
+          "index": 115,
+          "name": "Editar band bent-over hip extension",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\173_116-button-editar-band-bent-over-hip-extension.png"
+        },
+        {
+          "index": 116,
+          "name": "Inactivar band bent-over hip extension",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\174_117-button-inactivar-band-bent-over-hip-extensio.png"
+        },
+        {
+          "index": 117,
+          "name": "Editar band bicycle crunch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\175_118-button-editar-band-bicycle-crunch.png"
+        },
+        {
+          "index": 118,
+          "name": "Inactivar band bicycle crunch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\176_119-button-inactivar-band-bicycle-crunch.png"
+        },
+        {
+          "index": 119,
+          "name": "Editar band close-grip pulldown",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\177_120-button-editar-band-close-grip-pulldown.png"
+        },
+        {
+          "index": 120,
+          "name": "Inactivar band close-grip pulldown",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\178_121-button-inactivar-band-close-grip-pulldown.png"
+        },
+        {
+          "index": 121,
+          "name": "Editar band close-grip push-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\179_122-button-editar-band-close-grip-push-up.png"
+        },
+        {
+          "index": 122,
+          "name": "Inactivar band close-grip push-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\180_123-button-inactivar-band-close-grip-push-up.png"
+        },
+        {
+          "index": 123,
+          "name": "Editar band concentration curl",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\181_124-button-editar-band-concentration-curl.png"
+        },
+        {
+          "index": 124,
+          "name": "Inactivar band concentration curl",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\182_125-button-inactivar-band-concentration-curl.png"
+        },
+        {
+          "index": 125,
+          "name": "Editar band fixed back close grip pulldown",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\183_126-button-editar-band-fixed-back-close-grip-pul.png"
+        },
+        {
+          "index": 126,
+          "name": "Inactivar band fixed back close grip pulldown",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\184_127-button-inactivar-band-fixed-back-close-grip-.png"
+        },
+        {
+          "index": 127,
+          "name": "Editar band fixed back underhand pulldown",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\185_128-button-editar-band-fixed-back-underhand-pull.png"
+        },
+        {
+          "index": 128,
+          "name": "Inactivar band fixed back underhand pulldown",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\186_129-button-inactivar-band-fixed-back-underhand-p.png"
+        },
+        {
+          "index": 129,
+          "name": "Editar band front lateral raise",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\187_130-button-editar-band-front-lateral-raise.png"
+        },
+        {
+          "index": 130,
+          "name": "Inactivar band front lateral raise",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\188_131-button-inactivar-band-front-lateral-raise.png"
+        },
+        {
+          "index": 131,
+          "name": "Editar band front raise",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\189_132-button-editar-band-front-raise.png"
+        },
+        {
+          "index": 132,
+          "name": "Inactivar band front raise",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\190_133-button-inactivar-band-front-raise.png"
+        },
+        {
+          "index": 133,
+          "name": "Editar band hip lift",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\191_134-button-editar-band-hip-lift.png"
+        },
+        {
+          "index": 134,
+          "name": "Inactivar band hip lift",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\192_135-button-inactivar-band-hip-lift.png"
+        },
+        {
+          "index": 135,
+          "name": "Editar band horizontal pallof press",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\193_136-button-editar-band-horizontal-pallof-press.png"
+        },
+        {
+          "index": 136,
+          "name": "Inactivar band horizontal pallof press",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\194_137-button-inactivar-band-horizontal-pallof-pres.png"
+        },
+        {
+          "index": 137,
+          "name": "Editar band jack knife sit-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\195_138-button-editar-band-jack-knife-sit-up.png"
+        },
+        {
+          "index": 138,
+          "name": "Inactivar band jack knife sit-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\196_139-button-inactivar-band-jack-knife-sit-up.png"
+        },
+        {
+          "index": 139,
+          "name": "Editar band kneeling one arm pulldown",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\197_140-button-editar-band-kneeling-one-arm-pulldown.png"
+        },
+        {
+          "index": 140,
+          "name": "Inactivar band kneeling one arm pulldown",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\198_141-button-inactivar-band-kneeling-one-arm-pulld.png"
+        },
+        {
+          "index": 141,
+          "name": "Editar band kneeling twisting crunch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\199_142-button-editar-band-kneeling-twisting-crunch.png"
+        },
+        {
+          "index": 142,
+          "name": "Inactivar band kneeling twisting crunch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\200_143-button-inactivar-band-kneeling-twisting-crun.png"
+        },
+        {
+          "index": 143,
+          "name": "Editar band lying hip internal rotation",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\201_144-button-editar-band-lying-hip-internal-rotati.png"
+        },
+        {
+          "index": 144,
+          "name": "Inactivar band lying hip internal rotation",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\202_145-button-inactivar-band-lying-hip-internal-rot.png"
+        },
+        {
+          "index": 145,
+          "name": "Editar band lying straight leg raise",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\203_146-button-editar-band-lying-straight-leg-raise.png"
+        },
+        {
+          "index": 146,
+          "name": "Inactivar band lying straight leg raise",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\204_147-button-inactivar-band-lying-straight-leg-rai.png"
+        },
+        {
+          "index": 147,
+          "name": "Editar band one arm overhead biceps curl",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\205_148-button-editar-band-one-arm-overhead-biceps-c.png"
+        },
+        {
+          "index": 148,
+          "name": "Inactivar band one arm overhead biceps curl",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\206_149-button-inactivar-band-one-arm-overhead-bicep.png"
+        },
+        {
+          "index": 149,
+          "name": "Editar band one arm single leg split squat",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\207_150-button-editar-band-one-arm-single-leg-split-.png"
+        },
+        {
+          "index": 150,
+          "name": "Inactivar band one arm single leg split squat",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\208_151-button-inactivar-band-one-arm-single-leg-spl.png"
+        },
+        {
+          "index": 151,
+          "name": "Editar band one arm standing low row",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\209_152-button-editar-band-one-arm-standing-low-row.png"
+        },
+        {
+          "index": 152,
+          "name": "Inactivar band one arm standing low row",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\210_153-button-inactivar-band-one-arm-standing-low-r.png"
+        },
+        {
+          "index": 153,
+          "name": "Editar band one arm twisting chest press",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\211_154-button-editar-band-one-arm-twisting-chest-pr.png"
+        },
+        {
+          "index": 154,
+          "name": "Inactivar band one arm twisting chest press",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\212_155-button-inactivar-band-one-arm-twisting-chest.png"
+        },
+        {
+          "index": 155,
+          "name": "Editar band one arm twisting seated row",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\213_156-button-editar-band-one-arm-twisting-seated-r.png"
+        },
+        {
+          "index": 156,
+          "name": "Inactivar band one arm twisting seated row",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\214_157-button-inactivar-band-one-arm-twisting-seate.png"
+        },
+        {
+          "index": 157,
+          "name": "Editar band pull through",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\215_158-button-editar-band-pull-through.png"
+        },
+        {
+          "index": 158,
+          "name": "Inactivar band pull through",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\216_159-button-inactivar-band-pull-through.png"
+        },
+        {
+          "index": 159,
+          "name": "Editar band push sit-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\217_160-button-editar-band-push-sit-up.png"
+        },
+        {
+          "index": 160,
+          "name": "Inactivar band push sit-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\218_161-button-inactivar-band-push-sit-up.png"
+        },
+        {
+          "index": 161,
+          "name": "Editar band reverse fly",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\219_162-button-editar-band-reverse-fly.png"
+        },
+        {
+          "index": 162,
+          "name": "Inactivar band reverse fly",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\220_163-button-inactivar-band-reverse-fly.png"
+        },
+        {
+          "index": 163,
+          "name": "Editar band reverse wrist curl",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\221_164-button-editar-band-reverse-wrist-curl.png"
+        },
+        {
+          "index": 164,
+          "name": "Inactivar band reverse wrist curl",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\222_165-button-inactivar-band-reverse-wrist-curl.png"
+        },
+        {
+          "index": 165,
+          "name": "Editar band seated hip internal rotation",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\223_166-button-editar-band-seated-hip-internal-rotat.png"
+        },
+        {
+          "index": 166,
+          "name": "Inactivar band seated hip internal rotation",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\224_167-button-inactivar-band-seated-hip-internal-ro.png"
+        },
+        {
+          "index": 167,
+          "name": "Editar band seated twist",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\225_168-button-editar-band-seated-twist.png"
+        },
+        {
+          "index": 168,
+          "name": "Inactivar band seated twist",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\226_169-button-inactivar-band-seated-twist.png"
+        },
+        {
+          "index": 169,
+          "name": "Editar band shoulder press",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\227_170-button-editar-band-shoulder-press.png"
+        },
+        {
+          "index": 170,
+          "name": "Inactivar band shoulder press",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\228_171-button-inactivar-band-shoulder-press.png"
+        },
+        {
+          "index": 171,
+          "name": "Editar band shrug",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\229_172-button-editar-band-shrug.png"
+        },
+        {
+          "index": 172,
+          "name": "Inactivar band shrug",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\230_173-button-inactivar-band-shrug.png"
+        },
+        {
+          "index": 173,
+          "name": "Editar band side triceps extension",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\231_174-button-editar-band-side-triceps-extension.png"
+        },
+        {
+          "index": 174,
+          "name": "Inactivar band side triceps extension",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\232_175-button-inactivar-band-side-triceps-extension.png"
+        },
+        {
+          "index": 175,
+          "name": "Editar band single leg calf raise",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\233_176-button-editar-band-single-leg-calf-raise.png"
+        },
+        {
+          "index": 176,
+          "name": "Inactivar band single leg calf raise",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\234_177-button-inactivar-band-single-leg-calf-raise.png"
+        },
+        {
+          "index": 177,
+          "name": "Editar band single leg reverse calf raise",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\235_178-button-editar-band-single-leg-reverse-calf-r.png"
+        },
+        {
+          "index": 178,
+          "name": "Inactivar band single leg reverse calf raise",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\236_179-button-inactivar-band-single-leg-reverse-cal.png"
+        },
+        {
+          "index": 179,
+          "name": "Editar band single leg split squat",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\237_180-button-editar-band-single-leg-split-squat.png"
+        },
+        {
+          "index": 180,
+          "name": "Inactivar band single leg split squat",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\238_181-button-inactivar-band-single-leg-split-squat.png"
+        },
+        {
+          "index": 181,
+          "name": "Editar band squat",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\239_182-button-editar-band-squat.png"
+        },
+        {
+          "index": 182,
+          "name": "Inactivar band squat",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\240_183-button-inactivar-band-squat.png"
+        },
+        {
+          "index": 183,
+          "name": "Editar band squat row",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\241_184-button-editar-band-squat-row.png"
+        },
+        {
+          "index": 184,
+          "name": "Inactivar band squat row",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\242_185-button-inactivar-band-squat-row.png"
+        },
+        {
+          "index": 185,
+          "name": "Editar band standing crunch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\243_186-button-editar-band-standing-crunch.png"
+        },
+        {
+          "index": 186,
+          "name": "Inactivar band standing crunch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\244_187-button-inactivar-band-standing-crunch.png"
+        },
+        {
+          "index": 187,
+          "name": "Editar band standing rear delt row",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\245_188-button-editar-band-standing-rear-delt-row.png"
+        },
+        {
+          "index": 188,
+          "name": "Inactivar band standing rear delt row",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\246_189-button-inactivar-band-standing-rear-delt-row.png"
+        },
+        {
+          "index": 189,
+          "name": "Editar band standing twisting crunch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\247_190-button-editar-band-standing-twisting-crunch.png"
+        },
+        {
+          "index": 190,
+          "name": "Inactivar band standing twisting crunch",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\248_191-button-inactivar-band-standing-twisting-crun.png"
+        },
+        {
+          "index": 191,
+          "name": "Editar band step-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\249_192-button-editar-band-step-up.png"
+        },
+        {
+          "index": 192,
+          "name": "Inactivar band step-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\250_193-button-inactivar-band-step-up.png"
+        },
+        {
+          "index": 193,
+          "name": "Editar band stiff leg deadlift",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\251_194-button-editar-band-stiff-leg-deadlift.png"
+        },
+        {
+          "index": 194,
+          "name": "Inactivar band stiff leg deadlift",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\252_195-button-inactivar-band-stiff-leg-deadlift.png"
+        },
+        {
+          "index": 195,
+          "name": "Editar band straight back stiff leg deadlift",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\253_196-button-editar-band-straight-back-stiff-leg-d.png"
+        },
+        {
+          "index": 196,
+          "name": "Inactivar band straight back stiff leg deadlift",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\254_197-button-inactivar-band-straight-back-stiff-le.png"
+        },
+        {
+          "index": 197,
+          "name": "Editar band straight leg deadlift",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\255_198-button-editar-band-straight-leg-deadlift.png"
+        },
+        {
+          "index": 198,
+          "name": "Inactivar band straight leg deadlift",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\256_199-button-inactivar-band-straight-leg-deadlift.png"
+        },
+        {
+          "index": 199,
+          "name": "Editar band twisting overhead press",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\257_200-button-editar-band-twisting-overhead-press.png"
+        },
+        {
+          "index": 200,
+          "name": "Inactivar band twisting overhead press",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\258_201-button-inactivar-band-twisting-overhead-pres.png"
+        },
+        {
+          "index": 201,
+          "name": "Editar band two legs calf raise - (band under both legs) v. 2",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\259_202-button-editar-band-two-legs-calf-raise-band-.png"
+        },
+        {
+          "index": 202,
+          "name": "Inactivar band two legs calf raise - (band under both legs) v. 2",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\260_203-button-inactivar-band-two-legs-calf-raise-ba.png"
+        },
+        {
+          "index": 203,
+          "name": "Editar band underhand pulldown",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\261_204-button-editar-band-underhand-pulldown.png"
+        },
+        {
+          "index": 204,
+          "name": "Inactivar band underhand pulldown",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\262_205-button-inactivar-band-underhand-pulldown.png"
+        },
+        {
+          "index": 205,
+          "name": "Editar band v-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\263_206-button-editar-band-v-up.png"
+        },
+        {
+          "index": 206,
+          "name": "Inactivar band v-up",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\264_207-button-inactivar-band-v-up.png"
+        },
+        {
+          "index": 207,
+          "name": "Editar band vertical pallof press",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\265_208-button-editar-band-vertical-pallof-press.png"
+        },
+        {
+          "index": 208,
+          "name": "Inactivar band vertical pallof press",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\266_209-button-inactivar-band-vertical-pallof-press.png"
+        },
+        {
+          "index": 209,
+          "name": "Editar band wrist curl",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\267_210-button-editar-band-wrist-curl.png"
+        },
+        {
+          "index": 210,
+          "name": "Inactivar band wrist curl",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\268_211-button-inactivar-band-wrist-curl.png"
+        },
+        {
+          "index": 211,
+          "name": "Editar band y-raise",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\269_212-button-editar-band-y-raise.png"
+        },
+        {
+          "index": 212,
+          "name": "Inactivar band y-raise",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\270_213-button-inactivar-band-y-raise.png"
+        },
+        {
+          "index": 213,
+          "name": "Editar barbell alternate biceps curl",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\271_214-button-editar-barbell-alternate-biceps-curl.png"
+        },
+        {
+          "index": 214,
+          "name": "Inactivar barbell alternate biceps curl",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\272_215-button-inactivar-barbell-alternate-biceps-cu.png"
+        },
+        {
+          "index": 215,
+          "name": "Editar barbell bench front squat",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\273_216-button-editar-barbell-bench-front-squat.png"
+        },
+        {
+          "index": 216,
+          "name": "Inactivar barbell bench front squat",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\274_217-button-inactivar-barbell-bench-front-squat.png"
+        },
+        {
+          "index": 217,
+          "name": "Editar barbell bench press",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\275_218-button-editar-barbell-bench-press.png"
+        },
+        {
+          "index": 218,
+          "name": "Inactivar barbell bench press",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\276_219-button-inactivar-barbell-bench-press.png"
+        },
+        {
+          "index": 219,
+          "name": "Editar barbell bench squat",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\277_220-button-editar-barbell-bench-squat.png"
+        },
+        {
+          "index": 220,
+          "name": "Inactivar barbell bench squat",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\278_221-button-inactivar-barbell-bench-squat.png"
+        },
+        {
+          "index": 221,
+          "name": "Open Next.js Dev Tools",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\279_222-button-open-next-js-dev-tools.png"
+        },
+        {
+          "index": 222,
+          "name": "Cerrar tutorial",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\280_223-button-cerrar-tutorial.png"
+        },
+        {
+          "index": 223,
+          "name": "Omitir",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\281_224-button-omitir.png"
+        },
+        {
+          "index": 224,
+          "name": "Siguiente",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-exercises\\282_225-button-siguiente.png"
+        }
+      ]
+    },
+    {
+      "route": "/admin/facilities",
+      "landed": "/admin/facilities",
+      "total": 29,
+      "clicks": [
+        {
+          "index": 0,
+          "name": "Ir al panel",
+          "tag": "a",
+          "role": "",
+          "href": "/dashboard",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\003_01-a-ir-al-panel.png"
+        },
+        {
+          "index": 1,
+          "name": "Panel",
+          "tag": "a",
+          "role": "",
+          "href": "/dashboard",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\004_02-a-panel.png"
+        },
+        {
+          "index": 2,
+          "name": "Entrenamientos",
+          "tag": "a",
+          "role": "",
+          "href": "/workouts",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\005_03-a-entrenamientos.png"
+        },
+        {
+          "index": 3,
+          "name": "Mis planes",
+          "tag": "a",
+          "role": "",
+          "href": "/plans",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\006_04-a-mis-planes.png"
+        },
+        {
+          "index": 4,
+          "name": "Rutinas",
+          "tag": "a",
+          "role": "",
+          "href": "/routines",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\007_05-a-rutinas.png"
+        },
+        {
+          "index": 5,
+          "name": "Ejercicios",
+          "tag": "a",
+          "role": "",
+          "href": "/exercises",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\008_06-a-ejercicios.png"
+        },
+        {
+          "index": 6,
+          "name": "Membresía",
+          "tag": "a",
+          "role": "",
+          "href": "/membership",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\009_07-a-membres-a.png"
+        },
+        {
+          "index": 7,
+          "name": "Acceso",
+          "tag": "a",
+          "role": "",
+          "href": "/access",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\010_08-a-acceso.png"
+        },
+        {
+          "index": 8,
+          "name": "Avisos",
+          "tag": "a",
+          "role": "",
+          "href": "/notifications",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\011_09-a-avisos.png"
+        },
+        {
+          "index": 9,
+          "name": "Mi perfil",
+          "tag": "a",
+          "role": "",
+          "href": "/profile",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\012_10-a-mi-perfil.png"
+        },
+        {
+          "index": 10,
+          "name": "Centro de ayuda",
+          "tag": "a",
+          "role": "",
+          "href": "/tutorials",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\013_11-a-centro-de-ayuda.png"
+        },
+        {
+          "index": 11,
+          "name": "Operaciones",
+          "tag": "a",
+          "role": "",
+          "href": "/admin",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\014_12-a-operaciones.png"
+        },
+        {
+          "index": 12,
+          "name": "Equipamiento",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/equipment",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\015_13-a-equipamiento.png"
+        },
+        {
+          "index": 13,
+          "name": "Catálogo global",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/exercises",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\016_14-a-cat-logo-global.png"
+        },
+        {
+          "index": 14,
+          "name": "Instalaciones",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/facilities",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\017_15-a-instalaciones.png"
+        },
+        {
+          "index": 15,
+          "name": "Clientes",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/membership",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\018_16-a-clientes.png"
+        },
+        {
+          "index": 16,
+          "name": "Control de acceso",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/access",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\019_17-a-control-de-acceso.png"
+        },
+        {
+          "index": 17,
+          "name": "Abrir el Centro de ayuda",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\020_18-button-abrir-el-centro-de-ayuda.png"
+        },
+        {
+          "index": 18,
+          "name": "Cambiar a tema oscuro",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\021_19-button-cambiar-a-tema-oscuro.png"
+        },
+        {
+          "index": 19,
+          "name": "Sedes",
+          "tag": "button",
+          "role": "tab",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\022_20-button-tab-sedes.png"
+        },
+        {
+          "index": 20,
+          "name": "Salas",
+          "tag": "button",
+          "role": "tab",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\023_21-button-tab-salas.png"
+        },
+        {
+          "index": 21,
+          "name": "Puntos de acceso",
+          "tag": "button",
+          "role": "tab",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\024_22-button-tab-puntos-de-acceso.png"
+        },
+        {
+          "index": 22,
+          "name": "Mantenimiento",
+          "tag": "button",
+          "role": "tab",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\025_23-button-tab-mantenimiento.png"
+        },
+        {
+          "index": 23,
+          "name": "Asignaciones",
+          "tag": "button",
+          "role": "tab",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\026_24-button-tab-asignaciones.png"
+        },
+        {
+          "index": 24,
+          "name": "Nueva sede",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\027_25-button-nueva-sede.png"
+        },
+        {
+          "index": 25,
+          "name": "Open Next.js Dev Tools",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\028_26-button-open-next-js-dev-tools.png"
+        },
+        {
+          "index": 26,
+          "name": "Cerrar tutorial",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\029_27-button-cerrar-tutorial.png"
+        },
+        {
+          "index": 27,
+          "name": "Omitir",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\030_28-button-omitir.png"
+        },
+        {
+          "index": 28,
+          "name": "Siguiente",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-facilities\\031_29-button-siguiente.png"
+        }
+      ]
+    },
+    {
+      "route": "/admin/membership",
+      "landed": "/admin/membership",
+      "total": 31,
+      "clicks": [
+        {
+          "index": 0,
+          "name": "Ir al panel",
+          "tag": "a",
+          "role": "",
+          "href": "/dashboard",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\284_01-a-ir-al-panel.png"
+        },
+        {
+          "index": 1,
+          "name": "Panel",
+          "tag": "a",
+          "role": "",
+          "href": "/dashboard",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\285_02-a-panel.png"
+        },
+        {
+          "index": 2,
+          "name": "Entrenamientos",
+          "tag": "a",
+          "role": "",
+          "href": "/workouts",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\286_03-a-entrenamientos.png"
+        },
+        {
+          "index": 3,
+          "name": "Mis planes",
+          "tag": "a",
+          "role": "",
+          "href": "/plans",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\287_04-a-mis-planes.png"
+        },
+        {
+          "index": 4,
+          "name": "Rutinas",
+          "tag": "a",
+          "role": "",
+          "href": "/routines",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\288_05-a-rutinas.png"
+        },
+        {
+          "index": 5,
+          "name": "Ejercicios",
+          "tag": "a",
+          "role": "",
+          "href": "/exercises",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\289_06-a-ejercicios.png"
+        },
+        {
+          "index": 6,
+          "name": "Membresía",
+          "tag": "a",
+          "role": "",
+          "href": "/membership",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\290_07-a-membres-a.png"
+        },
+        {
+          "index": 7,
+          "name": "Acceso",
+          "tag": "a",
+          "role": "",
+          "href": "/access",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\291_08-a-acceso.png"
+        },
+        {
+          "index": 8,
+          "name": "Avisos",
+          "tag": "a",
+          "role": "",
+          "href": "/notifications",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\292_09-a-avisos.png"
+        },
+        {
+          "index": 9,
+          "name": "Mi perfil",
+          "tag": "a",
+          "role": "",
+          "href": "/profile",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\293_10-a-mi-perfil.png"
+        },
+        {
+          "index": 10,
+          "name": "Centro de ayuda",
+          "tag": "a",
+          "role": "",
+          "href": "/tutorials",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\294_11-a-centro-de-ayuda.png"
+        },
+        {
+          "index": 11,
+          "name": "Operaciones",
+          "tag": "a",
+          "role": "",
+          "href": "/admin",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\295_12-a-operaciones.png"
+        },
+        {
+          "index": 12,
+          "name": "Equipamiento",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/equipment",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\296_13-a-equipamiento.png"
+        },
+        {
+          "index": 13,
+          "name": "Catálogo global",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/exercises",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\297_14-a-cat-logo-global.png"
+        },
+        {
+          "index": 14,
+          "name": "Instalaciones",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/facilities",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\298_15-a-instalaciones.png"
+        },
+        {
+          "index": 15,
+          "name": "Clientes",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/membership",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\299_16-a-clientes.png"
+        },
+        {
+          "index": 16,
+          "name": "Control de acceso",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/access",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\300_17-a-control-de-acceso.png"
+        },
+        {
+          "index": 17,
+          "name": "Abrir el Centro de ayuda",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\301_18-button-abrir-el-centro-de-ayuda.png"
+        },
+        {
+          "index": 18,
+          "name": "Cambiar a tema oscuro",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\302_19-button-cambiar-a-tema-oscuro.png"
+        },
+        {
+          "index": 19,
+          "name": "Planes",
+          "tag": "button",
+          "role": "tab",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\303_20-button-tab-planes.png"
+        },
+        {
+          "index": 20,
+          "name": "Clientes",
+          "tag": "button",
+          "role": "tab",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\304_21-button-tab-clientes.png"
+        },
+        {
+          "index": 21,
+          "name": "Membresías",
+          "tag": "button",
+          "role": "tab",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\305_22-button-tab-membres-as.png"
+        },
+        {
+          "index": 22,
+          "name": "Personal",
+          "tag": "button",
+          "role": "tab",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\306_23-button-tab-personal.png"
+        },
+        {
+          "index": 23,
+          "name": "Nuevo plan",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\307_24-button-nuevo-plan.png"
+        },
+        {
+          "index": 24,
+          "name": "Editar alcances de Plan mensual · Desarrollo",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\308_25-button-editar-alcances-de-plan-mensual-desarr.png"
+        },
+        {
+          "index": 25,
+          "name": "Editar alcances de Plan trimestral · Desarrollo",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\309_26-button-editar-alcances-de-plan-trimestral-des.png"
+        },
+        {
+          "index": 26,
+          "name": "Editar alcances de Plan anual · Desarrollo",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\310_27-button-editar-alcances-de-plan-anual-desarrol.png"
+        },
+        {
+          "index": 27,
+          "name": "Open Next.js Dev Tools",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\311_28-button-open-next-js-dev-tools.png"
+        },
+        {
+          "index": 28,
+          "name": "Cerrar tutorial",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\312_29-button-cerrar-tutorial.png"
+        },
+        {
+          "index": 29,
+          "name": "Omitir",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\313_30-button-omitir.png"
+        },
+        {
+          "index": 30,
+          "name": "Siguiente",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-membership\\314_31-button-siguiente.png"
+        }
+      ]
+    },
+    {
+      "route": "/admin/access",
+      "landed": "/admin/access",
+      "total": 27,
+      "clicks": [
+        {
+          "index": 0,
+          "name": "Ir al panel",
+          "tag": "a",
+          "role": "",
+          "href": "/dashboard",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\316_01-a-ir-al-panel.png"
+        },
+        {
+          "index": 1,
+          "name": "Panel",
+          "tag": "a",
+          "role": "",
+          "href": "/dashboard",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\317_02-a-panel.png"
+        },
+        {
+          "index": 2,
+          "name": "Entrenamientos",
+          "tag": "a",
+          "role": "",
+          "href": "/workouts",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\318_03-a-entrenamientos.png"
+        },
+        {
+          "index": 3,
+          "name": "Mis planes",
+          "tag": "a",
+          "role": "",
+          "href": "/plans",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\319_04-a-mis-planes.png"
+        },
+        {
+          "index": 4,
+          "name": "Rutinas",
+          "tag": "a",
+          "role": "",
+          "href": "/routines",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\320_05-a-rutinas.png"
+        },
+        {
+          "index": 5,
+          "name": "Ejercicios",
+          "tag": "a",
+          "role": "",
+          "href": "/exercises",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\321_06-a-ejercicios.png"
+        },
+        {
+          "index": 6,
+          "name": "Membresía",
+          "tag": "a",
+          "role": "",
+          "href": "/membership",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\322_07-a-membres-a.png"
+        },
+        {
+          "index": 7,
+          "name": "Acceso",
+          "tag": "a",
+          "role": "",
+          "href": "/access",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\323_08-a-acceso.png"
+        },
+        {
+          "index": 8,
+          "name": "Avisos",
+          "tag": "a",
+          "role": "",
+          "href": "/notifications",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\324_09-a-avisos.png"
+        },
+        {
+          "index": 9,
+          "name": "Mi perfil",
+          "tag": "a",
+          "role": "",
+          "href": "/profile",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\325_10-a-mi-perfil.png"
+        },
+        {
+          "index": 10,
+          "name": "Centro de ayuda",
+          "tag": "a",
+          "role": "",
+          "href": "/tutorials",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\326_11-a-centro-de-ayuda.png"
+        },
+        {
+          "index": 11,
+          "name": "Operaciones",
+          "tag": "a",
+          "role": "",
+          "href": "/admin",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\327_12-a-operaciones.png"
+        },
+        {
+          "index": 12,
+          "name": "Equipamiento",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/equipment",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\328_13-a-equipamiento.png"
+        },
+        {
+          "index": 13,
+          "name": "Catálogo global",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/exercises",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\329_14-a-cat-logo-global.png"
+        },
+        {
+          "index": 14,
+          "name": "Instalaciones",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/facilities",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\330_15-a-instalaciones.png"
+        },
+        {
+          "index": 15,
+          "name": "Clientes",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/membership",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\331_16-a-clientes.png"
+        },
+        {
+          "index": 16,
+          "name": "Control de acceso",
+          "tag": "a",
+          "role": "",
+          "href": "/admin/access",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\332_17-a-control-de-acceso.png"
+        },
+        {
+          "index": 17,
+          "name": "Abrir el Centro de ayuda",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\333_18-button-abrir-el-centro-de-ayuda.png"
+        },
+        {
+          "index": 18,
+          "name": "Cambiar a tema oscuro",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\334_19-button-cambiar-a-tema-oscuro.png"
+        },
+        {
+          "index": 19,
+          "name": "Dispositivos",
+          "tag": "button",
+          "role": "tab",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\335_20-button-tab-dispositivos.png"
+        },
+        {
+          "index": 20,
+          "name": "Historial",
+          "tag": "button",
+          "role": "tab",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\336_21-button-tab-historial.png"
+        },
+        {
+          "index": 21,
+          "name": "Credenciales",
+          "tag": "button",
+          "role": "tab",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\337_22-button-tab-credenciales.png"
+        },
+        {
+          "index": 22,
+          "name": "Nuevo dispositivo",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked-forced",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\338_23-button-nuevo-dispositivo.png"
+        },
+        {
+          "index": 23,
+          "name": "Open Next.js Dev Tools",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\339_24-button-open-next-js-dev-tools.png"
+        },
+        {
+          "index": 24,
+          "name": "Cerrar tutorial",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\340_25-button-cerrar-tutorial.png"
+        },
+        {
+          "index": 25,
+          "name": "Omitir",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\341_26-button-omitir.png"
+        },
+        {
+          "index": 26,
+          "name": "Siguiente",
+          "tag": "button",
+          "role": "",
+          "href": "",
+          "status": "clicked",
+          "navigatedTo": null,
+          "screenshot": "C:\\Users\\DELL\\Documents\\GitHub\\GymSheetFrontend\\apps\\web\\click-evidence\\sweep-20260814-020557\\05_admin\\admin-access\\342_27-button-siguiente.png"
+        }
+      ]
+    }
+  ]
+}

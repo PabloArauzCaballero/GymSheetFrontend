@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Pencil } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { exerciseAdminService } from '@/features/admin/services/exercise-admin-service';
 import type { Exercise } from '@/shared/api/contracts';
 import { Button } from '@/shared/components/ui/button';
@@ -27,9 +27,9 @@ export function GlobalExerciseEditButton({ exercise }: Readonly<{ exercise: Exer
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['exercises'] });
       setOpen(false);
-      toast.success('Ejercicio global actualizado.');
+      notify.success('Ejercicio global actualizado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
 
   return (

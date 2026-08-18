@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Upload } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import {
   trainingService,
   type ImportRoutinePayload,
@@ -78,11 +78,11 @@ export function RoutineImportDialog() {
       await queryClient.invalidateQueries({ queryKey: queryKeys.routines('mine') });
       const failures = result.resultados.filter((item) => !item.creada);
       if (failures.length === 0) {
-        toast.success(`${result.creadas} rutinas importadas.`);
+        notify.success(`${result.creadas} rutinas importadas.`);
         setRaw('');
         setOpen(false);
       } else {
-        toast.warning(`${result.creadas} creadas, ${failures.length} con error.`);
+        notify.warning(`${result.creadas} creadas, ${failures.length} con error.`);
         setError(failures.map((f) => `${f.nombre}: ${f.error}`).slice(0, 8).join('\n'));
       }
     },

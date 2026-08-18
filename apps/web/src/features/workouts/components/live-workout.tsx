@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, type CSSProperties } from 'react';
-import { toast } from 'sonner';
+import { confirm, notify } from '@/shared/notifications';
 import { workoutService } from '@/features/workouts/services/workout-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
@@ -46,19 +46,19 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
     mutationFn: () => workoutService.finish(id),
     onSuccess: async () => {
       await refresh();
-      toast.success('Sesión finalizada.');
+      notify.success('Sesión finalizada.');
       router.refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const cancel = useMutation({
     mutationFn: () => workoutService.cancel(id),
     onSuccess: async () => {
       await refresh();
-      toast.success('Sesión cancelada.');
+      notify.success('Sesión cancelada.');
       router.refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   if (query.isLoading) return <LoadingPanel rows={8} />;
   if (query.isError || !query.data)
@@ -106,7 +106,21 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
                 <CheckCircle2 className="size-4" />
                 Finalizar
               </Button>
-              <Button loading={cancel.isPending} onClick={() => cancel.mutate()} variant="danger">
+              <Button
+                loading={cancel.isPending}
+                onClick={async () => {
+                  const result = await confirm({
+                    title: 'Cancelar sesión',
+                    message:
+                      'Se descartará la sesión en curso y las series registradas. Esta acción no se puede deshacer.',
+                    severity: 'danger',
+                    confirmLabel: 'Cancelar sesión',
+                    cancelLabel: 'Volver',
+                  });
+                  if (result.confirmed) cancel.mutate();
+                }}
+                variant="danger"
+              >
                 <Ban className="size-4" />
                 Cancelar
               </Button>

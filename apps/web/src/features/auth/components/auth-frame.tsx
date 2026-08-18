@@ -1,5 +1,8 @@
+'use client';
+
 import type { ReactNode } from 'react';
 import { Activity, BarChart3, ShieldCheck } from 'lucide-react';
+import { useBrand } from '@/shared/theme/brand-provider';
 import { AmbientBackground } from '@/shared/components/background/ambient-background';
 
 export function AuthFrame({
@@ -8,19 +11,20 @@ export function AuthFrame({
   description,
   children,
 }: Readonly<{ eyebrow: string; title: string; description: string; children: ReactNode }>) {
+  const brand = useBrand();
   return (
     <main className="relative isolate grid min-h-dvh lg:grid-cols-[minmax(0,1.1fr)_minmax(420px,0.9fr)]">
       <AmbientBackground variant="auth" reactive fixed />
       <section className="relative hidden border-r border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--surface-sidebar)_82%,transparent)] p-12 backdrop-blur-sm lg:flex lg:flex-col lg:justify-between xl:p-16">
-        <div className="inline-flex items-center gap-3 text-lg font-black tracking-[-0.04em]">
-          <span className="grid size-9 place-items-center rounded-[4px] bg-[var(--volt)] text-sm text-black">
-            GS
+        <div className="inline-flex items-center gap-3 text-lg font-semibold tracking-[-0.02em]">
+          <span className="grid size-9 place-items-center rounded-[4px] bg-[var(--volt)] text-sm text-[var(--accent-contrast)]">
+            {brand.monogram}
           </span>
-          GYMSHEET
+          {brand.wordmark}
         </div>
         <div className="max-w-2xl">
           <p className="data-label text-[var(--accent-ink)]">Elite performance system</p>
-          <h2 className="mt-5 text-5xl font-extrabold leading-[1.03] tracking-[-0.05em] xl:text-7xl">
+          <h2 className="mt-5 text-5xl font-semibold leading-[1.03] tracking-[-0.022em] xl:text-7xl">
             Cada serie.
             <br />
             Cada decisión.
@@ -54,11 +58,11 @@ export function AuthFrame({
       <section className="relative flex items-center justify-center px-5 py-10 sm:px-8 lg:px-12">
         <div className="reveal w-full max-w-md">
           <div className="mb-10 lg:hidden">
-            <div className="inline-flex items-center gap-3 text-lg font-black tracking-[-0.04em]">
-              <span className="grid size-9 place-items-center rounded-[6px] bg-[var(--volt)] text-sm text-black shadow-[0_8px_24px_-8px_rgb(195_244_0/0.7)]">
-                GS
+            <div className="inline-flex items-center gap-3 text-lg font-semibold tracking-[-0.02em]">
+              <span className="grid size-9 place-items-center rounded-[6px] bg-[var(--volt)] text-sm text-[var(--accent-contrast)] shadow-[0_8px_24px_-8px_rgb(var(--accent-channels)/0.7)]">
+                {brand.monogram}
               </span>
-              GYMSHEET
+              {brand.wordmark}
             </div>
           </div>
           <p className="data-label inline-flex items-center gap-2 text-[var(--accent-ink)]">
@@ -68,7 +72,7 @@ export function AuthFrame({
             />
             {eyebrow}
           </p>
-          <h1 className="mt-4 text-4xl font-extrabold tracking-[-0.045em]">{title}</h1>
+          <h1 className="mt-4 text-4xl font-semibold tracking-[-0.022em]">{title}</h1>
           <p className="mt-4 text-sm leading-7 text-[var(--text-muted)]">{description}</p>
           <div className="mt-8">{children}</div>
         </div>

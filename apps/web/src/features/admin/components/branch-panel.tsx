@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { facilitiesAdminService } from '@/features/admin/services/facilities-admin-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
@@ -37,18 +37,18 @@ export function BranchPanel({ canManage }: Readonly<{ canManage: boolean }>) {
     onSuccess: async () => {
       await refresh();
       setOpen(false);
-      toast.success('Sede creada.');
+      notify.success('Sede creada.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const update = useMutation({
     mutationFn: ({ id, estado }: { id: string; estado: 'ACTIVE' | 'INACTIVE' }) =>
       facilitiesAdminService.updateBranch(id, { estado }),
     onSuccess: async () => {
       await refresh();
-      toast.success('Estado de sede actualizado.');
+      notify.success('Estado de sede actualizado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   return (
     <section className="grid gap-4">

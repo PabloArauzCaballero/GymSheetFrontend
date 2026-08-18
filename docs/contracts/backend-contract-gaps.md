@@ -16,10 +16,14 @@ Several write endpoints are documented or implemented as generic objects, includ
 
 ## Missing list/detail capabilities
 
-- There is no verified endpoint to list staff profiles; staff can be created and status-updated only by known user ID.
+- ~~There is no verified endpoint to list staff profiles; staff can be created and status-updated only by known user ID.~~ Closed: the backend now exposes `GET /admin/membership/staff` (paginated, filterable by position and employment status) and `POST /admin/membership/staff-users`, which creates the account and the employment profile in one transaction. The authorization role is derived from the position, so the console cannot issue permissions that do not match the job.
 - Access event detail exists, but the UI emphasizes decision history because no paginated event-list endpoint is exposed.
 - Equipment's public list returns available items; no dedicated full administrative equipment list endpoint is exposed. The admin screen cannot reliably display inactive/maintenance inventory unless the backend changes the list contract.
 - No token refresh or logout endpoint exists in the backend; frontend logout clears its own cookie.
+
+## Plan write contract
+
+`membership.plans` has always persisted price, currency, benefits, display order, availability flags and `image_file_id`, but `createPlanSchema`/`updatePlanSchema` did not accept them, so those columns could only be set by seed. Both schemas now accept the full set; `imagenId` is validated against `media.files` before the write to return a 422 instead of a foreign-key 500. `GET /admin/media` was added so the console can reuse an already uploaded piece.
 
 ## Mock access route
 

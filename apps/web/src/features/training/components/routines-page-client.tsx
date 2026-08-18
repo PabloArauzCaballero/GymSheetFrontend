@@ -6,7 +6,7 @@ import { ClipboardList, Plus, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { z } from 'zod';
 import { isStaff } from '@gymsheet/domain';
 import { trainingService } from '@/features/training/services/training-service';
@@ -57,7 +57,7 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
       await queryClient.invalidateQueries({ queryKey: queryKeys.routines('mine') });
       form.reset();
       setOpen(false);
-      toast.success('Rutina creada.');
+      notify.success('Rutina creada.');
     },
     onError: (error: Error) => form.setError('root', { message: error.message }),
   });

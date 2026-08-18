@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { recoverPasswordSchema, type RecoverPasswordInput } from '@gymsheet/schemas';
+import { ApiError } from '@gymsheet/api-client';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { Screen, AppText, Button, Input } from '@/components/ui';
 import { apiClient } from '@/api/client';
+import { notify } from '@/notifications';
 import { z } from 'zod';
 import { spacing } from '@/theme';
 
@@ -27,10 +29,15 @@ export default function RecoverPasswordScreen() {
         method: 'POST',
         body: values,
       });
-    } finally {
-      // Always show the neutral confirmation to avoid account enumeration.
-      setSent(true);
+    } catch (error) {
+      // A request that never left the device must not claim success. Transport
+      // failures say so; anything else stays neutral to avoid account enumeration.
+      if (error instanceof ApiError && error.kind === 'network') {
+        notify.error(error);
+        return;
+      }
     }
+    setSent(true);
   });
 
   return (

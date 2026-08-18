@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, SlidersHorizontal } from 'lucide-react';
 import { useMemo, useState, type CSSProperties } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
@@ -52,9 +52,9 @@ export function ExerciseList() {
       favoriteIds.has(id) ? exerciseService.removeFavorite(id) : exerciseService.addFavorite(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.favorites });
-      toast.success('Frecuentes actualizados.');
+      notify.success('Frecuentes actualizados.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
 
   const groups = [...new Set(exercises.data?.items.map((item) => item.grupoMuscular) ?? [])].sort();

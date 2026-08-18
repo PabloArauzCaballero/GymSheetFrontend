@@ -19,7 +19,7 @@ export function ExerciseCard({
 }>) {
   const primaryMedia = exercise.media.find((item) => item.isPrimary) ?? exercise.media[0];
   return (
-    <article className="panel group overflow-hidden transition duration-300 hover:-translate-y-1 hover:border-[var(--border)] hover:shadow-[0_20px_50px_-24px_rgb(195_244_0_/_0.35)]">
+    <article className="panel group overflow-hidden transition duration-300 hover:-translate-y-1 hover:border-[var(--border)] hover:shadow-[0_20px_50px_-24px_rgb(var(--accent-channels)/0.35)]">
       <Link href={`/exercises/${exercise.id}`}>
         <div className="relative grid aspect-[16/9] place-items-center overflow-hidden border-b border-[var(--border-subtle)] bg-[var(--surface-low)]">
           {primaryMedia?.mediaType === 'IMAGE' || primaryMedia?.mediaType === 'GIF' ? (
@@ -35,7 +35,7 @@ export function ExerciseCard({
           )}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition duration-300 group-hover:opacity-100"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[rgb(var(--scrim-channels)/0.6)] via-transparent to-transparent opacity-0 transition duration-300 group-hover:opacity-100"
           />
           <div className="absolute left-3 top-3 flex gap-2">
             <Badge tone={exercise.tipoEjercicio === 'PERSONAL' ? 'info' : 'neutral'}>

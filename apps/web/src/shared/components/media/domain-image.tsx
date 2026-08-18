@@ -7,9 +7,11 @@ import { cn } from '@/shared/lib/cn';
 // Redirige URLs externas al proxy del BFF (`/api/media`) para servirlas desde el
 // mismo origen: evita mixed-content, hotlink y CORS. Las rutas locales o `data:`
 // se dejan intactas.
-function throughProxy(value: string): string {
+export function mediaProxyUrl(value: string): string {
   return /^https?:\/\//i.test(value) ? `/api/media?url=${encodeURIComponent(value)}` : value;
 }
+
+const throughProxy = mediaProxyUrl;
 
 export function DomainImage({
   alt,

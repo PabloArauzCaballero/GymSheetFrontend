@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/shared/notifications';
 import type { FitnessGoal } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { Button } from '@/shared/components/ui/button';
@@ -68,9 +68,9 @@ export function OnboardingForm({ initial }: Readonly<{ initial: OnboardingState 
     onSuccess: async (result) => {
       queryClient.setQueryData(queryKeys.onboarding, result);
       if (step < 4) setStep(step + 1);
-      toast.success('Progreso guardado.');
+      notify.success('Progreso guardado.');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const complete = useMutation({
     mutationFn: onboardingService.complete,
@@ -79,7 +79,7 @@ export function OnboardingForm({ initial }: Readonly<{ initial: OnboardingState 
       router.replace('/dashboard');
       router.refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
   const valid = step !== 2 || (weight > 0 && height > 0);
   return (
