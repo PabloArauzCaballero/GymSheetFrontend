@@ -1,4 +1,5 @@
 import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import { Platform } from 'react-native';
 import { env } from '@/config/env';
 import { secureStoreTokenProvider } from '@/storage/secure-store';
@@ -61,9 +62,23 @@ export async function exportWorkoutHistory(format: ExportFormat): Promise<Export
     format === 'pdf' ? FileSystem.EncodingType.Base64 : FileSystem.EncodingType.UTF8;
   const contents = await FileSystem.readAsStringAsync(download.uri, { encoding });
 
+  // The share sheet first, on both platforms. It is the native way to get a
+  // file out of an app on iOS *and* on Android — mail it, send it to the coach,
+  // drop it in Drive — and it needs no storage permission at all. The folder
+  // picker below stays as the Android fallback for someone who specifically
+  // wants the file on disk, and is what keeps iOS from needing its own branch.
+  if (await Sharing.isAvailableAsync()) {
+    await Sharing.shareAsync(download.uri, {
+      mimeType: spec.mimeType,
+      dialogTitle: 'Compartir tu avance',
+      UTI: format === 'pdf' ? 'com.adobe.pdf' : 'public.comma-separated-values-text',
+    });
+    return { status: 'saved', location: spec.fileName };
+  }
+
   if (Platform.OS !== 'android') {
-    // iOS has no folder picker of this kind; the cached file is the result and
-    // the caller surfaces its path rather than claiming it was "saved".
+    // No share sheet and no folder picker: the cached path is the honest
+    // answer rather than claiming a save that did not happen.
     return { status: 'saved', location: download.uri };
   }
 

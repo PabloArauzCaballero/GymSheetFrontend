@@ -17,6 +17,7 @@ import { Button } from '@/components/ui';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { membershipService, profileService } from '@/api/services';
 import { useAuthStore } from '@/state/auth-store';
+import { useTourStore } from '@/state/tour-store';
 import {
   GOAL_LABEL,
   MEMBERSHIP_LABEL,
@@ -38,6 +39,7 @@ const ROLE_LABEL: Record<string, string> = {
 export default function ProfileScreen() {
   const principal = useAuthStore((state) => state.principal);
   const router = useRouter();
+  const openTour = useTourStore((state) => state.open);
 
   const profile = useQuery({
     queryKey: ['profile', 'me'],
@@ -201,6 +203,12 @@ export default function ProfileScreen() {
           onPress={() => router.push('/profile-edit')}
           subtitle="Peso, estatura, edad y objetivo"
           title="Editar perfil"
+        />
+        <Divider />
+        <NavRow
+          onPress={() => openTour()}
+          subtitle="Repasa como funciona la app"
+          title="Ver tutorial"
         />
         <Divider />
         <NavRow

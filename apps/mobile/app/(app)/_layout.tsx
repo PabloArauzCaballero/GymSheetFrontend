@@ -13,6 +13,8 @@ import ReAnimated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useAuthStore } from '@/state/auth-store';
+import { useTourStore } from '@/state/tour-store';
+import { TourOverlay } from '@/components/tour';
 import { colors, fontSizes, iconSizes } from '@/theme';
 
 /** Outline when resting, filled when active — the platform convention. */
@@ -131,6 +133,12 @@ function tabIcon(screen: keyof typeof ICONS) {
  */
 export default function AppLayout() {
   const status = useAuthStore((state) => state.status);
+  // Se hidrata una vez, aqui: montarlo en una pantalla haria que el tour
+  // reapareciera cada vez que esa pantalla se remonta.
+  const hydrateTour = useTourStore((state) => state.hydrate);
+  useEffect(() => {
+    void hydrateTour();
+  }, [hydrateTour]);
 
   // Protect the entire private group from unauthenticated access.
   if (status === 'unauthenticated') {
@@ -138,6 +146,7 @@ export default function AppLayout() {
   }
 
   return (
+    <>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -178,5 +187,7 @@ export default function AppLayout() {
       <Tabs.Screen name="membership" options={{ href: null }} />
       <Tabs.Screen name="notifications" options={{ href: null }} />
     </Tabs>
+    <TourOverlay />
+    </>
   );
 }

@@ -24,7 +24,7 @@ export function CameraCapture({
   onCapture: (frame: CapturedFrame, detection: FaceDetection | null) => void;
   captureLabel?: string;
 }>) {
-  const camera = useCamera({ detectFace });
+  const [attachVideo, camera] = useCamera({ detectFace });
   const [capturing, setCapturing] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
 
@@ -42,12 +42,11 @@ export function CameraCapture({
   return (
     <div className="grid gap-4">
       <div className="relative aspect-video overflow-hidden rounded-[4px] border border-[var(--border-subtle)] bg-[var(--surface-low)]">
-        {/* eslint-disable-next-line jsx-a11y/media-has-caption -- Vista previa en vivo sin pista de audio. */}
         <video
           className="size-full object-cover"
           muted
           playsInline
-          ref={camera.videoRef}
+          ref={attachVideo}
           // Espejo: el operador se ve como en un espejo, que es lo que espera.
           style={{ transform: 'scaleX(-1)' }}
         />

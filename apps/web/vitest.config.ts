@@ -9,20 +9,21 @@ const pkg = (name: string) =>
   fileURLToPath(new URL(`../../packages/${name}/src/index.ts`, import.meta.url));
 
 /**
- * Alinea todo el árbol de pruebas con una única instancia de React.
+ * Copia única de React para todo el árbol de pruebas.
  *
- * El monorepo termina con varias copias: la aplicación móvil fija 19.0.0 y
- * arrastra esa versión a la raíz, `react-dom` resuelve entonces una 19.2.0
- * anidada propia y la web tiene la suya. Con dos instancias vivas el renderer
- * encola el trabajo en una y `act()` lo busca en la otra, así que `render()`
- * devuelve un contenedor vacío sin error alguno —el fallo más caro de
- * diagnosticar—.
+ * La aplicación móvil fija React 19.0.0 por requisito de Expo, así que el
+ * monorepo convive con dos versiones y algunas dependencias de la web
+ * (`@tanstack/react-query`, `react-hook-form`) terminan con una copia anidada.
+ * Con dos instancias vivas, el renderer encola el trabajo en una y los hooks se
+ * ejecutan contra la otra: `render()` devuelve un contenedor vacío o falla con
+ * «Cannot read properties of null», sin más pistas. El empaquetador de Next
+ * unifica React en la aplicación real; en las pruebas hay que hacerlo explícito.
  *
- * La referencia es la copia que usa `react-dom`, no una ruta escrita a mano: si
- * el árbol de dependencias cambia, esto sigue apuntando a la correcta.
+ * La referencia es la copia que usa `react-dom`, no una ruta escrita a mano,
+ * para que siga siendo correcta si cambia el árbol de dependencias.
  */
-const require_ = createRequire(import.meta.url);
-const reactDomEntry = require_.resolve('react-dom');
+const requireFromConfig = createRequire(import.meta.url);
+const reactDomEntry = requireFromConfig.resolve('react-dom');
 const reactDomDir = dirname(reactDomEntry);
 const reactDir = dirname(createRequire(reactDomEntry).resolve('react'));
 
@@ -32,8 +33,8 @@ export default defineConfig({
   plugins: [react() as PluginOption],
   resolve: {
     dedupe: ['react', 'react-dom'],
-    // Las entradas van en forma de arreglo con expresión regular porque un alias
-    // de cadena para `react` también capturaría `react-dom`.
+    // En forma de arreglo con expresión regular: un alias de cadena para
+    // `react` capturaría también `react-dom`.
     alias: [
       { find: /^react$/u, replacement: reactDir },
       { find: /^react\/(.*)$/u, replacement: `${reactDir}/$1` },
@@ -52,11 +53,11 @@ export default defineConfig({
     ],
   },
   test: {
-    // Vitest deja las dependencias de `node_modules` fuera de la transformación,
-    // así que el `require('react')` interno de `react-dom` escapaba a los alias
-    // y seguía cargando su copia anidada. Procesarlo con Vite lo somete a la
-    // misma resolución que el resto y deja una única instancia viva.
-    server: { deps: { inline: [/react-dom/u, /@testing-library\/react/u] } },
+    // `@tanstack/react-query` y `react-hook-form` publican fuentes y traen su
+    // propia copia anidada de React. Al procesarlos con Vite en vez de dejarlos
+    // como externos, sus importaciones pasan por los alias de arriba y usan la
+    // misma instancia que el resto.
+    server: { deps: { inline: [/@tanstack\/react-query/u, /react-hook-form/u] } },
     environment: 'jsdom',
     exclude: ['e2e/**', 'node_modules/**', '.next/**'],
     globals: true,

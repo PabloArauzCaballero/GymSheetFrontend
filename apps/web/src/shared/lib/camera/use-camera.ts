@@ -27,8 +27,10 @@ export type UseCameraOptions = {
   readonly detectFace?: boolean;
 };
 
-export type UseCameraResult = {
-  readonly videoRef: React.RefObject<HTMLVideoElement | null>;
+/** Enlace del elemento de vídeo: *callback ref*, nunca un objeto ref. */
+export type AttachVideo = (element: HTMLVideoElement | null) => void;
+
+export type CameraState = {
   readonly devices: readonly CameraDevice[];
   readonly deviceId: string | null;
   readonly active: boolean;
@@ -44,6 +46,16 @@ export type UseCameraResult = {
 };
 
 /**
+ * El enlace del vídeo viaja separado del estado, no como una propiedad más.
+ *
+ * Mezclarlos hace que el analizador de React considere que todo el objeto
+ * transporta un ref y marque cada lectura durante el render. Separarlos también
+ * describe mejor la realidad: uno es una instrucción imperativa de montaje y el
+ * otro es estado que se pinta.
+ */
+export type UseCameraResult = readonly [AttachVideo, CameraState];
+
+/**
  * Ciclo de vida de la cámara para componentes React: abre el flujo, lo enlaza
  * al `<video>`, ejecuta la detección periódica y garantiza que el dispositivo
  * quede liberado al desmontar (la luz de la webcam debe apagarse sola).
@@ -52,6 +64,15 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraResult {
   const detectionEnabled = options.detectFace ?? false;
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  // Al montarse el elemento se le enlaza el flujo ya abierto; sin esto, iniciar
+  // la cámara antes de que exista el `<video>` dejaría la vista previa en negro.
+  const attachVideo = useCallback((element: HTMLVideoElement | null) => {
+    videoRef.current = element;
+    if (element && streamRef.current) {
+      element.srcObject = streamRef.current;
+      void element.play().catch(() => undefined);
+    }
+  }, []);
   const [devices, setDevices] = useState<readonly CameraDevice[]>([]);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [active, setActive] = useState(false);
@@ -148,8 +169,7 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraResult {
     };
   }, [active, detectionEnabled]);
 
-  return {
-    videoRef,
+  const state: CameraState = {
     devices,
     deviceId,
     active,
@@ -163,4 +183,6 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraResult {
     capture,
     selectDevice,
   };
+
+  return [attachVideo, state];
 }
