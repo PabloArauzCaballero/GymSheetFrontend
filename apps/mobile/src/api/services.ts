@@ -101,7 +101,24 @@ export const routineService = {
       method: 'GET',
     }),
   get: (id: string) => apiClient.request(`/routines/${id}`, routineSchema, { method: 'GET' }),
+  /**
+   * Places a routine in the caller's own week. The recipient is never sent in
+   * the body: the backend derives it from the token, so this cannot schedule
+   * anything into someone else's agenda.
+   */
+  schedule: (routineId: string, input: RoutineScheduleInput) =>
+    apiClient.request(`/routines/${routineId}/schedule`, routineAssignmentSchema, {
+      method: 'POST',
+      body: input,
+    }),
 };
+
+export interface RoutineScheduleInput {
+  diasSemana: number[];
+  repiteDesde?: string | null;
+  /** `null` = indefinido, que es un plan permanente y no un error. */
+  repiteHasta?: string | null;
+}
 
 export interface ExerciseFilters {
   search?: string;

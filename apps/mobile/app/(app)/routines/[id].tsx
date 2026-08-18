@@ -12,6 +12,7 @@ import { PressableScale } from '@/components/motion';
 import { ApiError } from '@gymsheet/api-client';
 import { routineService, workoutService } from '@/api/services';
 import { Button } from '@/components/ui';
+import { ScheduleRoutine } from '@/components/schedule-routine';
 import { notify } from '@/notifications';
 import { GOAL_LABEL } from '@/lib/format';
 import { colors, fontSizes, spacing } from '@/theme';
@@ -111,7 +112,11 @@ export default function RoutineDetailScreen() {
         onPress={() => start.mutate()}
       />
 
-      <Section title="Ejercicios">
+      <Section index={0} title="Programar">
+        <ScheduleRoutine routineId={data.id} />
+      </Section>
+
+      <Section index={1} title="Ejercicios">
         {ordered.map((item) => (
           <Card key={item.id}>
             <PressableScale
