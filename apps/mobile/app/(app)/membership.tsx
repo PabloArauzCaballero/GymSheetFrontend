@@ -479,7 +479,7 @@ export default function MembershipScreen() {
                     style={{
                       color: colors.volt,
                       fontSize: fontSizes['2xl'],
-                      fontWeight: '800',
+                      fontWeight: '600',
                       fontVariant: ['tabular-nums'],
                       letterSpacing: fontSizes['2xl'] * -0.045,
                     }}

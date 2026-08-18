@@ -20,7 +20,7 @@ export function Brand() {
           className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-[rgb(var(--sheen-channels)/0.4)] to-transparent transition-transform duration-700 group-hover:translate-x-full"
         />
       </span>
-      <span className="text-base font-extrabold tracking-[-0.05em] transition-colors group-hover:text-[var(--accent-ink)]">
+      <span className="text-base font-semibold tracking-[-0.022em] transition-colors group-hover:text-[var(--accent-ink)]">
         {brand.wordmark}
       </span>
     </Link>

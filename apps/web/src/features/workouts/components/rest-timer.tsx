@@ -71,7 +71,7 @@ export function RestTimer() {
           />
         </svg>
         <span
-          className="data-value text-5xl font-extrabold tracking-[-0.05em] transition-colors duration-300"
+          className="data-value text-5xl font-semibold tracking-[-0.022em] transition-colors duration-300"
           style={{ color: accent }}
         >
           {display(remaining)}

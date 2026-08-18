@@ -48,7 +48,7 @@ export function MetricCard({
       </div>
       <div
         className={cn(
-          'data-value mt-5 text-3xl font-extrabold tracking-[-0.04em] sm:text-4xl',
+          'data-value mt-5 text-3xl font-semibold tracking-[-0.02em] sm:text-4xl',
           accent && 'text-[var(--accent-ink)]',
         )}
       >
