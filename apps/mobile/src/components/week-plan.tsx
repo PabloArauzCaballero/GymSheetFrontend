@@ -10,6 +10,18 @@ import { colors, fontSizes, radii, spacing } from '@/theme';
  * which is why it is written once here instead of inline at each use.
  */
 const DAY_INITIAL = ['D', 'L', 'M', 'X', 'J', 'V', 'S'] as const;
+
+/**
+ * Orden de presentacion: la semana empieza en lunes.
+ *
+ * Los numeros guardados siguen la convencion de `Date.getDay()` (0 = domingo)
+ * porque es con la que se comparan en codigo y evita conversiones en cada uso.
+ * Lo que cambia es como se pintan: en Espana y Latinoamerica la semana empieza
+ * el lunes, y una tira que arranca en domingo se lee mal aunque los datos sean
+ * correctos. Separar almacenamiento de presentacion es lo que permite tener
+ * ambas cosas bien.
+ */
+const DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0] as const;
 const DAY_NAME = [
   'domingo',
   'lunes',
@@ -46,7 +58,8 @@ export function WeekPlan({
   return (
     <View style={{ gap: spacing.sm }}>
       <View style={{ flexDirection: 'row', gap: spacing.xs }}>
-      {DAY_INITIAL.map((initial, day) => {
+      {DISPLAY_ORDER.map((day) => {
+        const initial = DAY_INITIAL[day];
         const forDay = assignments.filter(
           (item) => item.estado === 'ACTIVE' && item.diasSemana.includes(day),
         );

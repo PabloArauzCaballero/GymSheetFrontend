@@ -1,19 +1,26 @@
 # Tema e identidad por inquilino
 
-Los colores de la aplicación web son configurables sin tocar código ni CSS.
-Esta carpeta es la única que contiene valores de color; el resto del código
-consume variables CSS.
+La identidad visual de la aplicación web —colores, nombre, marca gráfica y
+tipografía— es configurable sin tocar código. Esta carpeta es la única que
+contiene valores de identidad; el resto del código consume variables CSS y el
+contexto de marca.
 
 ## Cómo encaja
 
-1. `color-contract.ts` — enumera cada variable de color que el estilo consume y
-   la asocia a una clave tipada. Añadir un color nuevo empieza aquí.
-2. `default-palette.ts` — la identidad GymSheet (oscura y clara). Es la
+1. `color-contract.ts` — cada variable de color que el estilo consume, asociada
+   a una clave tipada. Añadir un color nuevo empieza aquí.
+2. `brand-contract.ts` — nombre, rótulo, monograma y los catálogos cerrados de
+   glifo y tipografía.
+3. `default-palette.ts` — la identidad GymSheet (oscura y clara). Es la
    referencia y el respaldo de cualquier identidad parcial.
-3. `tenant-palette.ts` — lee el registro de inquilinos de configuración, lo
-   valida y combina cada identidad parcial sobre la de referencia.
-4. `build-theme-css.ts` — convierte una paleta en el bloque de variables.
-5. `tenant-theme.server.ts` — resuelve la identidad del host de la petición.
+4. `tenant-palette.ts` — lee el registro de inquilinos, lo valida y combina cada
+   identidad parcial sobre la de referencia.
+5. `build-theme-css.ts` — convierte un tema en el bloque de variables.
+6. `tenant-theme.server.ts` — resuelve la identidad del host de la petición.
+7. `brand-provider.tsx` — expone la marca al árbol de cliente (`useBrand`,
+   `useBrandCopy`).
+8. `brand-fonts.ts` — carga las familias con `next/font`; `brand-icons.tsx`
+   mapea las claves de glifo a componente.
 
 El layout raíz inyecta el resultado en `<head>`. Al renderizarse en el servidor
 llega con el documento, así que no hay un instante en que la página se pinte con
@@ -29,12 +36,23 @@ referencia, que es lo habitual y lo que mantiene la coherencia entre marcas.
 {
   "lifthouse.gymsheet.app": {
     "id": "lifthouse",
-    "name": "LiftHouse",
+    "brand": { "name": "LiftHouse", "monogram": "LH", "icon": "flame", "font": "manrope" },
     "dark":  { "accent": "#ff5a1f", "accentInk": "#ff7a4a", "accentContrast": "#1a0a03" },
     "light": { "accent": "#ff5a1f", "accentInk": "#b3400f", "accentContrast": "#ffffff" }
   }
 }
 ```
+
+`name` también se acepta en la raíz como atajo. Si no se declara `wordmark`, se
+usa el nombre en versales.
+
+Glifo y tipografía se eligen de un catálogo cerrado (`brandIconKeys`,
+`brandFontKeys`). Un SVG libre habría que incrustarlo en el documento y podría
+romper el encuadre; una familia libre exigiría descargarla en ejecución, con
+salto visual al cargar.
+
+Las copias de producto nombran al gimnasio con el marcador `{marca}` —ver
+`intro.ts` de tutoriales—, que `useBrandCopy` resuelve al pintar.
 
 Un JSON inválido o con claves fuera del contrato **detiene el arranque**: servir
 la marca equivocada a un inquilino es peor que fallar de forma visible.
@@ -60,9 +78,13 @@ decisión depende de la marca.
 ## Verificación
 
 `e2e/theme-parity.spec.ts` compara cada pantalla en ambos temas contra una línea
-base con tolerancia de cero píxeles. Es la red que garantiza que mover colores
-de sitio no cambia el aspecto. Regenerar la base sólo cuando el cambio visual
-sea deliberado (`--update-snapshots`).
+base con tolerancia de cero píxeles. Es la red que garantiza que mover la
+identidad de sitio no cambia el aspecto. Regenerar la base sólo cuando el cambio
+visual sea deliberado (`--update-snapshots`).
+
+Las pantallas que listan registros se comparan por su encabezado, no completas:
+crecen cada vez que alguien da de alta algo —las propias pruebas funcionales lo
+hacen— y una captura completa dejaría de coincidir por motivos ajenos al tema.
 
 Para ver dos identidades lado a lado:
 
@@ -71,8 +93,18 @@ TENANT_THEMES="$(cat .e2e-assets/tenant-themes.json)" yarn dev
 node scripts/capture-tenant-themes.mjs
 ```
 
-## Pendiente para multi-inquilino completo
+## Superficies que ya siguen al inquilino
 
-Esta fase cubre **color**. Siguen fijos en el código y son el siguiente paso
-natural: el nombre del producto y el texto de los tutoriales («GymSheet»), la
-marca gráfica (`brand-mark.svg`), la tipografía y las copias de bienvenida.
+Interfaz, título de la pestaña, manifiesto de instalación, color de la barra del
+sistema, marca gráfica (`/brand-mark.svg`, generada por petición) y la
+atribución de los medios que sube la consola.
+
+`global-error.tsx` es la excepción deliberada: sustituye al documento entero
+cuando falla el layout raíz, así que lleva su propia copia de la identidad de
+referencia. Si algo se rompió tan arriba, la resolución del inquilino es
+sospechosa y arriesgar una segunda caída no compensa.
+
+## Pendiente
+
+Los textos comerciales de la pantalla de acceso («Cada serie. Cada decisión.»)
+y la descripción del producto siguen siendo del sistema, no del inquilino.

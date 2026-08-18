@@ -6,7 +6,7 @@ import { Badge, Card, Divider, ScrollScreen, ScreenHeader } from '@/components/l
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { NavRow } from '@/components/list';
 import { Button } from '@/components/ui';
-import { exportWorkoutHistoryCsv } from '@/lib/export-progress';
+import { exportWorkoutHistory } from '@/lib/export-progress';
 import { notify } from '@/notifications';
 import { workoutService } from '@/api/services';
 import {
@@ -43,17 +43,17 @@ export default function WorkoutsScreen() {
 
   const sessions = workouts.data?.items ?? [];
 
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<'csv' | 'pdf' | null>(null);
 
   /**
    * Saving the history is the one action here that leaves the app, so it
    * reports what actually happened: a cancelled folder picker is not an error
    * and must not be dressed as one.
    */
-  const onExport = async () => {
-    setExporting(true);
+  const onExport = async (format: 'csv' | 'pdf') => {
+    setExporting(format);
     try {
-      const result = await exportWorkoutHistoryCsv();
+      const result = await exportWorkoutHistory(format);
       if (result.status === 'cancelled') return;
       if (result.status === 'unsupported') {
         notify.error('Este dispositivo no permite guardar archivos.');
@@ -63,7 +63,7 @@ export default function WorkoutsScreen() {
     } catch (error) {
       notify.error(error as Error);
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
   };
 
@@ -74,12 +74,25 @@ export default function WorkoutsScreen() {
         title="Entrenos"
       />
 
-      <Button
-        label={exporting ? 'Preparando CSV…' : 'Guardar mi avance (CSV)'}
-        loading={exporting}
-        onPress={() => void onExport()}
-        variant="ghost"
-      />
+      {/* Dos formatos porque responden a dos preguntas distintas: el CSV es
+          para analizar en una hoja de calculo, el PDF para ensenar a un
+          entrenador o adjuntar en un correo. */}
+      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+        <Button
+          label={exporting === 'pdf' ? 'Generando…' : 'Avance en PDF'}
+          loading={exporting === 'pdf'}
+          onPress={() => void onExport('pdf')}
+          style={{ flex: 1 }}
+          variant="ghost"
+        />
+        <Button
+          label={exporting === 'csv' ? 'Generando…' : 'Datos en CSV'}
+          loading={exporting === 'csv'}
+          onPress={() => void onExport('csv')}
+          style={{ flex: 1 }}
+          variant="ghost"
+        />
+      </View>
 
       {/* One primary action, and it changes with context: resume what is open,
           or start something new. */}

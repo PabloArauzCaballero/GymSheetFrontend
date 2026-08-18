@@ -43,6 +43,41 @@ describe('registro de inquilinos', () => {
     ).toThrow(/contrato de tema/u);
   });
 
+  it('deriva el rótulo del nombre cuando no se declara', () => {
+    const theme = parseRegistry(registryJson)['lifthouse.gymsheet.app'];
+    expect(theme?.brand.name).toBe('LiftHouse');
+    expect(theme?.brand.wordmark).toBe('LIFTHOUSE');
+    // Lo no declarado sigue siendo el del sistema.
+    expect(theme?.brand.icon).toBe(defaultTheme.brand.icon);
+    expect(theme?.brand.font).toBe(defaultTheme.brand.font);
+  });
+
+  it('acepta una marca declarada al detalle', () => {
+    const raw = JSON.stringify({
+      'a.test': {
+        id: 'a',
+        brand: { name: 'Atlas', wordmark: 'ATLAS GYM', monogram: 'AG', icon: 'flame', font: 'manrope' },
+      },
+    });
+    const brand = parseRegistry(raw)['a.test']?.brand;
+    expect(brand).toEqual({
+      name: 'Atlas',
+      wordmark: 'ATLAS GYM',
+      monogram: 'AG',
+      icon: 'flame',
+      font: 'manrope',
+    });
+  });
+
+  it('rechaza glifos y tipografías fuera del catálogo', () => {
+    expect(() =>
+      parseRegistry('{"a":{"id":"x","brand":{"icon":"unicornio"}}}'),
+    ).toThrow(/contrato de tema/u);
+    expect(() =>
+      parseRegistry('{"a":{"id":"x","brand":{"font":"comic-sans"}}}'),
+    ).toThrow(/contrato de tema/u);
+  });
+
   it('empareja el host ignorando puerto y mayúsculas', () => {
     expect(normalizeHost('Gym.Local:3002')).toBe('gym.local');
     expect(normalizeHost(null)).toBe('');

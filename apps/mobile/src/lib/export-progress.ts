@@ -21,27 +21,45 @@ export type ExportResult =
   | { readonly status: 'cancelled' }
   | { readonly status: 'unsupported' };
 
-const FILE_NAME = 'gymsheet-avance.csv';
+type ExportFormat = 'csv' | 'pdf';
 
-export async function exportWorkoutHistoryCsv(): Promise<ExportResult> {
+const FORMATS = {
+  csv: {
+    path: '/export/workout-history/csv',
+    fileName: 'gymsheet-avance.csv',
+    mimeType: 'text/csv',
+  },
+  pdf: {
+    path: '/export/workout-history/pdf',
+    fileName: 'gymsheet-avance.pdf',
+    mimeType: 'application/pdf',
+  },
+} as const;
+
+export async function exportWorkoutHistory(format: ExportFormat): Promise<ExportResult> {
+  const spec = FORMATS[format];
   const token = await secureStoreTokenProvider.getAccessToken();
   if (!token) throw new Error('Tu sesión expiró. Inicia sesión otra vez.');
 
   const cacheDirectory = FileSystem.cacheDirectory;
   if (!cacheDirectory) return { status: 'unsupported' };
 
-  const temporaryUri = `${cacheDirectory}${FILE_NAME}`;
+  const temporaryUri = `${cacheDirectory}${spec.fileName}`;
   const download = await FileSystem.downloadAsync(
-    `${env.apiUrl}/export/workout-history/csv`,
+    `${env.apiUrl}${spec.path}`,
     temporaryUri,
     { headers: { Authorization: `Bearer ${token}` } },
   );
 
   if (download.status !== 200) {
-    throw new Error(`El servidor respondió ${download.status} al generar el CSV.`);
+    throw new Error(`El servidor respondió ${download.status} al generar el archivo.`);
   }
 
-  const contents = await FileSystem.readAsStringAsync(download.uri);
+  // El PDF es binario: leerlo como UTF-8 lo corrompe, asi que se transporta en
+  // base64 y se escribe con la misma codificacion.
+  const encoding =
+    format === 'pdf' ? FileSystem.EncodingType.Base64 : FileSystem.EncodingType.UTF8;
+  const contents = await FileSystem.readAsStringAsync(download.uri, { encoding });
 
   if (Platform.OS !== 'android') {
     // iOS has no folder picker of this kind; the cached file is the result and
@@ -54,9 +72,9 @@ export async function exportWorkoutHistoryCsv(): Promise<ExportResult> {
 
   const target = await FileSystem.StorageAccessFramework.createFileAsync(
     permission.directoryUri,
-    FILE_NAME,
-    'text/csv',
+    spec.fileName,
+    spec.mimeType,
   );
-  await FileSystem.writeAsStringAsync(target, contents);
-  return { status: 'saved', location: FILE_NAME };
+  await FileSystem.writeAsStringAsync(target, contents, { encoding });
+  return { status: 'saved', location: spec.fileName };
 }
