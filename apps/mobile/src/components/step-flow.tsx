@@ -155,7 +155,7 @@ export function DateLeaf({
             style={{
               color: accent ? colors.background : colors.textMuted,
               fontSize: fontSizes.xs,
-              fontWeight: '800',
+              fontWeight: '600',
               letterSpacing: 1,
             }}
           >
@@ -167,7 +167,7 @@ export function DateLeaf({
             style={{
               color: colors.text,
               fontSize: fontSizes['2xl'],
-              fontWeight: '800',
+              fontWeight: '600',
               fontVariant: ['tabular-nums'],
             }}
           >

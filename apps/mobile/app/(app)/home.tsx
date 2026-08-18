@@ -162,7 +162,7 @@ export default function HomeScreen() {
               style={{
                 color: colors.text,
                 fontSize: fontSizes.lg,
-                fontWeight: '800',
+                fontWeight: '600',
                 letterSpacing: fontSizes.lg * -0.045,
               }}
             >

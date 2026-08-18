@@ -89,7 +89,13 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: -0.011em;
+  /* La familia es variable: dejar que ajuste su eje óptico afina los remates
+   * en los tamaños grandes en vez de escalar el mismo dibujo. */
+  font-optical-sizing: auto;
+  /* Un apretado apenas perceptible. El valor anterior cerraba el texto
+   * corrido, que es donde el ojo necesita aire para leer sin cansarse. */
+  letter-spacing: -0.006em;
+  line-height: 1.55;
   transition:
     background-color 0.3s ease,
     color 0.3s ease;
@@ -142,20 +148,28 @@ p {
   background: var(--surface-lowest);
 }
 
+/* Etiqueta de dato: versalita ancha y ligera. En negrita competía con el valor
+ * que rotula, y una etiqueta nunca debe pesar más que su contenido. */
 .data-label {
   color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 0.6875rem;
+  font-weight: 560;
+  letter-spacing: 0.16em;
   line-height: 1rem;
   text-transform: uppercase;
 }
 
+/* Título de pantalla.
+ *
+ * A este tamaño el peso 850 con -0.045em de apretado no se lee como carácter
+ * sino como volumen: las letras se tocan y el conjunto grita. Bajar el peso y
+ * abrir la letra deja ver el dibujo de la tipografía, que es de donde viene la
+ * sensación de calidad; el tamaño sigue haciendo la jerarquía. */
 .display-title {
   font-size: clamp(2.25rem, 5.5vw, 3.5rem);
-  font-weight: 850;
-  letter-spacing: -0.045em;
-  line-height: 1.04;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  line-height: 1.08;
   text-wrap: balance;
 }
 
@@ -168,8 +182,8 @@ p {
 
 .data-value {
   font-variant-numeric: tabular-nums;
-  font-weight: 650;
-  letter-spacing: 0.02em;
+  font-weight: 580;
+  letter-spacing: 0.01em;
 }
 
 .scrollbar-thin {

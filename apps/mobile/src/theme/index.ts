@@ -2,13 +2,35 @@ import {
   colors as sharedColors,
   fontSizes as sharedFontSizes,
   theme,
+  tones as sharedTones,
 } from '@gymsheet/design-tokens';
+import { getActiveTenant } from './tenant';
 
 /**
  * Re-exports the shared design tokens so the whole app imports the visual
  * identity from one place. The values match the web app's CSS variables.
  */
-export { tones, spacing, radii, fontWeights, minTouchTarget } from '@gymsheet/design-tokens';
+export { spacing, radii, fontWeights, minTouchTarget } from '@gymsheet/design-tokens';
+export { getActiveTenant, setActiveTenant, useActiveTenant } from './tenant';
+export type { TenantDefinition } from './tenant';
+
+/**
+ * Tonos semánticos con la confirmación tomada de la marca.
+ *
+ * Solo se reemplaza el verde de éxito: el resto (aviso, error, información) es
+ * deliberadamente ajeno a la marca, porque son señales que el usuario debe
+ * reconocer igual en cualquier gimnasio.
+ */
+export const tones = {
+  get dark() {
+    const success = { ...sharedTones.dark.success, text: getActiveTenant().colors.successOnDark };
+    return { ...sharedTones.dark, success };
+  },
+  get light() {
+    const success = { ...sharedTones.light.success, text: getActiveTenant().colors.successOnLight };
+    return { ...sharedTones.light, success };
+  },
+};
 
 /**
  * Mobile type scale.
@@ -44,11 +66,17 @@ export const fontSizes = {
  * secondary labels, ornament — uses these quieter tones instead.
  */
 export const accentPolicy = {
-  /** Navigation and decorative glyphs: present, not shouting. */
-  glyph: '#cfd8c4',
-  /** Secondary interactive text (breadcrumbs, inline links). */
-  quietLink: '#a9b69a',
-} as const;
+  /** Navegación y glifos decorativos: presentes, sin gritar. */
+  get glyph(): string {
+    return getActiveTenant().id === 'gymsheet' ? '#cfd8c4' : '#d6d6d6';
+  },
+  /** Texto interactivo secundario (migas, enlaces en línea). */
+  get quietLink(): string {
+    // Para el resto de marcas son neutros en vez de un derivado del acento: son
+    // ornamento, y teñirlos devolvería la saturación que esta política evita.
+    return getActiveTenant().id === 'gymsheet' ? '#a9b69a' : '#a8a8a8';
+  },
+};
 
 /**
  * Mobile surface ramp, overriding the shared one.
@@ -75,7 +103,33 @@ export const colors = {
   surfaceHighest: '#303030',
   borderSubtle: '#242424',
   border: '#333333',
-} as const;
+  // Lo único que cambia entre gimnasios, y lo único que se lee como propiedad
+  // calculada: la marca se resuelve al iniciar sesión, así que estos valores
+  // tienen que consultarse en cada render y no congelarse al importar el módulo.
+  // Con la identidad de referencia devuelven exactamente lo de antes.
+  get volt(): string {
+    return getActiveTenant().colors.accent;
+  },
+  get voltDim(): string {
+    return getActiveTenant().colors.accentDim;
+  },
+  get accentInk(): string {
+    return getActiveTenant().colors.accentInkOnDark;
+  },
+  get success(): string {
+    return getActiveTenant().colors.successOnDark;
+  },
+};
+
+/** Texto e iconos que van encima del relleno de acento. */
+export function accentContrast(): string {
+  return getActiveTenant().colors.accentContrast;
+}
+
+/** Degradado del relleno primario, según la marca activa. */
+export function accentGradient(): readonly [string, string] {
+  return getActiveTenant().colors.accentGradient;
+}
 export { theme };
 export type { Theme } from '@gymsheet/design-tokens';
 

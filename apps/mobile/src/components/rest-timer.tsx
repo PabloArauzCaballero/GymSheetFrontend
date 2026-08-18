@@ -238,7 +238,7 @@ export function RestTimer({
         style={{
           color: finished ? colors.accentInk : colors.text,
           fontSize: fontSizes['2xl'],
-          fontWeight: '800',
+          fontWeight: '600',
           letterSpacing: TIME_LETTER_SPACING,
           // Tabular figures keep the digits from shuffling sideways every second.
           fontVariant: ['tabular-nums'],

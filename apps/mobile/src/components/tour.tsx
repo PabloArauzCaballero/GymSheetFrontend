@@ -151,7 +151,7 @@ export function TourOverlay() {
             style={{
               color: colors.text,
               fontSize: fontSizes.xl,
-              fontWeight: '800',
+              fontWeight: '600',
               textAlign: 'center',
               letterSpacing: fontSizes.xl * -0.03,
             }}

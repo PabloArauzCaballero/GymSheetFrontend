@@ -21,7 +21,16 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { AmbientBackground } from '@/components/ambient';
-import { colors, fontSizes, maxContentWidth, minTouchTarget, radii, spacing } from '@/theme';
+import {
+  accentContrast,
+  accentGradient,
+  colors,
+  fontSizes,
+  maxContentWidth,
+  minTouchTarget,
+  radii,
+  spacing,
+} from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -76,24 +85,41 @@ export type ButtonVariant = 'primary' | 'danger' | 'ghost';
  * gives it a lit edge and a body. `ghost` stays flat — it is the quiet option
  * and should not compete with the action next to it.
  */
-const BUTTON_TONE: Record<
-  ButtonVariant,
-  { gradient: readonly [string, string] | null; background: string; ink: string; border: string }
-> = {
-  primary: {
-    gradient: ['#d8ff33', '#a8d400'] as const,
-    background: colors.volt,
-    ink: colors.background,
-    border: colors.volt,
-  },
-  danger: {
-    gradient: ['#ff8a80', '#e04f45'] as const,
-    background: colors.danger,
-    ink: colors.background,
-    border: colors.danger,
-  },
-  ghost: { gradient: null, background: 'transparent', ink: colors.text, border: colors.border },
+type ButtonTone = {
+  gradient: readonly [string, string] | null;
+  background: string;
+  ink: string;
+  border: string;
 };
+
+/**
+ * Relleno por variante. Es una función y no una constante porque la marca se
+ * resuelve al iniciar sesión: congelarla al importar el módulo dejaría los
+ * botones con los colores del gimnasio anterior.
+ *
+ * En la primaria, degradado y color de texto vienen de la marca. Con un acento
+ * claro el texto va en negro y con uno saturado en blanco, y acertarlo es la
+ * diferencia entre un botón legible y uno que no se puede leer.
+ */
+function buttonTone(variant: ButtonVariant): ButtonTone {
+  if (variant === 'primary') {
+    return {
+      gradient: accentGradient(),
+      background: colors.volt,
+      ink: accentContrast(),
+      border: colors.volt,
+    };
+  }
+  if (variant === 'danger') {
+    return {
+      gradient: ['#ff8a80', '#e04f45'] as const,
+      background: colors.danger,
+      ink: colors.background,
+      border: colors.danger,
+    };
+  }
+  return { gradient: null, background: 'transparent', ink: colors.text, border: colors.border };
+}
 
 /**
  * Press spring for the primary action surface. Slightly livelier than the one
@@ -125,7 +151,7 @@ export function Button({
   style?: StyleProp<ViewStyle>;
 }) {
   const isDisabled = disabled || loading;
-  const tone = BUTTON_TONE[variant];
+  const tone = buttonTone(variant);
   const pressed = useSharedValue(0);
   const reduceMotion = useReducedMotion();
 

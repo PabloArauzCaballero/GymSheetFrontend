@@ -174,7 +174,7 @@ export function ScreenHeader({ title, subtitle }: { title: string; subtitle?: st
           // a 16 body it was merely "bigger", and the page leaned on colour for
           // hierarchy instead of on type.
           fontSize: fontSizes.display,
-          fontWeight: '800',
+          fontWeight: '600',
           // Optical tracking: large type set at default spacing looks loose and
           // amateur. Negative tracking is most of what separates a display face
           // from body text scaled up.
@@ -346,7 +346,7 @@ export function StatTile({ value, label }: { value: string; label: string }) {
           // the emphasis instead, and volt is left for the primary action.
           color: colors.text,
           fontSize: fontSizes['2xl'],
-          fontWeight: '800',
+          fontWeight: '600',
           fontVariant: ['tabular-nums'],
           letterSpacing: fontSizes['2xl'] * -0.045,
         }}
