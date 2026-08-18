@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
@@ -14,6 +14,7 @@ import { BackLink } from '@/components/nav';
 import { useExerciseMedia } from '@/api/use-exercise-media';
 import { PressableScale } from '@/components/motion';
 import { workoutService } from '@/api/services';
+import { useAmbientStore } from '@/state/ambient-store';
 import { WORKOUT_LABEL, WORKOUT_TONE, formatDuration, relativeDay } from '@/lib/format';
 import { colors, fontSizes, spacing } from '@/theme';
 
@@ -117,6 +118,22 @@ export default function WorkoutDetailScreen() {
     : [];
   const withMedia = useExerciseMedia(ordered.map((item) => item.ejercicio));
 
+  /**
+   * The backdrop picks up while a session is open and settles when it closes.
+   *
+   * Declared here with the other hooks, above the early returns: placed after
+   * them it would run only once the query resolved, and the hook count would
+   * change between renders — the exact crash this screen already had once.
+   * The cleanup matters as much as the set: leaving the room "training" after
+   * the user walks away turns a contextual cue into permanent noise.
+   */
+  const isLive = workout.data?.estado === 'EN_PROGRESO';
+  const setAmbient = useAmbientStore((state) => state.setIntensity);
+  useEffect(() => {
+    setAmbient(isLive ? 'active' : 'calm');
+    return () => setAmbient('calm');
+  }, [isLive, setAmbient]);
+
   if (workout.isPending) {
     return (
       <ScrollScreen>
@@ -145,7 +162,7 @@ export default function WorkoutDetailScreen() {
     0,
   );
   const duration = formatDuration(data.fechaInicio, data.fechaFin);
-  const live = data.estado === 'EN_PROGRESO';
+  const live = isLive;
 
   const onFinish = async () => {
     const result = await confirm({

@@ -206,7 +206,7 @@ function ProfileForm({ defaults, isNew }: { defaults: ProfileFormValues; isNew: 
   };
 
   return (
-    <Card>
+    <Card style={{ gap: spacing.lg, paddingVertical: spacing.xl }}>
       <StepProgress current={step} steps={PROFILE_STEPS} />
 
       {step === 0 ? (
@@ -363,7 +363,10 @@ export default function ProfileEditScreen() {
   const current = profile.data;
 
   return (
-    <ScrollScreen>
+    // `center` porque esta pantalla es el formulario entero: dejaba la tarjeta
+    // arriba con dos tercios de negro debajo, que es justo lo que se pidio
+    // evitar. Centrada, el asistente ocupa la pantalla en vez de flotar en ella.
+    <ScrollScreen center>
       <BackLink />
       <ScreenHeader
         subtitle={

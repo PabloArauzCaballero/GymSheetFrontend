@@ -254,7 +254,7 @@ export function ExerciseForm({
                       {...form.register('equipoIds')}
                     />
                     <span
-                      className={`grid size-6 place-items-center rounded-[4px] border ${selected ? 'border-[var(--volt)] bg-[var(--volt)] text-black' : 'border-[var(--border)]'}`}
+                      className={`grid size-6 place-items-center rounded-[4px] border ${selected ? 'border-[var(--volt)] bg-[var(--volt)] text-[var(--accent-contrast)]' : 'border-[var(--border)]'}`}
                     >
                       {selected ? <Check className="size-4" /> : null}
                     </span>

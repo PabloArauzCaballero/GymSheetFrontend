@@ -7,6 +7,8 @@ import {
   Text,
   useWindowDimensions,
   View,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AmbientBackground } from '@/components/ambient';
@@ -167,11 +169,17 @@ export function ScreenHeader({ title, subtitle }: { title: string; subtitle?: st
         numberOfLines={2}
         style={{
           color: colors.text,
-          fontSize: fontSizes['2xl'],
-          // Matches the web's display type: heavy and optically tight. Weight
-          // alone does not make a title feel designed — the tracking does.
+          // The one place the display size is used. A title only reads as a
+          // title when the step down to body text is unmistakable; at 32 against
+          // a 16 body it was merely "bigger", and the page leaned on colour for
+          // hierarchy instead of on type.
+          fontSize: fontSizes.display,
           fontWeight: '800',
-          letterSpacing: fontSizes['2xl'] * -0.045,
+          // Optical tracking: large type set at default spacing looks loose and
+          // amateur. Negative tracking is most of what separates a display face
+          // from body text scaled up.
+          letterSpacing: fontSizes.display * -0.03,
+          lineHeight: fontSizes.display * 1.05,
         }}
       >
         {title}
@@ -229,11 +237,14 @@ export function Card({
   accent,
   onPress,
   accessibilityLabel,
+  style,
 }: {
   children: ReactNode;
   accent?: string;
   onPress?: () => void;
   accessibilityLabel?: string;
+  /** Escape hatch for a card that carries a whole screen, not a summary. */
+  style?: StyleProp<ViewStyle>;
 }) {
   const surface = {
     gap: spacing.sm,
@@ -258,13 +269,17 @@ export function Card({
 
   if (onPress) {
     return (
-      <PressableScale accessibilityLabel={accessibilityLabel} onPress={onPress} style={surface}>
+      <PressableScale
+        accessibilityLabel={accessibilityLabel}
+        onPress={onPress}
+        style={[surface, style]}
+      >
         {children}
       </PressableScale>
     );
   }
 
-  return <View style={surface}>{children}</View>;
+  return <View style={[surface, style]}>{children}</View>;
 }
 
 /** Label on the left, value on the right — the workhorse of profile/settings. */
@@ -325,7 +340,11 @@ export function StatTile({ value, label }: { value: string; label: string }) {
         minimumFontScale={0.55}
         numberOfLines={1}
         style={{
-          color: colors.volt,
+          // Near-white, not volt. Three tiles in a row all shouting in the
+          // brand colour is what made these screens feel loud: the accent stops
+          // meaning "look here" when everything wears it. Size and weight carry
+          // the emphasis instead, and volt is left for the primary action.
+          color: colors.text,
           fontSize: fontSizes['2xl'],
           fontWeight: '800',
           fontVariant: ['tabular-nums'],

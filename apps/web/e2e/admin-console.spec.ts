@@ -1,6 +1,6 @@
 import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 
 /**
  * Evidencia end-to-end de la consola de administración contra el stack real
@@ -79,15 +79,23 @@ async function open(page: Page, path: string) {
 test.describe.configure({ mode: 'serial' });
 
 test.describe('consola de administración', () => {
+  let context: BrowserContext;
   let page: Page;
 
-  test.beforeAll(async ({ browser }) => {
-    page = await browser.newPage();
+  test.beforeAll(async ({ browser, baseURL }) => {
+    // El contexto se crea a mano para compartir la sesión entre los pasos, así
+    // que las opciones de `test.use` no se aplican solas: el permiso de cámara
+    // y la URL base deben declararse aquí o `getUserMedia` recibe un rechazo.
+    context = await browser.newContext({
+      ...(baseURL ? { baseURL } : {}),
+      permissions: ['camera'],
+    });
+    page = await context.newPage();
     await loginAsAdmin(page);
   });
 
   test.afterAll(async () => {
-    await page.close();
+    await context.close();
   });
 
   test('panel de operaciones', async () => {
@@ -131,7 +139,9 @@ test.describe('consola de administración', () => {
 
   test('alta de sede (prerrequisito de todo plan)', async () => {
     await open(page, '/admin/facilities');
-    await expect(page.getByRole('heading', { name: 'Sedes' })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: 'Sedes', exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
     await shot(page, 'sedes-lista');
 
     // La base de desarrollo arranca sin sedes y un plan exige al menos un
@@ -154,7 +164,9 @@ test.describe('consola de administración', () => {
     const code = `E2E${run}`;
     await open(page, '/admin/membership');
     await page.getByRole('tab', { name: 'Planes' }).click();
-    await expect(page.getByRole('heading', { name: 'Planes' })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: 'Planes', exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
     await shot(page, 'planes-lista');
 
     await page.getByRole('button', { name: 'Nuevo plan' }).click();
@@ -225,7 +237,9 @@ test.describe('consola de administración', () => {
     const email = `coach.e2e.${run.toLowerCase()}@gymsheet.local`;
     await open(page, '/admin/membership');
     await page.getByRole('tab', { name: 'Personal' }).click();
-    await expect(page.getByRole('heading', { name: 'Personal' })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: 'Personal', exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
     await shot(page, 'personal-lista');
 
     await page.getByRole('button', { name: 'Nuevo entrenador' }).click();

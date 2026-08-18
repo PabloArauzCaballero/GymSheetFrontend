@@ -98,7 +98,7 @@ export function AddExerciseDialog({
                       </span>
                     </span>
                   </span>
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--text-muted)] transition-colors group-hover:border-[var(--volt)] group-hover:bg-[var(--volt)] group-hover:text-black">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--text-muted)] transition-colors group-hover:border-[var(--volt)] group-hover:bg-[var(--volt)] group-hover:text-[var(--accent-contrast)]">
                     <Plus className="size-4" />
                   </span>
                 </button>

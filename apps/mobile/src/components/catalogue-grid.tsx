@@ -1,7 +1,8 @@
 import { Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { EnterUp, PressableScale } from '@/components/motion';
-import { colors, fontSizes, iconSizes, radii, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, radii, spacing } from '@/theme';
 
 /**
  * Icon per body part.
@@ -45,12 +46,14 @@ export function iconFor(bodyPart: string): keyof typeof Ionicons.glyphMap {
  */
 export function GridTile({
   icon,
+  imageUrl,
   index,
   label,
   onPress,
   total,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
+  imageUrl?: string | null;
   index: number;
   label: string;
   onPress: () => void;
@@ -62,10 +65,7 @@ export function GridTile({
         accessibilityLabel={`${label}, ${total} ejercicios`}
         onPress={onPress}
         style={{
-          gap: spacing.sm,
-          padding: spacing.md,
-          minHeight: 116,
-          justifyContent: 'space-between',
+          overflow: 'hidden',
           borderRadius: radii.lg,
           borderWidth: 1,
           borderColor: colors.borderSubtle,
@@ -73,8 +73,33 @@ export function GridTile({
           backgroundColor: colors.surface,
         }}
       >
-        <Ionicons color={colors.volt} name={icon} size={iconSizes.xl} />
-        <View style={{ gap: 2 }}>
+        {/* The plate, not a glyph. These illustrations show a body with the
+            worked muscle picked out in red, which is the fastest possible
+            answer to "is this the one I want?" — and it needs no translation.
+            The icon stays as the fallback for a group the catalogue has no
+            artwork for, so the grid never renders a hole. */}
+        <View
+          style={{
+            height: 116,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: imageUrl ? '#ffffff' : colors.surfaceHigh,
+          }}
+        >
+          {imageUrl ? (
+            <Image
+              accessibilityIgnoresInvertColors
+              contentFit="contain"
+              source={{ uri: imageUrl }}
+              style={{ width: '100%', height: '100%' }}
+              transition={180}
+            />
+          ) : (
+            <Ionicons color={colors.textMuted} name={icon} size={iconSizes.xl} />
+          )}
+        </View>
+
+        <View style={{ gap: 2, padding: spacing.md }}>
           <Text
             numberOfLines={2}
             style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: '700' }}
@@ -114,8 +139,8 @@ export function DrillBack({ label, onPress }: { label: string; onPress: () => vo
       onPress={onPress}
       style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: 4 }}
     >
-      <Ionicons color={colors.accentInk} name="chevron-back" size={iconSizes.md} />
-      <Text style={{ color: colors.accentInk, fontSize: fontSizes.sm, fontWeight: '600' }}>
+      <Ionicons color={accentPolicy.quietLink} name="chevron-back" size={iconSizes.md} />
+      <Text style={{ color: accentPolicy.quietLink, fontSize: fontSizes.sm, fontWeight: '600' }}>
         {label}
       </Text>
     </PressableScale>

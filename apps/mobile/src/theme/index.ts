@@ -1,10 +1,54 @@
-import { colors as sharedColors, theme } from '@gymsheet/design-tokens';
+import {
+  colors as sharedColors,
+  fontSizes as sharedFontSizes,
+  theme,
+} from '@gymsheet/design-tokens';
 
 /**
  * Re-exports the shared design tokens so the whole app imports the visual
  * identity from one place. The values match the web app's CSS variables.
  */
-export { tones, spacing, radii, fontSizes, fontWeights, minTouchTarget } from '@gymsheet/design-tokens';
+export { tones, spacing, radii, fontWeights, minTouchTarget } from '@gymsheet/design-tokens';
+
+/**
+ * Mobile type scale.
+ *
+ * The shared scale steps 16 → 18 → 24 → 32. Two points between body and
+ * subtitle is not a step the eye reads as hierarchy; it reads as an accident,
+ * and the screens end up carrying their structure entirely in colour. Widening
+ * the top of the scale lets typography do that work instead, which is the
+ * difference between a page that looks loud and one that looks composed.
+ *
+ * Only the large end moves. Body sizes stay where they are because they are
+ * already at the comfortable reading size for the language.
+ */
+export const fontSizes = {
+  ...sharedFontSizes,
+  lg: 20,
+  xl: 26,
+  '2xl': 34,
+  /** Screen titles only. Nothing else in the app is allowed to be this big. */
+  display: 40,
+} as const;
+
+/**
+ * Accent policy.
+ *
+ * `volt` was being used 36 times across 18 files — on tab icons, every stat
+ * number, every badge, breadcrumbs, grid glyphs and the background at once.
+ * An accent applied to everything accents nothing, and that saturation is what
+ * reads as cheap rather than premium.
+ *
+ * The rule from here: `volt` is for the primary action and for the single
+ * number a screen exists to show. Everything decorative — navigation glyphs,
+ * secondary labels, ornament — uses these quieter tones instead.
+ */
+export const accentPolicy = {
+  /** Navigation and decorative glyphs: present, not shouting. */
+  glyph: '#cfd8c4',
+  /** Secondary interactive text (breadcrumbs, inline links). */
+  quietLink: '#a9b69a',
+} as const;
 
 /**
  * Mobile surface ramp, overriding the shared one.

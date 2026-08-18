@@ -57,10 +57,10 @@
 @keyframes volt-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgb(195 244 0 / 0.35);
+    box-shadow: 0 0 0 0 rgb(var(--accent-channels) / 0.35);
   }
   50% {
-    box-shadow: 0 0 0 6px rgb(195 244 0 / 0);
+    box-shadow: 0 0 0 6px rgb(var(--accent-channels) / 0);
   }
 }
 
@@ -112,11 +112,11 @@
 @keyframes glow-breathe {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgb(195 244 0 / 0);
+    box-shadow: 0 0 0 0 rgb(var(--accent-channels) / 0);
     border-color: color-mix(in srgb, var(--volt) 30%, transparent);
   }
   50% {
-    box-shadow: 0 0 22px -4px rgb(195 244 0 / 0.35);
+    box-shadow: 0 0 22px -4px rgb(var(--accent-channels) / 0.35);
     border-color: color-mix(in srgb, var(--volt) 60%, transparent);
   }
 }

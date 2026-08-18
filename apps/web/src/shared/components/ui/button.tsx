@@ -14,7 +14,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'btn-shine border-[var(--volt)] bg-[var(--volt)] text-black hover:bg-[var(--volt-dim)] hover:shadow-[0_8px_28px_-8px_rgb(195_244_0/0.55)]',
+    'btn-shine border-[var(--volt)] bg-[var(--volt)] text-[var(--accent-contrast)] hover:bg-[var(--volt-dim)] hover:shadow-[0_8px_28px_-8px_rgb(var(--accent-channels)/0.55)]',
   secondary:
     'border-[var(--border)] bg-[var(--surface-low)] text-[var(--text)] hover:border-[var(--text-disabled)] hover:bg-[var(--surface)]',
   danger:

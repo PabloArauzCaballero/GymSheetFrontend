@@ -122,7 +122,19 @@ export const exerciseTaxonomySchema = z.array(
   z.object({
     bodyPart: z.string(),
     total: z.number().int(),
-    muscles: z.array(z.object({ targetMuscle: z.string(), total: z.number().int() })),
+    /**
+     * A representative plate from the catalogue. The dataset illustrations
+     * highlight the worked muscle in red, so they identify a group far faster
+     * than any icon could — the picture *is* the label.
+     */
+    imageUrl: z.string().nullable().default(null),
+    muscles: z.array(
+      z.object({
+        targetMuscle: z.string(),
+        total: z.number().int(),
+        imageUrl: z.string().nullable().default(null),
+      }),
+    ),
   }),
 );
 

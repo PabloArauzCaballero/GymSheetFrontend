@@ -10,6 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { colors } from '@/theme';
+import { useAmbientStore } from '@/state/ambient-store';
 
 /**
  * The moving backdrop behind every screen.
@@ -160,14 +161,17 @@ function Bar({
   );
 }
 
-function Band({ spec, width, height, moving }: {
+function Band({ spec, width, height, moving, energy }: {
   spec: BandSpec;
   width: number;
   height: number;
   moving: boolean;
+  energy: number;
 }) {
-  const clock = useClock(spec.period, moving);
-  const clockAlt = useClock(spec.periodAlt, moving);
+  // Energy shortens the cycle rather than changing the shape: the wave people
+  // learned to recognise stays the same wave, it just runs harder.
+  const clock = useClock(Math.round(spec.period / energy), moving);
+  const clockAlt = useClock(Math.round(spec.periodAlt / energy), moving);
   const count = Math.ceil(width / spec.pitch) + 1;
 
   return (
@@ -179,7 +183,7 @@ function Band({ spec, width, height, moving }: {
         top: height * spec.cy - spec.height / 2,
         width,
         height: spec.height,
-        opacity: spec.opacity,
+        opacity: spec.opacity * energy,
       }}
     >
       {Array.from({ length: count }, (_, index) => (
@@ -252,6 +256,11 @@ export function AmbientBackground() {
   const { width, height } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
   const moving = !reduceMotion;
+  const intensity = useAmbientStore((state) => state.intensity);
+  // 1.0 while browsing, 1.9 during a live session. Chosen by eye: enough that
+  // the room visibly changes when training starts, not so much that the wave
+  // starts competing with the numbers the user is reading off the screen.
+  const energy = intensity === 'active' ? 1.9 : 1;
 
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>
@@ -259,7 +268,14 @@ export function AmbientBackground() {
         <Glow index={index} key={index} moving={moving} width={width} />
       ))}
       {BANDS.map((spec, index) => (
-        <Band height={height} key={index} moving={moving} spec={spec} width={width} />
+        <Band
+          energy={energy}
+          height={height}
+          key={index}
+          moving={moving}
+          spec={spec}
+          width={width}
+        />
       ))}
     </View>
   );

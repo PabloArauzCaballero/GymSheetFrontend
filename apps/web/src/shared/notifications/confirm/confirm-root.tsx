@@ -68,7 +68,7 @@ export function ConfirmRoot() {
                 cancelRef.current.focus();
               }
             }}
-            className="dialog-panel fixed left-1/2 top-1/2 z-[101] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-[8px] border border-[var(--border)] bg-[var(--surface-lowest)] p-6 shadow-[0_40px_120px_-40px_rgb(0_0_0/0.9)]"
+            className="dialog-panel fixed left-1/2 top-1/2 z-[101] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-[8px] border border-[var(--border)] bg-[var(--surface-lowest)] p-6 shadow-[var(--shadow-dialog)]"
           >
             <div className="flex gap-4">
               <span

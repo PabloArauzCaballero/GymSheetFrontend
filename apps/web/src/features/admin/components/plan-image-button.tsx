@@ -14,6 +14,7 @@ import {
 import type { MediaFile, MembershipPlan } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { CameraCapture } from '@/shared/components/media/camera-capture';
+import { useBrand } from '@/shared/theme/brand-provider';
 import { DomainImage, mediaProxyUrl } from '@/shared/components/media/domain-image';
 import { Button } from '@/shared/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/shared/components/ui/dialog';
@@ -36,6 +37,7 @@ export function PlanImageButton({ plan }: Readonly<{ plan: MembershipPlan }>) {
   const [selectedMediaId, setSelectedMediaId] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const queryClient = useQueryClient();
+  const brand = useBrand();
 
   const media = useQuery({
     queryKey: queryKeys.admin.media,
@@ -74,6 +76,7 @@ export function PlanImageButton({ plan }: Readonly<{ plan: MembershipPlan }>) {
         codigo: planImageCode(plan.codigo),
         nombre: `QR de ${plan.nombre}`,
         altText: input.altText,
+        atribucion: brand.name,
         ...(input.image.width && input.image.height
           ? { width: input.image.width, height: input.image.height }
           : {}),

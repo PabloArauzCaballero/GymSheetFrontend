@@ -191,6 +191,7 @@ export default function ExercisesScreen() {
                 icon={iconFor(group.bodyPart)}
                 index={index}
                 key={group.bodyPart}
+                imageUrl={group.imageUrl}
                 label={titleCase(group.bodyPart)}
                 onPress={() => setBodyPart(group.bodyPart)}
                 total={group.total}
@@ -208,6 +209,7 @@ export default function ExercisesScreen() {
               icon={iconFor(bodyPart)}
               index={index}
               key={entry.targetMuscle}
+              imageUrl={entry.imageUrl}
               label={titleCase(entry.targetMuscle)}
               onPress={() => setMuscle(entry.targetMuscle)}
               total={entry.total}

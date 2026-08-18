@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { Badge, Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { NavRow } from '@/components/list';
+import { WeekPlan } from '@/components/week-plan';
 import { routineService } from '@/api/services';
 import { Button } from '@/components/ui';
 import { GOAL_LABEL } from '@/lib/format';
@@ -34,8 +35,21 @@ export default function RoutinesScreen() {
 
       <Button label="Crear rutina" onPress={() => router.push('/routines/new')} />
 
+      {/* The week comes before the catalogue on purpose: someone opening this
+          screen on a Tuesday wants to know what today is, not to browse. */}
       {assigned.length > 0 ? (
-        <Section title="Asignadas por tu entrenador">
+        <Section index={0} title="Tu semana">
+          <WeekPlan
+            assignments={assigned}
+            onPickRoutine={(routineId) =>
+              router.push({ pathname: '/routines/[id]', params: { id: routineId } })
+            }
+          />
+        </Section>
+      ) : null}
+
+      {assigned.length > 0 ? (
+        <Section index={1} title="Asignadas por tu entrenador">
           <Card>
             {assigned.map((assignment, index) => (
               <View key={assignment.id}>
@@ -52,7 +66,7 @@ export default function RoutinesScreen() {
         </Section>
       ) : null}
 
-      <Section title="Todas">
+      <Section index={2} title="Todas">
         {routines.isPending ? (
           <View style={{ gap: spacing.sm }}>
             <Skeleton height={64} />

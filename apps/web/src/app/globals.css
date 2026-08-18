@@ -3,132 +3,25 @@
 @import './motion.css';
 @import './background.css';
 
-/* Tokens: fuente única del tema. Oscuro "volt" por defecto (:root); claro con
- * [data-theme='light']. El estilo consume var(--...); el tema se propaga aquí. */
+/* ----------------------------------------------------------------------------
+ * Esta hoja no contiene ni un color.
+ *
+ * Los valores de tema (`--background`, `--volt`, `--shadow-lg`, …) los publica
+ * el servidor en un bloque `<style id="tenant-theme">` a partir de la paleta
+ * del inquilino: ver `src/shared/theme/`. Aquí sólo vive la estructura —qué
+ * variable usa cada elemento—, de modo que cambiar de identidad visual no
+ * obliga a tocar CSS.
+ *
+ * El contrato completo de variables está en `theme/color-contract.ts`; añadir
+ * una nueva pasa por ahí, no por este archivo.
+ * -------------------------------------------------------------------------- */
 :root {
-  color-scheme: dark;
-  /* Superficies (elevación: de fondo a más alta) */
-  --background: #000000;
-  --surface-lowest: #080808;
-  --surface-low: #0d0d0d;
-  --surface: #131313;
-  --surface-high: #1f1f1f;
-  --surface-highest: #2a2a2a;
-  --surface-sidebar: #050505;
-  /* Bordes */
-  --border-subtle: #1a1a1a;
-  --border: #262626;
-  /* Texto */
-  --text: #f5f5f5;
-  --text-muted: #8c8c8c;
-  --text-disabled: #4d4d4d;
-  /* Acento: --volt relleno vívido (texto negro); --accent-ink texto/iconos. */
-  --volt: #c3f400;
-  --volt-dim: #abd600;
-  --accent-ink: #c3f400;
-  /* Estados (color plano para texto/iconos) */
-  --danger: #ff6b63;
-  --warning: #d7a944;
-  --success: #c3f400;
-  /* Tonos semánticos (fondo / borde / texto) para badges, alertas, chips */
-  --success-bg: #182000;
-  --success-border: #526800;
-  --success-text: #c3f400;
-  --warning-bg: #241c0c;
-  --warning-border: #5b4820;
-  --warning-text: #e0b65f;
-  --danger-bg: #241211;
-  --danger-border: #63302c;
-  --danger-text: #ffb4ab;
-  --danger-surface: #160c0b;
-  --info-bg: #111b21;
-  --info-border: #344654;
-  --info-text: #a8d4ee;
-  /* Cromo de la app */
-  --header-bg: rgb(0 0 0 / 0.9);
-  --overlay: rgb(0 0 0 / 0.8);
-  --focus-ring: #ffffff;
-  --grid-line: rgb(255 255 255 / 0.02);
-  --page-glow: rgb(195 244 0 / 0.045);
-  --sheen: rgb(255 255 255 / 0.45);
-  /* Fondos ambientales (aurora): luces difusas de baja opacidad; volt + matices
-   * frío/violeta. --ambient-strength escala el conjunto por variante. */
-  --aurora-1: rgb(195 244 0 / 0.14);
-  --aurora-2: rgb(56 189 172 / 0.12);
-  --aurora-3: rgb(120 110 255 / 0.1);
-  --aurora-spot: rgb(195 244 0 / 0.09);
-  --noise-opacity: 0.028;
-  --ambient-strength: 1;
-  /* Elevación */
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-md: 0 12px 32px -18px rgb(0 0 0 / 0.7);
-  --shadow-lg: 0 40px 120px -40px rgb(0 0 0 / 0.9);
-  /* Radios */
+  /* Radios: son proporción y ritmo, no identidad de marca, así que no forman
+   * parte de la paleta configurable. */
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 14px;
-}
-
-:root[data-theme='light'] {
-  color-scheme: light;
-
-  --background: #f3f4f0;
-  --surface-lowest: #ffffff;
-  --surface-low: #fafbf8;
-  --surface: #ffffff;
-  --surface-high: #f0f1ec;
-  --surface-highest: #e6e8e0;
-  --surface-sidebar: #ffffff;
-
-  --border-subtle: #e8e9e3;
-  --border: #d5d7ce;
-
-  --text: #14160e;
-  --text-muted: #5c6053;
-  --text-disabled: #a6a99d;
-
-  --volt: #c3f400;
-  --volt-dim: #b4e300;
-  --accent-ink: #55730a;
-
-  --danger: #c23b30;
-  --warning: #8a6410;
-  --success: #4d6b00;
-
-  --success-bg: #eef6cf;
-  --success-border: #c0d766;
-  --success-text: #4d6b00;
-  --warning-bg: #fbf1d6;
-  --warning-border: #e6cd82;
-  --warning-text: #8a6410;
-  --danger-bg: #fdeceb;
-  --danger-border: #f0b3ad;
-  --danger-text: #b23a30;
-  --danger-surface: #fdf3f2;
-  --info-bg: #e9f2fb;
-  --info-border: #aacdee;
-  --info-text: #235d88;
-
-  --header-bg: rgb(255 255 255 / 0.82);
-  --overlay: rgb(20 22 14 / 0.4);
-  --focus-ring: #14160e;
-  --grid-line: rgb(20 22 14 / 0.04);
-  --page-glow: rgb(195 244 0 / 0.12);
-  --sheen: rgb(255 255 255 / 0.65);
-
-  /* Aurora en modo claro: más pastel y con menor opacidad para no ensuciar el
-   * lienzo claro ni comprometer la legibilidad. */
-  --aurora-1: rgb(154 196 0 / 0.16);
-  --aurora-2: rgb(45 160 148 / 0.1);
-  --aurora-3: rgb(120 110 255 / 0.08);
-  --aurora-spot: rgb(120 150 0 / 0.08);
-  --noise-opacity: 0.02;
-  --ambient-strength: 1;
-
-  --shadow-sm: 0 1px 2px rgb(20 22 14 / 0.08);
-  --shadow-md: 0 12px 32px -18px rgb(20 22 14 / 0.18);
-  --shadow-lg: 0 40px 120px -40px rgb(20 22 14 / 0.26);
 }
 
 /* ----------------------------------------------------------------------------
@@ -184,10 +77,9 @@ body {
     radial-gradient(circle at 50% -20%, var(--page-glow), transparent 34rem),
     var(--background);
   color: var(--text);
+  /* `--font-app` la fija la hoja del inquilino según su tipografía elegida. */
   font-family:
-    var(--font-hanken),
-    'Hanken Grotesk',
-    Inter,
+    var(--font-app),
     ui-sans-serif,
     system-ui,
     -apple-system,
@@ -205,7 +97,7 @@ body {
 
 ::selection {
   background: var(--volt);
-  color: #000;
+  color: var(--accent-contrast);
 }
 
 :focus-visible {

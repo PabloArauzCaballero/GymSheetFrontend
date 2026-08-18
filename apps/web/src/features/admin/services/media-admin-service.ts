@@ -27,7 +27,8 @@ export type MediaUploadInput = {
   nombre: string;
   altText: string;
   licencia?: string;
-  atribucion?: string;
+  /** Marca del gimnasio que administra la pieza. */
+  atribucion: string;
   width?: number;
   height?: number;
 };
@@ -42,7 +43,7 @@ export const mediaAdminService = {
     form.append('name', input.nombre);
     form.append('altText', input.altText);
     form.append('license', input.licencia ?? 'Propietaria');
-    form.append('attribution', input.atribucion ?? 'GymSheet');
+    form.append('attribution', input.atribucion);
     // El backend exige ancho y alto juntos o ninguno.
     if (input.width && input.height) {
       form.append('width', String(input.width));

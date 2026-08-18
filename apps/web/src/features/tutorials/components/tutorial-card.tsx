@@ -4,6 +4,7 @@ import { Clock, Lock, Play, RotateCcw, Sparkles } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
+import { useBrandCopy } from '@/shared/theme/brand-provider';
 import { useTutorial } from '../engine/tutorial-context';
 import type { ResolvedTutorial } from '../model/types';
 import { categoryLabels, difficultyLabels, statusLabels, statusTone } from './labels';
@@ -15,6 +16,7 @@ import { categoryLabels, difficultyLabels, statusLabels, statusTone } from './la
 export function TutorialCard({ tutorial }: Readonly<{ tutorial: ResolvedTutorial }>) {
   const { statusOf, isOutdated, prerequisitesMet, pendingPrerequisites, repeatCountOf, start, reset } =
     useTutorial();
+  const copy = useBrandCopy();
 
   const status = statusOf(tutorial.id);
   const outdated = isOutdated(tutorial.id);
@@ -44,8 +46,8 @@ export function TutorialCard({ tutorial }: Readonly<{ tutorial: ResolvedTutorial
       </div>
 
       <div className="flex-1">
-        <h3 className="text-base font-bold tracking-[-0.01em]">{tutorial.title}</h3>
-        <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">{tutorial.description}</p>
+        <h3 className="text-base font-bold tracking-[-0.01em]">{copy(tutorial.title)}</h3>
+        <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">{copy(tutorial.description)}</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--text-muted)]">
@@ -84,7 +86,7 @@ export function TutorialCard({ tutorial }: Readonly<{ tutorial: ResolvedTutorial
             size="sm"
             variant="ghost"
             onClick={() => reset(tutorial.id)}
-            aria-label={`Reiniciar progreso de ${tutorial.title}`}
+            aria-label={`Reiniciar progreso de ${copy(tutorial.title)}`}
           >
             <RotateCcw className="size-4" />
             Reiniciar

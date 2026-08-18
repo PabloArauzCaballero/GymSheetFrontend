@@ -6,9 +6,14 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Toaster } from 'sonner';
 import { ConfirmRoot } from '@/shared/notifications';
+import type { TenantBrand } from '@/shared/theme/brand-contract';
+import { BrandProvider } from '@/shared/theme/brand-provider';
 import { ThemeProvider } from '@/shared/theme/theme-provider';
 
-export function Providers({ children }: Readonly<{ children: ReactNode }>) {
+export function Providers({
+  brand,
+  children,
+}: Readonly<{ brand: TenantBrand; children: ReactNode }>) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -31,7 +36,8 @@ export function Providers({ children }: Readonly<{ children: ReactNode }>) {
 
   return (
     <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
+      <BrandProvider brand={brand}>
+        <QueryClientProvider client={queryClient}>
         {children}
         <ConfirmRoot />
         <Toaster
@@ -44,7 +50,8 @@ export function Providers({ children }: Readonly<{ children: ReactNode }>) {
             },
           }}
         />
-      </QueryClientProvider>
+        </QueryClientProvider>
+      </BrandProvider>
     </ThemeProvider>
   );
 }

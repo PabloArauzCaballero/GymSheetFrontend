@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { colors, fontSizes, minTouchTarget, radii, spacing } from '@/theme';
 import { Button } from '@/components/ui';
+import { PressableScale } from '@/components/motion';
 
 /**
  * The one form used mid-workout, so it is built for a sweaty thumb between
@@ -68,6 +69,48 @@ function NumberField({
   );
 }
 
+
+/** A one-tap adjustment. Deliberately not a Button: these are modifiers, not
+ *  the action, and dressing them as buttons would compete with "Registrar". */
+function QuickChip({
+  label,
+  onPress,
+  wide = false,
+}: {
+  label: string;
+  onPress: () => void;
+  wide?: boolean;
+}) {
+  return (
+    <PressableScale
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={{
+        flexGrow: wide ? 1 : 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 36,
+        paddingHorizontal: spacing.md,
+        borderRadius: radii.full,
+        borderWidth: 1,
+        borderColor: colors.border,
+        backgroundColor: colors.surfaceHigh,
+      }}
+    >
+      <Text
+        style={{
+          color: colors.text,
+          fontSize: fontSizes.xs,
+          fontWeight: '700',
+          fontVariant: ['tabular-nums'],
+        }}
+      >
+        {label}
+      </Text>
+    </PressableScale>
+  );
+}
+
 export function SetEntryForm({
   initial,
   pending,
@@ -91,8 +134,39 @@ export function SetEntryForm({
   // defaults to 0 rather than blocking the save.
   const valid = Number.isFinite(repeticiones) && repeticiones > 0 && Number.isFinite(pesoKg);
 
+  /** Applies a delta to a field, floored at zero and keeping halves on weight. */
+  const bump = (field: keyof SetDraft, delta: number) =>
+    setDraft((prev) => {
+      const current = Number(String(prev[field]).replace(',', '.'));
+      const base = Number.isFinite(current) ? current : 0;
+      const next = Math.max(0, Math.round((base + delta) * 100) / 100);
+      return { ...prev, [field]: String(next) };
+    });
+
+  const repeatLast =
+    initial?.pesoKg || initial?.repeticiones
+      ? () =>
+          setDraft({
+            pesoKg: initial?.pesoKg ?? '',
+            repeticiones: initial?.repeticiones ?? '',
+            rir: initial?.rir ?? '',
+          })
+      : null;
+
   return (
     <View style={{ gap: spacing.sm }}>
+      {/* Progressive overload is arithmetic on the last set, not a fresh entry:
+          almost every set is the previous one plus a couple of reps or half a
+          plate. Typing that on a numeric keypad mid-set, with chalk on your
+          hands, is the friction these chips remove. */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+        {repeatLast ? <QuickChip label="Igual que la anterior" onPress={repeatLast} wide /> : null}
+        <QuickChip label="+2,5 kg" onPress={() => bump('pesoKg', 2.5)} />
+        <QuickChip label="−2,5 kg" onPress={() => bump('pesoKg', -2.5)} />
+        <QuickChip label="+1 rep" onPress={() => bump('repeticiones', 1)} />
+        <QuickChip label="−1 rep" onPress={() => bump('repeticiones', -1)} />
+      </View>
+
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
         <NumberField
           label="Peso"

@@ -19,5 +19,10 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|robots.txt).*)'],
+  // La marca gráfica y el manifiesto los pide el navegador antes de que exista
+  // sesión (icono de pestaña, instalación de la aplicación), así que no pueden
+  // caer en la redirección a login pese a resolverse por inquilino.
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|brand-mark.svg).*)',
+  ],
 };

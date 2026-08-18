@@ -79,7 +79,7 @@ export function TutorialSpotlight({
         aria-hidden
         className={cn(
           'pointer-events-none fixed rounded-[8px]',
-          'ring-2 ring-[var(--volt)] shadow-[0_0_0_4px_rgba(195,244,0,0.18)]',
+          'ring-2 ring-[var(--volt)] shadow-[0_0_0_4px_rgb(var(--accent-channels)/0.18)]',
           !reducedMotion && 'transition-all duration-200 ease-out',
         )}
         style={{ zIndex: TUTORIAL_Z + 1, top, left, width, height }}
