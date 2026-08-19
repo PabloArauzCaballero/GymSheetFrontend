@@ -3,7 +3,10 @@ import { SESSION_COOKIE } from '@/shared/auth/constants';
 import { tenantCatalog } from '@gymsheet/design-tokens';
 import { TENANT_COOKIE, TENANT_COOKIE_MAX_AGE } from '@/shared/theme/tenant-cookie';
 
-const publicRoutes = ['/login', '/register'];
+// Recuperar la contraseña es, por definición, algo que se hace sin sesión: sin
+// esta ruta aquí, quien la ha olvidado acaba redirigido al formulario que
+// justamente no puede completar.
+const publicRoutes = ['/login', '/register', '/recover-password'];
 
 /**
  * Primer segmento de la ruta cuando nombra a un gimnasio conocido.

@@ -54,6 +54,14 @@ appId: app.gymsheet.mobile
       visible: 'Bienvenido a GymSheet'
     commands:
       - tapOn: 'Saltar tutorial'
+# Tras la bienvenida, Inicio estrena su propio tour.
+- runFlow: cerrar-tour.subflow.yaml
+# El modal se cierra con un desvanecido, y mientras dura XCUITest
+# devuelve la jerarquia de la ventana que se va --vacia-- en lugar de
+# la de la pantalla que queda debajo. Esperar a que la animacion
+# termine es lo que separa "no esta" de "todavia no se ve".
+- waitForAnimationToEnd:
+    timeout: 5000
 - extendedWaitUntil:
     visible: 'Hola, Athlete'
     timeout: 120000

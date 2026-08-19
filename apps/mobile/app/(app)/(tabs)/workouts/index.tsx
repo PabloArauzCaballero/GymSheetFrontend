@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Badge, Card, Divider, ScrollScreen, ScreenHeader } from '@/components/layout';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { NavRow } from '@/components/list';
@@ -17,7 +18,7 @@ import {
   formatTimeOfDay,
   relativeDay,
 } from '@/lib/format';
-import { spacing } from '@/theme';
+import { accentPolicy, iconSizes, spacing } from '@/theme';
 
 export default function WorkoutsScreen() {
   const router = useRouter();
@@ -82,6 +83,7 @@ export default function WorkoutsScreen() {
           entrenador o adjuntar en un correo. */}
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
         <Button
+          icon="document-text-outline"
           label={exporting === 'pdf' ? 'Generando…' : 'Avance en PDF'}
           loading={exporting === 'pdf'}
           onPress={() => void onExport('pdf')}
@@ -89,6 +91,7 @@ export default function WorkoutsScreen() {
           variant="ghost"
         />
         <Button
+          icon="grid-outline"
           label={exporting === 'csv' ? 'Generando…' : 'Datos en CSV'}
           loading={exporting === 'csv'}
           onPress={() => void onExport('csv')}
@@ -102,6 +105,7 @@ export default function WorkoutsScreen() {
       <TourTarget id="workouts.list">
       {inProgress ? (
         <Button
+          icon="play-circle-outline"
           label="Continuar sesión en curso"
           onPress={() =>
             router.push({ pathname: '/workouts/[id]', params: { id: inProgress.id } })
@@ -109,6 +113,7 @@ export default function WorkoutsScreen() {
         />
       ) : (
         <Button
+          icon="add-circle-outline"
           label="Empezar entrenamiento"
           loading={startFree.isPending}
           onPress={() => startFree.mutate()}
@@ -138,6 +143,22 @@ export default function WorkoutsScreen() {
               <View key={session.id}>
                 {index > 0 ? <Divider /> : null}
                 <NavRow
+                  leading={
+                    <Ionicons
+                      accessibilityElementsHidden
+                      // Decorativo: el título de la fila ya dice qué es esto.
+                      color={accentPolicy.glyph}
+                      importantForAccessibility="no-hide-descendants"
+                      name={
+                        session.estado === 'EN_PROGRESO'
+                          ? 'flame'
+                          : session.estado === 'CANCELADA'
+                            ? 'close-circle-outline'
+                            : 'barbell-outline'
+                      }
+                      size={iconSizes.md}
+                    />
+                  }
                   meta={
                     <Badge
                       label={WORKOUT_LABEL[session.estado]}

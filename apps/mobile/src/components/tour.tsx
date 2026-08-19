@@ -199,11 +199,22 @@ export function useScreenTour(key: Exclude<TourKey, 'welcome'>): void {
   const seen = useTourStore((state) => state.seen);
   useEffect(() => {
     if (seen === null) return;
+    let retry: ReturnType<typeof setTimeout> | null = null;
     // A beat after mount so the screen's own entrance animation and the first
     // layout pass are done: highlighting a rect that is still moving reads as
     // a misaligned overlay rather than as a spotlight.
-    const timer = setTimeout(() => openOnce(key), 650);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(() => {
+      // El intento puede rebotar porque otro tour acaba de cerrarse —el caso
+      // del arranque en frío, donde la bienvenida termina justo antes de que
+      // esta pantalla monte—. Se vuelve a intentar una vez pasado el descanso
+      // en lugar de perder el tutorial de la pantalla para siempre.
+      if (openOnce(key)) return;
+      retry = setTimeout(() => openOnce(key), 1400);
+    }, 650);
+    return () => {
+      clearTimeout(timer);
+      if (retry) clearTimeout(retry);
+    };
   }, [key, openOnce, seen]);
 }
 

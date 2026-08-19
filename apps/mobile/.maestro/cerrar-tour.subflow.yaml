@@ -1,0 +1,38 @@
+# Cierra el tutorial de la pantalla en la que estemos, si lo hay.
+#
+# Cada pantalla estrena su propio tour la primera vez que se abre, y se
+# presenta como un `Modal`: hasta cerrarlo, lo que hay detrás no existe en la
+# jerarquía que Maestro consulta, así que cualquier aserción posterior falla
+# aunque el contenido esté perfectamente dibujado.
+#
+# Se pulsa hasta que no queda ninguno porque los tours tienen uno o dos pasos
+# según la pantalla, y el último botón se llama distinto («Entendido» en vez de
+# «Siguiente»). El límite de vueltas es un tope de seguridad, no una cuenta: si
+# algún día un tour crece, esto sigue funcionando.
+#
+# Los pasos son opcionales a propósito. Un tour ya visto no vuelve a salir, y
+# una pantalla sin tour tampoco: en ambos casos este subflujo no debe hacer
+# nada ni fallar.
+appId: app.gymsheet.mobile
+---
+# El primer toque es un `tapOn` opcional a secas, sin guardia. Es deliberado:
+# un `tapOn` espera a que el elemento aparezca, mientras que la condición de un
+# `repeat: while` se evalúa al instante. El tour de pantalla se abre con un
+# retardo corto —el tiempo que tarda la pantalla en asentar su posición—, así
+# que una guardia mirando antes de ese momento no ve nada, el bucle no llega a
+# ejecutarse y la aserción siguiente choca contra el modal que acaba de salir.
+# Esa carrera es exactamente la que rompió la suite la primera vez.
+- tapOn:
+    text: 'Siguiente|Entendido'
+    optional: true
+# A partir de aquí el tour, si lo había, ya está en pantalla: el resto de sus
+# pasos se pueden cerrar comprobando primero, que es instantáneo y no penaliza
+# a las pantallas que no tienen tour.
+- repeat:
+    times: 5
+    while:
+      visible: 'Siguiente|Entendido'
+    commands:
+      - tapOn:
+          text: 'Siguiente|Entendido'
+          optional: true

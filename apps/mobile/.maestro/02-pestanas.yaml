@@ -17,26 +17,36 @@ name: 02 · Navegación — las cinco pestañas
 # `href: null` pero seguían siendo miembros del navegador.
 - assertVisible: 'Inicio, tab, 1 of 5'
 - tapOn: 'Rutinas, tab.*'
+# Cada pestaña estrena su tour la primera vez que se abre.
+- runFlow: cerrar-tour.subflow.yaml
 - extendedWaitUntil:
     visible: 'Tus planes de entrenamiento.'
     timeout: 60000
 - takeScreenshot: 05-rutinas
 - tapOn: 'Ejercicios, tab.*'
+# Cada pestaña estrena su tour la primera vez que se abre.
+- runFlow: cerrar-tour.subflow.yaml
 - extendedWaitUntil:
     visible: 'Ejercicios'
     timeout: 60000
 - takeScreenshot: 06-ejercicios
 - tapOn: 'Entrenos, tab.*'
+# Cada pestaña estrena su tour la primera vez que se abre.
+- runFlow: cerrar-tour.subflow.yaml
 - extendedWaitUntil:
     visible: 'Entrenos'
     timeout: 60000
 - takeScreenshot: 07-entrenos
 - tapOn: 'Perfil, tab.*'
+# Cada pestaña estrena su tour la primera vez que se abre.
+- runFlow: cerrar-tour.subflow.yaml
 - extendedWaitUntil:
     visible: 'Editar mis datos'
     timeout: 60000
 - takeScreenshot: 08-perfil
 - tapOn: 'Inicio, tab.*'
+# Cada pestaña estrena su tour la primera vez que se abre.
+- runFlow: cerrar-tour.subflow.yaml
 - extendedWaitUntil:
     visible: 'Tu entrenamiento de un vistazo.'
     timeout: 60000

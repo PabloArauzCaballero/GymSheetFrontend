@@ -98,6 +98,16 @@ export function LoginForm() {
       >
         Iniciar sesión
       </Button>
+      {/* La recuperación va junto al botón, no escondida al final: quien la
+          necesita ya ha fallado una vez y no está para buscarla. */}
+      <p className="text-center text-sm">
+        <Link
+          className="text-[var(--text-muted)] underline-offset-4 hover:underline"
+          href="/recover-password"
+        >
+          ¿Olvidaste tu contraseña?
+        </Link>
+      </p>
       <p className="text-center text-sm text-[var(--text-muted)]">
         ¿Aún no tienes cuenta?{' '}
         <Link

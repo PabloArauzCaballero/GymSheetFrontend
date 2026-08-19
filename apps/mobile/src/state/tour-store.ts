@@ -20,6 +20,15 @@ export type TourKey = 'welcome' | 'home' | 'routines' | 'exercises' | 'workouts'
 
 const STORAGE_PREFIX = 'gymsheet.tour.v2.';
 
+/**
+ * Descanso mínimo entre el cierre de un tour y la apertura del siguiente.
+ *
+ * Cubre la animación de salida del modal con margen. Por debajo de esto iOS
+ * puede quedarse con la ventana que se va como frontal, y la pantalla de
+ * detrás deja de existir para el sistema aunque se vea perfectamente.
+ */
+const TOUR_GRACE_MS = 1200;
+
 /** Where a highlighted element sits on screen, in window coordinates. */
 export interface TargetRect {
   x: number;
@@ -40,7 +49,8 @@ interface TourState {
   /** Opens a tour unconditionally — the «ver tutorial» path. */
   open: (key: TourKey) => void;
   /** Opens a tour only if it has never been completed. */
-  openOnce: (key: TourKey) => void;
+  /** Devuelve `false` si no llegó a abrirse, para que quien llama reintente. */
+  openOnce: (key: TourKey) => boolean;
   setStep: (step: number) => void;
   /** Closes and remembers, so it never reappears unasked. */
   complete: () => Promise<void>;
@@ -62,6 +72,16 @@ interface TourState {
    */
   nonce: number;
   remeasure: () => void;
+  /**
+   * Cuándo se cerró el último tour.
+   *
+   * Existe para no presentar un modal en el instante en que otro se está
+   * cerrando. En iOS eso deja la ventana saliente como frontal en el árbol de
+   * accesibilidad —la pantalla se ve bien, pero para el sistema no hay nada
+   * debajo—, y para la persona es peor todavía: termina la bienvenida y le cae
+   * encima otra tarjeta sin respirar.
+   */
+  closedAt: number | null;
   /** Clears every flag so the whole tutorial can be replayed. */
   reset: () => Promise<void>;
 }
@@ -82,6 +102,7 @@ export const useTourStore = create<TourState>((set, get) => ({
   targets: {},
   scroller: null,
   nonce: 0,
+  closedAt: null,
   hydrate: async () => {
     try {
       const entries = await Promise.all(
@@ -107,13 +128,15 @@ export const useTourStore = create<TourState>((set, get) => ({
     const state = get();
     // `seen === null` means the flags have not been read yet. Opening now would
     // race hydration and could show a tour the user already dismissed.
-    if (state.seen === null || state.active !== null || state.seen[key]) return;
+    if (state.seen === null || state.active !== null || state.seen[key]) return false;
+    if (state.closedAt !== null && Date.now() - state.closedAt < TOUR_GRACE_MS) return false;
     set({ active: key, step: 0 });
+    return true;
   },
   setStep: (step) => set({ step }),
   complete: async () => {
     const key = get().active;
-    set({ active: null, step: 0 });
+    set({ active: null, step: 0, closedAt: Date.now() });
     if (!key) return;
     set((state) => ({ seen: { ...(state.seen ?? {}), [key]: true } }));
     try {

@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -21,7 +22,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { AmbientBackground } from '@/components/ambient';
-import { accentContrast, colors, fontSizes, maxContentWidth, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { accentContrast, colors, fontSizes, iconSizes, maxContentWidth, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -137,6 +138,7 @@ const BUTTON_SPRING = { damping: 22, stiffness: 380, mass: 0.5, overshootClampin
 export function Button({
   label,
   onPress,
+  icon,
   loading = false,
   disabled = false,
   variant = 'primary',
@@ -144,6 +146,16 @@ export function Button({
 }: {
   label: string;
   onPress: () => void;
+  /**
+   * Glifo antes de la etiqueta.
+   *
+   * Opcional y decorativo: el texto es el que nombra la acción, y el icono sólo
+   * la hace reconocible de un vistazo cuando hay dos botones seguidos que
+   * hacen cosas distintas —exportar en PDF frente a exportar en CSV—, que es
+   * justo donde leer dos etiquetas parecidas cuesta más que ver dos formas
+   * distintas. Un botón que se explica solo por su texto no necesita ninguno.
+   */
+  icon?: keyof typeof Ionicons.glyphMap;
   loading?: boolean;
   disabled?: boolean;
   variant?: ButtonVariant;
@@ -158,19 +170,34 @@ export function Button({
     transform: [{ scale: reduceMotion ? 1 : 1 - pressed.value * 0.04 }],
   }));
 
+  const ink = isDisabled ? colors.textDisabled : tone.ink;
   const content = loading ? (
     <ActivityIndicator color={tone.ink} />
   ) : (
-    <Text
-      style={{
-        color: isDisabled ? colors.textDisabled : tone.ink,
-        fontSize: fontSizes.md,
-        fontWeight: '700',
-        letterSpacing: 0.2,
-      }}
-    >
-      {label}
-    </Text>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+      {icon ? (
+        <Ionicons
+          // Oculto para lectores de pantalla: la etiqueta de al lado ya se
+          // anuncia, y repetir el nombre del glifo sólo alarga el anuncio.
+          accessibilityElementsHidden
+          color={ink}
+          importantForAccessibility="no-hide-descendants"
+          name={icon}
+          size={iconSizes.md}
+        />
+      ) : null}
+      <Text
+        numberOfLines={1}
+        style={{
+          color: ink,
+          fontSize: fontSizes.md,
+          fontWeight: '700',
+          letterSpacing: 0.2,
+        }}
+      >
+        {label}
+      </Text>
+    </View>
   );
 
   return (

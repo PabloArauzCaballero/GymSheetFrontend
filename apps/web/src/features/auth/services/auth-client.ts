@@ -54,3 +54,32 @@ export async function logout() {
   const response = await fetch('/api/auth/logout', { method: 'POST' });
   if (!response.ok) throw await readError(response);
 }
+
+/**
+ * Pide un PIN de recuperación al correo indicado.
+ *
+ * No devuelve nada ni distingue casos: el backend responde igual exista o no la
+ * cuenta, y propagar aquí cualquier matiz desharía esa protección.
+ */
+export async function requestPasswordReset(input: { email: string }): Promise<void> {
+  const response = await fetch('/api/auth/password-reset/request', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) throw await readError(response);
+}
+
+/** Canjea el PIN por una contraseña nueva. */
+export async function confirmPasswordReset(input: {
+  email: string;
+  pin: string;
+  password: string;
+}): Promise<void> {
+  const response = await fetch('/api/auth/password-reset/confirm', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) throw await readError(response);
+}
