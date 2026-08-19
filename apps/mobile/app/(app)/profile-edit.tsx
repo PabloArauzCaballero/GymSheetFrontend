@@ -10,6 +10,7 @@ import { ApiError } from '@gymsheet/api-client';
 import { trainingGoals, type TrainingGoal } from '@gymsheet/types';
 import { profileService, type ProfileInput } from '@/api/services';
 import { ErrorState, Skeleton } from '@/components/feedback';
+import { numericInputProps } from '@/components/keyboard';
 import { Card, ScreenHeader, ScrollScreen } from '@/components/layout';
 import { StepProgress, type FlowStep } from '@/components/step-flow';
 import { BackLink } from '@/components/nav';
@@ -223,6 +224,7 @@ function ProfileForm({ defaults, isNew }: { defaults: ProfileFormValues; isNew: 
               <Input
                 error={errors.pesoKg?.message}
                 keyboardType="numeric"
+                {...numericInputProps}
                 label="Peso (kg)"
                 onBlur={onBlur}
                 onChangeText={onChange}
@@ -248,6 +250,7 @@ function ProfileForm({ defaults, isNew }: { defaults: ProfileFormValues; isNew: 
               <Input
                 error={errors.estaturaCm?.message}
                 keyboardType="numeric"
+                {...numericInputProps}
                 label="Estatura (cm)"
                 onBlur={onBlur}
                 onChangeText={onChange}
@@ -273,6 +276,7 @@ function ProfileForm({ defaults, isNew }: { defaults: ProfileFormValues; isNew: 
               <Input
                 error={errors.edad?.message}
                 keyboardType="numeric"
+                {...numericInputProps}
                 label="Edad (opcional)"
                 onBlur={onBlur}
                 onChangeText={onChange}

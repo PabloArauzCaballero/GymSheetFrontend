@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
   useWindowDimensions,
@@ -13,7 +14,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
@@ -38,17 +38,27 @@ export function Screen({ children }: { children: ReactNode }) {
           very first screen of the app the flattest one — plain black behind a
           form, while every screen after it was lit. */}
       <AmbientBackground />
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          paddingHorizontal: gutter,
-          paddingVertical: spacing.lg,
-          gap: spacing.md,
-        }}
+      {/* The form is vertically centred, so on iOS the keyboard opens straight
+          over the password field and the «Iniciar sesión» button — the two things
+          the screen exists for. Android resizes the window itself
+          (`adjustResize`), which is why `behavior` is left undefined there:
+          setting it would make the layout jump twice for one keyboard. */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
       >
-        {children}
-      </View>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            paddingHorizontal: gutter,
+            paddingVertical: spacing.lg,
+            gap: spacing.md,
+          }}
+        >
+          {children}
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -61,7 +71,8 @@ export function AppText({
   variant?: 'title' | 'body' | 'muted';
 }) {
   const style = {
-    title: { color: colors.text, fontSize: fontSizes.xl, fontWeight: '700' as const },
+    // Misma regla que `ScreenHeader`: cuanto mayor el tamaño, menor el peso.
+    title: { color: colors.text, fontSize: fontSizes.xl, fontWeight: '600' as const },
     body: { color: colors.text, fontSize: fontSizes.md },
     muted: { color: colors.textMuted, fontSize: fontSizes.sm },
   }[variant];
@@ -71,28 +82,25 @@ export function AppText({
 export type ButtonVariant = 'primary' | 'danger' | 'ghost';
 
 /**
- * Fill per variant. The filled ones are gradients rather than flat colour: a
- * single hex reads as a printed rectangle, while a slight ramp across the face
- * gives it a lit edge and a body. `ghost` stays flat — it is the quiet option
- * and should not compete with the action next to it.
+ * Fill per variant — un color plano por variante, sin degradados.
+ *
+ * Antes cada botón lleno era un degradado de dos paradas con un velo blanco
+ * animado encima. Tres capas para pintar un rectángulo. El degradado no se
+ * leía como volumen sino como una superficie sucia, porque la rampa iba de un
+ * volt más claro que la marca a uno más apagado: el color del botón principal
+ * no era el color de la marca en ningún punto de su cara.
+ *
+ * Un relleno plano en el volt exacto es más limpio, se lee mejor sobre negro y
+ * es lo que hace un botón nativo. La respuesta al toque la sigue dando la
+ * escala, que es háptica y no decorativa.
  */
 const BUTTON_TONE: Record<
   ButtonVariant,
-  { gradient: readonly [string, string] | null; background: string; ink: string; border: string }
+  { background: string; ink: string; border: string }
 > = {
-  primary: {
-    gradient: ['#d8ff33', '#a8d400'] as const,
-    background: colors.volt,
-    ink: colors.background,
-    border: colors.volt,
-  },
-  danger: {
-    gradient: ['#ff8a80', '#e04f45'] as const,
-    background: colors.danger,
-    ink: colors.background,
-    border: colors.danger,
-  },
-  ghost: { gradient: null, background: 'transparent', ink: colors.text, border: colors.border },
+  primary: { background: colors.volt, ink: colors.background, border: colors.volt },
+  danger: { background: colors.danger, ink: colors.background, border: colors.danger },
+  ghost: { background: 'transparent', ink: colors.text, border: colors.border },
 };
 
 /**
@@ -104,10 +112,9 @@ const BUTTON_TONE: Record<
 const BUTTON_SPRING = { damping: 22, stiffness: 380, mass: 0.5, overshootClamping: true } as const;
 
 /**
- * The action surface. Three things answer a touch at once — scale, a brightness
- * lift and a haptic tick — because a button that only fades reads as a picture
- * of a button. All three are compositor-level or off-thread, so none of them
- * moves the layout around it.
+ * The action surface. Dos cosas responden al toque: la escala y un tic háptico.
+ * Ambas son de compositor o fuera del hilo de JS, así que ninguna mueve el
+ * layout de alrededor.
  */
 export function Button({
   label,
@@ -132,11 +139,6 @@ export function Button({
   const animated = useAnimatedStyle(() => ({
     transform: [{ scale: reduceMotion ? 1 : 1 - pressed.value * 0.04 }],
   }));
-
-  // A white veil laid over the fill, not a reduction of it. Fading the gradient
-  // out only reveals the darker base underneath, which reads as "disabled for a
-  // moment"; adding light reads as the surface taking the charge.
-  const flare = useAnimatedStyle(() => ({ opacity: pressed.value * 0.22 }));
 
   const content = loading ? (
     <ActivityIndicator color={tone.ink} />
@@ -185,20 +187,6 @@ export function Button({
         style,
       ]}
     >
-      {tone.gradient && !isDisabled ? (
-        <LinearGradient
-          colors={tone.gradient}
-          end={{ x: 1, y: 1 }}
-          start={{ x: 0, y: 0 }}
-          style={StyleSheet.absoluteFill}
-        />
-      ) : null}
-      {isDisabled ? null : (
-        <Animated.View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: '#ffffff' }, flare]}
-        />
-      )}
       {content}
     </AnimatedPressable>
   );
@@ -209,6 +197,9 @@ export function Input({ label, error, ...props }: TextInputProps & { label: stri
     <View style={{ gap: spacing.xs }}>
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{label}</Text>
       <TextInput
+        // iOS draws a light keyboard by default; against a black screen the
+        // slab of white is the brightest thing in the app. Android ignores it.
+        keyboardAppearance="dark"
         placeholderTextColor={colors.textDisabled}
         style={{
           minHeight: minTouchTarget,

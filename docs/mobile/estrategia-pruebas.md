@@ -9,7 +9,7 @@
 | Componentes móvil | Jest + `@testing-library/react-native` | Formularios, botones, estados, listas |
 | Integración móvil | Jest | Cliente API, auth, refresh, caché, SecureStore (mocked) |
 | E2E web | Playwright | Requiere backend + PostgreSQL activos |
-| E2E móvil | Maestro (recomendado) o Detox | Login → recuperar sesión → módulo principal → logout |
+| E2E móvil | Maestro ✅ implantado | `apps/mobile/.maestro/` — login, pestañas, teclado numérico, ajustes/cierre. Requiere backend + PostgreSQL activos. Ver [`ios-paridad.md`](./ios-paridad.md) |
 
 ## Paquetes compartidos
 

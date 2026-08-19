@@ -15,25 +15,36 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.gymsheet.mobile"
+      "bundleIdentifier": "app.gymsheet.mobile",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "app.gymsheet.mobile",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
-      }
+      },
+      "edgeToEdgeEnabled": true
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "GymSheet usa Face ID para proteger la sesión guardada en este dispositivo."
+        }
+      ],
       [
         "@sentry/react-native/expo",
         {
           "organization": "gymsheet",
           "project": "mobile"
         }
-      ]
+      ],
+      "./plugins/with-fmt-consteval-fix"
     ],
     "experiments": {
       "typedRoutes": true

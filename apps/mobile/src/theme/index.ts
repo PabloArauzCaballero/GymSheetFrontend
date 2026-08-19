@@ -8,7 +8,62 @@ import {
  * Re-exports the shared design tokens so the whole app imports the visual
  * identity from one place. The values match the web app's CSS variables.
  */
-export { tones, spacing, radii, fontWeights, minTouchTarget } from '@gymsheet/design-tokens';
+export { tones, spacing, fontWeights, minTouchTarget } from '@gymsheet/design-tokens';
+
+/**
+ * Mobile corner radii, overriding the shared ones.
+ *
+ * The web scale tops out at 8 for a card, which is the radius of a desktop
+ * dialog seen at arm's length on a large screen. On a phone the same 8 reads as
+ * a sharp box: the hardware corners are ~50pt round, every system surface
+ * echoes them, and a card that does not is the single most reliable tell that
+ * an interface was not designed for the device. Softening the ramp is most of
+ * what separates «premium» from «a form in a dark theme».
+ *
+ * `full` and the token names stay identical, so nothing downstream changes
+ * shape of API — only the numbers, and only on this platform.
+ */
+export const radii = {
+  sm: 8,
+  md: 12,
+  lg: 18,
+  xl: 26,
+  full: 9999,
+} as const;
+
+/**
+ * Vertical rhythm inside a card.
+ *
+ * The spacing scale jumps 8 → 16, and both are wrong here: at 8 a title, three
+ * rows and a button read as one undifferentiated block, and at 16 a two-row
+ * card falls apart into loose fragments. 12 is the step that lets the elements
+ * of one card breathe while still reading as a single object, so it is named
+ * once rather than typed as a literal in thirty places.
+ */
+export const cardGap = 16;
+
+/**
+ * Inner padding of a card. 16 left the content touching the border on a phone,
+ * which is what makes a dense screen feel cramped no matter how the type is
+ * set: the frame has to have air before the content inside it can.
+ */
+export const cardPadding = 22;
+
+/**
+ * Distance between the sections of a screen.
+ *
+ * The scale's 24 is the right gap between two paragraphs; between two *whole
+ * sections*, each with its own label and card, it is not enough to say «this
+ * finished, another begins», and the page arrives as one continuous wall. 32
+ * is what turns a screen into a sequence of blocks the eye can rest between.
+ */
+export const screenGap = 32;
+
+/**
+ * Gap between a section's label and the card it labels. At 8 the label looked
+ * stuck to the top edge of the card rather than hovering above it as a caption.
+ */
+export const sectionGap = 12;
 
 /**
  * Mobile type scale.

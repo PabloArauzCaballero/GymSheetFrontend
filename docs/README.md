@@ -5,6 +5,8 @@
 - `contracts/`: backend contract drift and limitations.
 - `decisions/`: architectural decision records.
 - `endpoints/`: screen-to-endpoint traceability.
+- `mobile/`: the Expo client — architecture, screens, iOS/Android parity
+  (`ios-paridad.md`) and simulator evidence (`ios-evidencia.md`).
 - `progress/`: completed and remaining work.
 - `security/`: trust boundaries and controls.
 - `testing/`: evidence and release gates.

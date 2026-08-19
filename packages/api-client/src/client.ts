@@ -119,7 +119,23 @@ export function createApiClient(config: ApiClientConfig) {
       return parsed.data;
     } catch (error: unknown) {
       if (error instanceof ApiError) throw error;
-      if (error instanceof DOMException && error.name === 'AbortError') {
+      // A timeout is recognised by our own signal, not by the shape of the
+      // rejection, because on React Native the rejection cannot be trusted.
+      // `DOMException` is a web global that Hermes does not define, and the
+      // fetch polyfill builds its abort rejection with `new DOMException(...)`
+      // — so aborting a request there rejects with
+      // `ReferenceError: Property 'DOMException' doesn't exist` instead of
+      // anything named `AbortError`.
+      //
+      // The previous check, `error instanceof DOMException`, was worse still:
+      // the `instanceof` itself threw, from inside the very catch block meant
+      // to turn failures into an ApiError, so the calling screen received a
+      // raw ReferenceError and reported «Ocurrió un error inesperado».
+      //
+      // The signal is set by both paths that can abort this request — the
+      // timeout above and a caller cancelling through `options.signal` — and
+      // it says the same thing in every runtime.
+      if (controller.signal.aborted) {
         throw new ApiError({
           message: 'La solicitud agotó el tiempo de espera.',
           status: 408,

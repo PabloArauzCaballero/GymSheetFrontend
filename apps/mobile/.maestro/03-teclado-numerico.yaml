@@ -1,0 +1,33 @@
+# El defecto que sólo existe en iOS.
+#
+# `number-pad` y `decimal-pad` no traen tecla de retorno en iOS, y no hay botón
+# atrás del sistema como en Android: sin la barra accesoria el teclado tapa el
+# botón de guardar y no hay forma de cerrarlo. Esta prueba es la que demuestra
+# que la corrección está viva en el simulador, no sólo en el código.
+appId: app.gymsheet.mobile
+name: 03 · Teclado numérico — barra «Listo» (sólo iOS)
+---
+- runFlow: login.subflow.yaml
+# Los ítems de la barra de pestañas se llaman «Rutinas, tab, 2 of 9» en el
+# árbol de accesibilidad de iOS, no «Rutinas»: Maestro compara el texto como
+# expresión regular completa, así que el nombre a secas no encuentra nada.
+- tapOn: 'Perfil, tab.*'
+- extendedWaitUntil:
+    visible: 'Editar mis datos'
+    timeout: 150000
+- tapOn: 'Editar mis datos'
+- extendedWaitUntil:
+    visible: 'Peso (kg)'
+    timeout: 150000
+- takeScreenshot: 10-editar-datos
+- tapOn:
+    below: 'Peso (kg)'
+    index: 0
+# Con el teclado numérico abierto, la barra accesoria tiene que estar encima.
+- extendedWaitUntil:
+    visible: 'Listo'
+    timeout: 30000
+- takeScreenshot: 11-teclado-numerico-con-listo
+- tapOn: 'Listo'
+- assertNotVisible: 'Listo'
+- takeScreenshot: 12-teclado-cerrado

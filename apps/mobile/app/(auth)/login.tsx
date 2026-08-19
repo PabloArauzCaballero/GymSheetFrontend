@@ -49,6 +49,12 @@ export default function LoginScreen() {
           <Input
             label="Correo electrónico"
             autoCapitalize="none"
+            // iOS ofrece la credencial guardada en el Llavero sólo si el campo
+            // declara qué contiene. Sin esto, el sistema pide guardar la
+            // contraseña al entrar pero luego no la sabe rellenar, que es la
+            // mitad peor de las dos. `autoComplete` cubre a Android.
+            autoComplete="email"
+            textContentType="emailAddress"
             keyboardType="email-address"
             value={value}
             onBlur={onBlur}
@@ -63,6 +69,8 @@ export default function LoginScreen() {
         render={({ field: { onChange, onBlur, value } }) => (
           <Input
             label="Contraseña"
+            autoComplete="current-password"
+            textContentType="password"
             secureTextEntry
             value={value}
             onBlur={onBlur}

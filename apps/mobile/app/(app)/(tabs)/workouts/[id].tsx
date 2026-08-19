@@ -16,7 +16,9 @@ import { PressableScale } from '@/components/motion';
 import { workoutService } from '@/api/services';
 import { useAmbientStore } from '@/state/ambient-store';
 import { WORKOUT_LABEL, WORKOUT_TONE, formatDuration, relativeDay } from '@/lib/format';
-import { colors, fontSizes, spacing } from '@/theme';
+import { previousPerformance, topSet } from '@/lib/training-metrics';
+import { accentPolicy, colors, fontSizes, iconSizes, spacing, tones } from '@/theme';
+import { Ionicons } from '@expo/vector-icons';
 
 /** Standard rest between working sets; the timer can be extended in place. */
 const DEFAULT_REST_SECONDS = 90;
@@ -32,6 +34,19 @@ export default function WorkoutDetailScreen() {
     queryKey: ['workout', id],
     queryFn: () => workoutService.get(id),
     enabled: Boolean(id),
+  });
+
+  /**
+   * Recent sessions, purely so each exercise can show what was done last time.
+   *
+   * Same query key the dashboard uses, so on the usual path — open the app,
+   * tap into the session in progress — this is already cached and costs no
+   * request. A failure here is silent by design: not knowing last week's load
+   * must never stand between someone and logging today's set.
+   */
+  const history = useQuery({
+    queryKey: ['workouts', 'recent'],
+    queryFn: () => workoutService.list(40),
   });
 
   /** Every write refreshes this session plus the lists that summarise it. */
@@ -221,7 +236,16 @@ export default function WorkoutDetailScreen() {
       ) : null}
 
       <Section title="Ejercicios">
-        {ordered.map((item) => (
+        {ordered.map((item) => {
+          // La última vez que se entrenó *este* ejercicio, en otra sesión ya
+          // cerrada, y la mejor serie de hoy para contrastarla.
+          const reference = item.ejercicio
+            ? previousPerformance(history.data?.items ?? [], item.ejercicio.id, id)
+            : null;
+          const previousTop = reference ? topSet(reference.exercise) : null;
+          const previousWhen = reference ? relativeDay(reference.workout.fechaInicio) : null;
+          const todayTop = topSet(item);
+          return (
           <Card key={item.id} accent={item.esEnfasis ? colors.volt : undefined}>
             <PressableScale
               disabled={!item.ejercicio}
@@ -303,9 +327,65 @@ export default function WorkoutDetailScreen() {
             {live ? (
               <>
                 <Divider />
+                {previousTop && previousWhen ? (
+                  // La referencia va pegada al formulario, no en una pantalla
+                  // aparte: se consulta con la barra cargada y a medio
+                  // descanso, y cualquier cosa que obligue a navegar para
+                  // verla no se consulta nunca.
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: spacing.sm,
+                    }}
+                  >
+                    <Ionicons
+                      accessibilityElementsHidden
+                      color={accentPolicy.glyph}
+                      importantForAccessibility="no-hide-descendants"
+                      name="repeat-outline"
+                      size={iconSizes.sm}
+                    />
+                    <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, flex: 1 }}>
+                      {`La vez anterior · ${previousWhen}`}
+                    </Text>
+                    <Text
+                      style={{
+                        color: colors.text,
+                        fontSize: fontSizes.sm,
+                        fontWeight: '600',
+                        fontVariant: ['tabular-nums'],
+                      }}
+                    >
+                      {`${previousTop.pesoKg} kg × ${previousTop.repeticiones}`}
+                    </Text>
+                    {todayTop ? (
+                      <Text
+                        style={{
+                          color:
+                            todayTop.pesoKg > previousTop.pesoKg
+                              ? tones.dark.success.text
+                              : todayTop.pesoKg < previousTop.pesoKg
+                                ? tones.dark.warning.text
+                                : colors.textMuted,
+                          fontSize: fontSizes.xs,
+                          fontWeight: '700',
+                          fontVariant: ['tabular-nums'],
+                        }}
+                      >
+                        {todayTop.pesoKg === previousTop.pesoKg
+                          ? '='
+                          : `${todayTop.pesoKg > previousTop.pesoKg ? '+' : '−'}${Math.abs(
+                              Math.round((todayTop.pesoKg - previousTop.pesoKg) * 10) / 10,
+                            )}`}
+                      </Text>
+                    ) : null}
+                  </View>
+                ) : null}
                 {/* Pre-filled from the last set: the next one is usually the
                     same load, so a repeat costs one tap. */}
                 <SetEntryForm
+                  previous={previousTop ?? undefined}
                   initial={(() => {
                     const last = [...item.series].sort(
                       (a, b) => b.numeroSerie - a.numeroSerie,
@@ -353,7 +433,8 @@ export default function WorkoutDetailScreen() {
               </>
             ) : null}
           </Card>
-        ))}
+          );
+        })}
       </Section>
 
       {live ? (

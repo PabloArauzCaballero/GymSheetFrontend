@@ -5,6 +5,7 @@ import { Badge, Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/com
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { NavRow } from '@/components/list';
 import { WeekPlan } from '@/components/week-plan';
+import { TourTarget, useScreenTour } from '@/components/tour';
 import { routineService } from '@/api/services';
 import { Button } from '@/components/ui';
 import { GOAL_LABEL } from '@/lib/format';
@@ -22,6 +23,7 @@ export default function RoutinesScreen() {
   const items = routines.data?.items ?? [];
   const assigned = assignments.data?.filter((item) => item.estado === 'ACTIVE') ?? [];
   const refreshing = routines.isFetching || assignments.isFetching;
+  useScreenTour('routines');
 
   return (
     <ScrollScreen
@@ -33,23 +35,27 @@ export default function RoutinesScreen() {
     >
       <ScreenHeader subtitle="Tus planes de entrenamiento." title="Rutinas" />
 
-      <Button label="Crear rutina" onPress={() => router.push('/routines/new')} />
+      <TourTarget id="routines.create">
+        <Button label="Crear rutina" onPress={() => router.push('/routines/new')} />
+      </TourTarget>
 
       {/* The week comes before the catalogue on purpose: someone opening this
           screen on a Tuesday wants to know what today is, not to browse. */}
       {assigned.length > 0 ? (
-        <Section index={0} title="Tu semana">
+        <Section icon="calendar-outline" index={0} title="Tu semana">
+          <TourTarget id="routines.week">
           <WeekPlan
             assignments={assigned}
             onPickRoutine={(routineId) =>
               router.push({ pathname: '/routines/[id]', params: { id: routineId } })
             }
           />
+          </TourTarget>
         </Section>
       ) : null}
 
       {assigned.length > 0 ? (
-        <Section index={1} title="Asignadas por tu entrenador">
+        <Section icon="person-outline" index={1} title="Asignadas por tu entrenador">
           <Card>
             {assigned.map((assignment, index) => (
               <View key={assignment.id}>
@@ -66,7 +72,7 @@ export default function RoutinesScreen() {
         </Section>
       ) : null}
 
-      <Section index={2} title="Todas">
+      <Section icon="albums-outline" index={2} title="Todas">
         {routines.isPending ? (
           <View style={{ gap: spacing.sm }}>
             <Skeleton height={64} />

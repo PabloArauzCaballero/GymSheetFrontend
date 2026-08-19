@@ -23,12 +23,12 @@ import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { Badge, Card, Divider, Row, ScreenHeader, ScrollScreen, Section, StatTile } from '@/components/layout';
 import { MetricChip } from '@/components/list';
 import { PressableScale } from '@/components/motion';
-import { DateBridge, DateLeaf, StepProgress, type FlowStep } from '@/components/step-flow';
+import { DateTimeline, StepProgress, type FlowStep } from '@/components/step-flow';
 import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { MEMBERSHIP_LABEL, MEMBERSHIP_TONE, formatDate } from '@/lib/format';
 import { notify } from '@/notifications';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
 
 /**
  * Reads this screen owns. `getMine` already lives in the shared service; the
@@ -215,7 +215,7 @@ export default function MembershipScreen() {
         title="Membresía"
       />
 
-      <Section index={0} title="Estado actual">
+      <Section icon="shield-checkmark-outline" index={0} title="Estado actual">
         {projection.isPending ? (
           <Skeleton height={220} />
         ) : projection.isError ? (
@@ -248,29 +248,54 @@ export default function MembershipScreen() {
 
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <StatTile
+                icon="hourglass-outline"
                 label={membership.venceHoy ? 'Vence hoy' : 'Días restantes'}
                 value={String(Math.max(membership.diasRestantes, 0))}
               />
               {membership.plan ? (
-                <StatTile label="Duración del plan" value={`${membership.plan.duracionDias} d`} />
+                <StatTile
+                  icon="calendar-outline"
+                  label="Duración del plan"
+                  value={`${membership.plan.duracionDias} d`}
+                />
               ) : null}
             </View>
 
             <Divider />
-            <Row label="Inicio" value={formatDate(membership.iniciaEl)} />
+            <Row icon="play-outline" label="Inicio" value={formatDate(membership.iniciaEl)} />
             <Divider />
-            <Row label="Vencimiento" value={formatDate(membership.venceEl)} />
+            <Row icon="flag-outline" label="Vencimiento" value={formatDate(membership.venceEl)} />
 
             {membership.plan?.beneficios.length ? (
               <>
                 <Divider />
+                {/* Una marca de verificación, no un punto medio: la lista dice
+                    qué incluye el plan, y un check lo afirma mientras que un
+                    punto sólo enumera. */}
                 {membership.plan.beneficios.map((benefit) => (
-                  <Text
+                  <View
                     key={benefit}
-                    style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}
+                    style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }}
                   >
-                    {`· ${benefit}`}
-                  </Text>
+                    <Ionicons
+                      accessibilityElementsHidden
+                      color={colors.volt}
+                      importantForAccessibility="no-hide-descendants"
+                      name="checkmark-circle"
+                      size={iconSizes.sm}
+                      style={{ marginTop: 2 }}
+                    />
+                    <Text
+                      style={{
+                        flex: 1,
+                        color: colors.textMuted,
+                        fontSize: fontSizes.sm,
+                        lineHeight: 20,
+                      }}
+                    >
+                      {benefit}
+                    </Text>
+                  </View>
                 ))}
               </>
             ) : null}
@@ -298,7 +323,7 @@ export default function MembershipScreen() {
         ) : null}
       </Section>
 
-      <Section index={1} title="Renovar">
+      <Section icon="refresh-outline" index={1} title="Renovar">
         <Card accent={step === 2 ? colors.volt : undefined}>
           <StepProgress current={step} steps={RENEWAL_STEPS} />
 
@@ -310,9 +335,9 @@ export default function MembershipScreen() {
               </Text>
               {renewablePlan ? (
                 <>
-                  <Row label="Precio" value={formatPrice(renewablePlan)} />
+                  <Row icon="cash-outline" label="Precio" value={formatPrice(renewablePlan)} />
                   <Divider />
-                  <Row label="Duración" value={`${renewablePlan.duracionDias} días`} />
+                  <Row icon="time-outline" label="Duración" value={`${renewablePlan.duracionDias} días`} />
                   <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
                     Antes de pagar te mostraremos desde cuándo corre el nuevo periodo.
                   </Text>
@@ -336,20 +361,27 @@ export default function MembershipScreen() {
               <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: '700' }}>
                 Así quedarán tus fechas
               </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs }}>
-                <DateLeaf
-                  caption="Vence tu plan actual"
-                  iso={membership?.venceEl ?? new Date().toISOString()}
-                />
-                <DateBridge />
-                <DateLeaf
-                  accent
-                  caption="Arranca el nuevo"
-                  iso={renewalStartsIso}
-                />
-                <DateBridge />
-                <DateLeaf accent caption="Nuevo vencimiento" iso={renewalEndsIso} />
-              </View>
+              <DateTimeline
+                items={[
+                  {
+                    caption: 'Vence tu plan actual',
+                    icon: 'hourglass-outline',
+                    iso: membership?.venceEl ?? new Date().toISOString(),
+                  },
+                  {
+                    accent: true,
+                    caption: 'Arranca el nuevo periodo',
+                    icon: 'play-outline',
+                    iso: renewalStartsIso,
+                  },
+                  {
+                    accent: true,
+                    caption: 'Nuevo vencimiento',
+                    icon: 'flag-outline',
+                    iso: renewalEndsIso,
+                  },
+                ]}
+              />
               <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
                 No pierdes los días que te quedan: el nuevo periodo empieza cuando termina el
                 actual.
@@ -412,7 +444,7 @@ export default function MembershipScreen() {
         </Card>
       </Section>
 
-      <Section index={2} title="Planes disponibles">
+      <Section icon="pricetags-outline" index={2} title="Planes disponibles">
         {plans.isPending ? (
           <Skeleton height={190} />
         ) : plans.isError ? (
@@ -491,19 +523,36 @@ export default function MembershipScreen() {
                   </Text>
 
                   {plan.beneficios.length > 0 ? (
-                    <View style={{ gap: 2 }}>
+                    <View style={{ gap: spacing.xs }}>
                       {/* Collapsed the list shows three and truncates each to a
                           line, which is enough to scan. Selecting expands it:
                           the moment someone is choosing, the benefits are the
                           decision, not decoration. */}
                       {(selected ? plan.beneficios : plan.beneficios.slice(0, 3)).map((benefit) => (
-                        <Text
+                        <View
                           key={benefit}
-                          numberOfLines={selected ? 3 : 1}
-                          style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 16 }}
+                          style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs }}
                         >
-                          · {benefit}
-                        </Text>
+                          <Ionicons
+                            accessibilityElementsHidden
+                            color={accentPolicy.glyph}
+                            importantForAccessibility="no-hide-descendants"
+                            name="checkmark"
+                            size={12}
+                            style={{ marginTop: 2 }}
+                          />
+                          <Text
+                            numberOfLines={selected ? 3 : 1}
+                            style={{
+                              flex: 1,
+                              color: colors.textMuted,
+                              fontSize: fontSizes.xs,
+                              lineHeight: 16,
+                            }}
+                          >
+                            {benefit}
+                          </Text>
+                        </View>
                       ))}
                       {!selected && plan.beneficios.length > 3 ? (
                         <Text style={{ color: colors.accentInk, fontSize: fontSizes.xs }}>
@@ -558,7 +607,7 @@ export default function MembershipScreen() {
         )}
       </Section>
 
-      <Section index={3} title="Historial">
+      <Section icon="time-outline" index={3} title="Historial">
         {projection.isPending ? (
           <Skeleton height={110} />
         ) : projection.isError ? (
@@ -609,7 +658,7 @@ export default function MembershipScreen() {
         )}
       </Section>
 
-      <Section index={4} title="Accesos recientes">
+      <Section icon="key-outline" index={4} title="Accesos recientes">
         {accesses.isPending ? (
           <Skeleton height={110} />
         ) : accesses.isError ? (

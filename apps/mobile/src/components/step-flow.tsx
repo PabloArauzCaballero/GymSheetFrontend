@@ -108,95 +108,81 @@ export function StepProgress({
 }
 
 /**
- * A date presented as a calendar leaf rather than as text.
+ * The dates of a renewal, as a vertical timeline.
  *
- * "16 oct" in a sentence is read and forgotten; the same date on a torn-off
- * calendar page is the thing people actually picture when they think about when
- * their membership dies. The month sits on its own tinted band because that is
- * how every physical calendar this is imitating is built.
+ * They used to be three calendar leaves side by side joined by arrows. Three
+ * 88pt leaves plus two bridges need 304pt before any gap, and a phone card has
+ * about 306pt of usable width: the row fit only by having nothing left over,
+ * which is exactly the «everything is glued together» reading. Stacking them
+ * also matches what the content is — a sequence in time, which people picture
+ * as a line going down, not across — and buys each entry a full line for its
+ * caption instead of two cramped centred words.
  */
-export function DateLeaf({
-  iso,
-  caption,
-  accent = false,
+export function DateTimeline({
+  items,
 }: {
-  iso: string;
-  caption: string;
-  accent?: boolean;
+  items: readonly {
+    iso: string;
+    caption: string;
+    icon: keyof typeof Ionicons.glyphMap;
+    accent?: boolean;
+  }[];
 }) {
-  const date = new Date(iso);
-  const valid = !Number.isNaN(date.getTime());
-  const month = valid
-    ? new Intl.DateTimeFormat('es', { month: 'short' }).format(date).replace('.', '').toUpperCase()
-    : '—';
-  const day = valid ? String(date.getDate()).padStart(2, '0') : '—';
-  const year = valid ? String(date.getFullYear()) : '';
-
+  const format = new Intl.DateTimeFormat('es', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
   return (
-    <View style={{ alignItems: 'center', gap: spacing.xs, flex: 1 }}>
-      <View
-        style={{
-          width: 88,
-          borderRadius: radii.lg,
-          overflow: 'hidden',
-          borderWidth: 1,
-          borderColor: accent ? colors.volt : colors.border,
-          backgroundColor: colors.surface,
-        }}
-      >
-        <View
-          style={{
-            paddingVertical: 4,
-            alignItems: 'center',
-            backgroundColor: accent ? colors.volt : colors.surfaceHigh,
-          }}
-        >
-          <Text
-            style={{
-              color: accent ? colors.background : colors.textMuted,
-              fontSize: fontSizes.xs,
-              fontWeight: '800',
-              letterSpacing: 1,
-            }}
-          >
-            {month}
-          </Text>
-        </View>
-        <View style={{ paddingVertical: spacing.sm, alignItems: 'center' }}>
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: fontSizes['2xl'],
-              fontWeight: '800',
-              fontVariant: ['tabular-nums'],
-            }}
-          >
-            {day}
-          </Text>
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>{year}</Text>
-        </View>
-      </View>
-      <Text
-        numberOfLines={2}
-        style={{ color: colors.textMuted, fontSize: fontSizes.xs, textAlign: 'center' }}
-      >
-        {caption}
-      </Text>
-    </View>
-  );
-}
-
-/**
- * The arrow between two leaves: reads as "and then", not as a decoration.
- *
- * No caption. Three leaves plus two bridges already fill a phone row, and a
- * word under each arrow overlapped the cards either side of it. The captions
- * under the leaves carry the meaning; the arrow only has to carry the order.
- */
-export function DateBridge() {
-  return (
-    <View style={{ width: 20, alignItems: 'center', justifyContent: 'center', paddingTop: 34 }}>
-      <Ionicons color={colors.accentInk} name="arrow-forward" size={iconSizes.sm} />
+    <View style={{ gap: 0 }}>
+      {items.map((item, index) => {
+        const date = new Date(item.iso);
+        const valid = !Number.isNaN(date.getTime());
+        const last = index === items.length - 1;
+        return (
+          <View key={item.caption} style={{ flexDirection: 'row', gap: spacing.md }}>
+            {/* Rail: the dot marks the moment, the line carries «and then». */}
+            <View style={{ alignItems: 'center', width: iconSizes.lg }}>
+              <View
+                style={{
+                  width: iconSizes.lg,
+                  height: iconSizes.lg,
+                  borderRadius: radii.full,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 1,
+                  borderColor: item.accent ? colors.volt : colors.border,
+                  backgroundColor: item.accent ? colors.volt : colors.surfaceHigh,
+                }}
+              >
+                <Ionicons
+                  color={item.accent ? colors.background : colors.textMuted}
+                  name={item.icon}
+                  size={14}
+                />
+              </View>
+              {last ? null : (
+                <View style={{ flex: 1, width: 1, backgroundColor: colors.border }} />
+              )}
+            </View>
+            <View style={{ flex: 1, paddingBottom: last ? 0 : spacing.md, gap: 2 }}>
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                {item.caption}
+              </Text>
+              <Text
+                style={{
+                  color: item.accent ? colors.text : colors.textMuted,
+                  fontSize: fontSizes.md,
+                  fontWeight: '600',
+                  fontVariant: ['tabular-nums'],
+                }}
+              >
+                {valid ? format.format(date) : '—'}
+              </Text>
+            </View>
+          </View>
+        );
+      })}
     </View>
   );
 }

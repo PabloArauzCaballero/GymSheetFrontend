@@ -1,0 +1,83 @@
+# Arranque en frío y login. Es el recorrido que ninguna otra prueba puede
+# saltarse: todo lo demás vive detrás del guardia de sesión.
+#
+# El teclado se cierra con la tecla de retorno y no con `hideKeyboard`: el gesto
+# genérico de Maestro no encuentra asidero en estas pantallas, y la tecla de
+# retorno es además lo que usa una persona real aquí.
+#
+# Las capturas van dentro del `retry`, así reflejan siempre el intento que
+# acabó saliendo bien.
+appId: app.gymsheet.mobile
+name: 01 · Sesión — arranque y login
+---
+- retry:
+    maxRetries: 3
+    commands:
+    # Cada intento parte de un arranque limpio en vez de borrar los campos:
+    # `eraseText` dejó residuos («…gymsheet.local.local») y el segundo intento
+    # falló por credenciales en vez de por lo que se estaba reintentando.
+    - launchApp:
+        clearState: true
+        # `clearState` vacía el contenedor de la app, pero la sesión y el flag
+        # de «tour ya visto» los guarda `expo-secure-store` en el Llavero, que
+        # vive fuera. Sin esto la app arranca ya autenticada y sin tour, y lo
+        # que se prueba no es una instalación nueva. (Desinstalar tampoco basta
+        # en el simulador: el Llavero es del dispositivo, no del paquete.)
+        clearKeychain: true
+    # `clearState` borra también el bundle de JavaScript que la app guarda en
+    # su contenedor, así que este arranque vuelve a descargarlo entero de
+    # Metro. Con la máquina cargada eso solo pasa de cuatro minutos, de ahí la
+    # espera desproporcionada: no mide la app, mide la descarga.
+    - extendedWaitUntil:
+        visible: 'Inicia sesión para continuar'
+        timeout: 420000
+    - assertVisible: 'GymSheet'
+    - takeScreenshot: 01-login
+    - tapOn:
+        below: 'Correo electrónico'
+        index: 0
+    - inputText: 'athlete.mock@gymsheet.local'
+    - pressKey: Enter
+    - tapOn:
+        below: 'Contraseña'
+        index: 0
+    - inputText: 'MockLocal2026!'
+    - pressKey: Enter
+    - takeScreenshot: 02-login-relleno
+    - tapOn: 'Iniciar sesión'
+    # Alerta del sistema exclusiva de iOS: tras enviar un campo
+    # `secureTextEntry`, el Llavero ofrece guardar la contraseña y tapa lo que
+    # hay detrás. Android no tiene equivalente, así que allí no encuentra nada.
+    - tapOn:
+        text: 'Ahora no'
+        optional: true
+    # El tour se presenta en una UIWindow propia: hasta cerrarlo, Inicio no
+    # está en la jerarquía consultable aunque se vea detrás.
+    - extendedWaitUntil:
+        visible: 'Bienvenido a GymSheet'
+        timeout: 90000
+    # `DevLoadingView` de React Native: la banda azul «Refreshing…» que tapa la
+    # barra de estado mientras el bundle de Debug se recarga. Es andamiaje de
+    # desarrollo, no interfaz de la app, y no debe salir en la evidencia.
+    - extendedWaitUntil:
+        notVisible: 'Refreshing'
+        timeout: 30000
+    - takeScreenshot: 03-tour-bienvenida
+# El control se llama «Saltar tutorial» en el árbol de accesibilidad
+# (`accessibilityLabel` en tour.tsx), no «Saltar»: la etiqueta sustituye al
+# texto visible, y Maestro compara contra la etiqueta.
+- tapOn: 'Saltar tutorial'
+- extendedWaitUntil:
+    visible: 'Hola, Athlete'
+    timeout: 60000
+# La primera tanda de consultas de Inicio puede agotar la espera del cliente y
+# dejar la tarjeta en su estado de error. Se pulsa el propio «Reintentar» de la
+# app; si no está, el paso no hace nada.
+- tapOn:
+    text: 'Reintentar'
+    optional: true
+- assertVisible: 'MEMBRESÍA'
+- extendedWaitUntil:
+    notVisible: 'Refreshing'
+    timeout: 30000
+- takeScreenshot: 04-inicio

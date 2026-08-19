@@ -18,6 +18,7 @@ import { apiClient } from '@/api/client';
 import { exerciseService } from '@/api/services';
 import { ExercisePicker } from '@/components/exercise-picker';
 import { EmptyState } from '@/components/feedback';
+import { numericInputProps } from '@/components/keyboard';
 import { Card, ScreenHeader, ScrollScreen, Section } from '@/components/layout';
 import { ExerciseImage } from '@/components/media';
 import { BackLink } from '@/components/nav';
@@ -254,6 +255,7 @@ function DraftRow({
         <View style={{ flex: 1 }}>
           <Input
             keyboardType="number-pad"
+            {...numericInputProps}
             label="Series"
             onChangeText={(value) => onChange({ seriesObjetivo: onlyDigits(value) })}
             placeholder="3"
@@ -263,6 +265,7 @@ function DraftRow({
         <View style={{ flex: 1 }}>
           <Input
             keyboardType="number-pad"
+            {...numericInputProps}
             label="Descanso (s)"
             onChangeText={(value) => onChange({ descansoSeg: onlyDigits(value) })}
             placeholder="90"
@@ -275,6 +278,7 @@ function DraftRow({
         <View style={{ flex: 1 }}>
           <Input
             keyboardType="number-pad"
+            {...numericInputProps}
             label="Reps mín."
             onChangeText={(value) => onChange({ repsMin: onlyDigits(value) })}
             placeholder="8"
@@ -284,6 +288,7 @@ function DraftRow({
         <View style={{ flex: 1 }}>
           <Input
             keyboardType="number-pad"
+            {...numericInputProps}
             label="Reps máx."
             onChangeText={(value) => onChange({ repsMax: onlyDigits(value) })}
             placeholder="12"

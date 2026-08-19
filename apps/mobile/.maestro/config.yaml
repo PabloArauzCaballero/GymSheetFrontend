@@ -1,0 +1,4 @@
+# Maestro drives the real iOS Simulator through XCUITest — no accessibility
+# permissions, no coordinate guessing, and the same flows run against an
+# Android emulator by swapping `appId`.
+appId: app.gymsheet.mobile

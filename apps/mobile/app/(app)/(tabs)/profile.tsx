@@ -18,6 +18,7 @@ import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { membershipService, profileService } from '@/api/services';
 import { useAuthStore } from '@/state/auth-store';
 import { useTourStore } from '@/state/tour-store';
+import { TourTarget, useScreenTour } from '@/components/tour';
 import {
   GOAL_LABEL,
   MEMBERSHIP_LABEL,
@@ -39,7 +40,8 @@ const ROLE_LABEL: Record<string, string> = {
 export default function ProfileScreen() {
   const principal = useAuthStore((state) => state.principal);
   const router = useRouter();
-  const openTour = useTourStore((state) => state.open);
+  const resetTour = useTourStore((state) => state.reset);
+  useScreenTour('profile');
 
   const profile = useQuery({
     queryKey: ['profile', 'me'],
@@ -66,6 +68,7 @@ export default function ProfileScreen() {
     >
       <ScreenHeader title="Perfil" />
 
+      <TourTarget id="profile.identity">
       <Card>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
           <View
@@ -101,19 +104,21 @@ export default function ProfileScreen() {
         {/* Editing was only reachable from a navigation row far below the fold:
             on a phone the user had to scroll past two data cards to find out
             their own details could be changed at all. The action belongs next
-            to the identity it edits. The row below stays as well — removing it
-            would break the habit of anyone who already knows where it lives. */}
+            to the identity it edits, and it is the only entry point: the same
+            destination also sat in the navigation list below, so the screen
+            offered one action twice under two different names. */}
         <Button
           label="Editar mis datos"
           onPress={() => router.push('/profile-edit')}
           variant="ghost"
         />
       </Card>
+      </TourTarget>
 
       {/* Both are short label/value cards: side by side on a tablet, where one
           full-width card stretches "Peso … 75 kg" across the whole screen. */}
       <Columns>
-        <Section title="Datos físicos">
+        <Section icon="body-outline" title="Datos físicos">
         {profile.isPending ? (
           <Skeleton height={130} />
         ) : missingProfile ? (
@@ -126,17 +131,18 @@ export default function ProfileScreen() {
           <ErrorState error={profile.error} onRetry={() => void profile.refetch()} />
         ) : profile.data ? (
           <Card>
-            <Row label="Peso" value={`${profile.data.pesoKg} kg`} />
+            <Row icon="scale-outline" label="Peso" value={`${profile.data.pesoKg} kg`} />
             <Divider />
-            <Row label="Estatura" value={`${profile.data.estaturaCm} cm`} />
+            <Row icon="resize-outline" label="Estatura" value={`${profile.data.estaturaCm} cm`} />
             <Divider />
-            <Row label="Edad" value={profile.data.edad ? `${profile.data.edad} años` : '—'} />
+            <Row icon="calendar-outline" label="Edad" value={profile.data.edad ? `${profile.data.edad} años` : '—'} />
             <Divider />
-            <Row label="Objetivo" value={GOAL_LABEL[profile.data.objetivo]} />
+            <Row icon="flag-outline" label="Objetivo" value={GOAL_LABEL[profile.data.objetivo]} />
             {profile.data.fechaActualizacion ? (
               <>
                 <Divider />
                 <Row
+                  icon="time-outline"
                   label="Actualizado"
                   value={formatDate(profile.data.fechaActualizacion)}
                 />
@@ -146,7 +152,7 @@ export default function ProfileScreen() {
         ) : null}
       </Section>
 
-      <Section title="Membresía">
+      <Section icon="card-outline" title="Membresía">
         {membership.isPending ? (
           <Skeleton height={110} />
         ) : membership.isError ? (
@@ -154,13 +160,14 @@ export default function ProfileScreen() {
         ) : membership.data?.membership ? (
           <Card>
             <Row
+              icon="pricetag-outline"
               label="Plan"
               value={membership.data.membership.plan?.nombre ?? 'Plan actual'}
             />
             <Divider />
-            <Row label="Inicio" value={formatDate(membership.data.membership.iniciaEl)} />
+            <Row icon="play-outline" label="Inicio" value={formatDate(membership.data.membership.iniciaEl)} />
             <Divider />
-            <Row label="Vence" value={formatDate(membership.data.membership.venceEl)} />
+            <Row icon="flag-outline" label="Vence" value={formatDate(membership.data.membership.venceEl)} />
             <Divider />
             <View
               style={{
@@ -200,14 +207,8 @@ export default function ProfileScreen() {
         />
         <Divider />
         <NavRow
-          onPress={() => router.push('/profile-edit')}
-          subtitle="Peso, estatura, edad y objetivo"
-          title="Editar perfil"
-        />
-        <Divider />
-        <NavRow
-          onPress={() => openTour()}
-          subtitle="Repasa como funciona la app"
+          onPress={() => void resetTour()}
+          subtitle="Vuelve a ver la bienvenida y los avisos de cada pantalla"
           title="Ver tutorial"
         />
         <Divider />

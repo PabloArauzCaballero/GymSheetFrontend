@@ -1,0 +1,43 @@
+# Las cinco pestañas. Verifica que cada sección carga sus datos reales del
+# backend, no sólo que la barra cambia de icono.
+#
+# Cada espera apunta a un texto propio de la pantalla (su subtítulo o una
+# sección) y no a la etiqueta de la pestaña: esa etiqueta ya está en la barra
+# antes de tocar nada, así que esperarla no probaría que la sección cargó.
+appId: app.gymsheet.mobile
+name: 02 · Navegación — las cinco pestañas
+---
+- runFlow: login.subflow.yaml
+# Los ítems de la barra se llaman «Rutinas, tab, 2 of 5» en el árbol de
+# accesibilidad de iOS, no «Rutinas»: Maestro compara el texto como expresión
+# regular completa, así que el nombre a secas no encuentra nada.
+#
+# El «de 5» es la comprobación de la corrección de accesibilidad: antes decía
+# «de 9», contando cuatro pantallas que estaban ocultas de la barra con
+# `href: null` pero seguían siendo miembros del navegador.
+- assertVisible: 'Inicio, tab, 1 of 5'
+- tapOn: 'Rutinas, tab.*'
+- extendedWaitUntil:
+    visible: 'Tus planes de entrenamiento.'
+    timeout: 60000
+- takeScreenshot: 05-rutinas
+- tapOn: 'Ejercicios, tab.*'
+- extendedWaitUntil:
+    visible: 'Ejercicios'
+    timeout: 60000
+- takeScreenshot: 06-ejercicios
+- tapOn: 'Entrenos, tab.*'
+- extendedWaitUntil:
+    visible: 'Entrenos'
+    timeout: 60000
+- takeScreenshot: 07-entrenos
+- tapOn: 'Perfil, tab.*'
+- extendedWaitUntil:
+    visible: 'Editar mis datos'
+    timeout: 60000
+- takeScreenshot: 08-perfil
+- tapOn: 'Inicio, tab.*'
+- extendedWaitUntil:
+    visible: 'Tu entrenamiento de un vistazo.'
+    timeout: 60000
+- takeScreenshot: 09-inicio-vuelta

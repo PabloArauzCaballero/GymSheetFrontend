@@ -4776,7 +4776,7 @@ expo-constants@~17.1.0, expo-constants@~17.1.7, expo-constants@~17.1.8:
     "@expo/config" "~11.0.13"
     "@expo/env" "~1.0.7"
 
-expo-file-system@~18.1.11:
+expo-file-system@~18.1.10, expo-file-system@~18.1.11:
   version "18.1.11"
   resolved "https://registry.yarnpkg.com/expo-file-system/-/expo-file-system-18.1.11.tgz#a563c715c4bb5c18729d6d104e8c6cdfbd383e69"
   integrity sha512-HJw/m0nVOKeqeRjPjGdvm+zBi5/NxcdPf8M8P3G2JFvH5Z8vBWqVDic2O58jnT1OFEy0XXzoH9UqFu7cHg9DTQ==
@@ -4873,6 +4873,14 @@ expo-status-bar@~2.2.0:
   dependencies:
     react-native-edge-to-edge "1.6.0"
     react-native-is-edge-to-edge "^1.1.6"
+
+expo-system-ui@~5.0.11:
+  version "5.0.11"
+  resolved "https://registry.yarnpkg.com/expo-system-ui/-/expo-system-ui-5.0.11.tgz#2bb70b2dd9f3f5137df85e43aa5d2d557432ad49"
+  integrity sha512-PG5VdaG5cwBe1Rj02mJdnsihKl9Iw/w/a6+qh2mH3f2K/IvQ+Hf7aG2kavSADtkGNCNj7CEIg7Rn4DQz/SE5rQ==
+  dependencies:
+    "@react-native/normalize-colors" "0.79.6"
+    debug "^4.3.2"
 
 expo@~53.0.0:
   version "53.0.27"

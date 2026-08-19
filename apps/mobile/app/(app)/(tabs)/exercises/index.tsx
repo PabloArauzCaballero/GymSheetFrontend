@@ -9,6 +9,7 @@ import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { ExerciseImage } from '@/components/media';
 import { PressableScale } from '@/components/motion';
 import { Input } from '@/components/ui';
+import { TourTarget, useScreenTour } from '@/components/tour';
 import { DrillBack, Grid, GridTile, iconFor, titleCase } from '@/components/catalogue-grid';
 import { exerciseService } from '@/api/services';
 import { colors, fontSizes, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
@@ -138,6 +139,7 @@ export default function ExercisesScreen() {
   const groups = taxonomy.data ?? [];
   const currentGroup = groups.find((group) => group.bodyPart === bodyPart) ?? null;
 
+  useScreenTour('exercises');
   const subtitle = searching
     ? 'Buscando en todo el catálogo'
     : muscle
@@ -156,6 +158,7 @@ export default function ExercisesScreen() {
     >
       <ScreenHeader subtitle={subtitle} title="Ejercicios" />
 
+      <TourTarget id="exercises.search">
       <Input
         autoCapitalize="none"
         autoCorrect={false}
@@ -165,6 +168,7 @@ export default function ExercisesScreen() {
         returnKeyType="search"
         value={search}
       />
+      </TourTarget>
 
       {/* Breadcrumb: one step back at a time, so the user can widen the filter
           without losing the zone they were exploring. */}
@@ -185,6 +189,7 @@ export default function ExercisesScreen() {
         ) : taxonomy.isError ? (
           <ErrorState error={taxonomy.error} onRetry={() => void taxonomy.refetch()} />
         ) : (
+          <TourTarget id="exercises.grid">
           <Grid>
             {groups.map((group, index) => (
               <GridTile
@@ -198,6 +203,7 @@ export default function ExercisesScreen() {
               />
             ))}
           </Grid>
+          </TourTarget>
         )
       ) : null}
 

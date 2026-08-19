@@ -19,6 +19,7 @@ import { membershipService, routineService, workoutService } from '@/api/service
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui';
 import { useAuthStore } from '@/state/auth-store';
+import { TourTarget, useScreenTour } from '@/components/tour';
 import {
   MEMBERSHIP_LABEL,
   MEMBERSHIP_TONE,
@@ -30,7 +31,12 @@ import {
   relativeDay,
   shortName,
 } from '@/lib/format';
-import { colors, fontSizes, iconSizes, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, radii, spacing } from '@/theme';
+import {
+  formatVolume,
+  overloadDelta,
+  summariseTraining,
+} from '@/lib/training-metrics';
 
 /**
  * The client's dashboard: where the membership stands, what training is
@@ -41,11 +47,15 @@ export default function HomeScreen() {
   const principal = useAuthStore((state) => state.principal);
   const router = useRouter();
   const { wide } = useResponsive();
+  useScreenTour('home');
 
   const [membership, workouts, assignments] = useQueries({
     queries: [
       { queryKey: ['membership', 'me'], queryFn: () => membershipService.getMine() },
-      { queryKey: ['workouts', 'recent'], queryFn: () => workoutService.list(5) },
+      // 40 en vez de 5: la lista de abajo sólo enseña las últimas, pero el
+      // panel compara esta semana con la anterior y necesita el historial
+      // completo de ese periodo. Una sola petición sirve a ambos.
+      { queryKey: ['workouts', 'recent'], queryFn: () => workoutService.list(40) },
       { queryKey: ['routines', 'assignments', 'me'], queryFn: () => routineService.myAssignments() },
     ],
   });
@@ -61,9 +71,11 @@ export default function HomeScreen() {
   const sessions = workouts.data?.items ?? [];
   const finished = sessions.filter((session) => session.estado === 'FINALIZADA');
   const activeAssignment = assignments.data?.find((item) => item.estado === 'ACTIVE');
+  const training = summariseTraining(sessions);
+  const overload = overloadDelta(training);
 
   const membershipSection = (
-    <Section index={0} title="Membresía">
+    <Section icon="card-outline" index={0} title="Membresía">
       {membership.isPending ? (
         <Skeleton height={110} />
       ) : membership.isError ? (
@@ -87,8 +99,9 @@ export default function HomeScreen() {
             />
           </View>
           <Divider />
-          <Row label="Vence" value={formatDate(membership.data.membership.venceEl)} />
+          <Row icon="flag-outline" label="Vence" value={formatDate(membership.data.membership.venceEl)} />
           <Row
+            icon="hourglass-outline"
             label="Días restantes"
             value={
               membership.data.membership.venceHoy
@@ -108,7 +121,7 @@ export default function HomeScreen() {
   );
 
   const routineSection = (
-    <Section index={2} title="Rutina asignada">
+    <Section icon="clipboard-outline" index={3} title="Rutina asignada">
       {assignments.isPending ? (
         <Skeleton height={90} />
       ) : assignments.isError ? (
@@ -124,7 +137,7 @@ export default function HomeScreen() {
             </Text>
           ) : null}
           {activeAssignment.fechaProgramada ? (
-            <Row label="Programada" value={formatDate(activeAssignment.fechaProgramada)} />
+            <Row icon="calendar-outline" label="Programada" value={formatDate(activeAssignment.fechaProgramada)} />
           ) : null}
           {activeAssignment.nota ? (
             // A coach note is prose, not a field: it reads left-aligned and
@@ -156,7 +169,7 @@ export default function HomeScreen() {
       />
 
       {sessions.some((session) => session.estado === 'EN_PROGRESO') ? (
-        <Section index={0} title="Ahora">
+        <Section icon="play-circle-outline" index={0} title="Ahora">
           <Card accent={colors.volt}>
             <Text
               style={{
@@ -194,16 +207,144 @@ export default function HomeScreen() {
         membershipSection
       )}
 
-      <Section index={1} title="Actividad">
+      {/* Tu evolución, no tu inventario.
+          Antes esta sección contaba cosas —sesiones totales, finalizadas,
+          cuándo fue la última—, que son hechos sobre la base de datos y no
+          sobre la persona. Lo que alguien quiere saber al abrir la app es si
+          está entrenando más que la semana pasada, si mantiene el hábito y qué
+          parte del cuerpo lleva descuidada. Esas tres preguntas son las tres
+          cifras, y las dos primeras llevan su comparación al lado, porque un
+          número sin referencia no es progreso: es trivia. */}
+      <Section icon="trending-up-outline" index={1} title="Tu evolución">
+        {workouts.isPending ? (
+          <Skeleton height={110} />
+        ) : workouts.isError ? (
+          <ErrorState error={workouts.error} onRetry={() => void workouts.refetch()} />
+        ) : (
+          <View style={{ gap: spacing.md }}>
+            <TourTarget id="home.progress">
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <StatTile
+                delta={overload}
+                icon="barbell-outline"
+                label="Carga esta semana"
+                value={formatVolume(training.thisWeek.volumeKg)}
+              />
+              <StatTile
+                icon="flame-outline"
+                // «Semanas seguidas» se parte en dos líneas dentro del tile y
+                // desalinea las tres cifras; «Racha» dice lo mismo en una.
+                label="Racha semanal"
+                value={`${training.streakWeeks}`}
+              />
+              <StatTile
+                icon="calendar-outline"
+                label="En 4 semanas"
+                value={`${training.recentSessions}`}
+              />
+            </View>
+            </TourTarget>
+
+            <TourTarget id="home.muscles">
+            <Card>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: spacing.sm,
+                }}
+              >
+                <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: '600' }}>
+                  Músculos de esta semana
+                </Text>
+                <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                  {`${training.thisWeek.sets} series`}
+                </Text>
+              </View>
+
+              {training.thisWeek.muscles.length === 0 ? (
+                <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
+                  Aún no has registrado series esta semana. Lo que entrenes aparecerá aquí
+                  repartido por grupo muscular.
+                </Text>
+              ) : (
+                // Barras proporcionales al grupo más trabajado, no al total: lo
+                // que se está juzgando es el reparto —«llevo tres de pecho y
+                // ninguna de pierna»—, y contra el total todas las barras
+                // quedarían cortas y el desequilibrio, invisible.
+                <View style={{ gap: spacing.md }}>
+                  {training.thisWeek.muscles.slice(0, 5).map((muscle) => {
+                    const top = training.thisWeek.muscles[0]?.sets ?? 1;
+                    return (
+                      <View key={muscle.name} style={{ gap: spacing.sm }}>
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            gap: spacing.sm,
+                          }}
+                        >
+                          <Text
+                            numberOfLines={1}
+                            style={{ color: colors.textMuted, fontSize: fontSizes.xs, flex: 1 }}
+                          >
+                            {muscle.name}
+                          </Text>
+                          <Text
+                            style={{
+                              color: colors.text,
+                              fontSize: fontSizes.xs,
+                              fontWeight: '600',
+                              fontVariant: ['tabular-nums'],
+                            }}
+                          >
+                            {muscle.sets}
+                          </Text>
+                        </View>
+                        <View
+                          style={{
+                            height: 8,
+                            borderRadius: radii.full,
+                            backgroundColor: colors.surfaceHigh,
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <View
+                            style={{
+                              height: '100%',
+                              width: `${Math.max(6, (muscle.sets / top) * 100)}%`,
+                              borderRadius: radii.full,
+                              backgroundColor: accentPolicy.glyph,
+                            }}
+                          />
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+            </Card>
+            </TourTarget>
+          </View>
+        )}
+      </Section>
+
+      <Section icon="stats-chart-outline" index={2} title="Actividad">
         {workouts.isPending ? (
           <Skeleton height={92} />
         ) : workouts.isError ? (
           <ErrorState error={workouts.error} onRetry={() => void workouts.refetch()} />
         ) : (
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            <StatTile label="Sesiones" value={`${workouts.data?.total ?? 0}`} />
-            <StatTile label="Finalizadas" value={`${finished.length}`} />
+            <StatTile icon="list-outline" label="Sesiones" value={`${workouts.data?.total ?? 0}`} />
             <StatTile
+              icon="checkmark-done-outline"
+              label="Finalizadas"
+              value={`${finished.length}`}
+            />
+            <StatTile
+              icon="time-outline"
               label="Última"
               value={sessions[0] ? relativeDay(sessions[0].fechaInicio) : '—'}
             />
@@ -213,7 +354,7 @@ export default function HomeScreen() {
 
       {wide ? null : routineSection}
 
-      <Section index={3} title="Últimas sesiones">
+      <Section icon="barbell-outline" index={4} title="Últimas sesiones">
         {workouts.isPending ? (
           <Skeleton height={140} />
         ) : sessions.length === 0 ? (

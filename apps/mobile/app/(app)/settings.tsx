@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Card, Divider, Row, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
+import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { confirm, notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
@@ -37,21 +38,26 @@ export default function SettingsScreen() {
 
   return (
     <ScrollScreen>
+      {/* Ajustes se empuja sobre la barra de pestañas, así que la barra deja de
+          ser una salida: sin esta fila la única forma de volver era el gesto de
+          borde, invisible para quien no lo conoce, y la pantalla parecía
+          colgada. Las otras tres pantallas apiladas ya lo llevaban. */}
+      <BackLink />
       <ScreenHeader title="Ajustes" />
 
-      <Section title="Cuenta">
+      <Section icon="person-outline" title="Cuenta">
         <Card>
-          <Row label="Correo" value={principal?.email ?? '—'} />
+          <Row icon="mail-outline" label="Correo" value={principal?.email ?? '—'} />
           <Divider />
-          <Row label="Sesión" value="Guardada en el llavero del dispositivo" />
+          <Row icon="key-outline" label="Sesión" value="Guardada en el llavero del dispositivo" />
         </Card>
       </Section>
 
-      <Section title="Aplicación">
+      <Section icon="phone-portrait-outline" title="Aplicación">
         <Card>
-          <Row label="Versión" value="1.0.0" />
+          <Row icon="pricetag-outline" label="Versión" value="1.0.0" />
           <Divider />
-          <Row label="Entorno" value={ENVIRONMENT_LABEL[env.environment] ?? env.environment} />
+          <Row icon="server-outline" label="Entorno" value={ENVIRONMENT_LABEL[env.environment] ?? env.environment} />
         </Card>
       </Section>
 

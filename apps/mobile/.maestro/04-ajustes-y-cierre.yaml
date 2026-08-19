@@ -1,0 +1,35 @@
+# Ajustes y cierre de sesión: comprueba que el diálogo de confirmación se
+# presenta bien en iOS y que al salir se vuelve a la pantalla de login.
+appId: app.gymsheet.mobile
+name: 04 · Ajustes y cierre de sesión
+---
+- runFlow: login.subflow.yaml
+# Los ítems de la barra de pestañas se llaman «Rutinas, tab, 2 of 9» en el
+# árbol de accesibilidad de iOS, no «Rutinas»: Maestro compara el texto como
+# expresión regular completa, así que el nombre a secas no encuentra nada.
+- tapOn: 'Perfil, tab.*'
+- extendedWaitUntil:
+    visible: 'Editar mis datos'
+    timeout: 150000
+# `NavRow` fusiona título y subtítulo en un único `accessibilityLabel`, y es
+# contra eso —no contra «Ajustes» a secas— contra lo que compara Maestro.
+#
+# Se baja con `scroll` a secas en vez de `scrollUntilVisible`: la altura de la
+# tarjeta de identidad depende de si «Datos físicos» ya resolvió o sigue en su
+# `Skeleton`, así que «Ajustes» a veces entra en pantalla sola y a veces no.
+# `scrollUntilVisible` falló en los dos casos; tres desplazamientos llegan al
+# final de la lista, que es corta, y desde ahí la fila siempre está.
+- repeat:
+    times: 3
+    commands:
+      - scroll
+- tapOn: 'Ajustes. Cuenta, versión y cierre de sesión'
+- extendedWaitUntil:
+    visible: 'Cerrar sesión'
+    timeout: 30000
+- takeScreenshot: 13-ajustes
+- tapOn: 'Cerrar sesión'
+- takeScreenshot: 14-confirmacion-cerrar-sesion
+# El diálogo llama «Volver» a la salida segura (settings.tsx), no «Cancelar».
+- tapOn: 'Volver'
+- assertVisible: 'Cerrar sesión'

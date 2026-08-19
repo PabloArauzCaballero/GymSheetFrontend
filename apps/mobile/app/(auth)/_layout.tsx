@@ -6,7 +6,7 @@ export default function AuthLayout() {
 
   // Never show auth screens to an already-authenticated user.
   if (status === 'authenticated') {
-    return <Redirect href="/(app)/home" />;
+    return <Redirect href="/home" />;
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;

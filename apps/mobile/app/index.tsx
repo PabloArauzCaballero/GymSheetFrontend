@@ -15,5 +15,5 @@ export default function Index() {
     );
   }
 
-  return <Redirect href={status === 'authenticated' ? '/(app)/home' : '/(auth)/login'} />;
+  return <Redirect href={status === 'authenticated' ? '/home' : '/(auth)/login'} />;
 }

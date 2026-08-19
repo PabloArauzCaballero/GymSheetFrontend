@@ -1,0 +1,65 @@
+# Sesión reutilizable para los flujos 02–04.
+#
+# A diferencia del flujo 01, aquí **no** se usa `clearState`: en desarrollo el
+# bundle de JavaScript vive en el contenedor de la app, así que borrarlo obliga
+# a redescargarlo entero de Metro. El arranque en frío de verdad lo cubre el
+# flujo 01, que es donde ese camino importa.
+#
+# El bloque de login va dentro de un `retry` que **relanza la app** en cada
+# intento. No es capricho: el cliente API aborta a los 15 s, y en una máquina
+# cargada la primera petición tras un rato de silencio los supera. Cuando eso
+# pasa, la app no se queda esperando — muestra «Sin conexión» y se rinde. Un
+# timeout más largo en Maestro no arregla eso, porque quien abandonó fue la
+# app; lo único que sirve es volver a intentarlo, que es además lo que haría
+# una persona. El relanzado limpia los campos sin tocar el bundle.
+appId: app.gymsheet.mobile
+---
+- retry:
+    maxRetries: 3
+    commands:
+      - launchApp
+      # Cualquiera de los tres textos significa «la app terminó de arrancar»:
+      # login, tour o Inicio. Maestro interpreta el texto como expresión regular.
+      - extendedWaitUntil:
+          visible: 'Inicia sesión para continuar|Bienvenido a GymSheet|Hola, Athlete'
+          timeout: 240000
+      - runFlow:
+          when:
+            visible: 'Inicia sesión para continuar'
+          commands:
+            - tapOn:
+                below: 'Correo electrónico'
+                index: 0
+            - inputText: 'athlete.mock@gymsheet.local'
+            - pressKey: Enter
+            - tapOn:
+                below: 'Contraseña'
+                index: 0
+            - inputText: 'MockLocal2026!'
+            - pressKey: Enter
+            - tapOn: 'Iniciar sesión'
+            # Alerta del sistema exclusiva de iOS: tras enviar un campo
+            # `secureTextEntry`, el Llavero ofrece guardar la contraseña y tapa
+            # lo que hay detrás. Android no tiene equivalente.
+            - tapOn:
+                text: 'Ahora no'
+                optional: true
+            - extendedWaitUntil:
+                visible: 'Bienvenido a GymSheet|Hola, Athlete'
+                timeout: 120000
+# El tour sólo sale la primera vez. El control se llama «Saltar tutorial» en el
+# árbol de accesibilidad (`accessibilityLabel` en tour.tsx), no «Saltar».
+- runFlow:
+    when:
+      visible: 'Bienvenido a GymSheet'
+    commands:
+      - tapOn: 'Saltar tutorial'
+- extendedWaitUntil:
+    visible: 'Hola, Athlete'
+    timeout: 120000
+# La primera tanda de consultas de Inicio puede agotar la espera del cliente y
+# dejar la tarjeta en su estado de error. Se pulsa el propio «Reintentar» de la
+# app; si no está, el paso no hace nada.
+- tapOn:
+    text: 'Reintentar'
+    optional: true

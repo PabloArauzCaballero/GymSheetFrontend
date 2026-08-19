@@ -3,6 +3,7 @@ import { Text, TextInput, View } from 'react-native';
 import { colors, fontSizes, minTouchTarget, radii, spacing } from '@/theme';
 import { Button } from '@/components/ui';
 import { PressableScale } from '@/components/motion';
+import { numericInputProps } from '@/components/keyboard';
 
 /**
  * The one form used mid-workout, so it is built for a sweaty thumb between
@@ -47,6 +48,9 @@ function NumberField({
           accessibilityLabel={label}
           // `decimal-pad` on weight (plates come in halves), plain digits elsewhere.
           keyboardType={label === 'Peso' ? 'decimal-pad' : 'number-pad'}
+          // Neither pad has a return key on iOS: without the accessory bar the
+          // keyboard covers «Registrar» and nothing on screen closes it.
+          {...numericInputProps}
           onChangeText={onChange}
           placeholder="0"
           placeholderTextColor={colors.textDisabled}
@@ -113,17 +117,30 @@ function QuickChip({
 
 export function SetEntryForm({
   initial,
+  previous,
   pending,
   onSubmit,
 }: {
-  /** Previous set's values, so a repeat is one tap. */
+  /** Previous set's values *within this session*, so a repeat is one tap. */
   initial?: Partial<SetDraft>;
+  /**
+   * The heaviest set of the last time this exercise was trained, in an earlier
+   * session. This is the number progressive overload is actually measured
+   * against: matching the set you did ninety seconds ago is not progress, and
+   * beating what you did last Tuesday is. `undefined` the first time an
+   * exercise is trained, which is why the chip is conditional rather than
+   * disabled — there is nothing to beat yet, and saying so would be noise.
+   */
+  previous?: { pesoKg: number; repeticiones: number };
   pending: boolean;
   onSubmit: (draft: { pesoKg: number; repeticiones: number; rir: number }) => void;
 }) {
   const [draft, setDraft] = useState<SetDraft>({
-    pesoKg: initial?.pesoKg ?? '',
-    repeticiones: initial?.repeticiones ?? '',
+    // Falls back to the previous session when this one has no sets yet: opening
+    // an exercise on an empty form asks the lifter to remember their own last
+    // load, which is precisely what a training log exists to avoid.
+    pesoKg: initial?.pesoKg ?? (previous ? String(previous.pesoKg) : ''),
+    repeticiones: initial?.repeticiones ?? (previous ? String(previous.repeticiones) : ''),
     rir: initial?.rir ?? '',
   });
 
@@ -161,6 +178,22 @@ export function SetEntryForm({
           hands, is the friction these chips remove. */}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
         {repeatLast ? <QuickChip label="Igual que la anterior" onPress={repeatLast} wide /> : null}
+        {previous ? (
+          // Sobrecarga sobre la sesión anterior, en un toque. Es la operación
+          // que la gente hace de cabeza al llegar a la barra, y la única que
+          // convierte el registro en un plan en vez de en un diario.
+          <QuickChip
+            label={`Superar ${previous.pesoKg} kg`}
+            onPress={() =>
+              setDraft((prev) => ({
+                ...prev,
+                pesoKg: String(previous.pesoKg + 2.5),
+                repeticiones: prev.repeticiones || String(previous.repeticiones),
+              }))
+            }
+            wide
+          />
+        ) : null}
         <QuickChip label="+2,5 kg" onPress={() => bump('pesoKg', 2.5)} />
         <QuickChip label="−2,5 kg" onPress={() => bump('pesoKg', -2.5)} />
         <QuickChip label="+1 rep" onPress={() => bump('repeticiones', 1)} />

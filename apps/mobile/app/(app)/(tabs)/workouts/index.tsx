@@ -6,6 +6,7 @@ import { Badge, Card, Divider, ScrollScreen, ScreenHeader } from '@/components/l
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { NavRow } from '@/components/list';
 import { Button } from '@/components/ui';
+import { TourTarget, useScreenTour } from '@/components/tour';
 import { exportWorkoutHistory } from '@/lib/export-progress';
 import { notify } from '@/notifications';
 import { workoutService } from '@/api/services';
@@ -67,6 +68,8 @@ export default function WorkoutsScreen() {
     }
   };
 
+  useScreenTour('workouts');
+
   return (
     <ScrollScreen onRefresh={() => void workouts.refetch()} refreshing={workouts.isFetching}>
       <ScreenHeader
@@ -96,6 +99,7 @@ export default function WorkoutsScreen() {
 
       {/* One primary action, and it changes with context: resume what is open,
           or start something new. */}
+      <TourTarget id="workouts.list">
       {inProgress ? (
         <Button
           label="Continuar sesión en curso"
@@ -110,6 +114,7 @@ export default function WorkoutsScreen() {
           onPress={() => startFree.mutate()}
         />
       )}
+      </TourTarget>
 
       {workouts.isPending ? (
         <View style={{ gap: spacing.sm }}>
