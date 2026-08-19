@@ -29,6 +29,19 @@ const STORAGE_PREFIX = 'gymsheet.tour.v2.';
  */
 const TOUR_GRACE_MS = 1200;
 
+/**
+ * Lo que el tour necesita de la lista que tiene delante.
+ *
+ * Además de moverla, saber dónde estaba: el tour desplaza la pantalla para
+ * traer a la vista aquello de lo que habla, y al terminar debe devolverla donde
+ * la persona la había dejado. Quien no scrolleó fue ella.
+ */
+export interface ScreenScroller {
+  scrollBy: (deltaY: number) => void;
+  scrollTo: (y: number) => void;
+  getOffset: () => number;
+}
+
 /** Where a highlighted element sits on screen, in window coordinates. */
 export interface TargetRect {
   x: number;
@@ -62,8 +75,8 @@ interface TourState {
    * tour has to be able to bring its own subject into view before drawing the
    * hole around it.
    */
-  scroller: ((deltaY: number) => void) | null;
-  registerScroller: (scroll: ((deltaY: number) => void) | null) => void;
+  scroller: ScreenScroller | null;
+  registerScroller: (scroll: ScreenScroller | null) => void;
   /**
    * Bumped whenever every anchor should read its position again — after the
    * tour scrolls one into view, for instance. `onLayout` does not fire on
@@ -72,6 +85,9 @@ interface TourState {
    */
   nonce: number;
   remeasure: () => void;
+  /** Posición de la lista al abrirse el tour, para restaurarla al cerrarlo. */
+  restoreOffset: number | null;
+  rememberOffset: () => void;
   /**
    * Cuándo se cerró el último tour.
    *
@@ -103,6 +119,7 @@ export const useTourStore = create<TourState>((set, get) => ({
   scroller: null,
   nonce: 0,
   closedAt: null,
+  restoreOffset: null,
   hydrate: async () => {
     try {
       const entries = await Promise.all(
@@ -136,6 +153,10 @@ export const useTourStore = create<TourState>((set, get) => ({
   setStep: (step) => set({ step }),
   complete: async () => {
     const key = get().active;
+    // Devolver la lista a donde estaba antes del tour.
+    const { scroller, restoreOffset } = get();
+    if (scroller && restoreOffset !== null) scroller.scrollTo(restoreOffset);
+    set({ restoreOffset: null });
     set({ active: null, step: 0, closedAt: Date.now() });
     if (!key) return;
     set((state) => ({ seen: { ...(state.seen ?? {}), [key]: true } }));
@@ -170,6 +191,12 @@ export const useTourStore = create<TourState>((set, get) => ({
     }),
   registerScroller: (scroll) => set({ scroller: scroll }),
   remeasure: () => set((state) => ({ nonce: state.nonce + 1 })),
+  rememberOffset: () =>
+    set((state) =>
+      state.restoreOffset === null && state.scroller
+        ? { restoreOffset: state.scroller.getOffset() }
+        : state,
+    ),
   reset: async () => {
     set({ seen: Object.fromEntries(ALL_KEYS.map((key) => [key, false])), active: 'welcome', step: 0 });
     try {

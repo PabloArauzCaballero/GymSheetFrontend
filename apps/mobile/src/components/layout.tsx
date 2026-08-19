@@ -1,4 +1,4 @@
-import { Children, useCallback, useEffect, useRef, type ReactNode } from 'react';
+import { Children, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import {
   RefreshControl,
@@ -90,14 +90,25 @@ export function ScrollScreen({
   // Lets the guided tour bring an anchor into view. Registered on mount and
   // cleared on unmount, so the last screen to mount is the one that scrolls —
   // which on a stack is exactly the one the user is looking at.
-  const scrollBy = useCallback((deltaY: number) => {
-    const next = Math.max(0, offsetRef.current + deltaY);
-    scrollRef.current?.scrollTo({ y: next, animated: true });
-  }, []);
+  const scroller = useMemo(
+    () => ({
+      scrollBy: (deltaY: number) => {
+        const next = Math.max(0, offsetRef.current + deltaY);
+        offsetRef.current = next;
+        scrollRef.current?.scrollTo({ y: next, animated: true });
+      },
+      scrollTo: (y: number) => {
+        offsetRef.current = Math.max(0, y);
+        scrollRef.current?.scrollTo({ y: offsetRef.current, animated: true });
+      },
+      getOffset: () => offsetRef.current,
+    }),
+    [],
+  );
   useEffect(() => {
-    registerScroller(scrollBy);
+    registerScroller(scroller);
     return () => registerScroller(null);
-  }, [registerScroller, scrollBy]);
+  }, [registerScroller, scroller]);
   // A two-column page needs room for two columns; keeping the phone cap on a
   // tablet is what leaves a narrow strip of content framed by black.
   const gutter = Math.max(spacing.lg, (width - (wide ? maxWideContentWidth : maxContentWidth)) / 2);

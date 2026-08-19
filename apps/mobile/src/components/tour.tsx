@@ -349,7 +349,10 @@ export function TourOverlay() {
       return;
     }
     scrolledFor.current = stepKey;
-    scroller(delta);
+    // Antes del primer desplazamiento se anota dónde estaba la lista, para
+    // devolverla ahí al cerrar el tour.
+    useTourStore.getState().rememberOffset();
+    scroller.scrollBy(delta);
     // The scroll is animated, so the anchor is still moving; read it again once
     // it has landed or the ring stays where the element used to be.
     //
@@ -397,10 +400,9 @@ export function TourOverlay() {
   /** True cuando cabe mejor encima del elemento. */
   const cardAbove = hole ? spaceAbove > spaceBelow : false;
 
-  if (!active || !current) return null;
-
   const close = () => void complete();
   const advance = () => (isLast ? close() : setStep(step + 1));
+  const visible = active !== null && current !== undefined;
 
   return (
     <Modal
@@ -414,12 +416,22 @@ export function TourOverlay() {
       // altura. Con la ventana translucida ambos espacios coinciden.
       statusBarTranslucent
       transparent
-      visible
+      // `visible={false}` y no desmontar el Modal.
+      //
+      // Devolver `null` en cuanto el tour termina arranca la ventana modal en
+      // mitad de su presentacion, y iOS se queda con ella como frontal: la
+      // pantalla de debajo se ve perfectamente pero deja de existir en el arbol
+      // de accesibilidad, asi que un lector de pantalla --y cualquier prueba
+      // automatizada-- encuentra la nada. Dejarlo montado y decirle que se
+      // oculte es lo que le permite retirarse por su cuenta.
+      visible={visible}
     >
       <View style={{ flex: 1 }}>
         {/* Tocar fuera cierra. Un tutorial a pantalla completa que sólo se deja
             salir por su propio botón es indistinguible de una app colgada, y
             quien lo sufre no vuelve a leer ninguno. */}
+        {current === undefined ? null : (
+          <>
         <Pressable
           accessibilityLabel="Cerrar tutorial"
           onPress={close}
@@ -531,6 +543,8 @@ export function TourOverlay() {
             </View>
           </Animated.View>
         </View>
+          </>
+        )}
       </View>
     </Modal>
   );
