@@ -17,7 +17,7 @@ import { BackLink } from '@/components/nav';
 import { Button, Input } from '@/components/ui';
 import { GOAL_LABEL } from '@/lib/format';
 import { notify } from '@/notifications';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 /**
  * A numeric keypad offers both separators depending on the locale, and a user
@@ -99,7 +99,7 @@ function GoalOption({
         style={{
           color: selected ? colors.background : colors.text,
           fontSize: fontSizes.sm,
-          fontWeight: '600',
+          fontWeight: semibold,
         }}
       >
         {GOAL_LABEL[goal]}
@@ -142,7 +142,7 @@ function StepHeading({
         style={{
           color: colors.text,
           fontSize: fontSizes.lg,
-          fontWeight: '600',
+          fontWeight: semibold,
           textAlign: 'center',
         }}
       >

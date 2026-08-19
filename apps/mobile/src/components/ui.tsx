@@ -21,7 +21,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { AmbientBackground } from '@/components/ambient';
-import { accentContrast, colors, fontSizes, maxContentWidth, minTouchTarget, radii, spacing } from '@/theme';
+import { accentContrast, colors, fontSizes, maxContentWidth, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -72,7 +72,7 @@ export function AppText({
 }) {
   const style = {
     // Misma regla que `ScreenHeader`: cuanto mayor el tamaño, menor el peso.
-    title: { color: colors.text, fontSize: fontSizes.xl, fontWeight: '600' as const },
+    title: { color: colors.text, fontSize: fontSizes.xl, fontWeight: semibold },
     body: { color: colors.text, fontSize: fontSizes.md },
     muted: { color: colors.textMuted, fontSize: fontSizes.sm },
   }[variant];

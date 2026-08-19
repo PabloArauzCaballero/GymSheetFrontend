@@ -25,7 +25,7 @@ import { BackLink } from '@/components/nav';
 import { Button, Input } from '@/components/ui';
 import { GOAL_LABEL } from '@/lib/format';
 import { notify } from '@/notifications';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 /**
  * Writes owned by this screen. They live here rather than in `@/api/services`
@@ -191,7 +191,7 @@ function ChoiceChip({
         style={{
           color: selected ? colors.background : colors.text,
           fontSize: fontSizes.sm,
-          fontWeight: '600',
+          fontWeight: semibold,
         }}
       >
         {label}
@@ -219,7 +219,7 @@ function DraftRow({
         <View style={{ flex: 1, gap: 2 }}>
           <Text
             numberOfLines={2}
-            style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: '600' }}
+            style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}
           >
             {draft.exercise.nombre}
           </Text>

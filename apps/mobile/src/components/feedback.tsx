@@ -11,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Button } from '@/components/ui';
 import { resolveError } from '@/notifications';
-import { colors, fontSizes, iconSizes, radii, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
 
 /**
  * Placeholder shown while a query is in flight. Blocks of the right shape beat
@@ -90,7 +90,7 @@ function CenteredState({
         style={{
           color: colors.text,
           fontSize: fontSizes.md,
-          fontWeight: '600',
+          fontWeight: semibold,
           textAlign: 'center',
         }}
       >

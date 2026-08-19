@@ -392,7 +392,19 @@ export function TourOverlay() {
   const advance = () => (isLast ? close() : setStep(step + 1));
 
   return (
-    <Modal animationType="fade" transparent visible>
+    <Modal
+      animationType="fade"
+      // Android: sin esto el boton fisico de atras no hace nada y el tutorial
+      // se convierte en la trampa que este componente existe para evitar.
+      onRequestClose={close}
+      // Android: el Modal es una ventana aparte y, sin esto, empieza bajo la
+      // barra de estado. Las posiciones que miden los anclajes son de la
+      // ventana de la app, asi que el foco se dibujaria desplazado justo esa
+      // altura. Con la ventana translucida ambos espacios coinciden.
+      statusBarTranslucent
+      transparent
+      visible
+    >
       <View style={{ flex: 1 }}>
         {/* Tocar fuera cierra. Un tutorial a pantalla completa que sólo se deja
             salir por su propio botón es indistinguible de una app colgada, y

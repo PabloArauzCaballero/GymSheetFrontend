@@ -15,7 +15,7 @@ import ReAnimated, {
 import { useAuthStore } from '@/state/auth-store';
 import { useTourStore } from '@/state/tour-store';
 import { TourOverlay } from '@/components/tour';
-import { colors, fontSizes, iconSizes } from '@/theme';
+import { colors, fontSizes, iconSizes, semibold } from '@/theme';
 
 /** Outline when resting, filled when active — the platform convention. */
 const ICONS = {
@@ -157,7 +157,7 @@ export default function TabsLayout() {
         },
         tabBarActiveTintColor: colors.volt,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarLabelStyle: { fontSize: fontSizes.xs, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: fontSizes.xs, fontWeight: semibold },
         tabBarStyle: { backgroundColor: colors.surfaceLow, borderTopColor: colors.borderSubtle },
       }}
     >

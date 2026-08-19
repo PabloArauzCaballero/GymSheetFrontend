@@ -31,7 +31,7 @@ import {
   relativeDay,
   shortName,
 } from '@/lib/format';
-import { accentPolicy, colors, fontSizes, iconSizes, radii, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
 import {
   formatVolume,
   overloadDelta,
@@ -175,7 +175,7 @@ export default function HomeScreen() {
               style={{
                 color: colors.text,
                 fontSize: fontSizes.lg,
-                fontWeight: '600',
+                fontWeight: semibold,
                 letterSpacing: fontSizes.lg * -0.045,
               }}
             >
@@ -255,7 +255,7 @@ export default function HomeScreen() {
                   gap: spacing.sm,
                 }}
               >
-                <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: '600' }}>
+                <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
                   Músculos de esta semana
                 </Text>
                 <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
@@ -295,7 +295,7 @@ export default function HomeScreen() {
                             style={{
                               color: colors.text,
                               fontSize: fontSizes.xs,
-                              fontWeight: '600',
+                              fontWeight: semibold,
                               fontVariant: ['tabular-nums'],
                             }}
                           >
@@ -387,7 +387,7 @@ export default function HomeScreen() {
                       size={iconSizes.md}
                     />
                     <View style={{ flex: 1, gap: 2 }}>
-                      <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: '600' }}>
+                      <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
                         {relativeDay(session.fechaInicio)}
                         {startTime ? (
                           <Text style={{ color: colors.textMuted, fontWeight: '400' }}>

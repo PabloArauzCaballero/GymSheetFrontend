@@ -8,7 +8,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { colors, fontSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 import { Button } from '@/components/ui';
 import { DURATION, PREMIUM_EASING, PressableScale } from '@/components/motion';
 
@@ -238,10 +238,16 @@ export function RestTimer({
         style={{
           color: finished ? colors.accentInk : colors.text,
           fontSize: fontSizes['2xl'],
-          fontWeight: '600',
+          fontWeight: semibold,
           letterSpacing: TIME_LETTER_SPACING,
           // Tabular figures keep the digits from shuffling sideways every second.
+          // Solo iOS las respeta: `fontVariant` no existe en Android, donde
+          // Roboto compone el «1» mas estrecho que el resto. Por eso el ancho
+          // minimo de abajo, que reserva el sitio del peor caso y deja el
+          // cronometro quieto en las dos plataformas.
           fontVariant: ['tabular-nums'],
+          minWidth: 132,
+          textAlign: 'center',
         }}
       >
         {formatTime(remainingMs)}
@@ -292,7 +298,7 @@ export function RestTimer({
               style={{
                 color: colors.text,
                 fontSize: fontSizes.md,
-                fontWeight: '600',
+                fontWeight: semibold,
                 fontVariant: ['tabular-nums'],
               }}
             >

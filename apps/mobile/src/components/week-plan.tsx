@@ -1,7 +1,7 @@
 import { Text, View } from 'react-native';
 import type { RoutineAssignment } from '@gymsheet/types';
 import { PressableScale } from '@/components/motion';
-import { colors, fontSizes, radii, spacing } from '@/theme';
+import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
 
 /**
  * Weekday initials, indexed the way `Date.getDay()` indexes them — 0 is Sunday.
@@ -96,7 +96,7 @@ export function WeekPlan({
               style={{
                 color: isToday ? colors.volt : colors.textMuted,
                 fontSize: fontSizes.xs,
-                fontWeight: '600',
+                fontWeight: semibold,
               }}
             >
               {initial}

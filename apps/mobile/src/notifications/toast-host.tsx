@@ -3,7 +3,7 @@ import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from '
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import type { NotificationSeverity, ToastItem } from '@gymsheet/notifications';
-import { colors, fontSizes, minTouchTarget, motion, radii, spacing, tones } from '@/theme';
+import { colors, fontSizes, minTouchTarget, motion, radii, semibold, spacing, tones } from '@/theme';
 import { toastQueue } from './notify';
 import { useReduceMotion } from './use-reduce-motion';
 
@@ -149,7 +149,7 @@ function ToastCard({ item }: { item: ToastItem }) {
             }}
             style={{ justifyContent: 'center', minHeight: minTouchTarget / 2 }}
           >
-            <Text style={{ color: tone.text, fontSize: fontSizes.sm, fontWeight: '600' }}>
+            <Text style={{ color: tone.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
               {item.action.label}
             </Text>
           </Pressable>

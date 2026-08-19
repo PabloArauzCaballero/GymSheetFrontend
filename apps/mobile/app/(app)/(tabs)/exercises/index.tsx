@@ -12,7 +12,7 @@ import { Input } from '@/components/ui';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { DrillBack, Grid, GridTile, iconFor, titleCase } from '@/components/catalogue-grid';
 import { exerciseService } from '@/api/services';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 /** A single fact about an exercise, sized to sit two or three to a row. */
 function Tag({ label, accent = false }: { label: string; accent?: boolean }) {
@@ -32,7 +32,7 @@ function Tag({ label, accent = false }: { label: string; accent?: boolean }) {
         style={{
           color: accent ? colors.accentInk : colors.textMuted,
           fontSize: fontSizes.xs,
-          fontWeight: '600',
+          fontWeight: semibold,
         }}
       >
         {label}
@@ -75,7 +75,7 @@ function ExerciseRow({ exercise, onPress }: { exercise: Exercise; onPress: () =>
       <View style={{ flex: 1, gap: spacing.xs }}>
         <Text
           numberOfLines={2}
-          style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: '600' }}
+          style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}
         >
           {exercise.nombre}
         </Text>

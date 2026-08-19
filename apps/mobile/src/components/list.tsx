@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
 import { Text, View } from 'react-native';
 import { PressableScale } from '@/components/motion';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 /**
  * A row that opens something: artwork on the left, two lines of copy, a
@@ -43,7 +43,7 @@ export function NavRow({
           // prefixed ("Plan del coach — Hipertrofia PPL"), so the part that
           // gets cut is precisely the part that tells one row from another.
           numberOfLines={2}
-          style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: '600' }}
+          style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}
         >
           {title}
         </Text>

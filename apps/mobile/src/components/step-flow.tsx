@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { DURATION, PREMIUM_EASING } from '@/components/motion';
-import { colors, fontSizes, iconSizes, radii, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
 
 export type FlowStep = {
   /** Short label under the rail — two words at most, it is a signpost. */
@@ -173,7 +173,7 @@ export function DateTimeline({
                 style={{
                   color: item.accent ? colors.text : colors.textMuted,
                   fontSize: fontSizes.md,
-                  fontWeight: '600',
+                  fontWeight: semibold,
                   fontVariant: ['tabular-nums'],
                 }}
               >

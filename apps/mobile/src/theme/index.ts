@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import {
   colors as sharedColors,
   fontSizes as sharedFontSizes,
@@ -229,3 +230,27 @@ export const tabletBreakpoint = 700;
  * enough that the page is filled instead of framed by black.
  */
 export const maxWideContentWidth = 1040;
+
+/**
+ * El peso «semibold», resuelto por plataforma.
+ *
+ * Android no sintetiza pesos: hasta API 28 la familia Roboto del sistema no
+ * trae SemiBold, y RN no lo interpola, asi que un `fontWeight: '600'` cae a
+ * normal. El efecto no es sutil —desaparece de golpe el escalon entre un
+ * titulo de tarjeta y su texto—, y como toda la jerarquia de esta app descansa
+ * en tamano y peso en vez de en color, en esos telefonos la interfaz se lee
+ * plana. Subir a 700 ahi es la aproximacion honesta: mas pesado de lo
+ * pretendido, pero visible, que es lo que el 600 estaba intentando conseguir.
+ *
+ * En iOS y en Android moderno se queda en 600 exacto.
+ */
+export const semibold: '600' | '700' =
+  Platform.OS === 'android' && Number(Platform.Version) < 28 ? '700' : '600';
+
+/**
+ * Cifras de ancho fijo. `fontVariant` sólo lo entiende iOS; en Android se
+ * ignora sin avisar. Se deja igualmente porque no hace dano y documenta la
+ * intencion, pero cualquier numero que cambie en su sitio —un cronometro—
+ * necesita ademas una anchura reservada, o el texto de al lado baila.
+ */
+export const tabularNums = { fontVariant: ['tabular-nums'] } as const;

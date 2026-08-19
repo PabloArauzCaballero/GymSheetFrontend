@@ -8,7 +8,7 @@ import { ExerciseImage } from '@/components/media';
 import { PressableScale } from '@/components/motion';
 import { BackLink } from '@/components/nav';
 import { exerciseService } from '@/api/services';
-import { colors, fontSizes, radii, spacing } from '@/theme';
+import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
 
 /**
  * Instruction steps arrive keyed by locale. `es-BO` first — the same order the
@@ -34,7 +34,7 @@ function Description({ text }: { text: string }) {
         hitSlop={spacing.sm}
         onPress={() => setExpanded((value) => !value)}
       >
-        <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: '600' }}>
+        <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}>
           {expanded ? 'Ver menos' : 'Leer más'}
         </Text>
       </Pressable>
@@ -189,7 +189,7 @@ export default function ExerciseDetailScreen() {
                 <ExerciseImage exercise={item} size={132} />
                 <Text
                   numberOfLines={2}
-                  style={{ color: colors.text, fontSize: fontSizes.xs, fontWeight: '600' }}
+                  style={{ color: colors.text, fontSize: fontSizes.xs, fontWeight: semibold }}
                 >
                   {item.nombre}
                 </Text>

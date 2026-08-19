@@ -17,7 +17,7 @@ import { workoutService } from '@/api/services';
 import { useAmbientStore } from '@/state/ambient-store';
 import { WORKOUT_LABEL, WORKOUT_TONE, formatDuration, relativeDay } from '@/lib/format';
 import { previousPerformance, topSet } from '@/lib/training-metrics';
-import { accentPolicy, colors, fontSizes, iconSizes, spacing, tones } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, semibold, spacing, tones } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 
 /** Standard rest between working sets; the timer can be extended in place. */
@@ -256,7 +256,7 @@ export default function WorkoutDetailScreen() {
               <View style={{ flex: 1, gap: 2 }}>
                 <Text
                   numberOfLines={2}
-                  style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: '600' }}
+                  style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}
                 >
                   {item.ejercicio?.nombre ?? 'Ejercicio no disponible'}
                 </Text>
@@ -297,7 +297,7 @@ export default function WorkoutDetailScreen() {
                         style={{
                           color: colors.text,
                           fontSize: fontSizes.sm,
-                          fontWeight: '600',
+                          fontWeight: semibold,
                           fontVariant: ['tabular-nums'],
                           flex: 1,
                         }}
@@ -353,7 +353,7 @@ export default function WorkoutDetailScreen() {
                       style={{
                         color: colors.text,
                         fontSize: fontSizes.sm,
-                        fontWeight: '600',
+                        fontWeight: semibold,
                         fontVariant: ['tabular-nums'],
                       }}
                     >
@@ -422,7 +422,7 @@ export default function WorkoutDetailScreen() {
                       style={{
                         color: colors.danger,
                         fontSize: fontSizes.sm,
-                        fontWeight: '600',
+                        fontWeight: semibold,
                         textAlign: 'center',
                       }}
                     >

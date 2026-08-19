@@ -28,7 +28,7 @@ import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { MEMBERSHIP_LABEL, MEMBERSHIP_TONE, formatDate } from '@/lib/format';
 import { notify } from '@/notifications';
-import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 /**
  * Reads this screen owns. `getMine` already lives in the shared service; the
@@ -313,7 +313,7 @@ export default function MembershipScreen() {
         {pendingPayment ? (
           <Card accent={colors.warning}>
             <Badge label="Pago pendiente" tone="warning" />
-            <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: '600' }}>
+            <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
               Tu solicitud quedó registrada.
             </Text>
             <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
@@ -511,7 +511,7 @@ export default function MembershipScreen() {
                     style={{
                       color: colors.volt,
                       fontSize: fontSizes['2xl'],
-                      fontWeight: '600',
+                      fontWeight: semibold,
                       fontVariant: ['tabular-nums'],
                       letterSpacing: fontSizes['2xl'] * -0.045,
                     }}
@@ -632,7 +632,7 @@ export default function MembershipScreen() {
                         flex: 1,
                         color: colors.text,
                         fontSize: fontSizes.sm,
-                        fontWeight: '600',
+                        fontWeight: semibold,
                       }}
                     >
                       {item.plan?.nombre ?? 'Plan'}
@@ -683,7 +683,7 @@ export default function MembershipScreen() {
                         flex: 1,
                         color: colors.text,
                         fontSize: fontSizes.sm,
-                        fontWeight: '600',
+                        fontWeight: semibold,
                       }}
                     >
                       {access.name}

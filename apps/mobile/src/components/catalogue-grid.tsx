@@ -2,7 +2,7 @@ import { Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { EnterUp, PressableScale } from '@/components/motion';
-import { accentPolicy, colors, fontSizes, iconSizes, radii, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
 
 /**
  * Icon per body part.
@@ -140,7 +140,7 @@ export function DrillBack({ label, onPress }: { label: string; onPress: () => vo
       style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: 4 }}
     >
       <Ionicons color={accentPolicy.quietLink} name="chevron-back" size={iconSizes.md} />
-      <Text style={{ color: accentPolicy.quietLink, fontSize: fontSizes.sm, fontWeight: '600' }}>
+      <Text style={{ color: accentPolicy.quietLink, fontSize: fontSizes.sm, fontWeight: semibold }}>
         {label}
       </Text>
     </PressableScale>

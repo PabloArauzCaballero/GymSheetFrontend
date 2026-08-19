@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, Text } from 'react-native';
-import { colors, fontSizes, iconSizes, minTouchTarget, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, minTouchTarget, semibold, spacing } from '@/theme';
 
 /**
  * Explicit way back from a detail screen. Android has the system back gesture
@@ -32,7 +32,7 @@ export function BackLink({ label = 'Volver' }: { label?: string }) {
         name="chevron-back"
         size={iconSizes.md}
       />
-      <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: '600' }}>{label}</Text>
+      <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}>{label}</Text>
     </Pressable>
   );
 }

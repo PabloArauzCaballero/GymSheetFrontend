@@ -15,23 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AmbientBackground } from '@/components/ambient';
 import { useTourStore } from '@/state/tour-store';
 import { EnterUp, PressableScale } from '@/components/motion';
-import {
-  accentPolicy,
-  cardGap,
-  cardPadding,
-  colors,
-  screenGap,
-  sectionGap,
-  fontSizes,
-  iconSizes,
-  maxContentWidth,
-  maxWideContentWidth,
-  minTouchTarget,
-  radii,
-  spacing,
-  tabletBreakpoint,
-  tones,
-} from '@/theme';
+import { accentPolicy, cardGap, cardPadding, colors, fontSizes, iconSizes, maxContentWidth, maxWideContentWidth, minTouchTarget, radii, screenGap, sectionGap, semibold, spacing, tabletBreakpoint, tones } from '@/theme';
 
 /**
  * One place decides what "wide" means, so a tablet layout cannot drift between
@@ -227,7 +211,7 @@ export function ScreenHeader({ title, subtitle }: { title: string; subtitle?: st
           // se cierra sobre sí misma y la página se lee pesada. Un display
           // grande y ligero es lo que separa un titular compuesto de uno que
           // sólo es texto grande en negrita.
-          fontWeight: '600',
+          fontWeight: semibold,
           // Optical tracking: large type set at default spacing looks loose and
           // amateur. Negative tracking is most of what separates a display face
           // from body text scaled up.
@@ -289,7 +273,7 @@ export function Section({
             fontSize: fontSizes.xs,
             // La versalita ya destaca por forma y color; a 700 competía con los
             // títulos de las tarjetas que etiqueta.
-            fontWeight: '600',
+            fontWeight: semibold,
             letterSpacing: fontSizes.xs * 0.1,
             textTransform: 'uppercase',
           }}
@@ -404,7 +388,7 @@ export function Row({
         style={{
           color: colors.text,
           fontSize: fontSizes.sm,
-          fontWeight: '600',
+          fontWeight: semibold,
           flexShrink: 1,
           textAlign: 'right',
         }}
@@ -481,7 +465,7 @@ export function StatTile({
           // the emphasis instead, and volt is left for the primary action.
           color: colors.text,
           fontSize: fontSizes['2xl'],
-          fontWeight: '600',
+          fontWeight: semibold,
           fontVariant: ['tabular-nums'],
           letterSpacing: fontSizes['2xl'] * -0.045,
         }}
@@ -504,7 +488,7 @@ export function StatTile({
             }
             size={12}
           />
-          <Text style={{ color: deltaTone, fontSize: fontSizes.xs, fontWeight: '600' }}>
+          <Text style={{ color: deltaTone, fontSize: fontSizes.xs, fontWeight: semibold }}>
             {delta.label}
           </Text>
         </View>
@@ -529,7 +513,7 @@ export function Badge({ label, tone = 'info' }: { label: string; tone?: BadgeTon
         paddingVertical: spacing.xs,
       }}
     >
-      <Text style={{ color: palette.text, fontSize: fontSizes.xs, fontWeight: '600' }}>
+      <Text style={{ color: palette.text, fontSize: fontSizes.xs, fontWeight: semibold }}>
         {label}
       </Text>
     </View>

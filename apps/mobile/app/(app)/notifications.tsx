@@ -9,7 +9,7 @@ import { Card, Divider, Row, ScreenHeader, ScrollScreen, Section } from '@/compo
 import { BackLink } from '@/components/nav';
 import { formatDate } from '@/lib/format';
 import { notify } from '@/notifications';
-import { colors, fontSizes, minTouchTarget, spacing } from '@/theme';
+import { colors, fontSizes, minTouchTarget, semibold, spacing } from '@/theme';
 
 const PREFERENCES_PATH = '/notifications/preferences/me';
 const PREFERENCES_KEY = ['notifications', 'preferences'] as const;
@@ -78,7 +78,7 @@ function PreferenceSwitch({
       }}
     >
       <View style={{ flex: 1, gap: spacing.xs }}>
-        <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: '600' }}>
+        <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
           {label}
         </Text>
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>

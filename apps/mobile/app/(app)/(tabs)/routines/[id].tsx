@@ -15,7 +15,7 @@ import { Button } from '@/components/ui';
 import { ScheduleRoutine } from '@/components/schedule-routine';
 import { notify } from '@/notifications';
 import { GOAL_LABEL } from '@/lib/format';
-import { colors, fontSizes, spacing } from '@/theme';
+import { colors, fontSizes, semibold, spacing } from '@/theme';
 
 /** «3 × 8-12» — the shorthand a lifter actually reads off a plan. */
 function repRange(item: RoutineExercise): string {
@@ -130,7 +130,7 @@ export default function RoutineDetailScreen() {
               <View style={{ flex: 1, gap: 2 }}>
                 <Text
                   numberOfLines={2}
-                  style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: '600' }}
+                  style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}
                 >
                   {item.ejercicio?.nombre ?? 'Ejercicio no disponible'}
                 </Text>
