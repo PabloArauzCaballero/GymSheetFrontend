@@ -74,6 +74,25 @@ De ahí las tres concesiones, que están en el código y **no** ocultan defectos
 Con la API caliente el login responde por debajo del segundo, y con la carga
 por debajo de 25 los cuatro flujos pasan seguidos.
 
+
+## 05 · Contraseña: revelarla y recuperarla
+
+Las cuatro últimas no salen de los flujos automatizados sino de un recorrido
+dirigido sobre el mismo simulador y el mismo backend. Se documentan aparte para
+no confundir lo que la suite garantiza en cada ejecución con lo que se comprobó
+una vez.
+
+| Captura | Qué demuestra |
+| --- | --- |
+| `15-login-contrasena-oculta.png` | Login con la contraseña escrita y enmascarada, y la casilla sin marcar. Arranca así siempre, aunque la última vez se dejara visible. |
+| `16-login-contrasena-visible.png` | La misma pantalla con la casilla marcada: cuadrado relleno en el acento de la marca, su palomita, y la contraseña en texto legible. |
+| `17-recuperar-paso-1.png` | Recuperación, paso uno. El indicador de dos pasos y un único campo: a quien ha olvidado su contraseña no se le piden más datos. |
+| `18-recuperar-paso-2.png` | Paso dos, ya con el correo enviado. Código, contraseña nueva con su casilla para revelarla, y la salida a pedir otro código. Ambos pasos viven en la misma pantalla, porque quien recibe el código vuelve a la app con seis cifras en la cabeza. |
+
+El envío es real: el mensaje sale por el puerto de mensajería del backend y
+queda registrado en `notifications.messages` como canal `EMAIL` en estado
+`SENT`, con su intento de entrega en `delivery_attempts`.
+
 ## La IP de LAN caduca — comprobarla antes de cada tanda
 
 `EXPO_PUBLIC_API_URL` lleva la IP de LAN del Mac escrita a mano. Al cambiar de

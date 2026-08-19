@@ -137,6 +137,13 @@ export default function RecoverPasswordScreen() {
                     label="Correo electrónico"
                     onBlur={onBlur}
                     onChangeText={onChange}
+                    // La tecla de retorno envía el formulario. Es el único
+                    // campo de la pantalla, así que pedir que se cierre el
+                    // teclado para alcanzar el botón --que en un teléfono
+                    // pequeño queda debajo-- es un paso que no tiene por qué
+                    // existir.
+                    onSubmitEditing={() => void onRequest()}
+                    returnKeyType="send"
                     textContentType="emailAddress"
                     value={value}
                   />
