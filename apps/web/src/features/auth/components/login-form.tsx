@@ -3,12 +3,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { login } from '@/features/auth/services/auth-client';
 import { ApiError } from '@/shared/api/api-error';
 import { Button } from '@/shared/components/ui/button';
 import { Field } from '@/shared/components/ui/field';
+import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Input } from '@/shared/components/ui/input';
 
 const schema = z.object({
@@ -23,6 +25,13 @@ function safeReturnTo(value: string | null) {
 
 export function LoginForm() {
   const router = useRouter();
+  /**
+   * Revelar la contraseña es una acción sobre este formulario y este momento,
+   * no una preferencia: arranca siempre oculta, aunque la última vez se dejara
+   * visible. Persistirlo dejaría la contraseña de alguien a la vista en la
+   * siguiente visita sin que lo pidiera.
+   */
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const searchParams = useSearchParams();
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -62,8 +71,14 @@ export function LoginForm() {
           autoComplete="current-password"
           id="password"
           placeholder="••••••••"
-          type="password"
+          type={passwordVisible ? 'text' : 'password'}
           {...form.register('password')}
+        />
+        <Checkbox
+          checked={passwordVisible}
+          className="mt-2"
+          label="Mostrar contraseña"
+          onChange={(event) => setPasswordVisible(event.target.checked)}
         />
       </Field>
       {form.formState.errors.root?.message ? (

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginInput } from '@gymsheet/schemas';
@@ -5,12 +6,20 @@ import { ApiError } from '@gymsheet/api-client';
 import { Link } from 'expo-router';
 import { View } from 'react-native';
 import { Screen, AppText, Button, Input } from '@/components/ui';
+import { Checkbox } from '@/components/checkbox';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { spacing, colors } from '@/theme';
 
 export default function LoginScreen() {
   const login = useAuthStore((state) => state.login);
+  /**
+   * Revelar la contraseña es una acción sobre este formulario y este momento,
+   * no una preferencia: arranca siempre oculta, aunque la última vez se dejara
+   * visible. Guardarlo seria dejar la contraseña de alguien a la vista en la
+   * siguiente sesión sin que lo pidiera.
+   */
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const {
     control,
     handleSubmit,
@@ -71,13 +80,19 @@ export default function LoginScreen() {
             label="Contraseña"
             autoComplete="current-password"
             textContentType="password"
-            secureTextEntry
+            secureTextEntry={!passwordVisible}
             value={value}
             onBlur={onBlur}
             onChangeText={onChange}
             error={errors.password?.message}
           />
         )}
+      />
+      <Checkbox
+        accessibilityHint="Muestra la contraseña en texto legible"
+        checked={passwordVisible}
+        label="Mostrar contraseña"
+        onChange={setPasswordVisible}
       />
 
       <Button label="Iniciar sesión" onPress={onSubmit} loading={isSubmitting} />
