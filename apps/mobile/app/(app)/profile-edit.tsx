@@ -142,7 +142,7 @@ function StepHeading({
         style={{
           color: colors.text,
           fontSize: fontSizes.lg,
-          fontWeight: '800',
+          fontWeight: '600',
           textAlign: 'center',
         }}
       >

@@ -96,7 +96,7 @@ export function WeekPlan({
               style={{
                 color: isToday ? colors.volt : colors.textMuted,
                 fontSize: fontSizes.xs,
-                fontWeight: '800',
+                fontWeight: '600',
               }}
             >
               {initial}

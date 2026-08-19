@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { z } from 'zod';
 import { sessionPrincipalSchema } from '@gymsheet/schemas';
+import { setActiveTenant } from '@/theme';
 import { initialSessionState, type SessionState } from '@gymsheet/auth';
 import type { LoginInput } from '@gymsheet/schemas';
 import { apiClient, setSessionLostHandler } from '@/api/client';
@@ -26,6 +27,7 @@ const authPayloadSchema = z
       email: z.string().email(),
       nombreCompleto: z.string().optional(),
       rol: z.string(),
+      tenantId: z.string().nullable().optional(),
     }),
   })
   .transform((payload) => ({
@@ -36,6 +38,7 @@ const authPayloadSchema = z
       email: payload.user.email,
       nombreCompleto: payload.user.nombreCompleto,
       role: payload.user.rol,
+      tenantId: payload.user.tenantId ?? null,
     }),
   }));
 
@@ -57,9 +60,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
     try {
       const user = await apiClient.request('/auth/me', sessionPrincipalSchema, { method: 'GET' });
+      // La marca acompaña a la sesión: se aplica al restaurarla para que la
+      // primera pantalla ya salga con los colores del gimnasio del usuario.
+      setActiveTenant(user.tenantId);
       set({ status: 'authenticated', principal: user });
     } catch {
       await secureStoreAuthStorage.clearTokens();
+      setActiveTenant(null);
       set({ status: 'unauthenticated', principal: null });
     }
   },
@@ -70,6 +77,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       body: input,
     });
     await secureStoreAuthStorage.saveTokens(payload.accessToken, payload.refreshToken);
+    setActiveTenant(payload.user.tenantId);
     set({ status: 'authenticated', principal: payload.user });
   },
 
@@ -80,6 +88,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       // Best-effort remote logout; local tokens are always cleared below.
     }
     await secureStoreAuthStorage.clearTokens();
+    setActiveTenant(null);
     set({ status: 'unauthenticated', principal: null });
   },
 }));
@@ -91,5 +100,6 @@ export const useAuthStore = create<AuthState>((set) => ({
  */
 setSessionLostHandler(() => {
   if (useAuthStore.getState().status === 'unauthenticated') return;
+  setActiveTenant(null);
   useAuthStore.setState({ status: 'unauthenticated', principal: null });
 });

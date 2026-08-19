@@ -25,6 +25,12 @@ export const sessionPrincipalSchema = z.object({
   email: z.string().email(),
   role: z.enum(userRoles),
   nombreCompleto: z.string().optional(),
+  /**
+   * Gimnasio al que pertenece la cuenta. Opcional y nulable: una instalación de
+   * un solo gimnasio no lo necesita, y el cliente cae entonces en la identidad
+   * de referencia en vez de quedarse sin interfaz.
+   */
+  tenantId: z.string().nullable().optional(),
 });
 
 export const profileSchema = z.object({

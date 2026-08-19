@@ -21,7 +21,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { AmbientBackground } from '@/components/ambient';
-import { colors, fontSizes, maxContentWidth, minTouchTarget, radii, spacing } from '@/theme';
+import { accentContrast, colors, fontSizes, maxContentWidth, minTouchTarget, radii, spacing } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -94,14 +94,32 @@ export type ButtonVariant = 'primary' | 'danger' | 'ghost';
  * es lo que hace un botón nativo. La respuesta al toque la sigue dando la
  * escala, que es háptica y no decorativa.
  */
-const BUTTON_TONE: Record<
-  ButtonVariant,
-  { background: string; ink: string; border: string }
-> = {
-  primary: { background: colors.volt, ink: colors.background, border: colors.volt },
-  danger: { background: colors.danger, ink: colors.background, border: colors.danger },
-  ghost: { background: 'transparent', ink: colors.text, border: colors.border },
-};
+/**
+ * Relleno por variante. Plano, no degradado.
+ *
+ * `dev` los traía en degradado; se mantiene la decisión de esta rama de dejarlos
+ * planos, porque el degradado sobre un acento saturado a tamaño de botón lee
+ * como un adorno de plantilla y no como una marca. Lo que sí se conserva de
+ * `dev` es de dónde salen los colores: el acento y su contraste los fija el
+ * inquilino, así que un gimnasio con marca clara no acaba con texto blanco
+ * ilegible sobre su propio color.
+ *
+ * Es una función y no una constante porque el inquilino se resuelve en tiempo
+ * de ejecución: una constante congelaría los colores del primero que cargara.
+ */
+function buttonTone(variant: ButtonVariant): {
+  background: string;
+  ink: string;
+  border: string;
+} {
+  if (variant === 'primary') {
+    return { background: colors.volt, ink: accentContrast(), border: colors.volt };
+  }
+  if (variant === 'danger') {
+    return { background: colors.danger, ink: colors.background, border: colors.danger };
+  }
+  return { background: 'transparent', ink: colors.text, border: colors.border };
+}
 
 /**
  * Press spring for the primary action surface. Slightly livelier than the one
@@ -132,7 +150,7 @@ export function Button({
   style?: StyleProp<ViewStyle>;
 }) {
   const isDisabled = disabled || loading;
-  const tone = BUTTON_TONE[variant];
+  const tone = buttonTone(variant);
   const pressed = useSharedValue(0);
   const reduceMotion = useReducedMotion();
 

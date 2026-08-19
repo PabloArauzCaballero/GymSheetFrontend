@@ -24,7 +24,7 @@ export default function GlobalError({
         <style dangerouslySetInnerHTML={{ __html: fallbackTheme }} />
         <main className="max-w-lg text-center">
           <p className="data-label text-[var(--danger-text)]">Error inesperado</p>
-          <h1 className="mt-4 text-4xl font-extrabold tracking-[-0.04em]">
+          <h1 className="mt-4 text-4xl font-semibold tracking-[-0.02em]">
             La interfaz no pudo continuar.
           </h1>
           <p className="mt-5 leading-7 text-[var(--text-muted)]">

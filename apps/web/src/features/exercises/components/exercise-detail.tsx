@@ -147,7 +147,7 @@ export function ExerciseDetail({
               <Badge>{item.dataSource}</Badge>
             </div>
             <p className="data-label mt-7 text-[var(--accent-ink)]">{item.grupoMuscular}</p>
-            <h1 className="mt-3 break-words text-3xl font-extrabold tracking-[-0.04em] sm:text-5xl">
+            <h1 className="mt-3 break-words text-3xl font-semibold tracking-[-0.02em] sm:text-5xl">
               {item.nombre}
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--text-muted)]">
