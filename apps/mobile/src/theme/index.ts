@@ -5,7 +5,7 @@ import {
   theme,
   tones as sharedTones,
 } from '@gymsheet/design-tokens';
-import { getActiveTenant } from './tenant';
+import { getActiveTenant, onTenantChange } from './tenant';
 
 /**
  * Re-exports the shared design tokens so the whole app imports the visual
@@ -152,7 +152,7 @@ export const accentPolicy = {
  * than in `packages/design-tokens` because that package is shared with the web
  * app, and nothing about this problem applies there.
  */
-export const colors = {
+const staticColors = {
   ...sharedColors,
   surfaceLowest: '#0d0d0d',
   surfaceLow: '#141414',
@@ -161,23 +161,61 @@ export const colors = {
   surfaceHighest: '#303030',
   borderSubtle: '#242424',
   border: '#333333',
-  // Lo único que cambia entre gimnasios, y lo único que se lee como propiedad
-  // calculada: la marca se resuelve al iniciar sesión, así que estos valores
-  // tienen que consultarse en cada render y no congelarse al importar el módulo.
-  // Con la identidad de referencia devuelven exactamente lo de antes.
-  get volt(): string {
-    return getActiveTenant().colors.accent;
-  },
-  get voltDim(): string {
-    return getActiveTenant().colors.accentDim;
-  },
-  get accentInk(): string {
-    return getActiveTenant().colors.accentInkOnDark;
-  },
-  get success(): string {
-    return getActiveTenant().colors.successOnDark;
-  },
-};
+} as const;
+
+/**
+ * Los cuatro colores que cambian con el gimnasio.
+ *
+ * Se adjuntan con `defineProperties` y **no** como getters dentro del literal
+ * de arriba. La diferencia no es de estilo: un literal que mezcla un *spread*
+ * con getters se compila a un helper que evalúa cada getter una sola vez, al
+ * cargar el módulo, y guarda el resultado. El acento quedaba entonces congelado
+ * en la marca de referencia, y aunque la sesión resolviera otro gimnasio y toda
+ * la aplicación se remontara, `colors.volt` seguía devolviendo el verde de
+ * siempre. Costó encontrarlo porque el valor era correcto en todas partes menos
+ * aquí: el inquilino activo decía rojo y este objeto decía verde en el mismo
+ * render.
+ */
+/**
+ * Los cuatro colores que cambian con el gimnasio.
+ *
+ * Se **escriben** sobre el objeto cada vez que cambia la marca, en vez de
+ * leerse con getters. Los getters serían más elegantes y no funcionan: un
+ * literal que mezcla un *spread* con getters se compila a un helper que los
+ * evalúa una sola vez, al cargar el módulo, y guarda el resultado. El acento
+ * quedaba congelado en la marca de referencia, y aunque la sesión resolviera
+ * otro gimnasio y toda la aplicación se remontara, `colors.volt` seguía
+ * devolviendo el verde de siempre. Costó encontrarlo porque el valor era
+ * correcto en todas partes menos aquí: el inquilino activo decía rojo y este
+ * objeto decía verde en el mismo render.
+ *
+ * Escribir es seguro porque nadie guarda estos valores entre renders: los
+ * estilos se calculan en cada uno, y la raíz remonta el árbol al cambiar de
+ * marca.
+ */
+export const colors: {
+  // Los tokens de marca son `string` y no el literal del token compartido:
+  // su valor depende del gimnasio, y fijarlos al hex de referencia haría que
+  // el compilador rechazara justamente la asignación que los actualiza.
+  -readonly [K in keyof typeof staticColors]: K extends
+    | 'volt'
+    | 'voltDim'
+    | 'accentInk'
+    | 'success'
+    ? string
+    : (typeof staticColors)[K];
+} = { ...staticColors };
+
+function applyBrandColors(): void {
+  const brand = getActiveTenant().colors;
+  colors.volt = brand.accent;
+  colors.voltDim = brand.accentDim;
+  colors.accentInk = brand.accentInkOnDark;
+  colors.success = brand.successOnDark;
+}
+
+applyBrandColors();
+onTenantChange(applyBrandColors);
 
 /** Texto e iconos que van encima del relleno de acento. */
 export function accentContrast(): string {

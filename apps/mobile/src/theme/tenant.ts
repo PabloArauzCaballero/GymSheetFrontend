@@ -37,6 +37,17 @@ export function getActiveTenant(): TenantDefinition {
   return active;
 }
 
+/**
+ * Suscripción sin React, para código que necesita reaccionar al cambio de marca
+ * fuera del árbol de componentes.
+ */
+export function onTenantChange(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
 function subscribe(onChange: () => void): () => void {
   listeners.add(onChange);
   return () => {
