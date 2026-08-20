@@ -1,6 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { admin } from './fixtures';
 
 /**
  * Lo añadido al portal para operar un gimnasio: el panel de operación, el
@@ -14,10 +15,6 @@ import { expect, test, type Page } from '@playwright/test';
  */
 const EVIDENCE_DIR = resolve(process.cwd(), 'e2e-evidence');
 
-const admin = {
-  email: process.env.E2E_ADMIN_EMAIL ?? 'admin@gymsheet.local',
-  password: process.env.E2E_ADMIN_PASSWORD ?? 'GymSheet-Admin_2026!',
-};
 
 /**
  * El nombre sale del contenido, no de un contador: las pruebas pueden correr en

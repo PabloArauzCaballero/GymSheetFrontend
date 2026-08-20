@@ -1,17 +1,15 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { athlete, dismissTour } from './fixtures';
 
-const betaAthlete = {
-  email: process.env.E2E_ATHLETE_EMAIL ?? 'active.mock@gymsheet.local',
-  password: process.env.E2E_ATHLETE_PASSWORD ?? 'GymSheet-Demo_2026!',
-};
 
 async function loginAsBetaAthlete(page: Page) {
   await page.goto('/login');
-  await page.getByLabel('Correo electrónico').fill(betaAthlete.email);
-  await page.getByLabel('Contraseña', { exact: true }).fill(betaAthlete.password);
+  await page.getByLabel('Correo electrónico').fill(athlete.email);
+  await page.getByLabel('Contraseña', { exact: true }).fill(athlete.password);
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await expect(page).toHaveURL(/\/dashboard$/u, { timeout: 15_000 });
+  await dismissTour(page);
 }
 
 test('unauthenticated users are redirected to login', async ({ page }) => {

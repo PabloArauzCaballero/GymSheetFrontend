@@ -1,5 +1,6 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { THEME_COOKIE } from '../src/shared/theme/theme-script';
+import { admin, waitForPageSettled } from './fixtures';
 
 /**
  * Red de seguridad visual para el paso a temas configurables por inquilino.
@@ -12,10 +13,6 @@ import { THEME_COOKIE } from '../src/shared/theme/theme-script';
  * Regenerar la línea base: `--update-snapshots` (solo cuando el cambio visual
  * sea deliberado).
  */
-const admin = {
-  email: process.env.E2E_ADMIN_EMAIL ?? 'admin.dev@gymsheet.local',
-  password: process.env.E2E_ADMIN_PASSWORD ?? 'GymSheet-Admin_2026!',
-};
 
 /**
  * Pantallas representativas de cada familia de superficie, borde y acento.
@@ -115,7 +112,7 @@ test.describe('paridad visual del tema', () => {
         ]);
         await page.goto(route.path);
         await dismissTutorial(page);
-        await expect(page.locator('main')).toBeVisible({ timeout: 30_000 });
+        await waitForPageSettled(page);
         await settle(page);
 
         const region = 'region' in route ? route.region : null;

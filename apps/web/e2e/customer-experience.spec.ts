@@ -1,11 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
+import { mockPassword } from './fixtures';
 
-const password = process.env.E2E_ATHLETE_PASSWORD ?? 'GymSheet-Demo_2026!';
 
 async function login(page: Page, email: string) {
   await page.goto('/login');
   await page.getByLabel('Correo electrónico').fill(email);
-  await page.getByLabel('Contraseña', { exact: true }).fill(password);
+  await page.getByLabel('Contraseña', { exact: true }).fill(mockPassword);
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await expect(page).not.toHaveURL(/\/login/u, { timeout: 15_000 });
 }

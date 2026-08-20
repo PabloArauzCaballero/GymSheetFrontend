@@ -67,6 +67,25 @@ yarn build
 
 The static source check can run without installed packages. All remaining commands require `yarn install` first.
 
+### End-to-end credentials
+
+`yarn test:e2e` signs in as real seeded accounts, so it needs the backend and
+PostgreSQL running and the same credentials the backend was seeded with. Copy
+them once into `apps/web/.env.e2e` (git-ignored); `playwright.config.ts` loads
+it, and anything already in the environment wins so CI can override it:
+
+```bash
+E2E_ADMIN_EMAIL=...        # SEED_ADMIN_EMAIL in the backend .env
+E2E_ADMIN_PASSWORD=...     # SEED_ADMIN_PASSWORD
+E2E_ATHLETE_EMAIL=active.mock@gymsheet.local
+E2E_ATHLETE_PASSWORD=...   # SEED_MOCK_PASSWORD
+```
+
+Without them the suite falls back to the documented development defaults in
+`e2e/fixtures.ts`. When those do not match the database, every spec fails with a
+timeout on `/login` rather than an authentication error — which is what makes
+the failure look like a broken application instead of a missing variable.
+
 ## Documentation
 
 - `SPEC.md`

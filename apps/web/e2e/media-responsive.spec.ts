@@ -1,9 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
+import { athlete } from './fixtures';
 
-const athlete = {
-  email: process.env.E2E_ATHLETE_EMAIL ?? 'active.mock@gymsheet.local',
-  password: process.env.E2E_ATHLETE_PASSWORD ?? 'GymSheet-Demo_2026!',
-};
 
 async function login(page: Page) {
   await page.goto('/login');

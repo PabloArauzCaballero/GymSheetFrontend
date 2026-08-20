@@ -1,6 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
+import { admin } from './fixtures';
 
 /**
  * Evidencia end-to-end de la consola de administración contra el stack real
@@ -16,10 +17,6 @@ const FAKE_FACE_VIDEO = resolve(process.cwd(), '.e2e-assets/fake-face.y4m');
 const FAKE_QR_IMAGE = resolve(process.cwd(), '.e2e-assets/fake-qr.png');
 const EVIDENCE_DIR = resolve(process.cwd(), 'e2e-evidence');
 
-const admin = {
-  email: process.env.E2E_ADMIN_EMAIL ?? 'admin.dev@gymsheet.local',
-  password: process.env.E2E_ADMIN_PASSWORD ?? 'GymSheet-Admin_2026!',
-};
 
 /** Sufijo único por corrida: los códigos de plan y correos son irrepetibles. */
 const run = Date.now().toString(36).toUpperCase().slice(-6);

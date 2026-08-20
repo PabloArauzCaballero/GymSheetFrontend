@@ -19,7 +19,12 @@ export function PageHeader({
       data-tutorial-id={tutorialId}
       className="reveal flex flex-col gap-5 border-b border-[var(--border-subtle)] pb-8 sm:flex-row sm:items-end sm:justify-between"
     >
-      <div className="max-w-3xl">
+      {/* `min-w-0` es lo que permite que este bloque se encoja: por defecto un
+          elemento flex no baja de su contenido (`min-width: auto`), así que a
+          anchuras intermedias —1024px, un portátil cualquiera— el título
+          empujaba las acciones fuera de la pantalla y la página entera se
+          desplazaba en horizontal. */}
+      <div className="min-w-0 max-w-3xl">
         {eyebrow ? (
           <p className="data-label mb-3 inline-flex items-center gap-2 text-[var(--accent-ink)]">
             <span
