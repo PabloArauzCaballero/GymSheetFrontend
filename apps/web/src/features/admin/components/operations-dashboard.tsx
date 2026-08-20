@@ -120,6 +120,7 @@ export function OperationsDashboard() {
     <div className="flex flex-col gap-4">
       <PageHeader
         title="Operación"
+        tutorialId="page:admin-operacion"
         description="Uso de máquinas, flujo de personas y quién dejó de renovar."
         actions={
           <Select

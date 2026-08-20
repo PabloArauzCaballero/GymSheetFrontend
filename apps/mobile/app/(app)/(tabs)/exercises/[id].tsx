@@ -93,7 +93,6 @@ export default function ExerciseDetailScreen() {
       <ScreenHeader subtitle={data.grupoMuscular} title={data.nombre} />
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-        {data.requiredEquipment ? <Badge label={data.requiredEquipment} /> : null}
         {data.bodyPart ? <Badge label={data.bodyPart} tone="success" /> : null}
         {data.tipoEjercicio === 'PERSONAL' ? <Badge label="Personal" tone="warning" /> : null}
       </View>
@@ -158,16 +157,6 @@ export default function ExerciseDetailScreen() {
               </View>
             ))}
           </Card>
-        </Section>
-      ) : null}
-
-      {data.equipment.length > 0 ? (
-        <Section index={3} title="Equipamiento">
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-            {data.equipment.map((item) => (
-              <Badge key={item.id} label={item.nombre} />
-            ))}
-          </View>
         </Section>
       ) : null}
 

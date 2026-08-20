@@ -9,30 +9,37 @@ const password = process.env.E2E_ATHLETE_PASSWORD ?? 'GymSheet-Demo_2026!';
 async function login(page: Page, email: string) {
   await page.goto('/login');
   await page.getByLabel('Correo electrónico').fill(email);
-  await page.getByLabel('Contraseña').fill(password);
+  await page.getByLabel('Contraseña', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await expect(page).not.toHaveURL(/\/login/u, { timeout: 15_000 });
 }
 
 async function dismissAnyTour(page: Page) {
-  // The intro tour may auto-launch on first login; close it if present.
+  // The intro tour may auto-launch on first login. It appears a moment after
+  // the page mounts, so a single visibility check races it and leaves the
+  // overlay swallowing the first click; wait for it, and treat its absence as
+  // the normal case rather than a failure.
   const close = page.getByRole('button', { name: 'Cerrar tutorial' });
-  if (await close.isVisible().catch(() => false)) await close.click();
+  await close.waitFor({ state: 'visible', timeout: 6_000 }).catch(() => undefined);
+  if (await close.isVisible().catch(() => false)) {
+    await close.click();
+    await expect(close).toBeHidden({ timeout: 15_000 });
+  }
 }
 
 test('the help center lists tutorials and shows progress', async ({ page }) => {
   await login(page, 'active.mock@gymsheet.local');
-  await dismissAnyTour(page);
   await page.goto('/tutorials');
-  await expect(page.getByRole('heading', { name: 'Centro de ayuda' })).toBeVisible();
+  await dismissAnyTour(page);
+  await expect(page.getByRole('heading', { name: 'Centro de ayuda', exact: true })).toBeVisible();
   await expect(page.getByText('Avance general')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Bienvenido a GymSheet' })).toBeVisible();
 });
 
 test('a tutorial can be started and advanced over the real UI', async ({ page }) => {
   await login(page, 'active.mock@gymsheet.local');
-  await dismissAnyTour(page);
   await page.goto('/tutorials');
+  await dismissAnyTour(page);
 
   // Start the navigation tour from its card.
   const card = page
@@ -52,8 +59,8 @@ test('a tutorial can be started and advanced over the real UI', async ({ page })
 
 test('filters narrow the tutorial list', async ({ page }) => {
   await login(page, 'active.mock@gymsheet.local');
-  await dismissAnyTour(page);
   await page.goto('/tutorials');
+  await dismissAnyTour(page);
   await page.getByLabel('Buscar').fill('perfil');
   await expect(page.getByRole('heading', { name: 'Tu perfil' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Panel de operaciones' })).toHaveCount(0);

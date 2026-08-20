@@ -95,7 +95,7 @@ test.describe('paridad visual del tema', () => {
     page = await context.newPage();
     await page.goto('/login');
     await page.getByLabel('Correo electrónico').fill(admin.email);
-    await page.getByLabel('Contraseña').fill(admin.password);
+    await page.getByLabel('Contraseña', { exact: true }).fill(admin.password);
     await page.getByRole('button', { name: 'Iniciar sesión' }).click();
     await expect(page).toHaveURL(/\/dashboard$/u, { timeout: 20_000 });
     await dismissTutorial(page);

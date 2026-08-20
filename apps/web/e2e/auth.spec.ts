@@ -9,7 +9,7 @@ const betaAthlete = {
 async function loginAsBetaAthlete(page: Page) {
   await page.goto('/login');
   await page.getByLabel('Correo electrónico').fill(betaAthlete.email);
-  await page.getByLabel('Contraseña').fill(betaAthlete.password);
+  await page.getByLabel('Contraseña', { exact: true }).fill(betaAthlete.password);
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await expect(page).toHaveURL(/\/dashboard$/u, { timeout: 15_000 });
 }

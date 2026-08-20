@@ -26,6 +26,7 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { downloadCsv, downloadJson, type CsvColumn } from '@/shared/lib/data-transfer';
 import type { Equipment } from '@/shared/api/contracts';
 import { EquipmentBulkImport } from './equipment-bulk-import';
+import { EquipmentCatalogPicker } from './equipment-catalog-picker';
 import { EquipmentEditButton } from './equipment-edit-button';
 
 const exportColumns: CsvColumn<Equipment>[] = [
@@ -86,6 +87,7 @@ export function EquipmentAdmin({ canManage }: Readonly<{ canManage: boolean }>) 
       <PageHeader
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <EquipmentCatalogPicker />
             <Button
               disabled={!query.data?.length}
               onClick={() =>

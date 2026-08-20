@@ -56,6 +56,7 @@ export function UsersPanel() {
     <div className="flex flex-col gap-4">
       <PageHeader
         title="Usuarios"
+        tutorialId="page:admin-usuarios"
         description="Todas las cuentas, con su membresía y su última actividad."
       />
 

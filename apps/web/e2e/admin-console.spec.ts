@@ -49,7 +49,7 @@ test.beforeAll(() => {
 async function loginAsAdmin(page: Page) {
   await page.goto('/login');
   await page.getByLabel('Correo electrónico').fill(admin.email);
-  await page.getByLabel('Contraseña').fill(admin.password);
+  await page.getByLabel('Contraseña', { exact: true }).fill(admin.password);
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await expect(page).toHaveURL(/\/dashboard$/u, { timeout: 20_000 });
 }

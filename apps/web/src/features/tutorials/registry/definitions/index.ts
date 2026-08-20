@@ -1,6 +1,7 @@
 import type { TutorialDefinition } from '../../model/types';
 import { adminOperations } from './admin';
 import { exerciseLibrary } from './exercises';
+import { gymOnboarding } from './gym-onboarding';
 import { helpCenterTour, platformIntro } from './intro';
 import { membershipOverview } from './membership';
 import { mainNavigation } from './navigation';
@@ -18,6 +19,9 @@ import {
  * the default listing order in the Tutorial Center.
  */
 export const allTutorialDefinitions: readonly TutorialDefinition[] = [
+  // Primero el de puesta en marcha: es lo que necesita quien acaba de recibir
+  // su gimnasio vacío, y en una lista se mira lo de arriba.
+  gymOnboarding,
   platformIntro,
   mainNavigation,
   profileBasics,

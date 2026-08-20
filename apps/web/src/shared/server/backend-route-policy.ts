@@ -11,6 +11,7 @@ const allowedPathPatterns = [
   /^\/admin\/access\/credentials\/(pin|external-reference)$/u,
   new RegExp(`^/admin/access/credentials/${resourceId}/revoke$`, 'u'),
   /^\/admin\/equipment$/u,
+  /^\/admin\/equipment\/catalog$/u,
   new RegExp(`^/admin/equipment/${resourceId}$`, 'u'),
   /^\/admin\/exercises\/global$/u,
   new RegExp(`^/admin/exercises/global/${resourceId}$`, 'u'),

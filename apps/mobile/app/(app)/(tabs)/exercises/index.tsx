@@ -44,19 +44,21 @@ function Tag({ label, accent = false }: { label: string; accent?: boolean }) {
 /**
  * A catalogue row.
  *
- * The previous version showed the muscle group and the equipment as one grey
- * sentence, which is why the section read as a phone book: every row looked
- * identical at a glance. The payload already carries the muscle actually
- * targeted, the body part and the equipment — three facts a lifter scans for
- * before reading a single name. Shown as tags they are separable at speed, and
- * the targeted muscle is accented because it is the one people filter by in
- * their head.
+ * The previous version showed the muscle group as one grey sentence, which is
+ * why the section read as a phone book: every row looked identical at a
+ * glance. The payload already carries the muscle actually targeted and the
+ * body part — the facts a lifter scans for before reading a single name. Shown
+ * as tags they are separable at speed, and the targeted muscle is accented
+ * because it is the one people filter by in their head.
  */
 function ExerciseRow({ exercise, onPress }: { exercise: Exercise; onPress: () => void }) {
+  // Sin equipamiento. Al socio no le sirve leer «barra» en cada fila: no elige
+  // el ejercicio por el hierro que necesita sino por el músculo que trabaja, y
+  // esa etiqueta sólo añade ruido a una lista que ya se recorre con el pulgar.
+  // El dato sigue en la API porque el gimnasio sí lo usa, en su panel.
   const tags = [
     { label: exercise.targetMuscle ?? exercise.grupoMuscular, accent: true },
     { label: exercise.bodyPart, accent: false },
-    { label: exercise.requiredEquipment, accent: false },
   ].filter((tag): tag is { label: string; accent: boolean } => Boolean(tag.label));
 
   return (

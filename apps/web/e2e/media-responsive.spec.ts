@@ -8,7 +8,7 @@ const athlete = {
 async function login(page: Page) {
   await page.goto('/login');
   await page.getByLabel('Correo electrónico').fill(athlete.email);
-  await page.getByLabel('Contraseña').fill(athlete.password);
+  await page.getByLabel('Contraseña', { exact: true }).fill(athlete.password);
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await expect(page).toHaveURL(/\/dashboard$/u, { timeout: 15_000 });
 }

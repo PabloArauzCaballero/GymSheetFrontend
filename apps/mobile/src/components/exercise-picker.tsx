@@ -176,9 +176,7 @@ export function ExercisePicker({
                   <NavRow
                     leading={<ExerciseImage exercise={item} size={56} />}
                     onPress={() => onSelect(item.id)}
-                    subtitle={[item.grupoMuscular, item.requiredEquipment]
-                      .filter(Boolean)
-                      .join(' · ')}
+                    subtitle={item.grupoMuscular}
                     title={item.nombre}
                   />
                 )}
