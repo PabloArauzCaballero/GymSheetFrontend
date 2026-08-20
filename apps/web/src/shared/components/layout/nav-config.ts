@@ -1,5 +1,6 @@
 import {
   Activity,
+  BarChart3,
   Bell,
   Building2,
   CalendarCheck,
@@ -38,6 +39,15 @@ export const primaryNavigation: NavigationItem[] = [
 
 export const adminNavigation: NavigationItem[] = [
   { href: '/admin', label: 'Operaciones', icon: ShieldCheck, roles: ['ADMIN', 'FRONT_DESK'] },
+  {
+    // Entrada propia y no una pestaña dentro de «Operaciones»: es la pantalla
+    // que se abre cada mañana para decidir a quién llamar, y esconderla un
+    // nivel más abajo es la diferencia entre que se use y que no.
+    href: '/admin/operacion',
+    label: 'Panel del gimnasio',
+    icon: BarChart3,
+    roles: ['ADMIN', 'FRONT_DESK'],
+  },
   {
     href: '/admin/equipment',
     label: 'Equipamiento',

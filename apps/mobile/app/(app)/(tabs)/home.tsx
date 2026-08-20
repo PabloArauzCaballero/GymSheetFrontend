@@ -20,6 +20,7 @@ import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui';
 import { useAuthStore } from '@/state/auth-store';
 import { TourTarget, useScreenTour } from '@/components/tour';
+import { MembershipGate } from '@/components/membership-gate';
 import {
   MEMBERSHIP_LABEL,
   MEMBERSHIP_TONE,
@@ -167,6 +168,17 @@ export default function HomeScreen() {
         }
         title={`Hola, ${firstName}`}
       />
+
+      {/* Antes que nada: si la membresía no está vigente, eso es lo que la
+          persona necesita ver y resolver, no su carga semanal. */}
+      {membership.data && !membership.data.membership?.vigenteHoy ? (
+        <Section icon="lock-closed-outline" index={0} title="Tu acceso">
+          <MembershipGate
+            onRenew={() => router.push('/membership')}
+            projection={membership.data}
+          />
+        </Section>
+      ) : null}
 
       {sessions.some((session) => session.estado === 'EN_PROGRESO') ? (
         <Section icon="play-circle-outline" index={0} title="Ahora">

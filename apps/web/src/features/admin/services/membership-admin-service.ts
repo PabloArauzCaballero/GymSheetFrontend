@@ -61,7 +61,11 @@ export type StaffUserInput = {
 
 export type CustomerInput = {
   email: string;
-  password: string;
+  /**
+   * Opcional: si no se envía, el backend genera una y se la manda por correo al
+   * cliente. Recepción no debería inventar contraseñas.
+   */
+  password?: string;
   pinAcceso: string;
   nombreCompleto: string;
   numeroCliente: string;
@@ -154,4 +158,41 @@ export const membershipAdminService = {
       method: 'PATCH',
       body: input,
     }),
+};
+
+/**
+ * Datos de una solicitud de activación por pago fuera de la aplicación.
+ *
+ * El enlace llega por WhatsApp desde el teléfono del cliente. Abrirlo no activa
+ * nada: identifica a quién activar, y quien confirma tiene que ser personal con
+ * sesión. Por eso esto vive en el servicio de administración y no en uno
+ * público.
+ */
+export const activationRequestDetailSchema = z.object({
+  requestId: z.string().uuid(),
+  solicitadoEl: z.string(),
+  expiraEn: z.string(),
+  nota: z.string().nullable(),
+  usuario: z.object({
+    id: z.string().uuid(),
+    email: z.string().email(),
+    nombreCompleto: z.string(),
+  }),
+});
+
+export type ActivationRequestDetail = z.infer<typeof activationRequestDetailSchema>;
+
+export const activationAdminService = {
+  describe: (token: string) =>
+    apiRequest(
+      `/admin/membership/activation/${encodeURIComponent(token)}`,
+      activationRequestDetailSchema,
+      { method: 'GET' },
+    ),
+  confirm: (token: string, planId: string) =>
+    apiRequest(
+      `/admin/membership/activation/${encodeURIComponent(token)}`,
+      membershipSchema,
+      { method: 'POST', body: { planId } },
+    ),
 };

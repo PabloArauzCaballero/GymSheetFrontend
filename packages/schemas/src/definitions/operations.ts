@@ -202,6 +202,19 @@ export const membershipProjectionSchema = z.object({
   ),
 });
 
+/**
+ * Respuesta a «pagué por fuera de la app».
+ *
+ * El backend devuelve el enlace ya compuesto y no un identificador que el
+ * cliente tenga que armar: quien pulsa esto está bloqueado y con prisa, y cada
+ * paso extra es una oportunidad de abandonar.
+ */
+export const activationRequestSchema = z.object({
+  token: z.string(),
+  url: z.string().url(),
+  expiresAt: z.string(),
+});
+
 export const customerSchema = z.object({
   id: z.string().uuid(),
   usuarioId: z.string().uuid(),

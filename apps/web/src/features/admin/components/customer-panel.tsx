@@ -27,7 +27,7 @@ export function CustomerPanel() {
     mutationFn: (form: FormData) =>
       membershipAdminService.createCustomer({
         email: String(form.get('email')),
-        password: String(form.get('password')),
+        // Sin contraseña: la genera el backend y la envía por correo.
         pinAcceso: String(form.get('pinAcceso')),
         nombreCompleto: String(form.get('nombreCompleto')),
         numeroCliente: String(form.get('numeroCliente')),
@@ -67,10 +67,16 @@ export function CustomerPanel() {
               <Field label="Correo">
                 <Input name="email" required type="email" />
               </Field>
+              {/* Ya no se pide contraseña aquí. Quien da de alta en recepción
+                  acababa poniendo la misma para todos, o una que el cliente
+                  nunca llegaba a recibir. Ahora la genera el servidor y se la
+                  manda por correo a la persona, con la recomendación de
+                  cambiarla. */}
+              <p className="rounded-[6px] border border-[var(--border-subtle)] bg-[var(--surface-low)] p-3 text-sm text-[var(--text-muted)]">
+                La contraseña se genera sola y se envía al correo del cliente, con la
+                recomendación de que la cambie al entrar.
+              </p>
               <div className="grid gap-5 sm:grid-cols-2">
-                <Field hint="Mínimo 10 caracteres." label="Contraseña temporal">
-                  <Input minLength={10} name="password" required type="password" />
-                </Field>
                 <Field hint="Entre 4 y 12 dígitos." label="PIN de acceso">
                   <Input inputMode="numeric" name="pinAcceso" pattern="\d{4,12}" required />
                 </Field>

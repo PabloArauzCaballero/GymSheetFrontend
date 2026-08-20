@@ -39,12 +39,21 @@ export function Checkbox({
 }) {
   const reduceMotion = useReducedMotion();
 
+  // Los colores se leen **fuera** del worklet y entran como valores sueltos.
+  // Referenciar `colors` dentro haría que Reanimated capturase el objeto entero
+  // y lo congelase, y ese objeto es el que cambia al resolverse la marca del
+  // gimnasio: a partir de ahí el acento se queda clavado en el de referencia en
+  // toda la aplicación. Un `colors.volt` dentro de un worklet cuesta el tema.
+  const marcado = colors.volt;
+  const borde = colors.border;
+  const tinta = accentContrast();
+
   const box = useAnimatedStyle(() => ({
-    backgroundColor: withTiming(checked ? colors.volt : 'transparent', {
+    backgroundColor: withTiming(checked ? marcado : 'transparent', {
       duration: DURATION.quick,
       easing: PREMIUM_EASING,
     }),
-    borderColor: withTiming(checked ? colors.volt : colors.border, {
+    borderColor: withTiming(checked ? marcado : borde, {
       duration: DURATION.quick,
       easing: PREMIUM_EASING,
     }),
@@ -91,7 +100,7 @@ export function Checkbox({
         ]}
       >
         <Animated.View style={mark}>
-          <Ionicons color={accentContrast()} name="checkmark" size={15} />
+          <Ionicons color={tinta} name="checkmark" size={15} />
         </Animated.View>
       </AnimatedView>
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, fontWeight: semibold }}>

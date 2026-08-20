@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  activationRequestSchema,
   exerciseSchema,
   membershipProjectionSchema,
   pageSchema,
@@ -45,6 +46,18 @@ export interface ProfileInput {
 
 export const membershipService = {
   getMine: () => apiClient.request('/me/membership', membershipProjectionSchema, { method: 'GET' }),
+  /**
+   * Pide que el gimnasio active la cuenta tras un pago que la app no vio.
+   *
+   * Devuelve el enlace que el administrador abrirá. La app no lo interpreta:
+   * sólo lo mete en el mensaje de WhatsApp, porque quién puede usarlo lo decide
+   * el backend y no este teléfono.
+   */
+  requestActivation: (nota: string | null) =>
+    apiClient.request('/me/membership/activation-request', activationRequestSchema, {
+      method: 'POST',
+      body: { nota },
+    }),
 };
 
 export const workoutService = {

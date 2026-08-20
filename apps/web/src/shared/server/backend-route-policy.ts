@@ -23,6 +23,12 @@ const allowedPathPatterns = [
   new RegExp(`^/admin/membership/plans/${resourceId}(/scopes)?$`, 'u'),
   new RegExp(`^/admin/membership/memberships/${resourceId}/status$`, 'u'),
   new RegExp(`^/admin/membership/staff/${resourceId}/status$`, 'u'),
+  // El token de activación es base64url y no encaja en `resourceId`, que sólo
+  // admite guiones: lleva además guiones bajos. Se acota igualmente el alfabeto
+  // para que esta entrada no se convierta en un comodín hacia el backend.
+  /^\/admin\/membership\/activation\/[A-Za-z0-9_-]{20,120}$/u,
+  /^\/me\/membership\/activation-request$/u,
+  /^\/admin\/membership\/insights\/(equipment-usage|people-flow|lapsed)$/u,
   /^\/equipment$/u,
   new RegExp(`^/exercise-media/${resourceId}$`, 'u'),
   /^\/exercises$/u,
