@@ -10,6 +10,7 @@ después de que sus datos lleguen por red.
 | --- | --- |
 | `01-operacion.png` | Panel del gimnasio con datos reales: uso por máquina —agrupado por ejercicio mientras no haya máquinas registradas—, flujo diario de app frente a entradas físicas, y la lista de quien no ha renovado, con «vencida hace N días» y «nunca tuvo membresía». |
 | `02-activacion.png` | La pantalla que abre el administrador desde el enlace que el cliente envía por WhatsApp: quién lo pidió, su nota, cuándo caduca el enlace y el selector de plan. |
+| `04-usuarios.png` | La pestaña de usuarios: todas las cuentas con rol, gimnasio, plan, acceso resuelto a una sola palabra --«Al día», «Vencida», «Sin membresía»-- y último entreno. Clientes y personal en la misma tabla, porque quien busca en recepción no sabe con qué rol fue dada de alta la persona. |
 | `03-enlace-sin-sesion.png` | El mismo enlace abierto sin sesión: el portal pide iniciarla y conserva el destino en `returnTo`. Es la protección que hace que reenviar el enlace a un grupo no sirva de nada. |
 
 ## Lo que no está capturado, y por qué

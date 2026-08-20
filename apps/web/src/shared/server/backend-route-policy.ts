@@ -29,6 +29,7 @@ const allowedPathPatterns = [
   /^\/admin\/membership\/activation\/[A-Za-z0-9_-]{20,120}$/u,
   /^\/me\/membership\/activation-request$/u,
   /^\/admin\/membership\/insights\/(equipment-usage|people-flow|lapsed)$/u,
+  /^\/admin\/membership\/users$/u,
   /^\/equipment$/u,
   new RegExp(`^/exercise-media/${resourceId}$`, 'u'),
   /^\/exercises$/u,

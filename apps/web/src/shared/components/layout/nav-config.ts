@@ -40,6 +40,12 @@ export const primaryNavigation: NavigationItem[] = [
 export const adminNavigation: NavigationItem[] = [
   { href: '/admin', label: 'Operaciones', icon: ShieldCheck, roles: ['ADMIN', 'FRONT_DESK'] },
   {
+    href: '/admin/usuarios',
+    label: 'Usuarios',
+    icon: Users,
+    roles: ['ADMIN', 'FRONT_DESK'],
+  },
+  {
     // Entrada propia y no una pestaña dentro de «Operaciones»: es la pantalla
     // que se abre cada mañana para decidir a quién llamar, y esconderla un
     // nivel más abajo es la diferencia entre que se use y que no.

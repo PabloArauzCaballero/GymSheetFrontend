@@ -39,7 +39,29 @@ export type EquipmentUsageRow = z.infer<typeof equipmentUsageRowSchema>;
 export type PeopleFlowRow = z.infer<typeof peopleFlowRowSchema>;
 export type LapsedMember = z.infer<typeof lapsedMemberSchema>;
 
+export const portalUserSchema = z.object({
+  id: z.string().uuid(),
+  nombreCompleto: z.string(),
+  email: z.string(),
+  rol: z.string(),
+  estado: z.string(),
+  tenantId: z.string().nullable(),
+  telefono: z.string().nullable(),
+  plan: z.string().nullable(),
+  venceEl: z.string().nullable(),
+  vigente: z.boolean(),
+  ultimaSesion: z.string().nullable(),
+});
+
+export type PortalUser = z.infer<typeof portalUserSchema>;
+
 export const insightsService = {
+  users: (search: string) =>
+    apiRequest(
+      `/admin/membership/users?limit=200${search ? `&q=${encodeURIComponent(search)}` : ''}`,
+      z.array(portalUserSchema),
+      { method: 'GET' },
+    ),
   equipmentUsage: (days: number) =>
     apiRequest(
       `/admin/membership/insights/equipment-usage?days=${days}`,
