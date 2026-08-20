@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Linking, Text, View } from 'react-native';
+import { Linking, Share, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { MembershipProjection } from '@gymsheet/types';
 import { Button } from '@/components/ui';
@@ -46,17 +46,39 @@ export function MembershipGate({
     }
     setAsking(true);
     try {
-      const { url } = await membershipService.requestActivation('Pago fuera de la aplicación.');
+      const { url: enlace } = await membershipService.requestActivation(
+        'Pago fuera de la aplicación.',
+      );
       const mensaje = [
         'Hola, pagué mi membresía por otro medio y quiero que activen mi cuenta.',
         '',
         'Enlace para activarla:',
-        url,
+        enlace,
       ].join('\n');
       // `wa.me` exige sólo dígitos: un teléfono guardado como «+591 700…»
       // abriría un chat vacío.
       const telefono = contacto.phone.replace(/\D/gu, '');
-      await Linking.openURL(`https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`);
+      // WhatsApp es el camino esperado, no el único.
+      //
+      // Se intenta primero con su propio esquema y no con `wa.me`: el enlace
+      // web abre la página de WhatsApp incluso sin la aplicación instalada, y
+      // esa página invita a descargarla pero no deja enviar nada, así que el
+      // enlace de activación se queda en manos de quien no puede usarlo. El
+      // esquema propio, en cambio, falla limpiamente cuando no está, y ese
+      // fallo es la señal para ofrecer el menú del sistema —mensajes, correo,
+      // Telegram, lo que la persona ya tenga—.
+      //
+      // Se abre y se captura en lugar de preguntar con `canOpenURL`, que para
+      // un esquema propio exige declararlo en el manifiesto de cada plataforma
+      // y devuelve `false` si se olvida, mandando a todo el mundo al menú de
+      // compartir aunque tengan WhatsApp.
+      try {
+        await Linking.openURL(
+          `whatsapp://send?phone=${telefono}&text=${encodeURIComponent(mensaje)}`,
+        );
+      } catch {
+        await Share.share({ message: mensaje });
+      }
     } catch (error) {
       notify.error(error as Error);
     } finally {

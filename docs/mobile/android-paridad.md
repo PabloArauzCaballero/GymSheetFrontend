@@ -65,6 +65,43 @@ una anchura mínima, que fija el sitio del peor caso en las dos plataformas.
   —el toast— declara `elevation` además de las props de sombra de iOS.
 - **Compartir y descargar**: `export-progress` ya bifurca por plataforma.
 
+
+## Repaso de lo añadido después (pago en efectivo, panel, casilla)
+
+Segunda pasada, con el mismo alcance que la primera: revisión de código, sin
+ejecutar.
+
+### Corregido
+
+**El botón de «Ya pagué por otro medio» podía parecer roto.** Abría WhatsApp
+con `Linking.openURL` sin comprobar antes que el enlace se pudiera resolver,
+mientras que el resto de la aplicación sí lo hace. En Android, un teléfono sin
+WhatsApp ni navegador capaz de abrir `wa.me` deja ese `openURL` fallando en
+silencio, y el botón se queda mudo justo en el momento en que la persona más
+necesita que responda. Ahora se comprueba primero y, si no se puede, se le dice
+qué hacer —la solicitud ya quedó registrada del lado del servidor, así que no
+se pierde nada—.
+
+### Revisado y correcto
+
+- **La casilla de contraseña** usa `Pressable` con `hitSlop` numérico y
+  Reanimated, todo con soporte en ambas plataformas. Los colores se leen fuera
+  del *worklet*, que además de ser lo correcto para el tema es lo que evita que
+  Reanimated congele el objeto.
+- **La tarjeta de membresía no vigente** no usa nada específico de iOS: iconos,
+  texto y botones del sistema de diseño compartido.
+- **El enlace de activación** viaja como `https://`, que en Android abre
+  WhatsApp o el navegador sin necesidad de declarar `<queries>` en el
+  manifiesto; eso sólo haría falta con un esquema propio.
+
+### Pendiente de comprobar en un dispositivo
+
+1. Que WhatsApp reciba el mensaje con los saltos de línea intactos: la
+   codificación del texto en la URL es la misma, pero quien la interpreta es la
+   aplicación instalada.
+2. Que el enlace abierto desde WhatsApp en Android caiga en el navegador con la
+   sesión del portal, que es donde el administrador ya la tiene.
+
 ## Lo que queda pendiente de comprobar en un dispositivo
 
 Por orden de riesgo:

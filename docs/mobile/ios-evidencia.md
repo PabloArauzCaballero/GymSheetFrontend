@@ -93,6 +93,18 @@ El envío es real: el mensaje sale por el puerto de mensajería del backend y
 queda registrado en `notifications.messages` como canal `EMAIL` en estado
 `SENT`, con su intento de entrega en `delivery_attempts`.
 
+
+## 06 · Membresía no vigente y pago fuera de la aplicación
+
+| Captura | Qué demuestra |
+| --- | --- |
+| `21-membresia-no-vigente.png` | Lo primero que ve quien no ha renovado: qué pasó, cuándo venció, y las dos salidas —renovar en la app o avisar de que ya pagó—. No bloquea el resto: sus rutinas y su historial los generó entrenando, y retenerlos como rehén de una renovación sería castigar a quien ya pagó por un fallo administrativo. |
+| `22-whatsapp-pago-efectivo.png` | El resultado de pulsar «Ya pagué por otro medio»: WhatsApp abierto con el número del gimnasio y el mensaje ya escrito, enlace de activación incluido. La solicitud queda registrada en `membership_activation_requests` en ese mismo instante. |
+
+El enlace que viaja en ese mensaje sólo sirve en manos del personal: abierto sin
+sesión lleva al acceso conservando el destino, con sesión de cliente responde
+403, y una vez usado no vuelve a servir. Ver `apps/web/docs-evidence`.
+
 ## La IP de LAN caduca — comprobarla antes de cada tanda
 
 `EXPO_PUBLIC_API_URL` lleva la IP de LAN del Mac escrita a mano. Al cambiar de
