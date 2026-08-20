@@ -105,7 +105,7 @@ export function RoomPanel({ canManage }: Readonly<{ canManage: boolean }>) {
                 <Field label="Capacidad">
                   <Input min="1" name="capacidad" type="number" />
                 </Field>
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-wrap justify-end gap-2">
                   <DialogClose asChild>
                     <Button type="button" variant="ghost">
                       Cancelar

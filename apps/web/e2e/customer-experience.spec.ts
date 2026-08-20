@@ -1,18 +1,15 @@
 import { expect, test, type Page } from '@playwright/test';
-import { mockPassword } from './fixtures';
+import { dismissTour, mockPassword, openPage, signIn } from './fixtures';
 
 
 async function login(page: Page, email: string) {
-  await page.goto('/login');
-  await page.getByLabel('Correo electrónico').fill(email);
-  await page.getByLabel('Contraseña', { exact: true }).fill(mockPassword);
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await expect(page).not.toHaveURL(/\/login/u, { timeout: 15_000 });
+  await signIn(page, { email, password: mockPassword });
+  await dismissTour(page);
 }
 
 test('new clients are required to continue onboarding', async ({ page }) => {
   await login(page, 'new.mock@gymsheet.local');
-  await expect(page).toHaveURL(/\/onboarding$/u, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/onboarding$/u, { timeout: 40_000 });
   await expect(page.getByRole('heading', { name: 'Personaliza tu experiencia' })).toBeVisible();
   await expect(page.getByText('Paso 1 de 4')).toBeVisible();
 });
@@ -21,7 +18,7 @@ test('active members see their plan, entitlements and extension action in Mi per
   page,
 }) => {
   await login(page, 'active.mock@gymsheet.local');
-  await page.goto('/profile');
+  await openPage(page, '/profile');
   await expect(page.getByRole('heading', { name: 'Mi membresía y accesos' })).toBeVisible();
   await expect(page.getByText('Plan mensual · Desarrollo').first()).toBeVisible();
   await expect(page.getByText('Biblioteca de ejercicios').first()).toBeVisible();
@@ -32,15 +29,18 @@ test('expired members can open an idempotent WhatsApp renewal without gaining ac
   page,
 }) => {
   await login(page, 'expired.mock@gymsheet.local');
-  await page.goto('/membership');
+  await openPage(page, '/membership');
   await expect(page.getByText('EXPIRED', { exact: true }).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Tienda de membresías' })).toBeVisible();
-  page.once('dialog', (dialog) => dialog.accept());
-  const popupPromise = page.waitForEvent('popup');
+  // La confirmación es un diálogo propio de la aplicación, no el `confirm()` del
+  // navegador: la prueba esperaba el evento nativo, que nunca llega, mientras la
+  // capa del modal —ya abierto— se comía los reintentos del clic.
   await page
     .getByRole('button', { name: /Renovar por WhatsApp/u })
     .first()
     .click();
+  const popupPromise = page.waitForEvent('popup');
+  await page.getByRole('button', { name: 'Continuar' }).click();
   const popup = await popupPromise;
   await expect.poll(() => new URL(popup.url()).searchParams.get('phone')).toBe('59177377232');
   expect(new URL(popup.url()).searchParams.get('text')).toBe('Hola, quisiera renovar mi membresía');

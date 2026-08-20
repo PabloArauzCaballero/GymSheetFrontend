@@ -150,7 +150,7 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
                         })}
                       </div>
                     </Field>
-                    <div className="flex justify-end gap-2">
+                    <div className="flex flex-wrap justify-end gap-2">
                       <DialogClose asChild>
                         <Button type="button" variant="ghost">
                           Cancelar

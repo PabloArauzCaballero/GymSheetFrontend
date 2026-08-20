@@ -1,14 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { athlete, dismissTour } from './fixtures';
+import { athlete, dismissTour, signIn } from './fixtures';
 
 
 async function loginAsBetaAthlete(page: Page) {
-  await page.goto('/login');
-  await page.getByLabel('Correo electrónico').fill(athlete.email);
-  await page.getByLabel('Contraseña', { exact: true }).fill(athlete.password);
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await expect(page).toHaveURL(/\/dashboard$/u, { timeout: 15_000 });
+  await signIn(page, athlete);
   await dismissTour(page);
 }
 
@@ -36,7 +32,7 @@ test('authenticated athlete can browse the imported exercise catalog', async ({ 
   await loginAsBetaAthlete(page);
   await page.getByRole('link', { name: 'Ejercicios' }).click();
 
-  await expect(page).toHaveURL(/\/exercises$/u, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/exercises$/u, { timeout: 40_000 });
   await expect(page.getByRole('heading', { name: 'Ejercicios' })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('3/4 sit-up', { exact: true })).toBeVisible();
 });

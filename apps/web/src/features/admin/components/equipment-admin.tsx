@@ -147,7 +147,7 @@ export function EquipmentAdmin({ canManage }: Readonly<{ canManage: boolean }>) 
                   {form.formState.errors.root?.message ? (
                     <p className="text-sm text-[var(--danger-text)]">{form.formState.errors.root.message}</p>
                   ) : null}
-                  <div className="flex justify-end gap-2">
+                  <div className="flex flex-wrap justify-end gap-2">
                     <DialogClose asChild>
                       <Button type="button" variant="ghost">
                         Cancelar

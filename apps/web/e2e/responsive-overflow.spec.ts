@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { athlete } from './fixtures';
+import { athlete, signIn } from './fixtures';
 
 /**
  * Regresión responsiva: barre la matriz de anchos obligatoria (320 → 2560) sobre
@@ -29,11 +29,7 @@ const ROUTES = [
 ] as const;
 
 async function login(page: Page) {
-  await page.goto('/login');
-  await page.getByLabel('Correo electrónico').fill(athlete.email);
-  await page.getByLabel('Contraseña', { exact: true }).fill(athlete.password);
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await expect(page).toHaveURL(/\/dashboard$/u, { timeout: 15_000 });
+  await signIn(page, athlete);
 }
 
 async function hasNoHorizontalOverflow(page: Page) {

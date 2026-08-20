@@ -107,7 +107,7 @@ export function MembershipPanel() {
               <Field label="Notas">
                 <Textarea name="notas" />
               </Field>
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-wrap justify-end gap-2">
                 <DialogClose asChild>
                   <Button type="button" variant="ghost">
                     Cancelar

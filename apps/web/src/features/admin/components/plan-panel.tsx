@@ -138,7 +138,7 @@ export function PlanPanel() {
                 rooms={rooms.data?.items ?? []}
                 withScope
               />
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-wrap justify-end gap-2">
                 <DialogClose asChild>
                   <Button type="button" variant="ghost">
                     Cancelar
@@ -277,7 +277,7 @@ export function PlanPanel() {
                 <Input defaultValue={editing.nombre} name="nombre" required />
               </Field>
               <PlanCommonFields plan={editing} withScope={false} />
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-wrap justify-end gap-2">
                 <Button onClick={() => setEditing(null)} type="button" variant="ghost">
                   Cancelar
                 </Button>

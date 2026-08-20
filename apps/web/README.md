@@ -86,6 +86,13 @@ Without them the suite falls back to the documented development defaults in
 timeout on `/login` rather than an authentication error — which is what makes
 the failure look like a broken application instead of a missing variable.
 
+The backend throttles authentication on purpose (`AUTH_RATE_LIMIT_MAX` per
+`RATE_LIMIT_TTL_SECONDS`). A single suite run stays well inside that budget, but
+running it repeatedly back to back does not: the extra logins are rejected and
+the affected spec stops on `/login`, looking like a different failure each time.
+Leave a minute between full runs, or raise the limit in the backend `.env` for
+that environment.
+
 ## Documentation
 
 - `SPEC.md`

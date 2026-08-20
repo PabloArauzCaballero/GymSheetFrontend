@@ -1,6 +1,6 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { THEME_COOKIE } from '../src/shared/theme/theme-script';
-import { admin, waitForPageSettled } from './fixtures';
+import { admin, signIn, waitForPageSettled } from './fixtures';
 
 /**
  * Red de seguridad visual para el paso a temas configurables por inquilino.
@@ -90,11 +90,7 @@ test.describe('paridad visual del tema', () => {
       reducedMotion: 'reduce',
     });
     page = await context.newPage();
-    await page.goto('/login');
-    await page.getByLabel('Correo electrónico').fill(admin.email);
-    await page.getByLabel('Contraseña', { exact: true }).fill(admin.password);
-    await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-    await expect(page).toHaveURL(/\/dashboard$/u, { timeout: 20_000 });
+    await signIn(page, admin);
     await dismissTutorial(page);
   });
 

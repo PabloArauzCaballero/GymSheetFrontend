@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import { admin } from './fixtures';
+import { admin, signIn } from './fixtures';
 
 /**
  * Lo añadido al portal para operar un gimnasio: el panel de operación, el
@@ -30,11 +30,7 @@ async function shot(page: Page, name: string) {
 }
 
 async function loginAsAdmin(page: Page) {
-  await page.goto('/login');
-  await page.getByLabel('Correo electrónico').fill(admin.email);
-  await page.getByLabel('Contraseña', { exact: true }).fill(admin.password);
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await expect(page).toHaveURL(/\/dashboard$/u, { timeout: 30_000 });
+  await signIn(page, admin);
 }
 
 /**
@@ -61,6 +57,7 @@ async function open(page: Page, path: string) {
 }
 
 test.describe('Operación del gimnasio', () => {
+
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
     await dismissTutorial(page);
@@ -130,7 +127,7 @@ test.describe('Operación del gimnasio', () => {
     const anonimo = await browser.newContext();
     const anonPage = await anonimo.newPage();
     await anonPage.goto('/activar/token-de-prueba-que-no-existe-000000');
-    await expect(anonPage).toHaveURL(/\/login\?returnTo=%2Factivar/u, { timeout: 20_000 });
+    await expect(anonPage).toHaveURL(/\/login\?returnTo=%2Factivar/u, { timeout: 40_000 });
     await shot(anonPage, 'activacion-sin-sesion');
     await anonimo.close();
 

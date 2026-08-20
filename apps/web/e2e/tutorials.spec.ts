@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { mockPassword } from './fixtures';
+import { mockPassword, signIn } from './fixtures';
 
 // These specs exercise the interactive tutorial engine over the real UI. They
 // require the NestJS backend + PostgreSQL to be running (see project README);
@@ -7,11 +7,7 @@ import { mockPassword } from './fixtures';
 
 
 async function login(page: Page, email: string) {
-  await page.goto('/login');
-  await page.getByLabel('Correo electrónico').fill(email);
-  await page.getByLabel('Contraseña', { exact: true }).fill(mockPassword);
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await expect(page).not.toHaveURL(/\/login/u, { timeout: 15_000 });
+  await signIn(page, { email, password: mockPassword });
 }
 
 async function dismissAnyTour(page: Page) {

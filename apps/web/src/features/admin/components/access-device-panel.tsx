@@ -94,7 +94,7 @@ export function AccessDevicePanel({ canManage }: Readonly<{ canManage: boolean }
                 <Field label="Nombre">
                   <Input name="nombre" required />
                 </Field>
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-wrap justify-end gap-2">
                   <DialogClose asChild>
                     <Button type="button" variant="ghost">
                       Cancelar

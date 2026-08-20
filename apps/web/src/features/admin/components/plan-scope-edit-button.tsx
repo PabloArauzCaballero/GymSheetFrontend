@@ -115,7 +115,7 @@ export function PlanScopeEditButton({ plan }: Readonly<{ plan: MembershipPlan }>
             <Plus className="size-4" />
             Agregar alcance
           </Button>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <DialogClose asChild>
               <Button type="button" variant="ghost">
                 Cancelar

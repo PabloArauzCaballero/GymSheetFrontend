@@ -33,6 +33,25 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
   workers: 1,
+  /*
+   * El servidor de pruebas es `next dev`, que compila cada ruta la primera vez
+   * que alguien entra en ella. Con el límite por defecto de treinta segundos la
+   * primera visita a una pantalla pesada se quedaba a medias y la navegación se
+   * abortaba: cada corrida caía en una prueba distinta, siempre con un error de
+   * red que no tenía relación con lo que se estaba comprobando. Un límite
+   * holgado no oculta nada —los fallos de verdad siguen fallando— y quita la
+   * intermitencia que hace que una suite deje de creerse.
+   */
+  timeout: 90_000,
+  /*
+   * La espera por defecto de una aserción es de cinco segundos. Con la suite
+   * entera en marcha —dos proyectos, casi ochenta pruebas y el servidor de
+   * desarrollo compilando— una redirección tras el acceso puede tardar más, y
+   * el resultado era una tanda de fallos que decían «sigue en /login» sin que
+   * el backend hubiera rechazado nada: no había defecto que arreglar, sólo una
+   * espera corta.
+   */
+  expect: { timeout: 15_000 },
   use: {
     baseURL: 'http://localhost:3002',
     trace: 'on-first-retry',

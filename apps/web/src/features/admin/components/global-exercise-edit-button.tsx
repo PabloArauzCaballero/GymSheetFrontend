@@ -70,7 +70,7 @@ export function GlobalExerciseEditButton({ exercise }: Readonly<{ exercise: Exer
           <Field label="Descripción">
             <Textarea defaultValue={exercise.descripcion ?? ''} name="descripcion" />
           </Field>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <DialogClose asChild>
               <Button type="button" variant="ghost">
                 Cancelar

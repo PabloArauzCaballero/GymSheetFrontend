@@ -96,7 +96,7 @@ export function ExerciseMediaManager({
                   <input className="size-4 accent-[var(--volt)]" name="isPrimary" type="checkbox" />
                   Usar como medio principal
                 </label>
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-wrap justify-end gap-2">
                   <DialogClose asChild>
                     <Button type="button" variant="ghost">
                       Cancelar

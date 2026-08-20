@@ -71,3 +71,57 @@ export async function dismissTour(page: Page): Promise<void> {
 export async function waitForPageSettled(page: Page): Promise<void> {
   await expect(page.locator('main')).toHaveCount(1, { timeout: 15_000 });
 }
+
+/**
+ * Navega y deja la pantalla lista para interactuar.
+ *
+ * El tour no es uno solo por sesión: cada pantalla tiene el suyo y vuelve a
+ * abrirse al llegar, así que cerrarlo tras el acceso no sirve para lo que pase
+ * después. Se cierra donde se va a hacer clic.
+ */
+export async function openPage(page: Page, path: string): Promise<void> {
+  await page.goto(path);
+  await dismissTour(page);
+}
+
+/**
+ * Entra en la aplicación y espera a estar dentro.
+ *
+ * El formulario de acceso es `method="post"`, así que si el clic llega antes de
+ * que React hidrate el navegador hace el envío nativo: el servidor devuelve la
+ * misma pantalla, la prueba se queda en `/login` y en el backend no aparece ni
+ * un intento de acceso. Se veía como una tanda de fallos de credenciales que no
+ * eran de credenciales.
+ *
+ * De ahí el reintento: si tras el primer envío seguimos en `/login` sin un
+ * error visible, se vuelve a intentar —a esas alturas la página ya hidrató—. Un
+ * acceso realmente rechazado muestra su mensaje y falla igual, que es lo que
+ * debe seguir pasando.
+ */
+export async function signIn(
+  page: Page,
+  credentials: { email: string; password: string },
+): Promise<void> {
+  await page.goto('/login');
+  const submit = page.getByRole('button', { name: 'Iniciar sesión' });
+
+  for (const attempt of [0, 1]) {
+    await page.getByLabel('Correo electrónico').fill(credentials.email);
+    await page.getByLabel('Contraseña', { exact: true }).fill(credentials.password);
+    await submit.click();
+
+    try {
+      await page.waitForURL((url) => !url.pathname.startsWith('/login'), {
+        timeout: attempt === 0 ? 15_000 : 40_000,
+      });
+      return;
+    } catch (error) {
+      const rejected = await page
+        .getByRole('alert')
+        .first()
+        .isVisible()
+        .catch(() => false);
+      if (rejected || attempt === 1) throw error;
+    }
+  }
+}

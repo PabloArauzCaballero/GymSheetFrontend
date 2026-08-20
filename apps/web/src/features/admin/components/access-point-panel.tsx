@@ -98,7 +98,7 @@ export function AccessPointPanel({ canManage }: Readonly<{ canManage: boolean }>
                     <option value="EXIT">EXIT</option>
                   </Select>
                 </Field>
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-wrap justify-end gap-2">
                   <DialogClose asChild>
                     <Button type="button" variant="ghost">
                       Cancelar
