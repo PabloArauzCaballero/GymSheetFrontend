@@ -40,7 +40,13 @@ export async function login(input: { email: string; password: string }) {
   return authResponseSchema.parse(await response.json()).data.user;
 }
 
-export async function register(input: { email: string; password: string; nombreCompleto: string }) {
+export async function register(input: {
+  email: string;
+  password: string;
+  nombreCompleto: string;
+  /** Ausente = no se preguntó. El gimnasio lo pone la cookie de inquilino, en el servidor. */
+  genero?: 'MALE' | 'FEMALE' | 'UNSPECIFIED';
+}) {
   const response = await fetch('/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

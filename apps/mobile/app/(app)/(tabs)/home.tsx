@@ -15,7 +15,8 @@ import {
   useResponsive,
 } from '@/components/layout';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
-import { membershipService, routineService, workoutService } from '@/api/services';
+import { ProgressTrack } from '@/components/progression';
+import { membershipService, progressionService, routineService, workoutService } from '@/api/services';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui';
 import { useAuthStore } from '@/state/auth-store';
@@ -50,7 +51,7 @@ export default function HomeScreen() {
   const { wide } = useResponsive();
   useScreenTour('home');
 
-  const [membership, workouts, assignments] = useQueries({
+  const [membership, workouts, assignments, progression] = useQueries({
     queries: [
       { queryKey: ['membership', 'me'], queryFn: () => membershipService.getMine() },
       // 40 en vez de 5: la lista de abajo sólo enseña las últimas, pero el
@@ -58,14 +59,17 @@ export default function HomeScreen() {
       // completo de ese periodo. Una sola petición sirve a ambos.
       { queryKey: ['workouts', 'recent'], queryFn: () => workoutService.list(40) },
       { queryKey: ['routines', 'assignments', 'me'], queryFn: () => routineService.myAssignments() },
+      { queryKey: ['progression', 'me'], queryFn: () => progressionService.get() },
     ],
   });
 
-  const refreshing = membership.isFetching || workouts.isFetching || assignments.isFetching;
+  const refreshing =
+    membership.isFetching || workouts.isFetching || assignments.isFetching || progression.isFetching;
   const refresh = () => {
     void membership.refetch();
     void workouts.refetch();
     void assignments.refetch();
+    void progression.refetch();
   };
 
   const firstName = shortName(principal?.nombreCompleto, principal?.email);
@@ -177,6 +181,69 @@ export default function HomeScreen() {
             onRenew={() => router.push('/membership')}
             projection={membership.data}
           />
+        </Section>
+      ) : null}
+
+      {/* La senda, antes que cualquier resumen.
+          Es la única sección que responde «¿me estoy acercando a como quiero
+          verme?», que es la razón por la que alguien vuelve. El resto de la
+          pantalla informa; esta tira. Va arriba —después del aviso de acceso,
+          que es urgente— porque un enganche al que hay que desplazarse no
+          engancha, y entera en una tarjeta pulsable para que el paso a la senda
+          sea un solo gesto. */}
+      {progression.data?.level ? (
+        <Section icon="trail-sign-outline" index={0} title="Tu senda">
+          <Card
+            accessibilityLabel={`Tu rango es ${progression.data.level.name}. Ver la senda completa.`}
+            accent={progression.data.level.color}
+            onPress={() => router.push('/trayectoria')}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+              <Ionicons
+                color={progression.data.level.color}
+                name={progression.data.level.icon as keyof typeof Ionicons.glyphMap}
+                size={iconSizes.xl}
+              />
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text
+                  style={{
+                    color: colors.text,
+                    fontSize: fontSizes.lg,
+                    fontWeight: semibold,
+                    letterSpacing: fontSizes.lg * -0.045,
+                  }}
+                >
+                  {progression.data.level.name}
+                </Text>
+                <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
+                  {progression.data.level.tagline}
+                </Text>
+              </View>
+              <Ionicons
+                accessibilityElementsHidden
+                color={accentPolicy.glyph}
+                importantForAccessibility="no-hide-descendants"
+                name="chevron-forward"
+                size={iconSizes.md}
+              />
+            </View>
+
+            <ProgressTrack
+              color={progression.data.nextLevel?.color ?? progression.data.level.color}
+              ratio={progression.data.levelProgress}
+            />
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm }}>
+              <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}>
+                {`${progression.data.points.toLocaleString('es-ES')} puntos`}
+              </Text>
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, flexShrink: 1 }}>
+                {progression.data.nextLevel && progression.data.pointsToNextLevel !== null
+                  ? `Faltan ${progression.data.pointsToNextLevel.toLocaleString('es-ES')} para ${progression.data.nextLevel.name}`
+                  : 'Senda completa'}
+              </Text>
+            </View>
+          </Card>
         </Section>
       ) : null}
 

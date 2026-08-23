@@ -11,6 +11,7 @@ import {
   cleanOptional,
   emptyExerciseFormValues,
   exerciseFormSchema,
+  splitList,
   type ExerciseFormValues,
 } from './exercise-form-model';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
@@ -23,6 +24,8 @@ import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { Field } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { MuscleMachinePicker } from './muscle-machine-picker';
+import { useMuscleInference } from './use-muscle-inference';
 
 export function ExerciseForm({
   exerciseId,
@@ -45,6 +48,8 @@ export function ExerciseForm({
     defaultValues: emptyExerciseFormValues,
   });
   const selectedEquipmentIds = useWatch({ control: form.control, name: 'equipoIds' });
+
+  const { muscleCode, equipmentLabel, applyInference } = useMuscleInference(form);
 
   useEffect(() => {
     const item = existing.data;
@@ -80,19 +85,16 @@ export function ExerciseForm({
   });
 
   function submit(values: ExerciseFormValues) {
-    const secondaryMuscles =
-      values.secondaryMusclesText
-        ?.split(',')
-        .map((item) => item.trim())
-        .filter(Boolean) ?? [];
-    const steps =
-      values.stepsText
-        ?.split('\n')
-        .map((item) => item.trim())
-        .filter(Boolean) ?? [];
+    const secondaryMuscles = splitList(values.secondaryMusclesText, ',');
+    const steps = splitList(values.stepsText, '\n');
     save.mutate({
       nombre: values.nombre.trim(),
       grupoMuscular: values.grupoMuscular.trim(),
+      // Van además de los campos rellenados, no en su lugar: el servidor los usa
+      // para fijar el equipamiento requerido, que no tiene campo en este
+      // formulario porque no se teclea, se deduce.
+      ...(muscleCode ? { muscleCode } : {}),
+      ...(equipmentLabel ? { equipmentLabel } : {}),
       descripcion: cleanOptional(values.descripcion),
       bodyPart: cleanOptional(values.bodyPart),
       targetMuscle: cleanOptional(values.targetMuscle),
@@ -149,6 +151,15 @@ export function ExerciseForm({
             title="Información principal"
           />
           <CardContent className="grid gap-5 sm:grid-cols-2">
+            {editing ? null : (
+              <div className="sm:col-span-2">
+                <MuscleMachinePicker
+                  onSelect={applyInference}
+                  selectedEquipmentLabel={equipmentLabel}
+                  value={muscleCode}
+                />
+              </div>
+            )}
             <Field
               className="sm:col-span-2"
               error={form.formState.errors.nombre?.message}

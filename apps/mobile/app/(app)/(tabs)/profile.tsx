@@ -14,6 +14,7 @@ import {
   Section,
 } from '@/components/layout';
 import { Button } from '@/components/ui';
+import { GenderPreference } from '@/components/gender-preference';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { membershipService, profileService } from '@/api/services';
 import { useAuthStore } from '@/state/auth-store';
@@ -193,7 +194,15 @@ export default function ProfileScreen() {
         </Section>
       </Columns>
 
+      <GenderPreference />
+
       <Card>
+        <NavRow
+          onPress={() => router.push('/trayectoria')}
+          subtitle="Tu rango, tus insignias y el camino que te queda"
+          title="Tu senda"
+        />
+        <Divider />
         <NavRow
           onPress={() => router.push('/membership')}
           subtitle="Plan, vencimiento, historial y renovación"

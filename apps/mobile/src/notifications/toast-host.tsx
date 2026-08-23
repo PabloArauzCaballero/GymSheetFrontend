@@ -7,14 +7,34 @@ import { colors, fontSizes, minTouchTarget, motion, radii, semibold, spacing, to
 import { toastQueue } from './notify';
 import { useReduceMotion } from './use-reduce-motion';
 
-const TONE: Record<NotificationSeverity, { bg: string; border: string; text: string }> = {
-  success: tones.dark.success,
-  info: tones.dark.info,
-  warning: tones.dark.warning,
-  error: tones.dark.danger,
-  // `danger` is a modal concept; as a toast it reads like an error.
-  danger: tones.dark.danger,
-};
+/**
+ * Tono de cada severidad, resuelto **en cada render**.
+ *
+ * Era un objeto constante y ahí estaba el fallo: `tones.dark` es un descriptor
+ * de acceso que compone la confirmación con el verde del gimnasio activo, y un
+ * literal a nivel de módulo lo lee una sola vez, al importar, cuando todavía no
+ * se sabe en qué gimnasio se ha iniciado sesión. El resultado era que toda la
+ * aplicación se pintaba de la marca menos el «guardado», que se quedaba con el
+ * verde de la identidad de referencia para siempre.
+ */
+function toneFor(severity: NotificationSeverity): {
+  bg: string;
+  border: string;
+  text: string;
+} {
+  switch (severity) {
+    case 'success':
+      return tones.dark.success;
+    case 'info':
+      return tones.dark.info;
+    case 'warning':
+      return tones.dark.warning;
+    // `danger` es un concepto de diálogo; como aviso se lee igual que un error.
+    case 'error':
+    case 'danger':
+      return tones.dark.danger;
+  }
+}
 
 /**
  * Renders the toast stack of {@link toastQueue} below the status bar. Mounted
@@ -49,7 +69,7 @@ export function ToastHost() {
 }
 
 function ToastCard({ item }: { item: ToastItem }) {
-  const tone = TONE[item.severity];
+  const tone = toneFor(item.severity);
   const reduceMotion = useReduceMotion();
   const progress = useRef(new Animated.Value(0)).current;
 

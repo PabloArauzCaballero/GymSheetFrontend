@@ -9,10 +9,13 @@ import { Screen, AppText, Button, Input } from '@/components/ui';
 import { Checkbox } from '@/components/checkbox';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
-import { spacing, colors } from '@/theme';
+import { spacing, colors, useActiveTenant } from '@/theme';
 
 export default function LoginScreen() {
   const login = useAuthStore((state) => state.login);
+  // Una compilación dedicada de un gimnasio ya entra con su marca; en la
+  // genérica esto sigue diciendo «GymSheet», que es lo correcto.
+  const tenant = useActiveTenant();
   /**
    * Revelar la contraseña es una acción sobre este formulario y este momento,
    * no una preferencia: arranca siempre oculta, aunque la última vez se dejara
@@ -47,7 +50,7 @@ export default function LoginScreen() {
   return (
     <Screen>
       <View style={{ gap: spacing.xs, marginBottom: spacing.lg }}>
-        <AppText variant="title">GymSheet</AppText>
+        <AppText variant="title">{tenant.name}</AppText>
         <AppText variant="muted">Inicia sesión para continuar</AppText>
       </View>
 

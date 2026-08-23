@@ -28,7 +28,18 @@ export type ExerciseFilters = {
 
 export type ExerciseInput = {
   nombre: string;
-  grupoMuscular: string;
+  /**
+   * Opcional cuando se envía `muscleCode`: el servidor lo toma de la taxonomía,
+   * que es más fiable que lo que se teclee aquí.
+   */
+  grupoMuscular?: string;
+  /**
+   * Código canónico del músculo entrenado. Con esto el servidor deduce la
+   * máquina desde el catálogo real y clasifica el ejercicio solo.
+   */
+  muscleCode?: string;
+  /** Etiqueta elegida entre las que propone el servidor. Ausente = la más habitual. */
+  equipmentLabel?: string;
   descripcion?: string | null;
   equipoIds?: string[];
   bodyPart?: string | null;

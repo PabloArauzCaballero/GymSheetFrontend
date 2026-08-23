@@ -33,3 +33,19 @@ export function cleanOptional(value: string | undefined) {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
 }
+
+/**
+ * Convierte una lista escrita a mano en un arreglo limpio.
+ *
+ * Los músculos secundarios se separan con comas y los pasos con saltos de
+ * línea; en ambos casos hay que descartar espacios sobrantes y entradas vacías,
+ * que es lo que deja una coma final o una línea en blanco.
+ */
+export function splitList(value: string | undefined, separator: ',' | '\n'): string[] {
+  return (
+    value
+      ?.split(separator)
+      .map((item) => item.trim())
+      .filter(Boolean) ?? []
+  );
+}

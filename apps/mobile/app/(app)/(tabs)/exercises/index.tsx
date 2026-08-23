@@ -8,7 +8,7 @@ import { Card, Divider, ScrollScreen, ScreenHeader } from '@/components/layout';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { ExerciseImage } from '@/components/media';
 import { PressableScale } from '@/components/motion';
-import { Input } from '@/components/ui';
+import { Button, Input } from '@/components/ui';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { DrillBack, Grid, GridTile, iconFor, titleCase } from '@/components/catalogue-grid';
 import { exerciseService } from '@/api/services';
@@ -24,7 +24,10 @@ function Tag({ label, accent = false }: { label: string; accent?: boolean }) {
         borderRadius: radii.full,
         borderWidth: 1,
         borderColor: accent ? colors.accentInk : colors.border,
-        backgroundColor: accent ? 'rgba(195,244,0,0.08)' : colors.surfaceHigh,
+        // Se compone desde el acento vigente en vez de escribir el verde de la
+        // identidad de referencia: con el valor fijo, un gimnasio de marca roja
+        // veía esta etiqueta verde en medio de una pantalla roja.
+        backgroundColor: accent ? `${colors.volt}14` : colors.surfaceHigh,
       }}
     >
       <Text
@@ -159,6 +162,17 @@ export default function ExercisesScreen() {
       refreshing={taxonomy.isFetching || exercises.isFetching}
     >
       <ScreenHeader subtitle={subtitle} title="Ejercicios" />
+
+      {/* Crear va arriba y no escondido tras el catálogo: quien viene a añadir
+          su propio ejercicio ya sabe que no está en la lista, y hacerle
+          recorrer 1.300 fichas antes de ofrecerle el botón es hacerle perder
+          el tiempo para confirmar algo que ya sabía. */}
+      <Button
+        icon="add-circle-outline"
+        label="Crear un ejercicio propio"
+        onPress={() => router.push('/ejercicio-nuevo')}
+        variant="ghost"
+      />
 
       <TourTarget id="exercises.search">
       <Input

@@ -2,6 +2,11 @@ import { z } from 'zod';
 import {
   activationRequestSchema,
   exerciseSchema,
+  userSchema,
+  leaderboardSchema,
+  muscleEquipmentInferenceSchema,
+  progressionAcknowledgedSchema,
+  progressionSchema,
   membershipProjectionSchema,
   pageSchema,
   profileSchema,
@@ -14,6 +19,7 @@ import type {
   TrainingGoal,
   WorkoutSetInput,
 } from '@gymsheet/types';
+import type { UserGender } from '@gymsheet/types';
 import { apiClient } from '@/api/client';
 
 /** Endpoints that answer with a free-form object we do not need to model. */
@@ -188,4 +194,69 @@ export const exerciseService = {
   get: (id: string) => apiClient.request(`/exercises/${id}`, exerciseSchema, { method: 'GET' }),
   taxonomy: () =>
     apiClient.request('/exercises/taxonomy', exerciseTaxonomySchema, { method: 'GET' }),
+};
+
+/**
+ * La senda: rangos, insignias y puntos.
+ *
+ * Todo lo visible llega del servidor —nombres, textos, iconos, colores—, así
+ * que el gimnasio puede renombrar un rango sin publicar una versión de la
+ * aplicación. Aquí no hay ni un nombre de nivel escrito.
+ */
+export const progressionService = {
+  /**
+   * Estado completo. Cada lectura recalcula en el servidor, de modo que abrir
+   * la pantalla justo después de entrenar ya muestra lo ganado, sin esperar a
+   * ningún proceso en segundo plano.
+   */
+  get: () => apiClient.request('/me/progression', progressionSchema, { method: 'GET' }),
+  /** Confirma que las novedades ya se han celebrado y dejan de ser nuevas. */
+  acknowledge: () =>
+    apiClient.request('/me/progression/acknowledge', progressionAcknowledgedSchema, {
+      method: 'POST',
+    }),
+  leaderboard: (limit = 10) =>
+    apiClient.request(`/me/progression/leaderboard?limit=${limit}`, leaderboardSchema, {
+      method: 'GET',
+    }),
+};
+
+/**
+ * Ejercicios propios: se elige el músculo y la máquina se deduce sola.
+ *
+ * La deducción la hace el servidor contra el catálogo real, no esta pantalla:
+ * una tabla músculo→máquina en el cliente quedaría desfasada en cuanto el
+ * catálogo se sincronizara.
+ */
+export const personalExerciseService = {
+  suggestEquipment: (muscleCode: string) =>
+    apiClient.request(
+      `/exercises/equipment-suggestion?muscle=${encodeURIComponent(muscleCode)}`,
+      muscleEquipmentInferenceSchema,
+      { method: 'GET' },
+    ),
+  create: (input: PersonalExerciseInput) =>
+    apiClient.request('/exercises/personal', exerciseSchema, { method: 'POST', body: input }),
+};
+
+export interface PersonalExerciseInput {
+  nombre: string;
+  /** Código canónico de la taxonomía. Con esto basta: el resto lo pone el servidor. */
+  muscleCode: string;
+  /** Ausente = se acepta la máquina que el catálogo considera más habitual. */
+  equipmentLabel?: string;
+  descripcion?: string | null;
+}
+
+/**
+ * La cuenta: lo que la persona es, no lo que mide.
+ *
+ * El género vive aquí y no en el perfil antropométrico a propósito: ese perfil
+ * exige peso y estatura, y obligar a medirse para poder corregir cómo te llama
+ * la aplicación sería pedir un dato íntimo a cambio de otro.
+ */
+export const accountService = {
+  getMe: () => apiClient.request('/users/me', userSchema, { method: 'GET' }),
+  setGender: (genero: UserGender) =>
+    apiClient.request('/users/me', userSchema, { method: 'PATCH', body: { genero } }),
 };

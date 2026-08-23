@@ -13,6 +13,7 @@ import {
   ScanFace,
   Settings,
   ShieldCheck,
+  Signpost,
   Users,
 } from 'lucide-react';
 import type { UserRole } from '@/shared/api/contracts';
@@ -26,6 +27,10 @@ export type NavigationItem = {
 
 export const primaryNavigation: NavigationItem[] = [
   { href: '/dashboard', label: 'Panel', icon: Gauge },
+  // Justo debajo del panel: es la pantalla que responde «¿me estoy acercando a
+  // como quiero verme?», y enterrarla al final de la lista la convertiría en
+  // una sección que nadie visita.
+  { href: '/trayectoria', label: 'Tu senda', icon: Signpost },
   { href: '/workouts', label: 'Entrenamientos', icon: Activity },
   { href: '/plans', label: 'Mis planes', icon: CalendarCheck },
   { href: '/routines', label: 'Rutinas', icon: ClipboardList },

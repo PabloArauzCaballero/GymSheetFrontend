@@ -8,13 +8,19 @@ import { useTourStore } from '@/state/tour-store';
 /**
  * The private area: a stack whose first screen is the tab bar.
  *
- * The four screens below the tabs — Ajustes, Editar perfil, Membresía,
- * Notificaciones — are reached from Profile and pushed over the bar. They used
- * to be declared inside the tab navigator with `href: null`, which hides the
- * button but keeps the screen a member of the bar: VoiceOver announced
- * «Inicio, pestaña, 1 de 9» over five reachable destinations. As stack
- * siblings they keep their URLs, get the push transition and edge-swipe every
- * other detail screen has, and the bar counts to five.
+ * The six screens below the tabs — Trayectoria, Nuevo ejercicio, Ajustes,
+ * Editar perfil, Membresía, Notificaciones — are reached from Home, Ejercicios
+ * or Perfil and pushed over the bar. Four of them used to be declared inside
+ * the tab navigator with `href: null`, which hides the button but keeps the
+ * screen a member of the bar: VoiceOver announced «Inicio, pestaña, 1 de 9»
+ * over five reachable destinations. As stack siblings they keep their URLs,
+ * get the push transition and edge-swipe every other detail screen has, and
+ * the bar counts to five.
+ *
+ * La senda entra aquí por la misma regla: cinco es el techo de una barra
+ * inferior antes de que las etiquetas empiecen a truncarse. Se abre desde una
+ * tarjeta destacada en Inicio, que además la pone en el recorrido diario en vez
+ * de esconderla detrás de un sexto icono.
  *
  * The session guard and the tour live here rather than one level down so both
  * cover the pushed screens too.
@@ -39,6 +45,8 @@ export default function AppLayout() {
         {/* The tab bar itself. No push animation: it is the root of this
             stack, not something you navigate to. */}
         <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
+        <Stack.Screen name="trayectoria" />
+        <Stack.Screen name="ejercicio-nuevo" />
         <Stack.Screen name="settings" />
         <Stack.Screen name="profile-edit" />
         <Stack.Screen name="membership" />

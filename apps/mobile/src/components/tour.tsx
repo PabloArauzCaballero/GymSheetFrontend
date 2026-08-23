@@ -11,11 +11,12 @@ import Animated, {
 import { Button } from '@/components/ui';
 import { PressableScale } from '@/components/motion';
 import { useTourStore, type TargetRect, type TourKey } from '@/state/tour-store';
-import { colors, fontSizes, iconSizes, radii, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, radii, spacing, useActiveTenant } from '@/theme';
 
 type TourStep = {
   readonly icon: keyof typeof Ionicons.glyphMap;
-  readonly title: string;
+  /** `null` = se sustituye por el nombre del gimnasio activo. */
+  readonly title: string | null;
   readonly body: string;
   /**
    * Which on-screen element this step is about. A step with no target is a
@@ -33,10 +34,15 @@ type TourStep = {
  * describes a reason to open it. The difference is whether the tour teaches the
  * product or merely narrates the navigation bar.
  */
+/**
+ * `null` en el título significa «rellénalo con el nombre del gimnasio al
+ * pintar». Es el único paso que lo menciona, así que no compensa convertir todo
+ * el arreglo en una función solo por este título.
+ */
 const WELCOME: readonly TourStep[] = [
   {
     icon: 'sparkles-outline',
-    title: 'Bienvenido a GymSheet',
+    title: null,
     body: 'Tu entrenamiento, tus cargas y tu progreso en un solo sitio. Cada pantalla se explica sola la primera vez que entras.',
   },
   {
@@ -273,13 +279,19 @@ export function TourOverlay() {
   const targets = useTourStore((state) => state.targets);
   const scroller = useTourStore((state) => state.scroller);
   const { height } = useWindowDimensions();
+  const tenant = useActiveTenant();
   const reduceMotion = useReducedMotion();
 
   const scale = useSharedValue(reduceMotion ? 1 : 0.86);
   const opacity = useSharedValue(reduceMotion ? 1 : 0);
 
   const steps = active === 'welcome' ? WELCOME : active ? SCREEN_TOURS[active] : [];
-  const current = steps[step];
+  const rawStep = steps[step];
+  // La bienvenida saluda con el nombre del gimnasio, no con el del producto: la
+  // persona instaló la aplicación de su gimnasio y eso es lo que espera leer.
+  const current = rawStep
+    ? { ...rawStep, title: rawStep.title ?? `Bienvenido a ${tenant.name}` }
+    : undefined;
   const isLast = step === steps.length - 1;
   const hole = current?.target ? (targets[current.target] ?? null) : null;
 
@@ -517,7 +529,7 @@ export function TourOverlay() {
               <View style={{ flexDirection: 'row', gap: spacing.xs, paddingVertical: spacing.xs }}>
                 {steps.map((item, index) => (
                   <View
-                    key={item.title}
+                    key={item.title ?? index}
                     style={{
                       width: index === step ? 18 : 6,
                       height: 6,

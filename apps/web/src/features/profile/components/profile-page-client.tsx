@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { profileService } from '@/features/profile/services/profile-service';
 import { onboardingService } from '@/features/onboarding/services/onboarding-service';
 import { MembershipExperience } from '@/features/membership/components/membership-experience';
+import { GenderPreferenceField } from '@/features/progression/components/gender-preference-field';
 import { ApiError } from '@/shared/api/api-error';
 import { trainingGoals } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -43,6 +44,7 @@ const goalLabels: Record<FormValues['objetivo'], string> = {
 export function ProfilePageClient() {
   const queryClient = useQueryClient();
   const user = useQuery({ queryKey: ['user', 'me'], queryFn: profileService.getUser });
+
   const profile = useQuery({
     queryKey: queryKeys.profile,
     queryFn: async () => {
@@ -200,6 +202,9 @@ export function ProfilePageClient() {
               <div className="flex justify-between border-t border-[var(--border-subtle)] pt-4">
                 <span className="text-sm text-[var(--text-muted)]">Rol</span>
                 <Badge>{user.data?.rol ?? '—'}</Badge>
+              </div>
+              <div className="border-t border-[var(--border-subtle)] pt-4">
+                <GenderPreferenceField value={user.data?.genero ?? null} />
               </div>
             </CardContent>
           </Card>

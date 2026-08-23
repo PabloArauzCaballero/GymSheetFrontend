@@ -9,7 +9,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { colors } from '@/theme';
+import { colors, getActiveTenant } from '@/theme';
 import { useAmbientStore } from '@/state/ambient-store';
 
 /**
@@ -200,20 +200,42 @@ function Band({ spec, width, height, moving, energy }: {
   );
 }
 
+/** `#rrggbb` → `rgba(r, g, b, a)`, para poder atenuar un color de marca. */
+function rgba(hex: string, alpha: number): string {
+  const value = Number.parseInt(hex.replace('#', '').slice(0, 6), 16);
+  const red = (value >> 16) & 255;
+  const green = (value >> 8) & 255;
+  const blue = value & 255;
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
 /**
- * Two dim lights so the black has some depth under the wave.
+ * Dos luces tenues para que el negro tenga profundidad bajo la onda.
  *
- * These carry the only colour in the backdrop now that the wave is neutral, and
- * they are deliberately below the threshold where you could name the hue: the
- * screen should look like it is lit from somewhere, not tinted.
+ * La primera lleva el acento del gimnasio. Estaba escrita con el verde de la
+ * identidad de referencia, así que un socio de una marca roja veía toda la
+ * aplicación en rojo salvo el fondo, que seguía verde: el único sitio donde la
+ * marca no llegaba, y precisamente el que cubre la pantalla entera.
+ *
+ * La segunda es un violeta fijo a propósito: es la luz de contraste que da
+ * volumen, y teñirla también del acento dejaría el fondo de un solo color y
+ * plano. Ambas van por debajo del umbral en el que se podría nombrar el tono:
+ * la pantalla debe parecer iluminada desde algún sitio, no teñida.
  */
-const GLOW = [
-  { colors: ['rgba(195,244,0,0.09)', 'rgba(195,244,0,0)'] as const, size: 1.35, x: -0.22, y: -0.12, px: 41000, py: 52000 },
-  { colors: ['rgba(120,110,255,0.08)', 'rgba(120,110,255,0)'] as const, size: 1.2, x: 0.42, y: 0.55, px: 58000, py: 44000 },
-];
+/** Cuántas luces hay. Se nombra aparte para no construir las dos solo por contarlas. */
+const GLOW_COUNT = 2;
+
+function glowSpecs(accent: string) {
+  return [
+    { colors: [rgba(accent, 0.09), rgba(accent, 0)] as const, size: 1.35, x: -0.22, y: -0.12, px: 41000, py: 52000 },
+    { colors: ['rgba(120,110,255,0.08)', 'rgba(120,110,255,0)'] as const, size: 1.2, x: 0.42, y: 0.55, px: 58000, py: 44000 },
+  ];
+}
 
 function Glow({ index, width, moving }: { index: number; width: number; moving: boolean }) {
-  const spec = GLOW[index]!;
+  // Se resuelve en cada render: el gimnasio se conoce al iniciar sesión, y un
+  // valor calculado al cargar el módulo se quedaría con la marca de referencia.
+  const spec = glowSpecs(getActiveTenant().colors.accent)[index]!;
   const clockX = useClock(spec.px, moving);
   const clockY = useClock(spec.py, moving);
   const diameter = width * spec.size;
@@ -264,7 +286,7 @@ export function AmbientBackground() {
 
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>
-      {GLOW.map((_, index) => (
+      {Array.from({ length: GLOW_COUNT }, (_, index) => (
         <Glow index={index} key={index} moving={moving} width={width} />
       ))}
       {BANDS.map((spec, index) => (

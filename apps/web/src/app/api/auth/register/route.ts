@@ -3,12 +3,34 @@ import { z } from 'zod';
 import { isTrustedMutation } from '@/shared/server/csrf';
 import { backendRequest, readBackendJson } from '@/shared/server/backend';
 import { SESSION_COOKIE, sessionCookieOptions } from '@/shared/server/auth-cookie';
+import { TENANT_COOKIE } from '@/shared/theme/tenant-cookie';
 
 const registerSchema = z.object({
   email: z.string().email().max(180),
   password: z.string().min(8).max(128),
   nombreCompleto: z.string().trim().min(3).max(180),
+  /**
+   * Opcional de verdad: la progresión tiene una rama neutra y nadie debería
+   * tener que declarar su género para poder crear una cuenta.
+   */
+  genero: z.enum(['MALE', 'FEMALE', 'UNSPECIFIED']).optional(),
 });
+
+/**
+ * Gimnasio al que se apunta la cuenta.
+ *
+ * Sale de la cookie de inquilino —que la puso la URL de acceso— y **no** del
+ * cuerpo de la petición: quién entra por `dominio/topfitness` es un hecho del
+ * servidor, y aceptarlo del navegador dejaría que cualquiera se diera de alta
+ * en el gimnasio que quisiera escribiendo otro valor.
+ *
+ * Sin cookie no se envía nada y el backend aplica su `DEFAULT_TENANT_ID`, que
+ * es lo correcto para una instalación de una sola marca.
+ */
+function tenantFromCookie(request: NextRequest): string | undefined {
+  const value = request.cookies.get(TENANT_COOKIE)?.value?.trim().toLowerCase();
+  return value && /^[a-z0-9][a-z0-9-]*$/.test(value) ? value : undefined;
+}
 
 const authEnvelopeSchema = z.object({
   ok: z.literal(true),
@@ -32,7 +54,7 @@ export async function POST(request: NextRequest) {
   const backendResponse = await backendRequest('/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input.data),
+    body: JSON.stringify({ ...input.data, tenantId: tenantFromCookie(request) }),
   });
   const payload = await readBackendJson(backendResponse);
   if (!backendResponse.ok) return NextResponse.json(payload, { status: backendResponse.status });

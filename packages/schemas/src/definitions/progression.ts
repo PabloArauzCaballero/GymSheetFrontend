@@ -1,0 +1,159 @@
+import { z } from 'zod';
+
+/**
+ * Contratos de la senda: el camino hacia tu imagen ideal.
+ *
+ * Los define el backend y los valida cada cliente, así que un cambio de
+ * contrato aparece como error en la web y en el móvil a la vez, en vez de como
+ * una pantalla en blanco en solo uno de los dos.
+ *
+ * Todo lo visible —nombres de rango, textos, iconos, colores— llega del
+ * servidor. Aquí no se codifica ni un solo nombre de nivel: el catálogo lo
+ * administra el gimnasio y una copia local quedaría desincronizada en cuanto
+ * alguien renombrara un rango.
+ */
+
+export const progressionAudiences = ['ANY', 'MALE', 'FEMALE'] as const;
+export type ProgressionAudience = (typeof progressionAudiences)[number];
+
+export const badgeRarities = ['COMUN', 'RARA', 'EPICA', 'LEGENDARIA'] as const;
+export type BadgeRarity = (typeof badgeRarities)[number];
+
+export const badgeCategories = [
+  'CONSTANCIA',
+  'VOLUMEN',
+  'FUERZA',
+  'VARIEDAD',
+  'HITO',
+  'SECRETA',
+] as const;
+export type BadgeCategory = (typeof badgeCategories)[number];
+
+/** Un hito del camino. */
+export const progressionLevelSchema = z.object({
+  code: z.string(),
+  name: z.string(),
+  /** Frase en segunda persona: nombra quién eres al llegar, no qué hiciste. */
+  tagline: z.string(),
+  description: z.string().nullable(),
+  minPoints: z.number().int(),
+  sortOrder: z.number().int(),
+  /** Nombre de icono de Ionicons; ambos clientes usan ese mismo juego. */
+  icon: z.string(),
+  color: z.string(),
+  unlocked: z.boolean(),
+  current: z.boolean(),
+});
+
+export const progressionBadgeSchema = z.object({
+  code: z.string(),
+  name: z.string(),
+  description: z.string(),
+  /** Línea de sabor; la que se lee al conseguirla. */
+  flavorText: z.string().nullable(),
+  category: z.enum(badgeCategories),
+  rarity: z.enum(badgeRarities),
+  icon: z.string(),
+  color: z.string(),
+  pointsReward: z.number().int(),
+  earned: z.boolean(),
+  earnedAt: z.string().nullable(),
+  /** Conseguida y todavía sin celebrar. */
+  isNew: z.boolean(),
+  /** De 0 a 1. Nulo en las secretas que aún no se han conseguido. */
+  progress: z.number().nullable(),
+  progressLabel: z.string().nullable(),
+});
+
+export const progressionStatsSchema = z.object({
+  totalSessions: z.number().int(),
+  totalSets: z.number().int(),
+  totalReps: z.number().int(),
+  totalVolumeKg: z.number(),
+  currentStreakDays: z.number().int(),
+  longestStreakDays: z.number().int(),
+  weeklyStreak: z.number().int(),
+  distinctExercises: z.number().int(),
+  distinctMuscleGroups: z.number().int(),
+  personalRecords: z.number().int(),
+  lastSessionOn: z.string().nullable(),
+});
+
+export const progressionSchema = z.object({
+  points: z.number().int(),
+  audience: z.enum(progressionAudiences),
+  /** Nulo solo antes del primer entrenamiento en un catálogo vacío. */
+  level: progressionLevelSchema.nullable(),
+  nextLevel: progressionLevelSchema.nullable(),
+  pointsToNextLevel: z.number().int().nullable(),
+  /** Avance dentro del tramo actual, de 0 a 1. */
+  levelProgress: z.number(),
+  path: z.array(progressionLevelSchema),
+  badges: z.array(progressionBadgeSchema),
+  stats: progressionStatsSchema,
+  unlockedNow: z.array(progressionBadgeSchema),
+});
+
+export const leaderboardEntrySchema = z.object({
+  position: z.number().int(),
+  points: z.number().int(),
+  levelCode: z.string().nullable(),
+  /** Nombre de pila e inicial: la tabla no es una lista de socios. */
+  displayName: z.string(),
+  isMe: z.boolean(),
+});
+
+export const leaderboardSchema = z.array(leaderboardEntrySchema);
+
+export const progressionAcknowledgedSchema = z.object({
+  acknowledged: z.literal(true),
+});
+
+/**
+ * Equipamiento que corresponde a un músculo, deducido del catálogo real.
+ *
+ * `primary` es nulo cuando el músculo no tiene ejercicios catalogados: el
+ * servidor no inventa una máquina, y la pantalla deja elegir a mano.
+ */
+export const equipmentSuggestionSchema = z.object({
+  label: z.string(),
+  name: z.string(),
+  type: z.string(),
+  exerciseCount: z.number().int(),
+  share: z.number(),
+});
+
+export const muscleEquipmentInferenceSchema = z.object({
+  muscleCode: z.string(),
+  muscleName: z.string(),
+  muscleGroupCode: z.string(),
+  muscleGroupName: z.string(),
+  primary: equipmentSuggestionSchema.nullable(),
+  alternatives: z.array(equipmentSuggestionSchema),
+  suggestedName: z.string().nullable(),
+});
+
+/**
+ * Catálogo de músculos, para el selector del ejercicio propio.
+ *
+ * Vive junto a la deducción de equipamiento porque solo se usan juntos: se
+ * elige un músculo de esta lista y el servidor responde con qué se entrena.
+ */
+export const muscleCatalogEntrySchema = z.object({
+  code: z.string(),
+  nombre: z.string(),
+  nombreLatin: z.string(),
+  descripcion: z.string().nullable(),
+  grupo: z.object({ code: z.string(), nombre: z.string() }),
+});
+
+export const muscleCatalogSchema = z.array(muscleCatalogEntrySchema);
+
+export type MuscleCatalogEntry = z.infer<typeof muscleCatalogEntrySchema>;
+export type ProgressionLevel = z.infer<typeof progressionLevelSchema>;
+export type ProgressionBadge = z.infer<typeof progressionBadgeSchema>;
+export type ProgressionStats = z.infer<typeof progressionStatsSchema>;
+export type Progression = z.infer<typeof progressionSchema>;
+export type LeaderboardEntry = z.infer<typeof leaderboardEntrySchema>;
+export type EquipmentSuggestion = z.infer<typeof equipmentSuggestionSchema>;
+export type MuscleEquipmentInference = z.infer<typeof muscleEquipmentInferenceSchema>;

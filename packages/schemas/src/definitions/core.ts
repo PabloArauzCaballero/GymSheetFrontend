@@ -11,6 +11,12 @@ export const problemSchema = z.object({
   error: z.object({ message: z.string().optional() }).optional(),
 });
 
+/**
+ * Géneros que reconoce la cuenta. El tipo lo declara `@gymsheet/types`, que es
+ * donde viven los contratos; aquí solo se necesita la tupla para el `z.enum`.
+ */
+export const userGenders = ['MALE', 'FEMALE', 'UNSPECIFIED'] as const;
+
 export const userSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
@@ -18,6 +24,10 @@ export const userSchema = z.object({
   rol: z.enum(userRoles),
   estado: z.enum(['ACTIVO', 'INACTIVO']).optional(),
   fechaRegistro: z.string().optional(),
+  /** Gimnasio de la cuenta; el cliente pinta su marca a partir de esto. */
+  tenantId: z.string().nullable().optional(),
+  /** Nulo = no se ha preguntado. Ver `userGenders`. */
+  genero: z.enum(userGenders).nullable().optional(),
 });
 
 export const sessionPrincipalSchema = z.object({

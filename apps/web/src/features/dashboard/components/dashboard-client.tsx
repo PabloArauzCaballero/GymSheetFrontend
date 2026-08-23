@@ -15,6 +15,8 @@ import { accessService } from '@/features/access/services/access-service';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
 import { membershipService } from '@/features/membership/services/membership-service';
 import { notificationService } from '@/features/notifications/services/notification-service';
+import { SendaCard } from '@/features/progression/components/senda-card';
+import { progressionService } from '@/features/progression/services/progression-service';
 import { workoutService } from '@/features/workouts/services/workout-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
@@ -64,6 +66,11 @@ export function DashboardClient() {
     queryFn: () => accessService.getHistory(1),
     retry: false,
   });
+  const progression = useQuery({
+    queryKey: ['progression', 'me'],
+    queryFn: progressionService.get,
+    retry: false,
+  });
 
   if (workouts.isLoading || favorites.isLoading) return <LoadingPanel rows={6} />;
   const sessions = workouts.data?.items ?? [];
@@ -92,6 +99,15 @@ export function DashboardClient() {
         title="Precisión antes que ruido."
         tutorialId="page:dashboard"
       />
+
+      {/* La senda, antes que los indicadores.
+          Es la única tarjeta que responde «¿me estoy acercando a como quiero
+          verme?», que es la razón por la que alguien vuelve. El resto del panel
+          informa; esta tira. Es el reflejo exacto de la tarjeta de Inicio en el
+          móvil: mismo rango, misma barra, mismo texto de distancia. */}
+      {progression.data?.level ? (
+        <SendaCard progression={progression.data} />
+      ) : null}
 
       <section
         aria-label="Indicadores"

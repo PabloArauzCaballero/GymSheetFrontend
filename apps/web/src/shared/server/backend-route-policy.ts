@@ -35,6 +35,8 @@ const allowedPathPatterns = [
   new RegExp(`^/exercise-media/${resourceId}$`, 'u'),
   /^\/exercises$/u,
   /^\/exercises\/personal$/u,
+  // Máquina que corresponde a un músculo, para el alta de ejercicio propio.
+  /^\/exercises\/equipment-suggestion$/u,
   new RegExp(`^/exercises/${resourceId}(/media)?$`, 'u'),
   /^\/export\/workout-history(\/csv)?$/u,
   /^\/memberships\/me$/u,
@@ -46,12 +48,18 @@ const allowedPathPatterns = [
   /^\/me\/membership$/u,
   /^\/me\/membership\/(options|renewal-intent|extension-intent)$/u,
   /^\/me\/accesses$/u,
+  // La senda: estado, confirmación de novedades y clasificación del gimnasio.
+  /^\/me\/progression$/u,
+  /^\/me\/progression\/(acknowledge|leaderboard)$/u,
   /^\/me\/tutorial-progress$/u,
   new RegExp(`^/me/tutorial-progress/${resourceId}$`, 'u'),
   /^\/notifications\/me$/u,
   /^\/notifications\/preferences\/me$/u,
   new RegExp(`^/notifications/${resourceId}/read$`, 'u'),
   /^\/profile$/u,
+  // Catálogo anatómico: alimenta el selector de músculo del ejercicio propio.
+  /^\/muscles$/u,
+  /^\/muscle-groups$/u,
   /^\/routines$/u,
   /^\/routines\/import$/u,
   /^\/routines\/assignments\/(me|coach)$/u,

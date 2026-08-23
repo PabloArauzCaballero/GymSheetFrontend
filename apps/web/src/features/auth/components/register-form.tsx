@@ -10,6 +10,7 @@ import { ApiError } from '@/shared/api/api-error';
 import { Button } from '@/shared/components/ui/button';
 import { Field } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
+import { Select } from '@/shared/components/ui/select';
 
 const schema = z
   .object({
@@ -17,6 +18,13 @@ const schema = z
     email: z.string().email('Ingresa un correo válido.').max(180),
     password: z.string().min(8, 'Usa al menos 8 caracteres.').max(128),
     confirmation: z.string(),
+    /**
+     * Solo sirve para elegir con qué arquetipos te habla la senda. Cadena vacía
+     * = prefiero no decirlo, y se envía como `UNSPECIFIED` en vez de omitirse:
+     * omitirlo dejaría la cuenta como «aún no preguntado» y la aplicación
+     * volvería a preguntar. Se puede cambiar después desde el perfil.
+     */
+    genero: z.enum(['', 'MALE', 'FEMALE', 'UNSPECIFIED']),
   })
   .refine((value) => value.password === value.confirmation, {
     path: ['confirmation'],
@@ -28,7 +36,7 @@ export function RegisterForm() {
   const router = useRouter();
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { nombreCompleto: '', email: '', password: '', confirmation: '' },
+    defaultValues: { nombreCompleto: '', email: '', password: '', confirmation: '', genero: '' },
   });
 
   async function submit(values: FormValues) {
@@ -38,6 +46,7 @@ export function RegisterForm() {
         nombreCompleto: values.nombreCompleto,
         email: values.email,
         password: values.password,
+        ...(values.genero === '' ? {} : { genero: values.genero }),
       });
       router.replace('/dashboard');
       router.refresh();
@@ -96,6 +105,18 @@ export function RegisterForm() {
           type="password"
           {...form.register('confirmation')}
         />
+      </Field>
+      <Field
+        error={form.formState.errors.genero?.message}
+        hint="Solo se usa para elegir los rangos e insignias con los que te habla la app. Puedes cambiarlo o dejarlo en blanco."
+        htmlFor="genero"
+        label="Género (opcional)"
+      >
+        <Select id="genero" {...form.register('genero')}>
+          <option value="">Prefiero no decirlo</option>
+          <option value="MALE">Hombre</option>
+          <option value="FEMALE">Mujer</option>
+        </Select>
       </Field>
       {form.formState.errors.root?.message ? (
         <p

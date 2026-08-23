@@ -8,6 +8,15 @@ export type Page<T> = {
   totalPages: number;
 };
 
+/**
+ * Género declarado por la persona.
+ *
+ * `UNSPECIFIED` no es lo mismo que ausencia: significa «me lo preguntaron y
+ * elijo no decirlo». Nulo es «todavía no se ha preguntado». Los dos llevan a la
+ * rama neutra de la senda, pero solo el segundo justifica volver a preguntar.
+ */
+export type UserGender = 'MALE' | 'FEMALE' | 'UNSPECIFIED';
+
 export type User = {
   id: string;
   email: string;
@@ -15,6 +24,10 @@ export type User = {
   rol: UserRole;
   estado?: 'ACTIVO' | 'INACTIVO';
   fechaRegistro?: string;
+  /** Gimnasio de la cuenta; el cliente pinta su marca a partir de esto. */
+  tenantId?: string | null;
+  /** Nulo = no se ha preguntado. */
+  genero?: UserGender | null;
 };
 
 export type SessionPrincipal = {
