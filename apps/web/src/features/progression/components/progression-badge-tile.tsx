@@ -68,7 +68,12 @@ export function BadgeTile({ badge }: Readonly<{ badge: ProgressionBadge }>) {
 
       {!badge.earned && badge.progress !== null ? (
         <div className="grid gap-1.5">
-          <ProgressTrack color="var(--text-disabled)" height={4} ratio={badge.progress} />
+          <ProgressTrack
+            color="var(--text-disabled)"
+            height={4}
+            label={`Avance de la medalla ${badge.name}`}
+            ratio={badge.progress}
+          />
           <span className="text-xs text-[var(--text-disabled)]">{badge.progressLabel}</span>
         </div>
       ) : null}

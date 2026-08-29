@@ -53,6 +53,11 @@ export function SendaCard({
 
       <ProgressTrack
         color={progression.nextLevel?.color ?? level.color}
+        label={
+          progression.nextLevel
+            ? `Avance hacia ${progression.nextLevel.name}`
+            : 'Avance de la senda'
+        }
         ratio={progression.levelProgress}
       />
 

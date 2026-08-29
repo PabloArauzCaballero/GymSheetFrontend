@@ -8,11 +8,24 @@
 export function ProgressTrack({
   ratio,
   color,
+  label,
   height = 8,
-}: Readonly<{ ratio: number; color: string; height?: number }>) {
+}: Readonly<{
+  ratio: number;
+  color: string;
+  /**
+   * Qué mide esta barra. OBLIGATORIO a propósito: sin nombre, un lector de
+   * pantalla lee «barra de progreso, 40 %» sin decir de qué, y en `/trayectoria`
+   * son 24 seguidas — ilegible. Haciéndolo obligatorio el fallo lo caza el
+   * type-check y no puede reaparecer en una llamada nueva. Ver M-5.
+   */
+  label: string;
+  height?: number;
+}>) {
   const clamped = Math.min(1, Math.max(0, ratio));
   return (
     <div
+      aria-label={label}
       aria-valuemax={100}
       aria-valuemin={0}
       aria-valuenow={Math.round(clamped * 100)}

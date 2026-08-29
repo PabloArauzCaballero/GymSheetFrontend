@@ -73,6 +73,7 @@ export function RankHero({
       <div className="grid gap-1.5">
         <ProgressTrack
           color={nextLevel?.color ?? level?.color ?? 'var(--volt)'}
+          label={nextLevel ? `Avance hacia ${nextLevel.name}` : 'Avance de la senda'}
           ratio={levelProgress}
         />
         <span className="text-xs text-[var(--text-muted)]">
