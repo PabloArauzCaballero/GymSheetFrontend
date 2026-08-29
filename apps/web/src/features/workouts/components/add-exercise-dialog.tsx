@@ -7,6 +7,8 @@ import { notify } from '@/shared/notifications';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
 import { workoutService } from '@/features/workouts/services/workout-service';
 import { queryKeys } from '@/shared/api/query-keys';
+import { ErrorPanel } from '@/shared/components/feedback/error-panel';
+import { SkeletonList } from '@/shared/components/feedback/skeleton';
 import { DomainImage } from '@/shared/components/media/domain-image';
 import { Button } from '@/shared/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from '@/shared/components/ui/dialog';
@@ -63,9 +65,15 @@ export function AddExerciseDialog({
         </div>
         <div className="scrollbar-thin stagger mt-4 grid max-h-[50dvh] gap-2 overflow-y-auto">
           {exercises.isLoading ? (
-            <p className="animate-fade-in p-5 text-center text-sm text-[var(--text-muted)]">
-              Cargando catálogo…
-            </p>
+            <SkeletonList rows={4} variant="stacked" withAvatar={false} />
+          ) : /* Sin esta rama, el catálogo caído se pintaba como «No hay ejercicios
+                que coincidan» en mitad del entrenamiento: parecía que el gimnasio no
+                tuviera ejercicios. Ver A-3 en hive/reports/qa-frontend.md. */
+          exercises.isError ? (
+            <ErrorPanel
+              message={exercises.error?.message ?? 'No pudimos cargar el catálogo.'}
+              onRetry={() => void exercises.refetch()}
+            />
           ) : exercises.data?.items.length ? (
             exercises.data.items.map((item, position) => {
               const media = item.media.find((entry) => entry.isPrimary) ?? item.media[0];

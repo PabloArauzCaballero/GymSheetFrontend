@@ -110,8 +110,17 @@ export const tenantCatalog: Record<string, TenantDefinition> = {
 
 export const defaultTenant = gymsheetTenant;
 
-/** Identidad por id; sin coincidencia devuelve la de referencia. */
+/**
+ * Identidad por id; sin coincidencia devuelve la de referencia.
+ *
+ * `Object.hasOwn` y no `tenantCatalog[key] ?? defaultTenant`: el acceso por
+ * índice recorre la cadena de prototipos, así que `tenantCatalog['constructor']`
+ * devolvía la función `Object` —que no es `undefined`, luego esquivaba el `??`—
+ * y el resto del sistema recibía una «identidad» sin `colors`. Bastaba visitar
+ * `/constructor` para dejar el `RootLayout` en 500 durante el año que dura la
+ * cookie de marca. Ver C-1 en hive/reports/qa-frontend.md.
+ */
 export function resolveTenant(id: string | null | undefined): TenantDefinition {
   const key = (id ?? '').trim().toLowerCase();
-  return tenantCatalog[key] ?? defaultTenant;
+  return Object.hasOwn(tenantCatalog, key) ? tenantCatalog[key]! : defaultTenant;
 }

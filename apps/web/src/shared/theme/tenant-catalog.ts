@@ -72,8 +72,16 @@ function lightOf(definition: TenantDefinition): ModePalette {
   };
 }
 
-/** Tema completo para una identidad del catálogo compartido. */
+/**
+ * Tema completo para una identidad del catálogo compartido.
+ *
+ * La comprobación de `colors` es una red, no una redundancia: este tema lo pinta
+ * el `RootLayout`, así que cualquier identidad malformada que llegase hasta aquí
+ * tumbaría TODAS las rutas, no sólo la que la introdujo. Ante algo que no es una
+ * identidad, degradar a la marca de referencia siempre es mejor que un 500.
+ */
 export function themeFromCatalog(definition: TenantDefinition): TenantTheme {
+  if (!definition?.colors) return defaultTheme;
   if (definition.id === defaultTheme.id) return defaultTheme;
   return {
     id: definition.id,
