@@ -8,7 +8,9 @@ import { exerciseService } from '@/features/exercises/services/exercise-service'
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
-import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
+import {
+  SkeletonCardGrid,
+} from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { ButtonLink } from '@/shared/components/ui/button';
 import { Field } from '@/shared/components/ui/field';
@@ -113,7 +115,7 @@ export function ExerciseList() {
         </Field>
       </section>
       {exercises.isLoading ? (
-        <LoadingPanel rows={8} />
+        <SkeletonCardGrid count={6} withMedia />
       ) : exercises.isError ? (
         <ErrorPanel message={exercises.error.message} onRetry={() => exercises.refetch()} />
       ) : exercises.data?.items.length ? (

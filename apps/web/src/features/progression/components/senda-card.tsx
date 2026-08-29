@@ -57,7 +57,11 @@ export function SendaCard({
       />
 
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <span className="text-sm font-semibold text-[var(--volt)]">
+        {/* `--accent-ink`, no `--volt`: en oscuro valen lo mismo (#c3f400), así que el
+            fallo era invisible al desarrollar; en claro `--volt` sigue siendo #c3f400
+            sobre superficie clara —1.3:1— y la cifra desaparecía. `--accent-ink` baja
+            a #55730a en claro y da 5.5:1. `--volt` queda para rellenos y CTA. */}
+        <span className="text-sm font-semibold text-[var(--accent-ink)]">
           {`${progression.points.toLocaleString('es-ES')} puntos`}
         </span>
         <span className="text-sm text-[var(--text-muted)]">

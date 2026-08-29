@@ -9,7 +9,11 @@ import { ExerciseMediaManager } from '@/features/exercises/components/exercise-m
 import type { UserRole } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
-import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
+import {
+  SkeletonDetail,
+  SkeletonPageHeader,
+  SkeletonScreen,
+} from '@/shared/components/feedback/skeleton';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button, ButtonLink } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
@@ -47,7 +51,14 @@ export function ExerciseDetail({
     onError: (error: Error) => notify.error(error),
   });
 
-  if (exercise.isLoading) return <LoadingPanel rows={6} />;
+  if (exercise.isLoading) {
+    return (
+      <SkeletonScreen className="gap-8" label="Cargando el ejercicio">
+        <SkeletonPageHeader withActions />
+        <SkeletonDetail />
+      </SkeletonScreen>
+    );
+  }
   if (exercise.isError || !exercise.data) {
     return (
       <ErrorPanel

@@ -13,7 +13,12 @@ import { trainingService } from '@/features/training/services/training-service';
 import { routineVisibilities, trainingGoals, type UserRole } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
-import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
+import { ErrorPanel } from '@/shared/components/feedback/error-panel';
+import {
+  SkeletonCardGrid,
+  SkeletonPageHeader,
+  SkeletonScreen,
+} from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -62,7 +67,28 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
     onError: (error: Error) => form.setError('root', { message: error.message }),
   });
 
-  if (mine.isLoading) return <LoadingPanel rows={6} />;
+  if (mine.isLoading) {
+    return (
+      <SkeletonScreen className="gap-8" label="Cargando tus rutinas">
+        <SkeletonPageHeader withActions />
+        <SkeletonCardGrid count={6} />
+      </SkeletonScreen>
+    );
+  }
+
+  /* Un fallo de la API caía en `?? []` y la pantalla decía «Aún no tienes
+     rutinas» con un botón para crear la primera: el usuario pensaba que sus
+     rutinas se habían borrado. `templates` sí puede fallar en silencio, es la
+     sección secundaria. */
+  if (mine.isError) {
+    return (
+      <ErrorPanel
+        message={mine.error?.message ?? 'No se pudieron cargar tus rutinas.'}
+        onRetry={() => void mine.refetch()}
+      />
+    );
+  }
+
   const routines = mine.data?.items ?? [];
   const templateItems = templates.data?.items ?? [];
 

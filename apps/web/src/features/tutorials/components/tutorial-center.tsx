@@ -3,7 +3,11 @@
 import { useMemo, useState } from 'react';
 import { GraduationCap, Search, WifiOff } from 'lucide-react';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
-import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
+import {
+  SkeletonCardGrid,
+  SkeletonPageHeader,
+  SkeletonScreen,
+} from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Badge } from '@/shared/components/ui/badge';
 import { Field } from '@/shared/components/ui/field';
@@ -64,7 +68,14 @@ export function TutorialCenter() {
     [category, search, status, statusOf, tutorials],
   );
 
-  if (!ready) return <LoadingPanel rows={6} />;
+  if (!ready) {
+    return (
+      <SkeletonScreen className="gap-8" label="Cargando el centro de ayuda">
+        <SkeletonPageHeader />
+        <SkeletonCardGrid count={6} />
+      </SkeletonScreen>
+    );
+  }
 
   return (
     <div className="grid gap-8">

@@ -8,7 +8,11 @@ import { trainingService } from '@/features/training/services/training-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
-import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
+import {
+  SkeletonList,
+  SkeletonPageHeader,
+  SkeletonScreen,
+} from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -31,7 +35,14 @@ export function MyPlansClient() {
     onError: (error: Error) => notify.error(error),
   });
 
-  if (query.isLoading) return <LoadingPanel rows={5} />;
+  if (query.isLoading) {
+    return (
+      <SkeletonScreen className="gap-8" label="Cargando tus planes">
+        <SkeletonPageHeader />
+        <SkeletonList rows={4} variant="stacked" withAvatar={false} />
+      </SkeletonScreen>
+    );
+  }
   if (query.isError)
     return <ErrorPanel message={query.error.message} onRetry={() => query.refetch()} />;
   const assignments = query.data ?? [];

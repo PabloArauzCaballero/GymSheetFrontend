@@ -9,7 +9,9 @@ import { workoutService } from '@/features/workouts/services/workout-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
-import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
+import {
+  SkeletonList,
+} from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button, ButtonLink } from '@/shared/components/ui/button';
@@ -74,7 +76,7 @@ export function WorkoutList() {
         tutorialId="page:workouts"
       />
       {query.isLoading ? (
-        <LoadingPanel rows={7} />
+        <SkeletonList rows={6} variant="stacked" withAvatar={false} />
       ) : query.isError ? (
         <ErrorPanel message={query.error.message} onRetry={() => query.refetch()} />
       ) : query.data?.items.length ? (

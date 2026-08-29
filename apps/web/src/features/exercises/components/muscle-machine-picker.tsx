@@ -173,6 +173,7 @@ export function MuscleMachinePicker({
                         option.label === (selectedEquipmentLabel ?? suggestion.primary?.label);
                       return (
                         <button
+                          aria-pressed={active}
                           className={cn(
                             'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors',
                             active

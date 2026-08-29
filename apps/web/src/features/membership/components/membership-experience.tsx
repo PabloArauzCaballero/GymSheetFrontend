@@ -8,7 +8,12 @@ import type { MembershipPlan } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
-import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
+import {
+  SkeletonDetail,
+  SkeletonList,
+  SkeletonMetricRow,
+  SkeletonScreen,
+} from '@/shared/components/feedback/skeleton';
 import { DomainImage } from '@/shared/components/media/domain-image';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -60,8 +65,16 @@ export function MembershipExperience({ compact = false }: Readonly<{ compact?: b
       if (error.message !== 'CANCELLED') notify.error(error);
     },
   });
-  if (projection.isLoading || accesses.isLoading || options.isLoading)
-    return <LoadingPanel rows={compact ? 3 : 6} />;
+  if (projection.isLoading || accesses.isLoading || options.isLoading) {
+    return compact ? (
+      <SkeletonList rows={3} withAvatar={false} />
+    ) : (
+      <SkeletonScreen className="gap-8" label="Cargando tu membresía">
+        <SkeletonMetricRow count={3} />
+        <SkeletonDetail />
+      </SkeletonScreen>
+    );
+  }
   if (projection.isError || accesses.isError || options.isError)
     return (
       <ErrorPanel

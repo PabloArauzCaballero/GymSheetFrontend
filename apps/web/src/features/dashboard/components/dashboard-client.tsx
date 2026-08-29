@@ -20,7 +20,13 @@ import { progressionService } from '@/features/progression/services/progression-
 import { workoutService } from '@/features/workouts/services/workout-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
-import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
+import { ErrorPanel } from '@/shared/components/feedback/error-panel';
+import {
+  SkeletonCardGrid,
+  SkeletonMetricRow,
+  SkeletonPageHeader,
+  SkeletonScreen,
+} from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Badge } from '@/shared/components/ui/badge';
 import { ButtonLink } from '@/shared/components/ui/button';
@@ -72,7 +78,35 @@ export function DashboardClient() {
     retry: false,
   });
 
-  if (workouts.isLoading || favorites.isLoading) return <LoadingPanel rows={6} />;
+  if (workouts.isLoading || favorites.isLoading) {
+    return (
+      <SkeletonScreen className="gap-10" label="Cargando tu panel">
+        <SkeletonPageHeader withActions />
+        <SkeletonMetricRow />
+        <SkeletonCardGrid count={3} />
+      </SkeletonScreen>
+    );
+  }
+
+  /* Sin esta rama el panel trataba un fallo de red como «no tienes nada»:
+     `data?.items ?? []` deja `sessions` vacío y abajo se pinta el estado vacío.
+     El usuario concluía que había perdido sus sesiones. Las consultas
+     secundarias (membresía, notificaciones, accesos) sí pueden fallar en
+     silencio porque son adornos; estas dos son la página. */
+  if (workouts.isError || favorites.isError) {
+    return (
+      <ErrorPanel
+        message={
+          (workouts.error ?? favorites.error)?.message ?? 'No se pudo cargar tu actividad reciente.'
+        }
+        onRetry={() => {
+          void workouts.refetch();
+          void favorites.refetch();
+        }}
+      />
+    );
+  }
+
   const sessions = workouts.data?.items ?? [];
   const active = sessions.find((session) => session.estado === 'EN_PROGRESO');
   const latest = sessions[0];

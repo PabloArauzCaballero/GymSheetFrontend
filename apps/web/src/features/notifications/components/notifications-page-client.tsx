@@ -8,7 +8,11 @@ import { notificationService } from '@/features/notifications/services/notificat
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
-import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
+import {
+  SkeletonList,
+  SkeletonPageHeader,
+  SkeletonScreen,
+} from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -36,7 +40,14 @@ export function NotificationsPageClient() {
     },
     onError: (error: Error) => notify.error(error),
   });
-  if (notifications.isLoading || preference.isLoading) return <LoadingPanel rows={7} />;
+  if (notifications.isLoading || preference.isLoading) {
+    return (
+      <SkeletonScreen className="gap-8" label="Cargando tus avisos">
+        <SkeletonPageHeader />
+        <SkeletonList rows={6} />
+      </SkeletonScreen>
+    );
+  }
   return (
     <div className="grid gap-8">
       <PageHeader
@@ -68,12 +79,17 @@ export function NotificationsPageClient() {
                           <span className="mt-1 grid size-9 shrink-0 place-items-center rounded-[4px] border border-[var(--border)]">
                             <Bell className="size-4 text-[var(--accent-ink)]" />
                           </span>
-                          <div>
+                          {/* `min-w-0`: un hijo flex no baja de su contenido por defecto
+                              (`min-width: auto`), así que un asunto o un mensaje con una
+                              URL larga sin espacios ensanchaba la fila y desplazaba la
+                              página en horizontal. Es el mismo motivo documentado en
+                              `page-header.tsx`. El texto es de difusión: no lo controlamos. */}
+                          <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <h2 className="font-bold">{item.asunto}</h2>
+                              <h2 className="break-words font-bold">{item.asunto}</h2>
                               {!item.leidoEn ? <Badge tone="success">Nuevo</Badge> : null}
                             </div>
-                            <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+                            <p className="mt-2 break-words text-sm leading-6 text-[var(--text-muted)]">
                               {item.mensaje}
                             </p>
                             <p className="mt-3 text-xs text-[var(--text-disabled)]">

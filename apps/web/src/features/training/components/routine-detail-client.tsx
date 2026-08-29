@@ -10,7 +10,11 @@ import { trainingService } from '@/features/training/services/training-service';
 import type { UserRole } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
-import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
+import {
+  SkeletonList,
+  SkeletonPageHeader,
+  SkeletonScreen,
+} from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Button } from '@/shared/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from '@/shared/components/ui/dialog';
@@ -76,7 +80,14 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
     onError: (error: Error) => notify.error(error),
   });
 
-  if (query.isLoading) return <LoadingPanel rows={6} />;
+  if (query.isLoading) {
+    return (
+      <SkeletonScreen className="gap-8" label="Cargando la rutina">
+        <SkeletonPageHeader withActions />
+        <SkeletonList rows={6} variant="stacked" withAvatar={false} />
+      </SkeletonScreen>
+    );
+  }
   if (query.isError || !query.data)
     return <ErrorPanel message={query.error?.message ?? 'Rutina no encontrada.'} onRetry={() => query.refetch()} />;
 
@@ -133,7 +144,8 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
                           const active = weekdays.includes(day);
                           return (
                             <button
-                              className={`min-h-9 rounded-[6px] border px-3 text-sm ${active ? 'border-[var(--volt)] bg-[var(--surface-high)] text-[var(--text)]' : 'border-[var(--border-subtle)] text-[var(--text-muted)]'}`}
+                              aria-pressed={active}
+                              className={`min-h-9 rounded-[6px] border px-3 text-sm ${active ? 'border-[var(--volt)] bg-[color-mix(in_srgb,var(--volt)_14%,transparent)] text-[var(--text)]' : 'border-[var(--border-subtle)] text-[var(--text-muted)]'}`}
                               key={label}
                               onClick={() =>
                                 setWeekdays((current) =>

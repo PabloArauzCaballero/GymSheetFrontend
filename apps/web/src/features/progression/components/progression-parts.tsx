@@ -60,7 +60,11 @@ export function RankHero({
       </p>
 
       <p className="flex items-baseline gap-2">
-        <span className="text-4xl font-semibold tracking-[-0.03em] text-[var(--volt)]">
+        {/* `--accent-ink`, no `--volt`: en oscuro valen lo mismo (#c3f400), así que el
+            fallo era invisible al desarrollar; en claro `--volt` sigue siendo #c3f400
+            sobre superficie clara —1.3:1— y la cifra desaparecía. `--accent-ink` baja
+            a #55730a en claro y da 5.5:1. `--volt` queda para rellenos y CTA. */}
+        <span className="text-4xl font-semibold tracking-[-0.03em] text-[var(--accent-ink)]">
           {points.toLocaleString('es-ES')}
         </span>
         <span className="text-sm text-[var(--text-muted)]">puntos</span>

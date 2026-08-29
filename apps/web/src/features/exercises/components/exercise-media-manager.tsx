@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ImagePlus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { confirm, notify } from '@/shared/notifications';
 import type { ExerciseMedia } from '@/shared/api/contracts';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
@@ -19,6 +19,7 @@ export function ExerciseMediaManager({
   media,
 }: Readonly<{ exerciseId: string; media: ExerciseMedia[] }>) {
   const [open, setOpen] = useState(false);
+  const fieldId = useId();
   const queryClient = useQueryClient();
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['exercise', exerciseId] });
   const create = useMutation({
@@ -69,28 +70,46 @@ export function ExerciseMediaManager({
             >
               <form action={(form) => create.mutate(form)} className="grid gap-5">
                 <div className="grid gap-5 sm:grid-cols-2">
-                  <Field label="Tipo">
-                    <Select name="mediaType">
+                  <Field htmlFor={`${fieldId}-tipo`} label="Tipo">
+                    <Select id={`${fieldId}-tipo`} name="mediaType">
                       <option value="IMAGE">Imagen</option>
                       <option value="GIF">GIF</option>
                       <option value="VIDEO">Video</option>
                     </Select>
                   </Field>
-                  <Field label="Orden">
-                    <Input defaultValue="0" min="0" max="1000" name="sortOrder" type="number" />
+                  <Field htmlFor={`${fieldId}-orden`} label="Orden">
+                    <Input
+                      defaultValue="0"
+                      id={`${fieldId}-orden`}
+                      min="0"
+                      max="1000"
+                      name="sortOrder"
+                      type="number"
+                    />
                   </Field>
                 </div>
-                <Field label="URL HTTPS">
-                  <Input name="url" required type="url" pattern="https://.*" />
+                <Field htmlFor={`${fieldId}-url`} label="URL HTTPS">
+                  <Input id={`${fieldId}-url`} name="url" required type="url" pattern="https://.*" />
                 </Field>
-                <Field label="Miniatura HTTPS">
-                  <Input name="thumbnailUrl" type="url" pattern="https://.*" />
+                <Field htmlFor={`${fieldId}-thumb`} label="Miniatura HTTPS">
+                  <Input
+                    id={`${fieldId}-thumb`}
+                    name="thumbnailUrl"
+                    type="url"
+                    pattern="https://.*"
+                  />
                 </Field>
-                <Field label="MIME opcional">
-                  <Input name="mimeType" placeholder="image/webp" />
+                <Field htmlFor={`${fieldId}-mime`} label="MIME opcional">
+                  <Input id={`${fieldId}-mime`} name="mimeType" placeholder="image/webp" />
                 </Field>
-                <Field label="Texto alternativo">
-                  <Input minLength={3} maxLength={500} name="altText" required />
+                <Field htmlFor={`${fieldId}-alt`} label="Texto alternativo">
+                  <Input
+                    id={`${fieldId}-alt`}
+                    minLength={3}
+                    maxLength={500}
+                    name="altText"
+                    required
+                  />
                 </Field>
                 <label className="flex items-center gap-3 text-sm">
                   <input className="size-4 accent-[var(--volt)]" name="isPrimary" type="checkbox" />

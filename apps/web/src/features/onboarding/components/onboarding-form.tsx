@@ -113,7 +113,8 @@ export function OnboardingForm({ initial }: Readonly<{ initial: OnboardingState 
             <div className="grid gap-3 sm:grid-cols-2">
               {goalOptions.map((item) => (
                 <button
-                  className={`rounded-lg border p-4 text-left ${goal === item.value ? 'border-[var(--volt)] bg-[var(--surface-high)]' : 'border-[var(--border-subtle)]'}`}
+                  aria-pressed={goal === item.value}
+                  className={`rounded-lg border p-4 text-left ${goal === item.value ? 'border-[var(--volt)] bg-[color-mix(in_srgb,var(--volt)_14%,transparent)]' : 'border-[var(--border-subtle)]'}`}
                   key={item.value}
                   onClick={() => setGoal(item.value)}
                   type="button"
