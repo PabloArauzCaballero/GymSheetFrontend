@@ -23,17 +23,16 @@ export function AuthFrame({
           {brand.wordmark}
         </div>
         <div className="max-w-2xl">
-          <p className="data-label text-[var(--accent-ink)]">Elite performance system</p>
+          <p className="data-label text-[var(--accent-ink)]">Tu entrenamiento, por fin conectado</p>
           <h2 className="mt-5 text-5xl font-semibold leading-[1.03] tracking-[-0.022em] xl:text-7xl">
-            Cada serie.
+            Entrena con precisión.
             <br />
-            Cada decisión.
+            Progresa con propósito.
             <br />
             Sin fricción.
           </h2>
           <p className="mt-7 max-w-xl text-lg leading-8 text-[var(--text-muted)]">
-            Registra peso, repeticiones, RIR, descanso y énfasis con la precisión de una herramienta
-            profesional.
+            Registra cada serie, entiende tu evolución y mantén tu gimnasio contigo en una experiencia profesional.
           </p>
         </div>
         <div className="stagger grid grid-cols-3 gap-4">

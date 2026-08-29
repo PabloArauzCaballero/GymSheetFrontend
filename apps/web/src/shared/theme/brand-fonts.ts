@@ -1,13 +1,10 @@
-import { Hanken_Grotesk, Inter, Manrope } from 'next/font/google';
+import localFont from 'next/font/local';
 
 /**
  * Catálogo tipográfico.
  *
- * `next/font` descarga y auto-hospeda en tiempo de compilación, así que exige
- * argumentos literales: no acepta constantes compartidas ni abreviaturas de
- * propiedad, y por eso cada familia repite sus opciones. Tampoco puede
- * resolverse por petición, de ahí que el catálogo sea cerrado y el inquilino
- * elija una clave.
+ * Las tres familias se sirven desde el repositorio. Así el build es reproducible
+ * y no depende de Google Fonts ni de acceso a red en CI/producción.
  *
  * Las variables declaradas aquí deben coincidir con `fontVariableByKey` del
  * contrato de marca, que es lo que consume la hoja de tema.
@@ -15,25 +12,25 @@ import { Hanken_Grotesk, Inter, Manrope } from 'next/font/google';
  * Sólo se precarga la familia por defecto: precargar las tres castigaría a
  * todos los inquilinos con descargas que la mayoría no llega a usar.
  */
-const hanken = Hanken_Grotesk({
-  subsets: ['latin'],
+const hanken = localFont({
+  src: './fonts/hanken-grotesk-latin.woff2',
   display: 'swap',
-  weight: ['400', '500', '600', '700', '800', '900'],
+  weight: '400 900',
   variable: '--font-hanken',
 });
 
-const inter = Inter({
-  subsets: ['latin'],
+const inter = localFont({
+  src: './fonts/inter-latin.woff2',
   display: 'swap',
-  weight: ['400', '500', '600', '700', '800', '900'],
+  weight: '400 900',
   variable: '--font-inter',
   preload: false,
 });
 
-const manrope = Manrope({
-  subsets: ['latin'],
+const manrope = localFont({
+  src: './fonts/manrope-latin.woff2',
   display: 'swap',
-  weight: ['400', '500', '600', '700', '800'],
+  weight: '400 800',
   variable: '--font-manrope',
   preload: false,
 });
