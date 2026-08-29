@@ -11,6 +11,14 @@ type BackendRequestOptions = RequestInit & {
   timeoutMs?: number;
 };
 
+/**
+ * Cabecera que marca un 503 fabricado AQUÍ (red caída o timeout) frente a un 503
+ * que venga de verdad del backend. Sin esta marca, quien recibe la respuesta no
+ * puede distinguir «el backend dijo que no» de «no pude preguntarle», y esa
+ * diferencia decide si se cierra la sesión del usuario o no. Ver A-2.
+ */
+export const BACKEND_UNREACHABLE_HEADER = 'x-backend-unreachable';
+
 function unavailableResponse(detail: string) {
   return new Response(
     JSON.stringify({
@@ -21,9 +29,21 @@ function unavailableResponse(detail: string) {
     }),
     {
       status: 503,
-      headers: { 'Content-Type': 'application/problem+json' },
+      headers: {
+        'Content-Type': 'application/problem+json',
+        [BACKEND_UNREACHABLE_HEADER]: '1',
+      },
     },
   );
+}
+
+/**
+ * `true` cuando no se pudo obtener respuesta del backend, o cuando la que dio no
+ * permite concluir nada sobre la sesión (5xx). Un 401/403 NO entra aquí: eso sí
+ * es una respuesta con criterio.
+ */
+export function isBackendUnreachable(response: Response) {
+  return response.headers.get(BACKEND_UNREACHABLE_HEADER) === '1' || response.status >= 500;
 }
 
 export async function backendRequest(path: string, input: BackendRequestOptions = {}) {
