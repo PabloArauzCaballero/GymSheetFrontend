@@ -96,7 +96,12 @@ export function RecoverPasswordForm() {
   }
 
   return step === 0 ? (
-    <form className="flex flex-col gap-4" onSubmit={requestForm.handleSubmit(submitRequest)}>
+    <form
+      action={() => undefined}
+      className="flex flex-col gap-4"
+      noValidate
+      onSubmit={requestForm.handleSubmit(submitRequest)}
+    >
       <p className="text-sm text-[var(--text-muted)]">
         Te enviamos un código de seis cifras al correo de tu cuenta.
       </p>
@@ -126,7 +131,12 @@ export function RecoverPasswordForm() {
       </Button>
     </form>
   ) : (
-    <form className="flex flex-col gap-4" onSubmit={confirmForm.handleSubmit(submitConfirm)}>
+    <form
+      action={() => undefined}
+      className="flex flex-col gap-4"
+      noValidate
+      onSubmit={confirmForm.handleSubmit(submitConfirm)}
+    >
       <p className="text-sm text-[var(--text-muted)]">
         {`Escribe el código que enviamos a ${email} y elige tu contraseña nueva. Caduca en unos minutos.`}
       </p>
