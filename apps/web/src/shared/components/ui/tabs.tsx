@@ -4,7 +4,20 @@ import * as TabsPrimitive from '@radix-ui/react-tabs';
 import type { ComponentProps } from 'react';
 import { cn } from '@/shared/lib/cn';
 
-export const Tabs = TabsPrimitive.Root;
+/**
+ * La raíz lleva `min-w-0` a propósito.
+ *
+ * `TabsList` ya scrollea en horizontal, pero eso no basta cuando la raíz es
+ * hijo de un `grid`/`flex`: un ítem de rejilla tiene `min-width: auto`, así que
+ * se niega a encogerse por debajo del contenido mínimo de sus hijos y crece con
+ * la tira de pestañas en vez de dejarla desplazarse. En `/admin/facilities`
+ * —cinco pestañas dentro de un `grid gap-8`— eso empujaba la página 107 px a
+ * 412 px de ancho: barra de scroll horizontal en toda la pantalla (M-12).
+ * Se arregla aquí, y no en cada página, porque el defecto es de la pieza.
+ */
+export function Tabs({ className, ...props }: ComponentProps<typeof TabsPrimitive.Root>) {
+  return <TabsPrimitive.Root className={cn('min-w-0', className)} {...props} />;
+}
 
 export function TabsList({ className, ...props }: ComponentProps<typeof TabsPrimitive.List>) {
   return (

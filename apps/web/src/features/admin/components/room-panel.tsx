@@ -146,6 +146,7 @@ export function RoomPanel({ canManage }: Readonly<{ canManage: boolean }>) {
                     <TableCell>
                       {canManage ? (
                         <Select
+                          aria-label={`Estado de ${room.nombre}`}
                           disabled={update.isPending}
                           onChange={(event) =>
                             update.mutate({

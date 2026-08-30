@@ -5,15 +5,57 @@ import { TENANT_COOKIE, TENANT_COOKIE_MAX_AGE } from '@/shared/theme/tenant-cook
 
 // Recuperar la contraseña es, por definición, algo que se hace sin sesión: sin
 // esta ruta aquí, quien la ha olvidado acaba redirigido al formulario que
-// justamente no puede completar. Términos y privacidad son la misma historia:
-// se enlazan desde el registro, antes de que exista una cuenta — sin esto,
-// tocar el enlace durante el alta rebotaba a /login.
-const publicRoutes = ['/login', '/register', '/recover-password', '/terminos', '/privacidad'];
+// justamente no puede completar.
+const publicRoutes = ['/login', '/register', '/recover-password'];
 
 // Directorio de gimnasios (punto 14): a diferencia de lo anterior, esto no es
 // parte del flujo de autenticación — alguien con sesión también puede querer
 // buscar otra sede, así que nunca se lo rebota a /dashboard por tenerla.
-const publicContentRoutes = ['/gimnasios'];
+//
+// Términos y privacidad viven aquí por lo mismo (M-1). Estaban en `publicRoutes`
+// para que se pudieran leer durante el alta, pero esa lista arrastra la regla
+// «con sesión → /dashboard», pensada para login y registro: el resultado era que
+// quien tenía cuenta no podía releer los términos que había aceptado. Siguen
+// siendo públicos — esta lista también exime del muro de acceso.
+const publicContentRoutes = ['/gimnasios', '/terminos', '/privacidad'];
+
+// Primeros segmentos que la aplicación resuelve de verdad. Sirve para dar 404
+// antes que el muro de acceso (M-4): sin esto, un enlace roto compartido en
+// redes pedía credenciales a quien lo abría — parece phishing, y tras iniciar
+// sesión el `returnTo` llevaba igualmente al 404.
+//
+// Es una lista estática a propósito: el proxy corre en el edge y no puede mirar
+// el árbol de `app/`. Al añadir una ruta de primer nivel hay que añadirla aquí
+// también; `proxy.test.ts` la contrasta con el contenido real de `src/app`.
+export const knownRoutes = new Set([
+  'login',
+  'register',
+  'recover-password',
+  'terminos',
+  'privacidad',
+  'gimnasios',
+  'access',
+  'activar',
+  'admin',
+  'chat',
+  'comunidad',
+  'dashboard',
+  'exercises',
+  'membership',
+  'notifications',
+  'onboarding',
+  'plans',
+  'profile',
+  'routines',
+  'trayectoria',
+  'tutorials',
+  'workouts',
+]);
+
+function isKnownRoute(pathname: string): boolean {
+  const first = pathname.split('/')[1] ?? '';
+  return first === '' || knownRoutes.has(first);
+}
 
 /**
  * Primer segmento de la ruta cuando nombra a un gimnasio conocido.
@@ -54,6 +96,19 @@ export function proxy(request: NextRequest) {
   // misma regla que a login/register más abajo en vez de a las de contenido.
   const isLandingRoute = pathname === '/';
   const isPublicContentRoute = publicContentRoutes.some((route) => pathname.startsWith(route));
+
+  // El 404 se resuelve ANTES que el muro de acceso: una ruta que no existe no
+  // tiene nada que proteger, y pedir credenciales para enseñarla es peor que
+  // decir que no está. `next()` deja que Next pinte su `not-found` con 404.
+  //
+  // Si alguien añade una ruta y olvida `knownRoutes`, esto la dejaría pasar sin
+  // muro — pero no la expone: `app/(portal)/layout.tsx` llama a
+  // `requireSession()` en el servidor para todo el portal, y las páginas de
+  // administración añaden `requireRole`. El proxy es defensa en profundidad,
+  // no la única puerta; y `proxy.test.ts` falla si la lista se queda vieja.
+  if (!isKnownRoute(pathname)) {
+    return NextResponse.next();
+  }
 
   if (!hasSessionCookie && !isPublicAuthRoute && !isLandingRoute && !isPublicContentRoute) {
     const loginUrl = new URL('/login', request.url);

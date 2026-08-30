@@ -160,6 +160,7 @@ export function MembershipPanel() {
                     </TableCell>
                     <TableCell>
                       <Select
+                        aria-label={`Estado de la membresía de ${membership.plan?.nombre ?? membership.planId}`}
                         disabled={changeStatus.isPending}
                         onChange={(event) =>
                           changeStatus.mutate({

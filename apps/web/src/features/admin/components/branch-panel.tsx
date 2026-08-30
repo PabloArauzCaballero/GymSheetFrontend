@@ -121,6 +121,7 @@ export function BranchPanel({ canManage }: Readonly<{ canManage: boolean }>) {
                     <TableCell>
                       {canManage ? (
                         <Select
+                          aria-label={`Estado de ${branch.nombre}`}
                           disabled={update.isPending}
                           onChange={(event) =>
                             update.mutate({

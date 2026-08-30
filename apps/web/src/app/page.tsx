@@ -49,7 +49,11 @@ const FAQS = [
 function ProductPreview() {
   return (
     <div className="relative mx-auto w-full max-w-xl" aria-label="Vista previa de una sesión en GymSheet">
-      <div aria-hidden className="absolute -inset-8 rounded-full bg-[color-mix(in_srgb,var(--volt)_12%,transparent)] blur-3xl" />
+      {/* El halo sangraba 32 px por cada lado también en móvil, y a 412 px eso
+          empujaba la página 12 px a la derecha: barra de scroll horizontal en la
+          portada por un adorno (M-12). Arriba y abajo puede sangrar sin coste; a
+          los lados solo a partir de `sm`, donde ya sobra ancho. */}
+      <div aria-hidden className="absolute inset-x-0 -inset-y-8 rounded-full bg-[color-mix(in_srgb,var(--volt)_12%,transparent)] blur-3xl sm:-inset-x-8" />
       <div className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface-lowest)] shadow-[var(--shadow-lg)]">
         <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-5 py-4"><span className="data-label flex items-center gap-2 text-[var(--text-muted)]"><span className="size-2 rounded-full bg-[var(--volt)]" />Sesión en curso</span><span className="font-mono text-xs text-[var(--text-muted)]">42:18</span></div>
         <div className="grid gap-5 p-6">

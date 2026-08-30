@@ -7,6 +7,7 @@ import { facilitiesAdminService } from '@/features/admin/services/facilities-adm
 import { exerciseService } from '@/features/exercises/services/exercise-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { Button } from '@/shared/components/ui/button';
+import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { Field } from '@/shared/components/ui/field';
 import { Select } from '@/shared/components/ui/select';
@@ -38,38 +39,55 @@ export function EquipmentAssignmentPanel() {
         title="Asignar equipo a sala"
       />
       <CardContent>
-        <form action={(form) => assign.mutate(form)} className="grid gap-5 sm:grid-cols-2">
-          <Field label="Equipo">
-            <Select name="equipoId" required>
-              {equipment.data?.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.nombre}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Sala">
-            <Select name="salaId" required>
-              {rooms.data?.items.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.nombre}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field className="sm:col-span-2" label="Notas">
-            <Textarea name="notas" />
-          </Field>
-          <Button
-            className="sm:col-span-2"
-            loading={assign.isPending}
-            type="submit"
-            variant="primary"
-          >
-            <Link2 className="size-4" />
-            Asignar
-          </Button>
-        </form>
+        {/* Sin esta rama, un fallo al leer el catálogo pintaba dos desplegables
+            vacíos: no parecía roto, parecía que no había equipos ni salas (A-3).
+            Y era peor que una mentira — el formulario seguía enviándose, con
+            `equipoId` y `salaId` a cadena vacía. */}
+        {equipment.isError || rooms.isError ? (
+          <ErrorPanel
+            message={
+              (equipment.error ?? rooms.error)?.message ??
+              'No se pudo cargar el catálogo de equipos y salas.'
+            }
+            onRetry={() => {
+              void equipment.refetch();
+              void rooms.refetch();
+            }}
+          />
+        ) : (
+          <form action={(form) => assign.mutate(form)} className="grid gap-5 sm:grid-cols-2">
+            <Field label="Equipo">
+              <Select name="equipoId" required>
+                {equipment.data?.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.nombre}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Sala">
+              <Select name="salaId" required>
+                {rooms.data?.items.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.nombre}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field className="sm:col-span-2" label="Notas">
+              <Textarea name="notas" />
+            </Field>
+            <Button
+              className="sm:col-span-2"
+              loading={assign.isPending}
+              type="submit"
+              variant="primary"
+            >
+              <Link2 className="size-4" />
+              Asignar
+            </Button>
+          </form>
+        )}
       </CardContent>
     </Card>
   );

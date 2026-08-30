@@ -139,6 +139,7 @@ export function AccessDevicePanel({ canManage }: Readonly<{ canManage: boolean }
                     <TableCell>
                       {canManage ? (
                         <Select
+                          aria-label={`Estado de ${device.nombre}`}
                           disabled={update.isPending}
                           onChange={(event) =>
                             update.mutate({
