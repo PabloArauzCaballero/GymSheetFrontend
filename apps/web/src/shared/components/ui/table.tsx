@@ -23,7 +23,7 @@ export function TableHead({ className, ...props }: ThHTMLAttributes<HTMLTableCel
   return (
     <th
       className={cn(
-        'border-b border-[var(--border)] px-4 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]',
+        'border-b border-[var(--border)] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]',
         className,
       )}
       {...props}

@@ -70,6 +70,7 @@ const ACCESS_SOURCE_LABEL: Record<MembershipAccess['source'], string> = {
   ADMIN_GRANT: 'Otorgado',
   PROMOTION: 'Promoción',
   TRIAL: 'Prueba',
+  STREAK_REWARD: 'Racha',
 };
 
 const TIME_FORMAT = new Intl.DateTimeFormat('es', { hour: '2-digit', minute: '2-digit' });
@@ -690,7 +691,11 @@ export default function MembershipScreen() {
                     </Text>
                     <Badge
                       label={ACCESS_SOURCE_LABEL[access.source]}
-                      tone={access.source === 'MEMBERSHIP' ? 'success' : 'info'}
+                      tone={
+                        access.source === 'MEMBERSHIP' || access.source === 'STREAK_REWARD'
+                          ? 'success'
+                          : 'info'
+                      }
                     />
                   </View>
                   <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>

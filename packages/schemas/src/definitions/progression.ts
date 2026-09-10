@@ -98,6 +98,7 @@ export const leaderboardEntrySchema = z.object({
   position: z.number().int(),
   points: z.number().int(),
   levelCode: z.string().nullable(),
+  streakDays: z.number().int(),
   /** Nombre de pila e inicial: la tabla no es una lista de socios. */
   displayName: z.string(),
   isMe: z.boolean(),
@@ -105,9 +106,18 @@ export const leaderboardEntrySchema = z.object({
 
 export const leaderboardSchema = z.array(leaderboardEntrySchema);
 
+export const leaderboardSortOptions = ['points', 'streak'] as const;
+export type LeaderboardSortBy = (typeof leaderboardSortOptions)[number];
+
 export const progressionAcknowledgedSchema = z.object({
   acknowledged: z.literal(true),
 });
+
+/** ISO 8601: 1 = lunes ... 7 = domingo. Igual criterio que usa el backend. */
+export const restDaysSchema = z.object({
+  weekdays: z.array(z.number().int().min(1).max(7)),
+});
+export type RestDays = z.infer<typeof restDaysSchema>;
 
 /**
  * Equipamiento que corresponde a un músculo, deducido del catálogo real.

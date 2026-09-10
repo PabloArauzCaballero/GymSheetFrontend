@@ -113,7 +113,7 @@ export function StaffPanel() {
     <section className="grid gap-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold">Personal</h2>
+          <h2 className="text-xl font-semibold">Personal</h2>
           <p className="mt-1 text-sm text-[var(--text-muted)]">
             Entrenadores, recepción y administración con su alcance de sedes.
           </p>

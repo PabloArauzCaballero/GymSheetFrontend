@@ -28,5 +28,6 @@ export const workoutSchema = z.object({
   fechaFin: z.string().nullable(),
   estado: z.enum(workoutStatuses),
   observacion: z.string().nullable(),
+  geoVerificada: z.boolean(),
   ejercicios: z.array(workoutExerciseSchema),
 });

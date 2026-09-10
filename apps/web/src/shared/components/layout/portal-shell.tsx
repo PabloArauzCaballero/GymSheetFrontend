@@ -60,9 +60,9 @@ function NavigationLinks({
             <Link
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'tap flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-full border px-4 text-sm font-semibold',
+                'tap flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-full border px-4 text-sm font-medium',
                 active
-                  ? 'border-[var(--volt)] bg-[var(--volt)] text-[var(--accent-contrast)] shadow-[0_6px_20px_-8px_rgb(var(--accent-channels)/0.6)]'
+                  ? 'border-[var(--volt)] bg-[var(--volt)] font-semibold text-[var(--accent-contrast)]'
                   : 'border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text-muted)]',
               )}
               data-tutorial-id={`nav:${item.href}`}
@@ -70,10 +70,7 @@ function NavigationLinks({
               key={item.href}
               ref={active ? activeLinkRef : undefined}
             >
-              <Icon
-                aria-hidden
-                className={cn('size-4 transition-transform', active && 'animate-pop')}
-              />
+              <Icon aria-hidden className="size-4" />
               {item.label}
               <LinkPending />
             </Link>
@@ -83,9 +80,9 @@ function NavigationLinks({
           <Link
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'group/nav relative flex min-h-10 items-center gap-3 overflow-hidden rounded-[6px] border border-transparent px-3 text-sm font-semibold text-[var(--text-muted)] transition-all duration-200 hover:translate-x-1 hover:bg-[var(--surface-low)] hover:text-[var(--text)]',
+              'group/nav relative flex min-h-10 items-center gap-3 rounded-[var(--radius-md)] border border-transparent px-3 text-sm font-medium text-[var(--text-muted)] transition-colors duration-[var(--dur-2)] hover:bg-[var(--surface-low)] hover:text-[var(--text)]',
               active &&
-                'border-[var(--border)] bg-[var(--surface-low)] text-[var(--text)] before:absolute before:left-0 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-full before:bg-[var(--volt)] before:shadow-[0_0_10px_var(--volt)] before:content-[""]',
+                'border-[var(--border)] bg-[var(--surface-low)] font-semibold text-[var(--text)] before:absolute before:left-0 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-full before:bg-[var(--volt)] before:content-[""]',
             )}
             data-tutorial-id={`nav:${item.href}`}
             href={item.href}
@@ -94,10 +91,7 @@ function NavigationLinks({
           >
             <Icon
               aria-hidden
-              className={cn(
-                'size-4 transition-all duration-200 group-hover/nav:scale-110',
-                active ? 'text-[var(--accent-ink)]' : 'group-hover/nav:text-[var(--accent-ink)]',
-              )}
+              className={cn('size-4', active && 'text-[var(--accent-ink)]')}
             />
             {item.label}
             <LinkPending />

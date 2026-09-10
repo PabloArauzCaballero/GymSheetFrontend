@@ -14,6 +14,7 @@ const registerSchema = z.object({
    * tener que declarar su género para poder crear una cuenta.
    */
   genero: z.enum(['MALE', 'FEMALE', 'UNSPECIFIED']).optional(),
+  acceptedTerms: z.literal(true),
 });
 
 /**

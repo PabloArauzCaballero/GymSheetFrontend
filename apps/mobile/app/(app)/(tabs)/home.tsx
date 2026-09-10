@@ -23,8 +23,6 @@ import { useAuthStore } from '@/state/auth-store';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { MembershipGate } from '@/components/membership-gate';
 import {
-  MEMBERSHIP_LABEL,
-  MEMBERSHIP_TONE,
   WORKOUT_LABEL,
   WORKOUT_TONE,
   formatDate,
@@ -79,51 +77,34 @@ export default function HomeScreen() {
   const training = summariseTraining(sessions);
   const overload = overloadDelta(training);
 
-  const membershipSection = (
+  // Cuando el acceso no está vigente, `MembershipGate` más abajo ya es la
+  // única palabra sobre el estado de la membresía — repetirlo aquí con un
+  // segundo texto (antes literalmente distinto: "Sin membresía activa" en
+  // lugar de "Aún no tienes membresía") es la clase de duplicado que hace
+  // parecer una pantalla rota aunque cada mitad esté bien por separado. Esta
+  // tarjeta se reserva entonces para lo que `MembershipGate` no cubre: los
+  // datos de una membresía que sí está vigente hoy.
+  const membershipSection = membership.data?.membership?.vigenteHoy ? (
     <Section icon="card-outline" index={0} title="Membresía">
-      {membership.isPending ? (
-        <Skeleton height={110} />
-      ) : membership.isError ? (
-        <ErrorState error={membership.error} onRetry={() => void membership.refetch()} />
-      ) : membership.data?.membership ? (
-        <Card accent={colors.volt}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: spacing.sm,
-            }}
-          >
-            <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: '700', flex: 1 }}>
-              {membership.data.membership.plan?.nombre ?? 'Plan actual'}
-            </Text>
-            <Badge
-              label={MEMBERSHIP_LABEL[membership.data.membership.estado]}
-              tone={MEMBERSHIP_TONE[membership.data.membership.estado]}
-            />
-          </View>
-          <Divider />
-          <Row icon="flag-outline" label="Vence" value={formatDate(membership.data.membership.venceEl)} />
-          <Row
-            icon="hourglass-outline"
-            label="Días restantes"
-            value={
-              membership.data.membership.venceHoy
-                ? 'Vence hoy'
-                : `${membership.data.membership.diasRestantes}`
-            }
-          />
-        </Card>
-      ) : (
-        <EmptyState
-          icon="card-outline"
-          message="Aún no tienes una membresía registrada. Consulta en recepción para activarla."
-          title="Sin membresía activa"
-        />
-      )}
+      <Card accent={colors.volt}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: spacing.sm,
+          }}
+        >
+          <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: '700', flex: 1 }}>
+            {membership.data.membership.plan?.nombre ?? 'Plan actual'}
+          </Text>
+        </View>
+        <Divider />
+        <Row icon="flag-outline" label="Vence" value={formatDate(membership.data.membership.venceEl)} />
+        <Row icon="hourglass-outline" label="Días restantes" value={`${membership.data.membership.diasRestantes}`} />
+      </Card>
     </Section>
-  );
+  ) : null;
 
   const routineSection = (
     <Section icon="clipboard-outline" index={3} title="Rutina asignada">

@@ -13,9 +13,10 @@ import { ExerciseImage } from '@/components/media';
 import { BackLink } from '@/components/nav';
 import { useExerciseMedia } from '@/api/use-exercise-media';
 import { PressableScale } from '@/components/motion';
-import { workoutService } from '@/api/services';
+import { accountService, workoutService } from '@/api/services';
 import { useAmbientStore } from '@/state/ambient-store';
 import { WORKOUT_LABEL, WORKOUT_TONE, formatDuration, relativeDay } from '@/lib/format';
+import { captureStreakLocation } from '@/lib/streak-location';
 import { previousPerformance, topSet } from '@/lib/training-metrics';
 import { accentPolicy, colors, fontSizes, iconSizes, semibold, spacing, tones } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,6 +36,7 @@ export default function WorkoutDetailScreen() {
     queryFn: () => workoutService.get(id),
     enabled: Boolean(id),
   });
+  const account = useQuery({ queryKey: ['user', 'me'], queryFn: () => accountService.getMe() });
 
   /**
    * Recent sessions, purely so each exercise can show what was done last time.
@@ -106,10 +108,13 @@ export default function WorkoutDetailScreen() {
   });
 
   const finish = useMutation({
-    mutationFn: () => workoutService.finish(id),
-    onSuccess: async () => {
+    mutationFn: (location?: { latitude: number; longitude: number }) =>
+      workoutService.finish(id, location),
+    onSuccess: async (session) => {
       await refreshAll();
-      notify.success('Sesión finalizada.');
+      notify.success(
+        session.geoVerificada ? 'Sesión finalizada. Racha verificada en tu sede.' : 'Sesión finalizada.',
+      );
     },
     onError: (error: Error) => notify.error(error),
   });
@@ -186,7 +191,11 @@ export default function WorkoutDetailScreen() {
       confirmLabel: 'Finalizar',
       cancelLabel: 'Seguir entrenando',
     });
-    if (result.confirmed) finish.mutate();
+    if (!result.confirmed) return;
+    // Se pide después de confirmar, no antes: si la persona cancela, no tiene
+    // sentido haber interrumpido el gesto con un diálogo de permiso primero.
+    const location = await captureStreakLocation();
+    finish.mutate(location ?? undefined);
   };
 
   const onCancel = async () => {
@@ -406,6 +415,7 @@ export default function WorkoutDetailScreen() {
                     })
                   }
                   pending={addSet.isPending}
+                  weightIncrementKg={account.data?.pesoIncrementoKg}
                 />
                 {item.series.length > 0 ? (
                   <PressableScale

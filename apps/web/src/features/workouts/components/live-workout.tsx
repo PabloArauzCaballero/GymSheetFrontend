@@ -175,7 +175,7 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
           <div className="grid min-h-64 place-items-center rounded-[8px] border border-dashed border-[var(--border)] p-8 text-center">
             <div>
               <Dumbbell className="mx-auto size-10 text-[var(--text-disabled)]" />
-              <h2 className="mt-4 text-xl font-bold">Sesión vacía</h2>
+              <h2 className="mt-4 text-xl font-semibold">Sesión vacía</h2>
               <p className="mt-2 text-sm text-[var(--text-muted)]">
                 Agrega el primer ejercicio para comenzar a registrar series.
               </p>

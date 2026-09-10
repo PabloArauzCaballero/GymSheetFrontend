@@ -62,7 +62,7 @@ export const TutorialTooltip = forwardRef<HTMLDivElement, TutorialTooltipProps>(
           </button>
         </div>
 
-        <h2 id={titleId} className="text-lg font-bold tracking-[-0.02em]">
+        <h2 id={titleId} className="text-lg font-semibold tracking-[-0.02em]">
           {copy(step.title)}
         </h2>
         <p id={descriptionId} className="mt-2 text-sm leading-6 text-[var(--text-muted)]">

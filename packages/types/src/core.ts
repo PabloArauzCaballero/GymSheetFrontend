@@ -28,6 +28,8 @@ export type User = {
   tenantId?: string | null;
   /** Nulo = no se ha preguntado. */
   genero?: UserGender | null;
+  /** Cuánto suma cada chip rápido al registrar una serie. 2.5 por defecto. */
+  pesoIncrementoKg?: number;
 };
 
 export type SessionPrincipal = {
@@ -35,6 +37,8 @@ export type SessionPrincipal = {
   email: string;
   role: UserRole;
   nombreCompleto?: string;
+  /** Permisos granulares de administración otorgados a esta cuenta (solo staff). */
+  permissions?: string[];
 };
 
 export type Profile = {
@@ -45,6 +49,14 @@ export type Profile = {
   estaturaCm: number;
   objetivo: TrainingGoal;
   fechaActualizacion?: string;
+};
+
+/** Una foto de la galería de perfil. Hasta seis por cuenta. */
+export type ProfilePhoto = {
+  id: string;
+  url: string;
+  posicion: number;
+  fechaCreacion: string;
 };
 
 export const fitnessGoals = [

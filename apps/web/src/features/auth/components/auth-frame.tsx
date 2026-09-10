@@ -45,10 +45,10 @@ export function AuthFrame({
               className="hover-lift group rounded-[8px] border border-[var(--border-subtle)] bg-[var(--surface-lowest)] p-4"
               key={label}
             >
-              <span className="grid size-9 place-items-center rounded-[6px] border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--accent-ink)] transition-transform duration-300 group-hover:scale-110">
+              <span className="grid size-9 place-items-center rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text-muted)]">
                 <Icon className="size-5" />
               </span>
-              <p className="mt-5 text-sm font-bold">{label}</p>
+              <p className="mt-5 text-sm font-semibold">{label}</p>
               <p className="mt-1 text-xs text-[var(--text-muted)]">{detail}</p>
             </div>
           ))}
@@ -58,17 +58,14 @@ export function AuthFrame({
         <div className="reveal w-full max-w-md">
           <div className="mb-10 lg:hidden">
             <div className="inline-flex items-center gap-3 text-lg font-semibold tracking-[-0.02em]">
-              <span className="grid size-9 place-items-center rounded-[6px] bg-[var(--volt)] text-sm text-[var(--accent-contrast)] shadow-[0_8px_24px_-8px_rgb(var(--accent-channels)/0.7)]">
+              <span className="grid size-9 place-items-center rounded-[var(--radius-md)] bg-[var(--volt)] text-sm font-semibold text-[var(--accent-contrast)]">
                 {brand.monogram}
               </span>
               {brand.wordmark}
             </div>
           </div>
-          <p className="data-label inline-flex items-center gap-2 text-[var(--accent-ink)]">
-            <span
-              aria-hidden
-              className="h-3 w-1 rounded-full bg-[var(--volt)] shadow-[0_0_8px_var(--volt)]"
-            />
+          <p className="data-label inline-flex items-center gap-2 text-[var(--text-muted)]">
+            <span aria-hidden className="h-3 w-[3px] rounded-full bg-[var(--volt)]" />
             {eyebrow}
           </p>
           <h1 className="mt-4 text-4xl font-semibold tracking-[-0.022em]">{title}</h1>

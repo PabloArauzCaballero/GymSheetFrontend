@@ -92,12 +92,12 @@ export function AddExerciseDialog({
                       {hasImage ? (
                         <DomainImage
                           alt={media.altText}
-                          className="size-full object-cover transition-transform duration-300 group-hover:scale-110"
+                          className="size-full object-cover"
                           fallbackSrc={media.url}
                           src={media.thumbnailUrl ?? media.url}
                         />
                       ) : (
-                        <Dumbbell className="size-4 text-[var(--accent-ink)]" />
+                        <Dumbbell className="size-4 text-[var(--text-muted)]" />
                       )}
                     </span>
                     <span className="min-w-0">
@@ -107,7 +107,7 @@ export function AddExerciseDialog({
                       </span>
                     </span>
                   </span>
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--text-muted)] transition-colors group-hover:border-[var(--volt)] group-hover:bg-[var(--volt)] group-hover:text-[var(--accent-contrast)]">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--text-muted)] transition-colors group-hover:border-[var(--text-disabled)] group-hover:text-[var(--text)]">
                     <Plus className="size-4" />
                   </span>
                 </button>

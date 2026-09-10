@@ -195,7 +195,7 @@ export function DashboardClient() {
                     href={`/workouts/${session.id}`}
                     key={session.id}
                   >
-                    <span className="grid size-10 shrink-0 place-items-center rounded-[8px] border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--accent-ink)] transition-all duration-200 group-hover:scale-110 group-hover:border-[var(--volt)]">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text-muted)]">
                       <Activity className="size-4" />
                     </span>
                     <div className="min-w-0 flex-1">
@@ -216,7 +216,7 @@ export function DashboardClient() {
                     >
                       {session.estado}
                     </Badge>
-                    <ChevronRight className="size-4 shrink-0 text-[var(--text-disabled)] transition-transform duration-200 group-hover:translate-x-1 group-hover:text-[var(--accent-ink)]" />
+                    <ChevronRight className="size-4 shrink-0 text-[var(--text-disabled)] transition-colors duration-[var(--dur-2)] group-hover:text-[var(--text-muted)]" />
                   </Link>
                 ))}
               </div>
@@ -232,7 +232,7 @@ export function DashboardClient() {
                 <div className="grid gap-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="font-bold">{membership.data.membership.plan?.nombre ?? 'Plan activo'}</p>
+                      <p className="font-semibold">{membership.data.membership.plan?.nombre ?? 'Plan activo'}</p>
                       <p className="mt-1 text-sm text-[var(--text-muted)]">
                         Vence en {membership.data.membership.diasRestantes} días
                       </p>
@@ -241,7 +241,7 @@ export function DashboardClient() {
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-[var(--surface-high)]">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-[var(--volt-dim)] to-[var(--volt)] shadow-[0_0_10px_var(--volt)] transition-[width] duration-700 ease-out"
+                      className="h-full rounded-full bg-[var(--volt)] transition-[width] duration-[var(--dur-6)] ease-[var(--ease-out)]"
                       style={{
                         width: `${Math.max(4, Math.min(100, membership.data.membership.diasRestantes))}%`,
                       }}

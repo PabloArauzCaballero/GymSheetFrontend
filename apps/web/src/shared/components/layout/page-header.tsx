@@ -26,15 +26,12 @@ export function PageHeader({
           desplazaba en horizontal. */}
       <div className="min-w-0 max-w-3xl">
         {eyebrow ? (
-          <p className="data-label mb-3 inline-flex items-center gap-2 text-[var(--accent-ink)]">
-            <span
-              aria-hidden
-              className="h-3 w-1 rounded-full bg-[var(--volt)] shadow-[0_0_8px_var(--volt)]"
-            />
+          <p className="data-label mb-3 inline-flex items-center gap-2 text-[var(--text-muted)]">
+            <span aria-hidden className="h-3 w-[3px] rounded-full bg-[var(--volt)]" />
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="display-title text-gradient-volt">{title}</h1>
+        <h1 className="display-title">{title}</h1>
         {description ? (
           <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-muted)] sm:text-base">
             {description}

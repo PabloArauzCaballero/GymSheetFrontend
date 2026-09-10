@@ -32,7 +32,7 @@ export function GuidedWorkout({
       <div className="panel grid min-h-52 place-items-center p-8 text-center">
         <div>
           <Dumbbell className="mx-auto size-10 text-[var(--text-disabled)]" />
-          <h2 className="mt-4 text-xl font-bold">Sin ejercicios en cola</h2>
+          <h2 className="mt-4 text-xl font-semibold">Sin ejercicios en cola</h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
             Esta sesión no tiene ejercicios programados. Termina o agrégalos desde el modo clásico.
           </p>
@@ -58,7 +58,7 @@ export function GuidedWorkout({
           {exercises.map((exercise, dotIndex) => (
             <span
               aria-hidden
-              className={`h-1.5 rounded-full transition-all ${
+              className={`h-1.5 rounded-full transition-[width,background-color] duration-[var(--dur-3)] ${
                 dotIndex === position
                   ? 'w-6 bg-[var(--volt)]'
                   : dotIndex < position
@@ -75,10 +75,10 @@ export function GuidedWorkout({
         <div className="border-b border-[var(--border-subtle)] p-5">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="data-label text-[var(--accent-ink)]">
+              <p className="data-label text-[var(--text-muted)]">
                 {current.ejercicio?.grupoMuscular ?? 'Ejercicio'}
               </p>
-              <h2 className="mt-1 break-words text-2xl font-bold tracking-[-0.03em]">
+              <h2 className="mt-1 break-words text-2xl font-semibold tracking-[-0.03em]">
                 {current.ejercicio?.nombre ?? 'Ejercicio'}
               </h2>
               {current.nota ? (
@@ -110,6 +110,13 @@ export function GuidedWorkout({
         ) : null}
 
         <SetEntryForm
+          lastSet={
+            current.series.length
+              ? current.series.reduce((latest, set) =>
+                  set.numeroSerie > latest.numeroSerie ? set : latest,
+                )
+              : undefined
+          }
           nextSetNumber={completedSets + 1}
           sessionExerciseId={current.id}
           workoutId={workout.id}

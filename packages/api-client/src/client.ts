@@ -153,7 +153,79 @@ export function createApiClient(config: ApiClientConfig) {
     }
   }
 
-  return { request };
+  /**
+   * Como `request`, pero para `multipart/form-data`. Separada de `request` a
+   * propósito: esa función siempre serializa el cuerpo con `JSON.stringify` y
+   * fija `Content-Type: application/json`, lo que corrompería un `FormData`.
+   * El límite de tiempo es más alto por defecto porque una imagen tarda más
+   * que un JSON pequeño en subir.
+   */
+  async function upload<T>(
+    path: string,
+    schema: z.ZodType<T>,
+    form: FormData,
+    options: { timeoutMs?: number; signal?: AbortSignal | null } = {},
+  ): Promise<T> {
+    const controller = new AbortController();
+    const onExternalAbort = () => controller.abort();
+    if (options.signal?.aborted) controller.abort();
+    else options.signal?.addEventListener('abort', onExternalAbort, { once: true });
+    const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 60_000);
+    try {
+      const headers = new Headers();
+      headers.set('Accept', 'application/json');
+      headers.set('X-Request-ID', newRequestId());
+      const token = await tokenProvider.getAccessToken();
+      if (token) headers.set('Authorization', `Bearer ${token}`);
+      // Sin `Content-Type` explícito a propósito: el runtime debe fijarlo con
+      // el `boundary` del multipart, y escribirlo a mano lo rompería.
+
+      const response = await fetchImpl(`${config.baseUrl}${path}`, {
+        method: 'POST',
+        headers,
+        body: form,
+        signal: controller.signal,
+      });
+      if (response.status === 401) await config.onUnauthorized?.();
+      if (!response.ok) throw await readError(response);
+      const envelope = successEnvelopeSchema.safeParse(await response.json());
+      if (!envelope.success) {
+        throw new ApiError({
+          message: 'El servidor devolvió un contrato inválido.',
+          status: 502,
+          kind: 'contract',
+        });
+      }
+      const parsed = schema.safeParse(envelope.data.data);
+      if (!parsed.success) {
+        throw new ApiError({
+          message: 'La respuesta no coincide con el contrato esperado.',
+          status: 502,
+          kind: 'contract',
+        });
+      }
+      return parsed.data;
+    } catch (error: unknown) {
+      if (error instanceof ApiError) throw error;
+      if (controller.signal.aborted) {
+        throw new ApiError({
+          message: 'La solicitud agotó el tiempo de espera.',
+          status: 408,
+          kind: 'network',
+        });
+      }
+      throw new ApiError({
+        message: 'No se pudo conectar con el servicio.',
+        status: 0,
+        kind: 'network',
+      });
+    } finally {
+      clearTimeout(timeout);
+      options.signal?.removeEventListener('abort', onExternalAbort);
+    }
+  }
+
+  return { request, upload };
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>;

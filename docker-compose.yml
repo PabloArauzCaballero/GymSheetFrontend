@@ -5,6 +5,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # A diferencia de BACKEND_API_URL (servidor→servidor, host.docker.internal),
+        # esta la usa el propio navegador para abrir el socket de chat: necesita
+        # una URL que el navegador del usuario, no el contenedor, pueda resolver.
+        NEXT_PUBLIC_BACKEND_ORIGIN: ${WEB_PUBLIC_BACKEND_ORIGIN:-http://localhost:3001}
     image: gymsheet-web:latest
     container_name: gymsheet-web
     ports:

@@ -64,7 +64,7 @@ export function MembershipPanel() {
     <section className="grid gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold">Membresías</h2>
+          <h2 className="text-xl font-semibold">Membresías</h2>
           <p className="mt-1 text-sm text-[var(--text-muted)]">
             Asignación de plan, vigencia y transición de estado.
           </p>

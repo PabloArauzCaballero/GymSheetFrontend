@@ -46,6 +46,7 @@ export async function register(input: {
   nombreCompleto: string;
   /** Ausente = no se preguntó. El gimnasio lo pone la cookie de inquilino, en el servidor. */
   genero?: 'MALE' | 'FEMALE' | 'UNSPECIFIED';
+  acceptedTerms: boolean;
 }) {
   const response = await fetch('/api/auth/register', {
     method: 'POST',

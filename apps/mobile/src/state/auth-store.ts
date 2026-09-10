@@ -6,6 +6,20 @@ import { initialSessionState, type SessionState } from '@gymsheet/auth';
 import type { LoginInput } from '@gymsheet/schemas';
 import { apiClient, setSessionLostHandler } from '@/api/client';
 import { secureStoreAuthStorage } from '@/storage/secure-store';
+import { env } from '@/config/env';
+
+/**
+ * Lo que `POST /auth/register` espera, ya sin el par de confirmación.
+ * `acceptedTerms` es literal `true`: el tipo obliga a que quien llama haya
+ * pasado por la validación de la casilla, no a confiar en que lo hizo.
+ */
+export type RegisterPayload = {
+  email: string;
+  password: string;
+  nombreCompleto: string;
+  genero?: 'MALE' | 'FEMALE' | 'UNSPECIFIED';
+  acceptedTerms: true;
+};
 
 /**
  * Backend mobile-auth contract (bearer flow) as the API actually serves it today
@@ -45,6 +59,7 @@ const authPayloadSchema = z
 interface AuthState extends Pick<SessionState, 'status' | 'principal'> {
   hydrate: () => Promise<void>;
   login: (input: LoginInput) => Promise<void>;
+  register: (input: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -75,6 +90,21 @@ export const useAuthStore = create<AuthState>((set) => ({
     const payload = await apiClient.request('/auth/login', authPayloadSchema, {
       method: 'POST',
       body: input,
+    });
+    await secureStoreAuthStorage.saveTokens(payload.accessToken, payload.refreshToken);
+    setActiveTenant(payload.user.tenantId);
+    set({ status: 'authenticated', principal: payload.user });
+  },
+
+  async register(input) {
+    const payload = await apiClient.request('/auth/register', authPayloadSchema, {
+      method: 'POST',
+      body: {
+        ...input,
+        // Una compilación dedicada de un gimnasio ya sabe a cuál pertenece;
+        // en la genérica se omite y el servidor cae en `DEFAULT_TENANT_ID`.
+        ...(env.tenantId ? { tenantId: env.tenantId } : {}),
+      },
     });
     await secureStoreAuthStorage.saveTokens(payload.accessToken, payload.refreshToken);
     setActiveTenant(payload.user.tenantId);

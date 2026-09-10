@@ -24,7 +24,7 @@ export function AccessHistoryPanel() {
   return (
     <section className="grid gap-5">
       <div>
-        <h2 className="text-xl font-bold">Historial de decisiones</h2>
+        <h2 className="text-xl font-semibold">Historial de decisiones</h2>
         <p className="mt-1 text-sm text-[var(--text-muted)]">
           Filtra por UUID de usuario cuando sea necesario.
         </p>

@@ -86,7 +86,7 @@ export function WorkoutList() {
               <Link href={`/workouts/${session.id}`} key={session.id}>
                 <Card className="grid gap-5 p-5 transition-colors hover:border-[var(--border)] hover:bg-[var(--surface-low)] sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(110px,auto))] sm:items-center">
                   <div>
-                    <p className="font-bold">{formatDateTime(session.fechaInicio)}</p>
+                    <p className="font-semibold">{formatDateTime(session.fechaInicio)}</p>
                     <p className="mt-1 line-clamp-1 text-sm text-[var(--text-muted)]">
                       {session.observacion ?? 'Sin observación'}
                     </p>

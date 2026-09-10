@@ -83,10 +83,15 @@ const BANDS: readonly BandSpec[] = [
     cy: 0.075,
     height: 150,
     // Thin bars packed tightly. Wide neon bars read as an equaliser in a music
-    // player; at 2px on an 8px pitch the same wave reads as an engraved
+    // player; at 2px on a wide pitch the same wave reads as an engraved
     // instrument scale — the density is what makes it look machined rather
-    // than decorative.
-    pitch: 8,
+    // than decorative. Widened from 8 to 24: each bar re-renders every frame
+    // via its own Reanimated worklet, and a phone-width band at 8px pitch is
+    // 130+ of them animating forever behind every screen — cheap on a modern
+    // phone, but enough to visibly starve the JS thread on weaker hardware
+    // (an emulator, an old Android). A 3x sparser band keeps the "engraved
+    // scale" read while cutting that cost by the same factor.
+    pitch: 24,
     barWidth: 2,
     // Near-white rather than saturated volt. Luxury palettes spend their one
     // saturated colour on the action, not on the wallpaper; a neon backdrop
@@ -103,7 +108,7 @@ const BANDS: readonly BandSpec[] = [
     // Just above the tab bar, where content padding always leaves room.
     cy: 0.9,
     height: 160,
-    pitch: 10,
+    pitch: 30,
     barWidth: 2,
     color: '#9fb6bf',
     opacity: 0.07,

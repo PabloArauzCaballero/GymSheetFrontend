@@ -181,7 +181,13 @@ function ProfileForm({ defaults, isNew }: { defaults: ProfileFormValues; isNew: 
     mutationFn: (input: ProfileInput) =>
       isNew ? profileService.create(input) : profileService.update(input),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['profile', 'me'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['profile', 'me'] }),
+        // El peso guardado aquí también queda en el histórico desde ahora;
+        // sin esto la pantalla de evolución no mostraría el registro nuevo
+        // hasta reabrir la aplicación.
+        queryClient.invalidateQueries({ queryKey: ['profile', 'body-measurements'] }),
+      ]);
       notify.success('Perfil actualizado.');
       router.back();
     },

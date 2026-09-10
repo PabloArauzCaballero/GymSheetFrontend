@@ -10,11 +10,13 @@ import {
   GraduationCap,
   IdCard,
   KeyRound,
+  MessageCircle,
   ScanFace,
   Settings,
   ShieldCheck,
   Signpost,
   Users,
+  Users2,
 } from 'lucide-react';
 import type { UserRole } from '@/shared/api/contracts';
 
@@ -35,6 +37,8 @@ export const primaryNavigation: NavigationItem[] = [
   { href: '/plans', label: 'Mis planes', icon: CalendarCheck },
   { href: '/routines', label: 'Rutinas', icon: ClipboardList },
   { href: '/exercises', label: 'Ejercicios', icon: Dumbbell },
+  { href: '/comunidad', label: 'Comunidad', icon: Users2 },
+  { href: '/chat', label: 'Chat', icon: MessageCircle },
   { href: '/membership', label: 'Membresía', icon: IdCard },
   { href: '/access', label: 'Acceso', icon: KeyRound },
   { href: '/notifications', label: 'Avisos', icon: Bell },

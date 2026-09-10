@@ -14,7 +14,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'btn-shine border-[var(--volt)] bg-[var(--volt)] text-[var(--accent-contrast)] hover:bg-[var(--volt-dim)] hover:shadow-[0_8px_28px_-8px_rgb(var(--accent-channels)/0.55)]',
+    'border-[var(--volt)] bg-[var(--volt)] text-[var(--accent-contrast)] hover:bg-[var(--volt-dim)] hover:border-[var(--volt-dim)]',
   secondary:
     'border-[var(--border)] bg-[var(--surface-low)] text-[var(--text)] hover:border-[var(--text-disabled)] hover:bg-[var(--surface)]',
   danger:
@@ -32,7 +32,7 @@ const sizeClasses: Record<ButtonSize, string> = {
 
 export function buttonClasses(variant: ButtonVariant = 'secondary', size: ButtonSize = 'md') {
   return cn(
-    'inline-flex items-center justify-center gap-2 rounded-[4px] border font-semibold transition-[transform,background-color,border-color,box-shadow,color] duration-150 ease-out active:scale-[0.96] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-45',
+    'inline-flex items-center justify-center gap-2 rounded-[var(--radius-sm)] border font-semibold transition-[transform,background-color,border-color,color] duration-[var(--dur-1)] ease-[var(--ease-out)] active:scale-[0.97] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-45',
     variantClasses[variant],
     sizeClasses[size],
   );

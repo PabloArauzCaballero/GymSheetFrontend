@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { register } from '@/features/auth/services/auth-client';
 import { ApiError } from '@/shared/api/api-error';
 import { Button } from '@/shared/components/ui/button';
+import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Field } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
@@ -25,10 +26,15 @@ const schema = z
      * volvería a preguntar. Se puede cambiar después desde el perfil.
      */
     genero: z.enum(['', 'MALE', 'FEMALE', 'UNSPECIFIED']),
+    acceptedTerms: z.boolean(),
   })
   .refine((value) => value.password === value.confirmation, {
     path: ['confirmation'],
     message: 'Las contraseñas no coinciden.',
+  })
+  .refine((value) => value.acceptedTerms, {
+    path: ['acceptedTerms'],
+    message: 'Debes aceptar los términos y la política de privacidad.',
   });
 type FormValues = z.infer<typeof schema>;
 
@@ -36,7 +42,14 @@ export function RegisterForm() {
   const router = useRouter();
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { nombreCompleto: '', email: '', password: '', confirmation: '', genero: '' },
+    defaultValues: {
+      nombreCompleto: '',
+      email: '',
+      password: '',
+      confirmation: '',
+      genero: '',
+      acceptedTerms: false,
+    },
   });
 
   async function submit(values: FormValues) {
@@ -46,6 +59,7 @@ export function RegisterForm() {
         nombreCompleto: values.nombreCompleto,
         email: values.email,
         password: values.password,
+        acceptedTerms: values.acceptedTerms,
         ...(values.genero === '' ? {} : { genero: values.genero }),
       });
       router.replace('/dashboard');
@@ -118,6 +132,37 @@ export function RegisterForm() {
           <option value="FEMALE">Mujer</option>
         </Select>
       </Field>
+      <div>
+        <Checkbox
+          label={
+            <span>
+              Acepto los{' '}
+              <Link
+                className="font-semibold text-[var(--text)] underline decoration-[var(--volt)] underline-offset-4"
+                href="/terminos"
+                target="_blank"
+              >
+                términos y condiciones
+              </Link>{' '}
+              y la{' '}
+              <Link
+                className="font-semibold text-[var(--text)] underline decoration-[var(--volt)] underline-offset-4"
+                href="/privacidad"
+                target="_blank"
+              >
+                política de privacidad
+              </Link>
+              .
+            </span>
+          }
+          {...form.register('acceptedTerms')}
+        />
+        {form.formState.errors.acceptedTerms?.message ? (
+          <p className="mt-1 text-xs text-[var(--danger-text)]">
+            {form.formState.errors.acceptedTerms.message}
+          </p>
+        ) : null}
+      </div>
       {form.formState.errors.root?.message ? (
         <p
           className="rounded-[4px] border border-[var(--danger-border)] bg-[var(--danger-surface)] p-3 text-sm text-[var(--danger-text)]"

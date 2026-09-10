@@ -25,4 +25,10 @@ export const profileService = {
    */
   updateGender: (genero: UserGender) =>
     apiRequest<User>('/users/me', userSchema, { method: 'PATCH', body: { genero } }),
+  /** Cuánto suma cada chip rápido («+2,5 kg») al registrar una serie. */
+  updateWeightIncrement: (pesoIncrementoKg: number) =>
+    apiRequest<User>('/users/me', userSchema, {
+      method: 'PATCH',
+      body: { pesoIncrementoKg },
+    }),
 };

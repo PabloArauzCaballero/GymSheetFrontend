@@ -50,22 +50,27 @@ const dark: ModePalette = {
   infoBorder: '#344654',
   infoText: '#a8d4ee',
 
-  headerBg: 'rgb(0 0 0 / 0.9)',
+  headerBg: 'rgb(0 0 0 / 0.72)',
   overlay: 'rgb(0 0 0 / 0.8)',
   focusRing: '#ffffff',
   gridLine: 'rgb(255 255 255 / 0.02)',
-  pageGlow: 'rgb(195 244 0 / 0.045)',
+  // Realce de página: un levantamiento neutro apenas perceptible en el borde
+  // superior. El acento ya no tiñe el cromo (ver ADR-0003) — grita solo donde
+  // hay que actuar, no de fondo.
+  pageGlow: 'rgb(255 255 255 / 0.022)',
   sheen: 'rgb(255 255 255 / 0.45)',
   // Color base del destello; su alfa se compone en cada uso.
   sheenBase: '#ffffff',
   // Velo que oscurece la media bajo el texto de una tarjeta.
   scrim: '#000000',
 
-  aurora1: 'rgb(195 244 0 / 0.14)',
-  aurora2: 'rgb(56 189 172 / 0.12)',
-  aurora3: 'rgb(120 110 255 / 0.1)',
-  auroraSpot: 'rgb(195 244 0 / 0.09)',
-  noiseOpacity: 0.028,
+  // Aurora: decoración de páginas públicas, no cromo de producto. Opacidades
+  // rebajadas y sin el orbe púrpura (nada de degradados IA azul/violeta).
+  aurora1: 'rgb(195 244 0 / 0.07)',
+  aurora2: 'rgb(56 189 172 / 0.05)',
+  aurora3: 'rgb(140 140 140 / 0.04)',
+  auroraSpot: 'rgb(195 244 0 / 0.05)',
+  noiseOpacity: 0.02,
   ambientStrength: 1,
 
   shadowSm: '0 1px 2px rgb(0 0 0 / 0.4)',

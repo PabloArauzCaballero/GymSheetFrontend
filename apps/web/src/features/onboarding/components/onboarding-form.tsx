@@ -85,14 +85,14 @@ export function OnboardingForm({ initial }: Readonly<{ initial: OnboardingState 
   return (
     <main className="mx-auto grid w-full max-w-2xl gap-6 px-4 py-8 sm:py-12">
       <div>
-        <p className="data-label text-[var(--accent-ink)]">Configuración inicial</p>
-        <h1 className="mt-2 text-3xl font-bold">Personaliza tu experiencia</h1>
+        <p className="data-label text-[var(--text-muted)]">Configuración inicial</p>
+        <h1 className="mt-2 text-3xl font-semibold">Personaliza tu experiencia</h1>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
           Paso {step} de 4 · Tu progreso se guarda en tu cuenta.
         </p>
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--surface-high)]">
           <div
-            className="h-full bg-[var(--volt)] transition-all"
+            className="h-full bg-[var(--volt)] transition-[width] duration-[var(--dur-4)] ease-[var(--ease-out)]"
             style={{ width: `${step * 25}%` }}
           />
         </div>

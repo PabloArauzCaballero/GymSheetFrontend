@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, type InputHTMLAttributes } from 'react';
+import { useId, type InputHTMLAttributes, type ReactNode } from 'react';
 import { cn } from '@/shared/lib/cn';
 
 /**
@@ -22,7 +22,7 @@ export function Checkbox({
   className,
   id,
   ...props
-}: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & { label: string }) {
+}: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & { label: ReactNode }) {
   const generated = useId();
   const inputId = id ?? generated;
 
@@ -46,10 +46,10 @@ export function Checkbox({
       >
         <span
           aria-hidden
-          className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-[6px] border border-[var(--border)] transition-[background-color,border-color] duration-200"
+          className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-[6px] border border-[var(--border)] transition-[background-color,border-color] duration-[var(--dur-2)]"
         >
           <svg
-            className="h-[13px] w-[13px] scale-50 opacity-0 transition-[opacity,transform] duration-150 ease-out"
+            className="h-[13px] w-[13px] scale-50 opacity-0 transition-[opacity,transform] duration-[var(--dur-1)] ease-[var(--ease-out)]"
             fill="none"
             stroke="var(--accent-contrast)"
             strokeLinecap="round"

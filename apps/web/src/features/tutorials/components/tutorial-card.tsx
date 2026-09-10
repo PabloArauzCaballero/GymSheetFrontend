@@ -46,7 +46,7 @@ export function TutorialCard({ tutorial }: Readonly<{ tutorial: ResolvedTutorial
       </div>
 
       <div className="flex-1">
-        <h3 className="text-base font-bold tracking-[-0.01em]">{copy(tutorial.title)}</h3>
+        <h3 className="text-base font-semibold tracking-[-0.01em]">{copy(tutorial.title)}</h3>
         <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">{copy(tutorial.description)}</p>
       </div>
 

@@ -105,10 +105,10 @@ export function WorkoutSetRow({
     <div
       className={cn(
         SET_GRID_COLS,
-        'group border-t border-[var(--border-subtle)] px-3 py-4 text-center transition-colors duration-150 hover:bg-[var(--surface-low)]',
+        'group border-t border-[var(--border-subtle)] px-3 py-4 text-center transition-colors duration-[var(--dur-1)] hover:bg-[var(--surface-low)]',
       )}
     >
-      <span className="data-value grid size-7 place-items-center justify-self-center rounded-full border border-[var(--border-subtle)] text-[var(--accent-ink)] transition-colors group-hover:border-[var(--volt)]">
+      <span className="data-value grid size-7 place-items-center justify-self-center rounded-full border border-[var(--border-subtle)] text-[var(--text-muted)]">
         {set.numeroSerie}
       </span>
       <span className="data-value">{set.pesoKg}</span>

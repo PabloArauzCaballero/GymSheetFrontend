@@ -19,19 +19,19 @@ export function ExerciseCard({
 }>) {
   const primaryMedia = exercise.media.find((item) => item.isPrimary) ?? exercise.media[0];
   return (
-    <article className="panel group overflow-hidden transition duration-300 hover:-translate-y-1 hover:border-[var(--border)] hover:shadow-[0_20px_50px_-24px_rgb(var(--accent-channels)/0.35)]">
+    <article className="panel hover-lift group overflow-hidden">
       <Link href={`/exercises/${exercise.id}`}>
         <div className="relative grid aspect-[16/9] place-items-center overflow-hidden border-b border-[var(--border-subtle)] bg-[var(--surface-low)]">
           {primaryMedia?.mediaType === 'IMAGE' || primaryMedia?.mediaType === 'GIF' ? (
             <DomainImage
               key={primaryMedia.id}
               alt={primaryMedia.altText}
-              className="size-full object-cover opacity-90 transition duration-500 ease-out group-hover:scale-[1.05] group-hover:opacity-100"
+              className="size-full object-cover transition-opacity duration-[var(--dur-4)] ease-[var(--ease-out)]"
               fallbackSrc={primaryMedia.url}
               src={primaryMedia.thumbnailUrl ?? primaryMedia.url}
             />
           ) : (
-            <Dumbbell className="size-10 text-[var(--text-disabled)] transition duration-500 group-hover:scale-110 group-hover:text-[var(--text-muted)]" />
+            <Dumbbell className="size-10 text-[var(--text-disabled)]" />
           )}
           <div
             aria-hidden
@@ -47,8 +47,8 @@ export function ExerciseCard({
       <div className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="data-label text-[var(--accent-ink)]">{exercise.grupoMuscular}</p>
-            <h2 className="mt-2 break-words text-xl font-bold tracking-[-0.03em] transition-colors duration-200 group-hover:text-[var(--accent-ink)]">
+            <p className="data-label">{exercise.grupoMuscular}</p>
+            <h2 className="mt-2 break-words text-xl font-semibold tracking-[-0.02em]">
               <Link href={`/exercises/${exercise.id}`}>{exercise.nombre}</Link>
             </h2>
           </div>

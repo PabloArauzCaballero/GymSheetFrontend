@@ -28,6 +28,8 @@ export const userSchema = z.object({
   tenantId: z.string().nullable().optional(),
   /** Nulo = no se ha preguntado. Ver `userGenders`. */
   genero: z.enum(userGenders).nullable().optional(),
+  /** Cuánto suma cada chip rápido al registrar una serie. 2.5 por defecto. */
+  pesoIncrementoKg: z.number().positive().optional(),
 });
 
 export const sessionPrincipalSchema = z.object({
@@ -51,6 +53,14 @@ export const profileSchema = z.object({
   estaturaCm: z.number().int(),
   objetivo: z.enum(trainingGoals),
   fechaActualizacion: z.string().optional(),
+});
+
+/** Una foto de la galería de perfil. Hasta seis por cuenta. */
+export const profilePhotoSchema = z.object({
+  id: z.string().uuid(),
+  url: z.string(),
+  posicion: z.number().int(),
+  fechaCreacion: z.string(),
 });
 
 export const onboardingSchema = z.object({

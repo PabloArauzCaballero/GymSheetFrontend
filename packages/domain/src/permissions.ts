@@ -30,3 +30,23 @@ export function hasAnyRole(
 ): boolean {
   return role != null && allowed.includes(role);
 }
+
+/**
+ * Granular admin permission check, additive to the role checks above. A role
+ * (ADMIN/FRONT_DESK) is the floor the backend enforces first; a permission
+ * key narrows further for a small team with differentiated responsibilities.
+ * Absence of the `permissions` list (e.g. non-staff sessions) means no grants.
+ */
+export function hasPermission(
+  permissions: readonly string[] | null | undefined,
+  permissionKey: string,
+): boolean {
+  return permissions != null && permissions.includes(permissionKey);
+}
+
+export function hasAnyPermission(
+  permissions: readonly string[] | null | undefined,
+  permissionKeys: readonly string[],
+): boolean {
+  return permissions != null && permissionKeys.some((key) => permissions.includes(key));
+}

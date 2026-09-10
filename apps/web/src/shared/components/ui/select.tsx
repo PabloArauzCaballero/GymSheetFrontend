@@ -46,7 +46,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
           else if (ref) ref.current = node;
         }}
         className={cn(
-          'h-11 w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--surface-low)] px-3 text-base text-[var(--text)] transition-all duration-200 hover:border-[var(--border)] focus:border-[var(--volt)] focus:shadow-[0_0_0_3px_rgb(var(--accent-channels)/0.14)]  disabled:opacity-50 sm:text-sm',
+          'h-11 w-full rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-low)] px-3 text-base text-[var(--text)] transition-[border-color,background-color,box-shadow] duration-[var(--dur-2)] hover:border-[var(--border)] focus:border-[var(--volt)] focus:shadow-[0_0_0_3px_rgb(var(--accent-channels)/0.14)] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm',
           className,
         )}
         {...props}

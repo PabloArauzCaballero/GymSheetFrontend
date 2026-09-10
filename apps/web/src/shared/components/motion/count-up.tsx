@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { prefersReducedMotion } from '@/shared/hooks/use-reduced-motion';
 
 /**
  * Animates a whole number from 0 to `value` on mount with an ease-out curve.
@@ -15,11 +16,8 @@ export function CountUp({
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {
-    const prefersReduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     let raf = 0;
-    if (prefersReduced || value === 0) {
+    if (prefersReducedMotion() || value === 0) {
       // Defer to the next frame so the update is not synchronous within the effect.
       raf = window.requestAnimationFrame(() => setDisplay(value));
       return () => window.cancelAnimationFrame(raf);

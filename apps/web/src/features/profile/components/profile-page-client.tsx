@@ -8,13 +8,20 @@ import { useForm } from 'react-hook-form';
 import { notify } from '@/shared/notifications';
 import { z } from 'zod';
 import { profileService } from '@/features/profile/services/profile-service';
-import { onboardingService } from '@/features/onboarding/services/onboarding-service';
+import { ProfilePhotoGallery } from '@/features/profile/components/profile-photo-gallery';
 import { MembershipExperience } from '@/features/membership/components/membership-experience';
+import { ProfileMeasurements } from '@/features/profile/components/profile-measurements';
 import { GenderPreferenceField } from '@/features/progression/components/gender-preference-field';
+import { WeightIncrementField } from '@/features/workouts/components/weight-increment-field';
 import { ApiError } from '@/shared/api/api-error';
 import { trainingGoals } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
-import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
+import { ErrorPanel } from '@/shared/components/feedback/error-panel';
+import {
+  SkeletonDetail,
+  SkeletonPageHeader,
+  SkeletonScreen,
+} from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -61,10 +68,6 @@ export function ProfilePageClient() {
     resolver: zodResolver(schema),
     defaultValues: { edad: 18, pesoKg: 70, estaturaCm: 170, objetivo: 'SALUD_GENERAL' },
   });
-  const measurements = useQuery({
-    queryKey: queryKeys.bodyMeasurements,
-    queryFn: onboardingService.measurements,
-  });
   useEffect(() => {
     if (profile.data)
       form.reset({
@@ -78,12 +81,41 @@ export function ProfilePageClient() {
     mutationFn: (values: FormValues) =>
       profile.data ? profileService.updateProfile(values) : profileService.createProfile(values),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.profile });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.profile }),
+        // El peso guardado aquí también queda en el histórico desde ahora;
+        // sin esto la tabla de abajo no mostraría el registro recién creado
+        // hasta recargar la página.
+        queryClient.invalidateQueries({ queryKey: queryKeys.bodyMeasurements }),
+      ]);
       notify.success('Perfil actualizado.');
     },
     onError: (error: Error) => form.setError('root', { message: error.message }),
   });
-  if (profile.isLoading || user.isLoading) return <LoadingPanel rows={6} />;
+  if (profile.isLoading || user.isLoading) {
+    return (
+      <SkeletonScreen className="gap-8" label="Cargando tu perfil">
+        <SkeletonPageHeader />
+        <SkeletonDetail />
+      </SkeletonScreen>
+    );
+  }
+
+  /* El formulario se inicializa con los datos del perfil. Si la petición falla
+     se renderizaba igualmente, en blanco y editable: guardar desde ahí habría
+     sobrescrito el perfil real con campos vacíos. */
+  if (profile.isError || user.isError) {
+    return (
+      <ErrorPanel
+        message={(profile.error ?? user.error)?.message ?? 'No se pudo cargar tu perfil.'}
+        onRetry={() => {
+          void profile.refetch();
+          void user.refetch();
+        }}
+      />
+    );
+  }
+
 
   return (
     <div className="grid gap-8">
@@ -94,24 +126,19 @@ export function ProfilePageClient() {
         tutorialId="page:profile"
       />
       <nav aria-label="Secciones del perfil" className="flex gap-2 overflow-x-auto pb-2 text-sm">
-        <a
-          className="whitespace-nowrap rounded-full border border-[var(--border-subtle)] px-4 py-2"
-          href="#personal"
-        >
-          Información personal
-        </a>
-        <a
-          className="whitespace-nowrap rounded-full border border-[var(--border-subtle)] px-4 py-2"
-          href="#progress"
-        >
-          Progreso corporal
-        </a>
-        <a
-          className="whitespace-nowrap rounded-full border border-[var(--border-subtle)] px-4 py-2"
-          href="#membership"
-        >
-          Mi membresía y accesos
-        </a>
+        {[
+          ['#personal', 'Información personal'],
+          ['#progress', 'Progreso corporal'],
+          ['#membership', 'Mi membresía y accesos'],
+        ].map(([href, label]) => (
+          <a
+            className="whitespace-nowrap rounded-full border border-[var(--border-subtle)] px-4 py-2 text-[var(--text-muted)] transition-colors duration-[var(--dur-2)] hover:text-[var(--text)]"
+            href={href}
+            key={href}
+          >
+            {label}
+          </a>
+        ))}
       </nav>
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]" id="personal">
         <form onSubmit={form.handleSubmit((values) => save.mutate(values))}>
@@ -189,11 +216,12 @@ export function ProfilePageClient() {
           </Card>
         </form>
         <div className="grid content-start gap-5">
+          <ProfilePhotoGallery />
           <Card>
             <CardHeader title="Identidad" />
             <CardContent className="grid gap-4">
               <div className="flex items-center gap-3">
-                <UserRound className="size-5 shrink-0 text-[var(--accent-ink)]" />
+                <UserRound className="size-5 shrink-0 text-[var(--text-muted)]" />
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{user.data?.nombreCompleto ?? 'Usuario'}</p>
                   <p className="truncate text-sm text-[var(--text-muted)]">{user.data?.email}</p>
@@ -205,6 +233,9 @@ export function ProfilePageClient() {
               </div>
               <div className="border-t border-[var(--border-subtle)] pt-4">
                 <GenderPreferenceField value={user.data?.genero ?? null} />
+              </div>
+              <div className="border-t border-[var(--border-subtle)] pt-4">
+                <WeightIncrementField value={user.data?.pesoIncrementoKg} />
               </div>
             </CardContent>
           </Card>
@@ -237,45 +268,10 @@ export function ProfilePageClient() {
         </div>
       </section>
       <section id="progress">
-        <Card>
-          <CardHeader
-            description="Cada registro se conserva; actualizar el peso no borra mediciones anteriores."
-            title="Progreso corporal"
-          />
-          <CardContent>
-            {measurements.isLoading ? (
-              <LoadingPanel rows={3} />
-            ) : measurements.data?.length ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr>
-                      <th className="pb-3">Fecha</th>
-                      <th className="pb-3">Peso</th>
-                      <th className="pb-3">Origen</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {measurements.data.map((item) => (
-                      <tr className="border-t border-[var(--border-subtle)]" key={item.id}>
-                        <td className="py-3">{item.measuredOn}</td>
-                        <td>
-                          {item.weight} {item.unit}
-                        </td>
-                        <td>{item.source}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-sm text-[var(--text-muted)]">Aún no hay mediciones guardadas.</p>
-            )}
-          </CardContent>
-        </Card>
+        <ProfileMeasurements />
       </section>
       <section className="grid gap-4" id="membership">
-        <h2 className="text-2xl font-bold">Mi membresía y accesos</h2>
+        <h2 className="text-2xl font-semibold">Mi membresía y accesos</h2>
         <MembershipExperience />
       </section>
     </div>

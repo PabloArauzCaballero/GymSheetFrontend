@@ -23,10 +23,13 @@ export const brandIconKeys = [
 export type BrandIconKey = (typeof brandIconKeys)[number];
 
 /**
- * Tipografías disponibles. Todas son sans neo-grotescas de rasgo cerrado: el
- * cambio se percibe como otra marca, no como otro producto.
+ * Tipografías disponibles. Las tres primeras son sans neo-grotescas de rasgo
+ * cerrado servidas desde el repo: el cambio se percibe como otra marca, no como
+ * otro producto. `system` usa la pila nativa del dispositivo (San Francisco en
+ * Apple, Segoe en Windows, Roboto en Android) — para experiencias que deben
+ * sentirse parte del sistema operativo y no cargar ni un byte de fuente.
  */
-export const brandFontKeys = ['hanken', 'inter', 'manrope'] as const;
+export const brandFontKeys = ['hanken', 'inter', 'manrope', 'system'] as const;
 export type BrandFontKey = (typeof brandFontKeys)[number];
 
 export type TenantBrand = {
@@ -54,6 +57,8 @@ export const fontVariableByKey: Record<BrandFontKey, string> = {
   hanken: 'var(--font-hanken)',
   inter: 'var(--font-inter)',
   manrope: 'var(--font-manrope)',
+  // Pila nativa: la declara `globals.css` en `:root`, no `next/font`.
+  system: 'var(--font-system)',
 };
 
 export const defaultBrand: TenantBrand = {

@@ -6,7 +6,7 @@ export function PublicFooter() {
   return (
     <footer className="border-t border-[var(--border-subtle)] bg-[var(--surface-lowest)]">
       <div className="mx-auto grid max-w-6xl gap-12 px-5 py-14 sm:px-8 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
-        <div><Link className="text-xl font-bold tracking-[-0.03em]" href="/">GymSheet</Link><p className="mt-4 max-w-xs text-sm leading-6 text-[var(--text-muted)]">Entrenamiento, progreso y comunidad en una experiencia precisa.</p></div>
+        <div><Link className="text-xl font-semibold tracking-[-0.03em]" href="/">GymSheet</Link><p className="mt-4 max-w-xs text-sm leading-6 text-[var(--text-muted)]">Entrenamiento, progreso y comunidad en una experiencia precisa.</p></div>
         {[
           ['Producto', [['Cómo funciona', '/#producto'], ['Planes', '/#planes'], ['Gimnasios', '/gimnasios']]],
           ['Cuenta', [['Crear cuenta', '/register'], ['Iniciar sesión', '/login'], ['Recuperar acceso', '/recover-password']]],

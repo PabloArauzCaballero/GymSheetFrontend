@@ -1,15 +1,21 @@
 'use client';
 
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Award, CalendarDays, Dumbbell, Flame, PersonStanding, TrendingUp } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { LeaderboardSortBy } from '@/shared/api/schemas';
 import { progressionService } from '@/features/progression/services/progression-service';
-import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
+import {
+  Skeleton,
+  SkeletonCardGrid,
+  SkeletonPageHeader,
+  SkeletonScreen,
+} from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { MetricCard } from '@/shared/components/ui/metric-card';
-import { cn } from '@/shared/lib/cn';
 import { BadgeTile, PathNode, RankHero } from './progression-parts';
+import { LeaderboardCard, RestDaysCard } from './progression-secondary-cards';
 
 /**
  * La senda en la web.
@@ -20,15 +26,28 @@ import { BadgeTile, PathNode, RankHero } from './progression-parts';
  * que reaprenderla. Lo único que cambia es el aprovechamiento del ancho: en
  * escritorio el camino y las cifras van en dos columnas, donde el móvil apila.
  */
+
 export function ProgressionClient() {
+  const queryClient = useQueryClient();
   const progression = useQuery({
     queryKey: ['progression', 'me'],
     queryFn: progressionService.get,
   });
+  const [leaderboardSort, setLeaderboardSort] = useState<LeaderboardSortBy>('points');
   const leaderboard = useQuery({
-    queryKey: ['progression', 'leaderboard'],
-    queryFn: () => progressionService.leaderboard(5),
+    queryKey: ['progression', 'leaderboard', leaderboardSort],
+    queryFn: () => progressionService.leaderboard(5, leaderboardSort),
     retry: false,
+  });
+  const restDays = useQuery({
+    queryKey: ['progression', 'rest-days'],
+    queryFn: progressionService.getRestDays,
+  });
+  const setRestDays = useMutation({
+    mutationFn: (weekdays: number[]) => progressionService.setRestDays(weekdays),
+    onSuccess: (data) => {
+      queryClient.setQueryData(['progression', 'rest-days'], data);
+    },
   });
 
   const acknowledge = useMutation({ mutationFn: progressionService.acknowledge });
@@ -58,7 +77,15 @@ export function ProgressionClient() {
     return [...all.filter((badge) => badge.earned), ...all.filter((badge) => !badge.earned)];
   }, [data?.badges]);
 
-  if (progression.isLoading) return <LoadingPanel rows={6} />;
+  if (progression.isLoading) {
+    return (
+      <SkeletonScreen className="gap-10" label="Cargando tu senda">
+        <SkeletonPageHeader />
+        <Skeleton className="h-44 w-full rounded-[var(--radius-lg)]" />
+        <SkeletonCardGrid count={6} />
+      </SkeletonScreen>
+    );
+  }
   if (progression.isError || !data) {
     return (
       <div className="grid gap-10">
@@ -80,6 +107,19 @@ export function ProgressionClient() {
 
   const stats = data.stats;
   const earnedCount = badges.filter((badge) => badge.earned).length;
+  const currentRestDays = restDays.data?.weekdays ?? [];
+
+  function toggleRestDay(day: number) {
+    const isRestDay = currentRestDays.includes(day);
+    // Los siete días de descanso dejarían la racha imposible de romper, así
+    // que el backend lo rechaza; se evita aquí para no mostrar un error por
+    // algo que la interfaz puede prevenir sola.
+    if (!isRestDay && currentRestDays.length >= 6) return;
+    const next = isRestDay
+      ? currentRestDays.filter((value) => value !== day)
+      : [...currentRestDays, day];
+    setRestDays.mutate(next);
+  }
 
   return (
     <div className="grid gap-10">
@@ -183,50 +223,17 @@ export function ProgressionClient() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader
-              description="Solo nombre e inicial: la tabla no es una lista de socios."
-              title="Clasificación del gimnasio"
-            />
-            <CardContent className="grid gap-3">
-              {(leaderboard.data ?? []).map((entry) => (
-                <div
-                  className="flex items-center gap-4"
-                  key={`${entry.position}-${entry.displayName}`}
-                >
-                  <span
-                    className={cn(
-                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
-                      entry.isMe
-                        ? 'bg-[var(--volt)] text-[var(--background)]'
-                        : 'bg-[var(--surface-high)] text-[var(--text-muted)]',
-                    )}
-                  >
-                    {entry.position}
-                  </span>
-                  <span
-                    className={cn(
-                      'flex-1 truncate text-sm',
-                      entry.isMe
-                        ? 'font-semibold text-[var(--text)]'
-                        : 'text-[var(--text-muted)]',
-                    )}
-                  >
-                    {entry.displayName}
-                    {entry.isMe ? ' · tú' : ''}
-                  </span>
-                  <span className="text-sm text-[var(--text-muted)]">
-                    {entry.points.toLocaleString('es-ES')}
-                  </span>
-                </div>
-              ))}
-              {(leaderboard.data ?? []).length === 0 ? (
-                <p className="text-sm text-[var(--text-muted)]">
-                  Todavía no hay nadie en la tabla. Entrena y sé el primero.
-                </p>
-              ) : null}
-            </CardContent>
-          </Card>
+          <RestDaysCard
+            currentRestDays={currentRestDays}
+            onToggle={toggleRestDay}
+            pending={setRestDays.isPending}
+          />
+
+          <LeaderboardCard
+            entries={leaderboard.data ?? []}
+            onSortChange={setLeaderboardSort}
+            sortBy={leaderboardSort}
+          />
         </div>
       </div>
 

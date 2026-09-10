@@ -45,12 +45,20 @@ export default function AppLayout() {
         {/* The tab bar itself. No push animation: it is the root of this
             stack, not something you navigate to. */}
         <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
+        <Stack.Screen name="onboarding" />
         <Stack.Screen name="trayectoria" />
         <Stack.Screen name="ejercicio-nuevo" />
         <Stack.Screen name="settings" />
         <Stack.Screen name="profile-edit" />
+        <Stack.Screen name="registrar-peso" />
         <Stack.Screen name="membership" />
         <Stack.Screen name="notifications" />
+        <Stack.Screen name="comunidad-mensajes" />
+        {/* La baraja de descubrimiento: se abre desde Comunidad y se cierra
+            volviendo, así que es una hermana del resto de pantallas de detalle
+            y no una sexta pestaña. */}
+        <Stack.Screen name="descubrir" />
+        <Stack.Screen name="chat" />
       </Stack>
       <TourOverlay />
     </>

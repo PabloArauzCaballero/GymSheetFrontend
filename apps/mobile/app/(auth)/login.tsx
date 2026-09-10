@@ -103,6 +103,9 @@ export default function LoginScreen() {
       <Link href="/(auth)/recover-password" style={{ color: colors.volt, marginTop: spacing.sm }}>
         ¿Olvidaste tu contraseña?
       </Link>
+      <Link href="/(auth)/register" style={{ color: colors.volt, marginTop: spacing.sm }}>
+        ¿No tienes cuenta? Regístrate
+      </Link>
     </Screen>
   );
 }

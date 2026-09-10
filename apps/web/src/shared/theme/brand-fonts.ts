@@ -7,7 +7,9 @@ import localFont from 'next/font/local';
  * y no depende de Google Fonts ni de acceso a red en CI/producción.
  *
  * Las variables declaradas aquí deben coincidir con `fontVariableByKey` del
- * contrato de marca, que es lo que consume la hoja de tema.
+ * contrato de marca, que es lo que consume la hoja de tema. La clave `system`
+ * es la excepción: su pila (`--font-system`) la declara `globals.css` porque no
+ * hay fuente que cargar.
  *
  * Sólo se precarga la familia por defecto: precargar las tres castigaría a
  * todos los inquilinos con descargas que la mayoría no llega a usar.

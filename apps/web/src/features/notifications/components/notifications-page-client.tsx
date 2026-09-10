@@ -86,7 +86,7 @@ export function NotificationsPageClient() {
                               `page-header.tsx`. El texto es de difusión: no lo controlamos. */}
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <h2 className="break-words font-bold">{item.asunto}</h2>
+                              <h2 className="break-words font-semibold">{item.asunto}</h2>
                               {!item.leidoEn ? <Badge tone="success">Nuevo</Badge> : null}
                             </div>
                             <p className="mt-2 break-words text-sm leading-6 text-[var(--text-muted)]">

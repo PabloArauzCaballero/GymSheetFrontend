@@ -191,7 +191,7 @@ function ConfirmExit({
         tabIndex={-1}
         className="panel w-[min(420px,calc(100vw-2rem))] p-6 outline-none"
       >
-        <h2 className="text-lg font-bold tracking-[-0.02em]">¿Salir del tutorial?</h2>
+        <h2 className="text-lg font-semibold tracking-[-0.02em]">¿Salir del tutorial?</h2>
         <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
           Tu avance se guarda automáticamente. Puedes continuar más tarde desde el Centro de ayuda,
           o marcar el tutorial como omitido.

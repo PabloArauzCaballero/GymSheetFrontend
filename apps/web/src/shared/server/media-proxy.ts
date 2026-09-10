@@ -5,6 +5,12 @@ import { lookup } from 'node:dns/promises';
 // Capa de red autorizada para el proxy de imágenes. Trae medios externos en el
 // servidor (nunca el navegador) con protecciones anti-SSRF: valida el destino,
 // bloquea rangos privados y revalida cada redirección.
+//
+// El control primario contra el abuso NO está aquí sino en la ruta: solo se
+// proxyan URLs con firma HMAC del servidor o de sesiones autenticadas (ver
+// `media-signing.ts`). Eso deja fuera el vector de rebinding DNS para anónimos
+// —no pueden ni proponer un host— y limita el residual (la resolución que hace
+// `fetch` es independiente de la validación de abajo) a URLs ya confiables.
 const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
 const MAX_REDIRECTS = 3;
 const FETCH_TIMEOUT_MS = 10_000;

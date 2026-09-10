@@ -51,7 +51,7 @@ export function WorkoutExercisePanel({
               </Badge>
             ) : null}
           </div>
-          <h2 className="mt-3 text-2xl font-bold tracking-[-0.03em]">
+          <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em]">
             {exercise?.nombre ?? 'Ejercicio no disponible'}
           </h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
@@ -103,7 +103,7 @@ export function WorkoutExercisePanel({
       <div
         className={cn(
           SET_GRID_COLS,
-          'bg-[var(--surface-low)] px-3 py-3 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]',
+          'bg-[var(--surface-low)] px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]',
         )}
       >
         <span>Set</span>
@@ -123,6 +123,13 @@ export function WorkoutExercisePanel({
       )}
       {editable ? (
         <SetEntryForm
+          lastSet={
+            item.series.length
+              ? item.series.reduce((latest, set) =>
+                  set.numeroSerie > latest.numeroSerie ? set : latest,
+                )
+              : undefined
+          }
           nextSetNumber={Math.max(0, ...item.series.map((set) => set.numeroSerie)) + 1}
           sessionExerciseId={item.id}
           workoutId={workoutId}

@@ -135,7 +135,7 @@ export const membershipAccessSchema = z.object({
   code: z.string(),
   name: z.string(),
   description: z.string().nullable(),
-  source: z.enum(['MEMBERSHIP', 'PURCHASE', 'ADMIN_GRANT', 'PROMOTION', 'TRIAL']),
+  source: z.enum(['MEMBERSHIP', 'PURCHASE', 'ADMIN_GRANT', 'PROMOTION', 'TRIAL', 'STREAK_REWARD']),
   sourceId: z.string().uuid(),
   startsAt: z.string(),
   endsAt: z.string().nullable(),

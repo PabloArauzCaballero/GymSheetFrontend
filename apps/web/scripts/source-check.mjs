@@ -53,7 +53,26 @@ for (const absolute of await walk(sourceRoot)) {
     findings.push(`${relative}: unsafe TypeScript suppression or cast`);
   }
   if (!relative.startsWith(themeSourceDirectory) && !relative.endsWith('.test.ts')) {
-    for (const [index, line] of content.split(/\r?\n/u).entries()) {
+    let inBlockComment = false;
+    for (const [index, rawLine] of content.split(/\r?\n/u).entries()) {
+      // La regla es sobre CÓDIGO: un literal que clava la identidad de marca.
+      // Un hex en un comentario que explica *por qué* se eligió un token
+      // (ratios WCAG, valores en claro vs. oscuro) es documentación, no
+      // identidad — se despoja el comentario antes de comprobar.
+      let line = rawLine;
+      if (inBlockComment) {
+        const end = line.indexOf('*/');
+        if (end === -1) continue;
+        line = line.slice(end + 2);
+        inBlockComment = false;
+      }
+      line = line.replace(/\/\*.*?\*\//gu, '');
+      const blockStart = line.indexOf('/*');
+      if (blockStart !== -1) {
+        inBlockComment = true;
+        line = line.slice(0, blockStart);
+      }
+      line = line.replace(/\/\/.*$/u, '');
       // En una máscara el color no es identidad sino opacidad: `#000` significa
       // "conserva este píxel". Tematizarlo rompería el efecto.
       if (/mask-image\s*:/u.test(line)) continue;

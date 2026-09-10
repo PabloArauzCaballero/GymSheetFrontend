@@ -63,7 +63,7 @@ export function MyPlansClient() {
               <article className="panel hover-lift flex flex-col gap-4 p-5 sm:flex-row sm:items-center" key={assignment.id}>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-lg font-bold tracking-[-0.02em]">
+                    <h2 className="text-lg font-semibold tracking-[-0.02em]">
                       {routine?.nombre ?? 'Rutina'}
                     </h2>
                     <Badge tone="info">{exercises} ejercicios</Badge>

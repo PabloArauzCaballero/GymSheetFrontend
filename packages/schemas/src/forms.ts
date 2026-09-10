@@ -11,11 +11,27 @@ export const loginSchema = z.object({
 });
 export type LoginInput = z.infer<typeof loginSchema>;
 
-export const registerSchema = z.object({
-  nombreCompleto: z.string().min(2, 'Ingresa tu nombre completo.'),
-  email: z.string().email('Correo electrónico inválido.'),
-  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.'),
-});
+export const registerSchema = z
+  .object({
+    nombreCompleto: z.string().min(2, 'Ingresa tu nombre completo.'),
+    email: z.string().email('Correo electrónico inválido.'),
+    password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.'),
+    confirmation: z.string(),
+    /**
+     * Cadena vacía = prefiero no decirlo, tratada igual que ausencia: solo
+     * sirve para elegir con qué arquetipos habla la senda.
+     */
+    genero: z.enum(['', 'MALE', 'FEMALE', 'UNSPECIFIED']).optional(),
+    acceptedTerms: z.boolean(),
+  })
+  .refine((value) => value.password === value.confirmation, {
+    path: ['confirmation'],
+    message: 'Las contraseñas no coinciden.',
+  })
+  .refine((value) => value.acceptedTerms, {
+    path: ['acceptedTerms'],
+    message: 'Debes aceptar los términos y la política de privacidad.',
+  });
 export type RegisterInput = z.infer<typeof registerSchema>;
 
 export const recoverPasswordSchema = z.object({

@@ -84,7 +84,7 @@ export function ConfirmRoot() {
                   <Icon className="size-5" />
                 </span>
                 <div className="min-w-0">
-                  <DialogPrimitive.Title className="text-lg font-bold tracking-[-0.02em]">
+                  <DialogPrimitive.Title className="text-lg font-semibold tracking-[-0.02em]">
                     {active.title}
                   </DialogPrimitive.Title>
                   <DialogPrimitive.Description className="mt-2 text-sm leading-6 text-[var(--text-muted)]">

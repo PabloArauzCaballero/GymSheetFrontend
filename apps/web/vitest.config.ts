@@ -50,6 +50,9 @@ export default defineConfig({
       { find: '@gymsheet/design-tokens', replacement: pkg('design-tokens') },
       { find: '@gymsheet/observability', replacement: pkg('observability') },
       { find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url)) },
+      // `server-only` lanza al importarse fuera de un RSC; en las pruebas es un
+      // no-op para poder ejercitar la lógica de los módulos de servidor.
+      { find: /^server-only$/u, replacement: fileURLToPath(new URL('./src/test/server-only-stub.ts', import.meta.url)) },
     ],
   },
   test: {

@@ -17,6 +17,11 @@ export interface SetDraft {
   rir: string;
 }
 
+/** «2.5» → «2,5»: coma decimal, y sin ceros de sobra («5» en vez de «5,0»). */
+function formatIncrement(kg: number): string {
+  return kg.toLocaleString('es-ES', { maximumFractionDigits: 2 });
+}
+
 function NumberField({
   label,
   value,
@@ -120,6 +125,7 @@ export function SetEntryForm({
   previous,
   pending,
   onSubmit,
+  weightIncrementKg = 2.5,
 }: {
   /** Previous set's values *within this session*, so a repeat is one tap. */
   initial?: Partial<SetDraft>;
@@ -134,6 +140,11 @@ export function SetEntryForm({
   previous?: { pesoKg: number; repeticiones: number };
   pending: boolean;
   onSubmit: (draft: { pesoKg: number; repeticiones: number; rir: number }) => void;
+  /**
+   * Cuánto suma cada chip de peso. Preferencia de cuenta (`Ajustes`), no una
+   * constante: 2.5 kg es solo el valor por defecto para quien no la cambió.
+   */
+  weightIncrementKg?: number;
 }) {
   const [draft, setDraft] = useState<SetDraft>({
     // Falls back to the previous session when this one has no sets yet: opening
@@ -187,15 +198,21 @@ export function SetEntryForm({
             onPress={() =>
               setDraft((prev) => ({
                 ...prev,
-                pesoKg: String(previous.pesoKg + 2.5),
+                pesoKg: String(previous.pesoKg + weightIncrementKg),
                 repeticiones: prev.repeticiones || String(previous.repeticiones),
               }))
             }
             wide
           />
         ) : null}
-        <QuickChip label="+2,5 kg" onPress={() => bump('pesoKg', 2.5)} />
-        <QuickChip label="−2,5 kg" onPress={() => bump('pesoKg', -2.5)} />
+        <QuickChip
+          label={`+${formatIncrement(weightIncrementKg)} kg`}
+          onPress={() => bump('pesoKg', weightIncrementKg)}
+        />
+        <QuickChip
+          label={`−${formatIncrement(weightIncrementKg)} kg`}
+          onPress={() => bump('pesoKg', -weightIncrementKg)}
+        />
         <QuickChip label="+1 rep" onPress={() => bump('repeticiones', 1)} />
         <QuickChip label="−1 rep" onPress={() => bump('repeticiones', -1)} />
       </View>

@@ -38,10 +38,10 @@ export function PublicHeader() {
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
         <Link className="group inline-flex items-center gap-2.5" href="/">
-          <span className="grid size-8 place-items-center rounded-[6px] bg-[var(--volt)] text-xs font-bold text-[var(--accent-contrast)] shadow-[0_6px_18px_-6px_rgb(var(--accent-channels)/0.65)] transition-transform duration-300 group-hover:scale-105">
+          <span className="grid size-8 place-items-center rounded-[var(--radius-md)] bg-[var(--volt)] text-xs font-semibold text-[var(--accent-contrast)]">
             {brand.monogram}
           </span>
-          <span className="text-lg font-bold tracking-[-0.02em] text-[var(--text)]">
+          <span className="text-lg font-semibold tracking-[-0.02em] text-[var(--text)]">
             {brand.wordmark}
           </span>
         </Link>

@@ -190,13 +190,13 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
 
       <section className="panel overflow-hidden">
         <div className="border-b border-[var(--border-subtle)] p-5">
-          <h2 className="text-lg font-bold">Ejercicios ({routine.ejercicios.length})</h2>
+          <h2 className="text-lg font-semibold">Ejercicios ({routine.ejercicios.length})</h2>
         </div>
         {routine.ejercicios.length ? (
           <ul className="divide-y divide-[var(--border-subtle)]">
             {routine.ejercicios.map((item) => (
               <li className="flex items-center gap-4 p-4" key={item.id}>
-                <span className="grid size-8 shrink-0 place-items-center rounded-[6px] border border-[var(--border-subtle)] text-sm font-bold text-[var(--accent-ink)]">
+                <span className="grid size-8 shrink-0 place-items-center rounded-[6px] border border-[var(--border-subtle)] text-sm font-semibold text-[var(--accent-ink)]">
                   {item.orden}
                 </span>
                 <div className="min-w-0 flex-1">

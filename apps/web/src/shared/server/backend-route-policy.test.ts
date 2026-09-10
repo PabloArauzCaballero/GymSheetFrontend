@@ -18,6 +18,14 @@ const allowedCases: Array<[string[], string]> = [
   [['me', 'progression', 'acknowledge'], '/me/progression/acknowledge'],
   [['exercises', 'equipment-suggestion'], '/exercises/equipment-suggestion'],
   [['muscles'], '/muscles'],
+  [['auth', 'socket-ticket'], '/auth/socket-ticket'],
+  [['me', 'connections'], '/me/connections'],
+  [['me', 'connections', id], `/me/connections/${id}`],
+  [['me', 'social-status'], '/me/social-status'],
+  [['me', 'gym-directory'], '/me/gym-directory'],
+  [['me', 'conversations'], '/me/conversations'],
+  [['me', 'conversations', id, 'messages'], `/me/conversations/${id}/messages`],
+  [['public', 'facilities', 'branches'], '/public/facilities/branches'],
 ];
 const blockedCases: Array<[string[]]> = [
   [['admin', 'access', 'mock', 'events']],

@@ -91,40 +91,17 @@
   }
 }
 
-/* Entrada de página: desliza y aclara un leve desenfoque para dar sensación de foco. */
+/* Entrada de página: un desplazamiento corto y una aparición. Solo `transform`
+ * y `opacity` — nada de `filter: blur`, que es caro y el movimiento no lo
+ * necesita para leerse como "llegó una pantalla nueva" (ver ADR-0003). */
 @keyframes page-enter {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.994);
-    filter: blur(6px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
-  }
-}
-
-/* Barrido de brillo diagonal para el botón primario. */
-@keyframes sheen {
-  from {
-    transform: translateX(-160%) skewX(-12deg);
-  }
-  to {
-    transform: translateX(160%) skewX(-12deg);
-  }
-}
-
-/* Respiración del acento volt para elementos "vivos". */
-@keyframes glow-breathe {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgb(var(--accent-channels) / 0);
-    border-color: color-mix(in srgb, var(--volt) 30%, transparent);
-  }
-  50% {
-    box-shadow: 0 0 22px -4px rgb(var(--accent-channels) / 0.35);
-    border-color: color-mix(in srgb, var(--volt) 60%, transparent);
+    transform: translateY(0);
   }
 }
 

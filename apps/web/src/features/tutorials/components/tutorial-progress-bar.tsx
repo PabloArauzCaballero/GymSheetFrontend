@@ -27,7 +27,7 @@ export function TutorialProgressBar({
         />
       </div>
       <span
-        className="shrink-0 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--text-muted)]"
+        className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]"
         aria-label={`Paso ${current + 1} de ${total}`}
       >
         {current + 1} / {total}

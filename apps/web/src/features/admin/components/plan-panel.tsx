@@ -111,7 +111,7 @@ export function PlanPanel() {
     <section className="grid gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold">Planes</h2>
+          <h2 className="text-xl font-semibold">Planes</h2>
           <p className="mt-1 text-sm text-[var(--text-muted)]">
             Precio, beneficios, duración, alcance físico e imagen QR de cobro.
           </p>

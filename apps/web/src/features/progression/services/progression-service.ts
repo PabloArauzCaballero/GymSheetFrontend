@@ -4,11 +4,14 @@ import {
   muscleEquipmentInferenceSchema,
   progressionAcknowledgedSchema,
   progressionSchema,
+  restDaysSchema,
 } from '@/shared/api/schemas';
 import type {
   LeaderboardEntry,
+  LeaderboardSortBy,
   MuscleEquipmentInference,
   Progression,
+  RestDays,
 } from '@/shared/api/schemas';
 
 /**
@@ -22,11 +25,17 @@ export const progressionService = {
   get: () => apiRequest<Progression>('/me/progression', progressionSchema),
   acknowledge: () =>
     apiRequest('/me/progression/acknowledge', progressionAcknowledgedSchema, { method: 'POST' }),
-  leaderboard: (limit = 10) =>
+  leaderboard: (limit = 10, sortBy: LeaderboardSortBy = 'points') =>
     apiRequest<LeaderboardEntry[]>(
-      `/me/progression/leaderboard?limit=${limit}`,
+      `/me/progression/leaderboard?limit=${limit}&sortBy=${sortBy}`,
       leaderboardSchema,
     ),
+  getRestDays: () => apiRequest<RestDays>('/me/progression/rest-days', restDaysSchema),
+  setRestDays: (weekdays: number[]) =>
+    apiRequest<RestDays>('/me/progression/rest-days', restDaysSchema, {
+      method: 'PATCH',
+      body: { weekdays },
+    }),
 };
 
 /** Ejercicios propios: se elige el músculo y el servidor deduce la máquina. */

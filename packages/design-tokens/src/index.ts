@@ -108,7 +108,48 @@ export const fontWeights = {
 /** Minimum touch target (px) for interactive mobile elements. */
 export const minTouchTarget = 44;
 
-export const theme = { colors, spacing, radii, fontSizes, fontWeights, minTouchTarget } as const;
+/**
+ * Motion — mirror of `--dur-*` / `--ease-*` in `apps/web/src/app/globals.css`.
+ * A scale of intent, not of size:
+ *   1 touch response (press)     2 hover / colour change
+ *   3 short enter/exit           4 panel / dialog
+ *   5 section reveal             6 scroll narrative
+ * Milliseconds, so React Native `withTiming` and web both consume them raw.
+ *
+ * The mobile app keeps its own haptic-tuned palette and curve in
+ * `apps/mobile/src/components/motion.tsx` (`DURATION`, `PREMIUM_EASING`) —
+ * motion responds to the medium the same way the surface ramp does, so this is
+ * the web baseline, available to mobile rather than imposed on it.
+ * Every consumer must still honour `prefers-reduced-motion` /
+ * `AccessibilityInfo.isReduceMotionEnabled`.
+ */
+export const durations = {
+  1: 120,
+  2: 180,
+  3: 240,
+  4: 320,
+  5: 480,
+  6: 640,
+} as const;
+
+/** Bézier control points — `[x1, y1, x2, y2]`, framework-agnostic. */
+export const easings = {
+  /** House curve (easeOutQuint): fast in, settles without bounce. */
+  out: [0.22, 1, 0.36, 1],
+  inOut: [0.65, 0, 0.35, 1],
+  in: [0.4, 0, 1, 1],
+} as const;
+
+export const theme = {
+  colors,
+  spacing,
+  radii,
+  fontSizes,
+  fontWeights,
+  minTouchTarget,
+  durations,
+  easings,
+} as const;
 
 /** Both palettes keyed by mode, for theme-aware clients. */
 export const themes = {
@@ -120,5 +161,7 @@ export type ThemeMode = keyof typeof themes;
 export type ColorToken = keyof typeof colors;
 export type SpacingToken = keyof typeof spacing;
 export type RadiusToken = keyof typeof radii;
+export type DurationToken = keyof typeof durations;
+export type EasingToken = keyof typeof easings;
 export type Theme = typeof theme;
 export * from './tenants';

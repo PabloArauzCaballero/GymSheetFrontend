@@ -44,7 +44,21 @@
           "project": "mobile"
         }
       ],
-      "./plugins/with-fmt-consteval-fix"
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "GymSheet usa tu ubicación, solo al finalizar un entrenamiento, para verificar tu racha en la sede donde entrenaste."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "GymSheet usa tus fotos para que elijas una imagen de perfil o publiques una story.",
+          "cameraPermission": "GymSheet usa la cámara para que hagas una foto y la publiques como story."
+        }
+      ],
+      "./plugins/with-fmt-consteval-fix",
+      "@sentry/react-native"
     ],
     "experiments": {
       "typedRoutes": true

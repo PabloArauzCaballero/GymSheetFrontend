@@ -3,6 +3,7 @@ const resourceId = '[A-Za-z0-9-]+';
 const allowedPathPatterns = [
   /^\/access\/me$/u,
   /^\/access\/credentials\/me$/u,
+  /^\/auth\/socket-ticket$/u,
   /^\/admin\/access\/devices$/u,
   new RegExp(`^/admin/access/devices/${resourceId}/status$`, 'u'),
   /^\/admin\/access\/history$/u,
@@ -50,13 +51,26 @@ const allowedPathPatterns = [
   /^\/me\/accesses$/u,
   // La senda: estado, confirmación de novedades y clasificación del gimnasio.
   /^\/me\/progression$/u,
-  /^\/me\/progression\/(acknowledge|leaderboard)$/u,
+  /^\/me\/progression\/(acknowledge|leaderboard|rest-days)$/u,
+  /^\/me\/photos$/u,
+  new RegExp(`^/me/photos/${resourceId}$`, 'u'),
   /^\/me\/tutorial-progress$/u,
   new RegExp(`^/me/tutorial-progress/${resourceId}$`, 'u'),
+  // Punto 11 (conexiones), 10 (estado social) y 5 (directorio + chat).
+  /^\/me\/connections$/u,
+  new RegExp(`^/me/connections/${resourceId}$`, 'u'),
+  /^\/me\/social-status$/u,
+  /^\/me\/gym-directory$/u,
+  /^\/me\/conversations$/u,
+  new RegExp(`^/me/conversations/${resourceId}/messages$`, 'u'),
   /^\/notifications\/me$/u,
   /^\/notifications\/preferences\/me$/u,
   new RegExp(`^/notifications/${resourceId}/read$`, 'u'),
   /^\/profile$/u,
+  // Directorio público de sedes: el filtro de sucursal en Comunidad lo pide
+  // desde el navegador ('use client'), a diferencia de las páginas públicas
+  // (`/gimnasios`), que lo llaman servidor-a-servidor sin pasar por este BFF.
+  /^\/public\/facilities\/branches$/u,
   // Catálogo anatómico: alimenta el selector de músculo del ejercicio propio.
   /^\/muscles$/u,
   /^\/muscle-groups$/u,

@@ -91,6 +91,13 @@ export function DomainImage({
           setIndex((current) => current + 1);
         }}
         onLoad={() => setLoaded(true)}
+        // Una imagen servida desde la caché HTTP puede completarse antes de que
+        // React monte y adjunte `onLoad`, dejando el evento sin disparar y el
+        // `<img>` invisible para siempre en `opacity-0`. El ref cubre ese caso:
+        // si al montarse ya está completa, confirma `loaded` de inmediato.
+        ref={(element) => {
+          if (element?.complete && element.naturalWidth > 0) setLoaded(true);
+        }}
         // `no-referrer` evita que CDNs con protección anti-hotlink devuelvan imágenes vacías.
         referrerPolicy="no-referrer"
         src={candidates[index]}

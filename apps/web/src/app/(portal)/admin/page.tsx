@@ -6,5 +6,5 @@ export const metadata: Metadata = { title: 'Administración' };
 
 export default async function AdminPage() {
   const session = await requireRole(['ADMIN', 'FRONT_DESK']);
-  return <AdminOverview role={session.role} />;
+  return <AdminOverview permissions={session.permissions} role={session.role} />;
 }

@@ -19,7 +19,7 @@ export function CardHeader({
       )}
     >
       <div className="grid gap-1">
-        <h2 className="text-lg font-bold tracking-[-0.02em]">{title}</h2>
+        <h2 className="text-lg font-semibold tracking-[-0.02em]">{title}</h2>
         {description ? (
           <p className="max-w-2xl text-sm leading-6 text-[var(--text-muted)]">{description}</p>
         ) : null}

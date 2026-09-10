@@ -1,4 +1,5 @@
-import { Activity, Building2, Dumbbell, KeyRound, Users } from 'lucide-react';
+import { hasPermission } from '@gymsheet/domain';
+import { Activity, Building2, Dumbbell, KeyRound, ShieldCheck, Users } from 'lucide-react';
 import Link from 'next/link';
 import type { UserRole } from '@/shared/api/contracts';
 import { PageHeader } from '@/shared/components/layout/page-header';
@@ -39,10 +40,27 @@ const modules = [
     icon: KeyRound,
     roles: ['ADMIN', 'FRONT_DESK'],
   },
+  {
+    href: '/admin/permissions',
+    title: 'Permisos de administración',
+    description: 'Otorgar y revocar permisos granulares al personal.',
+    icon: ShieldCheck,
+    roles: ['ADMIN', 'FRONT_DESK'],
+    requiredPermission: 'admin-access:manage',
+  },
 ] as const;
 
-export function AdminOverview({ role }: Readonly<{ role: UserRole }>) {
-  const visibleModules = modules.filter((module) => new Set<UserRole>(module.roles).has(role));
+export function AdminOverview({
+  role,
+  permissions,
+}: Readonly<{ role: UserRole; permissions?: readonly string[] }>) {
+  const visibleModules = modules.filter(
+    (module) =>
+      new Set<UserRole>(module.roles).has(role) &&
+      ('requiredPermission' in module
+        ? hasPermission(permissions, module.requiredPermission)
+        : true),
+  );
   return (
     <div className="grid gap-8">
       <PageHeader
@@ -60,12 +78,14 @@ export function AdminOverview({ role }: Readonly<{ role: UserRole }>) {
               href={module.href}
               key={module.href}
             >
-              <Icon className="size-7 text-[var(--accent-ink)]" />
-              <h2 className="mt-10 text-2xl font-bold tracking-[-0.03em]">{module.title}</h2>
+              <Icon className="size-7 text-[var(--text-muted)]" />
+              <h2 className="mt-10 text-2xl font-semibold tracking-[-0.02em]">{module.title}</h2>
               <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">
                 {module.description}
               </p>
-              <p className="data-label mt-6 group-hover:text-[var(--accent-ink)]">Abrir módulo →</p>
+              <p className="data-label mt-6 text-[var(--text-muted)] group-hover:text-[var(--text)]">
+                Abrir módulo →
+              </p>
             </Link>
           );
         })}

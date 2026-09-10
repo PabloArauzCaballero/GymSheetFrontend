@@ -35,7 +35,7 @@ export function DialogContent({
             className,
           )}
         >
-          <DialogPrimitive.Title className="pr-10 text-xl font-bold tracking-[-0.02em]">
+          <DialogPrimitive.Title className="pr-10 text-xl font-semibold tracking-[-0.02em]">
             {title}
           </DialogPrimitive.Title>
           {description ? (

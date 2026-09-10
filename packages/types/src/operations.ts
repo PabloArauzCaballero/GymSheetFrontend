@@ -149,7 +149,7 @@ export type MembershipAccess = {
   code: string;
   name: string;
   description: string | null;
-  source: 'MEMBERSHIP' | 'PURCHASE' | 'ADMIN_GRANT' | 'PROMOTION' | 'TRIAL';
+  source: 'MEMBERSHIP' | 'PURCHASE' | 'ADMIN_GRANT' | 'PROMOTION' | 'TRIAL' | 'STREAK_REWARD';
   sourceId: string;
   startsAt: string;
   endsAt: string | null;

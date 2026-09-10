@@ -23,6 +23,7 @@ const ICONS = {
   routines: ['albums-outline', 'albums'],
   exercises: ['barbell-outline', 'barbell'],
   workouts: ['flame-outline', 'flame'],
+  comunidad: ['people-outline', 'people'],
   profile: ['person-outline', 'person'],
 } as const satisfies Record<
   string,
@@ -127,17 +128,22 @@ function tabIcon(screen: keyof typeof ICONS) {
 }
 
 /**
- * Five destinations, the ceiling for a bottom bar before labels start
- * truncating. Settings is reachable from Profile instead of taking a slot of
- * its own — it is visited rarely and belongs to the account.
+ * Six destinations. Settings is reachable from Profile instead of taking a
+ * slot of its own — it is visited rarely and belongs to the account.
  *
- * Exactly five screens are declared here, and that is the point. They used to
- * share this navigator with four more (Ajustes, Editar perfil, Membresía,
- * Notificaciones) hidden behind `href: null`. Hiding a tab removes its button
- * but not its membership: VoiceOver still announced «Inicio, pestaña, 1 de 9»
- * over a bar with five reachable destinations. Those four now live as siblings
- * in the parent stack (`../_layout.tsx`), which is where a pushed screen
- * belongs anyway — same URLs, and the bar counts to five.
+ * Comunidad used to be a stack sibling reached only through a NavRow buried
+ * at the bottom of Perfil — invisible unless someone scrolled there on
+ * purpose, which is not how a social feature earns first use. Pablo asked
+ * for it where a dating app puts Discovery: in the bar, always one tap away.
+ * That meant moving the screen itself into this folder, not just adding an
+ * icon — a `Tabs.Screen` has to resolve to a real file here.
+ *
+ * The rest used to share this navigator with four more (Ajustes, Editar
+ * perfil, Membresía, Notificaciones) hidden behind `href: null`. Hiding a tab
+ * removes its button but not its membership: VoiceOver still announced
+ * «Inicio, pestaña, 1 de 9» over a bar with fewer reachable destinations.
+ * Those four live as siblings in the parent stack (`../_layout.tsx`), which
+ * is where a pushed screen belongs anyway.
  */
 export default function TabsLayout() {
   return (
@@ -173,6 +179,10 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="workouts"
         options={{ title: 'Entrenos', tabBarIcon: tabIcon('workouts') }}
+      />
+      <Tabs.Screen
+        name="comunidad"
+        options={{ title: 'Comunidad', tabBarIcon: tabIcon('comunidad') }}
       />
       <Tabs.Screen name="profile" options={{ title: 'Perfil', tabBarIcon: tabIcon('profile') }} />
     </Tabs>

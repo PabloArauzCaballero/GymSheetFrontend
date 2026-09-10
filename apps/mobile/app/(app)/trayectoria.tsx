@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo } from 'react';
-import { Text, View } from 'react-native';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { LeaderboardSortBy } from '@gymsheet/schemas';
+import { useEffect, useMemo, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { progressionService } from '@/api/services';
 import { BackLink } from '@/components/nav';
 import { ErrorState, Skeleton } from '@/components/feedback';
@@ -14,6 +15,7 @@ import {
   useResponsive,
 } from '@/components/layout';
 import { BadgeTile, PathNode, RankHero } from '@/components/progression';
+import { RankBadge } from '@/components/rank-badge';
 import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
 
 /**
@@ -28,22 +30,46 @@ import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme'
  * 3. **El camino entero**, con los ocho hitos. Los pendientes se ven: un camino
  *    con la meta tapada no tira de nadie.
  * 4. **Lo que suma**, las cifras que mueven los puntos.
- * 5. **Las insignias**, primero las conseguidas.
- * 6. **La clasificación** del gimnasio, al final: es contexto, no el objetivo.
+ * 5. **Días de descanso**, justo después: son la excepción a la racha que
+ *    acaba de mostrarse, así que van pegados a ella.
+ * 6. **Las insignias**, primero las conseguidas.
+ * 7. **La clasificación** del gimnasio, al final: es contexto, no el objetivo.
  *
  * Ni un solo nombre de rango está escrito aquí. Todo llega del servidor, porque
  * el catálogo lo administra el gimnasio.
  */
+const WEEKDAY_LABELS: ReadonlyArray<{ value: number; short: string }> = [
+  { value: 1, short: 'L' },
+  { value: 2, short: 'M' },
+  { value: 3, short: 'X' },
+  { value: 4, short: 'J' },
+  { value: 5, short: 'V' },
+  { value: 6, short: 'S' },
+  { value: 7, short: 'D' },
+];
+
 export default function TrayectoriaScreen() {
   const { wide } = useResponsive();
+  const queryClient = useQueryClient();
 
   const progression = useQuery({
     queryKey: ['progression', 'me'],
     queryFn: () => progressionService.get(),
   });
+  const [leaderboardSort, setLeaderboardSort] = useState<LeaderboardSortBy>('points');
   const leaderboard = useQuery({
-    queryKey: ['progression', 'leaderboard'],
-    queryFn: () => progressionService.leaderboard(5),
+    queryKey: ['progression', 'leaderboard', leaderboardSort],
+    queryFn: () => progressionService.leaderboard(5, leaderboardSort),
+  });
+  const restDays = useQuery({
+    queryKey: ['progression', 'rest-days'],
+    queryFn: () => progressionService.getRestDays(),
+  });
+  const setRestDays = useMutation({
+    mutationFn: (weekdays: number[]) => progressionService.setRestDays(weekdays),
+    onSuccess: (result) => {
+      queryClient.setQueryData(['progression', 'rest-days'], result);
+    },
   });
 
   const acknowledge = useMutation({
@@ -203,7 +229,54 @@ export default function TrayectoriaScreen() {
         ) : null}
       </Section>
 
-      <Section icon="ribbon-outline" index={3} title={`Insignias · ${earnedCount}/${badges.length}`}>
+      <Section icon="bed-outline" index={3} title="Días de descanso">
+        <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
+          Esos días, un hueco en tu racha no la rompe.
+        </Text>
+        <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
+          {WEEKDAY_LABELS.map((day) => {
+            const active = (restDays.data?.weekdays ?? []).includes(day.value);
+            return (
+              <Pressable
+                disabled={setRestDays.isPending}
+                key={day.value}
+                onPress={() => {
+                  const current = restDays.data?.weekdays ?? [];
+                  // Los siete días dejarían la racha imposible de romper; el
+                  // backend lo rechaza, esto solo evita mostrar ese error.
+                  if (!active && current.length >= 6) return;
+                  const next = active
+                    ? current.filter((value) => value !== day.value)
+                    : [...current, day.value];
+                  setRestDays.mutate(next);
+                }}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: radii.full,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 1,
+                  borderColor: active ? colors.volt : colors.border,
+                  backgroundColor: active ? colors.volt : 'transparent',
+                }}
+              >
+                <Text
+                  style={{
+                    color: active ? colors.background : colors.textMuted,
+                    fontSize: fontSizes.sm,
+                    fontWeight: semibold,
+                  }}
+                >
+                  {day.short}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </Section>
+
+      <Section icon="ribbon-outline" index={4} title={`Insignias · ${earnedCount}/${badges.length}`}>
         <View
           style={{
             gap: spacing.sm,
@@ -221,7 +294,45 @@ export default function TrayectoriaScreen() {
         </View>
       </Section>
 
-      <Section icon="podium-outline" index={4} title="Clasificación del gimnasio">
+      <Section icon="podium-outline" index={5} title="Clasificación del gimnasio">
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: spacing.xs,
+            backgroundColor: colors.surfaceHigh,
+            borderRadius: radii.full,
+            padding: 4,
+            alignSelf: 'flex-start',
+          }}
+        >
+          {(
+            [
+              { value: 'points' as const, label: 'Puntos' },
+              { value: 'streak' as const, label: 'Racha' },
+            ]
+          ).map((option) => (
+            <Pressable
+              key={option.value}
+              onPress={() => setLeaderboardSort(option.value)}
+              style={{
+                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.xs,
+                borderRadius: radii.full,
+                backgroundColor: leaderboardSort === option.value ? colors.volt : 'transparent',
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: fontSizes.xs,
+                  fontWeight: semibold,
+                  color: leaderboardSort === option.value ? colors.background : colors.textMuted,
+                }}
+              >
+                {option.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
         {leaderboard.isPending ? (
           <Skeleton height={140} />
         ) : leaderboard.isError ? (
@@ -233,26 +344,7 @@ export default function TrayectoriaScreen() {
                 key={`${entry.position}-${entry.displayName}`}
                 style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}
               >
-                <View
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: radii.full,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: entry.isMe ? colors.volt : colors.surfaceHigh,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: entry.isMe ? colors.background : colors.textMuted,
-                      fontSize: fontSizes.xs,
-                      fontWeight: semibold,
-                    }}
-                  >
-                    {entry.position}
-                  </Text>
-                </View>
+                <RankBadge isMe={entry.isMe} position={entry.position} />
                 <Text
                   numberOfLines={1}
                   style={{
@@ -265,8 +357,10 @@ export default function TrayectoriaScreen() {
                   {entry.displayName}
                   {entry.isMe ? ' · tú' : ''}
                 </Text>
-                <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-                  {entry.points.toLocaleString('es-ES')}
+                <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, fontVariant: ['tabular-nums'] }}>
+                  {leaderboardSort === 'streak'
+                    ? `${entry.streakDays} ${entry.streakDays === 1 ? 'día' : 'días'}`
+                    : entry.points.toLocaleString('es-ES')}
                 </Text>
               </View>
             ))}

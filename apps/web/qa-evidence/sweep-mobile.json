@@ -1,0 +1,1302 @@
+[
+  {
+    "path": "/",
+    "role": "anon",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/",
+    "title": "GymSheet — Registro de entrenamiento y comunidad de gimnasio",
+    "h1": [
+      "Entrena con precisión. Progresa con propósito."
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "overflowPx": 12,
+    "axe": []
+  },
+  {
+    "path": "/login",
+    "role": "anon",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/login",
+    "title": "Iniciar sesión · GymSheet",
+    "h1": [
+      "Vuelve al trabajo."
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/register",
+    "role": "anon",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/register",
+    "title": "Crear cuenta · GymSheet",
+    "h1": [
+      "Construye tu registro."
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/recover-password",
+    "role": "anon",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/recover-password",
+    "title": "Recuperar contraseña · GymSheet",
+    "h1": [
+      "Vuelve a entrar."
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/terminos",
+    "role": "anon",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/terminos",
+    "title": "Términos y condiciones · GymSheet",
+    "h1": [
+      "Términos y condiciones"
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/privacidad",
+    "role": "anon",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/privacidad",
+    "title": "Política de privacidad · GymSheet",
+    "h1": [
+      "Política de privacidad"
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/gimnasios",
+    "role": "anon",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/gimnasios",
+    "title": "Gimnasios · GymSheet",
+    "h1": [
+      "Gimnasios"
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/dashboard",
+    "role": "anon",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/login?returnTo=%2Fdashboard",
+    "title": "Iniciar sesión · GymSheet",
+    "h1": [
+      "Vuelve al trabajo."
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin",
+    "role": "anon",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/login?returnTo=%2Fadmin",
+    "title": "Iniciar sesión · GymSheet",
+    "h1": [
+      "Vuelve al trabajo."
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/dashboard",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/workouts",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/workouts/new",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/exercises",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/exercises/new",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/routines",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/trayectoria",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/membership",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/access",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/notifications",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/profile",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/plans",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/tutorials",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/comunidad",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/chat",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/onboarding",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/access",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/equipment",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/exercises",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/facilities",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/membership",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/operacion",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/people",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/permissions",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/usuarios",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/terminos",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/privacidad",
+    "role": "cliente",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/onboarding",
+    "title": "GymSheet",
+    "h1": [
+      "Personaliza tu experiencia"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/dashboard",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/dashboard",
+    "title": "Panel · GymSheet",
+    "h1": [
+      "Precisión antes que ruido."
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[notifications] {severity: error, code: not-found, requestId: 36ef2896-9323-4386-a113-d731877965d0, correlationId: undefined, retryable: false}"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 GET /api/backend/admin/membership/users?limit=200",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/workouts",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/workouts",
+    "title": "Entrenamientos · GymSheet",
+    "h1": [
+      "Entrenamientos"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/workouts/new",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/workouts/new",
+    "title": "Nueva sesión · GymSheet",
+    "h1": [
+      "Iniciar sesión"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/exercises",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/exercises",
+    "title": "Ejercicios · GymSheet",
+    "h1": [
+      "Ejercicios"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/exercises/new",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/exercises/new",
+    "title": "Nuevo ejercicio · GymSheet",
+    "h1": [
+      "Nuevo ejercicio"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/routines",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/routines",
+    "title": "Rutinas · GymSheet",
+    "h1": [
+      "Rutinas"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/trayectoria",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/trayectoria",
+    "title": "Tu senda · GymSheet",
+    "h1": [
+      "Tu senda"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/membership",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/membership",
+    "title": "Membresía · GymSheet",
+    "h1": [
+      "Membresía"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/access",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/access",
+    "title": "Acceso · GymSheet",
+    "h1": [
+      "Acceso"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/notifications",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/notifications",
+    "title": "Notificaciones · GymSheet",
+    "h1": [
+      "Notificaciones"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/profile",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/profile",
+    "title": "Perfil · GymSheet",
+    "h1": [
+      "Perfil"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro",
+      "404 GET /api/backend/profile"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/plans",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/plans",
+    "title": "Mis planes · GymSheet",
+    "h1": [
+      "Mis planes"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/tutorials",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/tutorials",
+    "title": "Centro de ayuda · GymSheet",
+    "h1": [
+      "Centro de ayuda"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/comunidad",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/comunidad",
+    "title": "Comunidad · GymSheet",
+    "h1": [
+      "Comunidad"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/chat",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/chat",
+    "title": "Chat · GymSheet",
+    "h1": [
+      "Chat"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/onboarding",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/dashboard",
+    "title": "Panel · GymSheet",
+    "h1": [
+      "Precisión antes que ruido."
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/admin",
+    "title": "Administración · GymSheet",
+    "h1": [
+      "Administración"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/access",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/admin/access",
+    "title": "Control de acceso · GymSheet",
+    "h1": [
+      "Control de acceso"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/equipment",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/admin/equipment",
+    "title": "Administrar equipamiento · GymSheet",
+    "h1": [
+      "Equipamiento"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/exercises",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/admin/exercises",
+    "title": "Catálogo global · GymSheet",
+    "h1": [
+      "Catálogo global"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/facilities",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/admin/facilities",
+    "title": "Instalaciones · GymSheet",
+    "h1": [
+      "Instalaciones"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 107,
+    "axe": [
+      {
+        "id": "select-name",
+        "impact": "critical",
+        "nodes": 9,
+        "help": "Select element must have an accessible name"
+      }
+    ]
+  },
+  {
+    "path": "/admin/membership",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/admin/membership",
+    "title": "Membresías y clientes · GymSheet",
+    "h1": [
+      "Membresías y clientes"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/operacion",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/admin/operacion",
+    "title": "Operación · GymSheet",
+    "h1": [
+      "Operación"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[notifications] {severity: error, code: not-found, requestId: b3d3a2c9-11e9-460f-8208-a09b0ae7121d, correlationId: undefined, retryable: false}",
+      "[notifications] {severity: error, code: not-found, requestId: 0255e415-bd5d-44f3-a778-d0490f90ec28, correlationId: undefined, retryable: false}",
+      "[notifications] {severity: error, code: not-found, requestId: 81fdc376-9da4-4884-af2b-60672a3782a2, correlationId: undefined, retryable: false}"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 GET /api/backend/admin/membership/insights/equipment-usage?days=30",
+      "404 GET /api/backend/admin/membership/insights/people-flow?days=30",
+      "404 GET /api/backend/admin/membership/insights/lapsed?limit=50",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/people",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/admin/people",
+    "title": "Registrar persona · GymSheet",
+    "h1": [
+      "Registrar persona"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/permissions",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/admin/permissions",
+    "title": "Permisos de administración · GymSheet",
+    "h1": [
+      "Permisos de administración"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[notifications] {severity: error, code: not-found, requestId: undefined, correlationId: undefined, retryable: false}",
+      "[notifications] {severity: error, code: not-found, requestId: 2a7ac4aa-781f-4f10-b6a9-a63311f06692, correlationId: undefined, retryable: false}"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 GET /api/backend/admin/permissions/catalog",
+      "404 GET /api/backend/admin/membership/users?limit=200",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  },
+  {
+    "path": "/admin/usuarios",
+    "role": "admin",
+    "viewport": "412px",
+    "status": 200,
+    "finalUrl": "/admin/usuarios",
+    "title": "Usuarios · GymSheet",
+    "h1": [
+      "Usuarios"
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[notifications] {severity: error, code: not-found, requestId: d55ae63a-b7a5-49e6-927f-e40930ea9e3d, correlationId: undefined, retryable: false}"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      "404 GET /api/backend/me/tutorial-progress",
+      "404 GET /api/backend/admin/membership/users?limit=200",
+      "404 PUT /api/backend/me/tutorial-progress/platform-intro"
+    ],
+    "overflowPx": 0,
+    "axe": []
+  }
+]

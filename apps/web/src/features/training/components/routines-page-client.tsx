@@ -180,7 +180,7 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
                   {routine.visibilidad}
                 </Badge>
               </div>
-              <h2 className="text-lg font-bold tracking-[-0.02em] group-hover:text-[var(--accent-ink)]">
+              <h2 className="text-lg font-semibold tracking-[-0.02em]">
                 {routine.nombre}
               </h2>
               <p className="line-clamp-2 min-h-10 text-sm text-[var(--text-muted)]">
@@ -212,7 +212,7 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
                 href={`/routines/${routine.id}`}
                 key={routine.id}
               >
-                <h3 className="font-bold">{routine.nombre}</h3>
+                <h3 className="font-semibold">{routine.nombre}</h3>
                 <p className="text-xs text-[var(--text-disabled)]">
                   {routine.ejercicios.length} ejercicios
                 </p>
