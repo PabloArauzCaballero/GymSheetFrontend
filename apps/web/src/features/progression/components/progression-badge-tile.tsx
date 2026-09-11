@@ -1,3 +1,4 @@
+import { Sparkles } from 'lucide-react';
 import type { ProgressionBadge } from '@/shared/api/schemas';
 import { cn } from '@/shared/lib/cn';
 import { RARITY_LABEL, withAlpha } from './progression-colors';
@@ -10,20 +11,32 @@ import { ProgressTrack } from './progression-track';
  * Conseguida: a todo color, con su línea de sabor —la frase es el premio tanto
  * como el icono—. Pendiente: apagada, pero con su barra y su cuenta exacta
  * («8 / 9»), porque una insignia sin distancia visible no motiva a nadie.
+ *
+ * Cuando quien la usa pasa `onCelebrate` y la insignia está conseguida, la
+ * tarjeta entera se convierte en un botón que reproduce la celebración. La prop
+ * es opcional a propósito: esta misma pieza dibuja las insignias de otro socio
+ * —el perfil ajeno—, y ahí no hay nada que celebrar; sin la prop, la tarjeta es
+ * exactamente la de siempre, un `article` sin foco ni acciones.
  */
-export function BadgeTile({ badge }: Readonly<{ badge: ProgressionBadge }>) {
-  return (
-    <article
-      className={cn(
-        'grid gap-3 rounded-2xl border p-5',
-        // Las pendientes se apagan sin desaparecer: siguen siendo el objetivo.
-        badge.earned ? 'opacity-100' : 'opacity-70',
-      )}
-      style={{
-        borderColor: badge.earned ? withAlpha(badge.color, 0.28) : 'var(--border-subtle)',
-        backgroundColor: 'var(--surface-low)',
-      }}
-    >
+export function BadgeTile({
+  badge,
+  onCelebrate,
+}: Readonly<{
+  badge: ProgressionBadge;
+  onCelebrate?: (badge: ProgressionBadge) => void;
+}>) {
+  const shell = cn(
+    'grid gap-3 rounded-2xl border p-5 text-left',
+    // Las pendientes se apagan sin desaparecer: siguen siendo el objetivo.
+    badge.earned ? 'opacity-100' : 'opacity-70',
+  );
+  const shellStyle = {
+    borderColor: badge.earned ? withAlpha(badge.color, 0.28) : 'var(--border-subtle)',
+    backgroundColor: 'var(--surface-low)',
+  };
+
+  const body = (
+    <>
       <div className="flex items-center gap-3">
         <span
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border"
@@ -77,6 +90,37 @@ export function BadgeTile({ badge }: Readonly<{ badge: ProgressionBadge }>) {
           <span className="text-xs text-[var(--text-disabled)]">{badge.progressLabel}</span>
         </div>
       ) : null}
-    </article>
+    </>
+  );
+
+  if (!badge.earned || !onCelebrate) {
+    return (
+      <article className={shell} style={shellStyle}>
+        {body}
+      </article>
+    );
+  }
+
+  return (
+    <button
+      // Un botón de verdad: el foco, `Enter` y `Espacio` los pone el navegador,
+      // y la tarjeta ya mide bastante más de 44 px en cualquier ancho.
+      aria-label={`Celebrar la insignia ${badge.name}`}
+      className={cn(shell, 'hover-lift pressable cursor-pointer')}
+      onClick={() => onCelebrate(badge)}
+      style={shellStyle}
+      type="button"
+    >
+      {body}
+      {/* Que sea pulsable tiene que *verse*: sin esta línea la única pista sería
+          el cursor, que en una pantalla táctil no existe. */}
+      <span
+        className="flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-ink)]"
+        aria-hidden
+      >
+        <Sparkles className="size-3.5" />
+        Celebrar
+      </span>
+    </button>
   );
 }

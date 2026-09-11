@@ -143,6 +143,73 @@
   }
 }
 
+/**
+ * Celebración de la senda: las dos capas *ambientales*.
+ *
+ * El reparto es deliberado. La secuencia con guion —haz cenital, botes,
+ * acercamiento— se orquesta en framer-motion, porque tiene orden, esperas y
+ * dependencias entre pasos, y eso en CSS acaba siendo una torre de
+ * `animation-delay` imposible de leer. Lo que queda aquí es lo contrario: dos
+ * bucles sin principio ni final que dan vida al emblema mientras está quieto.
+ * Son CSS por lo mismo que el latido del hito: no dependen de nada, el
+ * compositor los mueve solos y no cuestan un render de React por frame.
+ *
+ * Se consumen con `motion-safe:animate-[...]` (igual que
+ * `progression-heartbeat` en `progression-path-node.tsx`), porque el bloque de
+ * «reducir movimiento» de más abajo recorta la duración pero **no** apaga un
+ * bucle infinito: lo deja parpadeando a 0.01 ms, que es peor que no tenerlo.
+ */
+
+/**
+ * El barrido de luz que cruza el emblema — el destello que recorre un logotipo
+ * al presentarse.
+ *
+ * Es una franja inclinada que entra por la izquierda, atraviesa y se va; el
+ * recorte al objeto lo pone el contenedor circular (`overflow: hidden`), no la
+ * franja. El 70 % final del ciclo la deja fuera de cuadro y transparente: ese
+ * silencio es lo que convierte un destello en un acento y no en un estrobo.
+ */
+@keyframes celebration-sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-180%) skewX(-16deg);
+  }
+  8% {
+    opacity: 1;
+  }
+  26% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0;
+    transform: translateX(220%) skewX(-16deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(220%) skewX(-16deg);
+  }
+}
+
+/**
+ * El halo respira.
+ *
+ * La amplitud no está escrita aquí: llega en `--halo-rest` y `--halo-peak`, que
+ * el componente fija en línea según la rareza. Así una insignia legendaria
+ * brilla más que una común sin necesidad de cuatro keyframes casi idénticos, y
+ * el color —que viene del catálogo del gimnasio— sigue fuera de esta hoja.
+ */
+@keyframes celebration-halo-breath {
+  0%,
+  100% {
+    opacity: var(--halo-rest, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    opacity: var(--halo-peak, 0.85);
+    transform: scale(1.07);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -57,7 +57,17 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: `"${process.execPath}" node_modules/next/dist/bin/next dev --port 3002`,
+    // El binario se **resuelve**, no se adivina.
+    //
+    // La ruta anterior era `node_modules/next/dist/bin/next` relativa a
+    // `apps/web`, y ahí no existe: esto es un monorepo con Yarn Workspaces y
+    // `next` queda elevado a `node_modules/` de la raíz. El servidor no
+    // arrancaba nunca —`Cannot find module …/apps/web/node_modules/next`— y
+    // con él caía la suite entera antes del primer test.
+    //
+    // `require.resolve` pregunta a Node dónde está de verdad, así que funciona
+    // igual con el paquete elevado, sin elevar, o con un `nohoist` futuro.
+    command: `"${process.execPath}" "${require.resolve('next/dist/bin/next')}" dev --port 3002`,
     url: 'http://localhost:3002',
     reuseExistingServer: !process.env.CI,
   },

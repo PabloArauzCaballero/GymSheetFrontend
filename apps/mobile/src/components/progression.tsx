@@ -49,7 +49,10 @@ const RAIL = 2;
  * los colores como hexadecimal de seis dígitos y mezclarlos exigiría convertir
  * a RGB aquí; el alfa sobre una superficie ya oscura da el mismo resultado.
  */
-function withAlpha(hex: string, alpha: number): string {
+// Se exporta para la celebración: el haz, el halo y el borde del emblema se
+// componen con el mismo color del catálogo rebajado con alfa, y dos copias de
+// esta función acabarían divergiendo en el redondeo.
+export function withAlpha(hex: string, alpha: number): string {
   const clamped = Math.round(Math.min(1, Math.max(0, alpha)) * 255);
   return `${hex}${clamped.toString(16).padStart(2, '0')}`;
 }
@@ -279,9 +282,24 @@ export function BadgeTile({
   onPress,
 }: {
   badge: ProgressionBadge;
+  /**
+   * Abre lo que la insignia tenga detrás — hoy, su celebración.
+   *
+   * Sigue siendo opcional: cuatro pantallas pintan insignias sin nada que
+   * abrir (Perfil, Inicio, el perfil de un socio y su ficha) y ninguna cambia.
+   */
   onPress?: () => void;
 }) {
   const tint = badge.earned ? badge.color : colors.textDisabled;
+  /**
+   * Que se pueda tocar **tiene que verse**.
+   *
+   * Una tarjeta que reacciona al dedo sin anunciarlo no la toca nadie: el
+   * usuario no prueba a pulsar cosas para ver qué pasa. El glifo de chispas al
+   * final de la fila es la señal, y sólo aparece en las conseguidas, que son
+   * las únicas que tienen algo que celebrar.
+   */
+  const celebratable = Boolean(onPress) && badge.earned;
 
   const content = (
     <>
@@ -334,6 +352,27 @@ export function BadgeTile({
             </Text>
           </View>
         ) : null}
+        {celebratable ? (
+          <View
+            // Decorativo: la etiqueta del propio botón ya dice qué hace tocarlo,
+            // y un lector de pantalla anunciando «chispas» sólo alargaría el
+            // anuncio de la insignia.
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: radii.full,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: 1,
+              borderColor: withAlpha(badge.color, 0.4),
+              backgroundColor: withAlpha(badge.color, 0.12),
+            }}
+          >
+            <Ionicons color={badge.color} name="sparkles" size={iconSizes.sm} />
+          </View>
+        ) : null}
       </View>
 
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
@@ -364,7 +403,13 @@ export function BadgeTile({
 
   if (onPress) {
     return (
-      <PressableScale accessibilityLabel={badge.name} onPress={onPress} style={surface}>
+      <PressableScale
+        accessibilityLabel={
+          celebratable ? `${badge.name}. Toca para ver la celebración` : badge.name
+        }
+        onPress={onPress}
+        style={surface}
+      >
         {content}
       </PressableScale>
     );
@@ -385,24 +430,35 @@ export function RankHero({
   points,
   pointsToNextLevel,
   levelProgress,
+  onPress,
 }: {
   level: ProgressionLevel | null;
   nextLevel: ProgressionLevel | null;
   points: number;
   pointsToNextLevel: number | null;
   levelProgress: number;
+  /**
+   * Abre la celebración del rango actual.
+   *
+   * Opcional y sin valor por defecto: Perfil e Inicio pintan la misma cabecera
+   * y siguen siendo un bloque de lectura, no un botón. Sin rango todavía no hay
+   * nada que celebrar, así que tampoco se vuelve pulsable.
+   */
+  onPress?: () => void;
 }) {
-  return (
-    <View
-      style={{
-        gap: cardGap,
-        borderRadius: radii.xl,
-        borderWidth: 1,
-        borderColor: level ? withAlpha(colors.volt, 0.3) : colors.borderSubtle,
-        backgroundColor: colors.surfaceLow,
-        padding: cardPadding,
-      }}
-    >
+  const pressable = Boolean(onPress) && level !== null;
+
+  const surface = {
+    gap: cardGap,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: level ? withAlpha(colors.volt, 0.3) : colors.borderSubtle,
+    backgroundColor: colors.surfaceLow,
+    padding: cardPadding,
+  } as const;
+
+  const content = (
+    <>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <View
           style={{
@@ -437,6 +493,27 @@ export function RankHero({
             {level?.name ?? 'Sin empezar'}
           </Text>
         </View>
+        {pressable ? (
+          // Misma señal que en las insignias conseguidas, por coherencia: si
+          // las chispas significan «esto se celebra» en un sitio, tienen que
+          // significar lo mismo en el otro.
+          <View
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: radii.full,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: 1,
+              borderColor: withAlpha(colors.volt, 0.4),
+              backgroundColor: withAlpha(colors.volt, 0.12),
+            }}
+          >
+            <Ionicons color={accentPolicy.ink} name="sparkles" size={iconSizes.sm} />
+          </View>
+        ) : null}
       </View>
 
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 21 }}>
@@ -474,6 +551,19 @@ export function RankHero({
             : 'Has llegado al final de la senda. Ahora se trata de mantenerlo.'}
         </Text>
       </View>
-    </View>
+    </>
   );
+
+  if (pressable && onPress) {
+    return (
+      <PressableScale
+        accessibilityLabel={`Tu rango: ${level?.name ?? ''}. Toca para ver la celebración`}
+        onPress={onPress}
+        style={surface}
+      >
+        {content}
+      </PressableScale>
+    );
+  }
+  return <View style={surface}>{content}</View>;
 }

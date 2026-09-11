@@ -1,9 +1,17 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Award, CalendarDays, Dumbbell, Flame, PersonStanding, TrendingUp } from 'lucide-react';
+import {
+  Award,
+  CalendarDays,
+  Dumbbell,
+  Flame,
+  PersonStanding,
+  Sparkles,
+  TrendingUp,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import type { LeaderboardSortBy } from '@/shared/api/schemas';
+import type { LeaderboardSortBy, ProgressionBadge } from '@/shared/api/schemas';
 import { progressionService } from '@/features/progression/services/progression-service';
 import {
   Skeleton,
@@ -12,8 +20,16 @@ import {
   SkeletonScreen,
 } from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
+import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { MetricCard } from '@/shared/components/ui/metric-card';
+import {
+  badgeSubject,
+  levelSubject,
+  ProgressionCelebration,
+  useLevelUpWatch,
+  type CelebrationSubject,
+} from './progression-celebration';
 import { BadgeTile, PathNode, RankHero } from './progression-parts';
 import { LeaderboardCard, RestDaysCard } from './progression-secondary-cards';
 
@@ -53,6 +69,13 @@ export function ProgressionClient() {
   const acknowledge = useMutation({ mutationFn: progressionService.acknowledge });
 
   const data = progression.data;
+  // La celebración no se abre sola: este estado solo cambia al pulsar.
+  // `useLevelUpWatch` se limita a *marcar* que hubo ascenso —para destacar el
+  // botón— y va antes de los retornos tempranos, para no alterar el orden de
+  // los hooks entre estados de carga.
+  const [celebrating, setCelebrating] = useState<CelebrationSubject | null>(null);
+  const levelUp = useLevelUpWatch(progression.data?.level ?? null);
+  const celebrateBadge = (earned: ProgressionBadge) => setCelebrating(badgeSubject(earned));
   const unlockedNow = data?.unlockedNow ?? [];
 
   /**
@@ -106,6 +129,7 @@ export function ProgressionClient() {
   }
 
   const stats = data.stats;
+  const level = data.level;
   const earnedCount = badges.filter((badge) => badge.earned).length;
   const currentRestDays = restDays.data?.weekdays ?? [];
 
@@ -133,13 +157,27 @@ export function ProgressionClient() {
         title="Tu senda"
       />
 
-      <RankHero
-        level={data.level}
-        levelProgress={data.levelProgress}
-        nextLevel={data.nextLevel}
-        points={data.points}
-        pointsToNextLevel={data.pointsToNextLevel}
-      />
+      <div className="grid gap-4">
+        <RankHero
+          level={data.level}
+          levelProgress={data.levelProgress}
+          nextLevel={data.nextLevel}
+          points={data.points}
+          pointsToNextLevel={data.pointsToNextLevel}
+        />
+        {/* Se celebra desde aquí y no convirtiendo `RankHero` en botón: esa
+            cabecera la comparten otras pantallas. */}
+        {level ? (
+          <Button
+            className="justify-self-start"
+            onClick={() => setCelebrating(levelSubject(level))}
+            variant={levelUp ? 'primary' : 'secondary'}
+          >
+            <Sparkles aria-hidden className="size-4" />
+            {levelUp ? `Has subido a ${levelUp.name}` : `Revive tu ascenso a ${level.name}`}
+          </Button>
+        ) : null}
+      </div>
 
       {unlockedNow.length > 0 ? (
         <Card>
@@ -149,7 +187,7 @@ export function ProgressionClient() {
           />
           <CardContent className="grid gap-3 sm:grid-cols-2">
             {unlockedNow.map((badge) => (
-              <BadgeTile badge={badge} key={badge.code} />
+              <BadgeTile badge={badge} key={badge.code} onCelebrate={celebrateBadge} />
             ))}
           </CardContent>
         </Card>
@@ -244,10 +282,12 @@ export function ProgressionClient() {
         />
         <CardContent className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {badges.map((badge) => (
-            <BadgeTile badge={badge} key={badge.code} />
+            <BadgeTile badge={badge} key={badge.code} onCelebrate={celebrateBadge} />
           ))}
         </CardContent>
       </Card>
+
+      <ProgressionCelebration onClose={() => setCelebrating(null)} subject={celebrating} />
     </div>
   );
 }
