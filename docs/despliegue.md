@@ -38,11 +38,11 @@ funcionará contra el despliegue.
 
 | Secret                              | Valor                                                          |
 | ------------------------------------ | ----------------------------------------------------------------- |
-| `GYMSHEET_TAILSCALE_AUTHKEY`         | Authkey efímera de Tailscale (misma que en GymSheetBackend vale)  |
-| `GYMSHEET_COOLIFY_TOKEN`             | API token de Coolify con permisos `deploy` + `read`                |
-| `GYMSHEET_FRONTEND_COOLIFY_WEBHOOK`  | Deploy webhook de esta aplicación en Coolify (lleva el UUID)        |
+| `PABLO_H310_TAILSCALE_AUTHKEY`         | Authkey efímera de Tailscale (misma que en GymSheetBackend vale)  |
+| `PABLO_H310_COOLIFY_TOKEN`             | API token de Coolify con permisos `deploy` + `read`                |
+| `PABLO_H310_COOLIFY_WEBHOOK`  | Deploy webhook de esta aplicación en Coolify (lleva el UUID)        |
 
-`GYMSHEET_TAILSCALE_AUTHKEY` y `GYMSHEET_COOLIFY_TOKEN` pueden ser el mismo valor que en
+`PABLO_H310_TAILSCALE_AUTHKEY` y `PABLO_H310_COOLIFY_TOKEN` pueden ser el mismo valor que en
 `GymSheetBackend` (una authkey de Tailscale no es exclusiva de un repo, y el token de Coolify vale
 para todos los recursos del servidor sobre los que tenga permiso). El webhook sí es distinto: cada
 aplicación tiene el suyo.
