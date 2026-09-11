@@ -29,6 +29,26 @@ function loadE2EEnvironment(): void {
 
 loadE2EEnvironment();
 
+/*
+ * Requisito del backend que no es obvio hasta que la suite se atasca.
+ *
+ * Casi todos los flujos inician sesión, y el backend limita la autenticación a
+ * `AUTH_RATE_LIMIT_MAX` peticiones por minuto — 10 por defecto. Con ese tope la
+ * suite se estrangula a sí misma: el backend empieza a responder 429, el login
+ * deja de completarse, y los tests caen en cascada con `waitForURL` agotando el
+ * tiempo. El síntoma engaña, porque parecen veinte defectos repartidos por toda
+ * la aplicación en vez de una sola causa.
+ *
+ * Para correr esto en local, sube el tope en el `.env` del backend antes de
+ * arrancarlo. El esquema de configuración lo acota a 100, así que ese es el
+ * máximo admisible:
+ *
+ *   AUTH_RATE_LIMIT_MAX=100
+ *   RATE_LIMIT_MAX=1000
+ *
+ * Y devuélvelos a sus valores de producción después: el tope bajo existe para
+ * que la fuerza bruta contra el login salga cara.
+ */
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
