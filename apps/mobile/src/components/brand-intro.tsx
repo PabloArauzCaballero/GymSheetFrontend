@@ -348,8 +348,6 @@ export function BrandIntro({ ready }: { ready: boolean }) {
 
   /** Todo temporizador vive aquí para poder morir en el desmontaje. */
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  /** El remate se dispara una sola vez aunque el efecto se reevalúe. */
-  const exiting = useRef(false);
 
   /* --- Actos 1 a 4 ------------------------------------------------------- */
   useEffect(() => {
@@ -424,18 +422,39 @@ export function BrandIntro({ ready }: { ready: boolean }) {
     );
     return () => {
       cancelAnimation(breathe);
-      breathe.value = 0;
+      // Se apaga con una curva, no de golpe: al llegar la sesión la respiración
+      // se corta y el remate arranca en el mismo fotograma, y un salto de
+      // opacidad del halo justo ahí se ve como un parpadeo.
+      breathe.value = withTiming(0, { duration: DURATION.exit, easing: PREMIUM_EASING });
     };
   }, [breathe, ready, reduceMotion, timelineDone]);
 
   /* --- Acto 5: el remate -------------------------------------------------- */
+
+  /**
+   * La condición de salida, **derivada y monótona**, no leída suelta dentro del
+   * efecto.
+   *
+   * La diferencia importa y estuvo a punto de costar un defecto de los que dejan
+   * la aplicación inutilizable. Con `ready` y `overBudget` en las dependencias,
+   * esta secuencia bloqueaba el arranque: se agota el presupuesto → arranca el
+   * remate → la sesión resuelve medio segundo después → el efecto se reevalúa →
+   * su limpieza **cancela el remate a medias** → y la guarda de «una sola vez»
+   * impide relanzarlo. Resultado: la cortinilla congelada encima de la
+   * aplicación, para siempre.
+   *
+   * Con la condición reducida a un booleano que sólo puede ir de falso a
+   * verdadero —`timelineDone` no vuelve atrás, `ready` tampoco y `overBudget`
+   * tampoco—, React no reejecuta nada cuando cambia la parte que ya no decide
+   * nada, y la limpieza queda donde debe estar: sólo en el desmontaje.
+   */
+  const shouldExit = timelineDone && (ready || overBudget);
+
   useEffect(() => {
-    if (!timelineDone || exiting.current) return;
     // Se sale cuando la aplicación está lista **o** cuando se agota el
     // presupuesto. Lo primero es lo normal: la sesión suele resolver antes de
     // que acabe la animación, y entonces el remate encadena sin pausa.
-    if (!ready && !overBudget) return;
-    exiting.current = true;
+    if (!shouldExit) return;
 
     exit.value = withTiming(
       1,
@@ -451,7 +470,7 @@ export function BrandIntro({ ready }: { ready: boolean }) {
     return () => {
       cancelAnimation(exit);
     };
-  }, [exit, overBudget, ready, reduceMotion, timelineDone]);
+  }, [exit, reduceMotion, shouldExit]);
 
   /* --- Accesibilidad ------------------------------------------------------ */
   useEffect(() => {
