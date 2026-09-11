@@ -371,6 +371,17 @@ export default function ProfileScreen() {
           title="Ver toda la senda"
         />
         <Divider />
+        {/* Entrenos dejó de ser pestaña cuando Comunidad hizo seis y la barra
+            empezó a truncar etiquetas. Aquí no está escondido: es historial, y
+            este es el sitio donde se busca el historial propio. La otra entrada
+            está en Inicio, en «Últimas sesiones», que es por donde se llega en
+            el uso diario. */}
+        <NavRow
+          onPress={() => router.push('/workouts')}
+          subtitle="Todas tus sesiones, con sus ejercicios y series"
+          title="Mis entrenos"
+        />
+
         <NavRow onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />
         <Divider />
         <NavRow

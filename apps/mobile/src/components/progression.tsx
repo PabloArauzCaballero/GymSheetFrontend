@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import Animated, {
   Easing,
+  cancelAnimation,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -12,6 +13,7 @@ import Animated, {
 import type { ProgressionBadge, ProgressionLevel } from '@gymsheet/schemas';
 import { PressableScale } from '@/components/motion';
 import {
+  accentPolicy,
   cardGap,
   cardPadding,
   colors,
@@ -116,6 +118,9 @@ function useHeartbeat(active: boolean) {
       -1,
       true,
     );
+    return () => {
+      cancelAnimation(pulse);
+    };
   }, [active, pulse, reduceMotion]);
 
   return useAnimatedStyle(() => ({
@@ -393,7 +398,7 @@ export function RankHero({
         gap: cardGap,
         borderRadius: radii.xl,
         borderWidth: 1,
-        borderColor: level ? withAlpha(level.color, 0.3) : colors.borderSubtle,
+        borderColor: level ? withAlpha(colors.volt, 0.3) : colors.borderSubtle,
         backgroundColor: colors.surfaceLow,
         padding: cardPadding,
       }}
@@ -407,12 +412,12 @@ export function RankHero({
             alignItems: 'center',
             justifyContent: 'center',
             borderWidth: 1,
-            borderColor: level ? withAlpha(level.color, 0.5) : colors.border,
-            backgroundColor: level ? withAlpha(level.color, 0.16) : colors.surfaceHigh,
+            borderColor: level ? withAlpha(colors.volt, 0.5) : colors.border,
+            backgroundColor: level ? withAlpha(colors.volt, 0.16) : colors.surfaceHigh,
           }}
         >
           <Ionicons
-            color={level?.color ?? colors.textDisabled}
+            color={level ? accentPolicy.ink : colors.textDisabled}
             name={(level?.icon ?? 'footsteps-outline') as keyof typeof Ionicons.glyphMap}
             size={iconSizes.xl}
           />
@@ -441,7 +446,9 @@ export function RankHero({
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs }}>
         <Text
           style={{
-            color: colors.volt,
+            // Texto sobre la tarjeta: `ink`. El acento puro del inquilino rojo
+            // se queda en 4,22:1 contra esta superficie, por debajo de AA.
+            color: accentPolicy.ink,
             fontSize: fontSizes['2xl'],
             fontWeight: semibold,
             letterSpacing: fontSizes['2xl'] * -0.03,
@@ -453,7 +460,14 @@ export function RankHero({
       </View>
 
       <View style={{ gap: spacing.xs }}>
-        <ProgressTrack color={nextLevel?.color ?? level?.color ?? colors.volt} ratio={levelProgress} />
+        {/* Acento del gimnasio, no el color del nivel. `RankHero` enseña **un**
+            rango: su color no distingue nada, y el catálogo de la senda vive en
+            el backend con una rampa fija de ocho tonos escrita sin saber nada
+            de los inquilinos. En el simulador eso ponía una barra azul
+            `#5aa9e6` cruzando el perfil de un gimnasio de marca roja. La rampa
+            sigue donde sí significa algo: en la lista de hitos de más abajo,
+            donde los niveles se comparan entre sí. */}
+        <ProgressTrack color={colors.volt} ratio={levelProgress} />
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
           {nextLevel && pointsToNextLevel !== null
             ? `Te faltan ${pointsToNextLevel.toLocaleString('es-ES')} puntos para ${nextLevel.name}`

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { View, Text } from 'react-native';
 import Animated, {
   Easing,
+  cancelAnimation,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -31,6 +32,11 @@ export function Skeleton({ height = 72 }: { height?: number }) {
       -1,
       true,
     );
+    // Un esqueleto existe para desaparecer: es el componente de la app que más
+    // veces se desmonta, y cada vez dejaba su bucle atrás.
+    return () => {
+      cancelAnimation(progress);
+    };
   }, [progress, reduceMotion]);
 
   const animated = useAnimatedStyle(() => ({ opacity: 0.45 + progress.value * 0.35 }));

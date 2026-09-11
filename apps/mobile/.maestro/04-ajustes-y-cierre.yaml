@@ -4,7 +4,7 @@ appId: app.gymsheet.mobile
 name: 04 · Ajustes y cierre de sesión
 ---
 - runFlow: login.subflow.yaml
-# Los ítems de la barra de pestañas se llaman «Rutinas, tab, 2 of 9» en el
+# Los ítems de la barra de pestañas se llaman «Rutinas, tab, 2 of 5» en el
 # árbol de accesibilidad de iOS, no «Rutinas»: Maestro compara el texto como
 # expresión regular completa, así que el nombre a secas no encuentra nada.
 - tapOn: 'Perfil, tab.*'

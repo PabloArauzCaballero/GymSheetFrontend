@@ -86,7 +86,12 @@ export default function HomeScreen() {
   // datos de una membresía que sí está vigente hoy.
   const membershipSection = membership.data?.membership?.vigenteHoy ? (
     <Section icon="card-outline" index={0} title="Membresía">
-      <Card accent={colors.volt}>
+      {/* Sin `accent`: la ADR-0003 prohíbe el acento «como color de superficie,
+          de borde por defecto, de glow ambiental o de sombra». Esta tarjeta no
+          es una acción ni el dato que la pantalla existe para enseñar; es
+          información de estado, y su separación la da la luminancia como la de
+          todas las demás. */}
+      <Card>
         <View
           style={{
             flexDirection: 'row',
@@ -176,12 +181,17 @@ export default function HomeScreen() {
         <Section icon="trail-sign-outline" index={0} title="Tu senda">
           <Card
             accessibilityLabel={`Tu rango es ${progression.data.level.name}. Ver la senda completa.`}
-            accent={progression.data.level.color}
             onPress={() => router.push('/trayectoria')}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+              {/* El glifo del rango, en el tono tranquilo y no en el color que
+                  el servidor asigna al nivel. Aquí sólo hay un rango en
+                  pantalla: su color no distingue nada de nada, y en cambio mete
+                  un tercer tono en una tarjeta que ya tiene el acento del
+                  gimnasio. Los ocho colores de la rampa sí valen en /trayectoria,
+                  que es donde los niveles se ven uno al lado de otro. */}
               <Ionicons
-                color={progression.data.level.color}
+                color={accentPolicy.glyph}
                 name={progression.data.level.icon as keyof typeof Ionicons.glyphMap}
                 size={iconSizes.xl}
               />
@@ -209,13 +219,24 @@ export default function HomeScreen() {
               />
             </View>
 
-            <ProgressTrack
-              color={progression.data.nextLevel?.color ?? progression.data.level.color}
-              ratio={progression.data.levelProgress}
-            />
+            {/* La barra va en el acento del gimnasio, no en el color del nivel.
+                El catálogo de la senda vive en el backend con una rampa fija de
+                ocho colores (gris, azul, verde, lima, ámbar, naranja, magenta,
+                blanco) que se escribió sin saber nada de los inquilinos. El
+                resultado, visto en el simulador, era el elemento más saturado de
+                Inicio —una barra azul `#5aa9e6`— cruzando la pantalla de un
+                gimnasio cuya marca es roja; y uno de los ocho tonos de esa rampa
+                es `#c3f400`, que es literalmente el acento de *otra* marca.
+                El progreso del socio es justo el dato que la ADR-0003 reserva
+                para el acento: «como mucho, un dato clave». */}
+            <ProgressTrack color={colors.volt} ratio={progression.data.levelProgress} />
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm }}>
-              <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}>
+              {/* `ink`, no `volt`: esto es texto sobre la tarjeta, y el acento
+                  puro se queda en 4,22:1 para el inquilino rojo. */}
+              <Text
+                style={{ color: accentPolicy.ink, fontSize: fontSizes.sm, fontWeight: semibold }}
+              >
                 {`${progression.data.points.toLocaleString('es-ES')} puntos`}
               </Text>
               <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, flexShrink: 1 }}>
@@ -471,6 +492,18 @@ export default function HomeScreen() {
             })}
           </Card>
         )}
+        {/* La salida al historial completo. Inicio enseña las últimas; cuando
+            Entrenos era una pestaña, «ver el resto» era tocar su icono. Al
+            bajar al stack esa puerta tenía que quedarse en algún sitio visible,
+            y el final de la propia lista es donde se busca. */}
+        {sessions.length > 0 ? (
+          <Button
+            icon="time-outline"
+            label="Ver todos mis entrenos"
+            onPress={() => router.push('/workouts')}
+            variant="ghost"
+          />
+        ) : null}
       </Section>
     </ScrollScreen>
   );

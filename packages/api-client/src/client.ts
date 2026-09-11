@@ -16,6 +16,19 @@ export type ApiClientConfig = {
   timeoutMs?: number;
   /** Called when the backend answers 401 so the caller can trigger a refresh or logout. */
   onUnauthorized?: () => void | Promise<void>;
+  /**
+   * Intenta renovar la sesión tras un 401. Devuelve `true` si lo consiguió, y
+   * entonces la petición que falló se reintenta **una** vez con el token nuevo;
+   * `false` cae en `onUnauthorized`, que es el cierre de sesión.
+   *
+   * Es opcional porque la web no lo necesita: allí la sesión vive en una cookie
+   * HttpOnly que renueva el BFF. Quien lo necesita es el móvil, que lleva un
+   * bearer con vida corta.
+   *
+   * El cliente se encarga de que **no** haya dos renovaciones a la vez (ver
+   * `refreshOnce`); la implementación no tiene que preocuparse de eso.
+   */
+  refreshSession?: () => Promise<boolean>;
 };
 
 export type RequestOptions = Omit<RequestInit, 'body'> & {
@@ -47,6 +60,50 @@ export function createApiClient(config: ApiClientConfig) {
   const tokenProvider = config.tokenProvider ?? noopTokenProvider;
   const fetchImpl = config.fetchImpl ?? fetch;
   const defaultTimeout = config.timeoutMs ?? 15_000;
+
+  /**
+   * Renovación **compartida**: varias peticiones que reciben 401 a la vez se
+   * suben todas a la misma promesa en lugar de pedir una renovación cada una.
+   *
+   * No es una optimización, es corrección. El backend **rota** el refresh token
+   * en cada uso y detecta la reutilización: si dos peticiones renuevan en
+   * paralelo con el mismo token, la primera lo invalida y la segunda llega con
+   * uno ya revocado, lo que el servidor interpreta como robo de credencial y
+   * responde revocando la *familia* entera (`REUSE_DETECTED`). Es decir: sin
+   * este candado, el intento de salvar la sesión es justo lo que la mata — y
+   * encima lo hace peor, porque cierra también las demás sesiones del usuario.
+   *
+   * Y el caso es el normal, no el raro: Inicio lanza cuatro consultas a la vez,
+   * así que un token caducado produce cuatro 401 simultáneos en el primer
+   * render.
+   */
+  let refreshInFlight: Promise<boolean> | null = null;
+
+  function refreshOnce(): Promise<boolean> {
+    if (!config.refreshSession) return Promise.resolve(false);
+    if (!refreshInFlight) {
+      const attempt = config.refreshSession();
+      refreshInFlight = attempt
+        .catch(() => false)
+        .finally(() => {
+          refreshInFlight = null;
+        });
+    }
+    return refreshInFlight;
+  }
+
+  /**
+   * Qué hacer ante un 401. Devuelve `true` si la petición debe reintentarse.
+   *
+   * `retrying` corta el bucle: si la petición ya venía de una renovación
+   * correcta y el servidor la vuelve a rechazar, el problema no es el token y
+   * reintentar otra vez sería una espiral.
+   */
+  async function handleUnauthorized(retrying: boolean): Promise<boolean> {
+    if (!retrying && (await refreshOnce())) return true;
+    await config.onUnauthorized?.();
+    return false;
+  }
 
   async function buildHeaders(options: RequestOptions): Promise<Headers> {
     const headers = new Headers(options.headers);
@@ -85,6 +142,26 @@ export function createApiClient(config: ApiClientConfig) {
     schema: z.ZodType<T>,
     options: RequestOptions = {},
   ): Promise<T> {
+    const first = await attempt(path, schema, options, false);
+    if (!first.retry) return first.value;
+    // Un solo reintento, y ya con `retrying`, de modo que un segundo 401 cierre
+    // la sesión en vez de volver a renovar.
+    const second = await attempt(path, schema, options, true);
+    if (!second.retry) return second.value;
+    throw new ApiError({
+      message: 'La sesión no pudo renovarse.',
+      status: 401,
+      kind: 'unauthorized',
+    });
+  }
+
+  /** Una pasada. `retry: true` significa «la sesión se renovó, vuelve a intentarlo». */
+  async function attempt<T>(
+    path: string,
+    schema: z.ZodType<T>,
+    options: RequestOptions,
+    retrying: boolean,
+  ): Promise<{ retry: true } | { retry: false; value: T }> {
     const { body, timeoutMs, signal: externalSignal, ...init } = options;
     const controller = new AbortController();
     const onExternalAbort = () => controller.abort();
@@ -98,7 +175,14 @@ export function createApiClient(config: ApiClientConfig) {
         body: body === undefined ? undefined : JSON.stringify(body),
         signal: controller.signal,
       });
-      if (response.status === 401) await config.onUnauthorized?.();
+      if (response.status === 401) {
+        // El reintento se lanza **fuera** de este `try`: aquí dentro sigue vivo
+        // el `AbortController` con su temporizador, y reusarlo le daría a la
+        // segunda petición lo que quedara del plazo de la primera.
+        if (await handleUnauthorized(retrying)) {
+          return { retry: true as const };
+        }
+      }
       if (!response.ok) throw await readError(response);
       const envelope = successEnvelopeSchema.safeParse(await response.json());
       if (!envelope.success) {
@@ -116,7 +200,7 @@ export function createApiClient(config: ApiClientConfig) {
           kind: 'contract',
         });
       }
-      return parsed.data;
+      return { retry: false as const, value: parsed.data };
     } catch (error: unknown) {
       if (error instanceof ApiError) throw error;
       // A timeout is recognised by our own signal, not by the shape of the
@@ -166,6 +250,24 @@ export function createApiClient(config: ApiClientConfig) {
     form: FormData,
     options: { timeoutMs?: number; signal?: AbortSignal | null } = {},
   ): Promise<T> {
+    const first = await uploadAttempt(path, schema, form, options, false);
+    if (!first.retry) return first.value;
+    const second = await uploadAttempt(path, schema, form, options, true);
+    if (!second.retry) return second.value;
+    throw new ApiError({
+      message: 'La sesión no pudo renovarse.',
+      status: 401,
+      kind: 'unauthorized',
+    });
+  }
+
+  async function uploadAttempt<T>(
+    path: string,
+    schema: z.ZodType<T>,
+    form: FormData,
+    options: { timeoutMs?: number; signal?: AbortSignal | null },
+    retrying: boolean,
+  ): Promise<{ retry: true } | { retry: false; value: T }> {
     const controller = new AbortController();
     const onExternalAbort = () => controller.abort();
     if (options.signal?.aborted) controller.abort();
@@ -186,7 +288,9 @@ export function createApiClient(config: ApiClientConfig) {
         body: form,
         signal: controller.signal,
       });
-      if (response.status === 401) await config.onUnauthorized?.();
+      if (response.status === 401 && (await handleUnauthorized(retrying))) {
+        return { retry: true as const };
+      }
       if (!response.ok) throw await readError(response);
       const envelope = successEnvelopeSchema.safeParse(await response.json());
       if (!envelope.success) {
@@ -204,7 +308,7 @@ export function createApiClient(config: ApiClientConfig) {
           kind: 'contract',
         });
       }
-      return parsed.data;
+      return { retry: false as const, value: parsed.data };
     } catch (error: unknown) {
       if (error instanceof ApiError) throw error;
       if (controller.signal.aborted) {

@@ -47,6 +47,13 @@ export default function AppLayout() {
         <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="trayectoria" />
+        {/* Entrenos. Era la cuarta pestaña hasta que Comunidad hizo seis y
+            «Comunidad» dejó de caber en la barra. Baja aquí por la misma regla
+            que el resto: es historial que se consulta, no un destino diario. Se
+            alcanza desde «Últimas sesiones» en Inicio y desde Perfil. La URL no
+            cambia —los grupos no aparecen en la ruta—, así que `/workouts` y
+            `/workouts/[id]` siguen siendo las mismas. */}
+        <Stack.Screen name="workouts" />
         <Stack.Screen name="ejercicio-nuevo" />
         <Stack.Screen name="settings" />
         <Stack.Screen name="profile-edit" />

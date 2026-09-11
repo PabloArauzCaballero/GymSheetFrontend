@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, Text } from 'react-native';
-import { colors, fontSizes, iconSizes, minTouchTarget, semibold, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, semibold, spacing } from '@/theme';
 
 /**
  * Explicit way back from a detail screen. Android has the system back gesture
@@ -25,14 +25,22 @@ export function BackLink({ label = 'Volver' }: { label?: string }) {
         opacity: pressed ? 0.6 : 1,
       })}
     >
+      {/* Tono tranquilo, no el acento. Volver es cromo de navegación, no la
+          acción por la que se entra en la pantalla; en una pantalla de detalle
+          con su botón principal, un «Volver» del mismo color le disputa la
+          atención al único control que debería tenerla. */}
       <Ionicons
         accessibilityElementsHidden
-        color={colors.volt}
+        color={accentPolicy.quietLink}
         importantForAccessibility="no-hide-descendants"
         name="chevron-back"
         size={iconSizes.md}
       />
-      <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}>{label}</Text>
+      <Text
+        style={{ color: accentPolicy.quietLink, fontSize: fontSizes.sm, fontWeight: semibold }}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }

@@ -24,13 +24,35 @@ export type { TenantDefinition } from './tenant';
  * deliberadamente ajeno a la marca, porque son señales que el usuario debe
  * reconocer igual en cualquier gimnasio.
  */
+/** `#rrggbb` → `rgba(r, g, b, a)`. */
+function tint(hex: string, alpha: number): string {
+  const value = Number.parseInt(hex.replace('#', '').slice(0, 6), 16);
+  return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`;
+}
+
 export const tones = {
   get dark() {
-    const success = { ...sharedTones.dark.success, text: getActiveTenant().colors.successOnDark };
+    // El **chip entero**, no sólo su texto.
+    //
+    // Antes se sustituía el color del texto por el del gimnasio y se heredaban
+    // `bg` y `border` de los tonos compartidos, que están derivados del lima de
+    // la identidad de referencia (`#182000` sobre `#526800`). El resultado, a la
+    // vista en el simulador: en un gimnasio de marca roja, la insignia
+    // «Finalizada» era verde de la marca sobre un fondo verde oliva que no
+    // pertenece a ninguna de las dos paletas. Es el mismo defecto que la barra
+    // de progreso, sólo que más pequeño: un color que se escribió cuando la app
+    // tenía una sola marca y que el multi-inquilino no llegó a alcanzar.
+    //
+    // Se derivan del propio tono de éxito del gimnasio, con las mismas
+    // opacidades que separaban al lima de su fondo. El texto no se toca —ya
+    // llegaba bien— y el contraste sube: 8,12:1 sobre la superficie de tarjeta.
+    const text = getActiveTenant().colors.successOnDark;
+    const success = { text, bg: tint(text, 0.12), border: tint(text, 0.35) };
     return { ...sharedTones.dark, success };
   },
   get light() {
-    const success = { ...sharedTones.light.success, text: getActiveTenant().colors.successOnLight };
+    const text = getActiveTenant().colors.successOnLight;
+    const success = { text, bg: tint(text, 0.1), border: tint(text, 0.3) };
     return { ...sharedTones.light, success };
   },
 };
@@ -127,6 +149,28 @@ export const accentPolicy = {
   /** Navegación y glifos decorativos: presentes, sin gritar. */
   get glyph(): string {
     return getActiveTenant().id === 'gymsheet' ? '#cfd8c4' : '#d6d6d6';
+  },
+  /**
+   * El acento **como texto sobre una superficie oscura**.
+   *
+   * No es lo mismo que `colors.volt`, y confundirlos es un fallo de contraste,
+   * no de gusto. El acento está elegido para ser un relleno: se lee muy bien con
+   * tinta encima, que es como se usa en un botón. Puesto como texto sobre la
+   * tarjeta casi negra, en cambio, el rojo de TOP Fitness (`#ed1b34`) da
+   * **4,22:1** — por debajo del 4,5:1 que exige AA para texto normal.
+   *
+   * Los tokens del inquilino ya traían la respuesta: `accentInkOnDark`, con el
+   * comentario «sobre casi negro, el rojo de marca queda por debajo del
+   * contraste legible para texto; se aclara sin salirse del tono». Ese tono
+   * (`#ff6b7d`) da 6,71:1. Sólo que la app móvil casi no lo usaba: 116 usos de
+   * `colors.volt` frente a 9 de `accentInk`, de modo que la mayor parte del
+   * texto acentuado no llegaba al mínimo legible.
+   *
+   * Regla, entonces: **relleno → `colors.volt`; texto e iconos finos sobre
+   * superficie oscura → `accentPolicy.ink`.**
+   */
+  get ink(): string {
+    return colors.accentInk;
   },
   /** Texto interactivo secundario (migas, enlaces en línea). */
   get quietLink(): string {

@@ -58,7 +58,8 @@
         }
       ],
       "./plugins/with-fmt-consteval-fix",
-      "@sentry/react-native"
+      "@sentry/react-native",
+      "./plugins/with-path-spaces-fix"
     ],
     "experiments": {
       "typedRoutes": true

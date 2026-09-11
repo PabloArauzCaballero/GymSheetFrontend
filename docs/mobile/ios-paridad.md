@@ -26,6 +26,43 @@ pantalla.
 regenera con `expo prebuild` a partir de `app.json`. Todo ajuste nativo vive en
 la configuración o en un config plugin, nunca editado a mano dentro de `ios/`.
 
+## Lo que impedía compilar (rutas con espacios)
+
+Cuatro fases de build generadas invocan un script **sin comillar su ruta**. Da
+igual en cualquier checkout normal; con el proyecto bajo «Mantra Core
+Technologies» el shell parte la ruta por el espacio y busca un ejecutable
+`…/Desktop/Mantra` que no existe. No es configuración de esta app: las plantillas
+lo generan así, y por eso el arreglo vive en `plugins/with-path-spaces-fix.js` —
+`ios/` lo regenera `expo prebuild` y una edición a mano allí la borra la
+siguiente pasada.
+
+| Fase | Dónde | Qué pasa |
+| --- | --- | --- |
+| `[CP-User] Generate Specs` | Pods | `sh -c "$A $B"` vuelve a partir la cadena |
+| Bundle React Native code and images | app | sustitución por backticks sin comillar |
+| Upload Debug Symbols to Sentry | app | ídem |
+| `Generate app.config…` | Pods (expo-constants) | **no rompe el build: rompe la app** |
+
+Las tres primeras fallan en voz alta. La cuarta es la mala:
+`get-app-config-ios.sh` decide si le toca actuar con
+`PROJECT_DIR_BASENAME=$(basename $PROJECT_DIR)` —sin comillas—, que con espacios
+no devuelve «Pods», así que **sale con código 0**. La fase se da por buena,
+`EXConstants.bundle` se queda sin su `app.config`, y el fallo aparece mucho
+después y muy lejos: la app arranca y muere en rojo con «expo-linking needs
+access to the expo-constants manifest», que no menciona ni rutas ni espacios.
+
+Dos cosas que costaron una compilación cada una y están anotadas en el plugin:
+
+- Comillar los argumentos de la fase de codegen **no basta**:
+  `with-environment.sh` ejecuta lo que recibe como `$1`, sin comillas, en su
+  última línea, y la ruta se vuelve a partir ya dentro de `node_modules`. Se le
+  hace `source` y se invoca el script aquí.
+- **El plugin tiene que ir el último de `app.json`**, después de
+  `@sentry/react-native`: las dos fases de la app las escribe Sentry, los mods
+  se aplican en el orden de la lista, y puesto antes el parche se aplicaba y
+  Sentry lo sobrescribía a continuación. El prebuild terminaba «bien» y el
+  proyecto salía sin parchear.
+
 ## Lo que impedía compilar
 
 Dos cosas hacían fallar la compilación antes incluso de llegar a una pantalla.

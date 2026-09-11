@@ -6,7 +6,7 @@ import type { UserGender } from '@gymsheet/types';
 import { ApiError } from '@gymsheet/api-client';
 import { Link, useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
-import { Screen, AppText, Button, Input } from '@/components/ui';
+import { Screen, AppText, Button, Input, textLinkStyle } from '@/components/ui';
 import { Checkbox } from '@/components/checkbox';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
@@ -170,10 +170,10 @@ export default function RegisterScreen() {
       />
 
       <View style={{ gap: spacing.xs, marginBottom: spacing.sm }}>
-        <Link href="/(auth)/terminos" style={{ color: colors.volt, fontSize: fontSizes.sm }}>
+        <Link href="/(auth)/terminos" style={textLinkStyle()}>
           Leer términos y condiciones
         </Link>
-        <Link href="/(auth)/privacidad" style={{ color: colors.volt, fontSize: fontSizes.sm }}>
+        <Link href="/(auth)/privacidad" style={textLinkStyle()}>
           Leer política de privacidad
         </Link>
       </View>
@@ -201,7 +201,7 @@ export default function RegisterScreen() {
         style={{ marginTop: spacing.md }}
       />
 
-      <Link href="/(auth)/login" style={{ color: colors.volt, marginTop: spacing.sm }}>
+      <Link href="/(auth)/login" style={textLinkStyle()}>
         ¿Ya tienes cuenta? Inicia sesión
       </Link>
     </Screen>

@@ -4,12 +4,12 @@ El diseño de la app móvil se decide en esta rama y vale para las dos
 plataformas. Este documento recoge dónde Android **no** hace lo mismo que iOS
 con el mismo código, qué se hizo al respecto y qué queda sin verificar.
 
-> **Estado: revisión de código, sin ejecución.** Nada de lo de abajo se ha
-> visto correr en un Android real ni en un emulador — esta máquina no tiene
-> ninguno disponible. Las correcciones salen de diferencias documentadas de
-> React Native y del sistema, no de una pantalla observada, y así hay que
-> leerlas. Lo que sí está verificado en hardware real es iOS: ver
-> [`ios-evidencia.md`](./ios-evidencia.md).
+> **Estado: ejecutado en emulador (11 sep 2026).** Lo de abajo se escribió como
+> revisión de código, sin ejecución, porque no había ningún Android disponible.
+> Ya lo hay: Pixel 10 Pro con Android 17, JDK 17 (el Gradle de RN 0.79 no
+> compila con el 26 que trae la máquina), `BUILD SUCCESSFUL`, app instalada y
+> recorrida con datos reales del backend. Lo que esa pasada confirmó y lo que
+> corrigió está al final, en «Lo que se vio al ejecutarlo por fin».
 
 ## Lo que se corrigió
 
@@ -124,3 +124,45 @@ Para verificarlo hace falta un emulador Android o un teléfono con depuración
 USB. Maestro sí soporta emuladores Android, así que los flujos de
 `.maestro/` sirven tal cual: `maestro test .maestro/` con el emulador
 arrancado y el backend accesible en la IP de LAN.
+
+
+## Lo que se vio al ejecutarlo por fin
+
+Primera ejecución real en un emulador (Pixel 10 Pro · Android 17), con el
+backend NestJS y PostgreSQL en marcha y el atleta de la semilla con datos.
+
+### El riesgo nº 1 de la lista de pendientes: confirmado bueno
+
+«El recorte del foco del tour» encabezaba la lista de abajo, con el aviso de que
+«la aritmética de coordenadas entre ventanas es justo el tipo de cosa que hay
+que ver para creerla». Se vio: el recorte iluminado cae **sobre la fila que
+señala**, no desplazado la altura de la barra de estado. La corrección de
+`statusBarTranslucent` era la correcta, y ahora está comprobada en pantalla y no
+sólo en la documentación de React Native.
+
+### Lo demás que se comprobó en ejecución
+
+- **Tema oscuro y edge-to-edge.** El proyecto generado trae
+  `AppTheme parent="Theme.EdgeToEdge"` y
+  `expo_system_ui_user_interface_style = dark`; en pantalla, el contenido llega
+  hasta los bordes y los insets respetan barra de estado y barra de gestos.
+- **Jerarquía tipográfica.** Los pesos se leen: en Android 17 (API muy por
+  encima de 28) `semibold` resuelve a 600 exacto, que es lo pretendido. El
+  umbral de API 28 sigue **sin comprobar** — haría falta un emulador de API 24.
+- **Estado de foco de los campos.** El borde claro del campo activo se ve
+  igual que en iOS.
+
+### Lo que la ejecución destapó
+
+- **`localhost` no es el anfitrión.** El emulador corre en su propia máquina
+  virtual, donde `localhost` es él mismo; al anfitrión se le ve en `10.0.2.2`.
+  El `.env.example` lo explicaba en un párrafo y obligaba a editar el fichero
+  —y reiniciar Metro— en cada cambio de plataforma, lo que además impide tener
+  las dos abiertas contra el mismo Metro, que es justo lo que se hace al
+  comprobar paridad. Ahora lo traduce `src/config/env.ts` según la plataforma.
+  Una IP de LAN o un host de staging pasan intactos.
+- **La barra no cabía a seis.** Con Comunidad en la barra, «Comunidad» se
+  truncaba a «Comuni…» en iPhone. Entrenos bajó al stack y la barra vuelve a
+  cinco; en Android, con más ancho por pestaña, las cinco etiquetas entran
+  holgadas. Ver el comentario en `(tabs)/_layout.tsx` para las dos salidas
+  técnicas que se probaron y por qué ninguna servía.

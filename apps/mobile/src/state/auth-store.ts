@@ -28,9 +28,13 @@ export type RegisterPayload = {
  * - `POST /auth/login` names the role `rol`, while `GET /auth/me` and the shared
  *   `sessionPrincipalSchema` use `role`; normalised here so the rest of the app
  *   only ever sees the shared contract.
- * - No refresh token is issued yet (backend requirement #2, still pending), so
- *   it is optional: the session lasts as long as the access token until
- *   `POST /auth/refresh` exists.
+ * - El refresh token **sí** se emite hoy, y `POST /auth/refresh` existe. Sigue
+ *   declarado como opcional porque el esquema también valida respuestas de
+ *   despliegues antiguos, pero ya no describe la realidad del backend: quien lo
+ *   usa es `src/api/client.ts`, que renueva la sesión en silencio al primer 401.
+ *   Mientras este comentario dijo lo contrario, el móvil guardaba el refresh en
+ *   el Llavero y no lo usaba nunca, de modo que la sesión moría a los quince
+ *   minutos y devolvía al usuario a la pantalla de acceso.
  */
 const authPayloadSchema = z
   .object({

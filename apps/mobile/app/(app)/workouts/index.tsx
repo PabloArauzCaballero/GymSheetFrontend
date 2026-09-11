@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Badge, Card, Divider, ScrollScreen, ScreenHeader } from '@/components/layout';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { NavRow } from '@/components/list';
+import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { exportWorkoutHistory } from '@/lib/export-progress';
@@ -73,6 +74,14 @@ export default function WorkoutsScreen() {
 
   return (
     <ScrollScreen onRefresh={() => void workouts.refetch()} refreshing={workouts.isFetching}>
+      {/* Entrenos era una pestaña y no necesitaba salida: la barra siempre
+          estaba debajo. Al bajar al stack sí la necesita, y no basta con el
+          gesto del sistema — es la razón por la que `BackLink` existe: «un
+          control visible es la única affordance que sirve para todo el mundo,
+          incluido quien usa lector de pantalla, para quien un camino que sólo
+          es un gesto no es camino». Todas las demás pantallas empujadas lo
+          llevan; ésta se habría quedado sin él justo al dejar de ser pestaña. */}
+      <BackLink />
       <ScreenHeader
         subtitle={workouts.data ? `${workouts.data.total} sesiones registradas` : 'Tu historial.'}
         title="Entrenos"

@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -22,7 +22,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { AmbientBackground } from '@/components/ambient';
-import { accentContrast, colors, fontSizes, iconSizes, maxContentWidth, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { accentContrast, accentPolicy, colors, fontSizes, iconSizes, maxContentWidth, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -62,6 +62,34 @@ export function Screen({ children }: { children: ReactNode }) {
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
+}
+
+/**
+ * Los enlaces de texto de las pantallas de sesión.
+ *
+ * Dos defectos que en el fondo son la misma decisión mal tomada:
+ *
+ * - **Color.** Iban en el acento, el mismo del botón que tienen justo encima.
+ *   La política de acento de este proyecto lo reserva para *una* acción
+ *   dominante por región; con el botón y dos enlaces vestidos igual, ninguno de
+ *   los tres dice «yo soy lo que has venido a pulsar». Pasan al tono tranquilo
+ *   que `accentPolicy` define precisamente para enlaces secundarios.
+ * - **Tamaño del objetivo.** `Link` pinta un `Text`, y un `Text` mide lo que
+ *   mide su línea: unos 20pt de alto, frente a los 44 que fija `minTouchTarget`
+ *   y que respetan todos los demás controles de la app. El relleno vertical los
+ *   sube a 44 sin mover nada de sitio.
+ *
+ * Es una función y no una constante porque el tono depende del gimnasio activo,
+ * que se resuelve al iniciar sesión: una constante se quedaría con el primero
+ * que cargara el módulo.
+ */
+export function textLinkStyle() {
+  return {
+    color: accentPolicy.quietLink,
+    fontSize: fontSizes.sm,
+    // 20 de línea + 12 + 12 = 44.
+    paddingVertical: spacing.sm + spacing.xs,
+  } as const;
 }
 
 export function AppText({
@@ -237,20 +265,52 @@ export function Button({
   );
 }
 
-export function Input({ label, error, ...props }: TextInputProps & { label: string; error?: string }) {
+export function Input({
+  label,
+  error,
+  onBlur,
+  onFocus,
+  ...props
+}: TextInputProps & { label: string; error?: string }) {
+  const [focused, setFocused] = useState(false);
+
+  // El orden importa: el error gana al foco. Un campo enfocado y a la vez
+  // inválido tiene que seguir diciendo que está mal — si ganara el foco, el
+  // único aviso desaparecería justo al ir a corregirlo.
+  const borderColor = error ? colors.danger : focused ? colors.text : colors.border;
+
   return (
     <View style={{ gap: spacing.xs }}>
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{label}</Text>
       <TextInput
+        // La etiqueta de arriba es un `Text` hermano, y en React Native eso no
+        // nombra al campo: VoiceOver anunciaba «campo de texto» a secas y había
+        // que deducir cuál de los dos era por el orden de recorrido.
+        accessibilityLabel={label}
         // iOS draws a light keyboard by default; against a black screen the
         // slab of white is the brightest thing in the app. Android ignores it.
         keyboardAppearance="dark"
-        placeholderTextColor={colors.textDisabled}
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
+        }}
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
+        }}
+        // `textDisabled` daba 2,06:1 contra esta superficie, menos de la mitad
+        // del 4,5:1 de AA. El marcador de posición es una instrucción («Nombre,
+        // grupo muscular…»), no un adorno, y estaba más apagado que la propia
+        // etiqueta del campo — al revés de como se lee un formulario.
+        placeholderTextColor={colors.textMuted}
         style={{
           minHeight: minTouchTarget,
           borderRadius: radii.md,
           borderWidth: 1,
-          borderColor: error ? colors.danger : colors.border,
+          // El campo no tenía **ningún** estado de foco: el borde en reposo da
+          // 1,46:1 contra el relleno, así que un campo enfocado y uno inerte se
+          // veían exactamente igual. La ADR-0003 §6 pide los siete estados.
+          borderColor,
           backgroundColor: colors.surface,
           color: colors.text,
           paddingHorizontal: spacing.md,
@@ -258,7 +318,18 @@ export function Input({ label, error, ...props }: TextInputProps & { label: stri
         }}
         {...props}
       />
-      {error ? <Text style={{ color: colors.danger, fontSize: fontSizes.xs }}>{error}</Text> : null}
+      {error ? (
+        <Text
+          // Sin esto el mensaje aparece pero no se anuncia: quien no ve la
+          // pantalla pulsa «Iniciar sesión», no ocurre nada, y nada le dice por
+          // qué.
+          accessibilityLiveRegion="polite"
+          accessibilityRole="alert"
+          style={{ color: colors.danger, fontSize: fontSizes.xs }}
+        >
+          {error}
+        </Text>
+      ) : null}
     </View>
   );
 }

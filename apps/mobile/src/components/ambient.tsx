@@ -3,6 +3,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   Easing,
+  cancelAnimation,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -37,13 +38,29 @@ const TAU = Math.PI * 2;
 function useClock(periodMs: number, enabled: boolean) {
   const value = useSharedValue(0);
   useEffect(() => {
-    if (!enabled) return;
+    // `return` a secas dejaba el reloj anterior corriendo. La cabecera de este
+    // fichero promete que el fondo «se detiene por completo con Reducir
+    // movimiento», y era verdad sólo si la preferencia ya estaba activada al
+    // montar: si alguien la encendía con la app abierta, `enabled` pasaba a
+    // false, este efecto se iba sin tocar nada y la onda seguía animándose
+    // indefinidamente. Justo la persona que pidió que parara era la única a la
+    // que no le paraba.
+    if (!enabled) {
+      cancelAnimation(value);
+      value.value = 0;
+      return;
+    }
     value.value = 0;
     value.value = withRepeat(
       withTiming(1, { duration: periodMs, easing: Easing.linear }),
       -1,
       false,
     );
+    // Y al desmontar, también: este fondo se monta en cada pantalla, así que
+    // sin esto cada navegación deja atrás un puñado de bucles vivos.
+    return () => {
+      cancelAnimation(value);
+    };
   }, [enabled, periodMs, value]);
   return value;
 }

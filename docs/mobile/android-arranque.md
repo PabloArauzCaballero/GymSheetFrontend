@@ -55,9 +55,15 @@ node ..\GymSheetFrontend\apps\mobile\scripts\seed-demo-data.mjs
 
 Copiar `apps/mobile/.env.example` a `apps/mobile/.env` y ajustar la URL:
 
-- **Emulador de Android**: `http://10.0.2.2:3011/api/v1`. `10.0.2.2` es la
-  dirección con la que el emulador ve a la máquina anfitriona; `localhost`
-  dentro del emulador es el propio emulador, y la petición no sale de ahí.
+- **Emulador de Android**: `http://localhost:3011/api/v1` — el mismo valor que
+  para iOS. `localhost` dentro del emulador es el propio emulador y la petición
+  no saldría de ahí, pero ya no hay que acordarse:
+  `src/config/env.ts` lo traduce a `10.0.2.2` (la dirección con la que el
+  emulador ve al anfitrión) sólo en Android. Así el mismo `.env` sirve para las
+  dos plataformas y se pueden tener las dos abiertas contra el mismo Metro, que
+  es justo lo que se hace al comprobar paridad.
+  Si se prefiere, `adb reverse tcp:3011 tcp:3011` consigue lo mismo por la vía
+  del sistema y deja `localhost` funcionando literalmente.
 - **Teléfono Android físico**: la IP de LAN del PC (`ipconfig`, IPv4 del
   adaptador activo), con el teléfono en la misma Wi-Fi.
 

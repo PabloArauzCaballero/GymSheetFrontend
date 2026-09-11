@@ -5,7 +5,7 @@ import { loginSchema, type LoginInput } from '@gymsheet/schemas';
 import { ApiError } from '@gymsheet/api-client';
 import { Link } from 'expo-router';
 import { View } from 'react-native';
-import { Screen, AppText, Button, Input } from '@/components/ui';
+import { Screen, AppText, Button, Input, textLinkStyle } from '@/components/ui';
 import { Checkbox } from '@/components/checkbox';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
@@ -100,10 +100,10 @@ export default function LoginScreen() {
 
       <Button label="Iniciar sesión" onPress={onSubmit} loading={isSubmitting} />
 
-      <Link href="/(auth)/recover-password" style={{ color: colors.volt, marginTop: spacing.sm }}>
+      <Link href="/(auth)/recover-password" style={textLinkStyle()}>
         ¿Olvidaste tu contraseña?
       </Link>
-      <Link href="/(auth)/register" style={{ color: colors.volt, marginTop: spacing.sm }}>
+      <Link href="/(auth)/register" style={textLinkStyle()}>
         ¿No tienes cuenta? Regístrate
       </Link>
     </Screen>
