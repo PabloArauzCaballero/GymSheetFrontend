@@ -1,0 +1,61 @@
+# Despliegue en Coolify. Mismas reglas duras que en GymSheetBackend y en los repos de Atlas:
+#
+# 1. NUNCA `ports:`. Coolify levanta el contenedor nuevo antes de retirar el viejo y un puerto fijo
+#    del host da «address already in use» en cada despliegue. Se publica por el proxy de Coolify.
+# 2. NUNCA `env_file:`. Coolify añade el suyo a cada servicio; las variables van en la interfaz.
+# 3. `NEXT_PUBLIC_*` va en `build.args`, no en `environment`: Next las hornea al construir. El
+#    navegador abre el socket de chat directo contra `NEXT_PUBLIC_BACKEND_ORIGIN`, así que ese
+#    valor tiene que ser un origen público del backend, no un alias interno de la red `coolify`.
+# 4. `BACKEND_API_URL` y `APP_URL` son server-only: van en `environment`, nunca en `build.args`.
+# 5. Hay que activar «Connect To Predefined Network» en la aplicación.
+name: gymsheet-frontend
+
+services:
+  web:
+    image: gymsheet-frontend:coolify
+    build:
+      context: .
+      dockerfile: Dockerfile
+      cache_from:
+        - gymsheet-frontend:coolify
+      args:
+        # Placeholder hasta que exista un dominio público para el backend. Coolify lo sobreescribe
+        # como build arg desde la interfaz de la aplicación cuando el dominio esté listo.
+        NEXT_PUBLIC_BACKEND_ORIGIN: 'http://localhost:3000'
+    environment:
+      # Alias interno del recurso `api` de gymsheet-backend en la red `coolify`.
+      BACKEND_API_URL: 'http://gymsheet-backend:3000/api/v1'
+      # Origen público de ESTE frontend; lo usan robots.ts/sitemap.ts. Cambiar cuando haya dominio.
+      APP_URL: 'http://localhost:3001'
+    restart: unless-stopped
+    init: true
+    networks:
+      default: {}
+      coolify:
+        aliases:
+          - gymsheet-frontend
+    expose:
+      - '3001'
+    cpu_shares: 4096
+    stop_grace_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3001/api/health >/dev/null 2>&1 || exit 1']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+
+networks:
+  default: {}
+  coolify:
+    external: true
+    name: coolify
