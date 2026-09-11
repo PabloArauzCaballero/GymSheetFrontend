@@ -61,8 +61,37 @@ const allowedPathPatterns = [
   new RegExp(`^/me/connections/${resourceId}$`, 'u'),
   /^\/me\/social-status$/u,
   /^\/me\/gym-directory$/u,
+  // Ficha social de un socio concreto (directorio + insignias ganadas). Es lo
+  // que abre la tarjeta de una interacción, y lo que registra la visita.
+  new RegExp(`^/me/gym-directory/${resourceId}$`, 'u'),
+  // Las sedes del gimnasio propio, no el directorio público de marcas: es lo
+  // que debe alimentar el filtro por sucursal, porque `/me/gym-directory` está
+  // acotado al tenant y filtrar por una sede ajena no puede devolver a nadie.
+  /^\/me\/facilities\/branches$/u,
   /^\/me\/conversations$/u,
   new RegExp(`^/me/conversations/${resourceId}/messages$`, 'u'),
+  // Descubrimiento (R6.1): la baraja, el swipe y el deshacer. `swipes/undo` va
+  // en su propia entrada y no como sufijo opcional de `swipes` porque son dos
+  // operaciones distintas: una decide, la otra revierte la última decisión.
+  /^\/me\/discovery\/deck$/u,
+  /^\/me\/discovery\/swipes$/u,
+  /^\/me\/discovery\/swipes\/undo$/u,
+  // Stories (R6.2). `/me/stories` es GET del propio + POST multipart; el feed
+  // es una ruta hermana y no un parámetro, así que se declara aparte aunque el
+  // patrón por identificador de abajo también la aceptaría: quien lea esta
+  // lista debe ver qué rutas existen, no deducirlas.
+  /^\/me\/stories$/u,
+  /^\/me\/stories\/feed$/u,
+  new RegExp(`^/me/stories/${resourceId}$`, 'u'),
+  new RegExp(`^/me/stories/${resourceId}/(view|viewers)$`, 'u'),
+  // Vistas de perfil (R6.3): lista paginada por cursor, resumen y la marca de
+  // «ya la revisé».
+  /^\/me\/profile-views$/u,
+  /^\/me\/profile-views\/(summary|checked)$/u,
+  // Interacciones (R6.3): las cuatro listas, los contadores de cabecera y el
+  // borrado de un descarte propio para devolver a esa persona a la baraja.
+  /^\/me\/interactions\/(likes-received|likes-sent|passes-received|passes-sent|counts)$/u,
+  new RegExp(`^/me/interactions/passes/${resourceId}$`, 'u'),
   /^\/notifications\/me$/u,
   /^\/notifications\/preferences\/me$/u,
   new RegExp(`^/notifications/${resourceId}/read$`, 'u'),

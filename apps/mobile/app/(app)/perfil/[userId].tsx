@@ -55,9 +55,38 @@ export default function PerfilDetailScreen() {
   const userId = params.userId;
   const recordedRef = useRef<string | null>(null);
 
+  /**
+   * Registrar la visita una sola vez, sea cual sea la forma de llegar aquí.
+   *
+   * La guarda es una referencia y no un estado porque escribirla no debe
+   * provocar un render: es una marca de «esto ya se hizo», no algo que se
+   * pinte. Y guarda el `userId`, no un booleano, que es lo que la hace
+   * correcta en los dos modos de navegación que usa esta app:
+   *
+   * - `push` (el caso normal: se abre un perfil desde una lista) monta una
+   *   instancia nueva de la pantalla, con su referencia a `null`. Encadenar
+   *   dos perfiles distintos registra los dos, cada uno en su montaje.
+   * - `navigate` hacia la misma ruta con otro parámetro **reutiliza** la
+   *   pantalla y sólo cambia los parámetros: no hay montaje nuevo, el efecto
+   *   se vuelve a ejecutar con el `userId` nuevo y, como la referencia guarda
+   *   el anterior, la comparación falla y la segunda visita también se
+   *   registra. Con un booleano se habría perdido.
+   *
+   * La marca se escribe antes de lanzar la petición, no en su respuesta: en
+   * desarrollo React monta, desmonta y vuelve a montar cada efecto, y hacerlo
+   * después dejaba pasar dos registros de la misma visita.
+   *
+   * `useLocalSearchParams` y no `useGlobalSearchParams`: el global devuelve
+   * los parámetros de la ruta activa, así que al abrir un segundo perfil
+   * encima la pantalla de abajo —que sigue montada— vería el `userId` del de
+   * arriba y registraría una visita que nadie hizo.
+   */
   useEffect(() => {
     if (!userId || recordedRef.current === userId) return;
     recordedRef.current = userId;
+    // Fallo silencioso a propósito: registrar la visita es un efecto
+    // secundario del que el visitante no es responsable, y un aviso de error
+    // por algo que él no ha pedido ni puede arreglar sólo sería ruido.
     void profileViewsService.record(userId).catch(() => {});
   }, [userId]);
 

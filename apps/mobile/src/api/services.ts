@@ -4,6 +4,10 @@ import {
   bodyMeasurementSchema,
   connectionSchema,
   conversationSummarySchema,
+  discoveryPassEntrySchema,
+  interactionCountsSchema,
+  likeReceivedSchema,
+  likeSentSchema,
   exerciseSchema,
   userSchema,
   gymDirectoryEntrySchema,
@@ -20,6 +24,7 @@ import {
   membershipProjectionSchema,
   pageSchema,
   profileSchema,
+  profileViewersPageSchema,
   profileViewsSummarySchema,
   routineAssignmentSchema,
   routineSchema,
@@ -28,6 +33,7 @@ import {
   startConversationResponseSchema,
   storyFeedEntrySchema,
   storySchema,
+  storyViewersResponseSchema,
   swipeResultSchema,
   undoSwipeResultSchema,
   workoutSchema,
@@ -560,6 +566,9 @@ export const storiesService = {
   },
   view: (storyId: string) =>
     apiClient.request(`/me/stories/${storyId}/view`, z.object({ recorded: z.literal(true) }), { method: 'POST' }),
+  /** Quién vio una story propia. El backend responde 404 si la story es de otra persona. */
+  viewers: (storyId: string) =>
+    apiClient.request(`/me/stories/${storyId}/viewers`, storyViewersResponseSchema, { method: 'GET' }),
   remove: (storyId: string) => apiClient.request(`/me/stories/${storyId}`, deletedSchema, { method: 'DELETE' }),
 };
 
@@ -571,4 +580,61 @@ export const profileViewsService = {
       body: { viewedUserId },
     }),
   summary: () => apiClient.request('/me/profile-views/summary', profileViewsSummarySchema, { method: 'GET' }),
+  /**
+   * Quiénes vieron mi perfil, una fila por persona y no por visita.
+   *
+   * Paginado por cursor y no por página: la lista crece por delante, y con
+   * `OFFSET` una visita nueva mientras se pagina desplaza todo y repite filas.
+   */
+  list: (params: { limit?: number; cursor?: string } = {}) =>
+    apiClient.request(
+      `/me/profile-views?${socialQueryString({ limit: params.limit, cursor: params.cursor })}`,
+      profileViewersPageSchema,
+      { method: 'GET' },
+    ),
+  /** Marca la lista como revisada: a partir de aquí, `newSinceLastCheck` vuelve a cero. */
+  markChecked: () =>
+    apiClient.request('/me/profile-views/checked', z.object({ checked: z.literal(true) }), {
+      method: 'POST',
+    }),
+};
+
+/**
+ * Interacciones: quién me dio like, a quién se lo di yo, quién me descartó y a
+ * quién descarté.
+ *
+ * Las cuatro listas devuelven la misma ficha que la baraja de descubrimiento
+ * más la fecha de la interacción, así que se pintan con la misma tarjeta en
+ * vez de con cuatro variantes que acabarían divergiendo.
+ */
+export const interactionsService = {
+  likesReceived: (limit?: number) =>
+    apiClient.request(
+      `/me/interactions/likes-received?${socialQueryString({ limit })}`,
+      z.array(likeReceivedSchema),
+      { method: 'GET' },
+    ),
+  likesSent: (limit?: number) =>
+    apiClient.request(
+      `/me/interactions/likes-sent?${socialQueryString({ limit })}`,
+      z.array(likeSentSchema),
+      { method: 'GET' },
+    ),
+  passesReceived: (limit?: number) =>
+    apiClient.request(
+      `/me/interactions/passes-received?${socialQueryString({ limit })}`,
+      z.array(discoveryPassEntrySchema),
+      { method: 'GET' },
+    ),
+  passesSent: (limit?: number) =>
+    apiClient.request(
+      `/me/interactions/passes-sent?${socialQueryString({ limit })}`,
+      z.array(discoveryPassEntrySchema),
+      { method: 'GET' },
+    ),
+  /** Deshace un descarte propio: esa persona vuelve a la baraja. */
+  undoPass: (userId: string) =>
+    apiClient.request(`/me/interactions/passes/${userId}`, deletedSchema, { method: 'DELETE' }),
+  counts: () =>
+    apiClient.request('/me/interactions/counts', interactionCountsSchema, { method: 'GET' }),
 };

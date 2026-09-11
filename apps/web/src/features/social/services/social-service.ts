@@ -1,7 +1,18 @@
 import { z } from 'zod';
 import { apiRequest } from '@/shared/api/api-client';
-import type { Connection, ConnectionStatus, GymDirectoryEntry, SocialStatusState } from '@/shared/api/schemas';
-import { connectionSchema, gymDirectoryEntrySchema, socialStatusSchema } from '@/shared/api/schemas';
+import type {
+  Connection,
+  ConnectionStatus,
+  GymDirectoryEntry,
+  MemberProfile,
+  SocialStatusState,
+} from '@/shared/api/schemas';
+import {
+  connectionSchema,
+  gymDirectoryEntrySchema,
+  memberProfileSchema,
+  socialStatusSchema,
+} from '@/shared/api/schemas';
 
 export type DirectoryFilters = {
   objetivo?: string;
@@ -9,7 +20,14 @@ export type DirectoryFilters = {
   limit?: number;
 };
 
-function queryString(filters: Record<string, string | number | undefined>) {
+/**
+ * Serializa filtros descartando los vacíos.
+ *
+ * Se exporta porque la baraja de descubrimiento acepta los mismos filtros que
+ * el directorio: son el mismo catálogo, y duplicar el serializador es la forma
+ * habitual de que dentro de un mes uno mande `limit=` vacío y el otro no.
+ */
+export function directoryQueryString(filters: Record<string, string | number | undefined>) {
   const query = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined && value !== '') query.set(key, String(value));
@@ -45,7 +63,10 @@ export const socialService = {
     }),
   directory: (filters: DirectoryFilters) =>
     apiRequest<GymDirectoryEntry[]>(
-      `/me/gym-directory?${queryString(filters)}`,
+      `/me/gym-directory?${directoryQueryString(filters)}`,
       z.array(gymDirectoryEntrySchema),
     ),
+  /** Ficha social de un socio del mismo gimnasio, con las insignias que ganó. */
+  memberProfile: (userId: string) =>
+    apiRequest<MemberProfile>(`/me/gym-directory/${userId}`, memberProfileSchema),
 };

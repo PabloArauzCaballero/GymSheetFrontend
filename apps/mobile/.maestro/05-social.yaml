@@ -1,0 +1,106 @@
+# Las superficies sociales nuevas: la baraja estilo Tinder, la tira de stories
+# y las tres pestañas de Interacciones.
+#
+# Los textos que se esperan son los que la pantalla pone **por sí misma**
+# (títulos y segmentos), no los datos del gimnasio: el contenido depende de lo
+# que haya sembrado `scripts/seed-social-demo.mjs`, y un flujo que dependiera
+# de un nombre concreto se rompería en cuanto la siembra cambiara.
+#
+# Las capturas se numeran a partir de 30 para no pisar las de los flujos 01–04,
+# que llegan hasta la veintitantos.
+appId: app.gymsheet.mobile
+name: 05 · Social — baraja, stories e interacciones
+---
+- runFlow: login.subflow.yaml
+
+# ── Comunidad: la tira de stories vive arriba de esta pantalla ──────────────
+# El rótulo lleva la cuenta de novedades cuando las hay —«Comunidad, 9
+# novedades, tab, 4 of 5»— y sólo el nombre cuando no. El patrón cubre ambos:
+# esta pantalla es justamente la que estrena el badge, así que el flujo no
+# puede depender de que haya o no likes pendientes en la base.
+- tapOn: 'Comunidad.*tab.*'
+- runFlow: cerrar-tour.subflow.yaml
+- extendedWaitUntil:
+    visible: 'Socios de tu gimnasio, filtrados por lo que buscas.'
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 30-comunidad-tira-stories
+
+# ── El visor de stories ────────────────────────────────────────────────────
+# Se abre por la primera story ajena de la tira. Es opcional a propósito: si la
+# siembra no dejó ninguna, el flujo sigue en vez de fallar por falta de datos,
+# que no es un fallo de la app.
+- tapOn:
+    text: 'Ver story de.*'
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 31-visor-story
+# Mantener pulsado pausa y esconde la interfaz: es la diferencia más visible
+# entre este visor y el que había antes.
+- longPressOn:
+    text: 'Siguiente story'
+    optional: true
+- takeScreenshot: 32-visor-story-pausado
+- tapOn:
+    text: 'Cerrar'
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 4000
+
+# ── La baraja de descubrimiento ────────────────────────────────────────────
+- tapOn:
+    text: 'Descubrir socios uno a uno'
+    optional: true
+- extendedWaitUntil:
+    visible: 'Descubrir'
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 33-baraja-tinder
+# La ficha ampliada, que es donde viven las fotos en vertical y las insignias.
+# El rótulo lleva el nombre de la persona, que cambia con la baraja.
+- tapOn:
+    text: 'Ver la ficha completa de.*'
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 34-ficha-ampliada
+- tapOn:
+    text: 'Cerrar'
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 4000
+- tapOn:
+    text: 'Comunidad'
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 4000
+
+# ── Interacciones: likes, visitas y nexts ──────────────────────────────────
+# Igual que la pestaña: el rótulo suma la cuenta de novedades cuando las hay.
+- tapOn:
+    text: 'Interacciones.*'
+    optional: true
+- extendedWaitUntil:
+    visible: 'Quién te dio like, quién vio tu perfil y quién pasó de largo.'
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 35-interacciones-likes
+- tapOn: 'Visitas'
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 36-interacciones-visitas
+- tapOn: 'Nexts'
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 37-interacciones-nexts
+# La otra cara de Nexts: a quién descarté yo, que sí tiene acción.
+- tapOn:
+    text: 'Descarté'
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 38-interacciones-descarte-propio

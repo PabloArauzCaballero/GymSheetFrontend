@@ -3,26 +3,27 @@ import { Animated, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
 import ReAnimated, {
-  Easing as ReEasing,
   cancelAnimation,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withRepeat,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
 import { useAuthStore } from '@/state/auth-store';
 import { useTourStore } from '@/state/tour-store';
 import { TourOverlay } from '@/components/tour';
-import { colors, fontSizes, iconSizes, semibold } from '@/theme';
+import {
+  formatBadgeCount,
+  interactionsAlertTotal,
+  useInteractionCounts,
+} from '@/components/interactions-counts';
+import { accentContrast, colors, fontSizes, iconSizes, semibold } from '@/theme';
 
 /** Outline when resting, filled when active — the platform convention. */
 const ICONS = {
   home: ['home-outline', 'home'],
   routines: ['albums-outline', 'albums'],
   exercises: ['barbell-outline', 'barbell'],
-  workouts: ['flame-outline', 'flame'],
   comunidad: ['people-outline', 'people'],
   profile: ['person-outline', 'person'],
 } as const satisfies Record<
@@ -86,37 +87,47 @@ function tabIcon(screen: keyof typeof ICONS) {
   return function TabIcon({ color, focused }: { color: string; focused: boolean }) {
     const reduceMotion = useReducedMotion();
     const scale = useSharedValue(focused ? 1 : 0.9);
-    /** Continuous breath, only while this tab is the active one. */
-    const pulse = useSharedValue(0);
 
     useEffect(() => {
       const target = focused ? 1 : 0.9;
       if (reduceMotion) {
         scale.value = target;
-        pulse.value = 0;
         return;
       }
-      scale.value = withSpring(target, { damping: 11, stiffness: 260, mass: 0.6 });
+      // `damping: 11` rebotaba a ojo. La identidad de movimiento de esta app
+      // está escrita en `motion.tsx` y dice lo contrario — «Premium: se asienta,
+      // no rebota», con `overshootClamping` en el muelle de pulsación—, así que
+      // el único elemento permanentemente en pantalla era justo el que no la
+      // seguía. Mismos valores que `PRESS_SPRING`.
+      scale.value = withSpring(target, {
+        damping: 26,
+        stiffness: 340,
+        mass: 0.5,
+        overshootClamping: true,
+      });
 
-      // The spring lands and then the icon is a static picture again. A slow
-      // pulse on the active tab keeps the bar alive between taps — it is the
-      // one element always on screen, so a still one makes the whole app feel
-      // paused. Only the active icon breathes: five pulsing icons would be
-      // noise, and the movement doubles as a marker of where you are.
-      if (!focused) {
-        cancelAnimation(pulse);
-        pulse.value = withTiming(0, { duration: 220 });
-        return;
-      }
-      pulse.value = withRepeat(
-        withTiming(1, { duration: 2100, easing: ReEasing.inOut(ReEasing.sin) }),
-        -1,
-        true,
-      );
-    }, [focused, pulse, reduceMotion, scale]);
+      // Aquí vivía un latido infinito en el icono activo, «para que la barra no
+      // se sintiera parada». Se ha quitado, por dos motivos:
+      //
+      // 1. Es decoración. El skill de dirección de arte que gobierna este
+      //    rediseño pide movimiento que comunique estado y causalidad, y lista
+      //    «motion on every hover» y «simultaneous unrelated animations» entre
+      //    lo que hay que evitar. Qué pestaña está activa ya lo dicen el relleno
+      //    del icono y el color; el latido no añade información, sólo compite
+      //    con el contenido por la mirada, de forma permanente.
+      // 2. Es una animación que nunca termina en el elemento que nunca se
+      //    desmonta — el coste no lo paga una pantalla, lo paga la sesión
+      //    entera.
+      return () => {
+        // Cancelar al desmontar es obligatorio en esta rama («limpieza de
+        // efectos en unmount, obligatoria») y no se estaba haciendo en ninguna
+        // de las animaciones de la app.
+        cancelAnimation(scale);
+      };
+    }, [focused, reduceMotion, scale]);
 
     const style = useAnimatedStyle(() => ({
-      transform: [{ scale: scale.value * (1 + pulse.value * 0.07) }],
+      transform: [{ scale: scale.value }],
     }));
 
     return (
@@ -146,6 +157,18 @@ function tabIcon(screen: keyof typeof ICONS) {
  * is where a pushed screen belongs anyway.
  */
 export default function TabsLayout() {
+  /**
+   * El badge de Comunidad.
+   *
+   * Mismo total que el icono de Interacciones de la cabecera de Comunidad —
+   * likes recibidos más visitas nuevas— y la misma consulta: una sola clave
+   * con un minuto de frescura, compartida por los dos sitios. Sin eso, la
+   * barra de pestañas, que vive toda la sesión, pediría los contadores en cada
+   * cambio de pantalla y los dos números podrían no coincidir.
+   */
+  const counts = useInteractionCounts();
+  const alerts = interactionsAlertTotal(counts.data);
+
   return (
     <Tabs
       screenOptions={{
@@ -164,6 +187,27 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.volt,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontSize: fontSizes.xs, fontWeight: semibold },
+        // Cinco pestañas, no seis. Es el techo que este proyecto ya se había
+        // fijado —«cinco es el techo de una barra inferior antes de que las
+        // etiquetas empiecen a truncarse», en `(app)/_layout.tsx`— y la regla
+        // por la que Trayectoria y Descubrir viven en el stack y no aquí.
+        // Comunidad entró como sexta saltándosela.
+        //
+        // El síntoma se veía en el simulador: «Comunidad» no cabe en 1/6 del
+        // ancho de un iPhone y se leía «Comuni…». Los puntos suspensivos acaban
+        // además en el árbol de accesibilidad, así que VoiceOver anunciaba el
+        // nombre cortado y un selector que buscara «Comunidad» no encontraba
+        // nada.
+        //
+        // Las dos salidas puramente técnicas se probaron y ninguna vale: bajar
+        // el cuerpo de letra no resuelve (a 11pt y a 10pt sigue cortándose,
+        // porque lo que manda es el ancho del ítem), y cambiar la etiqueta por
+        // un componente que encoja le quita al navegador la cadena con la que
+        // nombra el botón — el árbol pasaba de «Rutinas, tab, 2 of 6» a un
+        // simple «Rutinas», sin rol ni posición. Las dos hacen que el problema
+        // deje de verse; ninguna lo arregla.
+        //
+        // La causa era el número de destinos, así que se corrige ahí.
         tabBarStyle: { backgroundColor: colors.surfaceLow, borderTopColor: colors.borderSubtle },
       }}
     >
@@ -177,12 +221,34 @@ export default function TabsLayout() {
         options={{ title: 'Ejercicios', tabBarIcon: tabIcon('exercises') }}
       />
       <Tabs.Screen
-        name="workouts"
-        options={{ title: 'Entrenos', tabBarIcon: tabIcon('workouts') }}
-      />
-      <Tabs.Screen
         name="comunidad"
-        options={{ title: 'Comunidad', tabBarIcon: tabIcon('comunidad') }}
+        options={{
+          title: 'Comunidad',
+          // El badge es una vista que pinta el navegador: VoiceOver lo
+          // anunciaría como un número suelto detrás del nombre, sin decir de
+          // qué es. Por eso la cuenta va en la etiqueta.
+          //
+          // Pero sólo cuando hay algo que contar. Fijar una etiqueta propia
+          // **sustituye** a la que iOS compone —«Comunidad, tab, 4 of 5»—, y
+          // esa cuenta de posición es justamente lo que orienta a quien navega
+          // por voz. Sin novedades no hay nada que añadir, así que se deja la
+          // nativa; con ellas se antepone el aviso y se conserva el resto.
+          tabBarAccessibilityLabel:
+            alerts > 0
+              ? `Comunidad, ${alerts} ${alerts === 1 ? 'novedad' : 'novedades'}, tab`
+              : undefined,
+          tabBarBadge: alerts > 0 ? formatBadgeCount(alerts) : undefined,
+          // Relleno de acento con la tinta de contraste de la marca. El rojo
+          // por defecto de React Navigation significa «error» en el resto de
+          // la app, y aquí no hay nada roto: hay gente esperando.
+          tabBarBadgeStyle: {
+            backgroundColor: colors.volt,
+            color: accentContrast(),
+            fontSize: fontSizes.xs,
+            fontWeight: semibold,
+          },
+          tabBarIcon: tabIcon('comunidad'),
+        }}
       />
       <Tabs.Screen name="profile" options={{ title: 'Perfil', tabBarIcon: tabIcon('profile') }} />
     </Tabs>

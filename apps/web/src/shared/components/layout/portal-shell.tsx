@@ -1,8 +1,13 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import Link, { useLinkStatus } from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, type ReactNode } from 'react';
+import {
+  interactionKeys,
+  interactionsService,
+} from '@/features/interactions/services/interactions-service';
 import type { SessionPrincipal } from '@/shared/api/contracts';
 import { cn } from '@/shared/lib/cn';
 import { AmbientBackground } from '@/shared/components/background/ambient-background';
@@ -17,6 +22,24 @@ import { LogoutButton } from './logout-button';
 import { RouteProgress } from './route-progress';
 import { ThemeToggle } from './theme-toggle';
 
+/**
+ * Novedades sin atender: likes recibidos y visitas al perfil sin revisar.
+ *
+ * El fallo se traga a propósito. Es un indicador, no contenido: si la consulta
+ * revienta, lo correcto es que el punto no aparezca, no que el portal entero
+ * salude con un aviso de error en cada carga de página (la red global de
+ * `providers.tsx` avisaría de cualquier consulta caída sin datos).
+ */
+function useInteractionAlerts() {
+  const counts = useQuery({
+    queryKey: interactionKeys.counts,
+    queryFn: () => interactionsService.counts().catch(() => null),
+    staleTime: 60_000,
+  });
+  const data = counts.data;
+  return data ? data.likesReceived + data.profileViewsNew : 0;
+}
+
 /** Instant pending indicator for the link being navigated to. */
 function LinkPending() {
   const { pending } = useLinkStatus();
@@ -29,6 +52,7 @@ function NavigationLinks({
 }: Readonly<{ session: SessionPrincipal; compact?: boolean }>) {
   const pathname = usePathname();
   const activeLinkRef = useRef<HTMLAnchorElement>(null);
+  const interactionAlerts = useInteractionAlerts();
   const items = [...primaryNavigation, ...adminNavigation].filter((item) =>
     canSee(item, session.role),
   );
@@ -55,6 +79,7 @@ function NavigationLinks({
           pathname === item.href ||
           (item.href !== '/dashboard' && pathname.startsWith(`${item.href}/`));
         const Icon = item.icon;
+        const alerts = item.href === '/interacciones' ? interactionAlerts : 0;
         if (compact) {
           return (
             <Link
@@ -72,6 +97,7 @@ function NavigationLinks({
             >
               <Icon aria-hidden className="size-4" />
               {item.label}
+              <NavAlert count={alerts} />
               <LinkPending />
             </Link>
           );
@@ -94,11 +120,25 @@ function NavigationLinks({
               className={cn('size-4', active && 'text-[var(--accent-ink)]')}
             />
             {item.label}
+            <NavAlert count={alerts} />
             <LinkPending />
           </Link>
         );
       })}
     </nav>
+  );
+}
+
+/** El número, no un punto: «3 personas» y «una» no piden lo mismo. */
+function NavAlert({ count }: Readonly<{ count: number }>) {
+  if (count <= 0) return null;
+  return (
+    <span
+      aria-label={`${count} novedades`}
+      className="ml-auto grid min-w-5 place-items-center rounded-full bg-[var(--volt)] px-1.5 text-[11px] font-bold text-[var(--accent-contrast)]"
+    >
+      {count > 99 ? '99+' : count}
+    </span>
   );
 }
 

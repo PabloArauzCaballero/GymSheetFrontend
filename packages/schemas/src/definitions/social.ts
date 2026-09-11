@@ -58,8 +58,21 @@ export const gymDirectoryEntrySchema = z.object({
   connectionId: z.string().uuid().nullable(),
   /** Solo llega si hay conexión aceptada y la otra persona lo marcó visible. */
   socialStatus: z.enum(socialStatusValues).nullable(),
-  /** Su primera foto de perfil, o `null` si no subió ninguna. */
+  /**
+   * Su primera foto de perfil, o `null` si no subió ninguna.
+   *
+   * Es `photos[0]`. Se mantiene aparte porque hay superficies —la tira de
+   * conexiones, el avatar del chat— que sólo necesitan la portada y no deben
+   * cargar con la galería.
+   */
   photoUrl: z.string().nullable(),
+  /**
+   * La galería completa, en el orden en que la persona la ordenó, hasta 6.
+   * Es lo que recorre el carrusel de la tarjeta de descubrimiento.
+   */
+  photos: z.array(z.object({ id: z.string().uuid(), url: z.string() })),
+  /** Años. Nulo mientras la persona no haya registrado sus medidas. */
+  age: z.number().int().nullable(),
   gender: z.enum(["MALE", "FEMALE", "UNSPECIFIED"]).nullable(),
   experienceLevel: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).nullable(),
   points: z.number().nullable(),
@@ -164,3 +177,43 @@ export type StartConversationResponse = z.infer<typeof startConversationResponse
 /** Boleto de un solo uso para el handshake del socket de `/chat` — nunca el JWT real. */
 export const socketTicketSchema = z.object({ ticket: z.string() });
 export type SocketTicket = z.infer<typeof socketTicketSchema>;
+
+
+/**
+ * Interacciones recibidas y enviadas: quién me dio like, a quién le di like,
+ * quién me descartó y a quién descarté.
+ *
+ * Las cuatro devuelven la **misma ficha** que la baraja (`gymDirectoryEntry`)
+ * más la marca de tiempo de la interacción, para que la tarjeta se pinte con
+ * un único componente en vez de con cuatro variantes que se desincronizan.
+ */
+export const likeReceivedSchema = gymDirectoryEntrySchema.extend({
+  /** La solicitud pendiente que hay que aceptar o rechazar. */
+  connectionId: z.string().uuid(),
+  likedAt: z.string(),
+});
+export type LikeReceived = z.infer<typeof likeReceivedSchema>;
+
+export const likeSentSchema = gymDirectoryEntrySchema.extend({
+  /** La solicitud que se puede retirar mientras siga pendiente. */
+  connectionId: z.string().uuid(),
+  likedAt: z.string(),
+});
+export type LikeSent = z.infer<typeof likeSentSchema>;
+
+/** Un descarte. `passedAt` es cuándo ocurrió; no hay estados intermedios. */
+export const discoveryPassEntrySchema = gymDirectoryEntrySchema.extend({
+  passedAt: z.string(),
+});
+export type DiscoveryPassEntry = z.infer<typeof discoveryPassEntrySchema>;
+
+/** Contadores de la cabecera de Interacciones y del badge de la pestaña. */
+export const interactionCountsSchema = z.object({
+  likesReceived: z.number().int().min(0),
+  likesSent: z.number().int().min(0),
+  passesReceived: z.number().int().min(0),
+  passesSent: z.number().int().min(0),
+  /** Espectadores únicos que aún no se han revisado. */
+  profileViewsNew: z.number().int().min(0),
+});
+export type InteractionCounts = z.infer<typeof interactionCountsSchema>;

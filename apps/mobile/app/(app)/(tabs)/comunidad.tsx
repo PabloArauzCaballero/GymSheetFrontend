@@ -17,6 +17,11 @@ import { StoriesBar } from '@/components/stories-bar';
 import { Button, Input } from '@/components/ui';
 import { PressableScale } from '@/components/motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
+import {
+  InteractionsBadge,
+  interactionsAlertTotal,
+  useInteractionCounts,
+} from '@/components/interactions-counts';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { notify } from '@/notifications';
 import { initialsOf } from '@/lib/format';
@@ -24,12 +29,18 @@ import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing 
 import { TRAINING_GOAL_LABEL } from '@/lib/social-labels';
 
 /**
- * El icono de mensaje en la esquina, no un menú.
+ * Los iconos en la esquina, no un menú.
  *
  * La versión anterior aterrizaba en un panel con tres accesos — Directorio,
  * Solicitudes, Mis conexiones — antes de enseñar a una sola persona. Pablo
  * pidió Instagram fundido con Tinder: la gente aparece de entrada, con sus
  * filtros arriba, y los mensajes viven detrás de un ícono, no de un menú.
+ *
+ * Interacciones entra por la misma puerta y por la misma razón. Son las dos
+ * bandejas de entrada de la parte social —lo que te han escrito y lo que han
+ * hecho contigo— y las dos van donde ya se mira, en la esquina superior, no
+ * detrás de una lista de opciones que habría que abrir para descubrir que hay
+ * algo nuevo.
  */
 function CommunityHeader({ onOpenPreferences }: { onOpenPreferences: () => void }) {
   const router = useRouter();
@@ -41,34 +52,30 @@ function CommunityHeader({ onOpenPreferences }: { onOpenPreferences: () => void 
     staleTime: 30_000,
   });
   const hasPendingReceived = (pending.data ?? []).some((connection) => connection.direction === 'RECEIVED');
+  // Aquí sí un número y no un punto: «alguien te dio like» y «siete personas te
+  // dieron like» piden entrar con urgencias distintas, y el dato ya existe.
+  const counts = useInteractionCounts();
+  const interactionsTotal = interactionsAlertTotal(counts.data);
 
+  /**
+   * Los iconos arriba y el título debajo, no los dos en la misma línea.
+   *
+   * Con dos iconos cabían al lado del título justo. Con el tercero ya no: tres
+   * objetivos táctiles de 44 más sus huecos dejan al título unos 170 puntos, y
+   * «Comunidad» a tamaño de display mide casi 200. Como es una sola palabra no
+   * puede partirse, así que el resultado no era un salto de línea sino una
+   * palabra recortada o desbordada — el mismo fallo que ya obligó a sacar
+   * pestañas de la barra inferior.
+   *
+   * La salida no es encoger el título ni esconder un icono en un menú: es la
+   * composición que usa el propio sistema para un título grande, con los
+   * botones en la barra de encima. Los iconos siguen en la esquina, que es la
+   * decisión de producto; lo único que cambia es que dejan de competir por el
+   * mismo renglón.
+   */
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-        gap: spacing.md,
-      }}
-    >
-      <View style={{ flex: 1, gap: spacing.xs }}>
-        <Text
-          accessibilityRole="header"
-          style={{
-            color: colors.text,
-            fontSize: fontSizes.display,
-            fontWeight: semibold,
-            letterSpacing: fontSizes.display * -0.03,
-            lineHeight: fontSizes.display * 1.05,
-          }}
-        >
-          Comunidad
-        </Text>
-        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
-          Socios de tu gimnasio, filtrados por lo que buscas.
-        </Text>
-      </View>
-      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+    <View style={{ gap: spacing.md }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm }}>
         <PressableScale
           accessibilityLabel="Preferencias de búsqueda"
           onPress={onOpenPreferences}
@@ -82,6 +89,25 @@ function CommunityHeader({ onOpenPreferences }: { onOpenPreferences: () => void 
           }}
         >
           <Ionicons color={colors.text} name="options-outline" size={iconSizes.lg} />
+        </PressableScale>
+        <PressableScale
+          accessibilityLabel={
+            interactionsTotal > 0
+              ? `Interacciones, ${interactionsTotal} ${interactionsTotal === 1 ? 'novedad' : 'novedades'}`
+              : 'Interacciones'
+          }
+          onPress={() => router.push('/interacciones')}
+          style={{
+            width: minTouchTarget,
+            height: minTouchTarget,
+            borderRadius: radii.full,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: colors.surfaceHigh,
+          }}
+        >
+          <Ionicons color={colors.text} name="heart-outline" size={iconSizes.lg} />
+          <InteractionsBadge total={interactionsTotal} />
         </PressableScale>
         <PressableScale
           accessibilityLabel="Mensajes y solicitudes"
@@ -112,6 +138,24 @@ function CommunityHeader({ onOpenPreferences }: { onOpenPreferences: () => void 
             />
           ) : null}
         </PressableScale>
+      </View>
+
+      <View style={{ gap: spacing.xs }}>
+        <Text
+          accessibilityRole="header"
+          style={{
+            color: colors.text,
+            fontSize: fontSizes.display,
+            fontWeight: semibold,
+            letterSpacing: fontSizes.display * -0.03,
+            lineHeight: fontSizes.display * 1.05,
+          }}
+        >
+          Comunidad
+        </Text>
+        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
+          Socios de tu gimnasio, filtrados por lo que buscas.
+        </Text>
       </View>
     </View>
   );

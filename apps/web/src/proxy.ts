@@ -41,6 +41,7 @@ export const knownRoutes = new Set([
   'comunidad',
   'dashboard',
   'exercises',
+  'interacciones',
   'membership',
   'notifications',
   'onboarding',

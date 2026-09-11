@@ -26,6 +26,27 @@ const allowedCases: Array<[string[], string]> = [
   [['me', 'conversations'], '/me/conversations'],
   [['me', 'conversations', id, 'messages'], `/me/conversations/${id}/messages`],
   [['public', 'facilities', 'branches'], '/public/facilities/branches'],
+  // R6: descubrimiento, stories, vistas de perfil e interacciones.
+  [['me', 'gym-directory', id], `/me/gym-directory/${id}`],
+  // Las sedes del gimnasio propio: es la que alimenta el filtro por sucursal.
+  [['me', 'facilities', 'branches'], '/me/facilities/branches'],
+  [['me', 'discovery', 'deck'], '/me/discovery/deck'],
+  [['me', 'discovery', 'swipes'], '/me/discovery/swipes'],
+  [['me', 'discovery', 'swipes', 'undo'], '/me/discovery/swipes/undo'],
+  [['me', 'stories'], '/me/stories'],
+  [['me', 'stories', 'feed'], '/me/stories/feed'],
+  [['me', 'stories', id], `/me/stories/${id}`],
+  [['me', 'stories', id, 'view'], `/me/stories/${id}/view`],
+  [['me', 'stories', id, 'viewers'], `/me/stories/${id}/viewers`],
+  [['me', 'profile-views'], '/me/profile-views'],
+  [['me', 'profile-views', 'summary'], '/me/profile-views/summary'],
+  [['me', 'profile-views', 'checked'], '/me/profile-views/checked'],
+  [['me', 'interactions', 'likes-received'], '/me/interactions/likes-received'],
+  [['me', 'interactions', 'likes-sent'], '/me/interactions/likes-sent'],
+  [['me', 'interactions', 'passes-received'], '/me/interactions/passes-received'],
+  [['me', 'interactions', 'passes-sent'], '/me/interactions/passes-sent'],
+  [['me', 'interactions', 'counts'], '/me/interactions/counts'],
+  [['me', 'interactions', 'passes', id], `/me/interactions/passes/${id}`],
 ];
 const blockedCases: Array<[string[]]> = [
   [['admin', 'access', 'mock', 'events']],
@@ -38,6 +59,12 @@ const blockedCases: Array<[string[]]> = [
   // use sería dejar accesible desde el navegador una API que nadie vigila.
   [['admin', 'progression', 'badges']],
   [['admin', 'progression', 'levels']],
+  // Las interacciones son cuatro listas concretas, no un prefijo abierto: una
+  // entrada comodín bajo `/me/interactions` publicaría al navegador cualquier
+  // ruta que el backend añada ahí mañana.
+  [['me', 'interactions']],
+  [['me', 'interactions', 'blocked']],
+  [['me', 'discovery']],
 ];
 
 describe('backend route policy', () => {

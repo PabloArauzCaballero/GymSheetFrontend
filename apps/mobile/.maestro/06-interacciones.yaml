@@ -1,0 +1,38 @@
+# Las tres pestañas de Interacciones, alcanzadas por enlace profundo.
+#
+# Va por `openLink` y no navegando desde Comunidad a propósito: llegar hasta
+# aquí a mano son seis toques y cada uno es una oportunidad de que el flujo se
+# rompa por un motivo que no tiene nada que ver con lo que se quiere fotografiar.
+# El enlace profundo es además un camino real —una notificación aterriza así—,
+# de modo que probarlo tiene valor por sí mismo.
+#
+# La sesión ya está abierta: este flujo se ejecuta después del 05.
+appId: app.gymsheet.mobile
+name: 06 · Interacciones — likes, visitas y nexts
+---
+- openLink: gymsheet://interacciones
+# iOS pide confirmación al abrir un esquema propio desde fuera de la app.
+- tapOn:
+    text: 'Abrir'
+    optional: true
+- extendedWaitUntil:
+    visible: 'Quién te dio like, quién vio tu perfil y quién pasó de largo.'
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 35-interacciones-likes
+- tapOn: 'Visitas'
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 36-interacciones-visitas
+- tapOn: 'Nexts'
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 37-interacciones-nexts
+# La otra cara de Nexts: a quién descarté yo, que sí tiene acción.
+- tapOn:
+    text: 'Descarté'
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 38-interacciones-descarte-propio

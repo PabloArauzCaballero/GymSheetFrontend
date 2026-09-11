@@ -15,6 +15,7 @@ import {
   Settings,
   ShieldCheck,
   Signpost,
+  Sparkles,
   Users,
   Users2,
 } from 'lucide-react';
@@ -38,6 +39,10 @@ export const primaryNavigation: NavigationItem[] = [
   { href: '/routines', label: 'Rutinas', icon: ClipboardList },
   { href: '/exercises', label: 'Ejercicios', icon: Dumbbell },
   { href: '/comunidad', label: 'Comunidad', icon: Users2 },
+  // Pegada a Comunidad: es lo que pasó ahí mientras no mirabas (likes, vistas
+  // de perfil, next). Lleva el único indicador numérico de la navegación, así
+  // que enterrarla al final la volvería una notificación que nadie atiende.
+  { href: '/interacciones', label: 'Interacciones', icon: Sparkles },
   { href: '/chat', label: 'Chat', icon: MessageCircle },
   { href: '/membership', label: 'Membresía', icon: IdCard },
   { href: '/access', label: 'Acceso', icon: KeyRound },
