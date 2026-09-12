@@ -60,12 +60,45 @@ vivo. Ver `apps/web/src/shared/config/backend-origin.ts`.
 para todos los recursos del servidor sobre los que tenga permiso). El webhook sí es distinto: cada
 aplicación tiene el suyo.
 
+## Dev tunnel de acceso anónimo (Tailscale Funnel)
+
+El servicio `tunnel` del compose expone este frontend en internet **sin necesidad de estar en la
+tailnet** — acceso anónimo, como cualquier sitio público — vía Tailscale Funnel:
+`https://gymsheet-frontend.taila8f993.ts.net`.
+
+**Por qué es un nodo de tailnet propio y no reutiliza el `pablo-h310` del VPS.** Tailscale Funnel
+solo admite tres puertos por nodo (`443`, `8443`, `10000`), y los tres del VPS ya sirven `/` de
+otras aplicaciones (Atlas, alovida...). En vez de pelear por una ruta bajo esos puertos —lo que
+además obligaría a Next a servir con un `basePath`, rompiendo rutas absolutas—, el servicio
+`tunnel` se une a la tailnet como un dispositivo independiente (hostname `gymsheet-frontend`) con
+su propio `:443` libre.
+
+**Cómo funciona.** La imagen oficial `tailscale/tailscale` trae un entrypoint (`containerboot`)
+que lee variables de entorno y arranca `tailscaled` + `tailscale up` solo. `TS_SERVE_CONFIG`
+apunta a `deploy/tailscale-serve.json` (montado de solo lectura desde este mismo repo, con el
+formato que devuelve `tailscale serve status --json`), y `containerboot` lo aplica automáticamente
+tras conectarse: sirve el frontend en `https://gymsheet-frontend.taila8f993.ts.net` y reenvía el
+tráfico hacia `http://gymsheet-frontend:3001` (el alias interno de `web` en la red `coolify`).
+Userspace networking por defecto: no requiere `NET_ADMIN` ni `/dev/net/tun`.
+
+**Requiere el secret `TS_AUTHKEY` en la interfaz de Coolify** (no en GitHub — este corre en el
+contenedor desplegado, no en CI). Se genera en
+[Tailscale admin console → Settings → Keys → Generate auth key](https://login.tailscale.com/admin/settings/keys),
+marcada **Reusable** (para que sobreviva a cada redeploy sin regenerarla) y sin marcar
+**Ephemeral** (para que el nodo no desaparezca de la tailnet si el contenedor se reinicia).
+
+Sin ese secret, el servicio `tunnel` falla al arrancar, pero es aditivo: `web` sigue sirviendo
+normal por la red `coolify`, solo no hay acceso público anónimo hasta que se ponga la key.
+
+Si el hostname de la tailnet cambia (otra cuenta, otra organización), el suffix
+`taila8f993.ts.net` hay que actualizarlo en `deploy/tailscale-serve.json` — es el nombre de la
+tailnet actual, no algo que dependa del código.
+
 ## Lo que sigue pendiente y no depende del código
 
 - El dominio público del backend (bloquea el chat en vivo, arriba). Cuando exista: variable
   `BACKEND_PUBLIC_ORIGIN` y reinicio.
-- El dominio público del frontend, si debe verse desde fuera de la tailnet. Cuando exista, conviene
-  actualizar también `APP_URL` (la usan `robots.txt` y `sitemap.xml`, hoy en `http://localhost:3001`).
+- El secret `TS_AUTHKEY` en Coolify, para que el dev tunnel de arriba quede activo.
 
 ## Compilaciones móviles (EAS)
 
