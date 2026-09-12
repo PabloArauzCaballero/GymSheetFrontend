@@ -11,7 +11,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import type { ProgressionBadge, ProgressionLevel } from '@gymsheet/schemas';
-import { PressableScale } from '@/components/motion';
+import { CountUpText, PressableScale } from '@/components/motion';
 import {
   accentPolicy,
   cardGap,
@@ -431,12 +431,24 @@ export function RankHero({
   pointsToNextLevel,
   levelProgress,
   onPress,
+  contarPuntos = false,
 }: {
   level: ProgressionLevel | null;
   nextLevel: ProgressionLevel | null;
   points: number;
   pointsToNextLevel: number | null;
   levelProgress: number;
+  /**
+   * Hace que la cifra SUBA contando al entrar, en vez de aparecer puesta.
+   *
+   * Apagado por defecto y encendido solo en la senda. Esta misma cabecera la
+   * pintan Inicio y Perfil, donde los puntos son un dato de paso entre otros
+   * muchos: ahí la cuenta sería un número inquieto en mitad de una pantalla que
+   * se lee de un vistazo. En la senda es lo contrario — la pantalla existe por
+   * esa cifra, y verla subir es lo que convierte «tengo 1.240 puntos» en «he
+   * ganado 1.240 puntos».
+   */
+  contarPuntos?: boolean;
   /**
    * Abre la celebración del rango actual.
    *
@@ -521,18 +533,21 @@ export function RankHero({
       </Text>
 
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs }}>
-        <Text
-          style={{
+        {(() => {
+          const cifra = {
             // Texto sobre la tarjeta: `ink`. El acento puro del inquilino rojo
             // se queda en 4,22:1 contra esta superficie, por debajo de AA.
             color: accentPolicy.ink,
             fontSize: fontSizes['2xl'],
             fontWeight: semibold,
             letterSpacing: fontSizes['2xl'] * -0.03,
-          }}
-        >
-          {points.toLocaleString('es-ES')}
-        </Text>
+          } as const;
+          return contarPuntos ? (
+            <CountUpText style={cifra} value={points} />
+          ) : (
+            <Text style={cifra}>{points.toLocaleString('es-ES')}</Text>
+          );
+        })()}
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>puntos</Text>
       </View>
 

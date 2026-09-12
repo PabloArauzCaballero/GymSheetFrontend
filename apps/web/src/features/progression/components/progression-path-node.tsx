@@ -82,6 +82,11 @@ export function PathNode({
           >
             {level.name}
           </span>
+          {/* El unico chip de la aplicacion que NO late, y a proposito: esta
+              pegado al nodo cuyo anillo ya late, y late para decir exactamente
+              lo mismo que el —«estas aqui»—. Dos latidos juntos, a distinto
+              ritmo (el del anillo va sincronizado con el del movil, 2.4 s), se
+              leen como un fallo de pintado en vez de como un acento. */}
           {level.current ? (
             <span
               className="rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider"

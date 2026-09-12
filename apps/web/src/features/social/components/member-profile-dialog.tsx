@@ -13,6 +13,7 @@ import { Skeleton, SkeletonScreen } from '@/shared/components/feedback/skeleton'
 import { DomainImage } from '@/shared/components/media/domain-image';
 import { Dialog, DialogContent } from '@/shared/components/ui/dialog';
 import { trainingGoalLabels } from './directory-labels';
+import { chipHeartbeat } from '@/shared/components/ui/badge';
 
 /**
  * La ficha de un socio, con lo que ha conseguido.
@@ -116,7 +117,7 @@ export function MemberProfileDialog({
 function BadgeChip({ badge }: Readonly<{ badge: EarnedBadge }>) {
   return (
     <li
-      className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm"
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${chipHeartbeat}`}
       style={{
         borderColor: withAlpha(badge.color, 0.35),
         backgroundColor: withAlpha(badge.color, 0.12),

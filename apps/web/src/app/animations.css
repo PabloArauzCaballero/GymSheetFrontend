@@ -210,6 +210,41 @@
   }
 }
 
+/**
+ * Latido de los chips.
+ *
+ * Un corazon no hace una onda senoidal: da dos golpes seguidos y descansa. Esa
+ * forma —golpe fuerte, golpe corto, silencio largo— es lo que hace que se lea
+ * como un latido y no como algo que palpita sin parar. El silencio ocupa dos
+ * tercios del ciclo a proposito: es lo que separa un acento de un estrobo.
+ *
+ * La escala se queda en 1.045. Un chip es una pildora pequeña pegada a un
+ * texto; cualquier cosa mayor empuja visualmente a lo que tiene al lado y se
+ * convierte en el elemento mas llamativo de la pantalla, que es justo lo que un
+ * chip no debe ser. No se toca la opacidad: estos chips llevan texto, y
+ * atenuarlo cada dos segundos lo vuelve incomodo de leer.
+ *
+ * Se consume con `motion-safe:` porque el bloque de «reducir movimiento» de mas
+ * abajo NO apaga un bucle infinito: le recorta la duracion a 0.01 ms y lo deja
+ * vibrando, que es peor que no tenerlo. Ver la nota de `progression-heartbeat`.
+ */
+@keyframes chip-heartbeat {
+  0%,
+  34%,
+  100% {
+    transform: scale(1);
+  }
+  8% {
+    transform: scale(1.045);
+  }
+  17% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.028);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

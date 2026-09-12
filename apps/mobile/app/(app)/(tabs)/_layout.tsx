@@ -11,7 +11,6 @@ import ReAnimated, {
 } from 'react-native-reanimated';
 import { useAuthStore } from '@/state/auth-store';
 import { useTourStore } from '@/state/tour-store';
-import { TourOverlay } from '@/components/tour';
 import {
   formatBadgeCount,
   interactionsAlertTotal,

@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, MapPin, Target, User } from 'lucide-react';
 import { useState } from 'react';
 import type { GymDirectoryEntry, SwipeDirection } from '@/shared/api/schemas';
 import { DomainImage } from '@/shared/components/media/domain-image';
+import { chipHeartbeat } from '@/shared/components/ui/badge';
 import { trainingGoalLabels } from './directory-labels';
 
 const EXPERIENCE_LABELS: Record<string, string> = {
@@ -89,8 +90,18 @@ export function SwipeCard({
             </span>
           ) : null}
         </div>
+        {/* Este chip no puede ser `Badge`: va sobre la foto, con la paleta
+            invertida del degradado. Toma de alli solo el latido, para que sea
+            literalmente el mismo movimiento que el del resto de la aplicacion y
+            no una copia que se desincronice al retocar uno de los dos.
+
+            Late solo el de la carta de encima. Las de debajo asoman por los
+            bordes, y algo latiendo en un monton de cartas apiladas parece un
+            fallo de pintado, no un acento. */}
         {experience ? (
-          <span className="w-fit rounded-[var(--radius-sm)] border border-white/30 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em]">
+          <span
+            className={`w-fit rounded-[var(--radius-sm)] border border-white/30 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] ${isTop ? chipHeartbeat : ''}`}
+          >
             {experience}
           </span>
         ) : null}

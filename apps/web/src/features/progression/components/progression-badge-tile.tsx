@@ -4,6 +4,7 @@ import { cn } from '@/shared/lib/cn';
 import { RARITY_LABEL, withAlpha } from './progression-colors';
 import { ProgressionIcon } from './progression-icon';
 import { ProgressTrack } from './progression-track';
+import { chipHeartbeat } from '@/shared/components/ui/badge';
 
 /**
  * Una insignia.
@@ -67,7 +68,7 @@ export function BadgeTile({
         </div>
         {badge.isNew ? (
           <span
-            className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${chipHeartbeat}`}
             style={{ backgroundColor: withAlpha(badge.color, 0.2), color: badge.color }}
           >
             NUEVA

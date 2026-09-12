@@ -1,4 +1,5 @@
 import type { ProgressionLevel } from '@/shared/api/schemas';
+import { CountUp } from '@/shared/components/motion/count-up';
 import { withAlpha } from './progression-colors';
 import { ProgressionIcon } from './progression-icon';
 import { ProgressTrack } from './progression-track';
@@ -59,15 +60,33 @@ export function RankHero({
         {level?.tagline ?? 'Registra tu primer entrenamiento y la senda empieza.'}
       </p>
 
+      {/* La cifra SUBE al entrar, no aparece puesta.
+          Esta pantalla existe por este número, y verlo contar es lo que
+          convierte «tengo 1.240 puntos» en «he ganado 1.240 puntos». Cuenta en
+          cada visita, no solo cuando cambia: entrar a la senda es justamente el
+          gesto de venir a mirarlo.
+
+          `CountUp` ya respeta «reducir movimiento» —salta al valor final— y
+          `es-ES` se pasa explícito para no heredar el `es-BO` por defecto y que
+          los miles se separen igual que en el resto de la pantalla.
+
+          El número que cambia queda oculto al lector de pantalla y al lado va
+          la cifra final: si no, anuncia cada fotograma de la cuenta. */}
       <p className="flex items-baseline gap-2">
         {/* `--accent-ink`, no `--volt`: en oscuro valen lo mismo (#c3f400), así que el
             fallo era invisible al desarrollar; en claro `--volt` sigue siendo #c3f400
             sobre superficie clara —1.3:1— y la cifra desaparecía. `--accent-ink` baja
             a #55730a en claro y da 5.5:1. `--volt` queda para rellenos y CTA. */}
-        <span className="text-4xl font-semibold tracking-[-0.03em] text-[var(--accent-ink)]">
-          {points.toLocaleString('es-ES')}
+        <span
+          aria-hidden
+          className="text-4xl font-semibold tracking-[-0.03em] text-[var(--accent-ink)] tabular-nums"
+        >
+          <CountUp locale="es-ES" value={points} />
         </span>
-        <span className="text-sm text-[var(--text-muted)]">puntos</span>
+        <span className="sr-only">{`${points.toLocaleString('es-ES')} puntos`}</span>
+        <span aria-hidden className="text-sm text-[var(--text-muted)]">
+          puntos
+        </span>
       </p>
 
       <div className="grid gap-1.5">

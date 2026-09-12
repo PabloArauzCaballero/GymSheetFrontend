@@ -52,7 +52,13 @@ for (const absolute of await walk(sourceRoot)) {
   if (/(@ts-ignore|@ts-nocheck|\bas any\b)/u.test(content)) {
     findings.push(`${relative}: unsafe TypeScript suppression or cast`);
   }
-  if (!relative.startsWith(themeSourceDirectory) && !relative.endsWith('.test.ts')) {
+  // Las pruebas quedan fuera: un color en un fixture no es identidad de marca,
+  // es el dato que el backend manda puesto a mano para poder comprobarlo. La
+  // lista decía solo `.test.ts` porque hasta ahora ninguna prueba `.tsx` había
+  // necesitado un color; la intención era «las pruebas», no «las pruebas sin
+  // JSX».
+  const isTest = relative.endsWith('.test.ts') || relative.endsWith('.test.tsx');
+  if (!relative.startsWith(themeSourceDirectory) && !isTest) {
     let inBlockComment = false;
     for (const [index, rawLine] of content.split(/\r?\n/u).entries()) {
       // La regla es sobre CÓDIGO: un literal que clava la identidad de marca.

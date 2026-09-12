@@ -1,5 +1,6 @@
-import { Children, useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { Children, useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
 import {
   RefreshControl,
   ScrollView,
@@ -14,7 +15,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AmbientBackground } from '@/components/ambient';
 import { useTourStore } from '@/state/tour-store';
-import { EnterUp, PressableScale } from '@/components/motion';
+import { EnterUp, Heartbeat, PressableScale } from '@/components/motion';
 import { accentPolicy, cardGap, cardPadding, colors, fontSizes, iconSizes, maxContentWidth, maxWideContentWidth, minTouchTarget, radii, screenGap, sectionGap, semibold, spacing, tabletBreakpoint, tones } from '@/theme';
 
 /**
@@ -87,9 +88,7 @@ export function ScrollScreen({
   const offsetRef = useRef(0);
   const registerScroller = useTourStore((state) => state.registerScroller);
 
-  // Lets the guided tour bring an anchor into view. Registered on mount and
-  // cleared on unmount, so the last screen to mount is the one that scrolls —
-  // which on a stack is exactly the one the user is looking at.
+  // Lets the guided tour bring an anchor into view.
   const scroller = useMemo(
     () => ({
       scrollBy: (deltaY: number) => {
@@ -105,10 +104,31 @@ export function ScrollScreen({
     }),
     [],
   );
-  useEffect(() => {
-    registerScroller(scroller);
-    return () => registerScroller(null);
-  }, [registerScroller, scroller]);
+  /**
+   * Se registra al RECIBIR EL FOCO, no al montar.
+   *
+   * Montar y estar a la vista no son lo mismo aquí. Las pestañas se quedan
+   * montadas para siempre tras la primera visita, asi que registrar en el
+   * montaje dejaba al tour moviendo la lista de la ultima pestaña *estrenada*
+   * en vez de la que la persona tiene delante; y al cerrar una pantalla de la
+   * pila, su desmontaje ponia el registro a `null` y la pestaña de debajo
+   * —visible y montada, pero sin volver a montarse— se quedaba sin forma de
+   * desplazarse. En ambos casos el foco del tutorial acababa señalando a un
+   * sitio donde no habia nada.
+   *
+   * La limpieza solo borra lo que es suyo: al navegar, el foco de la pantalla
+   * nueva y el desenfoque de la vieja no llegan en un orden garantizado, y sin
+   * esta comprobacion la que se va puede borrar el registro que la que llega
+   * acaba de dejar.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      registerScroller(scroller);
+      return () => {
+        if (useTourStore.getState().scroller === scroller) registerScroller(null);
+      };
+    }, [registerScroller, scroller]),
+  );
   // A two-column page needs room for two columns; keeping the phone cap on a
   // tablet is what leaves a narrow strip of content framed by black.
   const gutter = Math.max(spacing.lg, (width - (wide ? maxWideContentWidth : maxContentWidth)) / 2);
@@ -510,9 +530,29 @@ export function StatTile({
 
 export type BadgeTone = keyof typeof tones.dark;
 
-export function Badge({ label, tone = 'info' }: { label: string; tone?: BadgeTone }) {
+/**
+ * El chip late, y late aqui.
+ *
+ * Va en el componente compartido y no repetido en cada pantalla: es lo unico
+ * que hace que «los chips laten en toda la aplicacion» siga siendo cierto
+ * dentro de seis meses, cuando alguien añada el chip numero veinte sin haber
+ * leido esto. Es el mismo latido que la web (`@keyframes chip-heartbeat`).
+ *
+ * `latido={false}` para el chip que ya vive dentro de algo que se mueve —una
+ * tarjeta que entra, una baraja que se arrastra—: dos movimientos superpuestos
+ * no suman, se pelean.
+ */
+export function Badge({
+  label,
+  tone = 'info',
+  latido = true,
+}: {
+  label: string;
+  tone?: BadgeTone;
+  latido?: boolean;
+}) {
   const palette = tones.dark[tone];
-  return (
+  const chip = (
     <View
       style={{
         alignSelf: 'flex-start',
@@ -529,6 +569,7 @@ export function Badge({ label, tone = 'info' }: { label: string; tone?: BadgeTon
       </Text>
     </View>
   );
+  return latido ? <Heartbeat>{chip}</Heartbeat> : chip;
 }
 
 /** Thin divider for stacked rows inside one card. */

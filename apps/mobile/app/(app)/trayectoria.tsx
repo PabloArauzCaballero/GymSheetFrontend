@@ -180,6 +180,7 @@ export default function TrayectoriaScreen() {
         />
 
         <RankHero
+          contarPuntos
           level={data.level}
           levelProgress={data.levelProgress}
           nextLevel={data.nextLevel}
