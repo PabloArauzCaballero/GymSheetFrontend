@@ -27,7 +27,8 @@ function mergeMessages(existing: Message[], incoming: Message) {
 export function MessageThreadClient({
   conversationId,
   currentUserId,
-}: Readonly<{ conversationId: string; currentUserId: string }>) {
+  socketOrigin,
+}: Readonly<{ conversationId: string; currentUserId: string; socketOrigin: string }>) {
   const history = useQuery({
     queryKey: queryKeys.messages(conversationId),
     queryFn: () => chatService.listMessages(conversationId),
@@ -48,7 +49,7 @@ export function MessageThreadClient({
   const bottomRef = useRef<HTMLDivElement>(null);
   const joinedRef = useRef(false);
 
-  const { connectionState, joinConversation, sendMessage } = useChatSocket((incoming) => {
+  const { connectionState, joinConversation, sendMessage } = useChatSocket(socketOrigin, (incoming) => {
     if (incoming.conversationId !== conversationId) return;
     setLiveMessages((current) => mergeMessages(current, incoming));
   });

@@ -23,6 +23,9 @@ services:
       NODE_ENV: production
       PORT: '3002'
       HOSTNAME: 0.0.0.0
+      # Origen público del backend para el socket de chat, leído en ejecución. Tiene
+      # prioridad sobre el NEXT_PUBLIC_BACKEND_ORIGIN horneado arriba.
+      BACKEND_PUBLIC_ORIGIN: ${WEB_PUBLIC_BACKEND_ORIGIN:-http://localhost:3001}
       # URL del backend VISTA DESDE DENTRO del contenedor. El backend corre en otro
       # compose y publica su API en el puerto 3001 del host, así que se alcanza por
       # host.docker.internal:3001 (NO 'localhost', que dentro del contenedor es la

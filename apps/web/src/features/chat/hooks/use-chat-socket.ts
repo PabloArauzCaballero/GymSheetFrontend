@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import type { Message } from '@/shared/api/schemas';
-import { publicEnv } from '@/shared/config/public-env';
 import { chatService } from '../services/chat-service';
 
 export type ChatSocketConnectionState = 'connecting' | 'connected' | 'disconnected';
@@ -17,8 +16,12 @@ type SendAck = { ok: boolean; error?: string };
  * función se re-ejecuta en cada intento de conexión, incluidas las
  * reconexiones automáticas de Socket.IO — así cada intento pide un boleto
  * fresco en vez de reintentar uno ya consumido.
+ *
+ * `socketOrigin` llega como propiedad desde el servidor y no del bundle: la
+ * dirección del backend es un dato del despliegue, no de la imagen. Ver
+ * `shared/config/backend-origin.ts`.
  */
-export function useChatSocket(onMessage: (message: Message) => void) {
+export function useChatSocket(socketOrigin: string, onMessage: (message: Message) => void) {
   const socketRef = useRef<Socket | null>(null);
   const onMessageRef = useRef(onMessage);
   const [connectionState, setConnectionState] = useState<ChatSocketConnectionState>('connecting');
@@ -28,7 +31,7 @@ export function useChatSocket(onMessage: (message: Message) => void) {
   }, [onMessage]);
 
   useEffect(() => {
-    const socket = io(`${publicEnv.NEXT_PUBLIC_BACKEND_ORIGIN}/chat`, {
+    const socket = io(`${socketOrigin}/chat`, {
       transports: ['websocket'],
       auth: (callback: (data: object) => void) => {
         chatService
@@ -46,7 +49,7 @@ export function useChatSocket(onMessage: (message: Message) => void) {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, []);
+  }, [socketOrigin]);
 
   const joinConversation = useCallback((conversationId: string): Promise<boolean> => {
     return new Promise((resolve) => {

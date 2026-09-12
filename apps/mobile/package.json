@@ -9,7 +9,9 @@
     "ios": "expo run:ios",
     "type-check": "tsc --noEmit",
     "lint": "expo lint",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "eas-build-pre-install": "node scripts/check-api-url.mjs",
+    "check:api-url": "node scripts/check-api-url.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",

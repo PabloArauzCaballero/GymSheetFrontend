@@ -9,25 +9,27 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_ENVIRONMENT": "development",
-        "EXPO_PUBLIC_API_URL": "https://sol-cleaning-educational-planes.trycloudflare.com/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://CAMBIAR-POR-LA-URL-PUBLICA-DEL-BACKEND/api/v1"
+      },
+      "android": {
+        "buildType": "apk"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_ENVIRONMENT": "staging",
-        "EXPO_PUBLIC_API_URL": "https://sol-cleaning-educational-planes.trycloudflare.com/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://CAMBIAR-POR-LA-URL-PUBLICA-DEL-BACKEND/api/v1"
       },
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
-      "channel": "production",
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_ENVIRONMENT": "production",
-        "EXPO_PUBLIC_API_URL": "https://CAMBIAR-POR-EL-BACKEND-DE-PRODUCCION/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://CAMBIAR-POR-LA-URL-PUBLICA-DEL-BACKEND/api/v1"
       }
     }
   },
