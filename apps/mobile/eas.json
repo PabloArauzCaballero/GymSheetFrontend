@@ -9,7 +9,8 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_ENVIRONMENT": "development",
-        "EXPO_PUBLIC_API_URL": "https://gymsheet-backend.taila8f993.ts.net/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://gymsheet-backend.taila8f993.ts.net/api/v1",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       },
       "android": {
         "buildType": "apk"
@@ -19,7 +20,8 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_ENVIRONMENT": "staging",
-        "EXPO_PUBLIC_API_URL": "https://gymsheet-backend.taila8f993.ts.net/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://gymsheet-backend.taila8f993.ts.net/api/v1",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       },
       "android": {
         "buildType": "apk"
