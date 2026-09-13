@@ -9,7 +9,7 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_ENVIRONMENT": "development",
-        "EXPO_PUBLIC_API_URL": "https://CAMBIAR-POR-LA-URL-PUBLICA-DEL-BACKEND/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://gymsheet-backend.taila8f993.ts.net/api/v1"
       },
       "android": {
         "buildType": "apk"
@@ -19,7 +19,7 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_ENVIRONMENT": "staging",
-        "EXPO_PUBLIC_API_URL": "https://CAMBIAR-POR-LA-URL-PUBLICA-DEL-BACKEND/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://gymsheet-backend.taila8f993.ts.net/api/v1"
       },
       "android": {
         "buildType": "apk"
@@ -29,7 +29,7 @@
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_ENVIRONMENT": "production",
-        "EXPO_PUBLIC_API_URL": "https://CAMBIAR-POR-LA-URL-PUBLICA-DEL-BACKEND/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://gymsheet-backend.taila8f993.ts.net/api/v1"
       }
     }
   },

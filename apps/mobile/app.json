@@ -23,11 +23,17 @@
     },
     "android": {
       "package": "app.gymsheet.mobile",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -57,12 +63,26 @@
           "cameraPermission": "GymSheet usa la cámara para que hagas una foto y la publiques como story."
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#000000"
+        }
+      ],
       "./plugins/with-fmt-consteval-fix",
       "@sentry/react-native",
       "./plugins/with-path-spaces-fix"
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f836e62f-66c6-4216-a7bd-8d5ac49c8dd8"
+      }
+    },
+    "owner": "pablo28809"
   }
 }
