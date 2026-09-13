@@ -4,6 +4,7 @@ import { ApiError, type ApiErrorKind } from '@gymsheet/api-client';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NotificationRoot } from '@/notifications';
+import { PushRegistration } from '@/notifications/push-registration';
 
 const NON_RETRYABLE: ReadonlySet<ApiErrorKind> = new Set<ApiErrorKind>([
   'unauthorized',
@@ -42,6 +43,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <QueryClientProvider client={queryClient}>
           {children}
           <NotificationRoot />
+          <PushRegistration />
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

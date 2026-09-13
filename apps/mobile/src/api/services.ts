@@ -638,3 +638,23 @@ export const interactionsService = {
   counts: () =>
     apiClient.request('/me/interactions/counts', interactionCountsSchema, { method: 'GET' }),
 };
+
+/**
+ * Notificaciones push reales (Expo Push API). El backend nunca ve un token de
+ * FCM/APNs crudo, solo el `ExponentPushToken[...]` que entrega
+ * `Notifications.getExpoPushTokenAsync()` — ver `@/notifications/push`.
+ */
+const registerDeviceTokenResultSchema = z.object({ registered: z.boolean() });
+
+export const deviceTokenService = {
+  register: (input: { expoPushToken: string; platform: 'ANDROID' | 'IOS' }) =>
+    apiClient.request('/notifications/device-tokens', registerDeviceTokenResultSchema, {
+      method: 'POST',
+      body: input,
+    }),
+  unregister: (expoPushToken: string) =>
+    apiClient.request('/notifications/device-tokens', registerDeviceTokenResultSchema, {
+      method: 'DELETE',
+      body: { expoPushToken },
+    }),
+};

@@ -10,7 +10,7 @@
     "type-check": "tsc --noEmit",
     "lint": "expo lint",
     "test": "jest --passWithNoTests",
-    "eas-build-pre-install": "node scripts/check-api-url.mjs",
+    "eas-build-pre-install": "node scripts/ensure-install.mjs && node scripts/check-api-url.mjs",
     "check:api-url": "node scripts/check-api-url.mjs"
   },
   "dependencies": {
