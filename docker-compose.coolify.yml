@@ -79,23 +79,34 @@ services:
   # reportó como terminado. Con `:-` el compose siempre es válido; sin la key, solo este
   # contenedor entra en crash-loop (`containerboot` sale con error de auth) mientras `web` sigue
   # sirviendo normal — que es lo que "aditivo" significaba desde el principio.
+  #
+  # El JSON de TS_SERVE_CONFIG se escribe DENTRO del contenedor al arrancar, no por bind mount.
+  # También ocurrió en producción: cuando el primer intento (con `:?`) falló, Docker ya había
+  # preparado el mount y dejó `deploy/tailscale-serve.json` como DIRECTORIO VACÍO en el
+  # filesystem persistente de la aplicación en Coolify (`/data/coolify/applications/<uuid>/`).
+  # Los redeploys siguientes no lo arreglan solos: el sync de Coolify no reemplaza un directorio
+  # por un archivo del mismo nombre, así que cada redeploy repetía el mismo fallo
+  # ("read .../serve.json: is a directory") aunque el repo sí tuviera el archivo real. Generar el
+  # JSON con un heredoc en el propio entrypoint elimina esa clase de fallo por completo.
   tunnel:
     image: tailscale/tailscale:v1.90.6
     environment:
       TS_AUTHKEY: ${TS_AUTHKEY:-}
       TS_HOSTNAME: gymsheet-frontend
       TS_STATE_DIR: /var/lib/tailscale
-      # `containerboot` (el entrypoint real de esta imagen) aplica este archivo solo, con el mismo
-      # formato que devuelve `tailscale serve status --json` — nada de scripts propios frágiles.
-      TS_SERVE_CONFIG: /etc/tailscale/serve.json
+      TS_SERVE_CONFIG: /tmp/tailscale-serve.json
       TS_ACCEPT_DNS: 'false'
     volumes:
       - tailscale-frontend-state:/var/lib/tailscale
-      # Ruta relativa al checkout que Coolify clona: `--project-directory` de `docker compose` es
-      # la raíz de ESTE repo, así que resuelve igual que en local.
-      - ./deploy/tailscale-serve.json:/etc/tailscale/serve.json:ro
     networks:
       - coolify
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - |
+        cat > /tmp/tailscale-serve.json <<'JSON'
+        {"TCP":{"443":{"HTTPS":true}},"Web":{"gymsheet-frontend.taila8f993.ts.net:443":{"Handlers":{"/":{"Proxy":"http://gymsheet-frontend:3001"}}}},"AllowFunnel":{"gymsheet-frontend.taila8f993.ts.net:443":true}}
+        JSON
+        exec /usr/local/bin/containerboot
     restart: unless-stopped
     deploy:
       resources:
