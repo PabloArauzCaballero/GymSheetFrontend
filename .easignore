@@ -1,0 +1,29 @@
+# EAS Build archiva el repo ENTERO (es un monorepo Yarn Workspaces), no solo apps/mobile: por eso
+# el archivo pesaba 1.1 GB y tardaba ~6 min solo en subir. EAS reinstala dependencias desde cero en
+# la nube (yarn install), así que node_modules local es peso puro, nunca se usa.
+node_modules
+**/node_modules
+
+.next
+out
+dist
+coverage
+playwright-report
+test-results
+e2e-evidence
+e2e-evidence-theme
+.e2e-assets
+.turbo
+*.log
+*.tsbuildinfo
+.DS_Store
+graphify-out
+
+# apps/web no participa en absoluto del build de mobile.
+apps/web
+
+# Directorios nativos: EAS los regenera con `expo prebuild` a partir de app.json/plugins en cada
+# build. Llevarlos ya generados solo pesa y puede chocar con lo que el prebuild produciría.
+apps/mobile/android
+apps/mobile/ios
+apps/mobile/.expo
