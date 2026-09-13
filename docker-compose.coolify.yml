@@ -16,6 +16,11 @@
 #    (Tailscale admin console -> Settings -> Keys -> Generate auth key, marcada "Reusable" para que
 #    sobreviva a redeploys). Sin ese secret el sidecar no arranca, pero `web` sigue sirviendo normal
 #    por la red `coolify` — el tunnel es aditivo, nunca un requisito para que el frontend funcione.
+# 7. Solo `web` declara `build:` en este archivo (no hay otro servicio que comparta su imagen, a
+#    diferencia de GymSheetBackend con api/workers). Confirmado en los repos de Atlas: NUNCA
+#    `cache_from` apuntando al propio tag — en este VPS no hay registro, así que ese pull falla
+#    siempre con "pull access denied" y solo ensucia el log; la caché real la da el propio
+#    BuildKit del daemon, automática, sin declarar nada.
 name: gymsheet-frontend
 
 services:
@@ -24,8 +29,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      cache_from:
-        - gymsheet-frontend:coolify
       args:
         # Respaldo horneado, solo por si `BACKEND_PUBLIC_ORIGIN` no está definida.
         NEXT_PUBLIC_BACKEND_ORIGIN: 'http://localhost:3000'
