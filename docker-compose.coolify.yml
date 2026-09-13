@@ -71,10 +71,18 @@ services:
   # tres puertos de Funnel que ya usan otras apps del VPS. Userspace networking (`--tun`), así que
   # no pide NET_ADMIN ni /dev/net/tun — solo abre una conexión saliente hacia Tailscale y reenvía
   # tráfico HTTPS entrante a `web` por la red `coolify`, usando su alias interno.
+  #
+  # TS_AUTHKEY con `:-` (no `:?`) A PROPÓSITO: `:?` sin la variable hace que `docker compose`
+  # falle al INTERPOLAR el archivo, antes de tocar un solo contenedor — tumba TODO el stack,
+  # incluido `web`, no solo este servicio. Ocurrió en producción: el primer despliegue con este
+  # sidecar sin la key puesta no construyó ni arrancó nada, `web` incluido, y Coolify igual lo
+  # reportó como terminado. Con `:-` el compose siempre es válido; sin la key, solo este
+  # contenedor entra en crash-loop (`containerboot` sale con error de auth) mientras `web` sigue
+  # sirviendo normal — que es lo que "aditivo" significaba desde el principio.
   tunnel:
     image: tailscale/tailscale:v1.90.6
     environment:
-      TS_AUTHKEY: ${TS_AUTHKEY:?TS_AUTHKEY is required. Genera una reusable en https://login.tailscale.com/admin/settings/keys}
+      TS_AUTHKEY: ${TS_AUTHKEY:-}
       TS_HOSTNAME: gymsheet-frontend
       TS_STATE_DIR: /var/lib/tailscale
       # `containerboot` (el entrypoint real de esta imagen) aplica este archivo solo, con el mismo
