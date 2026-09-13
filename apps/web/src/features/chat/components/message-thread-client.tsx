@@ -1,102 +1,54 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { Send } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useChatSocket } from '@/features/chat/hooks/use-chat-socket';
-import { chatService } from '@/features/chat/services/chat-service';
-import type { Message } from '@/shared/api/schemas';
-import { queryKeys } from '@/shared/api/query-keys';
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { useChatThread } from '@/features/chat/hooks/use-chat-thread';
+import { dayDividerLabel } from '@/features/chat/lib/chat-time';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import {
   SkeletonPageHeader,
   SkeletonScreen,
   SkeletonThread,
 } from '@/shared/components/feedback/skeleton';
-import { Badge } from '@/shared/components/ui/badge';
+import { DomainImage } from '@/shared/components/media/domain-image';
 import { Button } from '@/shared/components/ui/button';
-import { PageHeader } from '@/shared/components/layout/page-header';
-import { cn } from '@/shared/lib/cn';
-import { notify } from '@/shared/notifications';
+import { Dialog, DialogContent } from '@/shared/components/ui/dialog';
+import { MessageBubble } from './message-bubble';
+import { MessageComposer } from './message-composer';
+import { ThreadHeader } from './thread-header';
 
-function mergeMessages(existing: Message[], incoming: Message) {
-  if (existing.some((message) => message.id === incoming.id)) return existing;
-  return [...existing, incoming];
+function sameDay(a: string, b: string): boolean {
+  return a.slice(0, 10) === b.slice(0, 10);
 }
 
+/**
+ * Un hilo de chat.
+ *
+ * Lo que había aquí era un hilo de texto plano: burbujas con `body`, sin
+ * cabecera de la otra persona, sin presencia, sin checks de entregado o leído,
+ * sin paginación, sin adjuntos ni ubicación, sin apodo. Todo eso existe en el
+ * backend —`/messages/media`, `/view`, `/nickname`, `/read`, los eventos
+ * `presence:update`, `message:delivered` y `message:read`— y lo consumía sólo el
+ * móvil. Esta pantalla lo iguala endpoint por endpoint.
+ *
+ * Aquí sólo vive el maquetado; la conversación como dato está en
+ * `useChatThread`.
+ */
 export function MessageThreadClient({
   conversationId,
   currentUserId,
   socketOrigin,
 }: Readonly<{ conversationId: string; currentUserId: string; socketOrigin: string }>) {
-  const history = useQuery({
-    queryKey: queryKeys.messages(conversationId),
-    queryFn: () => chatService.listMessages(conversationId),
-  });
-  // El historial de mensajes no trae el nombre de la otra persona: se toma de
-  // la lista de conversaciones, ya en caché si se llegó a esta pantalla
-  // navegando desde /chat.
-  const conversations = useQuery({
-    queryKey: queryKeys.conversations,
-    queryFn: chatService.listConversations,
-  });
-  // Los mensajes en vivo solo se ACUMULAN desde el socket (evento externo);
-  // el historial de la consulta se mezcla al leer, sin copiarlo a estado con
-  // un efecto — así no hay una fuente de verdad duplicada que sincronizar.
-  const [liveMessages, setLiveMessages] = useState<Message[]>([]);
-  const [draft, setDraft] = useState('');
-  const [sending, setSending] = useState(false);
+  const thread = useChatThread({ conversationId, socketOrigin });
   const bottomRef = useRef<HTMLDivElement>(null);
-  const joinedRef = useRef(false);
-
-  const { connectionState, joinConversation, sendMessage } = useChatSocket(socketOrigin, (incoming) => {
-    if (incoming.conversationId !== conversationId) return;
-    setLiveMessages((current) => mergeMessages(current, incoming));
-  });
-
-  const messages = useMemo(() => {
-    const base = history.data ?? [];
-    const seen = new Set(base.map((message) => message.id));
-    return [...base, ...liveMessages.filter((message) => !seen.has(message.id))];
-  }, [history.data, liveMessages]);
-
-  useEffect(() => {
-    if (connectionState !== 'connected' || joinedRef.current) return;
-    joinedRef.current = true;
-    void joinConversation(conversationId);
-  }, [connectionState, conversationId, joinConversation]);
+  const [imageViewer, setImageViewer] = useState<string | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [thread.latestMessageId]);
 
-  const otherConversation = conversations.data?.find(
-    (conversation) => conversation.conversationId === conversationId,
-  );
-  const otherName = otherConversation?.otherUserName;
-  const canWrite = otherConversation?.canWrite !== false;
-
-  async function handleSend() {
-    const body = draft.trim();
-    if (!body) return;
-    setSending(true);
-    try {
-      const ack = await sendMessage(conversationId, body);
-      if (!ack.ok) {
-        // El socket no lo entregó (reconectando, boleto vencido): REST usa el
-        // mismo `ChatService.sendMessage`, así que igual llega por el socket
-        // a quien esté conectado.
-        await chatService.sendMessage(conversationId, body);
-      }
-      setDraft('');
-    } catch (error: unknown) {
-      notify.error(error instanceof Error ? error : new Error('No se pudo enviar el mensaje.'));
-    } finally {
-      setSending(false);
-    }
-  }
-
-  if (history.isLoading) {
+  if (thread.history.isLoading) {
     return (
       <SkeletonScreen className="gap-6" label="Cargando la conversación">
         <SkeletonPageHeader />
@@ -104,76 +56,128 @@ export function MessageThreadClient({
       </SkeletonScreen>
     );
   }
-  if (history.isError) {
-    return <ErrorPanel message={history.error.message} onRetry={() => history.refetch()} />;
+  if (thread.history.isError) {
+    return (
+      <ErrorPanel message={thread.history.error.message} onRetry={() => thread.history.refetch()} />
+    );
   }
 
+  const canWrite = thread.conversation?.canWrite !== false;
+
   return (
-    <div className="grid gap-6" style={{ gridTemplateRows: 'auto 1fr auto' }}>
-      <PageHeader
-        actions={
-          <Badge tone={connectionState === 'connected' ? 'success' : 'neutral'}>
-            {connectionState === 'connected' ? 'En vivo' : 'Conectando…'}
-          </Badge>
-        }
-        eyebrow="Chat"
-        title={otherName ?? 'Conversación'}
+    <div className="mx-auto grid w-full max-w-3xl gap-5">
+      <Link
+        className="inline-flex w-fit items-center gap-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
+        href="/chat"
+      >
+        <ArrowLeft aria-hidden className="size-4" />
+        Mensajes
+      </Link>
+
+      <ThreadHeader
+        connectionState={thread.connectionState}
+        conversation={thread.conversation}
+        onSaveNickname={(nickname) => thread.setNickname.mutate(nickname)}
+        otherLastSeenAt={thread.otherLastSeenAt}
+        otherOnline={thread.otherOnline}
+        savingNickname={thread.setNickname.isPending}
       />
+
       {/* `role="log"` trae de serie `aria-live="polite"` + `aria-relevant="additions"`,
           que es justo lo que pide un chat: anuncia el mensaje que ENTRA sin releer
-          todo el hilo. Sin esto, los mensajes llegaban por socket y un lector de
-          pantalla no decía nada: la conversación avanzaba en silencio. */}
+          todo el hilo. */}
       <section
         aria-label="Mensajes"
-        className="panel grid max-h-[60vh] gap-2 overflow-y-auto p-4"
+        className="panel flex max-h-[60vh] flex-col overflow-y-auto p-4"
         role="log"
       >
-        {messages.length === 0 ? (
+        {thread.hasMoreOlder ? (
+          <Button
+            className="mb-2 self-center"
+            loading={thread.loadingOlder}
+            onClick={() => void thread.loadOlderMessages()}
+            size="sm"
+            variant="ghost"
+          >
+            Ver mensajes anteriores
+          </Button>
+        ) : null}
+
+        {thread.messages.length === 0 ? (
           <p className="m-auto max-w-xs py-8 text-center text-sm leading-6 text-[var(--text-muted)]">
             Aún no hay mensajes. Escribe el primero y empieza la conversación.
           </p>
         ) : null}
-        {messages.map((message) => {
-          const mine = message.senderId === currentUserId;
-          return (
-            <div
-              className={cn('max-w-[75%] break-words rounded-[8px] px-3 py-2 text-sm', mine ? 'ml-auto' : 'mr-auto')}
-              key={message.id}
-              style={{
-                background: mine ? 'var(--volt)' : 'var(--surface-low)',
-                color: mine ? 'var(--accent-contrast)' : 'var(--text)',
-              }}
-            >
-              {message.body}
-            </div>
-          );
-        })}
+
+        <ul className="flex flex-col">
+          {thread.messages.map((message, index) => {
+            const previous = thread.messages[index - 1];
+            const startsDay = !previous || !sameDay(previous.createdAt, message.createdAt);
+            return (
+              <Fragment key={message.id}>
+                {startsDay ? <DayDivider iso={message.createdAt} /> : null}
+                <MessageBubble
+                  groupedWithPrevious={!startsDay && previous?.senderId === message.senderId}
+                  message={message}
+                  mine={message.senderId === currentUserId}
+                  onOpenImage={setImageViewer}
+                  onRevealViewOnce={(messageId) =>
+                    thread.revealViewOnce.mutate(messageId, {
+                      // La foto revelada se abre en grande al momento: es de
+                      // vista única, así que no habrá una segunda oportunidad
+                      // de pulsarla.
+                      onSuccess: (revealed) => {
+                        if (revealed.type === 'image' && revealed.mediaUrl) {
+                          setImageViewer(revealed.mediaUrl);
+                        }
+                      },
+                    })
+                  }
+                  otherLastDeliveredAt={thread.otherLastDeliveredAt}
+                  otherLastReadAt={thread.otherLastReadAt}
+                  revealPending={thread.revealViewOnce.isPending}
+                  revealedUrl={thread.revealedMedia[message.id] ?? null}
+                />
+              </Fragment>
+            );
+          })}
+        </ul>
         <div ref={bottomRef} />
       </section>
+
       {canWrite ? (
-        <form
-          className="flex gap-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleSend();
-          }}
-        >
-          <input
-            aria-label="Mensaje"
-            className="h-11 flex-1 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--surface-low)] px-3 text-sm text-[var(--text)] focus:border-[var(--volt)] focus:outline-none"
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder="Escribe un mensaje…"
-            value={draft}
-          />
-          <Button disabled={!draft.trim()} loading={sending} type="submit" variant="primary">
-            <Send className="size-4" />
-          </Button>
-        </form>
+        <MessageComposer
+          onSendLocation={thread.sendLocation}
+          onSendMedia={(file, viewOnce) => void thread.sendMedia(file, viewOnce)}
+          onSendText={(body) => void thread.sendText(body)}
+          sending={thread.sending}
+          sendingMedia={thread.sendingMedia}
+        />
       ) : (
         <p className="text-center text-sm text-[var(--text-muted)]">
           Esta conversación es de solo lectura.
         </p>
       )}
+
+      <Dialog onOpenChange={(open) => !open && setImageViewer(null)} open={Boolean(imageViewer)}>
+        <DialogContent className="max-w-2xl" title="Foto">
+          {imageViewer ? (
+            <div className="max-h-[70vh] overflow-hidden rounded-[var(--radius-lg)]">
+              <DomainImage alt="Foto del mensaje" className="object-contain" src={imageViewer} />
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+function DayDivider({ iso }: Readonly<{ iso: string }>) {
+  return (
+    <li className="my-4 flex items-center gap-3 self-stretch text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
+      <span aria-hidden className="h-px flex-1 bg-[var(--border-subtle)]" />
+      {dayDividerLabel(iso)}
+      <span aria-hidden className="h-px flex-1 bg-[var(--border-subtle)]" />
+    </li>
   );
 }

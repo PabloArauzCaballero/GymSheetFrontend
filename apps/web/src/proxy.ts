@@ -40,11 +40,15 @@ export const knownRoutes = new Set([
   'chat',
   'comunidad',
   'dashboard',
+  'descubrir',
   'exercises',
   'interacciones',
   'membership',
   'notifications',
   'onboarding',
+  // Perfil ajeno (`/perfil/:userId`). `/profile` es el propio: rutas distintas
+  // porque son cosas distintas — una se edita, la otra se mira.
+  'perfil',
   'plans',
   'profile',
   'routines',

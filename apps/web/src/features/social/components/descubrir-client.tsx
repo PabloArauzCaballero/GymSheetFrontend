@@ -1,64 +1,72 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo, useState, type ReactNode } from 'react';
 import { interactionKeys } from '@/features/interactions/services/interactions-service';
-import { publicFacilitiesClient } from '@/features/public-facilities/services/public-facilities-client';
 import { discoveryService } from '@/features/social/services/discovery-service';
+import { directoryKeys } from '@/features/social/services/directory-keys';
 import type { GymDirectoryEntry, SwipeDirection } from '@/shared/api/schemas';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { Skeleton, SkeletonScreen } from '@/shared/components/feedback/skeleton';
 import { Button } from '@/shared/components/ui/button';
-import { Field } from '@/shared/components/ui/field';
-import { Select } from '@/shared/components/ui/select';
 import { notify } from '@/shared/notifications';
 import { DirectorySwipeDeck } from './directory-swipe-deck';
-import { trainingGoalLabels } from './directory-labels';
 import { MatchCelebration } from './match-celebration';
+import { MemberDetailSheet } from './member-detail-sheet';
 
 type Decision = { entry: GymDirectoryEntry; direction: SwipeDirection };
 
+/** Cartas por reparto. El backend admite hasta 30; diez llenan una sesión corta. */
+const DECK_SIZE = 10;
+
 /**
- * Contenedor de la baraja.
+ * La baraja de descubrimiento, a pantalla completa.
+ *
+ * El directorio de Comunidad sirve para recorrer el gimnasio; esto es lo
+ * contrario — una sola carta, dos salidas, y la siguiente sólo aparece cuando
+ * la anterior se ha resuelto. Por eso es un destino propio y no una pestaña:
+ * ocupa el ancho entero, como en el móvil, en vez de quedarse en un rectángulo
+ * pequeño flotando dentro de una página con cabecera y filtros.
  *
  * La cola visible se mantiene en local para que la tarjeta salga en el mismo
  * fotograma del gesto, pero la verdad está en el servidor: cada decisión es un
  * `POST` y, si falla, la tarjeta vuelve a su sitio en vez de desaparecer en
- * silencio. Antes esta pestaña pedía el directorio entero y filtraba en
- * cliente; ahora pide `/me/discovery/deck`, que ya excluye a quien se decidió.
+ * silencio.
  */
-export function DirectoryTab() {
+export function DescubrirClient({
+  genero,
+  objetivo,
+  sucursalId,
+}: Readonly<{ genero: string; objetivo: string; sucursalId: string }>) {
   const queryClient = useQueryClient();
-  const [objetivo, setObjetivo] = useState('');
-  const [sucursalId, setSucursalId] = useState('');
   const [queue, setQueue] = useState<GymDirectoryEntry[]>([]);
   const [history, setHistory] = useState<GymDirectoryEntry[]>([]);
   const [match, setMatch] = useState<GymDirectoryEntry | null>(null);
+  const [detail, setDetail] = useState<GymDirectoryEntry | null>(null);
 
   const filters = useMemo(
-    () => ({ objetivo: objetivo || undefined, sucursalId: sucursalId || undefined, limit: 20 }),
-    [objetivo, sucursalId],
+    () => ({
+      objetivo: objetivo || undefined,
+      sucursalId: sucursalId || undefined,
+      genero: genero || undefined,
+      limit: DECK_SIZE,
+    }),
+    [genero, objetivo, sucursalId],
   );
-  const filterKey = `${objetivo}|${sucursalId}`;
-
-  // Las sedes del gimnasio propio, no el directorio público de marcas.
-  //
-  // Antes alimentaba este selector con `/public/facilities/branches`, que lista
-  // sedes de **todas** las marcas. Como el directorio de socios está acotado al
-  // gimnasio de quien mira, elegir cualquiera de las ajenas devolvía cero
-  // resultados siempre, sin decir por qué. Contra la base de desarrollo son
-  // nueve sedes públicas frente a una propia: ocho opciones muertas de nueve.
-  const branches = useQuery({
-    queryKey: ['facilities', 'my-branches'],
-    queryFn: () => publicFacilitiesClient.myBranches(),
-    staleTime: 5 * 60_000,
-  });
+  const filterKey = `${objetivo}|${sucursalId}|${genero}`;
 
   const deck = useQuery({
-    queryKey: ['discovery', 'deck', filterKey],
+    queryKey: directoryKeys.deck(filterKey),
     queryFn: () => discoveryService.deck(filters),
+    // Una baraja usada no se guarda: al volver a entrar se reparte de nuevo.
+    // Con la caché por defecto reaparecerían cartas ya decididas, que el
+    // servidor no considera candidatas y rechazaría con un conflicto.
+    gcTime: 0,
+    staleTime: 0,
   });
 
   // Sincroniza la cola con la baraja recién llegada ajustando estado durante el
@@ -73,13 +81,17 @@ export function DirectoryTab() {
   }
 
   const refreshCounters = async () => {
-    await queryClient.invalidateQueries({ queryKey: interactionKeys.counts });
-    await queryClient.invalidateQueries({ queryKey: queryKeys.connections });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: interactionKeys.counts }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.connections }),
+      // El directorio cuenta lo mismo que la baraja: un «me interesa» cambia el
+      // estado de conexión de esa persona también ahí.
+      queryClient.invalidateQueries({ queryKey: directoryKeys.all }),
+    ]);
   };
 
   const decide = useMutation({
-    mutationFn: ({ entry, direction }: Decision) =>
-      discoveryService.swipe(entry.userId, direction),
+    mutationFn: ({ entry, direction }: Decision) => discoveryService.swipe(entry.userId, direction),
     onMutate: ({ entry }: Decision) => {
       setQueue((current) => current.filter((card) => card.userId !== entry.userId));
       setHistory((current) => [entry, ...current]);
@@ -100,50 +112,38 @@ export function DirectoryTab() {
   const undo = useMutation({
     mutationFn: () => discoveryService.undoSwipe(),
     onSuccess: async (result) => {
+      // El backend deshace *su* último swipe, no uno concreto: se devuelve a la
+      // baraja la carta que él nombra, no la que el navegador supone.
       const restored = history.find((card) => card.userId === result.targetId);
       setHistory((current) => current.filter((card) => card.userId !== result.targetId));
       if (restored) setQueue((current) => [restored, ...current]);
-      // El backend puede haber deshecho un swipe de una sesión anterior, del
-      // que no tenemos la ficha en memoria: en ese caso se vuelve a pedir.
       else await deck.refetch();
       await refreshCounters();
       notify.success(result.unmatched ? 'Match deshecho.' : 'Última decisión deshecha.');
     },
+    // 409 cuando el match ya tiene mensajes: el backend explica por qué, y esa
+    // explicación es mejor que cualquier copia local del motivo.
     onError: (error: Error) => notify.error(error),
   });
 
   return (
-    <div className="grid gap-6">
-      <section className="panel grid gap-4 p-4 sm:grid-cols-2">
-        <Field htmlFor="directory-objetivo" label="Objetivo">
-          <Select
-            id="directory-objetivo"
-            onChange={(event) => setObjetivo(event.target.value)}
-            value={objetivo}
-          >
-            <option value="">Todos</option>
-            {Object.entries(trainingGoalLabels).map(([code, label]) => (
-              <option key={code} value={code}>
-                {label}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field htmlFor="directory-sucursal" label="Sucursal">
-          <Select
-            id="directory-sucursal"
-            onChange={(event) => setSucursalId(event.target.value)}
-            value={sucursalId}
-          >
-            <option value="">Todas</option>
-            {(branches.data ?? []).map((branch) => (
-              <option key={branch.id} value={branch.id}>
-                {branch.nombre}
-              </option>
-            ))}
-          </Select>
-        </Field>
-      </section>
+    <div className="mx-auto grid w-full max-w-2xl gap-6">
+      <header className="grid gap-2">
+        <Link
+          className="inline-flex w-fit items-center gap-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
+          href="/comunidad"
+        >
+          <ArrowLeft aria-hidden className="size-4" />
+          Comunidad
+        </Link>
+        <h1 className="text-3xl font-semibold tracking-[-0.03em]">Descubrir</h1>
+        {/* Una línea, no dos: cada renglón de aquí arriba se lo quita a la
+            carta, que es lo único que la pantalla necesita enseñar. */}
+        <p className="text-sm text-[var(--text-muted)]">
+          Arrastra a la derecha si te interesa, a la izquierda si no.
+        </p>
+      </header>
+
       <DeckSurface
         deckError={deck.isError ? deck.error.message : null}
         empty={queue.length === 0}
@@ -155,7 +155,7 @@ export function DirectoryTab() {
               </Button>
             ) : null}
             <Button loading={deck.isFetching} onClick={() => deck.refetch()} variant="primary">
-              Buscar más
+              Buscar más socios
             </Button>
           </div>
         }
@@ -167,10 +167,13 @@ export function DirectoryTab() {
           decidePending={decide.isPending}
           entries={queue}
           onDecide={(entry, direction) => decide.mutate({ entry, direction })}
+          onInfo={setDetail}
           onUndo={() => undo.mutate()}
           undoPending={undo.isPending}
         />
       </DeckSurface>
+
+      <MemberDetailSheet entry={detail} onClose={() => setDetail(null)} />
       <MatchCelebration match={match} onClose={() => setMatch(null)} />
     </div>
   );
@@ -200,10 +203,10 @@ function DeckSurface({
   if (loading) {
     return (
       <SkeletonScreen className="justify-items-center" label="Cargando la baraja">
-        <Skeleton className="h-[26rem] w-full max-w-sm rounded-[var(--radius-xl)] sm:h-[30rem]" />
+        <Skeleton className="h-[28rem] w-full max-w-md rounded-[var(--radius-xl)] sm:h-[34rem]" />
         <div className="flex gap-4">
+          <Skeleton className="size-16 rounded-full" />
           <Skeleton className="size-12 rounded-full" />
-          <Skeleton className="size-14 rounded-full" />
           <Skeleton className="size-16 rounded-full" />
         </div>
       </SkeletonScreen>
@@ -214,8 +217,8 @@ function DeckSurface({
     return (
       <EmptyState
         action={emptyAction}
-        description="Ya decidiste sobre todo el mundo que encaja con estos filtros. Prueba a ampliarlos o vuelve más tarde."
-        title="No queda nadie por descubrir"
+        description="Ya decidiste sobre todo el mundo que encaja con estos filtros. Cámbialos en Comunidad o vuelve más tarde."
+        title="No quedan cartas"
       />
     );
   }

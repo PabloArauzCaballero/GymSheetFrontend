@@ -14,9 +14,21 @@ import {
   socialStatusSchema,
 } from '@/shared/api/schemas';
 
+/**
+ * Filtros del directorio. La baraja acepta los mismos: es el mismo catálogo
+ * visto de otra forma — el directorio se recorre, la baraja se consume.
+ *
+ * `genero` y `q` no son añadidos de la web: el backend los valida desde el
+ * principio en `directoryQuerySchema` y el móvil los manda. Faltaban aquí, así
+ * que el portal pedía un subconjunto de lo que el servidor ya sabía filtrar.
+ */
 export type DirectoryFilters = {
   objetivo?: string;
   sucursalId?: string;
+  /** `MALE` | `FEMALE`. El backend rechaza cualquier otro valor. */
+  genero?: string;
+  /** Búsqueda por nombre dentro del mismo gimnasio. */
+  q?: string;
   limit?: number;
 };
 

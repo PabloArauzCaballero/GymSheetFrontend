@@ -5,6 +5,7 @@ import { Check, X } from 'lucide-react';
 import { socialService } from '@/features/social/services/social-service';
 import type { Connection } from '@/shared/api/schemas';
 import { queryKeys } from '@/shared/api/query-keys';
+import { connectionKeys } from '@/features/social/services/directory-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import {
@@ -17,7 +18,7 @@ import { notify } from '@/shared/notifications';
 export function RequestsTab() {
   const queryClient = useQueryClient();
   const pending = useQuery({
-    queryKey: queryKeys.connections,
+    queryKey: connectionKeys.byStatus('PENDING'),
     queryFn: () => socialService.listConnections('PENDING'),
   });
 

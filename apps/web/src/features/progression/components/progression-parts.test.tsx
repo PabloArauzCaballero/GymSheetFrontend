@@ -7,9 +7,13 @@ const level: ProgressionLevel = {
   code: 'ACERO',
   name: 'Acero',
   tagline: 'Has empezado.',
+  // El contrato sumó `description` y `sortOrder`; este fixture se quedó atrás y
+  // dejaba el `type-check` del repo en rojo para todo el mundo.
+  description: null,
   color: '#8899aa',
   icon: 'footsteps-outline',
   minPoints: 0,
+  sortOrder: 0,
   unlocked: true,
   current: true,
 };

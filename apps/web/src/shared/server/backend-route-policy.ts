@@ -70,6 +70,14 @@ const allowedPathPatterns = [
   /^\/me\/facilities\/branches$/u,
   /^\/me\/conversations$/u,
   new RegExp(`^/me/conversations/${resourceId}/messages$`, 'u'),
+  // Chat completo, a la altura del móvil: media (multipart), la revelación de
+  // un mensaje de vista única, el apodo privado de la conversación y el avance
+  // del cursor de leído. Sin estas cuatro, el hilo de la web se queda en texto
+  // plano contra un backend que ya sirve el resto.
+  new RegExp(`^/me/conversations/${resourceId}/messages/media$`, 'u'),
+  new RegExp(`^/me/conversations/${resourceId}/messages/${resourceId}/view$`, 'u'),
+  new RegExp(`^/me/conversations/${resourceId}/nickname$`, 'u'),
+  new RegExp(`^/me/conversations/${resourceId}/read$`, 'u'),
   // Descubrimiento (R6.1): la baraja, el swipe y el deshacer. `swipes/undo` va
   // en su propia entrada y no como sufijo opcional de `swipes` porque son dos
   // operaciones distintas: una decide, la otra revierte la última decisión.

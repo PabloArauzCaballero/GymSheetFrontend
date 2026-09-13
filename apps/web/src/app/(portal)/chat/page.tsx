@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { ConversationListClient } from '@/features/chat/components/conversation-list-client';
+import { ChatHubClient } from '@/features/chat/components/chat-hub-client';
 
-export const metadata: Metadata = { title: 'Chat' };
+export const metadata: Metadata = { title: 'Mensajes' };
 
 export default function ChatPage() {
-  return <ConversationListClient />;
+  return <ChatHubClient />;
 }

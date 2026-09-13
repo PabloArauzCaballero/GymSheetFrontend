@@ -25,7 +25,16 @@ async function forward(request: NextRequest, parts: string[]) {
     : await request.arrayBuffer();
   const backendResponse = await backendRequest(`${path}${query}`, {
     method: request.method,
-    timeoutMs: path.startsWith('/export/') || path === '/admin/media' ? 60_000 : undefined,
+    // Las subidas viajan por la misma puerta que el JSON, pero no tardan lo
+    // mismo: una story o un vídeo de chat son megabytes, y el tiempo por
+    // defecto los corta a mitad de camino.
+    timeoutMs:
+      path.startsWith('/export/') ||
+      path === '/admin/media' ||
+      path === '/me/stories' ||
+      path.endsWith('/messages/media')
+        ? 60_000
+        : undefined,
     headers,
     token,
     ...(body && body.byteLength > 0 ? { body } : {}),

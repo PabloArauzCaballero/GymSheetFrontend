@@ -6,6 +6,7 @@ import {
   CalendarCheck,
   ClipboardList,
   Dumbbell,
+  Flame,
   Gauge,
   GraduationCap,
   IdCard,
@@ -39,11 +40,15 @@ export const primaryNavigation: NavigationItem[] = [
   { href: '/routines', label: 'Rutinas', icon: ClipboardList },
   { href: '/exercises', label: 'Ejercicios', icon: Dumbbell },
   { href: '/comunidad', label: 'Comunidad', icon: Users2 },
+  // La baraja es un destino y no una pestaña de Comunidad: se decide
+  // arrastrando y ocupa el ancho entero. Va pegada a Comunidad porque se llega
+  // desde allí con los filtros puestos, y aquí sin ellos.
+  { href: '/descubrir', label: 'Descubrir', icon: Flame },
   // Pegada a Comunidad: es lo que pasó ahí mientras no mirabas (likes, vistas
   // de perfil, next). Lleva el único indicador numérico de la navegación, así
   // que enterrarla al final la volvería una notificación que nadie atiende.
   { href: '/interacciones', label: 'Interacciones', icon: Sparkles },
-  { href: '/chat', label: 'Chat', icon: MessageCircle },
+  { href: '/chat', label: 'Mensajes', icon: MessageCircle },
   { href: '/membership', label: 'Membresía', icon: IdCard },
   { href: '/access', label: 'Acceso', icon: KeyRound },
   { href: '/notifications', label: 'Avisos', icon: Bell },

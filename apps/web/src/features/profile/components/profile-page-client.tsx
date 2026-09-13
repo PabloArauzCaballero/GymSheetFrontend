@@ -9,6 +9,7 @@ import { notify } from '@/shared/notifications';
 import { z } from 'zod';
 import { profileService } from '@/features/profile/services/profile-service';
 import { ProfilePhotoGallery } from '@/features/profile/components/profile-photo-gallery';
+import { SocialStatusCard } from '@/features/social/components/social-status-card';
 import { MembershipExperience } from '@/features/membership/components/membership-experience';
 import { ProfileMeasurements } from '@/features/profile/components/profile-measurements';
 import { GenderPreferenceField } from '@/features/progression/components/gender-preference-field';
@@ -217,6 +218,11 @@ export function ProfilePageClient() {
         </form>
         <div className="grid content-start gap-5">
           <ProfilePhotoGallery />
+          {/* El estado social vive aquí y no en Comunidad: es lo que TÚ muestras,
+              no una forma de mirar a los demás. Estaba en Comunidad, entre las
+              stories y el directorio, que es la única pantalla de la parte social
+              que no habla de uno mismo. El móvil ya lo tenía en Perfil. */}
+          <SocialStatusCard />
           <Card>
             <CardHeader title="Identidad" />
             <CardContent className="grid gap-4">

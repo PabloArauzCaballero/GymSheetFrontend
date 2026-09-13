@@ -10,6 +10,19 @@ export type ChatSocketConnectionState = 'connecting' | 'connected' | 'disconnect
 type JoinAck = { joined: boolean };
 type SendAck = { ok: boolean; error?: string };
 
+export type PresenceUpdate = { userId: string; online: boolean; lastSeenAt: string | null };
+/**
+ * `userId` es quien entregó o leyó — nunca el autor del mensaje. El check de
+ * los mensajes propios se pinta comparando su `createdAt` contra estas marcas.
+ */
+export type ReceiptUpdate = { userId: string; deliveredAt?: string; readAt?: string };
+
+type ChatSocketHandlers = {
+  onMessage: (message: Message) => void;
+  onPresence?: (presence: PresenceUpdate) => void;
+  onReceipt?: (receipt: ReceiptUpdate) => void;
+};
+
 /**
  * Un socket por sesión de chat abierta, autenticado con un boleto de un solo
  * uso (nunca el JWT: el navegador solo habla con rutas BFF). `auth` como
@@ -17,18 +30,23 @@ type SendAck = { ok: boolean; error?: string };
  * reconexiones automáticas de Socket.IO — así cada intento pide un boleto
  * fresco en vez de reintentar uno ya consumido.
  *
+ * Escucha los cuatro eventos que el gateway emite, no sólo `message:new`. Los
+ * otros tres —presencia, entregado y leído— ya viajaban por el cable y la web
+ * los descartaba: el hilo no sabía si la otra persona estaba conectada ni si
+ * había leído nada, mientras el móvil sí.
+ *
  * `socketOrigin` llega como propiedad desde el servidor y no del bundle: la
  * dirección del backend es un dato del despliegue, no de la imagen. Ver
  * `shared/config/backend-origin.ts`.
  */
-export function useChatSocket(socketOrigin: string, onMessage: (message: Message) => void) {
+export function useChatSocket(socketOrigin: string, handlers: ChatSocketHandlers) {
   const socketRef = useRef<Socket | null>(null);
-  const onMessageRef = useRef(onMessage);
+  const handlersRef = useRef(handlers);
   const [connectionState, setConnectionState] = useState<ChatSocketConnectionState>('connecting');
 
   useEffect(() => {
-    onMessageRef.current = onMessage;
-  }, [onMessage]);
+    handlersRef.current = handlers;
+  }, [handlers]);
 
   useEffect(() => {
     const socket = io(`${socketOrigin}/chat`, {
@@ -43,7 +61,16 @@ export function useChatSocket(socketOrigin: string, onMessage: (message: Message
     socketRef.current = socket;
     socket.on('connect', () => setConnectionState('connected'));
     socket.on('disconnect', () => setConnectionState('disconnected'));
-    socket.on('message:new', (message: Message) => onMessageRef.current(message));
+    socket.on('message:new', (message: Message) => handlersRef.current.onMessage(message));
+    socket.on('presence:update', (presence: PresenceUpdate) =>
+      handlersRef.current.onPresence?.(presence),
+    );
+    socket.on('message:delivered', (receipt: { userId: string; deliveredAt: string }) =>
+      handlersRef.current.onReceipt?.(receipt),
+    );
+    socket.on('message:read', (receipt: { userId: string; readAt: string }) =>
+      handlersRef.current.onReceipt?.(receipt),
+    );
 
     return () => {
       socket.disconnect();

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { chatService } from '@/features/chat/services/chat-service';
 import { socialService } from '@/features/social/services/social-service';
 import { queryKeys } from '@/shared/api/query-keys';
+import { connectionKeys } from '@/features/social/services/directory-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import {
@@ -19,7 +20,7 @@ export function ConnectionsTab() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const connections = useQuery({
-    queryKey: queryKeys.connections,
+    queryKey: connectionKeys.byStatus('ACCEPTED'),
     queryFn: () => socialService.listConnections('ACCEPTED'),
   });
 
