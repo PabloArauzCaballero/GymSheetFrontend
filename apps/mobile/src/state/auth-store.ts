@@ -7,6 +7,7 @@ import type { LoginInput } from '@gymsheet/schemas';
 import { apiClient, setSessionLostHandler } from '@/api/client';
 import { secureStoreAuthStorage } from '@/storage/secure-store';
 import { env } from '@/config/env';
+import { unregisterPushNotifications } from '@/notifications/push';
 
 /**
  * Lo que `POST /auth/register` espera, ya sin el par de confirmación.
@@ -116,6 +117,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   async logout() {
+    // Antes que nada: la baja del dispositivo necesita el bearer que se borra
+    // dos líneas más abajo.
+    await unregisterPushNotifications();
     try {
       await apiClient.request('/auth/logout', z.object({}).passthrough(), { method: 'POST' });
     } catch {

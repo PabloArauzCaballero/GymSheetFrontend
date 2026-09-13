@@ -65,3 +65,27 @@ export async function registerForPushNotifications(): Promise<void> {
     // error que deba interrumpir al usuario.
   }
 }
+
+/**
+ * Baja del dispositivo al cerrar sesión.
+ *
+ * Hay que llamarla ANTES de borrar los tokens de la sesión: el endpoint exige
+ * el bearer, y sin él la baja se pierde en silencio. Sin esto, un teléfono que
+ * cierra sesión y en el que nadie más entra sigue sonando con los avisos de la
+ * cuenta anterior — el alta en el siguiente inicio de sesión traslada el token,
+ * pero solo cuando ese siguiente inicio ocurre.
+ */
+export async function unregisterPushNotifications(): Promise<void> {
+  if (!Device.isDevice) return;
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== 'granted') return;
+    const projectId = await resolveProjectId();
+    const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync(
+      projectId ? { projectId } : undefined,
+    );
+    await deviceTokenService.unregister(expoPushToken);
+  } catch {
+    // Igual que el alta: cerrar sesión nunca puede fallar por esto.
+  }
+}
