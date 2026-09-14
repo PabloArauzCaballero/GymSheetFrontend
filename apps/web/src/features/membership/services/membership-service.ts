@@ -8,6 +8,7 @@ import type {
   MembershipProjection,
 } from '@/shared/api/contracts';
 import {
+  activationRequestSchema,
   membershipAccessSchema,
   membershipIntentSchema,
   membershipOptionsSchema,
@@ -31,5 +32,18 @@ export const membershipService = {
     apiRequest<MembershipIntent>('/me/membership/extension-intent', membershipIntentSchema, {
       method: 'POST',
       body: input,
+    }),
+  /**
+   * Pide que el gimnasio active la cuenta tras un pago que la aplicación no vio.
+   *
+   * Devuelve el enlace ya compuesto que abrirá el personal del gimnasio. El
+   * cliente no lo interpreta: sólo lo mete en el mensaje, porque quién puede
+   * usarlo lo decide el backend y no este navegador. Mismo endpoint y mismo
+   * contrato que el móvil.
+   */
+  requestActivation: (nota: string | null) =>
+    apiRequest('/me/membership/activation-request', activationRequestSchema, {
+      method: 'POST',
+      body: { nota },
     }),
 };

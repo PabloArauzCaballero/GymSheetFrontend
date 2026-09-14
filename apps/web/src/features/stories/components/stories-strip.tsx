@@ -2,9 +2,10 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
-import { useRef, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { Skeleton, SkeletonScreen } from '@/shared/components/feedback/skeleton';
+import { MediaSourceDialog } from '@/shared/components/media/media-source-dialog';
 import { PersonAvatar } from '@/shared/components/media/person-avatar';
 import { notify } from '@/shared/notifications';
 import { storiesService, storyKeys } from '@/features/stories/services/stories-service';
@@ -22,7 +23,7 @@ export function StoriesStrip({
   ownUserId,
 }: Readonly<{ ownName: string; ownUserId: string }>) {
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [picking, setPicking] = useState(false);
   const [startUserId, setStartUserId] = useState<string | null>(null);
 
   const feed = useQuery({ queryKey: storyKeys.feed, queryFn: storiesService.feed });
@@ -64,7 +65,7 @@ export function StoriesStrip({
             <StoryRing
               hasUnviewed={own?.hasUnviewed ?? false}
               muted={!own}
-              onClick={() => (own ? setStartUserId(own.userId) : fileInputRef.current?.click())}
+              onClick={() => (own ? setStartUserId(own.userId) : setPicking(true))}
               label={own ? 'Ver tu story' : 'Subir tu primera story'}
             >
               <PersonAvatar name={ownName} photoUrl={own?.photoUrl ?? null} size="md" />
@@ -73,7 +74,7 @@ export function StoriesStrip({
               aria-label="Subir una story"
               className="tap absolute -bottom-0.5 -right-0.5 grid size-8 place-items-center rounded-full border-2 border-[var(--background)] bg-[var(--volt)] text-[var(--accent-contrast)] disabled:opacity-60"
               disabled={upload.isPending}
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => setPicking(true)}
               type="button"
             >
               <Plus aria-hidden className="size-4" />
@@ -103,23 +104,19 @@ export function StoriesStrip({
           </p>
         ) : null}
       </div>
-      <input
-        accept="image/*,video/*"
-        // Fuera del recorrido de teclado y del árbol de accesibilidad: quien
-        // navega con teclado llega por los botones de arriba, que sí se
-        // anuncian; un campo de archivo invisible en medio sólo confunde.
-        aria-hidden
-        className="sr-only"
-        tabIndex={-1}
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          // El input se limpia siempre: si no, elegir el mismo archivo dos
-          // veces seguidas no dispara `change` y la subida parece ignorada.
-          event.target.value = '';
-          if (file) upload.mutate(file);
-        }}
-        ref={fileInputRef}
-        type="file"
+      <MediaSourceDialog
+        // Sólo imágenes: temporal hasta que el visor móvil tenga `expo-video`.
+        // Un vídeo subido desde la web hoy es inconsumible en el teléfono.
+        accept="image/*"
+        busy={upload.isPending}
+        captureFileName="story"
+        captureLabel="Publicar esta foto"
+        description="Se verá 24 horas para tus matches."
+        fileLabel="Elegir una imagen"
+        onOpenChange={setPicking}
+        onPick={(file) => upload.mutate(file)}
+        open={picking}
+        title="Añadir una story"
       />
       {startUserId ? (
         <StoryViewer

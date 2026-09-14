@@ -1,20 +1,15 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import {
-  Activity,
-  Bell,
-  CalendarDays,
-  ChevronRight,
-  Dumbbell,
-  IdCard,
-  TrendingUp,
-} from 'lucide-react';
+import { Activity, Bell, CalendarDays, ChevronRight, Dumbbell, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { accessService } from '@/features/access/services/access-service';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
+import { MembershipGate } from '@/features/membership/components/membership-gate';
+import { MembershipSummaryCard } from '@/features/membership/components/membership-summary-card';
 import { membershipService } from '@/features/membership/services/membership-service';
 import { notificationService } from '@/features/notifications/services/notification-service';
+import { BodyWeightCard } from '@/features/profile/components/body-weight-card';
 import { SendaCard } from '@/features/progression/components/senda-card';
 import { progressionService } from '@/features/progression/services/progression-service';
 import { workoutService } from '@/features/workouts/services/workout-service';
@@ -111,6 +106,8 @@ export function DashboardClient() {
   const active = sessions.find((session) => session.estado === 'EN_PROGRESO');
   const latest = sessions[0];
   const unread = notifications.data?.items.filter((item) => !item.leidoEn).length ?? 0;
+  const projection = membership.data ?? null;
+  const membershipActive = projection?.membership?.vigenteHoy ?? false;
 
   return (
     <div className="grid gap-10">
@@ -133,6 +130,11 @@ export function DashboardClient() {
         title="Precisión antes que ruido."
         tutorialId="page:dashboard"
       />
+
+      {/* Antes que nada: si la membresía no está vigente, eso es lo que la
+          persona necesita ver y resolver, no su carga semanal. Mismo orden que
+          Inicio en el móvil. */}
+      {projection && !membershipActive ? <MembershipGate projection={projection} /> : null}
 
       {/* La senda, antes que los indicadores.
           Es la única tarjeta que responde «¿me estoy acercando a como quiero
@@ -225,36 +227,14 @@ export function DashboardClient() {
         </Card>
 
         <div className="grid gap-5">
-          <Card>
-            <CardHeader title="Membresía" />
-            <CardContent>
-              {membership.data?.membership ? (
-                <div className="grid gap-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="font-semibold">{membership.data.membership.plan?.nombre ?? 'Plan activo'}</p>
-                      <p className="mt-1 text-sm text-[var(--text-muted)]">
-                        Vence en {membership.data.membership.diasRestantes} días
-                      </p>
-                    </div>
-                    <IdCard className="size-5 text-[var(--accent-ink)]" />
-                  </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-[var(--surface-high)]">
-                    <div
-                      className="h-full rounded-full bg-[var(--volt)] transition-[width] duration-[var(--dur-6)] ease-[var(--ease-out)]"
-                      style={{
-                        width: `${Math.max(4, Math.min(100, membership.data.membership.diasRestantes))}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm leading-6 text-[var(--text-muted)]">
-                  No existe una membresía visible para esta cuenta.
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          {/* Sólo cuando está vigente: si no lo está, el aviso de arriba ya es
+              la única palabra sobre el estado de la membresía. */}
+          {projection?.membership && membershipActive ? (
+            <MembershipSummaryCard membership={projection.membership} />
+          ) : null}
+          {/* Pesarse es un hábito semanal, y un hábito que hay que ir a buscar
+              tres pantallas más adentro no se mantiene. */}
+          <BodyWeightCard />
           <Card>
             <CardHeader title="Último acceso" />
             <CardContent>

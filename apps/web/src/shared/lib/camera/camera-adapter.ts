@@ -83,6 +83,30 @@ export function cameraAvailability():
   return { ok: true };
 }
 
+/**
+ * ¿Hay una webcam que ofrecer, antes de pedir permiso por ella?
+ *
+ * Se pregunta para no enseñar una vía de captura que sólo puede fallar —un
+ * escritorio de sobremesa sin cámara— sin convertir la comprobación en un
+ * segundo guardián del permiso: no se abre el flujo, sólo se mira el inventario.
+ *
+ * La duda se resuelve a favor de ofrecerla. Algunos navegadores no enumeran
+ * ningún dispositivo hasta que se concede permiso, y una lista vacía ahí
+ * significa «todavía no te lo digo», no «no hay cámara»; en ese caso quien debe
+ * decidir es el permiso, no esta función. Sólo una lista que sí trae
+ * dispositivos y ninguno de vídeo es una respuesta firme.
+ */
+export async function hasCameraDevice(): Promise<boolean> {
+  if (!cameraAvailability().ok) return false;
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    if (devices.length === 0) return true;
+    return devices.some((device) => device.kind === 'videoinput');
+  } catch {
+    return true;
+  }
+}
+
 export type CameraStartOptions = {
   readonly deviceId?: string | undefined;
   readonly width?: number;

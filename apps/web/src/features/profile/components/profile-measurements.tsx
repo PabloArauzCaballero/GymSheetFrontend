@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { onboardingService } from '@/features/onboarding/services/onboarding-service';
+import { RecordWeightButton } from '@/features/profile/components/record-weight-dialog';
 import { queryKeys } from '@/shared/api/query-keys';
 import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
@@ -15,6 +16,10 @@ export function ProfileMeasurements() {
   return (
     <Card>
       <CardHeader
+        // La acción vive junto a la evolución que alimenta, igual que en el
+        // móvil: anotar un pesaje es lo que se hace cada semana, y hasta ahora
+        // el histórico sólo se llenaba de rebote al guardar el perfil entero.
+        action={<RecordWeightButton size="sm" />}
         description="Cada registro se conserva; actualizar el peso no borra mediciones anteriores."
         title="Progreso corporal"
       />

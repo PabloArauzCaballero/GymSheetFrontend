@@ -2,11 +2,12 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Trash2, Upload } from 'lucide-react';
-import { useRef } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { profilePhotosService } from '@/features/profile/services/profile-photos-service';
 import { ApiError } from '@/shared/api/api-error';
 import { queryKeys } from '@/shared/api/query-keys';
+import { MediaSourceDialog } from '@/shared/components/media/media-source-dialog';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { notify } from '@/shared/notifications';
 
@@ -18,7 +19,7 @@ const MAX_PHOTOS = 6;
  */
 export function ProfilePhotoGallery() {
   const queryClient = useQueryClient();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [picking, setPicking] = useState(false);
   const photos = useQuery({
     queryKey: queryKeys.profilePhotos,
     queryFn: profilePhotosService.list,
@@ -75,7 +76,7 @@ export function ProfilePhotoGallery() {
           <button
             className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-[8px] border border-dashed border-[var(--border-subtle)] text-[var(--text-muted)] transition-colors hover:border-[var(--volt)] hover:text-[var(--text)] disabled:opacity-50"
             disabled={upload.isPending}
-            onClick={() => inputRef.current?.click()}
+            onClick={() => setPicking(true)}
             type="button"
           >
             <Upload className="size-5" />
@@ -83,16 +84,16 @@ export function ProfilePhotoGallery() {
           </button>
         ) : null}
       </CardContent>
-      <input
-        accept="image/*"
-        className="hidden"
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          event.target.value = '';
-          if (file) upload.mutate(file);
-        }}
-        ref={inputRef}
-        type="file"
+      <MediaSourceDialog
+        busy={upload.isPending}
+        captureFileName="foto-de-perfil"
+        captureLabel="Usar esta foto"
+        description="Aparecerá en tu ficha del directorio y en la baraja de Descubrir."
+        fileLabel="Elegir una imagen"
+        onOpenChange={setPicking}
+        onPick={(file) => upload.mutate(file)}
+        open={picking}
+        title="Añadir una foto"
       />
     </Card>
   );
