@@ -105,14 +105,15 @@ export function StoriesStrip({
         ) : null}
       </div>
       <MediaSourceDialog
-        // Sólo imágenes: temporal hasta que el visor móvil tenga `expo-video`.
-        // Un vídeo subido desde la web hoy es inconsumible en el teléfono.
-        accept="image/*"
+        // Imagen o vídeo: los dos visores saben reproducirlos (el móvil, desde
+        // que `story-viewer.tsx` monta `expo-video`), así que la web ya no
+        // puede publicar nada inconsumible en el teléfono.
+        accept="image/*,video/*"
         busy={upload.isPending}
         captureFileName="story"
         captureLabel="Publicar esta foto"
         description="Se verá 24 horas para tus matches."
-        fileLabel="Elegir una imagen"
+        fileLabel="Elegir una imagen o un vídeo"
         onOpenChange={setPicking}
         onPick={(file) => upload.mutate(file)}
         open={picking}

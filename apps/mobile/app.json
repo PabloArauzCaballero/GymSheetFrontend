@@ -59,8 +59,16 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "GymSheet usa tus fotos para que elijas una imagen de perfil o publiques una story.",
-          "cameraPermission": "GymSheet usa la cámara para que hagas una foto y la publiques como story."
+          "photosPermission": "GymSheet usa tus fotos y vídeos para que elijas una imagen de perfil o publiques una story.",
+          "cameraPermission": "GymSheet usa la cámara para que hagas una foto o grabes un vídeo y lo publiques como story.",
+          "microphonePermission": "GymSheet usa el micrófono para grabar el sonido de los vídeos que publiques como story."
+        }
+      ],
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": false,
+          "supportsPictureInPicture": false
         }
       ],
       [

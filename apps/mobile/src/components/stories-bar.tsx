@@ -219,7 +219,7 @@ function StorySourceSheet({
             Se verá 24 horas para el resto del gimnasio.
           </Text>
 
-          <Button icon="camera-outline" label="Hacer una foto" onPress={onCamera} />
+          <Button icon="camera-outline" label="Hacer una foto o un vídeo" onPress={onCamera} />
           <Button icon="images-outline" label="Elegir de la galería" onPress={onLibrary} variant="ghost" />
         </View>
       </View>
@@ -228,22 +228,31 @@ function StorySourceSheet({
 }
 
 /**
- * Qué se deja subir: sólo imágenes, y es una limitación temporal.
+ * Qué se deja subir: foto o vídeo, como en la web.
  *
- * La app no tiene reproductor de vídeo —no hay `expo-av`, `expo-video` ni
- * `react-native-video` instalados—, así que el visor no puede reproducir lo que
- * se suba: un vídeo se abría como quince segundos de pantalla negra con un
- * botón de play. Pedir `['images', 'videos']` era invitar a publicar algo que
- * la app no sabe enseñar, y el que peor lo pasaba era quien publicaba, porque
- * su story quedaba rota para todo el gimnasio sin que él llegara a verlo.
- *
- * Para levantar la restricción: instalar `expo-video`, reproducir el vídeo en
- * `story-viewer.tsx` (donde hoy hay un cartel de «se abre fuera de la app»),
- * pasar la duración del tramo a la real del clip en vez del tope fijo, y
- * devolver aquí `['images', 'videos']`. Mientras tanto, `fileFromAsset` sigue
- * sabiendo empaquetar vídeo: los que ya están en el feed se siguen sirviendo.
+ * Estuvo restringido a imágenes mientras la app no tenía reproductor: un vídeo
+ * publicado desde el navegador quedaba inconsumible en el teléfono. Desde que
+ * `story-viewer.tsx` monta `expo-video` —reproduce dentro de la app, silenciado
+ * por defecto y con la barra siguiendo la duración real del clip— esa razón
+ * desapareció y las dos plataformas admiten lo mismo. `livePhotos` queda fuera
+ * a propósito: el backend recibiría la foto y perdería el vídeo emparejado.
  */
-const STORY_MEDIA_TYPES: ImagePicker.MediaType[] = ['images'];
+const STORY_MEDIA_TYPES: ImagePicker.MediaType[] = ['images', 'videos'];
+
+/**
+ * Tope de grabación, en segundos.
+ *
+ * 15 s es el tramo de una story y el mismo respaldo que usan los dos visores
+ * cuando un clip no declara duración, así que grabando desde la app no se puede
+ * producir algo más largo de lo que la barra sabe representar sin medirlo.
+ *
+ * `videoMaxDuration` sólo gobierna la GRABACIÓN (así lo documenta
+ * `expo-image-picker`): un vídeo ya existente que se elija del carrete puede
+ * durar más, y eso está bien — el visor mide la duración real y el tramo se
+ * ajusta. El tope duro de lo que se puede publicar lo pone el backend por
+ * tamaño (`CHAT_MEDIA_MAX_BYTES`), y su error llega tal cual al aviso.
+ */
+const STORY_VIDEO_MAX_SECONDS = 15;
 
 /** Lo que el backend espera en el multipart, salga de la cámara o del carrete. */
 function fileFromAsset(asset: ImagePicker.ImagePickerAsset): { uri: string; name: string; mimeType: string } {
@@ -311,7 +320,13 @@ export function StoriesBar() {
       notify.error('Se necesita acceso a la cámara para publicar una story.');
       return;
     }
-    submitPicked(await ImagePicker.launchCameraAsync({ mediaTypes: STORY_MEDIA_TYPES, quality: 0.85 }));
+    submitPicked(
+      await ImagePicker.launchCameraAsync({
+        mediaTypes: STORY_MEDIA_TYPES,
+        quality: 0.85,
+        videoMaxDuration: STORY_VIDEO_MAX_SECONDS,
+      }),
+    );
   }
 
   async function handleFromLibrary() {

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
+  ActivityIndicator,
   AppState,
-  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -14,7 +14,10 @@ import {
 import type { AccessibilityActionEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEventListener } from 'expo';
 import { Image } from 'expo-image';
+import { VideoView, useVideoPlayer } from 'expo-video';
+import type { VideoPlayerStatus } from 'expo-video';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -42,21 +45,26 @@ import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing 
 const IMAGE_DURATION_MS = 5000;
 
 /**
- * Tope para un vídeo.
+ * Lo que dura un vídeo **mientras no se sepa cuánto dura de verdad**.
  *
- * La app no lleva reproductor: no hay `expo-av` ni `expo-video` instalados y no
- * se puede añadir una dependencia, así que el vídeo se abre en el reproductor
- * del sistema con `Linking` y **no hay forma de leer su duración real**.
+ * Ya hay reproductor dentro (`expo-video`), así que esto dejó de ser el número
+ * que manda: en cuanto el reproductor emite `sourceLoad` con la duración del
+ * clip, el tramo de la barra y el temporizador se rehacen contra esa cifra.
+ * Este valor sólo cubre la ventana entre abrir la story y tener metadatos, y el
+ * caso en que el origen no llegue a decirlas nunca.
  *
- * Eran 15 s, el tramo de Instagram, y era el número equivocado: aquí no se
- * reproduce nada, así que esos 15 s eran 15 s de cartel fijo. Lo que se muestra
- * es un aviso de dos líneas y un botón; 6 s bastan para leerlo y decidir, y
- * quien toque el botón se lleva el reloj pausado solo (ver `appActive`, la app
- * deja de estar activa mientras el reproductor del sistema está delante).
- *
- * Subir esto de nuevo sólo tiene sentido el día que haya reproductor dentro.
+ * 15 s y no otro número porque es exactamente el mismo respaldo que usa la web
+ * (`apps/web/src/features/stories/components/story-viewer.tsx`): ante un vídeo
+ * que no declara duración, las dos plataformas tienen que enseñar el mismo
+ * tramo o la barra significará una cosa en el teléfono y otra en el navegador.
  */
-const VIDEO_FALLBACK_MS = 6_000;
+const VIDEO_FALLBACK_MS = 15_000;
+
+/** Cuánto dura un tramo: la foto, lo fijo; el vídeo, lo que mida de verdad. */
+function segmentDurationMs(mediaType: 'image' | 'video', measuredMs: number | null): number {
+  if (mediaType !== 'video') return IMAGE_DURATION_MS;
+  return measuredMs ?? VIDEO_FALLBACK_MS;
+}
 
 /**
  * Escalones del tramo actual cuando el sistema pide movimiento reducido.
@@ -125,11 +133,17 @@ function ProgressSegment({
   // `runToken`— empieza de cero. Es un efecto aparte del de abajo a propósito:
   // si el reinicio viviera ahí, cada pausa reiniciaría el tramo en vez de
   // congelarlo. Va declarado antes para que su cuerpo corra primero.
+  //
+  // `durationMs` también reinicia, y no es un descuido: en un vídeo el tramo
+  // empieza dibujándose contra el respaldo y, cuando el reproductor dice la
+  // duración real, la regla cambia debajo. Conservar el avance ahí pondría la
+  // barra por delante del vídeo —que justo entonces es cuando arranca—, así
+  // que lo honesto es volver a empezar con la cifra buena.
   useEffect(() => {
     if (status !== 'current') return;
     progress.value = 0;
     startedRunRef.current = null;
-  }, [progress, runToken, status]);
+  }, [durationMs, progress, runToken, status]);
 
   useEffect(() => {
     cancelAnimation(progress);
@@ -442,6 +456,20 @@ export function StoryViewer({
   const [manualPaused, setManualPaused] = useState(false);
   const [dragging, setDragging] = useState(false);
   /**
+   * El vídeo entra silenciado, como en la web y como en cualquier visor de
+   * stories: quien abre la app en un vagón no ha pedido sonido. El estado vive
+   * en el visor y no en el reproductor para que la decisión sobreviva al paso
+   * de una story a la siguiente — desmutear una vez es desmutear la sesión.
+   */
+  const [muted, setMuted] = useState(true);
+  /**
+   * La duración real del clip, guardada JUNTO A LA STORY que la produjo.
+   *
+   * Sin el `storyId` al lado, pasar de un vídeo largo a una foto dejaría el
+   * número anterior aplicándose un render de más. Mismo patrón que la web.
+   */
+  const [videoDuration, setVideoDuration] = useState<{ storyId: string; ms: number } | null>(null);
+  /**
    * El cierre ya está decidido pero la animación de salida aún corre.
    *
    * `dragging` se apagaba en `onFinalize`, que es inmediato: durante los 200 ms
@@ -469,7 +497,10 @@ export function StoryViewer({
   const storyId = story?.id ?? null;
   const storyViewedByMe = story?.viewedByMe ?? false;
   const isMine = Boolean(entry && principal && entry.userId === principal.id);
-  const durationMs = story?.mediaType === 'video' ? VIDEO_FALLBACK_MS : IMAGE_DURATION_MS;
+  const isVideo = story?.mediaType === 'video';
+  /** La medida sólo vale para la story que la produjo; para el resto, `null`. */
+  const measuredMs = videoDuration && videoDuration.storyId === storyId ? videoDuration.ms : null;
+  const durationMs = segmentDurationMs(story?.mediaType ?? 'image', measuredMs);
 
   /**
    * Todas las razones para parar el reloj, en una sola expresión: el dedo
@@ -478,6 +509,79 @@ export function StoryViewer({
    * plano. Ninguna de esas situaciones es «el usuario está mirando la story».
    */
   const paused = held || manualPaused || dragging || closing || busy || viewersOpen || !appActive;
+
+  /**
+   * El reproductor del vídeo en curso.
+   *
+   * La fuente es `null` en una foto: `useVideoPlayer` memoriza por fuente, así
+   * que una tira de fotos seguidas reutiliza el mismo reproductor vacío y sólo
+   * se crea uno nuevo al llegar a un vídeo. Cada vídeo estrena instancia, y por
+   * eso el estado de silencio se lee de una referencia: el `setup` corre al
+   * crear, cuando la variable de estado de este render todavía no existía.
+   */
+  const mutedRef = useRef(muted);
+  const player = useVideoPlayer(isVideo && story ? story.mediaUrl : null, (instance) => {
+    instance.muted = mutedRef.current;
+    instance.loop = false;
+    // Una story no sigue sonando con el teléfono bloqueado ni con la app detrás.
+    instance.staysActiveInBackground = false;
+  });
+
+  // El silencio se aplica sobre el reproductor vigente. `player` está en las
+  // dependencias porque cambiar de vídeo crea otro: sin eso, desmutear en la
+  // primera story y pasar a la segunda devolvía el sonido al silencio.
+  useEffect(() => {
+    mutedRef.current = muted;
+    player.muted = muted;
+  }, [muted, player]);
+
+  /*
+   * Reproducir es lo contrario de pausar, y «pausar» aquí es la misma palabra
+   * para todo: mantener pulsado, la pausa del lector de pantalla, el arrastre,
+   * la hoja de espectadores, el borrado y la app en segundo plano. Mantener
+   * pulsado detiene el VÍDEO, no sólo la barra — que era justo la diferencia
+   * entre pausar y disimular. Autoplay al entrar sale gratis de aquí: al
+   * cambiar de vídeo `player` es otro y el efecto vuelve a correr.
+   */
+  useEffect(() => {
+    if (!isVideo) return;
+    if (paused) player.pause();
+    else player.play();
+  }, [isVideo, paused, player]);
+
+  /*
+   * La duración de verdad.
+   *
+   * `sourceLoad` llega cuando el reproductor termina de leer los metadatos del
+   * clip y trae su duración en segundos; es el único momento en que se puede
+   * saber cuánto dura sin inventárselo. A partir de ahí manda esa cifra: la
+   * barra y el temporizador se rehacen contra ella (ver `storyKey`).
+   *
+   * `useEventListener` reengancha solo al cambiar de reproductor y siempre
+   * invoca la última versión de este cuerpo, así que `storyId` es el de este
+   * render y no hace falta una referencia para leerlo.
+   */
+  useEventListener(player, 'sourceLoad', ({ duration }) => {
+    if (!storyId || !Number.isFinite(duration) || duration <= 0) return;
+    const ms = Math.round(duration * 1000);
+    setVideoDuration((previous) =>
+      previous && previous.storyId === storyId && previous.ms === ms ? previous : { storyId, ms },
+    );
+  });
+
+  /*
+   * Estado del reproductor, para no dejar un rectángulo negro sin explicación.
+   *
+   * Se repone al cambiar de reproductor y no sólo al recibir eventos: sin ese
+   * efecto, un vídeo que falló dejaría su `error` puesto sobre el siguiente
+   * hasta que éste emitiera, y el usuario leería «no se pudo cargar» encima de
+   * un clip que estaba cargando perfectamente.
+   */
+  const [playerStatus, setPlayerStatus] = useState<VideoPlayerStatus>('idle');
+  useEffect(() => {
+    setPlayerStatus(player.status);
+  }, [player]);
+  useEventListener(player, 'statusChange', ({ status }) => setPlayerStatus(status));
 
   /** Lo que le queda a la story actual; sobrevive a las pausas. */
   const remainingRef = useRef(durationMs);
@@ -650,7 +754,13 @@ export function StoryViewer({
 
   // La clave del reloj va por identidad, no por posición: un reordenamiento del
   // feed ya no reinicia el temporizador de la story que se está viendo.
-  const storyKey = cursor ? `${cursor.userId}:${cursor.storyId}:${cursor.run}` : 'none';
+  //
+  // `durationMs` forma parte de la clave por el vídeo: el reloj arranca con el
+  // respaldo y, cuando `sourceLoad` trae la duración real, tiene que rearmarse
+  // con ella. Sin esto el temporizador seguiría contando los 15 s de reserva
+  // mientras la barra dibuja otra cosa, que es la divergencia exacta que esta
+  // fase venía a cerrar. En una foto el valor es constante y no cambia nada.
+  const storyKey = cursor ? `${cursor.userId}:${cursor.storyId}:${cursor.run}:${durationMs}` : 'none';
 
   // Declarado ANTES del temporizador a propósito: al cambiar de story la
   // limpieza del temporizador guarda lo que quedaba de la anterior, y este
@@ -828,14 +938,29 @@ export function StoryViewer({
         <GestureDetector gesture={pan}>
           <Animated.View style={[{ flex: 1, overflow: 'hidden', borderRadius: radii.xl }, contentStyle]}>
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-              {story.mediaType === 'image' ? (
+              {isVideo ? (
+                // Sin controles nativos y sin pantalla completa: la story YA es
+                // pantalla completa y su lenguaje son los toques laterales y el
+                // dedo apoyado. Una barra de reproducción encima taparía la
+                // mitad de esos gestos y ofrecería un modelo distinto para lo
+                // mismo. El sonido y la pausa viven en la cabecera y en el
+                // gesto, que es donde el usuario ya los busca.
+                <VideoView
+                  allowsFullscreen={false}
+                  allowsPictureInPicture={false}
+                  contentFit="contain"
+                  nativeControls={false}
+                  player={player}
+                  style={{ width: '100%', height: '100%' }}
+                />
+              ) : (
                 <Image
                   contentFit="contain"
                   source={{ uri: story.mediaUrl }}
                   style={{ width: '100%', height: '100%' }}
                   transition={reduceMotion ? 0 : 160}
                 />
-              ) : null}
+              )}
             </View>
 
             {/* Zonas de avance: por encima de la imagen y por debajo de la
@@ -871,11 +996,13 @@ export function StoryViewer({
               style={{ position: 'absolute', top: headerHeight, bottom: tapZoneBottom, right: 0, width: '68%', zIndex: 1 }}
             />
 
-            {story.mediaType === 'video' ? (
-              // `box-none`: sólo el botón recibe el toque, el resto del recuadro
-              // lo deja pasar a las zonas de avance de debajo.
+            {/* Un vídeo que aún no ha pintado su primer fotograma es un
+                rectángulo negro con la barra corriendo por encima, y eso se lee
+                como una app rota. `pointerEvents="none"`: es un cartel, no un
+                control — los toques siguen llegando a las zonas de avance. */}
+            {isVideo && playerStatus !== 'readyToPlay' ? (
               <View
-                pointerEvents="box-none"
+                pointerEvents="none"
                 style={{
                   position: 'absolute',
                   top: headerHeight,
@@ -884,53 +1011,28 @@ export function StoryViewer({
                   bottom: tapZoneBottom,
                   alignItems: 'center',
                   justifyContent: 'center',
+                  gap: spacing.sm,
+                  paddingHorizontal: spacing.xl,
                   zIndex: 3,
                 }}
               >
-                {/* Sin reproductor no hay póster ni primer fotograma que
-                    pintar, así que lo honesto es decirlo: un cartel legible es
-                    menos malo que una pantalla negra con un botón de play que
-                    promete algo que no va a pasar dentro de la app. */}
-                <Pressable
-                  accessibilityHint="Se abre en el reproductor del teléfono, fuera de la aplicación"
-                  accessibilityLabel="Abrir este vídeo"
-                  accessibilityRole="button"
-                  // Con `catch`: si el teléfono no sabe abrir esa URL, la
-                  // promesa rechazada se quedaba en silencio y el botón parecía
-                  // roto. Decirlo es lo mínimo cuando la acción se va fuera.
-                  onPress={() => {
-                    void Linking.openURL(story.mediaUrl).catch(() => {
-                      notify.error('No se pudo abrir el vídeo.');
-                    });
-                  }}
-                  style={({ pressed }) => ({
-                    alignItems: 'center',
-                    gap: spacing.sm,
-                    minHeight: minTouchTarget,
-                    paddingVertical: spacing.lg,
-                    paddingHorizontal: spacing.xl,
-                    borderRadius: radii.xl,
-                    borderWidth: 1,
-                    borderColor: 'rgba(255,255,255,0.24)',
-                    backgroundColor: 'rgba(255,255,255,0.10)',
-                    opacity: pressed ? 0.7 : 1,
-                  })}
-                >
-                  <Ionicons color="#fff" name="play-circle-outline" size={56} />
-                  <Text style={{ color: '#fff', fontSize: fontSizes.md, fontWeight: semibold }}>
-                    Vídeo
-                  </Text>
-                  <Text
-                    style={{
-                      color: 'rgba(255,255,255,0.75)',
-                      fontSize: fontSizes.sm,
-                      textAlign: 'center',
-                      lineHeight: 20,
-                    }}
-                  >
-                    Este vídeo se abre fuera de la app,{'\n'}en el reproductor del teléfono.
-                  </Text>
-                </Pressable>
+                {playerStatus === 'error' ? (
+                  <>
+                    <Ionicons color="rgba(255,255,255,0.75)" name="cloud-offline-outline" size={40} />
+                    <Text
+                      style={{
+                        color: 'rgba(255,255,255,0.75)',
+                        fontSize: fontSizes.sm,
+                        textAlign: 'center',
+                        lineHeight: 20,
+                      }}
+                    >
+                      Este vídeo no se pudo cargar.
+                    </Text>
+                  </>
+                ) : (
+                  <ActivityIndicator color="#fff" size="small" />
+                )}
               </View>
             ) : null}
 
@@ -952,7 +1054,15 @@ export function StoryViewer({
                 {entry.stories.map((item, itemIndex) => (
                   <ProgressSegment
                     animated={!reduceMotion}
-                    durationMs={item.mediaType === 'video' ? VIDEO_FALLBACK_MS : IMAGE_DURATION_MS}
+                    // La duración medida sólo se conoce de la story en curso —
+                    // es la única cuyo vídeo está cargado. Los demás tramos no
+                    // se animan (están llenos o vacíos), así que su duración
+                    // nominal no llega a usarse para nada.
+                    durationMs={
+                      item.id === storyId
+                        ? durationMs
+                        : segmentDurationMs(item.mediaType, null)
+                    }
                     key={item.id}
                     paused={paused}
                     remainingMsRef={remainingRef}
@@ -980,6 +1090,29 @@ export function StoryViewer({
                     {relativeTimeEs(story.createdAt)}
                   </Text>
                 </View>
+                {/* El sonido sólo aparece cuando hay sonido que gobernar. Es un
+                    conmutador y se anuncia como tal: la etiqueta dice lo que va
+                    a pasar al pulsar, y el valor, en qué estado está ahora. */}
+                {isVideo ? (
+                  <Pressable
+                    accessibilityLabel={muted ? 'Activar el sonido' : 'Silenciar'}
+                    accessibilityRole="button"
+                    accessibilityValue={{ text: muted ? 'Silenciado' : 'Con sonido' }}
+                    onPress={() => setMuted((value) => !value)}
+                    style={{
+                      width: minTouchTarget,
+                      height: minTouchTarget,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Ionicons
+                      color="#fff"
+                      name={muted ? 'volume-mute-outline' : 'volume-high-outline'}
+                      size={iconSizes.lg}
+                    />
+                  </Pressable>
+                ) : null}
                 {isMine ? (
                   <Pressable
                     accessibilityLabel="Eliminar esta story"

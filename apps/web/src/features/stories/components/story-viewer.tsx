@@ -13,7 +13,11 @@ import { StoryViewersPanel } from './story-viewers-panel';
 
 /** Lo que dura una foto en pantalla. Un video dura lo que dure el video. */
 const IMAGE_DURATION_MS = 5_000;
-/** Si el navegador no sabe cuánto dura el video, no se queda ahí para siempre. */
+/**
+ * Si el navegador no sabe cuánto dura el video, no se queda ahí para siempre.
+ * El mismo número que `apps/mobile/src/components/story-viewer.tsx`: ante un
+ * clip que no declara duración, las dos plataformas enseñan el mismo tramo.
+ */
 const VIDEO_FALLBACK_MS = 15_000;
 /** Por debajo de esto, el gesto fue un toque; por encima, fue mantener pulsado. */
 const TAP_MAX_MS = 250;
