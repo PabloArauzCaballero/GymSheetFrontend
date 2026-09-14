@@ -102,6 +102,12 @@ const allowedPathPatterns = [
   new RegExp(`^/me/interactions/passes/${resourceId}$`, 'u'),
   /^\/notifications\/me$/u,
   /^\/notifications\/preferences\/me$/u,
+  // Push al navegador (F4): la configuración pública que necesita `PushManager`
+  // (`applicationServerKey`) y el alta/baja de la suscripción. El móvil llamaba
+  // a `device-tokens` directamente contra el backend; la web pasa por el BFF
+  // como todo lo demás, y sin estas dos entradas no llegaba ni a intentarlo.
+  /^\/notifications\/push\/web-config$/u,
+  /^\/notifications\/device-tokens$/u,
   new RegExp(`^/notifications/${resourceId}/read$`, 'u'),
   /^\/profile$/u,
   // Directorio público de sedes: el filtro de sucursal en Comunidad lo pide

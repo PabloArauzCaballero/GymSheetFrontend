@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { Pagination } from '@/shared/components/ui/pagination';
 import { formatDateTime } from '@/shared/lib/date';
 import { NotificationPreferenceForm } from './notification-preference-form';
+import { WebPushCard } from './web-push-card';
 
 export function NotificationsPageClient() {
   const [page, setPage] = useState(1);
@@ -128,19 +129,29 @@ export function NotificationsPageClient() {
             )}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader
-            description="El canal externo exige fecha y versión de consentimiento."
-            title="Preferencias"
-          />
-          <CardContent>
-            {preference.isError ? (
-              <ErrorPanel message={preference.error.message} onRetry={() => preference.refetch()} />
-            ) : preference.data ? (
-              <NotificationPreferenceForm preference={preference.data} />
-            ) : null}
-          </CardContent>
-        </Card>
+        {/* La columna lateral agrupa lo que se CONFIGURA, frente a la bandeja,
+            que es lo que se lee: preferencias de canal primero y el opt-in de
+            este navegador debajo, porque uno vale para la cuenta entera y el
+            otro solo para el equipo que tienes delante. */}
+        <div className="grid content-start gap-5">
+          <Card>
+            <CardHeader
+              description="El canal externo exige fecha y versión de consentimiento."
+              title="Preferencias"
+            />
+            <CardContent>
+              {preference.isError ? (
+                <ErrorPanel
+                  message={preference.error.message}
+                  onRetry={() => preference.refetch()}
+                />
+              ) : preference.data ? (
+                <NotificationPreferenceForm preference={preference.data} />
+              ) : null}
+            </CardContent>
+          </Card>
+          <WebPushCard />
+        </div>
       </section>
     </div>
   );

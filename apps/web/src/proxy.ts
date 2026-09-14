@@ -52,6 +52,9 @@ export const knownRoutes = new Set([
   'plans',
   'profile',
   'routines',
+  // Consola de plataforma (`SYSTEM_ADMIN`). Como el resto, tiene que figurar
+  // aquí para que no se confunda con el prefijo de un gimnasio.
+  'sistema',
   'trayectoria',
   'tutorials',
   'workouts',
@@ -130,7 +133,12 @@ export const config = {
   // La marca gráfica y el manifiesto los pide el navegador antes de que exista
   // sesión (icono de pestaña, instalación de la aplicación), así que no pueden
   // caer en la redirección a login pese a resolverse por inquilino.
+  //
+  // `sw.js` va por lo mismo y con un motivo propio: el navegador lo revalida por
+  // su cuenta, fuera de cualquier navegación y a veces sin cookies. Una
+  // redirección en la respuesta de un script de service worker aborta el
+  // registro, así que esta ruta no puede pasar por el muro.
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|brand-mark.svg).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|brand-mark.svg|sw.js).*)',
   ],
 };

@@ -45,12 +45,15 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 
 # El standalone del monorepo ubica el server en apps/web/server.js y hoistea
-# node_modules en la raíz. static/ se copia aparte (no va en el trace). Esta
-# app no tiene carpeta public/: los assets estáticos (brand-mark.svg,
-# manifest.ts) son rutas de archivo especiales de app/, ya incluidas en
-# el standalone.
+# node_modules en la raíz. static/ se copia aparte (no va en el trace). La
+# mayoría de assets (brand-mark.svg, manifest.ts) son rutas de archivo
+# especiales de app/ y ya viajan en el standalone; public/ se copia aparte
+# porque el standalone tampoco lo incluye, y ahí vive sw.js: un service worker
+# SÓLO controla todo el origen si se sirve desde la raíz, así que no puede ser
+# una ruta de app/.
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
 USER nextjs
 EXPOSE 3001

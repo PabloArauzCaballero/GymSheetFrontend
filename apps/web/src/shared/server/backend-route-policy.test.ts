@@ -47,6 +47,9 @@ const allowedCases: Array<[string[], string]> = [
   [['me', 'interactions', 'passes-sent'], '/me/interactions/passes-sent'],
   [['me', 'interactions', 'counts'], '/me/interactions/counts'],
   [['me', 'interactions', 'passes', id], `/me/interactions/passes/${id}`],
+  // F4: push web. Sin estas dos el navegador no puede ni preguntar si hay push.
+  [['notifications', 'push', 'web-config'], '/notifications/push/web-config'],
+  [['notifications', 'device-tokens'], '/notifications/device-tokens'],
 ];
 const blockedCases: Array<[string[]]> = [
   [['admin', 'access', 'mock', 'events']],
@@ -65,6 +68,9 @@ const blockedCases: Array<[string[]]> = [
   [['me', 'interactions']],
   [['me', 'interactions', 'blocked']],
   [['me', 'discovery']],
+  // `push` no es un prefijo abierto: sólo la configuración pública pasa.
+  [['notifications', 'push']],
+  [['notifications', 'device-tokens', id]],
 ];
 
 describe('backend route policy', () => {
