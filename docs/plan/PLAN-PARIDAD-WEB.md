@@ -31,6 +31,32 @@ Deuda anotada (no bloqueante): la lista de vistas de perfil re-agrega el histori
 página, y el contador de interacciones no comparte tope con la lista (>50 likes → números
 discrepantes).
 
+## Estado (2026-09-14)
+
+**F1, F2, F3, F4 y F5 hechas y desplegadas en dev.** Queda F0 (E2E con Playwright) y los
+pulidos de F6.
+
+| Fase | Estado | Dónde |
+|---|---|---|
+| F0 — E2E de lo portado | **pendiente** | única deuda de verificación que queda |
+| F1 — stories solo imágenes | hecha y **revertida por F5** (ya hay vídeo en ambas) | `stories-strip.tsx` |
+| F2 — registrar peso + MembershipGate | hecha | `record-weight-dialog.tsx`, `membership-gate.tsx` |
+| F3 — cámara en stories y galería | hecha | `media-source-dialog.tsx` |
+| F4 — push web (VAPID) | hecha y **activa en dev** | ADR-0011; `public/sw.js`, `use-web-push.ts` |
+| F5 — vídeo en stories | hecha | `expo-video` en el visor móvil + proxy de media |
+| F6 — pulidos | pendiente | baraja a sangre, deuda de rendimiento |
+
+Hallazgos que el plan no anticipaba y que resultaron ser el trabajo de verdad:
+
+1. **La web tampoco reproducía vídeo**, y no por la subida sino por la lectura:
+   `/api/media` sólo admitía `^image/...` y devolvía 415 para todo vídeo, sin `Range` y
+   bufferizando el cuerpo entero. Reabrir `video/*` sin arreglar eso habría repetido el
+   problema de H5 con los papeles cambiados. Arreglado de paso el vídeo del chat.
+2. **El build standalone de Next no incluye `public/`**, así que el service worker de F4
+   nunca habría llegado al contenedor. Se añade la copia al `Dockerfile`.
+3. **Una redirección del proxy sobre `/sw.js` aborta el registro del worker en silencio**;
+   por eso `sw.js` sale del matcher de `proxy.ts`.
+
 ## Fases
 
 ### F0 — Verificación E2E de lo ya portado (primero, sin escribir features)
