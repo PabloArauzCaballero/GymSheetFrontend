@@ -2,6 +2,7 @@ import { apiRequest } from '@/shared/api/api-client';
 import {
   leaderboardSchema,
   muscleEquipmentInferenceSchema,
+  pointRulesSchema,
   progressionAcknowledgedSchema,
   progressionSchema,
   restDaysSchema,
@@ -10,6 +11,7 @@ import type {
   LeaderboardEntry,
   LeaderboardSortBy,
   MuscleEquipmentInference,
+  PointRules,
   Progression,
   RestDays,
 } from '@/shared/api/schemas';
@@ -23,6 +25,8 @@ import type {
  */
 export const progressionService = {
   get: () => apiRequest<Progression>('/me/progression', progressionSchema),
+  /** Cuánto vale cada cosa. Lo publica el servidor para no copiarlo aquí. */
+  rules: () => apiRequest<PointRules>('/me/progression/rules', pointRulesSchema),
   acknowledge: () =>
     apiRequest('/me/progression/acknowledge', progressionAcknowledgedSchema, { method: 'POST' }),
   leaderboard: (limit = 10, sortBy: LeaderboardSortBy = 'points') =>

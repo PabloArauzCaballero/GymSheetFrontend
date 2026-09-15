@@ -113,7 +113,7 @@ export default function ProfileScreen() {
         profile.isFetching || membership.isFetching || photos.isFetching || progression.isFetching
       }
     >
-      <ScreenHeader title="Perfil" />
+      <ScreenHeader title="Perfil" tourKey="profile" />
 
       <TourTarget id="profile.identity">
       <Card>

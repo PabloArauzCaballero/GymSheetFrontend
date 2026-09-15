@@ -85,6 +85,7 @@ export default function WorkoutsScreen() {
       <ScreenHeader
         subtitle={workouts.data ? `${workouts.data.total} sesiones registradas` : 'Tu historial.'}
         title="Entrenos"
+        tourKey="workouts"
       />
 
       {/* Dos formatos porque responden a dos preguntas distintas: el CSV es

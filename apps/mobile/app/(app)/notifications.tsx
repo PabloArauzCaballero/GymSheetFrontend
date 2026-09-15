@@ -7,6 +7,7 @@ import { apiClient } from '@/api/client';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { Card, Divider, Row, ScreenHeader, ScrollScreen, Section } from '@/components/layout';
 import { BackLink } from '@/components/nav';
+import { TourTarget, useScreenTour } from '@/components/tour';
 import { formatDate } from '@/lib/format';
 import { notify } from '@/notifications';
 import { colors, fontSizes, minTouchTarget, semibold, spacing } from '@/theme';
@@ -103,6 +104,7 @@ function PreferenceSwitch({
 
 export default function NotificationsScreen() {
   const queryClient = useQueryClient();
+  useScreenTour('notifications');
 
   const preference = useQuery({
     queryKey: PREFERENCES_KEY,
@@ -175,8 +177,10 @@ export default function NotificationsScreen() {
       <ScreenHeader
         subtitle="Avisos propios y consentimiento explícito para canales externos."
         title="Notificaciones"
+        tourKey="notifications"
       />
 
+      <TourTarget id="notifications.reminders">
       <Section title="Avisos">
         <Card>
           <PreferenceSwitch
@@ -189,6 +193,7 @@ export default function NotificationsScreen() {
           />
         </Card>
       </Section>
+      </TourTarget>
 
       <Section index={1} title="Canal de entrega">
         <Card>
@@ -239,6 +244,7 @@ export default function NotificationsScreen() {
         </Card>
       </Section>
 
+      <TourTarget id="notifications.quiet">
       <Section index={2} title="Horario de silencio">
         <Card>
           <PreferenceSwitch
@@ -266,6 +272,7 @@ export default function NotificationsScreen() {
           ) : null}
         </Card>
       </Section>
+      </TourTarget>
     </ScrollScreen>
   );
 }

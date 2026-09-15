@@ -17,6 +17,7 @@ import {
   onboardingSchema,
   profilePhotoSchema,
   muscleEquipmentInferenceSchema,
+  pointRulesSchema,
   progressionAcknowledgedSchema,
   progressionSchema,
   publicBranchSummarySchema,
@@ -36,6 +37,7 @@ import {
   storyViewersResponseSchema,
   swipeResultSchema,
   undoSwipeResultSchema,
+  workoutFinishSchema,
   workoutSchema,
 } from '@gymsheet/schemas';
 import type {
@@ -203,7 +205,7 @@ export const workoutService = {
   startFromRoutine: (routineId: string) =>
     apiClient.request(`/routines/${routineId}/start`, workoutSchema, { method: 'POST' }),
   finish: (id: string, location?: { latitude: number; longitude: number }) =>
-    apiClient.request(`/workouts/${id}/finish`, workoutSchema, {
+    apiClient.request(`/workouts/${id}/finish`, workoutFinishSchema, {
       method: 'PATCH',
       body: location ?? {},
     }),
@@ -332,6 +334,8 @@ export const progressionService = {
    * ningún proceso en segundo plano.
    */
   get: () => apiClient.request('/me/progression', progressionSchema, { method: 'GET' }),
+  /** Cuánto vale cada cosa. Lo publica el servidor para no copiarlo en la app. */
+  rules: () => apiClient.request('/me/progression/rules', pointRulesSchema, { method: 'GET' }),
   /** Confirma que las novedades ya se han celebrado y dejan de ser nuevas. */
   acknowledge: () =>
     apiClient.request('/me/progression/acknowledge', progressionAcknowledgedSchema, {

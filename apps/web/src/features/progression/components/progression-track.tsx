@@ -1,3 +1,8 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { useSeenOnce } from '@/shared/hooks/use-seen-once';
+
 /**
  * Barra de avance dentro del tramo actual.
  *
@@ -10,6 +15,7 @@ export function ProgressTrack({
   color,
   label,
   height = 8,
+  from = 0,
 }: Readonly<{
   ratio: number;
   color: string;
@@ -21,10 +27,28 @@ export function ProgressTrack({
    */
   label: string;
   height?: number;
+  /** Desde qué avance crece, de 0 a 1. El resumen de sesión la arranca donde estaba. */
+  from?: number;
 }>) {
-  const clamped = Math.min(1, Math.max(0, ratio));
+  const clamped = clampRatio(ratio);
+  const ref = useRef<HTMLDivElement>(null);
+  const seen = useSeenOnce(ref);
+  // La barra crece al verse, a la vez que la cifra cuenta: cuentan la misma
+  // historia y deben llegar juntas. La transición es CSS, así que el
+  // interruptor global de «reducir movimiento» de `animations.css` la apaga.
+  const [shown, setShown] = useState(() => clampRatio(from));
+
+  useEffect(() => {
+    if (!seen) return;
+    // Diferido a la siguiente frame: con el ancho inicial ya pintado, el
+    // cambio es una transición y no un salto.
+    const raf = window.requestAnimationFrame(() => setShown(clamped));
+    return () => window.cancelAnimationFrame(raf);
+  }, [clamped, seen]);
+
   return (
     <div
+      ref={ref}
       aria-label={label}
       aria-valuemax={100}
       aria-valuemin={0}
@@ -34,15 +58,19 @@ export function ProgressTrack({
       style={{ height }}
     >
       <div
-        className="h-full rounded-full transition-[width] duration-500 ease-out"
+        className="h-full rounded-full transition-[width] duration-1000 ease-[cubic-bezier(0.33,1,0.68,1)]"
         style={{
           // Un tramo recién empezado debe verse empezado: sin este mínimo el
           // 1 % es un pixel y la barra parece vacía justo cuando más importa
           // confirmar que el primer entrenamiento contó.
-          width: `${Math.max(clamped * 100, clamped > 0 ? 3 : 0)}%`,
+          width: `${Math.max(shown * 100, shown > 0 ? 3 : 0)}%`,
           backgroundColor: color,
         }}
       />
     </div>
   );
+}
+
+function clampRatio(value: number): number {
+  return Math.min(1, Math.max(0, value));
 }

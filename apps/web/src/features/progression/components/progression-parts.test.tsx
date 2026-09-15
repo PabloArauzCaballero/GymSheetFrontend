@@ -3,6 +3,10 @@ import { describe, expect, it } from 'vitest';
 import type { ProgressionLevel } from '@/shared/api/schemas';
 import { RankHero } from './progression-parts';
 
+// Fallo ajeno a este test: `ProgressionLevel` ganó `description` y `sortOrder`
+// y este apaño se quedó sin ellos, así que `yarn type-check` de la web venía
+// fallando aquí —y con él la puerta de validación del monorepo— sin que la
+// prueba tuviera nada que ver.
 const level: ProgressionLevel = {
   code: 'ACERO',
   name: 'Acero',

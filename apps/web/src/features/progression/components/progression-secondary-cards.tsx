@@ -1,4 +1,5 @@
 import type { LeaderboardEntry, LeaderboardSortBy } from '@/shared/api/schemas';
+import { CountUp } from '@/shared/components/motion/count-up';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { cn } from '@/shared/lib/cn';
 
@@ -20,7 +21,11 @@ export function RestDaysCard({
   return (
     <Card>
       <CardHeader
-        description="Esos días, un hueco en tu racha no la rompe. Como máximo seis: si marcas los siete, la racha nunca podría romperse."
+        description={
+          currentRestDays.length >= 6
+            ? 'Los días marcados no rompen tu racha. Ya tienes seis. El séptimo no se puede marcar: sin ningún día de entreno, la racha dejaría de significar algo.'
+            : 'Los días marcados no rompen tu racha. Puedes marcar hasta seis.'
+        }
         title="Días de descanso"
       />
       <CardContent className="flex flex-wrap gap-2">
@@ -88,11 +93,11 @@ export function LeaderboardCard({
             ))}
           </div>
         }
-        description="Solo nombre e inicial: la tabla no es una lista de socios."
+        description="Los cinco primeros de tu gimnasio. Solo se ve el nombre y la inicial."
         title="Clasificación del gimnasio"
       />
       <CardContent className="grid gap-3">
-        {entries.map((entry) => (
+        {entries.map((entry, index) => (
           <div className="flex items-center gap-4" key={`${entry.position}-${entry.displayName}`}>
             <span
               className={cn(
@@ -113,11 +118,19 @@ export function LeaderboardCard({
               {entry.displayName}
               {entry.isMe ? ' · tú' : ''}
             </span>
-            <span className="text-sm text-[var(--text-muted)]">
-              {sortBy === 'streak'
-                ? `${entry.streakDays} ${entry.streakDays === 1 ? 'día' : 'días'}`
-                : entry.points.toLocaleString('es-ES')}
-            </span>
+            {sortBy === 'streak' ? (
+              <span className="text-sm text-[var(--text-muted)] tabular-nums">
+                {`${entry.streakDays} ${entry.streakDays === 1 ? 'día' : 'días'}`}
+              </span>
+            ) : (
+              <span className="text-sm text-[var(--text-muted)]">
+                {/* Escalonado en el orden de lectura: el podio se llena de arriba abajo. */}
+                <span aria-hidden>
+                  <CountUp delayMs={index * 60} value={entry.points} />
+                </span>
+                <span className="sr-only">{`${entry.points.toLocaleString('es-ES')} puntos`}</span>
+              </span>
+            )}
           </div>
         ))}
         {entries.length === 0 ? (

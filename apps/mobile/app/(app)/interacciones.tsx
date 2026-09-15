@@ -15,6 +15,7 @@ import {
   socialService,
 } from '@/api/services';
 import { ScreenHeader } from '@/components/layout';
+import { TourTarget, useScreenTour } from '@/components/tour';
 import { BackLink } from '@/components/nav';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { LikeReceivedCard, LikeSentCard } from '@/components/interactions-cards';
@@ -572,6 +573,7 @@ function NextsTab({ header }: { header: ReactNode }) {
 
 export default function InteraccionesScreen() {
   const [tab, setTab] = useState<MainTab>('likes');
+  useScreenTour('interacciones');
   // Se consulta aquí aunque la cabecera no pinte números: entrar en esta
   // pantalla es el momento en que el badge de Comunidad y el de la barra de
   // pestañas deben estar al día, y comparten esta misma clave y su caché.
@@ -594,16 +596,19 @@ export default function InteraccionesScreen() {
       <ScreenHeader
         subtitle="Quién te dio like, quién vio tu perfil y quién pasó de largo."
         title="Interacciones"
+        tourKey="interacciones"
       />
-      <Segmented
-        onChange={setTab}
-        options={[
-          { value: 'likes', label: 'Te gustan' },
-          { value: 'visitas', label: 'Visitas' },
-          { value: 'nexts', label: 'Nexts' },
-        ]}
-        value={tab}
-      />
+      <TourTarget id="interacciones.tabs">
+        <Segmented
+          onChange={setTab}
+          options={[
+            { value: 'likes', label: 'Te gustan' },
+            { value: 'visitas', label: 'Visitas' },
+            { value: 'nexts', label: 'Nexts' },
+          ]}
+          value={tab}
+        />
+      </TourTarget>
     </>
   );
 

@@ -33,6 +33,14 @@ export const mainNavigation: TutorialDefinition = {
       placement: 'right',
     },
     {
+      id: 'senda',
+      title: 'Tu senda',
+      description: 'Tu rango, tus puntos e insignias. Ganas puntos cada vez que entrenas.',
+      target: 'nav:/trayectoria',
+      placement: 'right',
+      optional: true,
+    },
+    {
       id: 'profile',
       title: 'Mi perfil',
       description: 'Tus datos antropométricos y preferencias de cuenta.',

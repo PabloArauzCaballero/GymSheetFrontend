@@ -28,7 +28,8 @@ import {
   INFO_BUTTON_SIZE,
 } from '@/components/directory-card';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
-import { useResponsive } from '@/components/layout';
+import { TourHelpButton, useResponsive } from '@/components/layout';
+import { TourTarget, useScreenTour } from '@/components/tour';
 import { PressableScale } from '@/components/motion';
 import { BackLink } from '@/components/nav';
 import { ProfileDetailSheet } from '@/components/profile-detail-sheet';
@@ -364,6 +365,7 @@ function MatchModal({
  */
 export default function DescubrirScreen() {
   const router = useRouter();
+  useScreenTour('descubrir');
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const { wide, width } = useResponsive();
@@ -773,17 +775,21 @@ export default function DescubrirScreen() {
             }}
           >
             <BackLink label="Comunidad" />
-            <Text
-              accessibilityRole="header"
-              style={{
-                color: colors.text,
-                fontSize: fontSizes.xl,
-                fontWeight: semibold,
-                letterSpacing: fontSizes.xl * -0.03,
-              }}
-            >
-              Descubrir
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+              <Text
+                accessibilityRole="header"
+                style={{
+                  flex: 1,
+                  color: colors.text,
+                  fontSize: fontSizes.xl,
+                  fontWeight: semibold,
+                  letterSpacing: fontSizes.xl * -0.03,
+                }}
+              >
+                Descubrir
+              </Text>
+              <TourHelpButton tourKey="descubrir" />
+            </View>
             {/* Una línea, no dos: cada renglón de aquí arriba se lo quita a la
                 carta, que es lo único que la pantalla necesita enseñar. */}
             <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
@@ -934,6 +940,7 @@ export default function DescubrirScreen() {
               backend, y un botón que no hace nada cuesta más confianza de la
               que gana en parecido. Los dos que deciden son mayores que el que
               corrige, porque esa es la jerarquía real de la pantalla. */}
+          <TourTarget id="descubrir.actions">
           <View
             style={{
               flexDirection: 'row',
@@ -974,6 +981,7 @@ export default function DescubrirScreen() {
               size={DECIDE_SIZE}
             />
           </View>
+          </TourTarget>
         </View>
       </View>
 

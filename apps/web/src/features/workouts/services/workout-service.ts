@@ -7,7 +7,8 @@ import type {
   Workout,
   WorkoutSetInput,
 } from '@/shared/api/contracts';
-import { pageSchema, workoutSchema } from '@/shared/api/schemas';
+import { pageSchema, workoutFinishSchema, workoutSchema } from '@/shared/api/schemas';
+import type { WorkoutFinish } from '@/shared/api/schemas';
 
 const deleteSchema = z.object({ deleted: z.literal(true) });
 const objectSchema = z.record(z.string(), z.unknown());
@@ -21,8 +22,9 @@ export const workoutService = {
   get: (id: string) => apiRequest<Workout>(`/workouts/${id}`, workoutSchema),
   start: (input: CreateWorkoutInput) =>
     apiRequest<Workout>('/workouts', workoutSchema, { method: 'POST', body: input }),
+  /** Cierra la sesión y trae lo que movió en la senda (puntos, insignias, rango). */
   finish: (id: string) =>
-    apiRequest<Workout>(`/workouts/${id}/finish`, workoutSchema, { method: 'PATCH' }),
+    apiRequest<WorkoutFinish>(`/workouts/${id}/finish`, workoutFinishSchema, { method: 'PATCH' }),
   cancel: (id: string) =>
     apiRequest<Workout>(`/workouts/${id}/cancel`, workoutSchema, { method: 'PATCH' }),
   addExercise: (sessionId: string, input: AddWorkoutExerciseInput) =>

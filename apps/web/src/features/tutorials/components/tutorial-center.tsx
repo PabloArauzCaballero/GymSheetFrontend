@@ -153,10 +153,20 @@ export function TutorialCenter() {
           description="Ajusta la búsqueda o los filtros para ver más recorridos."
         />
       ) : (
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((tutorial) => (
-            <TutorialCard key={tutorial.id} tutorial={tutorial} />
-          ))}
+        <section aria-labelledby="tutorial-grid-title">
+          {/* La rejilla necesita su propio encabezado: los títulos de las
+              tarjetas son `h3` y, sin un `h2` por encima, saltaban directamente
+              del `h1` de la pantalla (axe: heading-order). Va oculto a la vista
+              porque el rótulo ya lo da el título de la página; lo que faltaba
+              era el escalón para quien navega por encabezados. */}
+          <h2 className="sr-only" id="tutorial-grid-title">
+            Tutoriales disponibles
+          </h2>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {filtered.map((tutorial) => (
+              <TutorialCard key={tutorial.id} tutorial={tutorial} />
+            ))}
+          </div>
         </section>
       )}
     </div>

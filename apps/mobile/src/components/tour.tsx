@@ -134,6 +134,119 @@ const SCREEN_TOURS: Record<Exclude<TourKey, 'welcome'>, readonly TourStep[]> = {
       target: 'profile.identity',
     },
   ],
+  trayectoria: [
+    {
+      icon: 'trophy-outline',
+      title: 'Tu rango y tus puntos',
+      body: 'Ganas puntos cada vez que entrenas, y nunca bajan. La barra te dice cuánto falta para el siguiente rango.',
+      target: 'trayectoria.rank',
+    },
+    {
+      icon: 'trail-sign-outline',
+      title: 'El camino',
+      body: 'Todos los rangos, también los que te quedan. Cada uno pide más puntos que el anterior.',
+      target: 'trayectoria.path',
+    },
+    {
+      icon: 'ribbon-outline',
+      title: 'Insignias',
+      body: 'Retos concretos que suman puntos extra. Toca una conseguida para ver su carta. La rareza dice lo difícil que es.',
+      target: 'trayectoria.badges',
+    },
+  ],
+  comunidad: [
+    {
+      icon: 'options-outline',
+      title: 'Filtros, likes y mensajes',
+      body: 'Arriba ajustas a quién ves, revisas quién te dio like y abres tus mensajes.',
+      target: 'comunidad.actions',
+    },
+    {
+      icon: 'podium-outline',
+      title: 'El podio del gimnasio',
+      body: 'Quién lleva más puntos en tu gimnasio. Tócalo para ver tu senda completa.',
+      target: 'comunidad.podium',
+    },
+    {
+      icon: 'flame-outline',
+      title: 'Descubrir',
+      body: 'Conoce socios uno a uno, una carta por persona. Se aplican los filtros que tengas puestos.',
+      target: 'comunidad.discover',
+    },
+  ],
+  descubrir: [
+    {
+      icon: 'albums-outline',
+      title: 'Una carta por socio',
+      body: 'Arrastra a la derecha si te interesa y a la izquierda si no. Toca la esquina de información para ver su ficha.',
+    },
+    {
+      icon: 'heart-outline',
+      title: 'O usa los botones',
+      body: 'La cruz pasa y el corazón marca interés. La flecha deshace tu última decisión.',
+      target: 'descubrir.actions',
+    },
+  ],
+  interacciones: [
+    {
+      icon: 'people-outline',
+      title: 'Cómo reaccionan a tu perfil',
+      body: 'Aquí ves lo que hacen otros socios cuando te encuentran en Comunidad.',
+    },
+    {
+      icon: 'heart-outline',
+      title: 'Tres listas',
+      body: 'Te gustan: quién te dio like. Visitas: quién vio tu perfil. Nexts: quién pasó de largo.',
+      target: 'interacciones.tabs',
+    },
+  ],
+  chat: [
+    {
+      icon: 'chatbubbles-outline',
+      title: 'Solo con conexiones',
+      body: 'Puedes escribir a los socios que aceptaron tu conexión. Las invitaciones se envían desde Comunidad.',
+    },
+    {
+      icon: 'list-outline',
+      title: 'Tus conversaciones',
+      body: 'Toca una para abrirla. Desliza hacia abajo para traer los mensajes nuevos.',
+      target: 'chat.list',
+    },
+  ],
+  membership: [
+    {
+      icon: 'shield-checkmark-outline',
+      title: 'Tu plan hoy',
+      body: 'Si está vigente, cuántos días le quedan y cuándo vence.',
+      target: 'membership.status',
+    },
+    {
+      icon: 'refresh-outline',
+      title: 'Renovar',
+      body: 'Eliges el plan, confirmas y pagas con el código QR. Después envías el comprobante por WhatsApp.',
+      target: 'membership.renew',
+    },
+    {
+      icon: 'key-outline',
+      title: 'Tus accesos',
+      body: 'Cada entrada al gimnasio queda registrada aquí.',
+      target: 'membership.accesses',
+    },
+  ],
+  notifications: [
+    {
+      icon: 'notifications-outline',
+      title: 'Avisos de vencimiento',
+      body: 'Actívalos y te recordamos renovar antes de que venza tu membresía.',
+      target: 'notifications.reminders',
+    },
+    {
+      icon: 'moon-outline',
+      title: 'Horario de silencio',
+      body: 'Silencia los avisos por la noche para que no te molesten.',
+      target: 'notifications.quiet',
+    },
+  ],
 };
 
 /** Breathing room between the highlighted element and the hole cut around it. */

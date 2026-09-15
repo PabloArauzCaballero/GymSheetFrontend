@@ -8,6 +8,7 @@ export const categoryLabels: Record<TutorialCategory, string> = {
   TRAINING: 'Entrenamiento',
   EXERCISES: 'Ejercicios',
   MEMBERSHIP: 'Membresía',
+  PROGRESSION: 'Tu senda',
   ADMIN: 'Administración',
 };
 

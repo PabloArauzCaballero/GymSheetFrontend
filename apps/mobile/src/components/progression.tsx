@@ -7,6 +7,7 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  withDelay,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
@@ -68,12 +69,47 @@ export function ProgressTrack({
   ratio,
   color,
   height = 8,
+  from = 0,
+  durationMs = 1000,
+  delayMs = 0,
 }: {
   ratio: number;
   color: string;
   height?: number;
+  /** Desde qué avance crece, de 0 a 1. El resumen de sesión la arranca donde estaba. */
+  from?: number;
+  durationMs?: number;
+  delayMs?: number;
 }) {
-  const clamped = Math.min(1, Math.max(0, ratio));
+  const clamped = clampRatio(ratio);
+  const reduceMotion = useReducedMotion();
+  // La barra crece al entrar, igual que la cifra que la acompaña cuenta: las
+  // dos cuentan la misma historia y deben llegar juntas.
+  const fill = useSharedValue(reduceMotion ? clamped : clampRatio(from));
+
+  useEffect(() => {
+    if (reduceMotion) {
+      cancelAnimation(fill);
+      fill.value = clamped;
+      return;
+    }
+    fill.value = withDelay(
+      delayMs,
+      withTiming(clamped, { duration: durationMs, easing: Easing.out(Easing.cubic) }),
+    );
+    return () => {
+      cancelAnimation(fill);
+    };
+  }, [clamped, delayMs, durationMs, fill, reduceMotion]);
+
+  const fillStyle = useAnimatedStyle(() => {
+    const value = fill.value;
+    // Un tramo recién empezado debe verse empezado: sin este mínimo, el
+    // 1 % es un pixel y la barra parece vacía justo cuando más importa
+    // confirmar que el primer entrenamiento contó.
+    return { width: `${Math.max(value * 100, value > 0.001 ? 3 : 0)}%` };
+  });
+
   return (
     <View
       accessible
@@ -86,19 +122,15 @@ export function ProgressTrack({
         overflow: 'hidden',
       }}
     >
-      <View
-        style={{
-          // Un tramo recién empezado debe verse empezado: sin este mínimo, el
-          // 1 % es un pixel y la barra parece vacía justo cuando más importa
-          // confirmar que el primer entrenamiento contó.
-          width: `${Math.max(clamped * 100, clamped > 0 ? 3 : 0)}%`,
-          height: '100%',
-          borderRadius: radii.full,
-          backgroundColor: color,
-        }}
+      <Animated.View
+        style={[{ height: '100%', borderRadius: radii.full, backgroundColor: color }, fillStyle]}
       />
     </View>
   );
+}
+
+function clampRatio(value: number): number {
+  return Math.min(1, Math.max(0, value));
 }
 
 /**
@@ -333,10 +365,20 @@ export function BadgeTile({
           >
             {badge.name}
           </Text>
-          <Text numberOfLines={1} style={{ color: colors.textDisabled, fontSize: fontSizes.xs }}>
-            {RARITY_LABEL[badge.rarity] ?? badge.rarity}
-            {badge.pointsReward > 0 ? ` · +${badge.pointsReward} pts` : ''}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text numberOfLines={1} style={{ color: colors.textDisabled, fontSize: fontSizes.xs }}>
+              {RARITY_LABEL[badge.rarity] ?? badge.rarity}
+              {badge.pointsReward > 0 ? ' · ' : ''}
+            </Text>
+            {badge.pointsReward > 0 ? (
+              <CountUpText
+                prefix="+"
+                style={{ color: colors.textDisabled, fontSize: fontSizes.xs }}
+                suffix=" pts"
+                value={badge.pointsReward}
+              />
+            ) : null}
+          </View>
         </View>
         {badge.isNew ? (
           <View
@@ -431,7 +473,7 @@ export function RankHero({
   pointsToNextLevel,
   levelProgress,
   onPress,
-  contarPuntos = false,
+  contarPuntos = true,
 }: {
   level: ProgressionLevel | null;
   nextLevel: ProgressionLevel | null;
@@ -441,12 +483,10 @@ export function RankHero({
   /**
    * Hace que la cifra SUBA contando al entrar, en vez de aparecer puesta.
    *
-   * Apagado por defecto y encendido solo en la senda. Esta misma cabecera la
-   * pintan Inicio y Perfil, donde los puntos son un dato de paso entre otros
-   * muchos: ahí la cuenta sería un número inquieto en mitad de una pantalla que
-   * se lee de un vistazo. En la senda es lo contrario — la pantalla existe por
-   * esa cifra, y verla subir es lo que convierte «tengo 1.240 puntos» en «he
-   * ganado 1.240 puntos».
+   * Encendido por defecto: la regla del producto es que todo número de puntos
+   * empieza en cero y sube hasta su valor cada vez que entra en pantalla. Verlo
+   * subir es lo que convierte «tengo 1.240 puntos» en «he ganado 1.240
+   * puntos». `false` queda para una cabecera que deba leerse quieta.
    */
   contarPuntos?: boolean;
   /**

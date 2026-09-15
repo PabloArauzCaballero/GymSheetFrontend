@@ -8,6 +8,7 @@ import type { EarnedBadge, ProgressionBadge } from '@gymsheet/schemas';
 import { chatService, profileViewsService, socialService } from '@/api/services';
 import { BackLink } from '@/components/nav';
 import { Card, Row, ScrollScreen, Section } from '@/components/layout';
+import { CountUpText } from '@/components/motion';
 import { levelTitle } from '@/components/directory-card';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { BadgeTile } from '@/components/progression';
@@ -196,10 +197,15 @@ export default function PerfilDetailScreen() {
             <Ionicons color={colors.volt} name="trophy-outline" size={iconSizes.sm} />
             <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}>
               {levelTitle(entry.levelCode)}
-              {typeof entry.points === 'number'
-                ? ` · ${entry.points.toLocaleString('es-ES')} pts`
-                : ''}
+              {typeof entry.points === 'number' ? ' · ' : ''}
             </Text>
+            {typeof entry.points === 'number' ? (
+              <CountUpText
+                style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}
+                suffix=" pts"
+                value={entry.points}
+              />
+            ) : null}
           </View>
         ) : null}
         {entry.socialStatus ? (
@@ -236,6 +242,8 @@ export default function PerfilDetailScreen() {
         ) : null}
         {typeof entry.points === 'number' ? (
           <Row
+            count={entry.points}
+            countSuffix=" pts"
             icon="stats-chart-outline"
             label="Puntos"
             value={`${entry.points.toLocaleString('es-ES')} pts`}

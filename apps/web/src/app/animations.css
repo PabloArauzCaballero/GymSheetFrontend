@@ -245,6 +245,44 @@
   }
 }
 
+/* Carta de recompensa: bucles y chispas. Los bucles solo se montan sin «reducir
+   movimiento»: el bloque del final no los apaga, los deja vibrando. */
+@keyframes celebration-rays-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/** Chispa del estallido. Destino, giro y retraso llegan por variables CSS. */
+@keyframes celebration-particle {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  12% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px)))
+      rotate(var(--spin, 0deg)) scale(0.5);
+  }
+}
+
+/** Reflejo holográfico que cruza la cara de la carta y descansa fuera de cuadro. */
+@keyframes celebration-holo {
+  0% {
+    transform: translateX(-120%);
+  }
+  45%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

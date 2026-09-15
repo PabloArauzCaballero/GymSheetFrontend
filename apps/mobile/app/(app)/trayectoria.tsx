@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { LeaderboardSortBy } from '@gymsheet/schemas';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { progressionService } from '@/api/services';
 import { BackLink } from '@/components/nav';
@@ -16,13 +16,19 @@ import {
 } from '@/components/layout';
 import {
   CelebrationModal,
+  keyOf,
   useLevelUpCelebration,
   type CelebrationSubject,
 } from '@/components/celebration';
 import { BadgeTile, PathNode, RankHero } from '@/components/progression';
+import { CountUpText } from '@/components/motion';
 import { RankBadge } from '@/components/rank-badge';
 import { useAuthStore } from '@/state/auth-store';
-import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { pointRateChips } from '@gymsheet/domain';
+import { PointsRulesSheet, usePointRules } from '@/components/points-rules-sheet';
+import { RarityLegend } from '@/components/rarity-legend';
+import { TourTarget, useScreenTour } from '@/components/tour';
 
 /**
  * La senda: el camino hacia tu imagen ideal.
@@ -63,6 +69,12 @@ export default function TrayectoriaScreen() {
     queryFn: () => progressionService.get(),
   });
   const [leaderboardSort, setLeaderboardSort] = useState<LeaderboardSortBy>('points');
+
+  // La explicación de los puntos: la hoja y las tarifas de los chips salen de
+  // las mismas reglas publicadas por el servidor.
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const rules = usePointRules();
+  useScreenTour('trayectoria');
   const leaderboard = useQuery({
     queryKey: ['progression', 'leaderboard', leaderboardSort],
     queryFn: () => progressionService.leaderboard(5, leaderboardSort),
@@ -84,6 +96,19 @@ export default function TrayectoriaScreen() {
 
   const data = progression.data;
   const unlockedNow = data?.unlockedNow ?? [];
+  /**
+   * Lo pendiente de celebrar: lo otorgado en esta misma lectura y lo que ya se
+   * otorgó al cerrar una sesión pero sigue sin verse (`isNew`). Sin lo segundo,
+   * una insignia que se saltó en el resumen de sesión no volvería a abrirse:
+   * al entrar aquí `unlockedNow` ya llega vacío.
+   */
+  const pendingBadges = [
+    ...unlockedNow,
+    ...(data?.badges ?? []).filter(
+      (badge) =>
+        badge.earned && badge.isNew && !unlockedNow.some((fresh) => fresh.code === badge.code),
+    ),
+  ];
 
   /**
    * Se confirma en cuanto la celebración está en pantalla, no al salir: si el
@@ -94,7 +119,7 @@ export default function TrayectoriaScreen() {
    * devuelve una función nueva en cada render y el efecto se dispararía en
    * bucle. Lo que debe disparar el efecto es que aparezcan novedades.
    */
-  const newlyEarnedCount = unlockedNow.length;
+  const newlyEarnedCount = pendingBadges.length;
   useEffect(() => {
     if (newlyEarnedCount > 0) acknowledge.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,13 +141,14 @@ export default function TrayectoriaScreen() {
   const earnedCount = badges.filter((badge) => badge.earned).length;
 
   /**
-   * Lo que se está celebrando ahora mismo, o nada.
+   * La cola de cartas en pantalla, o vacía.
    *
-   * Nada se celebra solo: este estado sólo lo escribe un toque. Un modal a
-   * pantalla completa que aparece por su cuenta interrumpe; uno que espera a
-   * que lo abran es un premio.
+   * Lo nuevo se abre solo, una sola vez: las insignias de `unlockedNow` y el
+   * ascenso recién detectado. Es un premio que llega cuando se gana, no un modal
+   * que interrumpe. Revisitar una insignia o el rango sigue esperando a un toque.
    */
-  const [celebration, setCelebration] = useState<CelebrationSubject | null>(null);
+  const [celebrationQueue, setCelebrationQueue] = useState<CelebrationSubject[]>([]);
+  const setCelebration = (subject: CelebrationSubject) => setCelebrationQueue([subject]);
 
   const principal = useAuthStore((state) => state.principal);
   // El ascenso de rango se deduce en el cliente porque el contrato no lo trae;
@@ -132,11 +158,31 @@ export default function TrayectoriaScreen() {
     principal?.id ?? null,
   );
 
+  /** Lo ya abierto solo en esta visita, para no volver a lanzarlo al refrescar. */
+  const autoOpened = useRef(new Set<string>());
+  const freshSignature = [
+    ...pendingBadges.map((badge) => `badge:${badge.code}`),
+    pendingLevel ? `level:${pendingLevel.code}` : '',
+  ].join('|');
+  useEffect(() => {
+    const fresh: CelebrationSubject[] = [
+      ...pendingBadges.map((badge): CelebrationSubject => ({ kind: 'badge', badge, fresh: true })),
+      // El rango va el último: es lo más grande y cierra la cola.
+      ...(pendingLevel ? [{ kind: 'level', level: pendingLevel, fresh: true } as CelebrationSubject] : []),
+    ].filter((subject) => !autoOpened.current.has(keyOf(subject)));
+    if (fresh.length === 0) return;
+    fresh.forEach((subject) => autoOpened.current.add(keyOf(subject)));
+    setCelebrationQueue((current) => [...current, ...fresh]);
+    // Lo que debe dispararlo es que aparezcan novedades, no cada objeto nuevo
+    // que devuelve react-query.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [freshSignature]);
+
   const closeCelebration = () => {
-    // Sólo el ascenso se da por visto; cerrar la celebración de una insignia no
-    // debe tragarse el aviso de rango nuevo que aún no se ha abierto.
-    if (celebration?.kind === 'level') dismissLevelUp();
-    setCelebration(null);
+    // Sólo el ascenso se da por visto; cerrar la carta de una insignia no debe
+    // tragarse el aviso de rango nuevo que aún no se ha abierto.
+    if (celebrationQueue.some((subject) => subject.kind === 'level')) dismissLevelUp();
+    setCelebrationQueue([]);
   };
 
   if (progression.isPending) {
@@ -161,6 +207,8 @@ export default function TrayectoriaScreen() {
   }
 
   const stats = data.stats;
+  const chips = rules.data ? pointRateChips(rules.data) : undefined;
+  const restDayCount = restDays.data?.weekdays.length ?? 0;
   // Se saca a una constante para que el estrechamiento sobreviva dentro del
   // callback: TypeScript no conserva el `!== null` de un acceso a propiedad al
   // cruzar una función.
@@ -174,11 +222,13 @@ export default function TrayectoriaScreen() {
           subtitle={
             data.level
               ? `Vas por ${data.level.name}. Sigue subiendo.`
-              : 'Registra tu primer entrenamiento y la senda empieza.'
+              : `Termina tu primer entreno: +${rules.data?.perSession ?? 50} puntos y tu primera insignia.`
           }
           title="Tu senda"
+          tourKey="trayectoria"
         />
 
+        <TourTarget id="trayectoria.rank">
         <RankHero
           contarPuntos
           level={data.level}
@@ -190,6 +240,25 @@ export default function TrayectoriaScreen() {
           points={data.points}
           pointsToNextLevel={data.pointsToNextLevel}
         />
+        </TourTarget>
+
+        <Pressable
+          accessibilityLabel="Cómo se ganan los puntos"
+          accessibilityRole="button"
+          onPress={() => setRulesOpen(true)}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.xs,
+            alignSelf: 'flex-start',
+            minHeight: minTouchTarget,
+          }}
+        >
+          <Ionicons color={accentPolicy.ink} name="information-circle-outline" size={iconSizes.md} />
+          <Text style={{ color: accentPolicy.ink, fontSize: fontSizes.sm, fontWeight: semibold }}>
+            ¿Cómo se ganan los puntos?
+          </Text>
+        </Pressable>
 
         {pendingLevel ? (
           // El aviso del ascenso, no el ascenso. La celebración sigue abriéndose
@@ -197,7 +266,7 @@ export default function TrayectoriaScreen() {
           // nuevo en la cabecera se confunde con el de siempre.
           <Card
             accent={colors.volt}
-            accessibilityLabel={`Has subido a ${pendingLevel.name}. Toca para ver la celebración`}
+            accessibilityLabel={`Has subido a ${pendingLevel.name}. Toca para ver tu carta de rango`}
             onPress={() => setCelebration({ kind: 'level', level: pendingLevel })}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
@@ -207,7 +276,7 @@ export default function TrayectoriaScreen() {
                   {`Has subido a ${pendingLevel.name}`}
                 </Text>
                 <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-                  Toca para ver la celebración
+                  Toca para ver tu carta de rango
                 </Text>
               </View>
               <Ionicons color={colors.textMuted} name="chevron-forward" size={iconSizes.md} />
@@ -229,6 +298,7 @@ export default function TrayectoriaScreen() {
           </Section>
         ) : null}
 
+        <TourTarget id="trayectoria.path">
         <Section icon="trail-sign-outline" index={1} title="El camino">
           <Card style={{ paddingBottom: spacing.xs }}>
             {data.path.map((level, index) => (
@@ -241,15 +311,49 @@ export default function TrayectoriaScreen() {
             ))}
           </Card>
         </Section>
+        </TourTarget>
 
         <Section icon="stats-chart-outline" index={2} title="Lo que suma">
-          {/* Parejas en fila, no `Columns`.
-              `Columns` apila en teléfono y deja seis tarjetas una debajo de otra:
-              la sección ocupaba dos pantallas para seis números de dos dígitos.
-              En pareja caben igual de holgadas y la sección se lee de un vistazo,
-              que es justo para lo que existe. Es la misma disposición que usa
-              Inicio para sus cifras. */}
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
+            Las cifras con tarifa son las que te dan puntos.
+          </Text>
+          {/* Parejas en fila, no `Columns`: en teléfono `Columns` apila y la
+              sección ocupaba dos pantallas. Primero las cuatro cifras que suman,
+              cada una con su tarifa; después las que solo informan. La racha que
+              paga es la más larga, así que va con chip; la actual, sin él. */}
           <View style={{ gap: spacing.sm }}>
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <StatTile
+                icon="barbell-outline"
+                label="Entrenamientos"
+                rate={chips?.session}
+                value={`${stats.totalSessions}`}
+              />
+              <StatTile
+                icon="layers-outline"
+                label="Series"
+                rate={chips?.sets}
+                value={stats.totalSets.toLocaleString('es-ES')}
+              />
+            </View>
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <StatTile
+                icon="scale-outline"
+                label="Volumen total"
+                rate={chips?.volume}
+                value={`${Math.round(stats.totalVolumeKg / 1000).toLocaleString('es-ES')} t`}
+              />
+              <StatTile
+                icon="trophy-outline"
+                label="Racha más larga"
+                rate={chips?.streak}
+                value={
+                  stats.longestStreakDays > 0
+                    ? `${stats.longestStreakDays} ${stats.longestStreakDays === 1 ? 'día' : 'días'}`
+                    : '—'
+                }
+              />
+            </View>
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <StatTile
                 icon="flame-outline"
@@ -264,14 +368,6 @@ export default function TrayectoriaScreen() {
                 icon="calendar-outline"
                 label="Semanas seguidas"
                 value={`${stats.weeklyStreak}`}
-              />
-            </View>
-            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <StatTile icon="barbell-outline" label="Entrenamientos" value={`${stats.totalSessions}`} />
-              <StatTile
-                icon="scale-outline"
-                label="Volumen total"
-                value={`${Math.round(stats.totalVolumeKg / 1000).toLocaleString('es-ES')} t`}
               />
             </View>
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
@@ -298,7 +394,9 @@ export default function TrayectoriaScreen() {
 
         <Section icon="bed-outline" index={3} title="Días de descanso">
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
-            Esos días, un hueco en tu racha no la rompe.
+            {restDayCount >= 6
+              ? 'Los días marcados no rompen tu racha. Ya tienes seis. El séptimo no se puede marcar: sin ningún día de entreno, la racha dejaría de significar algo.'
+              : 'Los días marcados no rompen tu racha.'}
           </Text>
           <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
             {WEEKDAY_LABELS.map((day) => {
@@ -343,7 +441,9 @@ export default function TrayectoriaScreen() {
           </View>
         </Section>
 
+        <TourTarget id="trayectoria.badges">
         <Section icon="ribbon-outline" index={4} title={`Insignias · ${earnedCount}/${badges.length}`}>
+          <RarityLegend />
           <View
             style={{
               gap: spacing.sm,
@@ -367,8 +467,12 @@ export default function TrayectoriaScreen() {
             ))}
           </View>
         </Section>
+        </TourTarget>
 
         <Section icon="podium-outline" index={5} title="Clasificación del gimnasio">
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
+            Los cinco primeros de tu gimnasio.
+          </Text>
           <View
             style={{
               flexDirection: 'row',
@@ -413,7 +517,7 @@ export default function TrayectoriaScreen() {
             <ErrorState error={leaderboard.error} onRetry={() => void leaderboard.refetch()} />
           ) : (
             <Card>
-              {(leaderboard.data ?? []).map((entry) => (
+              {(leaderboard.data ?? []).map((entry, index) => (
                 <View
                   key={`${entry.position}-${entry.displayName}`}
                   style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}
@@ -431,11 +535,17 @@ export default function TrayectoriaScreen() {
                     {entry.displayName}
                     {entry.isMe ? ' · tú' : ''}
                   </Text>
-                  <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, fontVariant: ['tabular-nums'] }}>
-                    {leaderboardSort === 'streak'
-                      ? `${entry.streakDays} ${entry.streakDays === 1 ? 'día' : 'días'}`
-                      : entry.points.toLocaleString('es-ES')}
-                  </Text>
+                  {leaderboardSort === 'streak' ? (
+                    <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, fontVariant: ['tabular-nums'] }}>
+                      {`${entry.streakDays} ${entry.streakDays === 1 ? 'día' : 'días'}`}
+                    </Text>
+                  ) : (
+                    <CountUpText
+                      delayMs={index * 60}
+                      style={{ color: colors.textMuted, fontSize: fontSizes.sm }}
+                      value={entry.points}
+                    />
+                  )}
                 </View>
               ))}
               {(leaderboard.data ?? []).length === 0 ? (
@@ -451,7 +561,15 @@ export default function TrayectoriaScreen() {
         </Section>
       </ScrollScreen>
 
-      <CelebrationModal onClose={closeCelebration} subject={celebration} />
+      <PointsRulesSheet
+        badges={data.badges}
+        onClose={() => setRulesOpen(false)}
+        points={data.points}
+        stats={stats}
+        visible={rulesOpen}
+      />
+
+      <CelebrationModal onClose={closeCelebration} subjects={celebrationQueue} />
     </>
   );
 }

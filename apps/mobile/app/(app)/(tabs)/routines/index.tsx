@@ -33,7 +33,7 @@ export default function RoutinesScreen() {
       }}
       refreshing={refreshing}
     >
-      <ScreenHeader subtitle="Tus planes de entrenamiento." title="Rutinas" />
+      <ScreenHeader subtitle="Tus planes de entrenamiento." title="Rutinas" tourKey="routines" />
 
       <TourTarget id="routines.create">
         <Button label="Crear rutina" onPress={() => router.push('/routines/new')} />

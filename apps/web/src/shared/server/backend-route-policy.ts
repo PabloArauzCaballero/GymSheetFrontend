@@ -51,7 +51,7 @@ const allowedPathPatterns = [
   /^\/me\/accesses$/u,
   // La senda: estado, confirmación de novedades y clasificación del gimnasio.
   /^\/me\/progression$/u,
-  /^\/me\/progression\/(acknowledge|leaderboard|rest-days)$/u,
+  /^\/me\/progression\/(acknowledge|leaderboard|rest-days|rules)$/u,
   /^\/me\/photos$/u,
   new RegExp(`^/me/photos/${resourceId}$`, 'u'),
   /^\/me\/tutorial-progress$/u,

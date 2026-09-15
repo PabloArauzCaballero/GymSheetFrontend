@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { workoutStatuses } from '@gymsheet/types';
 import { exerciseSchema } from './core';
+import { sessionRewardSchema } from './progression';
 
 export const workoutSetSchema = z.object({
   id: z.string().uuid(),
@@ -31,3 +32,12 @@ export const workoutSchema = z.object({
   geoVerificada: z.boolean(),
   ejercicios: z.array(workoutExerciseSchema),
 });
+
+/**
+ * Respuesta de cerrar una sesión: la sesión y lo que movió en la senda.
+ * `progression` es nulo si el servidor no pudo calcularlo; la sesión se cerró igual.
+ */
+export const workoutFinishSchema = workoutSchema.extend({
+  progression: sessionRewardSchema.nullable().optional().transform((value) => value ?? null),
+});
+export type WorkoutFinish = z.infer<typeof workoutFinishSchema>;

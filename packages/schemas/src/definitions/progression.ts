@@ -167,3 +167,44 @@ export type Progression = z.infer<typeof progressionSchema>;
 export type LeaderboardEntry = z.infer<typeof leaderboardEntrySchema>;
 export type EquipmentSuggestion = z.infer<typeof equipmentSuggestionSchema>;
 export type MuscleEquipmentInference = z.infer<typeof muscleEquipmentInferenceSchema>;
+
+/**
+ * Lo que una sesión recién terminada movió en la senda.
+ *
+ * Llega dentro de la respuesta de `PATCH /workouts/:id/finish` para que el
+ * cliente enseñe causa y efecto en el momento —cuántos puntos y por qué— y abra
+ * la carta de cada insignia ganada sin adivinar qué cambió.
+ */
+export const pointsBreakdownSchema = z.object({
+  session: z.number().int(),
+  sets: z.number().int(),
+  volume: z.number().int(),
+  streak: z.number().int(),
+  badges: z.number().int(),
+});
+
+export const sessionRewardSchema = z.object({
+  pointsBefore: z.number().int(),
+  pointsAfter: z.number().int(),
+  pointsEarned: z.number().int(),
+  breakdown: pointsBreakdownSchema,
+  levelBefore: progressionLevelSchema.nullable(),
+  levelAfter: progressionLevelSchema.nullable(),
+  leveledUp: z.boolean(),
+  nextLevel: progressionLevelSchema.nullable(),
+  pointsToNextLevel: z.number().int().nullable(),
+  levelProgressBefore: z.number(),
+  levelProgress: z.number(),
+  unlockedNow: z.array(progressionBadgeSchema),
+});
+
+/** Las reglas de puntos publicadas por el servidor; los clientes no las copian. */
+export const pointRulesSchema = z.object({
+  perSession: z.number().int(),
+  perSet: z.number().int(),
+  perVolumeUnitKg: z.number().int(),
+  perLongestStreakDay: z.number().int(),
+});
+export type PointsBreakdown = z.infer<typeof pointsBreakdownSchema>;
+export type SessionReward = z.infer<typeof sessionRewardSchema>;
+export type PointRules = z.infer<typeof pointRulesSchema>;

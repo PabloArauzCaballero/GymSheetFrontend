@@ -17,6 +17,7 @@ import { useState, type CSSProperties } from 'react';
 import { confirm, notify } from '@/shared/notifications';
 import { workoutService } from '@/features/workouts/services/workout-service';
 import { queryKeys } from '@/shared/api/query-keys';
+import type { SessionReward } from '@/shared/api/schemas';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
 import { PageHeader } from '@/shared/components/layout/page-header';
@@ -27,12 +28,15 @@ import { formatDateTime, formatDuration } from '@/shared/lib/date';
 import { AddExerciseDialog } from './add-exercise-dialog';
 import { GuidedWorkout } from './guided-workout';
 import { RestTimer } from './rest-timer';
+import { SessionSummary } from './session-summary';
 import { WorkoutExercisePanel } from './workout-exercise-panel';
 
 export function LiveWorkout({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [guided, setGuided] = useState(true);
+  // Lo que movió la sesión recién cerrada. Mientras existe, se ve el resumen.
+  const [reward, setReward] = useState<SessionReward | null>(null);
   const query = useQuery({
     queryKey: queryKeys.workout(id),
     queryFn: () => workoutService.get(id),
@@ -44,8 +48,14 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
   };
   const finish = useMutation({
     mutationFn: () => workoutService.finish(id),
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       await refresh();
+      await queryClient.invalidateQueries({ queryKey: ['progression'] });
+      if (result.progression) {
+        setReward(result.progression);
+        return;
+      }
+      // Sin datos de la senda la sesión se cerró igual: basta el aviso.
       notify.success('Sesión finalizada.');
       router.refresh();
     },
@@ -190,6 +200,17 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
           </section>
         </>
       )}
+      {reward ? (
+        <SessionSummary
+          duration={formatDuration(workout.fechaInicio, workout.fechaFin)}
+          onClose={() => {
+            setReward(null);
+            router.refresh();
+          }}
+          reward={reward}
+          sets={sets}
+        />
+      ) : null}
     </div>
   );
 }

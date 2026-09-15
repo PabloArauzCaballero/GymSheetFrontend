@@ -15,6 +15,7 @@ import {
   useResponsive,
 } from '@/components/layout';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
+import { CountUpText } from '@/components/motion';
 import { ProgressTrack } from '@/components/progression';
 import { membershipService, progressionService, routineService, workoutService } from '@/api/services';
 import { useRouter } from 'expo-router';
@@ -157,6 +158,7 @@ export default function HomeScreen() {
             : 'Tu entrenamiento de un vistazo.'
         }
         title={`Hola, ${firstName}`}
+        tourKey="home"
       />
 
       {/* Antes que nada: si la membresía no está vigente, eso es lo que la
@@ -234,11 +236,11 @@ export default function HomeScreen() {
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm }}>
               {/* `ink`, no `volt`: esto es texto sobre la tarjeta, y el acento
                   puro se queda en 4,22:1 para el inquilino rojo. */}
-              <Text
+              <CountUpText
                 style={{ color: accentPolicy.ink, fontSize: fontSizes.sm, fontWeight: semibold }}
-              >
-                {`${progression.data.points.toLocaleString('es-ES')} puntos`}
-              </Text>
+                suffix=" puntos"
+                value={progression.data.points}
+              />
               <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, flexShrink: 1 }}>
                 {progression.data.nextLevel && progression.data.pointsToNextLevel !== null
                   ? `Faltan ${progression.data.pointsToNextLevel.toLocaleString('es-ES')} para ${progression.data.nextLevel.name}`

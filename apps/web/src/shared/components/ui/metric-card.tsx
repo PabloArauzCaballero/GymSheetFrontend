@@ -8,6 +8,7 @@ export function MetricCard({
   suffix,
   icon,
   accent = false,
+  rate,
   className,
 }: Readonly<{
   label: string;
@@ -15,6 +16,8 @@ export function MetricCard({
   suffix?: string;
   icon?: ReactNode;
   accent?: boolean;
+  /** Cuánto aporta esta cifra a los puntos, ya redactado («+50 c/u»). */
+  rate?: string;
   className?: string;
 }>) {
   return (
@@ -26,7 +29,14 @@ export function MetricCard({
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <span className="data-label">{label}</span>
+        <span className="grid gap-1.5">
+          <span className="data-label">{label}</span>
+          {rate ? (
+            <span className="justify-self-start rounded-full bg-[var(--surface-high)] px-2 py-0.5 text-xs font-semibold text-[var(--accent-ink)]">
+              {rate}
+            </span>
+          ) : null}
+        </span>
         {icon ? (
           <span
             className={cn(

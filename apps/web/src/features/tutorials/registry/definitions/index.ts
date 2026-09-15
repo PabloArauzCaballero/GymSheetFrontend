@@ -6,6 +6,7 @@ import { helpCenterTour, platformIntro } from './intro';
 import { membershipOverview } from './membership';
 import { mainNavigation } from './navigation';
 import { profileBasics } from './profile';
+import { sendaOverview } from './senda';
 import {
   coachAssignments,
   firstWorkout,
@@ -26,6 +27,7 @@ export const allTutorialDefinitions: readonly TutorialDefinition[] = [
   mainNavigation,
   profileBasics,
   firstWorkout,
+  sendaOverview,
   workoutHistory,
   exerciseLibrary,
   routinesAndPlans,

@@ -15,6 +15,7 @@ import { useExerciseMedia } from '@/api/use-exercise-media';
 import { PressableScale } from '@/components/motion';
 import { accountService, workoutService } from '@/api/services';
 import { useAmbientStore } from '@/state/ambient-store';
+import { useSessionRewardStore } from '@/state/session-reward-store';
 import { WORKOUT_LABEL, WORKOUT_TONE, formatDuration, relativeDay } from '@/lib/format';
 import { captureStreakLocation } from '@/lib/streak-location';
 import { previousPerformance, topSet } from '@/lib/training-metrics';
@@ -30,6 +31,7 @@ export default function WorkoutDetailScreen() {
   const queryClient = useQueryClient();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [restingFor, setRestingFor] = useState<number | null>(null);
+  const setFinishedSession = useSessionRewardStore((state) => state.setLast);
 
   const workout = useQuery({
     queryKey: ['workout', id],
@@ -112,6 +114,29 @@ export default function WorkoutDetailScreen() {
       workoutService.finish(id, location),
     onSuccess: async (session) => {
       await refreshAll();
+      // La senda se recalculó al cerrar: cualquier pantalla que la muestre
+      // debe volver a pedirla.
+      void queryClient.invalidateQueries({ queryKey: ['progression'] });
+      if (session.progression) {
+        // Con recompensa, el cierre no es un aviso: es una pantalla que enseña
+        // cuánto ganaste y por qué. Reemplaza a la sesión para que «atrás» no
+        // vuelva a algo ya cerrado.
+        const sets = session.ejercicios.reduce((sum, item) => sum + item.series.length, 0);
+        const volumeKg = session.ejercicios.reduce(
+          (sum, item) => sum + item.series.reduce((acc, set) => acc + set.pesoKg * set.repeticiones, 0),
+          0,
+        );
+        setFinishedSession({
+          sessionId: session.id,
+          duration: formatDuration(session.fechaInicio, session.fechaFin),
+          sets,
+          volumeKg,
+          geoVerified: session.geoVerificada,
+          reward: session.progression,
+        });
+        router.replace('/workouts/resumen');
+        return;
+      }
       notify.success(
         session.geoVerificada ? 'Sesión finalizada. Racha verificada en tu sede.' : 'Sesión finalizada.',
       );

@@ -1,14 +1,27 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { Pressable, Text, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { countUpDuration } from '@gymsheet/domain';
+import { useEffect, type ReactNode } from 'react';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type StyleProp,
+  type TextInputProps,
+  type TextStyle,
+  type ViewStyle,
+} from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, {
   cancelAnimation,
   Easing,
   FadeIn,
   FadeInDown,
+  useAnimatedProps,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  withDelay,
   withRepeat,
   withSequence,
   withSpring,
@@ -221,52 +234,133 @@ export function Heartbeat({
 /**
  * Un número que SUBE hasta su valor en vez de aparecer puesto.
  *
- * Gemelo del `CountUp` de la web: misma curva (ease-out cúbica), misma
- * duración, mismo respeto por «reducir movimiento» —con ella puesta salta
- * directo al valor final, porque una cifra que se mueve sola es justo lo que
- * esa preferencia pide evitar—.
+ * Gemelo del `CountUp` de la web: misma duración según la magnitud del salto
+ * (`countUpDuration`, de `@gymsheet/domain`), misma curva de salida cúbica y
+ * mismo respeto por «reducir movimiento», que salta directo al valor final.
  *
- * Vive en su propio componente y no dentro de quien lo usa por una razón
- * concreta: cuenta repintando, un fotograma por render, y aislarlo deja ese
- * repintado en un `Text` de dos líneas en vez de arrastrar en cada fotograma a
- * la tarjeta entera que lo rodea.
+ * Cuenta en el hilo de UI: un valor compartido de Reanimated escribe el texto
+ * de un `TextInput` no editable a través de props animadas. Así ningún
+ * fotograma de la cuenta pasa por un render de React.
  *
- * `accessibilityLabel` lleva el valor final desde el primer momento: sin él, un
- * lector de pantalla narra la cuenta entera.
+ * El ancho lo reserva un `Text` invisible con la cifra final. Un `TextInput`
+ * medido con «0» no crece cuando su texto cambia desde el hilo nativo, y la
+ * cifra quedaría recortada; con la caja ya del tamaño final, además, el número
+ * no empuja lo que tiene al lado mientras sube.
+ *
+ * Cuando `value` cambia después de montar, cuenta desde lo que se ve en ese
+ * momento, no desde cero.
+ *
+ * El lector de pantalla recibe la cifra final una sola vez, en la etiqueta del
+ * contenedor, y nunca la cuenta.
  */
 export function CountUpText({
   value,
-  durationMs = 900,
+  from = 0,
+  durationMs,
+  delayMs = 0,
+  prefix = '',
+  suffix = '',
   style,
 }: {
   value: number;
+  /** Desde dónde cuenta. 0 por defecto: el número se gana cada vez que se ve. */
+  from?: number;
+  /** Si se omite, sale de la magnitud del salto (`countUpDuration`). */
   durationMs?: number;
+  delayMs?: number;
+  /** Texto fijo antes de la cifra, p. ej. «+». */
+  prefix?: string;
+  /** Texto fijo después de la cifra, p. ej. « pts». */
+  suffix?: string;
   style?: StyleProp<TextStyle>;
 }) {
   const reduceMotion = useReducedMotion();
-  const [display, setDisplay] = useState(0);
+  const current = useSharedValue(reduceMotion ? value : from);
 
   useEffect(() => {
-    if (reduceMotion || value === 0) {
-      setDisplay(value);
+    const start = current.value;
+    const duration = durationMs ?? countUpDuration(start, value);
+    if (reduceMotion || duration === 0) {
+      cancelAnimation(current);
+      current.value = value;
       return;
     }
-    let raf = 0;
-    let start: number | null = null;
-    const step = (timestamp: number) => {
-      if (start === null) start = timestamp;
-      const progress = Math.min(1, (timestamp - start) / durationMs);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(value * eased));
-      if (progress < 1) raf = requestAnimationFrame(step);
+    current.value = withDelay(
+      delayMs,
+      withTiming(value, { duration, easing: Easing.out(Easing.cubic) }),
+    );
+    return () => {
+      // Al desmontar o al cambiar de destino: la cuenta en curso se detiene
+      // donde está y la siguiente arranca desde ahí.
+      cancelAnimation(current);
     };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [durationMs, reduceMotion, value]);
+  }, [current, delayMs, durationMs, reduceMotion, value]);
+
+  const animatedProps = useAnimatedProps(
+    () => ({ text: `${prefix}${formatThousandsEs(current.value)}${suffix}` }) as TextInputProps,
+  );
+
+  const finalText = `${prefix}${formatThousandsEs(value)}${suffix}`;
+  const textStyle = [COUNTER_BASE, style];
 
   return (
-    <Text accessibilityLabel={value.toLocaleString('es-ES')} style={style}>
-      {display.toLocaleString('es-ES')}
-    </Text>
+    <View accessibilityLabel={finalText} accessibilityRole="text" accessible>
+      <Text
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={[textStyle, { opacity: 0 }]}
+      >
+        {finalText}
+      </Text>
+      <AnimatedTextInput
+        accessibilityElementsHidden
+        animatedProps={animatedProps}
+        caretHidden
+        defaultValue={`${prefix}${formatThousandsEs(reduceMotion ? value : from)}${suffix}`}
+        editable={false}
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        scrollEnabled={false}
+        style={[textStyle, StyleSheet.absoluteFill, COUNTER_INPUT]}
+        underlineColorAndroid="transparent"
+      />
+    </View>
   );
+}
+
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+Animated.addWhitelistedNativeProps({ text: true });
+
+/** Dígitos de ancho fijo: la cifra no baila mientras cuenta. */
+const COUNTER_BASE: TextStyle = { fontVariant: ['tabular-nums'] };
+
+/** Un `TextInput` trae relleno y ajustes de fuente propios; aquí debe medir como un `Text`. */
+const COUNTER_INPUT: TextStyle = {
+  padding: 0,
+  margin: 0,
+  includeFontPadding: false,
+  textAlignVertical: 'center',
+  textAlign: 'right',
+};
+
+/**
+ * Separador de miles de `es-ES`, apto para worklets.
+ *
+ * `toLocaleString` no es fiable dentro del hilo de UI. La regla es la de CLDR
+ * para el español: el punto solo aparece desde los cinco dígitos, de modo que
+ * 1240 queda «1240» y 12400 queda «12.400», igual que en la web.
+ */
+export function formatThousandsEs(input: number): string {
+  'worklet';
+  const rounded = Math.round(input);
+  const digits = String(Math.abs(rounded));
+  let out = digits;
+  if (digits.length >= 5) {
+    out = '';
+    for (let index = 0; index < digits.length; index += 1) {
+      if (index > 0 && (digits.length - index) % 3 === 0) out += '.';
+      out += digits[index];
+    }
+  }
+  return rounded < 0 ? `-${out}` : out;
 }

@@ -1,16 +1,8 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  Award,
-  CalendarDays,
-  Dumbbell,
-  Flame,
-  PersonStanding,
-  Sparkles,
-  TrendingUp,
-} from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Info, Sparkles } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import type { LeaderboardSortBy, ProgressionBadge } from '@/shared/api/schemas';
 import { progressionService } from '@/features/progression/services/progression-service';
 import {
@@ -22,16 +14,18 @@ import {
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
-import { MetricCard } from '@/shared/components/ui/metric-card';
 import {
   badgeSubject,
   levelSubject,
   ProgressionCelebration,
   useLevelUpWatch,
-  type CelebrationSubject,
+  useRewardQueue,
 } from './progression-celebration';
 import { BadgeTile, PathNode, RankHero } from './progression-parts';
 import { LeaderboardCard, RestDaysCard } from './progression-secondary-cards';
+import { ProgressionStatsCard } from './progression-stats-card';
+import { PointsRulesDialog, usePointRules } from './points-rules-dialog';
+import { RarityLegend } from './rarity-legend';
 
 /**
  * La senda en la web.
@@ -68,30 +62,19 @@ export function ProgressionClient() {
 
   const acknowledge = useMutation({ mutationFn: progressionService.acknowledge });
 
-  const data = progression.data;
-  // La celebración no se abre sola: este estado solo cambia al pulsar.
-  // `useLevelUpWatch` se limita a *marcar* que hubo ascenso —para destacar el
-  // botón— y va antes de los retornos tempranos, para no alterar el orden de
-  // los hooks entre estados de carga.
-  const [celebrating, setCelebrating] = useState<CelebrationSubject | null>(null);
-  const levelUp = useLevelUpWatch(progression.data?.level ?? null);
-  const celebrateBadge = (earned: ProgressionBadge) => setCelebrating(badgeSubject(earned));
-  const unlockedNow = data?.unlockedNow ?? [];
+  // La explicación de los puntos: el diálogo y los chips de tarifa salen de las
+  // mismas reglas publicadas por el servidor.
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const rules = usePointRules();
 
-  /**
-   * Se confirma en cuanto la celebración está en pantalla, no al salir: si la
-   * pestaña se cierra desde aquí, ya se ha visto, y volver a celebrarla mañana
-   * la convertiría en ruido.
-   *
-   * `acknowledge.mutate` se omite de las dependencias a propósito: react-query
-   * devuelve una función nueva en cada render y el efecto entraría en bucle. Lo
-   * que debe dispararlo es que aparezcan novedades.
-   */
-  const newlyEarnedCount = unlockedNow.length;
-  useEffect(() => {
-    if (newlyEarnedCount > 0) acknowledge.mutate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [newlyEarnedCount]);
+  const data = progression.data;
+  // Los hooks de la celebración van antes de los retornos tempranos, para no
+  // alterar su orden entre estados de carga. Lo nuevo se abre solo una vez por
+  // visita y se confirma al servidor; las revisitas, al tocar.
+  const levelUp = useLevelUpWatch(progression.data?.level ?? null);
+  const rewards = useRewardQueue(data?.badges, levelUp, () => acknowledge.mutate());
+  const celebrateBadge = (earned: ProgressionBadge) => rewards.show([badgeSubject(earned, false)]);
+  const unlockedNow = data?.unlockedNow ?? [];
 
   // Conseguidas primero: el muro de trofeos es lo que da la sensación de
   // avance. Dentro de cada mitad se respeta el orden del catálogo.
@@ -151,30 +134,41 @@ export function ProgressionClient() {
         description={
           data.level
             ? `Vas por ${data.level.name}. Sigue subiendo.`
-            : 'Registra tu primer entrenamiento y la senda empieza.'
+            : `Termina tu primer entreno: +${rules.data?.perSession ?? 50} puntos y tu primera insignia.`
         }
         eyebrow="Progresión"
         title="Tu senda"
       />
 
       <div className="grid gap-4">
-        <RankHero
-          level={data.level}
-          levelProgress={data.levelProgress}
-          nextLevel={data.nextLevel}
-          points={data.points}
-          pointsToNextLevel={data.pointsToNextLevel}
-        />
+        <div data-tutorial-id="progression:rank">
+          <RankHero
+            level={data.level}
+            levelProgress={data.levelProgress}
+            nextLevel={data.nextLevel}
+            points={data.points}
+            pointsToNextLevel={data.pointsToNextLevel}
+          />
+        </div>
+        <Button
+          className="justify-self-start"
+          data-tutorial-id="progression:rules"
+          onClick={() => setRulesOpen(true)}
+          variant="ghost"
+        >
+          <Info aria-hidden className="size-4" />
+          ¿Cómo se ganan los puntos?
+        </Button>
         {/* Se celebra desde aquí y no convirtiendo `RankHero` en botón: esa
             cabecera la comparten otras pantallas. */}
         {level ? (
           <Button
             className="justify-self-start"
-            onClick={() => setCelebrating(levelSubject(level))}
+            onClick={() => rewards.show([levelSubject(level)])}
             variant={levelUp ? 'primary' : 'secondary'}
           >
             <Sparkles aria-hidden className="size-4" />
-            {levelUp ? `Has subido a ${levelUp.name}` : `Revive tu ascenso a ${level.name}`}
+            {levelUp ? `Has subido a ${levelUp.name}` : 'Ver mi carta de rango'}
           </Button>
         ) : null}
       </div>
@@ -194,9 +188,9 @@ export function ProgressionClient() {
       ) : null}
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <Card>
+        <Card data-tutorial-id="progression:path">
           <CardHeader
-            description="Los hitos que quedan también se ven: saber hacia dónde vas es lo que tira."
+            description="Todos los rangos, también los que te quedan. Cada uno pide más puntos que el anterior."
             title="El camino"
           />
           <CardContent>
@@ -214,52 +208,7 @@ export function ProgressionClient() {
         </Card>
 
         <div className="grid content-start gap-10">
-          <Card>
-            <CardHeader description="Las cifras que mueven tus puntos." title="Lo que suma" />
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <MetricCard
-                icon={<Flame aria-hidden className="h-4 w-4" />}
-                label="Racha actual"
-                value={
-                  stats.currentStreakDays > 0
-                    ? `${stats.currentStreakDays} ${stats.currentStreakDays === 1 ? 'día' : 'días'}`
-                    : '—'
-                }
-              />
-              <MetricCard
-                icon={<CalendarDays aria-hidden className="h-4 w-4" />}
-                label="Semanas seguidas"
-                value={`${stats.weeklyStreak}`}
-              />
-              <MetricCard
-                icon={<Dumbbell aria-hidden className="h-4 w-4" />}
-                label="Entrenamientos"
-                value={`${stats.totalSessions}`}
-              />
-              <MetricCard
-                icon={<Award aria-hidden className="h-4 w-4" />}
-                label="Volumen total"
-                value={`${Math.round(stats.totalVolumeKg / 1000).toLocaleString('es-ES')} t`}
-              />
-              <MetricCard
-                icon={<TrendingUp aria-hidden className="h-4 w-4" />}
-                label="Récords batidos"
-                value={`${stats.personalRecords}`}
-              />
-              <MetricCard
-                icon={<PersonStanding aria-hidden className="h-4 w-4" />}
-                label="Grupos trabajados"
-                value={`${stats.distinctMuscleGroups}`}
-              />
-              {stats.currentStreakDays === 0 && stats.totalSessions > 0 ? (
-                // Una racha rota es un hecho, no un reproche: el texto invita a
-                // empezar otra hoy y no menciona el fallo.
-                <p className="text-xs leading-5 text-[var(--text-muted)] sm:col-span-2">
-                  Tu racha está en cero. Un entrenamiento hoy y vuelve a contar.
-                </p>
-              ) : null}
-            </CardContent>
-          </Card>
+          <ProgressionStatsCard rules={rules.data} stats={stats} />
 
           <RestDaysCard
             currentRestDays={currentRestDays}
@@ -275,11 +224,14 @@ export function ProgressionClient() {
         </div>
       </div>
 
-      <Card>
+      <Card data-tutorial-id="progression:badges">
         <CardHeader
-          description="Las que faltan muestran cuánto te queda; las secretas aparecen ya conseguidas."
+          description="Retos concretos que suman puntos extra. Las que faltan muestran cuánto te queda."
           title={`Insignias · ${earnedCount}/${badges.length}`}
         />
+        <div className="px-5 pt-5">
+          <RarityLegend />
+        </div>
         <CardContent className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {badges.map((badge) => (
             <BadgeTile badge={badge} key={badge.code} onCelebrate={celebrateBadge} />
@@ -287,7 +239,15 @@ export function ProgressionClient() {
         </CardContent>
       </Card>
 
-      <ProgressionCelebration onClose={() => setCelebrating(null)} subject={celebrating} />
+      <PointsRulesDialog
+        badges={data.badges}
+        onOpenChange={setRulesOpen}
+        open={rulesOpen}
+        points={data.points}
+        stats={stats}
+      />
+
+      <ProgressionCelebration onClose={rewards.close} subjects={rewards.subjects} />
     </div>
   );
 }

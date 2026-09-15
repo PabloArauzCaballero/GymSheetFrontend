@@ -14,8 +14,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AmbientBackground } from '@/components/ambient';
-import { useTourStore } from '@/state/tour-store';
-import { EnterUp, Heartbeat, PressableScale } from '@/components/motion';
+import { useTourStore, type TourKey } from '@/state/tour-store';
+import { CountUpText, EnterUp, Heartbeat, PressableScale } from '@/components/motion';
 import { accentPolicy, cardGap, cardPadding, colors, fontSizes, iconSizes, maxContentWidth, maxWideContentWidth, minTouchTarget, radii, screenGap, sectionGap, semibold, spacing, tabletBreakpoint, tones } from '@/theme';
 
 /**
@@ -222,15 +222,54 @@ export function ScrollScreen({
 }
 
 /** Page title plus an optional line of context underneath. */
-export function ScreenHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+/**
+ * Reabre la guía de una pantalla.
+ *
+ * Los tours se muestran solos una vez; este botón es el camino para volver a
+ * verlos sin pasar por Perfil ni reiniciar todos. Vive en la cabecera porque es
+ * donde se busca la ayuda de «esta» pantalla, y es discreto —glifo apagado
+ * sobre superficie— para no competir con la acción principal.
+ */
+export function TourHelpButton({ tourKey }: { tourKey: Exclude<TourKey, 'welcome'> }) {
+  const open = useTourStore((state) => state.open);
+  return (
+    <PressableScale
+      accessibilityLabel="Ver la guía de esta pantalla"
+      onPress={() => open(tourKey)}
+      style={{
+        width: minTouchTarget,
+        height: minTouchTarget,
+        borderRadius: radii.full,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.surfaceHigh,
+      }}
+    >
+      <Ionicons color={colors.textMuted} name="help" size={iconSizes.md} />
+    </PressableScale>
+  );
+}
+
+export function ScreenHeader({
+  title,
+  subtitle,
+  tourKey,
+}: {
+  title: string;
+  subtitle?: string;
+  /** Si se pasa, la cabecera ofrece «?» para repetir la guía de la pantalla. */
+  tourKey?: Exclude<TourKey, 'welcome'>;
+}) {
   return (
     <View style={{ gap: spacing.xs }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }}>
       <Text
         accessibilityRole="header"
         // Caps the title at two lines: at the largest system text size a long
         // name would otherwise push the whole screen down.
         numberOfLines={2}
         style={{
+          flex: 1,
           color: colors.text,
           // The one place the display size is used. A title only reads as a
           // title when the step down to body text is unmistakable; at 32 against
@@ -252,6 +291,8 @@ export function ScreenHeader({ title, subtitle }: { title: string; subtitle?: st
       >
         {title}
       </Text>
+      {tourKey ? <TourHelpButton tourKey={tourKey} /> : null}
+      </View>
       {subtitle ? (
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
           {subtitle}
@@ -380,9 +421,18 @@ export function Row({
   label,
   value,
   icon,
+  count,
+  countSuffix = '',
 }: {
   label: string;
   value: string;
+  /**
+   * Si llega, el valor se pinta contando desde 0 hasta `count` con
+   * `countSuffix` detrás, en vez de `value`. `value` sigue siendo obligatorio:
+   * es el texto final completo para quien no ve la cuenta.
+   */
+  count?: number;
+  countSuffix?: string;
   /**
    * Glyph before the label. A stack of six label/value rows is the densest
    * thing in the app and the hardest to scan, because every line has the same
@@ -415,17 +465,31 @@ export function Row({
         ) : null}
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{label}</Text>
       </View>
-      <Text
-        style={{
-          color: colors.text,
-          fontSize: fontSizes.sm,
-          fontWeight: semibold,
-          flexShrink: 1,
-          textAlign: 'right',
-        }}
-      >
-        {value}
-      </Text>
+      {typeof count === 'number' ? (
+        <CountUpText
+          style={{
+            color: colors.text,
+            fontSize: fontSizes.sm,
+            fontWeight: semibold,
+            textAlign: 'right',
+            fontVariant: ['tabular-nums'],
+          }}
+          suffix={countSuffix}
+          value={count}
+        />
+      ) : (
+        <Text
+          style={{
+            color: colors.text,
+            fontSize: fontSizes.sm,
+            fontWeight: semibold,
+            flexShrink: 1,
+            textAlign: 'right',
+          }}
+        >
+          {value}
+        </Text>
+      )}
     </View>
   );
 }
@@ -442,9 +506,15 @@ export function StatTile({
   label,
   icon,
   delta,
+  rate,
 }: {
   value: string;
   label: string;
+  /**
+   * Cuánto aporta esta cifra a tus puntos, ya redactado («+50 c/u»). Solo en
+   * las cifras que suman: una tarifa en todas diría que todo cuenta, y no.
+   */
+  rate?: string;
   icon?: keyof typeof Ionicons.glyphMap;
   /**
    * Change against the comparable previous period, already formatted. A number
@@ -504,6 +574,21 @@ export function StatTile({
         {value}
       </Text>
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>{label}</Text>
+      {rate ? (
+        <View
+          style={{
+            alignSelf: 'flex-start',
+            paddingHorizontal: spacing.xs,
+            paddingVertical: 2,
+            borderRadius: radii.full,
+            backgroundColor: colors.surfaceHigh,
+          }}
+        >
+          <Text style={{ color: accentPolicy.ink, fontSize: fontSizes.xs, fontWeight: semibold }}>
+            {rate}
+          </Text>
+        </View>
+      ) : null}
       {delta ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
           <Ionicons

@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react';
 import type { ProgressionBadge } from '@/shared/api/schemas';
+import { CountUp } from '@/shared/components/motion/count-up';
 import { cn } from '@/shared/lib/cn';
 import { RARITY_LABEL, withAlpha } from './progression-colors';
 import { ProgressionIcon } from './progression-icon';
@@ -63,7 +64,15 @@ export function BadgeTile({
           </span>
           <span className="truncate text-xs text-[var(--text-disabled)]">
             {RARITY_LABEL[badge.rarity] ?? badge.rarity}
-            {badge.pointsReward > 0 ? ` · +${badge.pointsReward} pts` : ''}
+            {badge.pointsReward > 0 ? (
+              <>
+                <span aria-hidden>
+                  {' · +'}
+                  <CountUp value={badge.pointsReward} /> pts
+                </span>
+                <span className="sr-only">{`, ${badge.pointsReward} puntos`}</span>
+              </>
+            ) : null}
           </span>
         </div>
         {badge.isNew ? (

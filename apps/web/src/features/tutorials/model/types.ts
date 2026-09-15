@@ -14,6 +14,7 @@ export type TutorialCategory =
   | 'TRAINING'
   | 'EXERCISES'
   | 'MEMBERSHIP'
+  | 'PROGRESSION'
   | 'ADMIN';
 
 /**

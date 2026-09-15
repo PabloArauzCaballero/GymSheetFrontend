@@ -161,7 +161,7 @@ export default function ExercisesScreen() {
       }}
       refreshing={taxonomy.isFetching || exercises.isFetching}
     >
-      <ScreenHeader subtitle={subtitle} title="Ejercicios" />
+      <ScreenHeader subtitle={subtitle} title="Ejercicios" tourKey="exercises" />
 
       {/* Crear va arriba y no escondido tras el catálogo: quien viene a añadir
           su propio ejercicio ya sabe que no está en la lista, y hacerle

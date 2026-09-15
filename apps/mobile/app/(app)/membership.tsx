@@ -25,6 +25,7 @@ import { MetricChip } from '@/components/list';
 import { PressableScale } from '@/components/motion';
 import { DateTimeline, StepProgress, type FlowStep } from '@/components/step-flow';
 import { BackLink } from '@/components/nav';
+import { TourTarget, useScreenTour } from '@/components/tour';
 import { Button } from '@/components/ui';
 import { MEMBERSHIP_LABEL, MEMBERSHIP_TONE, formatDate } from '@/lib/format';
 import { notify } from '@/notifications';
@@ -144,6 +145,7 @@ export default function MembershipScreen() {
   const [intent, setIntent] = useState<MembershipIntent | null>(null);
   /** 0 confirmar · 1 fechas · 2 pagar. */
   const [step, setStep] = useState(0);
+  useScreenTour('membership');
 
   const projection = useQuery({
     queryKey: ['membership', 'me'],
@@ -214,8 +216,10 @@ export default function MembershipScreen() {
       <ScreenHeader
         subtitle="Tu plan, tus accesos y las opciones para renovar."
         title="Membresía"
+        tourKey="membership"
       />
 
+      <TourTarget id="membership.status">
       <Section icon="shield-checkmark-outline" index={0} title="Estado actual">
         {projection.isPending ? (
           <Skeleton height={220} />
@@ -323,7 +327,9 @@ export default function MembershipScreen() {
           </Card>
         ) : null}
       </Section>
+      </TourTarget>
 
+      <TourTarget id="membership.renew">
       <Section icon="refresh-outline" index={1} title="Renovar">
         <Card accent={step === 2 ? colors.volt : undefined}>
           <StepProgress current={step} steps={RENEWAL_STEPS} />
@@ -444,6 +450,7 @@ export default function MembershipScreen() {
           ) : null}
         </Card>
       </Section>
+      </TourTarget>
 
       <Section icon="pricetags-outline" index={2} title="Planes disponibles">
         {plans.isPending ? (
@@ -659,6 +666,7 @@ export default function MembershipScreen() {
         )}
       </Section>
 
+      <TourTarget id="membership.accesses">
       <Section icon="key-outline" index={4} title="Accesos recientes">
         {accesses.isPending ? (
           <Skeleton height={110} />
@@ -720,6 +728,7 @@ export default function MembershipScreen() {
           />
         )}
       </Section>
+      </TourTarget>
     </ScrollScreen>
   );
 }

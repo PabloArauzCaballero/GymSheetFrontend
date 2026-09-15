@@ -6,9 +6,11 @@ import { BackLink } from '@/components/nav';
 import { Card, Divider, ScrollScreen, ScreenHeader } from '@/components/layout';
 import { ChatConversationRow } from '@/components/chat-conversation-row';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
+import { TourTarget, useScreenTour } from '@/components/tour';
 
 export default function ChatListScreen() {
   const router = useRouter();
+  useScreenTour('chat');
   const conversations = useQuery({
     queryKey: ['chat', 'conversations'],
     queryFn: () => chatService.listConversations(),
@@ -20,8 +22,13 @@ export default function ChatListScreen() {
       refreshing={conversations.isFetching}
     >
       <BackLink />
-      <ScreenHeader subtitle="Habla con las conexiones que ya aceptaste." title="Chat" />
+      <ScreenHeader
+        subtitle="Habla con las conexiones que ya aceptaste."
+        title="Chat"
+        tourKey="chat"
+      />
 
+      <TourTarget id="chat.list">
       {conversations.isPending ? (
         <Skeleton height={200} />
       ) : conversations.isError ? (
@@ -47,6 +54,7 @@ export default function ChatListScreen() {
           title="Sin conversaciones"
         />
       )}
+      </TourTarget>
     </ScrollScreen>
   );
 }

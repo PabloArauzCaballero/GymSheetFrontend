@@ -43,7 +43,14 @@ type DetailSection = {
   key: string;
   title: string;
   icon: keyof typeof Ionicons.glyphMap;
-  rows: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string }[];
+  rows: {
+    icon: keyof typeof Ionicons.glyphMap;
+    label: string;
+    value: string;
+    /** Cifra que cuenta desde 0 al mostrarse; `value` es su texto final. */
+    count?: number;
+    countSuffix?: string;
+  }[];
 };
 
 /**
@@ -87,6 +94,8 @@ function sectionsOf(entry: GymDirectoryEntry): DetailSection[] {
       icon: 'stats-chart-outline',
       label: 'Puntos',
       value: `${entry.points.toLocaleString('es-ES')} pts`,
+      count: entry.points,
+      countSuffix: ' pts',
     });
   }
 
@@ -119,7 +128,14 @@ function SectionBlock({ index, section }: { index: number; section: DetailSectio
     <Section icon={section.icon} index={index} title={section.title}>
       <Card>
         {section.rows.map((row) => (
-          <Row icon={row.icon} key={row.label} label={row.label} value={row.value} />
+          <Row
+            count={row.count}
+            countSuffix={row.countSuffix}
+            icon={row.icon}
+            key={row.label}
+            label={row.label}
+            value={row.value}
+          />
         ))}
       </Card>
     </Section>

@@ -9,13 +9,14 @@ import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { trainingGoals } from '@gymsheet/types';
 import type { GymDirectoryEntry, PublicBranchSummary } from '@gymsheet/schemas';
 import { chatService, facilitiesService, progressionService, socialService } from '@/api/services';
-import { Card, ScrollScreen, Section } from '@/components/layout';
+import { Card, ScrollScreen, Section, TourHelpButton } from '@/components/layout';
+import { TourTarget, useScreenTour } from '@/components/tour';
 import { DirectoryCardFace, levelTitle } from '@/components/directory-card';
 import { NavRow } from '@/components/list';
 import { RankBadge } from '@/components/rank-badge';
 import { StoriesBar } from '@/components/stories-bar';
 import { Button, Input } from '@/components/ui';
-import { PressableScale } from '@/components/motion';
+import { CountUpText, PressableScale } from '@/components/motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import {
   InteractionsBadge,
@@ -76,6 +77,7 @@ function CommunityHeader({ onOpenPreferences }: { onOpenPreferences: () => void 
   return (
     <View style={{ gap: spacing.md }}>
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm }}>
+        <TourHelpButton tourKey="comunidad" />
         <PressableScale
           accessibilityLabel="Preferencias de búsqueda"
           onPress={onOpenPreferences}
@@ -188,7 +190,7 @@ function PodiumPreview() {
         </View>
         <Ionicons color={colors.textMuted} name="chevron-forward" size={iconSizes.sm} />
       </View>
-      {leaderboard.data.map((entry) => (
+      {leaderboard.data.map((entry, index) => (
         <View
           key={`${entry.position}-${entry.displayName}`}
           style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}
@@ -206,9 +208,12 @@ function PodiumPreview() {
             {entry.displayName}
             {entry.isMe ? ' · tú' : ''}
           </Text>
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, fontVariant: ['tabular-nums'] }}>
-            {entry.points.toLocaleString('es-ES')} pts
-          </Text>
+          <CountUpText
+            delayMs={index * 60}
+            style={{ color: colors.textMuted, fontSize: fontSizes.sm }}
+            suffix=" pts"
+            value={entry.points}
+          />
         </View>
       ))}
     </Card>
@@ -628,8 +633,15 @@ function DirectoryPersonRow({
                   style={{ color: colors.volt, fontSize: fontSizes.xs, fontWeight: semibold }}
                 >
                   {levelTitle(entry.levelCode)}
-                  {typeof entry.points === 'number' ? ` · ${entry.points.toLocaleString('es-ES')} pts` : ''}
+                  {typeof entry.points === 'number' ? ' · ' : ''}
                 </Text>
+                {typeof entry.points === 'number' ? (
+                  <CountUpText
+                    style={{ color: colors.volt, fontSize: fontSizes.xs, fontWeight: semibold }}
+                    suffix=" pts"
+                    value={entry.points}
+                  />
+                ) : null}
               </View>
             ) : null}
             {entry.connectionStatus === 'NONE' ? (
@@ -739,6 +751,7 @@ function DirectoryViewToggle({
 
 export default function ComunidadScreen() {
   const router = useRouter();
+  useScreenTour('comunidad');
   const queryClient = useQueryClient();
   const [objetivo, setObjetivo] = useState<string | null>(null);
   const [sucursalId, setSucursalId] = useState<string | null>(null);
@@ -813,11 +826,15 @@ export default function ComunidadScreen() {
 
   return (
     <ScrollScreen onRefresh={() => void directory.refetch()} refreshing={directory.isFetching}>
-      <CommunityHeader onOpenPreferences={() => setPrefsVisible(true)} />
+      <TourTarget id="comunidad.actions">
+        <CommunityHeader onOpenPreferences={() => setPrefsVisible(true)} />
+      </TourTarget>
 
       <StoriesBar />
 
-      <PodiumPreview />
+      <TourTarget id="comunidad.podium">
+        <PodiumPreview />
+      </TourTarget>
 
       <Input
         autoCapitalize="none"
@@ -862,6 +879,7 @@ export default function ComunidadScreen() {
               entera, así que es un destino, no un ajuste del listado. Va junto
               al conmutador porque es donde se elige cómo mirar, y se lleva los
               filtros puestos para no reabrir un gimnasio recién acotado. */}
+          <TourTarget id="comunidad.discover">
           <PressableScale
             accessibilityLabel="Descubrir socios uno a uno"
             onPress={() =>
@@ -891,6 +909,7 @@ export default function ComunidadScreen() {
               Descubrir
             </Text>
           </PressableScale>
+          </TourTarget>
           <DirectoryViewToggle mode={viewMode} onChange={setViewMode} />
         </View>
       </View>

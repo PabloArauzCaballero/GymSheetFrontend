@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import type { Progression } from '@/shared/api/schemas';
+import { CountUp } from '@/shared/components/motion/count-up';
 import { withAlpha } from './progression-colors';
 import { ProgressionIcon } from './progression-icon';
 import { ProgressTrack } from './progression-track';
@@ -67,7 +68,10 @@ export function SendaCard({
             sobre superficie clara —1.3:1— y la cifra desaparecía. `--accent-ink` baja
             a #55730a en claro y da 5.5:1. `--volt` queda para rellenos y CTA. */}
         <span className="text-sm font-semibold text-[var(--accent-ink)]">
-          {`${progression.points.toLocaleString('es-ES')} puntos`}
+          <span aria-hidden>
+            <CountUp value={progression.points} /> puntos
+          </span>
+          <span className="sr-only">{`${progression.points.toLocaleString('es-ES')} puntos`}</span>
         </span>
         <span className="text-sm text-[var(--text-muted)]">
           {progression.nextLevel && progression.pointsToNextLevel !== null
@@ -75,6 +79,10 @@ export function SendaCard({
             : 'Senda completa'}
         </span>
       </div>
+
+      <span className="text-xs text-[var(--text-muted)]">
+        Sumas puntos al entrenar. Toca para ver cómo.
+      </span>
     </Link>
   );
 }

@@ -16,7 +16,20 @@ import { create } from 'zustand';
  * every screen tour as seen, and a screen added later has to be able to
  * introduce itself to users who have been using the app for months.
  */
-export type TourKey = 'welcome' | 'home' | 'routines' | 'exercises' | 'workouts' | 'profile';
+export type TourKey =
+  | 'welcome'
+  | 'home'
+  | 'routines'
+  | 'exercises'
+  | 'workouts'
+  | 'profile'
+  | 'trayectoria'
+  | 'comunidad'
+  | 'descubrir'
+  | 'interacciones'
+  | 'chat'
+  | 'membership'
+  | 'notifications';
 
 const STORAGE_PREFIX = 'gymsheet.tour.v2.';
 
@@ -109,6 +122,13 @@ const ALL_KEYS: readonly TourKey[] = [
   'exercises',
   'workouts',
   'profile',
+  'trayectoria',
+  'comunidad',
+  'descubrir',
+  'interacciones',
+  'chat',
+  'membership',
+  'notifications',
 ];
 
 export const useTourStore = create<TourState>((set, get) => ({
