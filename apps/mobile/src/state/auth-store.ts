@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { sessionPrincipalSchema } from '@gymsheet/schemas';
 import { setActiveTenant } from '@/theme';
 import { initialSessionState, type SessionState } from '@gymsheet/auth';
-import type { LoginInput } from '@gymsheet/schemas';
+import type { LoginInput, RegisterPayload } from '@gymsheet/schemas';
 import { apiClient, setSessionLostHandler } from '@/api/client';
 import { secureStoreAuthStorage } from '@/storage/secure-store';
 import { env } from '@/config/env';
@@ -11,16 +11,15 @@ import { unregisterPushNotifications } from '@/notifications/push';
 
 /**
  * Lo que `POST /auth/register` espera, ya sin el par de confirmación.
- * `acceptedTerms` es literal `true`: el tipo obliga a que quien llama haya
- * pasado por la validación de la casilla, no a confiar en que lo hizo.
+ *
+ * El tipo y la traducción desde los valores del formulario viven en
+ * `@gymsheet/schemas` y se reexportan aquí para no romper a quien ya los
+ * importaba de este módulo. Antes cada plataforma armaba este objeto por su
+ * cuenta —quitar `confirmation`, omitir `genero` vacío, forzar `acceptedTerms`—
+ * y bastaba con que una cambiara para que el alta se comportara distinto según
+ * el dispositivo.
  */
-export type RegisterPayload = {
-  email: string;
-  password: string;
-  nombreCompleto: string;
-  genero?: 'MALE' | 'FEMALE' | 'UNSPECIFIED';
-  acceptedTerms: true;
-};
+export type { RegisterPayload } from '@gymsheet/schemas';
 
 /**
  * Backend mobile-auth contract (bearer flow) as the API actually serves it today

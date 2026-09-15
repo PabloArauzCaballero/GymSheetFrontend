@@ -11,7 +11,11 @@ export function PublicFooter() {
           ['Producto', [['Cómo funciona', '/#producto'], ['Planes', '/#planes'], ['Gimnasios', '/gimnasios']]],
           ['Cuenta', [['Crear cuenta', '/register'], ['Iniciar sesión', '/login'], ['Recuperar acceso', '/recover-password']]],
           ['Legal', [['Privacidad', '/privacidad'], ['Términos', '/terminos'], ['Preguntas', '/#preguntas']]],
-        ].map(([title, links]) => <nav key={title as string}><p className="data-label text-[var(--text)]">{title as string}</p><div className="mt-4 grid gap-3">{(links as string[][]).map(([label, href]) => <Link className="text-sm text-[var(--text-muted)] transition-colors hover:text-[var(--text)]" href={href!} key={href}>{label}</Link>)}</div></nav>)}
+          /* Cada columna se nombra con su propio título: cuatro `<nav>` sin
+             nombre en la misma página se anuncian todos como «navegación» y
+             quien salta entre regiones no puede distinguirlos (axe:
+             landmark-unique). */
+        ].map(([title, links]) => <nav aria-label={title as string} key={title as string}><p className="data-label text-[var(--text)]">{title as string}</p><div className="mt-4 grid gap-3">{(links as string[][]).map(([label, href]) => <Link className="text-sm text-[var(--text-muted)] transition-colors hover:text-[var(--text)]" href={href!} key={href}>{label}</Link>)}</div></nav>)}
       </div>
       <div className="mx-auto max-w-6xl border-t border-[var(--border-subtle)] px-5 py-6 text-xs text-[var(--text-muted)] sm:px-8">© {year} GymSheet. Hecho para que cada progreso cuente.</div>
     </footer>

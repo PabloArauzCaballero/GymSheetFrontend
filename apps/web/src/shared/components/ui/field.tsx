@@ -42,9 +42,29 @@ export function Field({
   // puede saber cuál es el control, y sobrescribir el primero a ciegas sería
   // peor que no tocar nada.
   const only = Children.count(children) === 1 ? Children.only(children) : null;
-  const canWire = only !== null && isValidElement(only);
+  const isElement = only !== null && isValidElement(only);
 
-  const childProps = canWire ? (only.props as Record<string, unknown>) : {};
+  /**
+   * Y tampoco se cablea cuando ese único hijo es una ETIQUETA HTML que no es un
+   * control.
+   *
+   * Los campos con glifo envuelven el control en un `<div className="relative">`
+   * para poder posicionar el icono. Al clonar a ciegas, el `id` acababa en ese
+   * `div` —y el `<Input>` de dentro ya traía el suyo, el mismo—, así que el
+   * documento tenía el id duplicado y `label[for]` resolvía al PRIMERO, el
+   * `div`. Resultado: el buscador del Centro de ayuda y el de Ejercicios se
+   * anunciaban sin nombre, con la etiqueta «Buscar» apuntando a una caja vacía.
+   *
+   * Con el envoltorio delante, el `id` lo pone el propio control —que es quien
+   * debe llevarlo— y aquí basta con que la etiqueta apunte a `htmlFor`.
+   */
+  const childType = isElement ? (only as { type: unknown }).type : null;
+  const isHtmlTag = typeof childType === 'string';
+  const isFormControlTag =
+    isHtmlTag && (childType === 'input' || childType === 'select' || childType === 'textarea');
+  const canWire = isElement && (!isHtmlTag || isFormControlTag);
+
+  const childProps = isElement ? (only.props as Record<string, unknown>) : {};
   // Un `id` propio del hijo manda: puede haber un `htmlFor` externo apuntándole.
   const controlId = (childProps.id as string | undefined) ?? htmlFor ?? generatedId;
 

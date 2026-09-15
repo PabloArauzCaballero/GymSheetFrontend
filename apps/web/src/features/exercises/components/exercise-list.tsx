@@ -88,6 +88,11 @@ export function ExerciseList() {
                 setPage(1);
               }}
               placeholder="Nombre, músculo o parte corporal"
+              // `search` y no `text`: es lo que hace que el campo se anuncie
+              // como buscador —rol `searchbox`— en vez de como una caja de
+              // texto cualquiera, y lo que da el botón de borrar del navegador
+              // y el teclado con «Buscar» en el móvil. El aspecto no cambia.
+              type="search"
               value={search}
             />
           </div>

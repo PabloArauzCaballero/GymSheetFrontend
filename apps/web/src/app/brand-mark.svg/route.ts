@@ -18,10 +18,23 @@ export async function GET(): Promise<Response> {
   const { brand } = theme;
   // El monograma se centra por tipografía del sistema para no depender de una
   // fuente web: un SVG servido suelto no hereda las del documento.
+  /**
+   * El dibujo es el mismo que el del emblema en pantalla
+   * (`shared/components/brand/brand-mark.tsx`) y el de la cortinilla del móvil:
+   * caja redondeada rellena con el degradado del acento y el monograma en el
+   * color de contraste. Antes esto era un monograma de color sobre un cuadrado
+   * casi negro — legible, pero distinto de lo que la aplicación enseña al
+   * abrirse, así que el icono del escritorio no se reconocía como la misma
+   * marca.
+   */
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="brand-title">
 <title id="brand-title">${escapeXml(brand.name)}</title>
-<rect width="64" height="64" rx="8" fill="${escapeXml(theme.dark.surfaceLowest)}"/>
-<text x="32" y="33" fill="${escapeXml(theme.dark.accent)}" font-family="system-ui, sans-serif" font-size="${brand.monogram.length > 2 ? 22 : 28}" font-weight="800" letter-spacing="-1" text-anchor="middle" dominant-baseline="central">${escapeXml(brand.monogram)}</text>
+<defs><linearGradient id="brand-fill" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="${escapeXml(theme.dark.accent)}"/>
+<stop offset="1" stop-color="${escapeXml(theme.dark.accentDim)}"/>
+</linearGradient></defs>
+<rect width="64" height="64" rx="17" fill="url(#brand-fill)"/>
+<text x="32" y="34" fill="${escapeXml(theme.dark.accentContrast)}" font-family="system-ui, sans-serif" font-size="${brand.monogram.length > 2 ? 22 : 28}" font-weight="800" letter-spacing="-1" text-anchor="middle" dominant-baseline="central">${escapeXml(brand.monogram)}</text>
 </svg>`;
 
   return new Response(svg, {

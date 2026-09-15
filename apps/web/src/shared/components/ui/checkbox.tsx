@@ -27,8 +27,35 @@ export function Checkbox({
   const inputId = id ?? generated;
 
   return (
-    <div className={cn('flex items-center', className)}>
-      <input className="peer sr-only" id={inputId} type="checkbox" {...props} />
+    /*
+     * El `input` nativo NO se esconde con `sr-only`: se superpone al cuadrado
+     * dibujado, a su mismo tamaño, con `opacity-0`.
+     *
+     * `sr-only` lo dejaba en un punto de 1×1 px recortado y, al ser
+     * `position: absolute` sin ancestro posicionado, se colocaba respecto a un
+     * contenedor varios niveles más arriba: el control acababa lejos de su
+     * propia casilla —en el alta, debajo del botón de enviar—. Quien pulsa la
+     * etiqueta no lo notaba, pero el objetivo real de la casilla no estaba
+     * donde se ve, así que el foco al tabular saltaba a otro punto de la página
+     * y cualquier pulsación por coordenadas aterrizaba en el elemento
+     * equivocado.
+     *
+     * Con la superposición, lo que se pulsa ES la casilla: el navegador sigue
+     * dando el foco, el teclado y el anuncio de «casilla, marcada», y además
+     * hay un objetivo táctil de verdad donde el ojo lo espera. La etiqueta
+     * sigue alternándola por `htmlFor`.
+     */
+    <div className={cn('relative flex items-center', className)}>
+      <input
+        // `z-10` porque la marca de dentro lleva `opacity` y eso le crea su
+        // propio contexto de apilado: sin subir el input, el SVG —invisible
+        // mientras está sin marcar— se pintaba por encima y se comía la
+        // pulsación sobre la casilla.
+        className="peer absolute left-0 top-1/2 z-10 size-[22px] -translate-y-1/2 cursor-pointer opacity-0 disabled:cursor-not-allowed"
+        id={inputId}
+        type="checkbox"
+        {...props}
+      />
       <label
         className={cn(
           'flex cursor-pointer select-none items-center gap-2 py-1 text-sm text-[var(--text-muted)]',

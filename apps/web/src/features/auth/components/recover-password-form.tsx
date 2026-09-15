@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { authCopy } from '@gymsheet/domain';
 import { ApiError } from '@/shared/api/api-error';
 import { Button } from '@/shared/components/ui/button';
-import { Checkbox } from '@/shared/components/ui/checkbox';
+import { AuthAlert } from '@/features/auth/components/auth-alert';
 import { Field } from '@/shared/components/ui/field';
-import { Input } from '@/shared/components/ui/input';
+import { AtSign, KeyRound, LockKeyhole } from 'lucide-react';
+import { InputWithIcon, PasswordInput } from '@/shared/components/ui/input';
 import { confirmPasswordReset, requestPasswordReset } from '@/features/auth/services/auth-client';
 
 const requestSchema = z.object({
@@ -35,7 +37,6 @@ type ConfirmValues = z.infer<typeof confirmSchema>;
 export function RecoverPasswordForm() {
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [email, setEmail] = useState('');
-  const [passwordVisible, setPasswordVisible] = useState(false);
 
   const requestForm = useForm<RequestValues>({
     resolver: zodResolver(requestSchema),
@@ -110,8 +111,9 @@ export function RecoverPasswordForm() {
         htmlFor="reset-email"
         label="Correo electrónico"
       >
-        <Input
+        <InputWithIcon
           autoComplete="email"
+          icon={<AtSign className="size-4" />}
           id="reset-email"
           placeholder="tu@correo.com"
           type="email"
@@ -119,14 +121,15 @@ export function RecoverPasswordForm() {
         />
       </Field>
       {requestForm.formState.errors.root?.message ? (
-        <p
-          className="rounded-[4px] border border-[var(--danger-border)] bg-[var(--danger-surface)] p-3 text-sm text-[var(--danger-text)]"
-          role="alert"
-        >
-          {requestForm.formState.errors.root.message}
-        </p>
+        <AuthAlert message={requestForm.formState.errors.root.message} />
       ) : null}
-      <Button className="w-full" disabled={requestForm.formState.isSubmitting} type="submit">
+      <Button
+        className="w-full"
+        loading={requestForm.formState.isSubmitting}
+        size="lg"
+        type="submit"
+        variant="primary"
+      >
         {requestForm.formState.isSubmitting ? 'Enviando…' : 'Enviar código'}
       </Button>
     </form>
@@ -141,11 +144,12 @@ export function RecoverPasswordForm() {
         {`Escribe el código que enviamos a ${email} y elige tu contraseña nueva. Caduca en unos minutos.`}
       </p>
       <Field error={confirmForm.formState.errors.pin?.message} htmlFor="reset-pin" label="Código">
-        <Input
+        <InputWithIcon
           // `one-time-code` es lo que hace que el gestor de contraseñas y el
           // teléfono ofrezcan el código en cuanto llega, en vez de obligar a
           // copiarlo a mano entre dos ventanas.
           autoComplete="one-time-code"
+          icon={<KeyRound className="size-4" />}
           id="reset-pin"
           inputMode="numeric"
           maxLength={6}
@@ -158,29 +162,26 @@ export function RecoverPasswordForm() {
         htmlFor="reset-password"
         label="Contraseña nueva"
       >
-        <Input
+        <PasswordInput
           autoComplete="new-password"
+          hideLabel={authCopy.hidePassword}
+          icon={<LockKeyhole className="size-4" />}
           id="reset-password"
           placeholder="••••••••"
-          type={passwordVisible ? 'text' : 'password'}
+          showLabel={authCopy.showPassword}
           {...confirmForm.register('password')}
-        />
-        <Checkbox
-          checked={passwordVisible}
-          className="mt-2"
-          label="Mostrar contraseña"
-          onChange={(event) => setPasswordVisible(event.target.checked)}
         />
       </Field>
       {confirmForm.formState.errors.root?.message ? (
-        <p
-          className="rounded-[4px] border border-[var(--danger-border)] bg-[var(--danger-surface)] p-3 text-sm text-[var(--danger-text)]"
-          role="alert"
-        >
-          {confirmForm.formState.errors.root.message}
-        </p>
+        <AuthAlert message={confirmForm.formState.errors.root.message} />
       ) : null}
-      <Button className="w-full" disabled={confirmForm.formState.isSubmitting} type="submit">
+      <Button
+        className="w-full"
+        loading={confirmForm.formState.isSubmitting}
+        size="lg"
+        type="submit"
+        variant="primary"
+      >
         {confirmForm.formState.isSubmitting ? 'Cambiando…' : 'Cambiar contraseña'}
       </Button>
       <button

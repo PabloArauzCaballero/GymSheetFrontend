@@ -92,157 +92,195 @@
   --radius-xl: var(--radius-xl);
 }
 
-* {
-  box-sizing: border-box;
-  border-color: var(--border-subtle);
-}
+/* ----------------------------------------------------------------------------
+ * Reinicios de elemento — DENTRO de `@layer base`, y esto no es cosmético.
+ *
+ * El CSS que no está en ninguna capa gana a todo lo que sí lo está, sin mirar
+ * la especificidad. Las utilidades de Tailwind v4 viven en `@layer utilities`,
+ * así que mientras estas reglas estuvieron sueltas ganaban a las clases de las
+ * pantallas **en silencio**: la clase aparecía en el marcado, el navegador la
+ * ignoraba y nadie veía un error. Lo que estaba muerto en toda la aplicación:
+ *
+ *   `*  { border-color }`            → todo `border-<color>`
+ *   `a  { color, text-decoration }`  → todo `text-<color>`, `underline`
+ *   form controls `{ font: inherit }`→ todo `text-<tamaño>`, `font-<peso>`,
+ *                                      `leading-*`, `tracking-*` en
+ *                                      `button`, `input`, `select`, `textarea`
+ *   `button { cursor: pointer }`     → `cursor-not-allowed` en botones
+ *   `h1,h2,h3,p { margin-block: 0 }` → todo `mt-*`, `mb-*`, `my-*`
+ *   `:focus-visible { outline }`     → `focus-visible:outline-*`
+ *
+ * Metidas en `base` siguen haciendo su trabajo —ganan a los valores por defecto
+ * del navegador, que es para lo que están— y pierden ante una utilidad, que es
+ * lo que se espera al escribirla. Se comprueba en consola:
+ *
+ *   getComputedStyle(document.querySelector('h1.mt-6')).marginTop  // "24px"
+ * -------------------------------------------------------------------------- */
+@layer base {
+  * {
+    box-sizing: border-box;
+    border-color: var(--border-subtle);
+  }
 
-html {
-  min-width: 320px;
-  background: var(--background);
-  scroll-behavior: smooth;
-}
+  html {
+    min-width: 320px;
+    background: var(--background);
+    scroll-behavior: smooth;
+  }
 
-body {
-  min-height: 100dvh;
-  margin: 0;
-  background:
-    radial-gradient(circle at 50% -20%, var(--page-glow), transparent 34rem),
-    var(--background);
-  color: var(--text);
-  /* `--font-app` la fija la hoja del inquilino según su tipografía elegida. */
-  font-family:
-    var(--font-app),
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /* La familia es variable: dejar que ajuste su eje óptico afina los remates
-   * en los tamaños grandes en vez de escalar el mismo dibujo. */
-  font-optical-sizing: auto;
-  /* Un apretado apenas perceptible. El valor anterior cerraba el texto
-   * corrido, que es donde el ojo necesita aire para leer sin cansarse. */
-  letter-spacing: -0.006em;
-  line-height: 1.55;
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease;
-}
+  body {
+    min-height: 100dvh;
+    margin: 0;
+    background:
+      radial-gradient(circle at 50% -20%, var(--page-glow), transparent 34rem),
+      var(--background);
+    color: var(--text);
+    /* `--font-app` la fija la hoja del inquilino según su tipografía elegida. */
+    font-family:
+      var(--font-app),
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      sans-serif;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* La familia es variable: dejar que ajuste su eje óptico afina los remates
+     * en los tamaños grandes en vez de escalar el mismo dibujo. */
+    font-optical-sizing: auto;
+    /* Un apretado apenas perceptible. El valor anterior cerraba el texto
+     * corrido, que es donde el ojo necesita aire para leer sin cansarse. */
+    letter-spacing: -0.006em;
+    line-height: 1.55;
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
+  }
 
-::selection {
-  background: var(--volt);
-  color: var(--accent-contrast);
-}
+  ::selection {
+    background: var(--volt);
+    color: var(--accent-contrast);
+  }
 
-:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 3px;
-}
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+  }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
 
-button:not(:disabled),
-[role='button']:not([aria-disabled='true']) {
-  cursor: pointer;
-}
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-h1,
-h2,
-h3,
-p {
-  margin-block: 0;
-}
-
-.tech-grid {
-  background-image:
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-
-.panel {
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--surface-lowest);
-}
-
-/* Superficie translúcida para cromo flotante (barras fijas, popovers sobre
- * contenido que hace scroll). Separa por luminancia + blur, no por sombra. */
-.glass {
-  background: color-mix(in srgb, var(--surface) 72%, transparent);
-  backdrop-filter: blur(var(--blur-2));
-  -webkit-backdrop-filter: blur(var(--blur-2));
-}
-@supports not (backdrop-filter: blur(1px)) {
-  .glass {
-    background: var(--surface);
+  h1,
+  h2,
+  h3,
+  p {
+    margin-block: 0;
   }
 }
 
-/* Etiqueta de dato: versalita ancha y ligera. En negrita competía con el valor
- * que rotula, y una etiqueta nunca debe pesar más que su contenido. */
-.data-label {
-  color: var(--text-muted);
-  font-size: 0.6875rem;
-  font-weight: 560;
-  letter-spacing: 0.16em;
-  line-height: 1rem;
-  text-transform: uppercase;
-}
-
-/* Título de pantalla.
+/* ----------------------------------------------------------------------------
+ * Ayudantes de composición — en `@layer components`, por debajo de las
+ * utilidades y por la misma razón que los reinicios de arriba.
  *
- * A este tamaño el peso 850 con -0.045em de apretado no se lee como carácter
- * sino como volumen: las letras se tocan y el conjunto grita. Bajar el peso y
- * abrir la letra deja ver el dibujo de la tipografía, que es de donde viene la
- * sensación de calidad; el tamaño sigue haciendo la jerarquía. */
-.display-title {
-  font-size: clamp(2.25rem, 5.5vw, 3.5rem);
-  font-weight: 600;
-  letter-spacing: -0.022em;
-  line-height: 1.08;
-  text-wrap: balance;
-}
+ * Sueltos ganaban a las clases que los acompañan, de modo que
+ * `class="data-label text-[var(--accent-ink)]"` pintaba la etiqueta en gris: el
+ * `color` de `.data-label` se imponía al que pedía la pantalla. En `components`
+ * el ayudante pone la base y la utilidad ajusta lo que necesite, que es cómo se
+ * espera que funcione la pareja.
+ * -------------------------------------------------------------------------- */
+@layer components {
+  .tech-grid {
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
 
-.text-gradient-volt {
-  background: linear-gradient(100deg, var(--text) 0%, var(--text) 45%, var(--accent-ink) 130%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
+  .panel {
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background: var(--surface-lowest);
+  }
 
-.data-value {
-  font-variant-numeric: tabular-nums;
-  font-weight: 580;
-  letter-spacing: 0.01em;
-}
+  /* Superficie translúcida para cromo flotante (barras fijas, popovers sobre
+   * contenido que hace scroll). Separa por luminancia + blur, no por sombra. */
+  .glass {
+    background: color-mix(in srgb, var(--surface) 72%, transparent);
+    backdrop-filter: blur(var(--blur-2));
+    -webkit-backdrop-filter: blur(var(--blur-2));
+  }
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass {
+      background: var(--surface);
+    }
+  }
 
-.scrollbar-thin {
-  scrollbar-color: var(--surface-highest) transparent;
-  scrollbar-width: thin;
-}
+  /* Etiqueta de dato: versalita ancha y ligera. En negrita competía con el valor
+   * que rotula, y una etiqueta nunca debe pesar más que su contenido. */
+  .data-label {
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+    font-weight: 560;
+    letter-spacing: 0.16em;
+    line-height: 1rem;
+    text-transform: uppercase;
+  }
 
-.nav-scroll {
-  overscroll-behavior-inline: contain;
-  scrollbar-width: none;
-  scroll-padding-inline: 1rem;
-}
+  /* Título de pantalla.
+   *
+   * A este tamaño el peso 850 con -0.045em de apretado no se lee como carácter
+   * sino como volumen: las letras se tocan y el conjunto grita. Bajar el peso y
+   * abrir la letra deja ver el dibujo de la tipografía, que es de donde viene la
+   * sensación de calidad; el tamaño sigue haciendo la jerarquía. */
+  .display-title {
+    font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
 
-.nav-scroll::-webkit-scrollbar {
-  display: none;
+  .text-gradient-volt {
+    background: linear-gradient(100deg, var(--text) 0%, var(--text) 45%, var(--accent-ink) 130%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .data-value {
+    font-variant-numeric: tabular-nums;
+    font-weight: 580;
+    letter-spacing: 0.01em;
+  }
+
+  .scrollbar-thin {
+    scrollbar-color: var(--surface-highest) transparent;
+    scrollbar-width: thin;
+  }
+
+  .nav-scroll {
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+    scroll-padding-inline: 1rem;
+  }
+
+  .nav-scroll::-webkit-scrollbar {
+    display: none;
+  }
 }

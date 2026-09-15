@@ -4,153 +4,151 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { register } from '@/features/auth/services/auth-client';
+import { AtSign, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
+import { authCopy, authDestination, authErrorMessage, genderOptions } from '@gymsheet/domain';
+import {
+  registerDefaults,
+  registerSchema,
+  toRegisterPayload,
+  type RegisterInput,
+} from '@/shared/api/schemas';
+import { register as createAccount } from '@/features/auth/services/auth-client';
 import { ApiError } from '@/shared/api/api-error';
+import { AuthAlert } from '@/features/auth/components/auth-alert';
 import { Button } from '@/shared/components/ui/button';
 import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Field } from '@/shared/components/ui/field';
-import { Input } from '@/shared/components/ui/input';
+import { InputWithIcon, PasswordInput } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
-
-const schema = z
-  .object({
-    nombreCompleto: z.string().trim().min(3, 'Ingresa tu nombre completo.').max(180),
-    email: z.string().email('Ingresa un correo válido.').max(180),
-    password: z.string().min(8, 'Usa al menos 8 caracteres.').max(128),
-    confirmation: z.string(),
-    /**
-     * Solo sirve para elegir con qué arquetipos te habla la senda. Cadena vacía
-     * = prefiero no decirlo, y se envía como `UNSPECIFIED` en vez de omitirse:
-     * omitirlo dejaría la cuenta como «aún no preguntado» y la aplicación
-     * volvería a preguntar. Se puede cambiar después desde el perfil.
-     */
-    genero: z.enum(['', 'MALE', 'FEMALE', 'UNSPECIFIED']),
-    acceptedTerms: z.boolean(),
-  })
-  .refine((value) => value.password === value.confirmation, {
-    path: ['confirmation'],
-    message: 'Las contraseñas no coinciden.',
-  })
-  .refine((value) => value.acceptedTerms, {
-    path: ['acceptedTerms'],
-    message: 'Debes aceptar los términos y la política de privacidad.',
-  });
-type FormValues = z.infer<typeof schema>;
 
 export function RegisterForm() {
   const router = useRouter();
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      nombreCompleto: '',
-      email: '',
-      password: '',
-      confirmation: '',
-      genero: '',
-      acceptedTerms: false,
-    },
+  const form = useForm<RegisterInput>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: registerDefaults,
   });
 
-  async function submit(values: FormValues) {
+  async function submit(values: RegisterInput) {
     form.clearErrors('root');
     try {
-      await register({
-        nombreCompleto: values.nombreCompleto,
-        email: values.email,
-        password: values.password,
-        acceptedTerms: values.acceptedTerms,
-        ...(values.genero === '' ? {} : { genero: values.genero }),
-      });
-      router.replace('/dashboard');
+      // La traducción a lo que espera el servidor —quitar la confirmación,
+      // omitir el género vacío— la hace el paquete compartido, no esta pantalla.
+      await createAccount(toRegisterPayload(values));
+      // Al onboarding directamente, igual que el móvil. Antes iba al panel y
+      // un guardia la rebotaba, así que la cuenta recién creada veía medio
+      // panel antes del cuestionario.
+      router.replace(authDestination.web.afterRegister);
       router.refresh();
     } catch (error: unknown) {
       form.setError('root', {
-        message: error instanceof ApiError ? error.message : 'No se pudo crear la cuenta.',
+        message:
+          error instanceof ApiError
+            ? authErrorMessage(error.kind, 'register', error.message)
+            : authErrorMessage(undefined, 'register'),
       });
     }
   }
 
   return (
-    <form className="grid gap-5" method="post" onSubmit={form.handleSubmit(submit)}>
+    <form className="grid gap-5" method="post" onSubmit={form.handleSubmit(submit)} noValidate>
       <Field
         error={form.formState.errors.nombreCompleto?.message}
         htmlFor="nombreCompleto"
-        label="Nombre completo"
+        label={authCopy.fields.fullName.label}
       >
-        <Input
+        <InputWithIcon
           autoComplete="name"
+          icon={<UserRound className="size-4" />}
           id="nombreCompleto"
-          placeholder="Nombre y apellido"
+          placeholder={authCopy.fields.fullName.placeholder}
           {...form.register('nombreCompleto')}
         />
       </Field>
+
       <Field
         error={form.formState.errors.email?.message}
         htmlFor="email"
-        label="Correo electrónico"
+        label={authCopy.fields.email.label}
       >
-        <Input
+        <InputWithIcon
           autoComplete="email"
+          icon={<AtSign className="size-4" />}
           id="email"
-          placeholder="tu@correo.com"
+          placeholder={authCopy.fields.email.placeholder}
           type="email"
           {...form.register('email')}
         />
       </Field>
-      <Field error={form.formState.errors.password?.message} htmlFor="password" label="Contraseña">
-        <Input
+
+      <Field
+        error={form.formState.errors.password?.message}
+        htmlFor="password"
+        label={authCopy.fields.password.label}
+      >
+        <PasswordInput
           autoComplete="new-password"
+          hideLabel={authCopy.hidePassword}
+          icon={<LockKeyhole className="size-4" />}
           id="password"
-          placeholder="Mínimo 8 caracteres"
-          type="password"
+          placeholder={authCopy.fields.password.placeholder}
+          showLabel={authCopy.showPassword}
           {...form.register('password')}
         />
       </Field>
+
       <Field
         error={form.formState.errors.confirmation?.message}
         htmlFor="confirmation"
-        label="Confirmar contraseña"
+        label={authCopy.fields.confirmation.label}
       >
-        <Input
+        <PasswordInput
           autoComplete="new-password"
+          hideLabel={authCopy.hidePassword}
+          icon={<ShieldCheck className="size-4" />}
           id="confirmation"
-          placeholder="Repite la contraseña"
-          type="password"
+          placeholder={authCopy.fields.confirmation.placeholder}
+          showLabel={authCopy.showPassword}
           {...form.register('confirmation')}
         />
       </Field>
+
       <Field
         error={form.formState.errors.genero?.message}
-        hint="Solo se usa para elegir los rangos e insignias con los que te habla la app. Puedes cambiarlo o dejarlo en blanco."
+        hint={authCopy.fields.gender.hint}
         htmlFor="genero"
-        label="Género (opcional)"
+        label={authCopy.fields.gender.label}
       >
+        {/* Campo de valores cerrados: selector, no texto libre ni botones
+            sueltos. Las opciones vienen del paquete compartido, así que el
+            móvil ofrece exactamente las mismas y en el mismo orden. */}
         <Select id="genero" {...form.register('genero')}>
-          <option value="">Prefiero no decirlo</option>
-          <option value="MALE">Hombre</option>
-          <option value="FEMALE">Mujer</option>
+          {genderOptions.map((option) => (
+            <option key={option.label} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </Select>
       </Field>
+
       <div>
         <Checkbox
           label={
             <span>
-              Acepto los{' '}
+              {authCopy.terms.prefix}{' '}
               <Link
                 className="font-semibold text-[var(--text)] underline decoration-[var(--volt)] underline-offset-4"
                 href="/terminos"
                 target="_blank"
               >
-                términos y condiciones
+                {authCopy.terms.termsLabel}
               </Link>{' '}
-              y la{' '}
+              {authCopy.terms.connector}{' '}
               <Link
                 className="font-semibold text-[var(--text)] underline decoration-[var(--volt)] underline-offset-4"
                 href="/privacidad"
                 target="_blank"
               >
-                política de privacidad
+                {authCopy.terms.privacyLabel}
               </Link>
               .
             </span>
@@ -158,37 +156,25 @@ export function RegisterForm() {
           {...form.register('acceptedTerms')}
         />
         {form.formState.errors.acceptedTerms?.message ? (
-          <p className="mt-1 text-xs text-[var(--danger-text)]">
+          <p className="mt-1 text-xs text-[var(--danger-text)]" role="alert">
             {form.formState.errors.acceptedTerms.message}
           </p>
         ) : null}
       </div>
+
       {form.formState.errors.root?.message ? (
-        <p
-          className="rounded-[4px] border border-[var(--danger-border)] bg-[var(--danger-surface)] p-3 text-sm text-[var(--danger-text)]"
-          role="alert"
-        >
-          {form.formState.errors.root.message}
-        </p>
+        <AuthAlert message={form.formState.errors.root.message} />
       ) : null}
+
       <Button
-        className="mt-2 w-full"
+        className="mt-1 w-full"
         loading={form.formState.isSubmitting}
         size="lg"
         type="submit"
         variant="primary"
       >
-        Crear cuenta
+        {authCopy.register.submit}
       </Button>
-      <p className="text-center text-sm text-[var(--text-muted)]">
-        ¿Ya tienes cuenta?{' '}
-        <Link
-          className="font-semibold text-[var(--text)] underline decoration-[var(--volt)] underline-offset-4"
-          href="/login"
-        >
-          Inicia sesión
-        </Link>
-      </p>
     </form>
   );
 }

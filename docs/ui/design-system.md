@@ -100,3 +100,59 @@ reduce toda animación a ~0.
   (`border-[var(--danger-border)] bg-[var(--danger-surface)] …`) se repite en ~6
   formularios; ya está tokenizado pero conviene extraerlo a un átomo `<FormError>`
   para eliminar la duplicación de marcado.
+
+## Cascada: por qué los reinicios van en `@layer base`
+
+Durante un tiempo `globals.css` declaró, **fuera de toda `@layer`**:
+
+```css
+h1, h2, h3, p { margin-block: 0; }
+```
+
+El CSS sin capa gana a cualquier regla dentro de una `@layer`, y las utilidades
+de Tailwind v4 viven en `@layer utilities`. La consecuencia es que **todo `mt-*`
+y `mb-*` aplicado a un `<h1>`, `<h2>`, `<h3>` o `<p>` de esta aplicación se
+calcula como `0px`**, en silencio: la clase aparece en el marcado, el navegador
+la ignora, y el hueco que se ve es el interlineado, no el espaciado elegido.
+
+Se descubrió al rediseñar las pantallas de sesión, donde `mt-6` sobre el titular
+rendía cero. La verificación es directa en consola (hoy devuelve `24px`):
+
+```js
+getComputedStyle(document.querySelector('h1.mt-6')).marginTop; // "0px"
+```
+
+**Regla:** el ritmo vertical se lleva con `gap` en el contenedor (`flex flex-col
+gap-*`, `grid gap-*`), nunca con márgenes sobre el propio texto. `gap` no lo toca
+ese reinicio y además mantiene el espaciado declarado en un solo sitio.
+
+### Corregido: los reinicios viven ahora en `@layer base`
+
+El problema no se limitaba a los márgenes. Cualquier regla de elemento suelta
+ganaba a las utilidades, y en esta hoja había siete:
+
+| Regla | Lo que dejaba muerto |
+|---|---|
+| `* { border-color }` | todo `border-<color>` |
+| `a { color, text-decoration }` | todo `text-<color>`, `underline`, `no-underline` |
+| `button, input, select, textarea { font: inherit }` | `text-<tamaño>`, `font-<peso>`, `leading-*`, `tracking-*` en los controles |
+| `button { cursor: pointer }` | `cursor-not-allowed` en botones |
+| `h1, h2, h3, p { margin-block: 0 }` | `mt-*`, `mb-*`, `my-*` |
+| `:focus-visible { outline }` | `focus-visible:outline-*` |
+| `html`, `body` | utilidades sobre la raíz y el cuerpo |
+
+Los reinicios pasaron a `@layer base` y los ayudantes de clase (`.glass`,
+`.data-label`, `.panel`, `.display-title`…) a `@layer components`. Los primeros
+siguen ganando a los valores por defecto del navegador; los segundos ponen la
+base y dejan que una utilidad los ajuste. Ambos pierden ahora ante una utilidad,
+que es lo que se espera al escribirla.
+
+El cambio movió píxeles en **todas** las pantallas —enlaces que recuperan su
+subrayado, botones que recuperan su peso, títulos que recuperan su aire— así que
+las referencias visuales de `theme-parity.spec.ts` se regeneraron. Las variantes
+`*-win32.png` no se pueden regenerar desde macOS: hay que refrescarlas en una
+corrida de Windows o de CI.
+
+**Regla que sigue vigente:** el ritmo vertical se lleva con `gap` en el
+contenedor. Es más robusto que el margen y mantiene el espaciado declarado en un
+solo sitio.

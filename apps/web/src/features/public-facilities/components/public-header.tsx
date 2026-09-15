@@ -45,7 +45,7 @@ export function PublicHeader() {
             {brand.wordmark}
           </span>
         </Link>
-        <nav className="flex items-center gap-1 sm:gap-3">
+        <nav aria-label="Principal" className="flex items-center gap-1 sm:gap-3">
           {NAV_LINKS.map((link) => {
             const active = pathname === link.href;
             return (

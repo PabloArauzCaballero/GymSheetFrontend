@@ -265,59 +265,135 @@ export function Button({
   );
 }
 
+/**
+ * Campo de texto del producto.
+ *
+ * Tres cosas se añadieron aquí para que el móvil y la web se comporten igual en
+ * las pantallas de sesión:
+ *
+ * - `icon`: un glifo de cabecera dentro de la caja. Es **decorativo** y así se
+ *   declara; el campo ya se anuncia por su etiqueta, y leer «sobre» antes de
+ *   «Correo electrónico» sería leer el adorno.
+ * - `revealable`: el interruptor del ojo, que sustituye a la casilla «Mostrar
+ *   contraseña» suelta debajo del formulario. En el alta hay **dos** campos de
+ *   contraseña y aquella casilla sólo revelaba el primero, justo el caso —que
+ *   no coinciden— en el que hace falta ver los dos.
+ * - El foco pinta el borde en el acento, no en blanco: es el mismo color con el
+ *   que la web señala el campo activo.
+ *
+ * La visibilidad arranca siempre oculta y no se recuerda: revelar es una acción
+ * sobre este formulario y este momento, no una preferencia que deba sobrevivir
+ * a la siguiente sesión.
+ */
 export function Input({
   label,
   error,
+  icon,
+  revealable = false,
+  revealLabel = 'Mostrar contraseña',
+  hideLabel = 'Ocultar contraseña',
   onBlur,
   onFocus,
   ...props
-}: TextInputProps & { label: string; error?: string }) {
+}: TextInputProps & {
+  label: string;
+  error?: string;
+  icon?: keyof typeof Ionicons.glyphMap;
+  /** Añade el ojo y gestiona `secureTextEntry` por su cuenta. */
+  revealable?: boolean;
+  revealLabel?: string;
+  hideLabel?: string;
+}) {
   const [focused, setFocused] = useState(false);
+  const [revealed, setRevealed] = useState(false);
 
   // El orden importa: el error gana al foco. Un campo enfocado y a la vez
   // inválido tiene que seguir diciendo que está mal — si ganara el foco, el
   // único aviso desaparecería justo al ir a corregirlo.
-  const borderColor = error ? colors.danger : focused ? colors.text : colors.border;
+  const borderColor = error ? colors.danger : focused ? colors.volt : colors.border;
+  const glyphColor = error ? colors.danger : focused ? colors.accentInk : colors.textMuted;
 
   return (
     <View style={{ gap: spacing.xs }}>
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{label}</Text>
-      <TextInput
-        // La etiqueta de arriba es un `Text` hermano, y en React Native eso no
-        // nombra al campo: VoiceOver anunciaba «campo de texto» a secas y había
-        // que deducir cuál de los dos era por el orden de recorrido.
-        accessibilityLabel={label}
-        // iOS draws a light keyboard by default; against a black screen the
-        // slab of white is the brightest thing in the app. Android ignores it.
-        keyboardAppearance="dark"
-        onBlur={(event) => {
-          setFocused(false);
-          onBlur?.(event);
-        }}
-        onFocus={(event) => {
-          setFocused(true);
-          onFocus?.(event);
-        }}
-        // `textDisabled` daba 2,06:1 contra esta superficie, menos de la mitad
-        // del 4,5:1 de AA. El marcador de posición es una instrucción («Nombre,
-        // grupo muscular…»), no un adorno, y estaba más apagado que la propia
-        // etiqueta del campo — al revés de como se lee un formulario.
-        placeholderTextColor={colors.textMuted}
-        style={{
-          minHeight: minTouchTarget,
-          borderRadius: radii.md,
-          borderWidth: 1,
-          // El campo no tenía **ningún** estado de foco: el borde en reposo da
-          // 1,46:1 contra el relleno, así que un campo enfocado y uno inerte se
-          // veían exactamente igual. La ADR-0003 §6 pide los siete estados.
-          borderColor,
-          backgroundColor: colors.surface,
-          color: colors.text,
-          paddingHorizontal: spacing.md,
-          fontSize: fontSizes.md,
-        }}
-        {...props}
-      />
+      <View style={{ justifyContent: 'center' }}>
+        {icon ? (
+          <Ionicons
+            // Decorativo: el campo ya lleva su `accessibilityLabel`.
+            accessibilityElementsHidden
+            color={glyphColor}
+            importantForAccessibility="no-hide-descendants"
+            name={icon}
+            size={iconSizes.md}
+            style={{ position: 'absolute', left: spacing.md, zIndex: 1 }}
+          />
+        ) : null}
+        <TextInput
+          // La etiqueta de arriba es un `Text` hermano, y en React Native eso no
+          // nombra al campo: VoiceOver anunciaba «campo de texto» a secas y había
+          // que deducir cuál de los dos era por el orden de recorrido.
+          accessibilityLabel={label}
+          // iOS draws a light keyboard by default; against a black screen the
+          // slab of white is the brightest thing in the app. Android ignores it.
+          keyboardAppearance="dark"
+          onBlur={(event) => {
+            setFocused(false);
+            onBlur?.(event);
+          }}
+          onFocus={(event) => {
+            setFocused(true);
+            onFocus?.(event);
+          }}
+          // `textDisabled` daba 2,06:1 contra esta superficie, menos de la mitad
+          // del 4,5:1 de AA. El marcador de posición es una instrucción («Nombre,
+          // grupo muscular…»), no un adorno, y estaba más apagado que la propia
+          // etiqueta del campo — al revés de como se lee un formulario.
+          placeholderTextColor={colors.textMuted}
+          style={{
+            minHeight: minTouchTarget,
+            borderRadius: radii.md,
+            borderWidth: 1,
+            // El campo no tenía **ningún** estado de foco: el borde en reposo da
+            // 1,46:1 contra el relleno, así que un campo enfocado y uno inerte se
+            // veían exactamente igual. La ADR-0003 §6 pide los siete estados.
+            borderColor,
+            backgroundColor: colors.surface,
+            color: colors.text,
+            paddingLeft: icon ? spacing.md * 2 + iconSizes.md : spacing.md,
+            paddingRight: revealable ? spacing.md * 2 + iconSizes.md : spacing.md,
+            fontSize: fontSizes.md,
+          }}
+          {...props}
+          // Después de `props` a propósito: cuando el campo gestiona su propio
+          // ojo, quien lo usa no debe poder fijar `secureTextEntry` por su
+          // cuenta y dejar el interruptor mintiendo.
+          {...(revealable ? { secureTextEntry: !revealed } : {})}
+        />
+        {revealable ? (
+          <Pressable
+            accessibilityHint="Alterna entre ocultar y mostrar lo que escribes"
+            accessibilityLabel={revealed ? hideLabel : revealLabel}
+            accessibilityRole="button"
+            accessibilityState={{ selected: revealed }}
+            hitSlop={spacing.sm}
+            onPress={() => setRevealed((current) => !current)}
+            style={{
+              position: 'absolute',
+              right: spacing.xs,
+              height: minTouchTarget,
+              width: minTouchTarget,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons
+              color={revealed ? colors.accentInk : colors.textMuted}
+              name={revealed ? 'eye-off-outline' : 'eye-outline'}
+              size={iconSizes.md}
+            />
+          </Pressable>
+        ) : null}
+      </View>
       {error ? (
         <Text
           // Sin esto el mensaje aparece pero no se anuncia: quien no ve la

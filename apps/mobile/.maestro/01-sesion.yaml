@@ -29,9 +29,12 @@ name: 01 · Sesión — arranque y login
     # Metro. Con la máquina cargada eso solo pasa de cuatro minutos, de ahí la
     # espera desproporcionada: no mide la app, mide la descarga.
     - extendedWaitUntil:
-        visible: 'Inicia sesión para continuar'
+        visible: 'Vuelve al trabajo.'
         timeout: 420000
-    - assertVisible: 'GymSheet'
+    # El rótulo de la marca va en versales bajo el emblema, igual que en la
+    # cortinilla de arranque y en la web; antes esta pantalla mostraba el
+    # nombre del gimnasio en caja mixta.
+    - assertVisible: 'GYMSHEET'
     - takeScreenshot: 01-login
     - tapOn:
         below: 'Correo electrónico'

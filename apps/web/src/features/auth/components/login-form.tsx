@@ -3,118 +3,105 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import { AtSign, LockKeyhole } from 'lucide-react';
+import { authCopy, authDestination, authErrorMessage } from '@gymsheet/domain';
+import { loginDefaults, loginSchema, type LoginInput } from '@/shared/api/schemas';
 import { login } from '@/features/auth/services/auth-client';
 import { ApiError } from '@/shared/api/api-error';
+import { AuthAlert } from '@/features/auth/components/auth-alert';
 import { Button } from '@/shared/components/ui/button';
 import { Field } from '@/shared/components/ui/field';
-import { Checkbox } from '@/shared/components/ui/checkbox';
-import { Input } from '@/shared/components/ui/input';
-
-const schema = z.object({
-  email: z.string().email('Ingresa un correo válido.'),
-  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.'),
-});
-type FormValues = z.infer<typeof schema>;
+import { InputWithIcon, PasswordInput } from '@/shared/components/ui/input';
 
 function safeReturnTo(value: string | null) {
-  return value?.startsWith('/') && !value.startsWith('//') ? value : '/dashboard';
+  return value?.startsWith('/') && !value.startsWith('//')
+    ? value
+    : authDestination.web.afterLogin;
 }
 
 export function LoginForm() {
   const router = useRouter();
-  /**
-   * Revelar la contraseña es una acción sobre este formulario y este momento,
-   * no una preferencia: arranca siempre oculta, aunque la última vez se dejara
-   * visible. Persistirlo dejaría la contraseña de alguien a la vista en la
-   * siguiente visita sin que lo pidiera.
-   */
-  const [passwordVisible, setPasswordVisible] = useState(false);
   const searchParams = useSearchParams();
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { email: '', password: '' },
+  const form = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: loginDefaults,
   });
 
-  async function submit(values: FormValues) {
+  async function submit(values: LoginInput) {
     form.clearErrors('root');
     try {
       await login(values);
       router.replace(safeReturnTo(searchParams.get('returnTo')));
       router.refresh();
     } catch (error: unknown) {
+      // El mapeo vive en `@gymsheet/domain` para que el móvil diga exactamente
+      // lo mismo ante el mismo fallo. Un 401 aquí significa credenciales
+      // incorrectas, no sesión caducada.
       form.setError('root', {
-        message: error instanceof ApiError ? error.message : 'No se pudo iniciar sesión.',
+        message:
+          error instanceof ApiError
+            ? authErrorMessage(error.kind, 'login', error.message)
+            : authErrorMessage(undefined, 'login'),
       });
     }
   }
 
   return (
-    <form className="grid gap-5" method="post" onSubmit={form.handleSubmit(submit)}>
+    <form className="grid gap-5" method="post" onSubmit={form.handleSubmit(submit)} noValidate>
       <Field
         error={form.formState.errors.email?.message}
         htmlFor="email"
-        label="Correo electrónico"
+        label={authCopy.fields.email.label}
       >
-        <Input
+        <InputWithIcon
           autoComplete="email"
+          icon={<AtSign className="size-4" />}
           id="email"
-          placeholder="tu@correo.com"
+          placeholder={authCopy.fields.email.placeholder}
           type="email"
           {...form.register('email')}
         />
       </Field>
-      <Field error={form.formState.errors.password?.message} htmlFor="password" label="Contraseña">
-        <Input
+
+      <Field
+        error={form.formState.errors.password?.message}
+        htmlFor="password"
+        label={authCopy.fields.password.label}
+      >
+        <PasswordInput
           autoComplete="current-password"
+          hideLabel={authCopy.hidePassword}
+          icon={<LockKeyhole className="size-4" />}
           id="password"
           placeholder="••••••••"
-          type={passwordVisible ? 'text' : 'password'}
+          showLabel={authCopy.showPassword}
           {...form.register('password')}
         />
-        <Checkbox
-          checked={passwordVisible}
-          className="mt-2"
-          label="Mostrar contraseña"
-          onChange={(event) => setPasswordVisible(event.target.checked)}
-        />
       </Field>
+
       {form.formState.errors.root?.message ? (
-        <p
-          className="rounded-[4px] border border-[var(--danger-border)] bg-[var(--danger-surface)] p-3 text-sm text-[var(--danger-text)]"
-          role="alert"
-        >
-          {form.formState.errors.root.message}
-        </p>
+        <AuthAlert message={form.formState.errors.root.message} />
       ) : null}
+
       <Button
-        className="mt-2 w-full"
+        className="mt-1 w-full"
         loading={form.formState.isSubmitting}
         size="lg"
         type="submit"
         variant="primary"
       >
-        Iniciar sesión
+        {authCopy.login.submit}
       </Button>
+
       {/* La recuperación va junto al botón, no escondida al final: quien la
           necesita ya ha fallado una vez y no está para buscarla. */}
       <p className="text-center text-sm">
         <Link
-          className="text-[var(--text-muted)] underline-offset-4 hover:underline"
+          className="text-[var(--text-muted)] underline-offset-4 transition-colors duration-[var(--dur-2)] hover:text-[var(--text)] hover:underline"
           href="/recover-password"
         >
-          ¿Olvidaste tu contraseña?
-        </Link>
-      </p>
-      <p className="text-center text-sm text-[var(--text-muted)]">
-        ¿Aún no tienes cuenta?{' '}
-        <Link
-          className="font-semibold text-[var(--text)] underline decoration-[var(--volt)] underline-offset-4"
-          href="/register"
-        >
-          Regístrate
+          {authCopy.login.forgotPassword}
         </Link>
       </p>
     </form>

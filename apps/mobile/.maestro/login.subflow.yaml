@@ -20,12 +20,14 @@ appId: app.gymsheet.mobile
       - launchApp
       # Cualquiera de los tres textos significa «la app terminó de arrancar»:
       # login, tour o Inicio. Maestro interpreta el texto como expresión regular.
+      # El de acceso es ahora el mismo titular que sirve la web, desde
+      # `@gymsheet/domain`: las dos plataformas reciben con las mismas palabras.
       - extendedWaitUntil:
-          visible: 'Inicia sesión para continuar|Bienvenido a GymSheet|Hola, Athlete'
+          visible: 'Vuelve al trabajo.|Bienvenido a GymSheet|Hola, Athlete'
           timeout: 240000
       - runFlow:
           when:
-            visible: 'Inicia sesión para continuar'
+            visible: 'Vuelve al trabajo.'
           commands:
             - tapOn:
                 below: 'Correo electrónico'
