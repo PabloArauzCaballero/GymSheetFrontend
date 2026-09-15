@@ -8,6 +8,13 @@ import { useForm } from 'react-hook-form';
 import { notify } from '@/shared/notifications';
 import { z } from 'zod';
 import { profileService } from '@/features/profile/services/profile-service';
+import {
+  MAX_AGE,
+  MIN_AGE,
+  birthDateInputSchema,
+  birthDatePayload,
+  isoYearsAgo,
+} from '@/features/profile/lib/birth-date';
 import { ProfilePhotoGallery } from '@/features/profile/components/profile-photo-gallery';
 import { SocialStatusCard } from '@/features/social/components/social-status-card';
 import { MembershipExperience } from '@/features/membership/components/membership-experience';
@@ -32,33 +39,8 @@ import { Input } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
 import { formatDateTime } from '@/shared/lib/date';
 
-const MIN_AGE = 12;
-const MAX_AGE = 100;
-
-/** Años cumplidos a partir de `YYYY-MM-DD`, contados en calendario local. */
-function ageFromBirthDate(isoDate: string, today = new Date()): number {
-  const [year = 0, month = 0, day = 0] = isoDate.split('-').map(Number);
-  let age = today.getFullYear() - year;
-  if (today.getMonth() + 1 < month || (today.getMonth() + 1 === month && today.getDate() < day)) {
-    age -= 1;
-  }
-  return age;
-}
-
-/** `YYYY-MM-DD` de hoy menos `years` años, para los límites del selector de fecha. */
-function isoYearsAgo(years: number): string {
-  const today = new Date();
-  const date = new Date(today.getFullYear() - years, today.getMonth(), today.getDate());
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
-
 const schema = z.object({
-  // `<input type="date">` entrega '' o `YYYY-MM-DD`. Vacío es válido: la fecha es opcional.
-  fechaNacimiento: z.string().refine((value) => {
-    if (value === '') return true;
-    const age = ageFromBirthDate(value);
-    return age >= MIN_AGE && age <= MAX_AGE;
-  }, `Debes tener entre ${MIN_AGE} y ${MAX_AGE} años.`),
+  fechaNacimiento: birthDateInputSchema,
   pesoKg: z.number().min(1).max(400),
   estaturaCm: z.number().int().min(80).max(250),
   objetivo: z.enum(trainingGoals),
@@ -105,14 +87,8 @@ export function ProfilePageClient() {
   }, [form, profile.data]);
   const save = useMutation({
     mutationFn: ({ fechaNacimiento, ...values }: FormValues) => {
-      // Vacío solo borra una fecha que ya existía. Si nunca la hubo se omite, y la
-      // edad que guardó una versión anterior no se pierde al editar el peso.
-      const birthDate = fechaNacimiento
-        ? { fechaNacimiento }
-        : profile.data?.fechaNacimiento
-          ? { fechaNacimiento: null }
-          : {};
-      const input = { ...values, ...birthDate };
+      const hadBirthDate = Boolean(profile.data?.fechaNacimiento);
+      const input = { ...values, ...birthDatePayload(fechaNacimiento, hadBirthDate) };
       return profile.data ? profileService.updateProfile(input) : profileService.createProfile(input);
     },
     onSuccess: async () => {
@@ -150,7 +126,6 @@ export function ProfilePageClient() {
       />
     );
   }
-
 
   return (
     <div className="grid gap-8">
