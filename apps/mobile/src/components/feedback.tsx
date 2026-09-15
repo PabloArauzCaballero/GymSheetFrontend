@@ -59,29 +59,39 @@ export function Skeleton({ height = 72 }: { height?: number }) {
   );
 }
 
+type ViewProps = React.ComponentProps<typeof View>;
+
 function CenteredState({
   icon,
   title,
   message,
   children,
+  style,
+  onLayout,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   message: string;
   children?: React.ReactNode;
+  style?: ViewProps['style'];
+  onLayout?: ViewProps['onLayout'];
 }) {
   return (
     <View
-      style={{
-        alignItems: 'center',
-        gap: spacing.sm,
-        borderRadius: radii.xl,
-        borderWidth: 1,
-        borderColor: colors.borderSubtle,
-        backgroundColor: colors.surfaceLow,
-        paddingVertical: spacing.xl,
-        paddingHorizontal: spacing.lg,
-      }}
+      onLayout={onLayout}
+      style={[
+        {
+          alignItems: 'center',
+          gap: spacing.sm,
+          borderRadius: radii.xl,
+          borderWidth: 1,
+          borderColor: colors.borderSubtle,
+          backgroundColor: colors.surfaceLow,
+          paddingVertical: spacing.xl,
+          paddingHorizontal: spacing.lg,
+        },
+        style,
+      ]}
     >
       {/* Decorative: the title and message already carry the meaning, so the
           glyph is hidden from the accessibility tree instead of read aloud. */}
@@ -117,16 +127,31 @@ function CenteredState({
   );
 }
 
+/**
+ * `style` y `onLayout` existen por las listas invertidas (el chat): React Native
+ * inyecta ahí la transformación que deshace la inversión del
+ * `ListEmptyComponent`. Si no se aplican, la tarjeta se pinta cabeza abajo.
+ */
 export function EmptyState({
   icon = 'sparkles-outline',
   title,
   message,
+  children,
+  style,
+  onLayout,
 }: {
   icon?: keyof typeof Ionicons.glyphMap;
   title: string;
   message: string;
+  children?: React.ReactNode;
+  style?: ViewProps['style'];
+  onLayout?: ViewProps['onLayout'];
 }) {
-  return <CenteredState icon={icon} message={message} title={title} />;
+  return (
+    <CenteredState icon={icon} message={message} onLayout={onLayout} style={style} title={title}>
+      {children}
+    </CenteredState>
+  );
 }
 
 /**
