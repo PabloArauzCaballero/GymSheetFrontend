@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { ActivityIndicator, FlatList, Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { exerciseService } from '@/api/services';
@@ -8,7 +9,7 @@ import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { Divider } from '@/components/layout';
 import { NavRow } from '@/components/list';
 import { ExerciseImage } from '@/components/media';
-import { Input } from '@/components/ui';
+import { Button, Input } from '@/components/ui';
 import { colors, fontSizes, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
 
 /** How much of the screen the sheet claims: enough rows to scan, still clearly a sheet. */
@@ -35,6 +36,7 @@ export function ExercisePicker({
   pending: boolean;
 }) {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [search, setSearch] = useState('');
 
   // Every opening starts from the full catalogue: a query left over from the
@@ -170,7 +172,18 @@ export function ExercisePicker({
                         : 'El catálogo está vacío por ahora.'
                     }
                     title="Sin resultados"
-                  />
+                  >
+                    {/* Una lista vacía sin salida deja la sesión a medias: el
+                        ejercicio que falta se puede crear sin abandonarla. */}
+                    <Button
+                      label="Crear ejercicio"
+                      onPress={() => {
+                        onClose();
+                        router.push('/ejercicio-nuevo');
+                      }}
+                      variant={search ? 'ghost' : 'primary'}
+                    />
+                  </EmptyState>
                 }
                 renderItem={({ item }) => (
                   <NavRow
