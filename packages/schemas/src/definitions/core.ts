@@ -49,6 +49,8 @@ export const profileSchema = z.object({
   id: z.string().uuid(),
   usuarioId: z.string().uuid(),
   edad: z.number().int().nullable(),
+  // Opcional: un backend anterior a la migración no la envía.
+  fechaNacimiento: z.string().nullable().optional(),
   pesoKg: z.number(),
   estaturaCm: z.number().int(),
   objetivo: z.enum(trainingGoals),

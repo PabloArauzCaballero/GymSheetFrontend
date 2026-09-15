@@ -165,7 +165,8 @@ export const profilePhotosService = {
 };
 
 export interface ProfileInput {
-  edad?: number | null;
+  /** `YYYY-MM-DD`; `null` borra la fecha guardada. */
+  fechaNacimiento?: string | null;
   pesoKg: number;
   estaturaCm: number;
   objetivo: TrainingGoal;

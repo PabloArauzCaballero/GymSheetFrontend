@@ -45,6 +45,8 @@ export type Profile = {
   id: string;
   usuarioId: string;
   edad: number | null;
+  /** `YYYY-MM-DD`. */
+  fechaNacimiento?: string | null;
   pesoKg: number;
   estaturaCm: number;
   objetivo: TrainingGoal;

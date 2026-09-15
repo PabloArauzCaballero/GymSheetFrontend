@@ -52,6 +52,12 @@ export function formatDate(iso: string): string {
   return (sameYear ? DATE_FORMAT : DATE_YEAR_FORMAT).format(date);
 }
 
+/** `1996-03-15` → `15/03/1996`. Se parte la cadena: un `Date` la movería de día según la zona. */
+export function formatBirthDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-');
+  return year && month && day ? `${day}/${month}/${year}` : '—';
+}
+
 /** Calendar-day distance, so a session at 23:50 is still "Ayer" at 00:10. */
 export function relativeDay(iso: string): string {
   const date = new Date(iso);

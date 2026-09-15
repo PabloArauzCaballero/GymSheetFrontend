@@ -3,7 +3,8 @@ import type { Profile, TrainingGoal, User, UserGender } from '@/shared/api/contr
 import { profileSchema, userSchema } from '@/shared/api/schemas';
 
 export type ProfileInput = {
-  edad: number;
+  /** `YYYY-MM-DD`; `null` borra la fecha guardada. */
+  fechaNacimiento?: string | null;
   pesoKg: number;
   estaturaCm: number;
   objetivo: TrainingGoal;

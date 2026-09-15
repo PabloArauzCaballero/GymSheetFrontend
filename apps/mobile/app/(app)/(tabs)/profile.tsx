@@ -31,6 +31,7 @@ import { useAuthStore } from '@/state/auth-store';
 import { useTourStore } from '@/state/tour-store';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import {
+  formatBirthDate,
   GOAL_LABEL,
   MEMBERSHIP_LABEL,
   MEMBERSHIP_TONE,
@@ -247,7 +248,17 @@ export default function ProfileScreen() {
             <Divider />
             <Row icon="resize-outline" label="Estatura" value={`${profile.data.estaturaCm} cm`} />
             <Divider />
-            <Row icon="calendar-outline" label="Edad" value={profile.data.edad ? `${profile.data.edad} años` : '—'} />
+            <Row
+              icon="calendar-outline"
+              label="Nacimiento"
+              value={
+                profile.data.fechaNacimiento
+                  ? `${formatBirthDate(profile.data.fechaNacimiento)} · ${profile.data.edad} años`
+                  : profile.data.edad
+                    ? `${profile.data.edad} años`
+                    : '—'
+              }
+            />
             <Divider />
             <Row icon="flag-outline" label="Objetivo" value={GOAL_LABEL[profile.data.objetivo]} />
             {profile.data.fechaActualizacion ? (

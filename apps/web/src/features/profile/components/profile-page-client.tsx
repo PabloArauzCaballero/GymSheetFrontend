@@ -32,8 +32,33 @@ import { Input } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
 import { formatDateTime } from '@/shared/lib/date';
 
+const MIN_AGE = 12;
+const MAX_AGE = 100;
+
+/** Años cumplidos a partir de `YYYY-MM-DD`, contados en calendario local. */
+function ageFromBirthDate(isoDate: string, today = new Date()): number {
+  const [year = 0, month = 0, day = 0] = isoDate.split('-').map(Number);
+  let age = today.getFullYear() - year;
+  if (today.getMonth() + 1 < month || (today.getMonth() + 1 === month && today.getDate() < day)) {
+    age -= 1;
+  }
+  return age;
+}
+
+/** `YYYY-MM-DD` de hoy menos `years` años, para los límites del selector de fecha. */
+function isoYearsAgo(years: number): string {
+  const today = new Date();
+  const date = new Date(today.getFullYear() - years, today.getMonth(), today.getDate());
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
 const schema = z.object({
-  edad: z.number().int().min(12).max(100),
+  // `<input type="date">` entrega '' o `YYYY-MM-DD`. Vacío es válido: la fecha es opcional.
+  fechaNacimiento: z.string().refine((value) => {
+    if (value === '') return true;
+    const age = ageFromBirthDate(value);
+    return age >= MIN_AGE && age <= MAX_AGE;
+  }, `Debes tener entre ${MIN_AGE} y ${MAX_AGE} años.`),
   pesoKg: z.number().min(1).max(400),
   estaturaCm: z.number().int().min(80).max(250),
   objetivo: z.enum(trainingGoals),
@@ -67,20 +92,29 @@ export function ProfilePageClient() {
   });
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { edad: 18, pesoKg: 70, estaturaCm: 170, objetivo: 'SALUD_GENERAL' },
+    defaultValues: { fechaNacimiento: '', pesoKg: 70, estaturaCm: 170, objetivo: 'SALUD_GENERAL' },
   });
   useEffect(() => {
     if (profile.data)
       form.reset({
-        edad: profile.data.edad ?? 18,
+        fechaNacimiento: profile.data.fechaNacimiento ?? '',
         pesoKg: profile.data.pesoKg,
         estaturaCm: profile.data.estaturaCm,
         objetivo: profile.data.objetivo,
       });
   }, [form, profile.data]);
   const save = useMutation({
-    mutationFn: (values: FormValues) =>
-      profile.data ? profileService.updateProfile(values) : profileService.createProfile(values),
+    mutationFn: ({ fechaNacimiento, ...values }: FormValues) => {
+      // Vacío solo borra una fecha que ya existía. Si nunca la hubo se omite, y la
+      // edad que guardó una versión anterior no se pierde al editar el peso.
+      const birthDate = fechaNacimiento
+        ? { fechaNacimiento }
+        : profile.data?.fechaNacimiento
+          ? { fechaNacimiento: null }
+          : {};
+      const input = { ...values, ...birthDate };
+      return profile.data ? profileService.updateProfile(input) : profileService.createProfile(input);
+    },
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.profile }),
@@ -149,13 +183,17 @@ export function ProfilePageClient() {
               title="Datos antropométricos"
             />
             <CardContent className="grid gap-5 sm:grid-cols-2">
-              <Field error={form.formState.errors.edad?.message} htmlFor="edad" label="Edad">
+              <Field
+                error={form.formState.errors.fechaNacimiento?.message}
+                htmlFor="fechaNacimiento"
+                label="Fecha de nacimiento"
+              >
                 <Input
-                  id="edad"
-                  max="100"
-                  min="12"
-                  type="number"
-                  {...form.register('edad', { valueAsNumber: true })}
+                  id="fechaNacimiento"
+                  max={isoYearsAgo(MIN_AGE)}
+                  min={isoYearsAgo(MAX_AGE + 1)}
+                  type="date"
+                  {...form.register('fechaNacimiento')}
                 />
               </Field>
               <Field

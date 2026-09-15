@@ -28,6 +28,44 @@ function toNumber(value: string): number {
   return Number(value.replace(',', '.'));
 }
 
+const MIN_AGE = 12;
+const MAX_AGE = 100;
+
+/**
+ * Why a day/month/year triple is not a usable birth date, or `null` if it is
+ * (all three empty counts as usable: the field is optional).
+ *
+ * Built from local calendar parts, not `new Date('1996-03-15')`, which is
+ * parsed as UTC and can land on the previous day west of Greenwich.
+ */
+function birthDateError(dia: string, mes: string, anio: string): string | null {
+  if (dia === '' && mes === '' && anio === '') return null;
+  if (dia === '' || mes === '' || anio === '') return 'Completa día, mes y año.';
+  if (![dia, mes, anio].every((part) => /^\d+$/.test(part))) return 'Usa solo números.';
+  if (anio.length !== 4) return 'Escribe el año con cuatro cifras, por ejemplo 1996.';
+  const day = Number(dia);
+  const month = Number(mes);
+  const year = Number(anio);
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return 'Esa fecha no existe.';
+  }
+  const today = new Date();
+  if (date > today) return 'La fecha no puede ser futura.';
+  let age = today.getFullYear() - year;
+  if (today.getMonth() < month - 1 || (today.getMonth() === month - 1 && today.getDate() < day)) {
+    age -= 1;
+  }
+  if (age < MIN_AGE || age > MAX_AGE) return `Debes tener entre ${MIN_AGE} y ${MAX_AGE} años.`;
+  return null;
+}
+
+/** `1996-03-15` → the three fields the form edits. */
+function splitBirthDate(isoDate: string | null | undefined) {
+  const [anio = '', mes = '', dia = ''] = isoDate ? isoDate.split('-') : [];
+  return { dia, mes, anio };
+}
+
 /**
  * The form speaks strings (that is what a `TextInput` produces) and parses to
  * the numbers the API expects, so `z.input` is the shape bound to the fields and
@@ -51,15 +89,17 @@ const profileFormSchema = z.object({
     .transform(toNumber)
     .refine((value) => Number.isInteger(value), 'Usa centímetros enteros, por ejemplo 178.')
     .refine((value) => value >= 80 && value <= 260, 'La estatura debe estar entre 80 y 260 cm.'),
-  // Optional: an empty field is "no lo digo", not an error, and travels as null.
-  edad: z
-    .string()
-    .trim()
-    .transform((value) => (value === '' ? null : toNumber(value)))
-    .refine((value) => value === null || Number.isInteger(value), 'Usa años enteros.')
-    .refine(
-      (value) => value === null || (value >= 10 && value <= 120),
-      'La edad debe estar entre 10 y 120 años.',
+  // Optional: three empty fields are "no lo digo", not an error, and travel as null.
+  fechaNacimiento: z
+    .object({ dia: z.string().trim(), mes: z.string().trim(), anio: z.string().trim() })
+    .superRefine(({ dia, mes, anio }, ctx) => {
+      const message = birthDateError(dia, mes, anio);
+      if (message) ctx.addIssue({ code: 'custom', message });
+    })
+    .transform(({ dia, mes, anio }) =>
+      dia === '' && mes === '' && anio === ''
+        ? null
+        : `${anio}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`,
     ),
   objetivo: z.enum(trainingGoals),
 });
@@ -119,12 +159,18 @@ function GoalOption({
 const PROFILE_STEPS: readonly FlowStep[] = [
   { label: 'Peso', icon: 'barbell-outline' },
   { label: 'Estatura', icon: 'resize-outline' },
-  { label: 'Edad', icon: 'calendar-outline' },
+  { label: 'Nacimiento', icon: 'calendar-outline' },
   { label: 'Objetivo', icon: 'flag-outline' },
 ];
 
 /** The field validated before each step is allowed to advance. */
-const STEP_FIELD = ['pesoKg', 'estaturaCm', 'edad', 'objetivo'] as const;
+const STEP_FIELD = ['pesoKg', 'estaturaCm', 'fechaNacimiento', 'objetivo'] as const;
+
+const BIRTH_DATE_PARTS = [
+  { key: 'dia', label: 'Día', placeholder: '15', maxLength: 2, flex: 1 },
+  { key: 'mes', label: 'Mes', placeholder: '03', maxLength: 2, flex: 1 },
+  { key: 'anio', label: 'Año', placeholder: '1996', maxLength: 4, flex: 1.6 },
+] as const;
 
 function StepHeading({
   icon,
@@ -162,7 +208,15 @@ function StepHeading({
   );
 }
 
-function ProfileForm({ defaults, isNew }: { defaults: ProfileFormValues; isNew: boolean }) {
+function ProfileForm({
+  defaults,
+  isNew,
+  hadBirthDate,
+}: {
+  defaults: ProfileFormValues;
+  isNew: boolean;
+  hadBirthDate: boolean;
+}) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
@@ -196,8 +250,12 @@ function ProfileForm({ defaults, isNew }: { defaults: ProfileFormValues; isNew: 
     },
   });
 
-  const onSubmit = handleSubmit((values) => {
-    save.mutate(values);
+  const onSubmit = handleSubmit(({ fechaNacimiento, ...values }) => {
+    // Vacío solo borra una fecha que ya existía. Si nunca la hubo se omite, y la
+    // edad que guardó una versión anterior de la app no se pierde al editar el peso.
+    save.mutate(
+      fechaNacimiento === null && !hadBirthDate ? values : { ...values, fechaNacimiento },
+    );
   });
 
   /**
@@ -271,24 +329,39 @@ function ProfileForm({ defaults, isNew }: { defaults: ProfileFormValues; isNew: 
       {step === 2 ? (
         <>
           <StepHeading
-            hint="Puedes dejarlo en blanco: es opcional."
+            hint="Opcional. Con ella calculamos tu edad, que así se mantiene al día sola."
             icon="calendar-outline"
-            question="¿Qué edad tienes?"
+            question="¿Cuándo naciste?"
           />
           <Controller
             control={control}
-            name="edad"
+            name="fechaNacimiento"
             render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                error={errors.edad?.message}
-                keyboardType="numeric"
-                {...numericInputProps}
-                label="Edad (opcional)"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                placeholder="28"
-                value={value}
-              />
+              <View style={{ gap: spacing.xs }}>
+                <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                  {BIRTH_DATE_PARTS.map((part) => (
+                    <View key={part.key} style={{ flex: part.flex }}>
+                      <Input
+                        keyboardType="number-pad"
+                        {...numericInputProps}
+                        label={part.label}
+                        maxLength={part.maxLength}
+                        onBlur={onBlur}
+                        onChangeText={(text) =>
+                          onChange({ ...value, [part.key]: text.replace(/\D/g, '') })
+                        }
+                        placeholder={part.placeholder}
+                        value={value[part.key]}
+                      />
+                    </View>
+                  ))}
+                </View>
+                {errors.fechaNacimiento?.message ? (
+                  <Text style={{ color: colors.danger, fontSize: fontSizes.xs }}>
+                    {errors.fechaNacimiento.message}
+                  </Text>
+                ) : null}
+              </View>
             )}
           />
         </>
@@ -390,9 +463,10 @@ export default function ProfileEditScreen() {
         defaults={{
           pesoKg: current ? String(current.pesoKg) : '',
           estaturaCm: current ? String(current.estaturaCm) : '',
-          edad: current?.edad != null ? String(current.edad) : '',
+          fechaNacimiento: splitBirthDate(current?.fechaNacimiento),
           objetivo: current?.objetivo ?? 'HIPERTROFIA',
         }}
+        hadBirthDate={Boolean(current?.fechaNacimiento)}
         isNew={isNew}
       />
     </ScrollScreen>
