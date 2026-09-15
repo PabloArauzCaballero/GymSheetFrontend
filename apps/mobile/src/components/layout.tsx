@@ -154,7 +154,7 @@ export function ScrollScreen({
         }}
         ref={scrollRef}
         contentContainerStyle={{
-          paddingTop: topInset + spacing.lg,
+          paddingTop: topInset + spacing.xl,
           paddingBottom: insets.bottom + spacing['2xl'],
           paddingLeft: gutter + insets.left,
           paddingRight: gutter + insets.right,

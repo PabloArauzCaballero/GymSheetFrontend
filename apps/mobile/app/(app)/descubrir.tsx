@@ -763,7 +763,7 @@ export default function DescubrirScreen() {
           style={{
             flex: 1,
             gap: spacing.md,
-            paddingTop: topInset + spacing.md,
+            paddingTop: topInset + spacing.xl,
             paddingBottom: insets.bottom + spacing.md,
           }}
         >

@@ -158,7 +158,7 @@ export function InteractionsList<T>({
       <FlatList<T>
         columnWrapperStyle={numColumns > 1 ? { gap: spacing.md } : undefined}
         contentContainerStyle={{
-          paddingTop: topInset + spacing.lg,
+          paddingTop: topInset + spacing.xl,
           paddingBottom: insets.bottom + spacing['2xl'],
           paddingLeft: gutter + insets.left,
           paddingRight: gutter + insets.right,

@@ -10,6 +10,7 @@ import {
   Text,
   View,
   useWindowDimensions,
+  StatusBar,
 } from 'react-native';
 import type { AccessibilityActionEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -1047,7 +1048,9 @@ export function StoryViewer({
                 style={{
                   flexDirection: 'row',
                   gap: 4,
-                  paddingTop: insets.top + spacing.sm,
+                  // En Android el inset puede quedarse corto frente a la barra de
+                  // estado dibujada; sin el respaldo, los tramos caían bajo el reloj.
+                  paddingTop: Math.max(insets.top, StatusBar.currentHeight ?? 0) + spacing.md,
                   paddingHorizontal: spacing.md,
                 }}
               >

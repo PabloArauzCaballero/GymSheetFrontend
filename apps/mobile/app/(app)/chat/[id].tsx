@@ -541,7 +541,7 @@ export default function ChatThreadScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={{
             flex: 1,
-            paddingTop: topInset + spacing.lg,
+            paddingTop: topInset + spacing.xl,
             paddingBottom: insets.bottom + spacing.md,
             paddingLeft: gutter + insets.left,
             paddingRight: gutter + insets.right,
