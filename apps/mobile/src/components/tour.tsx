@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useAnimatedStyle,
@@ -8,6 +16,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui';
 import { PressableScale } from '@/components/motion';
 import { useTourStore, type TargetRect, type TourKey } from '@/state/tour-store';
@@ -392,6 +401,7 @@ export function TourOverlay() {
   const targets = useTourStore((state) => state.targets);
   const scroller = useTourStore((state) => state.scroller);
   const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const tenant = useActiveTenant();
   const reduceMotion = useReducedMotion();
 
@@ -524,6 +534,17 @@ export function TourOverlay() {
   const spaceBelow = hole ? height - (hole.y + hole.height + HALO) : 0;
   /** True cuando cabe mejor encima del elemento. */
   const cardAbove = hole ? spaceAbove > spaceBelow : false;
+  /**
+   * Alto máximo de la tarjeta. Descuenta la barra de estado y la de gestos
+   * (el Modal es translúcido y empieza en y=0), y vale también para la
+   * bienvenida sin hueco: con letra grande del sistema tampoco cabía entera.
+   */
+  const cardMaxHeight = Math.max(
+    220,
+    hole
+      ? (cardAbove ? spaceAbove - insets.top : spaceBelow - insets.bottom) - spacing.lg
+      : height - insets.top - insets.bottom - spacing.lg * 2,
+  );
 
   const close = () => void complete();
   const advance = () => (isLast ? close() : setStep(step + 1));
@@ -568,7 +589,9 @@ export function TourOverlay() {
         <View
           style={{
             flex: 1,
-            padding: spacing.lg,
+            paddingHorizontal: spacing.lg,
+            paddingTop: insets.top + spacing.lg,
+            paddingBottom: insets.bottom + spacing.lg,
             alignItems: 'center',
             justifyContent: hole ? (cardAbove ? 'flex-start' : 'flex-end') : 'center',
           }}
@@ -578,14 +601,8 @@ export function TourOverlay() {
               {
                 width: '100%',
                 maxWidth: 420,
-                // Techo real: si el hueco junto al elemento no da para toda la
-                // tarjeta, ésta se queda dentro y su contenido se desplaza, en
-                // vez de salirse de la pantalla llevándose el botón con ella.
-                maxHeight: hole
-                  ? Math.max(220, (cardAbove ? spaceAbove : spaceBelow) - spacing.lg)
-                  : undefined,
+                maxHeight: cardMaxHeight,
                 gap: spacing.md,
-                alignItems: hole ? 'flex-start' : 'center',
                 padding: hole ? spacing.lg : spacing.xl,
                 borderRadius: radii.xl,
                 borderWidth: 1,
@@ -595,64 +612,78 @@ export function TourOverlay() {
               animated,
             ]}
           >
-            <View
-              style={{
-                width: hole ? 44 : 72,
-                height: hole ? 44 : 72,
-                borderRadius: radii.full,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: colors.surfaceHigh,
-                borderWidth: 1,
-                borderColor: colors.volt,
+            {/* El texto se desplaza y los botones no: si el paso no cabe, lo que
+                se recorta nunca es la salida. `key` devuelve el scroll arriba en
+                cada paso nuevo. */}
+            <ScrollView
+              bounces={false}
+              contentContainerStyle={{
+                gap: spacing.md,
+                alignItems: hole ? 'flex-start' : 'center',
               }}
+              key={`${active}:${step}`}
+              persistentScrollbar
+              style={{ flexGrow: 0, flexShrink: 1 }}
             >
-              <Ionicons
-                color={colors.volt}
-                name={current.icon}
-                size={hole ? iconSizes.lg : iconSizes.xl}
-              />
-            </View>
-
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: hole ? fontSizes.lg : fontSizes.xl,
-                fontWeight: '700',
-                textAlign: hole ? 'left' : 'center',
-                letterSpacing: fontSizes.xl * -0.03,
-              }}
-            >
-              {current.title}
-            </Text>
-            <Text
-              style={{
-                color: colors.textMuted,
-                fontSize: fontSizes.sm,
-                lineHeight: 22,
-                textAlign: hole ? 'left' : 'center',
-              }}
-            >
-              {current.body}
-            </Text>
-
-            {/* Dots, not a numbered counter: the point is "almost done", and a
-                shape communicates that faster than "4 de 5". */}
-            {steps.length > 1 ? (
-              <View style={{ flexDirection: 'row', gap: spacing.xs, paddingVertical: spacing.xs }}>
-                {steps.map((item, index) => (
-                  <View
-                    key={item.title ?? index}
-                    style={{
-                      width: index === step ? 18 : 6,
-                      height: 6,
-                      borderRadius: radii.full,
-                      backgroundColor: index === step ? colors.volt : colors.surfaceHighest,
-                    }}
-                  />
-                ))}
+              <View
+                style={{
+                  width: hole ? 44 : 72,
+                  height: hole ? 44 : 72,
+                  borderRadius: radii.full,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: colors.surfaceHigh,
+                  borderWidth: 1,
+                  borderColor: colors.volt,
+                }}
+              >
+                <Ionicons
+                  color={colors.volt}
+                  name={current.icon}
+                  size={hole ? iconSizes.lg : iconSizes.xl}
+                />
               </View>
-            ) : null}
+
+              <Text
+                style={{
+                  color: colors.text,
+                  fontSize: hole ? fontSizes.lg : fontSizes.xl,
+                  fontWeight: '700',
+                  textAlign: hole ? 'left' : 'center',
+                  letterSpacing: fontSizes.xl * -0.03,
+                }}
+              >
+                {current.title}
+              </Text>
+              <Text
+                style={{
+                  color: colors.textMuted,
+                  fontSize: fontSizes.sm,
+                  lineHeight: 22,
+                  textAlign: hole ? 'left' : 'center',
+                }}
+              >
+                {current.body}
+              </Text>
+
+              {/* Dots, not a numbered counter: the point is "almost done", and a
+                  shape communicates that faster than "4 de 5". */}
+              {steps.length > 1 ? (
+                <View style={{ flexDirection: 'row', gap: spacing.xs, paddingVertical: spacing.xs }}>
+                  {steps.map((item, index) => (
+                    <View
+                      key={item.title ?? index}
+                      style={{
+                        width: index === step ? 18 : 6,
+                        height: 6,
+                        borderRadius: radii.full,
+                        backgroundColor: index === step ? colors.volt : colors.surfaceHighest,
+                      }}
+                    />
+                  ))}
+                </View>
+              ) : null}
+            </ScrollView>
 
             <View style={{ width: '100%', gap: spacing.sm }}>
               <Button label={isLast ? 'Entendido' : 'Siguiente'} onPress={advance} />
