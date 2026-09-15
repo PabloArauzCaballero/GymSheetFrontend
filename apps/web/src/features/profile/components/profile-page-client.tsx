@@ -8,13 +8,7 @@ import { useForm } from 'react-hook-form';
 import { notify } from '@/shared/notifications';
 import { z } from 'zod';
 import { profileService } from '@/features/profile/services/profile-service';
-import {
-  MAX_AGE,
-  MIN_AGE,
-  birthDateInputSchema,
-  birthDatePayload,
-  isoYearsAgo,
-} from '@/features/profile/lib/birth-date';
+import * as birthDate from '@/features/profile/lib/birth-date';
 import { ProfilePhotoGallery } from '@/features/profile/components/profile-photo-gallery';
 import { SocialStatusCard } from '@/features/social/components/social-status-card';
 import { MembershipExperience } from '@/features/membership/components/membership-experience';
@@ -40,7 +34,7 @@ import { Select } from '@/shared/components/ui/select';
 import { formatDateTime } from '@/shared/lib/date';
 
 const schema = z.object({
-  fechaNacimiento: birthDateInputSchema,
+  fechaNacimiento: birthDate.birthDateInputSchema,
   pesoKg: z.number().min(1).max(400),
   estaturaCm: z.number().int().min(80).max(250),
   objetivo: z.enum(trainingGoals),
@@ -88,8 +82,10 @@ export function ProfilePageClient() {
   const save = useMutation({
     mutationFn: ({ fechaNacimiento, ...values }: FormValues) => {
       const hadBirthDate = Boolean(profile.data?.fechaNacimiento);
-      const input = { ...values, ...birthDatePayload(fechaNacimiento, hadBirthDate) };
-      return profile.data ? profileService.updateProfile(input) : profileService.createProfile(input);
+      const input = { ...values, ...birthDate.birthDatePayload(fechaNacimiento, hadBirthDate) };
+      return profile.data
+        ? profileService.updateProfile(input)
+        : profileService.createProfile(input);
     },
     onSuccess: async () => {
       await Promise.all([
@@ -165,8 +161,8 @@ export function ProfilePageClient() {
               >
                 <Input
                   id="fechaNacimiento"
-                  max={isoYearsAgo(MIN_AGE)}
-                  min={isoYearsAgo(MAX_AGE + 1)}
+                  max={birthDate.isoYearsAgo(birthDate.MIN_AGE)}
+                  min={birthDate.isoYearsAgo(birthDate.MAX_AGE + 1)}
                   type="date"
                   {...form.register('fechaNacimiento')}
                 />
