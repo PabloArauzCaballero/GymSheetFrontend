@@ -4,10 +4,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Badge, Card, Divider, Row, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { ErrorState, Skeleton } from '@/components/feedback';
-import { ExerciseImage } from '@/components/media';
+import { ExerciseDemo, ExerciseImage } from '@/components/media';
 import { PressableScale } from '@/components/motion';
 import { BackLink } from '@/components/nav';
-import { exerciseService } from '@/api/services';
+import { accountService, exerciseService } from '@/api/services';
 import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
 
 /**
@@ -52,6 +52,13 @@ export default function ExerciseDetailScreen() {
     enabled: Boolean(id),
   });
 
+  /**
+   * El género elige el cuerpo de la demostración. Misma clave que el resto de
+   * la app (`['user','me']`), así que se sirve de la caché ya cargada en Perfil
+   * en vez de pedir la cuenta otra vez.
+   */
+  const account = useQuery({ queryKey: ['user', 'me'], queryFn: () => accountService.getMe() });
+
   const group = exercise.data?.grupoMuscular;
   // Same muscle group, minus this exercise: the natural "what else trains
   // this?" question, answered without leaving the screen.
@@ -88,7 +95,7 @@ export default function ExerciseDetailScreen() {
     <ScrollScreen onRefresh={() => void exercise.refetch()} refreshing={exercise.isFetching}>
       <BackLink />
 
-      <ExerciseImage exercise={data} size="hero" />
+      <ExerciseDemo exercise={data} gender={account.data?.genero ?? null} />
 
       <ScreenHeader subtitle={data.grupoMuscular} title={data.nombre} />
 

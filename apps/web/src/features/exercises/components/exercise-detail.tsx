@@ -1,11 +1,13 @@
 'use client';
 
+import { selectExerciseVideo } from '@gymsheet/domain';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Dumbbell, Heart, Pencil, Play, Target, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { confirm, notify } from '@/shared/notifications';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
 import { ExerciseMediaManager } from '@/features/exercises/components/exercise-media-manager';
+import { profileService } from '@/features/profile/services/profile-service';
 import type { UserRole } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
@@ -32,6 +34,12 @@ export function ExerciseDetail({
     queryFn: exerciseService.listFavorites,
   });
   const favorite = favorites.data?.some((item) => item.ejercicio.id === id) ?? false;
+  /**
+   * El género decide qué cuerpo se enseña. Misma clave de caché que el resto de
+   * la web (`['user','me']`), así que esto no añade una petición: reutiliza la
+   * que ya hizo la pantalla de perfil o el registro de series.
+   */
+  const account = useQuery({ queryKey: ['user', 'me'], queryFn: profileService.getUser });
   const toggle = useMutation({
     mutationFn: () =>
       favorite ? exerciseService.removeFavorite(id) : exerciseService.addFavorite(id),
@@ -73,6 +81,7 @@ export function ExerciseDetail({
   const canManageMedia =
     ownsPersonalExercise || (item.tipoEjercicio === 'GLOBAL' && role === 'ADMIN');
   const media = item.media.find((entry) => entry.isPrimary) ?? item.media[0];
+  const video = selectExerciseVideo(item.media, account.data?.genero ?? null);
   const instructions =
     item.instructions['es-BO'] ?? item.instructions.es ?? Object.values(item.instructions)[0];
   const steps =
@@ -127,7 +136,28 @@ export function ExerciseDetail({
       <section className="grid gap-8 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
         <div className="panel overflow-hidden">
           <div className="grid aspect-video place-items-center border-b border-[var(--border-subtle)] bg-[var(--surface-low)]">
-            {media && ['IMAGE', 'GIF'].includes(media.mediaType) ? (
+            {video ? (
+              /* Sin `autoPlay`: la reproducción la pide quien mira. Eso respeta
+                 «reducir movimiento» sin ramas extra y evita gastar 1,9 MB de
+                 datos móviles a quien solo venía a leer la técnica.
+                 `preload="none"` deja la ficha en el póster (0,12 MB) hasta que
+                 se pulsa play; el navegador elige WebM o MP4 entre las fuentes. */
+              <video
+                aria-label={video.altText}
+                className="size-full object-cover"
+                controls
+                key={video.sources[0]?.url}
+                loop
+                muted
+                playsInline
+                poster={video.poster ?? undefined}
+                preload="none"
+              >
+                {video.sources.map((source) => (
+                  <source key={source.url} src={source.url} type={source.mimeType} />
+                ))}
+              </video>
+            ) : media && ['IMAGE', 'GIF'].includes(media.mediaType) ? (
               <DomainImage
                 key={media.id}
                 alt={media.altText}
@@ -135,16 +165,6 @@ export function ExerciseDetail({
                 fallbackSrc={media.thumbnailUrl}
                 src={media.url}
               />
-            ) : media?.mediaType === 'VIDEO' ? (
-              <video
-                aria-label={media.altText}
-                className="size-full object-cover"
-                controls
-                poster={media.thumbnailUrl ?? undefined}
-                preload="metadata"
-              >
-                <source src={media.url} type={media.mimeType ?? undefined} />
-              </video>
             ) : (
               <Dumbbell className="size-14 text-[var(--text-disabled)]" />
             )}

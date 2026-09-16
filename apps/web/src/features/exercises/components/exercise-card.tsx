@@ -1,3 +1,4 @@
+import { selectExercisePoster } from '@gymsheet/domain';
 import { Dumbbell, Heart, Target } from 'lucide-react';
 import Link from 'next/link';
 import type { Exercise } from '@/shared/api/contracts';
@@ -17,18 +18,22 @@ export function ExerciseCard({
   onToggleFavorite: () => void;
   busy?: boolean;
 }>) {
-  const primaryMedia = exercise.media.find((item) => item.isPrimary) ?? exercise.media[0];
+  /**
+   * Solo imagen fija, nunca vídeo: una rejilla que cargara los clips gastaría
+   * 1,9 MB por tarjeta (PLAN-VIDEOS-EJERCICIOS §4.3). Cuando el ejercicio solo
+   * tiene vídeo se usa su póster, que antes caía al icono genérico.
+   */
+  const poster = selectExercisePoster(exercise.media, null);
   return (
     <article className="panel hover-lift group overflow-hidden">
       <Link href={`/exercises/${exercise.id}`}>
         <div className="relative grid aspect-[16/9] place-items-center overflow-hidden border-b border-[var(--border-subtle)] bg-[var(--surface-low)]">
-          {primaryMedia?.mediaType === 'IMAGE' || primaryMedia?.mediaType === 'GIF' ? (
+          {poster ? (
             <DomainImage
-              key={primaryMedia.id}
-              alt={primaryMedia.altText}
+              key={poster.url}
+              alt={poster.altText}
               className="size-full object-cover transition-opacity duration-[var(--dur-4)] ease-[var(--ease-out)]"
-              fallbackSrc={primaryMedia.url}
-              src={primaryMedia.thumbnailUrl ?? primaryMedia.url}
+              src={poster.url}
             />
           ) : (
             <Dumbbell className="size-10 text-[var(--text-disabled)]" />

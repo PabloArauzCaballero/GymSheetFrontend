@@ -134,6 +134,12 @@ export const exerciseMediaSchema = z
     isPrimary: z.boolean(),
     sortOrder: z.number().int(),
     status: z.enum(['ACTIVE', 'INACTIVE']),
+    /**
+     * Datos del render: `variant` (hombre/mujer/neutro) es lo que decide qué
+     * demostración ve cada perfil. Llegaba por `passthrough`, sin tipo, así que
+     * la app tenía que hacer aserciones para leerlo.
+     */
+    metadata: z.record(z.string(), z.unknown()).default({}),
   })
   .passthrough();
 
