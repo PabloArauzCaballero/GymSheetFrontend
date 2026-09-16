@@ -42,6 +42,10 @@ services:
       # Origen público de ESTE frontend; lo usan robots.ts/sitemap.ts. Se pone en las variables de
       # Coolify (en `test` es el dominio sslip.io); el valor por defecto deja el local intacto.
       APP_URL: ${APP_URL:-http://localhost:3001}
+      # Vacia por defecto: manda `NODE_ENV`. Se pone a `false` solo donde el
+      # frontend se sirve por HTTP plano (TEST en Contabo), porque una cookie
+      # `Secure` no vuelve nunca por HTTP y el login parece no funcionar.
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-}
     restart: unless-stopped
     init: true
     networks:
