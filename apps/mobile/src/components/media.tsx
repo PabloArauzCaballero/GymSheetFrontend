@@ -1,10 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { View } from 'react-native';
+import { VideoView, useVideoPlayer } from 'expo-video';
+import { useEffect, useState } from 'react';
+import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { useReducedMotion } from 'react-native-reanimated';
+import {
+  selectExercisePoster,
+  selectExerciseVideo,
+  type ProfileGender,
+} from '@gymsheet/domain';
 import type { Exercise, ExerciseMedia } from '@gymsheet/types';
-import { colors, iconSizes, motion, radii } from '@/theme';
+import { colors, fontSizes, iconSizes, motion, radii, semibold, spacing } from '@/theme';
 
 /**
  * Best still image for an exercise: the one flagged primary, else the first one.
@@ -14,6 +21,16 @@ import { colors, iconSizes, motion, radii } from '@/theme';
 export function primaryMedia(exercise: Pick<Exercise, 'media'>): ExerciseMedia | null {
   const images = exercise.media.filter((item) => item.mediaType === 'IMAGE');
   return images.find((item) => item.isPrimary) ?? images[0] ?? null;
+}
+
+/**
+ * La imagen fija que va en filas y tarjetas: lámina del catálogo, y si el
+ * ejercicio solo tiene vídeo, su póster. Nunca el vídeo: una lista que
+ * descargara clips gastaría 1,9 MB por fila (PLAN-VIDEOS-EJERCICIOS §4.3).
+ */
+function posterOf(exercise: Pick<Exercise, 'media'>): { uri: string; altText: string } | null {
+  const poster = selectExercisePoster(exercise.media, null);
+  return poster ? { uri: poster.url, altText: poster.altText } : null;
 }
 
 /**
@@ -83,7 +100,11 @@ export function ExerciseImage({
   // stay on the still image. Reduce Motion keeps the still everywhere.
   const animated = isHero && !reduceMotion ? animatedMedia(exercise) : null;
   const media = animated ?? primaryMedia(exercise);
-  const uri = media?.url ?? media?.thumbnailUrl ?? null;
+  const poster = posterOf(exercise);
+  // El GIF manda en el detalle; si no hay lámina, cae al póster del vídeo, que
+  // antes dejaba la tarjeta con el icono genérico.
+  const uri = media?.url ?? media?.thumbnailUrl ?? poster?.uri ?? null;
+  const altText = media?.altText || poster?.altText || exercise.nombre;
 
   const frame = isHero
     ? { width: HERO_SIZE, height: HERO_SIZE, alignSelf: 'center' as const }
@@ -112,7 +133,7 @@ export function ExerciseImage({
     >
       {uri ? (
         <Image
-          accessibilityLabel={media?.altText || exercise.nombre}
+          accessibilityLabel={altText}
           accessible
           cachePolicy="memory-disk"
           // `contain` on the detail: the illustration is a full figure and
@@ -136,5 +157,131 @@ export function ExerciseImage({
         />
       )}
     </Frame>
+  );
+}
+
+/** Lado máximo del reproductor. El clip es 1:1, y más ancho empuja los datos fuera de pantalla. */
+const VIDEO_MAX_SIDE = 320;
+
+/**
+ * La demostración del ejercicio en la ficha: vídeo si lo hay, lámina si no.
+ *
+ * Es el único sitio de la aplicación que reproduce vídeo del catálogo. Las
+ * listas se quedan en la imagen fija por ancho de banda, y un ejercicio sin
+ * vídeo —hoy, casi todos— se ve exactamente igual que antes.
+ */
+export function ExerciseDemo({
+  exercise,
+  gender,
+}: {
+  exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular'>;
+  gender: ProfileGender;
+}) {
+  const video = selectExerciseVideo(exercise.media, gender);
+  // MP4 y no WebM: AVPlayer de iOS no decodifica WebM, así que el formato que
+  // ahorra bytes en la web aquí dejaría la ficha en negro.
+  if (!video?.mp4Url) return <ExerciseImage exercise={exercise} size="hero" />;
+  return <ExerciseVideo altText={video.altText} poster={video.poster} uri={video.mp4Url} />;
+}
+
+/**
+ * Reproductor de una demostración.
+ *
+ * Empieza en el póster y **no descarga el vídeo hasta que se pulsa**: la fuente
+ * del reproductor es nula mientras nadie lo pide, que es la única forma de que
+ * abrir una ficha con datos móviles no cueste 1,9 MB. Por lo mismo no hay
+ * reproducción automática, lo que además respeta «reducir movimiento» sin
+ * necesidad de una rama aparte. En bucle y en silencio: es un gesto técnico
+ * repetido, no un vídeo que contar.
+ */
+function ExerciseVideo({
+  uri,
+  poster,
+  altText,
+}: {
+  uri: string;
+  poster: string | null;
+  altText: string;
+}) {
+  const { width } = useWindowDimensions();
+  const side = Math.min(width - spacing.lg * 2, VIDEO_MAX_SIDE);
+  const [playing, setPlaying] = useState(false);
+  // `useVideoPlayer` memoriza por fuente: con `null` no hay descarga ninguna, y
+  // al pasar a la URL se crea el reproductor ya con el clip pedido.
+  const player = useVideoPlayer(playing ? uri : null, (instance) => {
+    instance.loop = true;
+    instance.muted = true;
+  });
+
+  useEffect(() => {
+    if (playing) player.play();
+  }, [playing, player]);
+
+  const frame = {
+    width: side,
+    height: side,
+    alignSelf: 'center' as const,
+    borderRadius: radii.lg,
+    overflow: 'hidden' as const,
+    backgroundColor: colors.surfaceHigh,
+  };
+
+  if (playing) {
+    return (
+      <View style={frame}>
+        <VideoView
+          accessibilityLabel={altText}
+          contentFit="contain"
+          nativeControls
+          player={player}
+          style={{ width: '100%', height: '100%' }}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <Pressable
+      accessibilityLabel={`Reproducir demostración. ${altText}`}
+      accessibilityRole="button"
+      onPress={() => setPlaying(true)}
+      style={frame}
+    >
+      {poster ? (
+        <Image
+          accessibilityElementsHidden
+          cachePolicy="memory-disk"
+          contentFit="contain"
+          importantForAccessibility="no-hide-descendants"
+          source={{ uri: poster }}
+          style={{ width: '100%', height: '100%' }}
+        />
+      ) : null}
+      <View
+        style={{
+          position: 'absolute',
+          inset: 0,
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: spacing.xs,
+        }}
+      >
+        <View
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: radii.full,
+            backgroundColor: colors.volt,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Ionicons color={colors.background} name="play" size={iconSizes.lg} />
+        </View>
+        <Text style={{ color: colors.text, fontSize: fontSizes.xs, fontWeight: semibold }}>
+          Ver la técnica
+        </Text>
+      </View>
+    </Pressable>
   );
 }

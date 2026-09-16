@@ -132,6 +132,8 @@ export type ExerciseMedia = {
   isPrimary: boolean;
   sortOrder: number;
   status: 'ACTIVE' | 'INACTIVE';
+  /** Datos del render; `variant` decide qué cuerpo se enseña a cada perfil. */
+  metadata?: Record<string, unknown>;
 };
 
 export type Exercise = {
