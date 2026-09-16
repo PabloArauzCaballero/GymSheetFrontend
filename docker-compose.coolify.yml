@@ -9,13 +9,11 @@
 #    variable y un reinicio, no una reconstrucción. El build arg queda solo como respaldo.
 # 4. `BACKEND_API_URL` y `APP_URL` son server-only: van en `environment`, nunca en `build.args`.
 # 5. Hay que activar «Connect To Predefined Network» en la aplicación.
-# 6. El servicio `tunnel` (abajo) expone este frontend en internet con acceso anónimo, sin VPN,
-#    vía Tailscale Funnel. Es un nodo de tailnet PROPIO (hostname `gymsheet-frontend`), no reutiliza
-#    los `:443`/`:8443`/`:10000` del VPS: esos tres ya sirven `/` de otras apps (Atlas, alovida...) y
-#    Funnel solo admite esos tres puertos por nodo. Requiere el secret `TS_AUTHKEY` en Coolify
-#    (Tailscale admin console -> Settings -> Keys -> Generate auth key, marcada "Reusable" para que
-#    sobreviva a redeploys). Sin ese secret el sidecar no arranca, pero `web` sigue sirviendo normal
-#    por la red `coolify` — el tunnel es aditivo, nunca un requisito para que el frontend funcione.
+# 6. RAMA `test` (VPS de Contabo): SIN sidecar de Tailscale. En `dev` (H310) hace falta un Funnel
+#    porque esa máquina no tiene IP pública; Contabo sí la tiene y el Traefik de Coolify publica
+#    `web` en un dominio `sslip.io` (`docker_compose_domains` de la aplicación). El servicio
+#    `tunnel` está borrado A PROPÓSITO en esta rama: levantarlo aquí reclamaría el MISMO hostname
+#    de tailnet (`gymsheet-frontend`) que ya usa el despliegue de `dev` y le rompería el Funnel.
 # 7. Solo `web` declara `build:` en este archivo (no hay otro servicio que comparta su imagen, a
 #    diferencia de GymSheetBackend con api/workers). Confirmado en los repos de Atlas: NUNCA
 #    `cache_from` apuntando al propio tag — en este VPS no hay registro, así que ese pull falla
@@ -34,15 +32,16 @@ services:
         NEXT_PUBLIC_BACKEND_ORIGIN: 'http://localhost:3000'
     environment:
       # Alias interno del recurso `api` de gymsheet-backend en la red `coolify`.
-      BACKEND_API_URL: 'http://gymsheet-backend:3000/api/v1'
+      BACKEND_API_URL: ${BACKEND_API_URL:-http://gymsheet-backend:3000/api/v1}
       # Origen PÚBLICO del backend: el navegador abre contra él el socket de chat, así que tiene
       # que ser una dirección que resuelva la máquina del usuario. El alias interno
       # `gymsheet-backend:3000` NO vale aquí (el navegador no ve la red `coolify`); se descarta
       # solo, sin romper la pantalla, pero el chat no conectará hasta poner el dominio real.
       # Se cambia en las variables de la aplicación en Coolify, sin reconstruir.
       BACKEND_PUBLIC_ORIGIN: ${BACKEND_PUBLIC_ORIGIN:-}
-      # Origen público de ESTE frontend; lo usan robots.ts/sitemap.ts. Cambiar cuando haya dominio.
-      APP_URL: 'http://localhost:3001'
+      # Origen público de ESTE frontend; lo usan robots.ts/sitemap.ts. Se pone en las variables de
+      # Coolify (en `test` es el dominio sslip.io); el valor por defecto deja el local intacto.
+      APP_URL: ${APP_URL:-http://localhost:3001}
     restart: unless-stopped
     init: true
     networks:
@@ -69,60 +68,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 25s
-
-  # Dev tunnel de acceso anónimo (Tailscale Funnel). Nodo de tailnet propio: no compite por los
-  # tres puertos de Funnel que ya usan otras apps del VPS. Userspace networking (`--tun`), así que
-  # no pide NET_ADMIN ni /dev/net/tun — solo abre una conexión saliente hacia Tailscale y reenvía
-  # tráfico HTTPS entrante a `web` por la red `coolify`, usando su alias interno.
-  #
-  # TS_AUTHKEY con `:-` (no `:?`) A PROPÓSITO: `:?` sin la variable hace que `docker compose`
-  # falle al INTERPOLAR el archivo, antes de tocar un solo contenedor — tumba TODO el stack,
-  # incluido `web`, no solo este servicio. Ocurrió en producción: el primer despliegue con este
-  # sidecar sin la key puesta no construyó ni arrancó nada, `web` incluido, y Coolify igual lo
-  # reportó como terminado. Con `:-` el compose siempre es válido; sin la key, solo este
-  # contenedor entra en crash-loop (`containerboot` sale con error de auth) mientras `web` sigue
-  # sirviendo normal — que es lo que "aditivo" significaba desde el principio.
-  #
-  # El JSON de TS_SERVE_CONFIG se escribe DENTRO del contenedor al arrancar, no por bind mount.
-  # También ocurrió en producción: cuando el primer intento (con `:?`) falló, Docker ya había
-  # preparado el mount y dejó `deploy/tailscale-serve.json` como DIRECTORIO VACÍO en el
-  # filesystem persistente de la aplicación en Coolify (`/data/coolify/applications/<uuid>/`).
-  # Los redeploys siguientes no lo arreglan solos: el sync de Coolify no reemplaza un directorio
-  # por un archivo del mismo nombre, así que cada redeploy repetía el mismo fallo
-  # ("read .../serve.json: is a directory") aunque el repo sí tuviera el archivo real. Generar el
-  # JSON con un heredoc en el propio entrypoint elimina esa clase de fallo por completo.
-  tunnel:
-    image: tailscale/tailscale:v1.90.6
-    environment:
-      TS_AUTHKEY: ${TS_AUTHKEY:-}
-      TS_HOSTNAME: gymsheet-frontend
-      TS_STATE_DIR: /var/lib/tailscale
-      TS_SERVE_CONFIG: /tmp/tailscale-serve.json
-      TS_ACCEPT_DNS: 'false'
-    volumes:
-      - tailscale-frontend-state:/var/lib/tailscale
-    networks:
-      - coolify
-    entrypoint: ['/bin/sh', '-c']
-    command:
-      - |
-        cat > /tmp/tailscale-serve.json <<'JSON'
-        {"TCP":{"443":{"HTTPS":true}},"Web":{"gymsheet-frontend.taila8f993.ts.net:443":{"Handlers":{"/":{"Proxy":"http://gymsheet-frontend:3001"}}}},"AllowFunnel":{"gymsheet-frontend.taila8f993.ts.net:443":true}}
-        JSON
-        exec /usr/local/bin/containerboot
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 128m
-    logging:
-      driver: json-file
-      options:
-        max-size: '10m'
-        max-file: '3'
-
-volumes:
-  tailscale-frontend-state:
 
 networks:
   default: {}
