@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { formatDate } from '@/shared/lib/date';
 import { membershipService } from '../services/membership-service';
 import { Fact, PlanCard } from './membership-cards';
+import { randomUuid } from '@/shared/lib/uuid';
 
 export function MembershipExperience({ compact = false }: Readonly<{ compact?: boolean }>) {
   const projection = useQuery({
@@ -44,7 +45,7 @@ export function MembershipExperience({ compact = false }: Readonly<{ compact?: b
       if (!decision.confirmed) throw new Error('CANCELLED');
       const popup = window.open('about:blank', '_blank');
       if (popup) popup.opener = null;
-      const input = { planId: plan.id, months: 1, idempotencyKey: crypto.randomUUID() };
+      const input = { planId: plan.id, months: 1, idempotencyKey: randomUuid() };
       try {
         const result =
           type === 'EXTENSION'

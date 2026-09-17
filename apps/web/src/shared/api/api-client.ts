@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ApiError, classifyStatus } from './api-error';
+import { randomUuid } from '@/shared/lib/uuid';
 import { problemSchema } from './schemas';
 
 const successEnvelopeSchema = z.object({ ok: z.literal(true), data: z.unknown() });
@@ -12,7 +13,7 @@ type ApiRequestOptions = Omit<RequestInit, 'body'> & {
 function resolveHeaders(options: ApiRequestOptions) {
   const headers = new Headers(options.headers);
   headers.set('Accept', 'application/json');
-  headers.set('X-Request-ID', crypto.randomUUID());
+  headers.set('X-Request-ID', randomUuid());
   if (options.body !== undefined) headers.set('Content-Type', 'application/json');
   return headers;
 }
@@ -129,7 +130,7 @@ export async function apiUpload<T>(
   try {
     const response = await fetch(`/api/backend${path}`, {
       method: 'POST',
-      headers: { Accept: 'application/json', 'X-Request-ID': crypto.randomUUID() },
+      headers: { Accept: 'application/json', 'X-Request-ID': randomUuid() },
       body: form,
       credentials: 'same-origin',
       signal: requestController.signal,
