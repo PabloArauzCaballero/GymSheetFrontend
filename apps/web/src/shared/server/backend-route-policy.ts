@@ -1,4 +1,14 @@
 const resourceId = '[A-Za-z0-9-]+';
+// Clave de permiso granular, p. ej. `admin-access:manage` o `moderation:read`
+// (dominio:acción, `admin-permission.catalog.ts`). Va URL-encodeada en el
+// segmento (`encodeURIComponent` convierte `:` en `%3A`), así que el patrón
+// matchea la forma codificada, no el literal con dos puntos.
+const permissionKey = '[a-z-]+%3A[a-z-]+';
+// Qué se puede reportar/moderar (`ModerationTargetKind`, enum cerrado): una
+// alternativa explícita en vez de un comodín, igual que el token de activación
+// más abajo — así una URL no puede colar un valor que el backend rechazaría
+// de todos modos, pero sin llegar a intentarlo.
+const moderationTargetKind = 'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER';
 
 const allowedPathPatterns = [
   /^\/access\/me$/u,
@@ -11,6 +21,10 @@ const allowedPathPatterns = [
   new RegExp(`^/admin/access/credentials/user/${resourceId}$`, 'u'),
   /^\/admin\/access\/credentials\/(pin|external-reference)$/u,
   new RegExp(`^/admin/access/credentials/${resourceId}/revoke$`, 'u'),
+  // Auditoría (H01 de docs/refactor-profesional): un solo endpoint para las
+  // dos consolas (/admin/auditoria y /sistema/auditoria) — el alcance lo
+  // resuelve `actor.tenantScope` en el backend, no la URL.
+  /^\/admin\/audit$/u,
   /^\/admin\/equipment$/u,
   /^\/admin\/equipment\/catalog$/u,
   new RegExp(`^/admin/equipment/${resourceId}$`, 'u'),
@@ -32,6 +46,21 @@ const allowedPathPatterns = [
   /^\/me\/membership\/activation-request$/u,
   /^\/admin\/membership\/insights\/(equipment-usage|people-flow|lapsed)$/u,
   /^\/admin\/membership\/users$/u,
+  // Moderación (H01): cola, un caso puntual y las tres acciones sobre él, más
+  // el historial de un usuario. `targetKind` va acotado al enum cerrado.
+  /^\/admin\/moderation\/queue$/u,
+  new RegExp(`^/admin/moderation/cases/(?:${moderationTargetKind})/${resourceId}$`, 'u'),
+  new RegExp(
+    `^/admin/moderation/cases/(?:${moderationTargetKind})/${resourceId}/(claim|release|resolve)$`,
+    'u',
+  ),
+  new RegExp(`^/admin/moderation/users/${resourceId}/history$`, 'u'),
+  // Permisos granulares del personal (H01): catálogo, los de un usuario,
+  // otorgar y revocar. `/me` es la vista propia (qué puedo hacer yo).
+  /^\/admin\/permissions\/me$/u,
+  /^\/admin\/permissions\/catalog$/u,
+  new RegExp(`^/admin/permissions/${resourceId}$`, 'u'),
+  new RegExp(`^/admin/permissions/${resourceId}/${permissionKey}$`, 'u'),
   /^\/equipment$/u,
   new RegExp(`^/exercise-media/${resourceId}$`, 'u'),
   /^\/exercises$/u,
@@ -54,6 +83,8 @@ const allowedPathPatterns = [
   /^\/me\/progression\/(acknowledge|leaderboard|rest-days|rules)$/u,
   /^\/me\/photos$/u,
   new RegExp(`^/me/photos/${resourceId}$`, 'u'),
+  // Denunciar contenido (H01): el botón en perfil ajeno, chat y stories.
+  /^\/me\/reports$/u,
   /^\/me\/tutorial-progress$/u,
   new RegExp(`^/me/tutorial-progress/${resourceId}$`, 'u'),
   // Punto 11 (conexiones), 10 (estado social) y 5 (directorio + chat).

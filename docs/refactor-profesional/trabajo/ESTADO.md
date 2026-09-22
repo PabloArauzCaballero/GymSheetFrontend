@@ -1,5 +1,35 @@
 # Estado — registro de sesión
 
+## 2026-09-22 (continuación misma sesión)
+
+- El usuario confirmó explícitamente avanzar sin pausas por fases autorizadas ("hacelo todo, no te
+  detengas"). A partir de aquí se ejecuta fase 01 con evidencia real y se corrige en el momento el
+  hallazgo más grave encontrado, en vez de solo documentarlo.
+- **Entorno real levantado:** backend NestJS desde fuente en `:3005` (Postgres local
+  `gymsheetbackend-postgres-1`, puerto 5433, BD `gym_sheet`), web Next.js desde fuente en `:3006`.
+  Un zombi de 5 días en el puerto 3006 se mató antes de arrancar limpio.
+- **Bloqueo de entorno encontrado y resuelto:** `.next` con build de producción del 15-sep
+  mezclado con caché de `next dev` de hoy causaba 404 en todo el grupo `(auth)` (login/registro/
+  recuperar). `rm -rf apps/web/.next` + reinicio lo resolvió. Sin esto no se podía ni loguear.
+- **Fase 01 (auditoría con evidencia real) en progreso:** `trabajo/HALLAZGOS.md` con tres
+  hallazgos (H01 P1, H02 P2, H03 P3) y dos notas de entorno, respaldados con capturas en
+  `trabajo/evidencia/` y con cuentas reales (`super@qa.test` SYSTEM_ADMIN, `admin.a@qa.test` ADMIN).
+- **H01 corregido y verificado en la misma pasada** (no solo documentado): el allowlist del BFF
+  (`apps/web/src/shared/server/backend-route-policy.ts`) nunca tuvo entradas para
+  `admin/audit`, `admin/permissions`, `admin/moderation` ni `me/reports` — cuatro pantallas del
+  admin portal V2 recién commiteado estaban completamente desconectadas del backend real (404
+  falso del BFF, visible como toast "No encontrado" al usuario). Se añadieron 16 patrones nuevos +
+  tests en `backend-route-policy.test.ts` (65/65 ✅) + reproducción en vivo antes/después
+  (`evidencia/sistema-auditoria.png` vs `evidencia/sistema-auditoria-FIX-H01.png`: 404→200, toast
+  desaparece).
+- **Verificación completa en curso:** `yarn turbo run source-check type-check lint test
+  --filter=!@gymsheet/mobile` corriendo en segundo plano tras el fix de H01, para confirmar que no
+  rompió nada antes de commitear.
+- **Siguiente acción:** al cerrar la verificación completa, commitear el fix de H01 por separado
+  (`fix(web):` — es una corrección real, no parte del checkpoint de documentación), luego seguir
+  con lo pendiente de fase 01 (descubrir, recuperar contraseña) y entrar a fase 02 (UX/IA) con los
+  tres hallazgos como insumo real.
+
 ## 2026-09-21
 
 - **Candidato/rama:** `GymSheetFrontend`, rama `dev`. Sin commits nuevos (el usuario no lo ha

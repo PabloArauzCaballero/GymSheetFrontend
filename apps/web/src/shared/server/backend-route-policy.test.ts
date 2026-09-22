@@ -51,6 +51,31 @@ const allowedCases: Array<[string[], string]> = [
   // F4: push web. Sin estas dos el navegador no puede ni preguntar si hay push.
   [['notifications', 'push', 'web-config'], '/notifications/push/web-config'],
   [['notifications', 'device-tokens'], '/notifications/device-tokens'],
+  // H01 (docs/refactor-profesional/trabajo/HALLAZGOS.md): auditoría, permisos,
+  // moderación y reportar contenido nunca habían llegado a este allowlist.
+  [['admin', 'audit'], '/admin/audit'],
+  [['admin', 'permissions', 'me'], '/admin/permissions/me'],
+  [['admin', 'permissions', 'catalog'], '/admin/permissions/catalog'],
+  [['admin', 'permissions', id], `/admin/permissions/${id}`],
+  [
+    ['admin', 'permissions', id, 'admin-access:manage'],
+    `/admin/permissions/${id}/admin-access%3Amanage`,
+  ],
+  [['admin', 'moderation', 'queue'], '/admin/moderation/queue'],
+  [
+    ['admin', 'moderation', 'cases', 'CHAT_MESSAGE', id],
+    `/admin/moderation/cases/CHAT_MESSAGE/${id}`,
+  ],
+  [
+    ['admin', 'moderation', 'cases', 'CHAT_MESSAGE', id, 'claim'],
+    `/admin/moderation/cases/CHAT_MESSAGE/${id}/claim`,
+  ],
+  [
+    ['admin', 'moderation', 'cases', 'CHAT_MESSAGE', id, 'resolve'],
+    `/admin/moderation/cases/CHAT_MESSAGE/${id}/resolve`,
+  ],
+  [['admin', 'moderation', 'users', id, 'history'], `/admin/moderation/users/${id}/history`],
+  [['me', 'reports'], '/me/reports'],
 ];
 const blockedCases: Array<[string[]]> = [
   [['admin', 'access', 'mock', 'events']],
@@ -58,6 +83,8 @@ const blockedCases: Array<[string[]]> = [
   [['..', 'secrets']],
   [['gateway', 'events']],
   [['admin', 'media', id]],
+  // `targetKind` es el enum cerrado de moderación, no un comodín.
+  [['admin', 'moderation', 'cases', 'BOGUS_KIND', id]],
   // La administración del catálogo de la senda no pasa por el BFF: la pantalla
   // que la consumirá todavía no existe, y abrir la ruta antes de tener quien la
   // use sería dejar accesible desde el navegador una API que nadie vigila.
