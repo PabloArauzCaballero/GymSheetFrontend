@@ -3,8 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import Link, { useLinkStatus } from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef, type ReactNode } from 'react';
-import { isSystemAdmin } from '@gymsheet/domain';
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import {
   interactionKeys,
   interactionsService,
@@ -18,7 +17,7 @@ import {
   TutorialProvider,
 } from '@/features/tutorials';
 import { Brand } from './brand';
-import { adminNavigation, canSee, primaryNavigation, systemNavigation } from './nav-config';
+import { navigationFor, type NavigationItem } from './nav-config';
 import { LogoutButton } from './logout-button';
 import { RouteProgress } from './route-progress';
 import { ThemeToggle } from './theme-toggle';
@@ -47,6 +46,50 @@ function LinkPending() {
   return pending ? <span aria-hidden className="link-pending ml-auto" /> : null;
 }
 
+function NavLink({
+  item,
+  active,
+  compact,
+  alerts,
+  linkRef,
+}: Readonly<{
+  item: NavigationItem;
+  active: boolean;
+  compact: boolean;
+  alerts: number;
+  linkRef?: RefObject<HTMLAnchorElement | null>;
+}>) {
+  const Icon = item.icon;
+  return (
+    <Link
+      aria-current={active ? 'page' : undefined}
+      className={cn(
+        compact
+          ? 'tap flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-full border px-4 text-sm font-medium'
+          : 'group/nav relative flex min-h-10 items-center gap-3 rounded-[var(--radius-md)] border border-transparent px-3 text-sm font-medium text-[var(--text-muted)] transition-colors duration-[var(--dur-2)] hover:bg-[var(--surface-low)] hover:text-[var(--text)]',
+        compact &&
+          (active
+            ? 'border-[var(--volt)] bg-[var(--volt)] font-semibold text-[var(--accent-contrast)]'
+            : 'border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text-muted)]'),
+        !compact &&
+          active &&
+          'border-[var(--border)] bg-[var(--surface-low)] font-semibold text-[var(--text)] before:absolute before:left-0 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-full before:bg-[var(--volt)] before:content-[""]',
+      )}
+      data-tutorial-id={`nav:${item.href}`}
+      href={item.href}
+      ref={linkRef}
+    >
+      <Icon
+        aria-hidden
+        className={cn('size-4', !compact && active && 'text-[var(--accent-ink)]')}
+      />
+      {item.label}
+      <NavAlert count={alerts} />
+      <LinkPending />
+    </Link>
+  );
+}
+
 function NavigationLinks({
   session,
   compact = false,
@@ -54,14 +97,10 @@ function NavigationLinks({
   const pathname = usePathname();
   const activeLinkRef = useRef<HTMLAnchorElement>(null);
   const interactionAlerts = useInteractionAlerts();
-  // El super-admin no ve la navegación de socio ni la de un gimnasio: no tiene
-  // entrenamientos propios ni un gimnasio al que pertenezcan estos módulos, y
-  // pintárselos sería ofrecerle pantallas que su sesión no puede contestar.
-  const items = (
-    isSystemAdmin(session.role)
-      ? systemNavigation
-      : [...primaryNavigation, ...adminNavigation]
-  ).filter((item) => canSee(item, session.role, session.permissions));
+  // Cada audiencia recibe su navegación y su orden; la decisión vive en
+  // `navigationFor` para que la barra lateral y la tira móvil no puedan
+  // discrepar.
+  const groups = navigationFor(session.role, session.permissions);
   useEffect(() => {
     if (compact) {
       activeLinkRef.current?.scrollIntoView({
@@ -72,65 +111,63 @@ function NavigationLinks({
     }
   }, [compact, pathname]);
 
+  // Se ilumina el destino MÁS específico que cubre la ruta, no todos los que
+  // la prefijan: en `/admin/operacion` encendían a la vez «Panel del gimnasio»
+  // y «Operaciones» (`/admin`), y dos entradas activas no dicen dónde estás.
+  // El prefijo sigue valiendo para las páginas de detalle —`/workouts/:id`
+  // mantiene encendido «Entrenamientos»—, que es para lo que estaba.
+  const activeHref = groups
+    .flatMap((group) => group.items)
+    .map((item) => item.href)
+    .filter(
+      (href) =>
+        pathname === href || (href !== '/dashboard' && pathname.startsWith(`${href}/`)),
+    )
+    .reduce<string | null>(
+      (best, href) => (best === null || href.length > best.length ? href : best),
+      null,
+    );
+
+  const renderItem = (item: NavigationItem) => {
+    const active = item.href === activeHref;
+    return (
+      <NavLink
+        active={active}
+        alerts={item.href === '/interacciones' ? interactionAlerts : 0}
+        compact={compact}
+        item={item}
+        key={item.href}
+        linkRef={active ? activeLinkRef : undefined}
+      />
+    );
+  };
+
+  // En móvil la navegación es una tira horizontal: los rótulos de grupo
+  // ocuparían el ancho que necesitan los destinos, así que ahí se aplanan y el
+  // orden —gimnasio primero— es lo que comunica la separación.
+  if (compact) {
+    return (
+      <nav
+        aria-label="Navegación principal"
+        className="nav-scroll flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 py-0.5"
+      >
+        {groups.flatMap((group) => group.items).map(renderItem)}
+      </nav>
+    );
+  }
+
   return (
-    <nav
-      aria-label="Navegación principal"
-      className={cn(
-        'flex gap-2',
-        compact ? 'nav-scroll snap-x snap-mandatory overflow-x-auto px-4 py-0.5' : 'flex-col gap-1',
-      )}
-    >
-      {items.map((item) => {
-        const active =
-          pathname === item.href ||
-          (item.href !== '/dashboard' && pathname.startsWith(`${item.href}/`));
-        const Icon = item.icon;
-        const alerts = item.href === '/interacciones' ? interactionAlerts : 0;
-        if (compact) {
-          return (
-            <Link
-              aria-current={active ? 'page' : undefined}
-              className={cn(
-                'tap flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-full border px-4 text-sm font-medium',
-                active
-                  ? 'border-[var(--volt)] bg-[var(--volt)] font-semibold text-[var(--accent-contrast)]'
-                  : 'border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text-muted)]',
-              )}
-              data-tutorial-id={`nav:${item.href}`}
-              href={item.href}
-              key={item.href}
-              ref={active ? activeLinkRef : undefined}
-            >
-              <Icon aria-hidden className="size-4" />
-              {item.label}
-              <NavAlert count={alerts} />
-              <LinkPending />
-            </Link>
-          );
-        }
-        return (
-          <Link
-            aria-current={active ? 'page' : undefined}
-            className={cn(
-              'group/nav relative flex min-h-10 items-center gap-3 rounded-[var(--radius-md)] border border-transparent px-3 text-sm font-medium text-[var(--text-muted)] transition-colors duration-[var(--dur-2)] hover:bg-[var(--surface-low)] hover:text-[var(--text)]',
-              active &&
-                'border-[var(--border)] bg-[var(--surface-low)] font-semibold text-[var(--text)] before:absolute before:left-0 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-full before:bg-[var(--volt)] before:content-[""]',
-            )}
-            data-tutorial-id={`nav:${item.href}`}
-            href={item.href}
-            key={item.href}
-            ref={active ? activeLinkRef : undefined}
-          >
-            <Icon
-              aria-hidden
-              className={cn('size-4', active && 'text-[var(--accent-ink)]')}
-            />
-            {item.label}
-            <NavAlert count={alerts} />
-            <LinkPending />
-          </Link>
-        );
-      })}
+    <nav aria-label="Navegación principal" className="flex flex-col gap-5">
+      {groups.map((group, index) => (
+        <div className="flex flex-col gap-1" key={group.label ?? `grupo-${index}`}>
+          {group.label ? (
+            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-disabled)]">
+              {group.label}
+            </p>
+          ) : null}
+          {group.items.map(renderItem)}
+        </div>
+      ))}
     </nav>
   );
 }
