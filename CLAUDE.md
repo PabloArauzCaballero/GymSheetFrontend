@@ -72,3 +72,10 @@ Mapa de skills por tarea (usar la que corresponda, no improvisar):
 
 Regla de cierre: ningún PR de UI se considera terminado sin una pasada de
 `web-design-guidelines` y sin respetar `prefers-reduced-motion` en todo motion.
+
+## Refactorización profesional UX/UI (en curso)
+
+El alcance y los criterios están en `docs/refactor-profesional/ESPECIFICACION_OBJETIVO.md`.
+Consulta `docs/refactor-profesional/trabajo/ESTADO.md` antes de continuar.
+Lee la fase vigente y sus referencias; conserva reglas de negocio y cambios ajenos.
+Cada afirmación de validación debe enlazar evidencia real o indicar que no se ejecutó.
