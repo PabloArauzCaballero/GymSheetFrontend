@@ -1,4 +1,25 @@
-export const userRoles = ['ADMIN', 'CLIENTE', 'ENTRENADOR_EXTERNO', 'COACH', 'FRONT_DESK'] as const;
+/**
+ * Roles que el backend puede devolver en una sesión.
+ *
+ * `SYSTEM_ADMIN` opera por encima de los gimnasios y existe en el backend desde
+ * la migración `202608290001`. Faltaba aquí, y la ausencia no era cosmética:
+ * `sessionPrincipalSchema` valida el rol con `z.enum(userRoles)`, así que
+ * `/auth/me` no parseaba para esa cuenta, la sesión se resolvía como nula y el
+ * portal la mandaba a cerrar sesión. En la práctica un `SYSTEM_ADMIN` no podía
+ * entrar en la web.
+ *
+ * La lista sólo se usa para PARSEAR lo que llega del backend; ninguna interfaz
+ * la recorre para ofrecer roles, de modo que añadirlo no pone al super-admin en
+ * ningún desplegable de alta de personal.
+ */
+export const userRoles = [
+  'SYSTEM_ADMIN',
+  'ADMIN',
+  'CLIENTE',
+  'ENTRENADOR_EXTERNO',
+  'COACH',
+  'FRONT_DESK',
+] as const;
 export type UserRole = (typeof userRoles)[number];
 
 export const trainingGoals = [

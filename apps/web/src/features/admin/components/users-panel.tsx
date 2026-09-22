@@ -5,6 +5,7 @@ import { Search } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Card, CardContent } from '@/shared/components/ui/card';
+import { Pagination } from '@/shared/components/ui/pagination';
 import { Input } from '@/shared/components/ui/input';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { insightsService, type PortalUser } from '@/features/admin/services/insights-service';
@@ -41,16 +42,31 @@ function AccessBadge({ user }: { user: PortalUser }) {
  */
 export function UsersPanel() {
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
 
   const users = useQuery({
-    queryKey: ['admin', 'users', search],
-    queryFn: () => insightsService.users(search),
+    queryKey: ['admin', 'users', search, page],
+    queryFn: () => insightsService.users(search, page),
     // Mantener lo anterior mientras teclea evita el parpadeo a lista vacía en
     // cada letra, que es lo que hace que un buscador se sienta lento.
     placeholderData: keepPreviousData,
   });
 
-  const rows = users.data ?? [];
+  const rows = users.data?.items ?? [];
+  const total = users.data?.total ?? 0;
+  const totalPages = users.data?.totalPages ?? 0;
+
+  /**
+   * Buscar reinicia la paginación.
+   *
+   * Sin esto, teclear desde la página 3 pide la página 3 de una búsqueda que
+   * quizá sólo tiene una, y la tabla se queda vacía con resultados que sí
+   * existen.
+   */
+  function updateSearch(value: string) {
+    setSearch(value);
+    setPage(1);
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -60,12 +76,21 @@ export function UsersPanel() {
         description="Todas las cuentas, con su membresía y su última actividad."
       />
 
+      {/* El total va arriba y no al pie: es la respuesta a «¿cuántos socios
+          tengo?», que se consulta más veces que cualquier fila concreta. */}
+      {users.data ? (
+        <p className="text-sm text-[var(--text-muted)]">
+          {total === 1 ? '1 cuenta' : `${total} cuentas`}
+          {search ? (total === 1 ? ' coincide con la búsqueda' : ' coinciden con la búsqueda') : ''}
+        </p>
+      ) : null}
+
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
         <Input
           aria-label="Buscar por nombre o correo"
           className="pl-9"
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) => updateSearch(event.target.value)}
           placeholder="Buscar por nombre o correo…"
           value={search}
         />
@@ -129,6 +154,10 @@ export function UsersPanel() {
           )}
         </CardContent>
       </Card>
+
+      {/* El componente compartido, no una pareja de botones propia: ya resuelve
+          el caso de una sola página y se ve igual que el resto del portal. */}
+      <Pagination onPageChange={setPage} page={page} totalPages={totalPages} />
     </div>
   );
 }

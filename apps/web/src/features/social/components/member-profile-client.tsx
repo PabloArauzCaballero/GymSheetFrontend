@@ -9,6 +9,7 @@ import { socialService } from '@/features/social/services/social-service';
 import { directoryKeys } from '@/features/social/services/directory-keys';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { Skeleton, SkeletonScreen } from '@/shared/components/feedback/skeleton';
+import { ReportDialog } from '@/features/moderation/components/report-dialog';
 import { ConnectionActionButton, useConnectionActions } from './connection-actions';
 import { MemberProfileBody } from './member-profile-body';
 
@@ -70,6 +71,16 @@ export function MemberProfileClient({ userId }: Readonly<{ userId: string }>) {
         <>
           <MemberProfileBody member={profile.data} />
           <ConnectionActionButton actions={actions} entry={profile.data} />
+          {/* Al final y discreto: denunciar es una salida de emergencia, no una
+              acción que competir con conectar. Pero tiene que estar donde se
+              mira a la persona, que es donde se decide usarla. */}
+          <div className="flex justify-center">
+            <ReportDialog
+              subjectName={profile.data.displayName}
+              targetId={userId}
+              targetKind="USER"
+            />
+          </div>
         </>
       ) : null}
     </div>

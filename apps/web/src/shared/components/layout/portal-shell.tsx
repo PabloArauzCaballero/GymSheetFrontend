@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link, { useLinkStatus } from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, type ReactNode } from 'react';
+import { isSystemAdmin } from '@gymsheet/domain';
 import {
   interactionKeys,
   interactionsService,
@@ -17,7 +18,7 @@ import {
   TutorialProvider,
 } from '@/features/tutorials';
 import { Brand } from './brand';
-import { adminNavigation, canSee, primaryNavigation } from './nav-config';
+import { adminNavigation, canSee, primaryNavigation, systemNavigation } from './nav-config';
 import { LogoutButton } from './logout-button';
 import { RouteProgress } from './route-progress';
 import { ThemeToggle } from './theme-toggle';
@@ -53,9 +54,14 @@ function NavigationLinks({
   const pathname = usePathname();
   const activeLinkRef = useRef<HTMLAnchorElement>(null);
   const interactionAlerts = useInteractionAlerts();
-  const items = [...primaryNavigation, ...adminNavigation].filter((item) =>
-    canSee(item, session.role),
-  );
+  // El super-admin no ve la navegación de socio ni la de un gimnasio: no tiene
+  // entrenamientos propios ni un gimnasio al que pertenezcan estos módulos, y
+  // pintárselos sería ofrecerle pantallas que su sesión no puede contestar.
+  const items = (
+    isSystemAdmin(session.role)
+      ? systemNavigation
+      : [...primaryNavigation, ...adminNavigation]
+  ).filter((item) => canSee(item, session.role, session.permissions));
   useEffect(() => {
     if (compact) {
       activeLinkRef.current?.scrollIntoView({

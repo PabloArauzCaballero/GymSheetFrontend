@@ -13,19 +13,19 @@ import { Input } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
 import { formatDateTime } from '@/shared/lib/date';
 import { confirm, notify } from '@/shared/notifications';
-import { insightsService, type PortalUser } from '@/features/admin/services/insights-service';
+import {
+  insightsService,
+  STAFF_ROLE_FILTER,
+  type PortalUser,
+} from '@/features/admin/services/insights-service';
 import { permissionsAdminService } from '@/features/admin/services/permissions-admin-service';
 
 const ROLE_LABEL: Record<string, string> = {
   ADMIN: 'Administración',
   COACH: 'Entrenador',
   FRONT_DESK: 'Recepción',
+  ENTRENADOR_EXTERNO: 'Entrenador externo',
 };
-
-/** Solo tiene sentido otorgar permisos granulares al personal, no a clientes. */
-function isStaffUser(user: PortalUser): boolean {
-  return user.rol in ROLE_LABEL;
-}
 
 export function PermissionsPanel() {
   const [search, setSearch] = useState('');
@@ -36,9 +36,11 @@ export function PermissionsPanel() {
 
   const users = useQuery({
     queryKey: ['admin', 'permissions', 'staff-search', search],
-    queryFn: () => insightsService.users(search),
+    // El personal lo selecciona el servidor: pedir todas las cuentas y quedarse
+    // con el personal dejaba fuera a quien no cupiera en la primera página.
+    queryFn: () => insightsService.users(search, 1, 100, STAFF_ROLE_FILTER),
   });
-  const staffResults = (users.data ?? []).filter(isStaffUser);
+  const staffResults = users.data?.items ?? [];
 
   const catalog = useQuery({
     queryKey: ['admin', 'permissions', 'catalog'],
