@@ -65,7 +65,7 @@ ni `/admin/moderacion` (requieren una cuenta `ADMIN` con los permisos granulares
 de esta pasada) — la corrección para esas dos rutas descansa en el mismo mecanismo ya verificado
 para auditoría más el test unitario, no en una segunda reproducción en navegador.
 
-## H02 — El tour de onboarding no puede persistir: reaparece en cada navegación dura — **MITIGADO Y VERIFICADO**
+## H02 — El tour de onboarding no puede persistir: reaparece en cada navegación dura — **ABIERTO (mitigación revertida)**
 
 **Severidad: P2 (papelón de UX real, reproducido en 6 navegaciones, 2 cuentas, escritorio y 375px).**
 
@@ -98,16 +98,25 @@ entrenamiento, progreso...") está escrito para un socio del gimnasio, no para `
 `/me/tutorial-progress/:id` (PUT) en el backend — fuera del alcance de un refactor de frontend
 puro, se registra como bloqueo con propietario (backend).
 
-**Mitigación de frontend aplicada en esta pasada:** `local-progress-store.ts` reescrito para
-respaldarse en `sessionStorage` (no `localStorage`, coherente con la regla del repo contra Web
-Storage para estado de usuario a largo plazo — esto es explícitamente un puente de corta vida,
-con degradación a un `Map` en memoria si el storage lanza, p. ej. en modo privado) en vez de un
-`Map` de módulo puro. Misma API pública, mismo contrato de aislamiento por usuario y por copia.
-Verificado: `vitest run src/features/tutorials` → 52/52 (incluye el test antes marcado como flake,
-que pasó limpio aislado). Reproducido en vivo: navegación dura repetida con `super@qa.test` tras
-cerrar el tour ya no lo vuelve a mostrar (antes reaparecía siempre — capturas previas de esta
-misma sesión). No resuelve el caso de pestaña nueva o reinicio del navegador — eso exige el
-backend real.
+**Mitigación intentada y REVERTIDA (error propio, corregido):** se reescribió
+`local-progress-store.ts` sobre `sessionStorage`. Funcionaba (52/52 tests, verificado en vivo:
+la navegación dura dejaba de reabrir el tour), pero **viola una regla del propio repositorio que
+está automatizada**: `apps/web/scripts/source-check.mjs` rechaza cualquier uso de
+`localStorage`/`sessionStorage` ("browser storage is prohibited for session data"). El commit
+`a4889c0` se hizo sin re-ejecutar `source-check` después del cambio — ese fue el error. El archivo
+quedó revertido a su versión en memoria y `source-check` vuelve a pasar.
+
+**Estado real: el hallazgo sigue abierto.** La corrección correcta es el backend
+(`GET /me/tutorial-progress`, `PUT /me/tutorial-progress/:id`), que es exactamente lo que el
+comentario del código ya asume ("survives reloads via the backend, not this map"). Propietario:
+backend.
+
+**Alternativa sin backend, si se quiere cerrar antes:** una cookie, que es el mecanismo que este
+proyecto sí sanciona para estado de cliente (ADR-0002 persiste el tema en `gymsheet-theme`
+precisamente porque Web Storage está prohibido). Requiere decidir qué se guarda —basta la lista
+de tutoriales cerrados/completados, no el registro entero— para no engordar cada petición. **No
+aplicado**: es un canal de persistencia nuevo que el equipo no eligió, y merece su decisión
+explícita antes que la de un refactor de UX.
 
 ## H03 — El dashboard muestra el aviso de membresía vencida a cuentas de personal, sin distinguir audiencia
 
