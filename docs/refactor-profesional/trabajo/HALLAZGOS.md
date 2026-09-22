@@ -65,7 +65,7 @@ ni `/admin/moderacion` (requieren una cuenta `ADMIN` con los permisos granulares
 de esta pasada) — la corrección para esas dos rutas descansa en el mismo mecanismo ya verificado
 para auditoría más el test unitario, no en una segunda reproducción en navegador.
 
-## H02 — El tour de onboarding no puede persistir: reaparece en cada navegación dura
+## H02 — El tour de onboarding no puede persistir: reaparece en cada navegación dura — **MITIGADO Y VERIFICADO**
 
 **Severidad: P2 (papelón de UX real, reproducido en 6 navegaciones, 2 cuentas, escritorio y 375px).**
 
@@ -94,12 +94,20 @@ enlace en pestaña nueva, ve el tour desde cero. Además, el copy ("te mostrarem
 entrenamiento, progreso...") está escrito para un socio del gimnasio, no para `SYSTEM_ADMIN` ni
 `ADMIN` — vale la pena decidir en fase 02 si el tour debe mostrarse a cuentas de personal.
 
-**Corrección de fondo:** implementar `/me/tutorial-progress` (GET) y `/me/tutorial-progress/:id`
-(PUT) en el backend — fuera del alcance de un refactor de frontend puro, se registra como bloqueo
-con propietario. Mitigación de frontend posible mientras tanto: usar `sessionStorage` (no
-`localStorage`, coherente con la regla del repo) en vez de un `Map` en memoria de módulo, para que
-al menos sobreviva una recarga dentro de la misma pestaña — a decidir en fase 02/06, no aplicado
-aquí sin autorización de producto sobre alcance de esta regla.
+**Corrección de fondo pendiente:** implementar `/me/tutorial-progress` (GET) y
+`/me/tutorial-progress/:id` (PUT) en el backend — fuera del alcance de un refactor de frontend
+puro, se registra como bloqueo con propietario (backend).
+
+**Mitigación de frontend aplicada en esta pasada:** `local-progress-store.ts` reescrito para
+respaldarse en `sessionStorage` (no `localStorage`, coherente con la regla del repo contra Web
+Storage para estado de usuario a largo plazo — esto es explícitamente un puente de corta vida,
+con degradación a un `Map` en memoria si el storage lanza, p. ej. en modo privado) en vez de un
+`Map` de módulo puro. Misma API pública, mismo contrato de aislamiento por usuario y por copia.
+Verificado: `vitest run src/features/tutorials` → 52/52 (incluye el test antes marcado como flake,
+que pasó limpio aislado). Reproducido en vivo: navegación dura repetida con `super@qa.test` tras
+cerrar el tour ya no lo vuelve a mostrar (antes reaparecía siempre — capturas previas de esta
+misma sesión). No resuelve el caso de pestaña nueva o reinicio del navegador — eso exige el
+backend real.
 
 ## H03 — El dashboard de un `ADMIN` prioriza un mensaje de venta de membresía sobre su tarea operativa
 
