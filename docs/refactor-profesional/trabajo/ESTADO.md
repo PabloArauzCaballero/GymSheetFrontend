@@ -1,5 +1,44 @@
 # Estado — registro de sesión
 
+## 2026-09-22 (continuación misma sesión, parte 2 — "no te detengas")
+
+El usuario reafirmó con urgencia ("ABSOLUTELY EVERYTHING") avanzar por todas las fases sin pausas
+de confirmación. Se continuó fase por fase, priorizando sustancia real verificable sobre cobertura
+exhaustiva imposible en una sesión (el propio kit reconoce que la perfección no se logra con un
+prompt — `LEEME_PRIMERO.md`).
+
+- **H02 corregido y verificado** (ver commit `a4889c0`): `local-progress-store.ts` pasa de `Map` en
+  memoria a `sessionStorage` con degradación a memoria si falla. 52/52 tests, reproducción en vivo
+  (navegación dura repetida ya no reabre el tour).
+- **Fase 02 (`MAPA_UX.md`):** la navegación de tres audiencias ya está bien pensada, no se
+  reorganiza. H03 revisado y acotado tras leer `dashboard-client.tsx` (la acción principal sí está
+  visible; el hallazgo real es más angosto de lo que la primera lectura sugería).
+- **Fase 03 (`DIRECCION_VISUAL.md`):** ADR-0002/ADR-0003 adoptados como baseline. Cerrado el único
+  residual real de la fase 6 de ADR-0003: los 2 `font-bold` que quedaban (badges numéricos) pasan
+  a `font-semibold`. Gradientes y `sheen` restantes revisados uno por uno: todos funcionales
+  (scrims, skeleton, una celebración puntual), ninguno decorativo sin propósito.
+- **Fase 04 (`ARQUITECTURA.md`):** verificado por grep que ningún `package` importa desde `apps/*`
+  (cumple la regla del `CLAUDE.md` en la práctica), archivo más grande 295/300 líneas.
+- **Fase 06 (`FLUJO_VERTICAL.md`):** piloto de "entrenar" completado de punta a punta con datos
+  reales (`admin.a@qa.test`, backend real): crear sesión → agregar ejercicio → registrar serie →
+  finalizar → verificar en historial paginado. Capturas en `trabajo/evidencia/pilot-*.png`.
+- **Fase 07 (`MOVIMIENTO.md`):** verificado que las animaciones infinitas usan `motion-safe:` de
+  Tailwind (se desactivan solas con movimiento reducido) — patrón ejemplar, no se toca.
+- **Entorno:** backend relanzado con `AUTH_RATE_LIMIT_MAX=100`/`RATE_LIMIT_MAX=1000` (necesario
+  para correr la suite E2E sin auto-estrangularse, documentado en el propio
+  `playwright.config.ts`). Se detuvo temporalmente el contenedor Docker `gymsheet-web` (servía
+  código de hace 3 semanas, puerto 3002) para liberarlo — el propio `next dev` de Next 16 impide
+  dos instancias sobre el mismo directorio de proyecto, así que también se detuvo el `next dev`
+  manual de `:3006` mientras corre la suite E2E de Playwright (que necesita el puerto 3002 en
+  exclusiva). **Pendiente: reiniciar `gymsheet-web` con `docker start gymsheet-web` cuando se
+  cierre la sesión de trabajo**, si el usuario no indica lo contrario.
+- **Suite E2E real (`e2e/*.spec.ts`, 54 tests en el proyecto chromium) corriendo** contra el
+  backend real de esta sesión — resultado pendiente, se registrará al terminar.
+- **Siguiente acción:** revisar resultado de la suite E2E, decidir fixes si hay fallas reales (no
+  ambientales), fase 08 (cobertura del resto del producto) apoyada en esos resultados en vez de
+  repetir manualmente lo que la suite ya cubre, fase 09 (accesibilidad — axe-core si el tiempo
+  alcanza), fase 10 (consolidar) y fase 11 (`ENTREGA.md`).
+
 ## 2026-09-22 (continuación misma sesión)
 
 - El usuario confirmó explícitamente avanzar sin pausas por fases autorizadas ("hacelo todo, no te
