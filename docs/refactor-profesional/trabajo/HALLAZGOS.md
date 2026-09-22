@@ -109,21 +109,30 @@ cerrar el tour ya no lo vuelve a mostrar (antes reaparecía siempre — capturas
 misma sesión). No resuelve el caso de pestaña nueva o reinicio del navegador — eso exige el
 backend real.
 
-## H03 — El dashboard de un `ADMIN` prioriza un mensaje de venta de membresía sobre su tarea operativa
+## H03 — El dashboard muestra el aviso de membresía vencida a cuentas de personal, sin distinguir audiencia
 
-**Severidad: P3 (arquitectura de información, no defecto funcional).**
+**Severidad: P3 (arquitectura de información, no defecto funcional — revisado y corregido de
+alcance tras leer el código, ver nota de revisión abajo).**
 
-Al iniciar sesión como `admin.a@qa.test` (`ADMIN`, gimnasio `topfitness`), lo primero que ve bajo el
-encabezado es una tarjeta "Aún no tienes membresía — Renueva desde la app, o avísanos si ya pagaste
-en recepción" (captura `evidencia/dashboard-admin-topfitness.png`). Es el mismo dashboard de un
-socio, sin distinguir que quien entra es personal del gimnasio cuya tarea principal al iniciar
-sesión es casi con certeza operar (ver clientes, marcar acceso, revisar equipamiento), no pagar su
-propia cuota. Los indicadores reales (sesiones, volumen, avisos) aparecen después, todos en cero.
+Al iniciar sesión como `admin.a@qa.test` (`ADMIN`, gimnasio `topfitness`), bajo el encabezado
+aparece una tarjeta "Aún no tienes membresía — Renueva desde la app, o avísanos si ya pagaste en
+recepción" (captura `evidencia/dashboard-admin-topfitness.png`).
 
-**No es un bug — es una decisión de IA a revisar en fase 02**, con el criterio del propio
-`PROMPT_MAESTRO.md`: "Mantén visible y reconocible la acción principal de cada contexto." Candidatas
-a evaluar: dashboard distinto para cuentas con rol de personal, o la tarjeta de membresía
-reordenada/condicionada cuando el usuario tiene además acceso a `/admin`.
+**Nota de revisión (R14 — la primera lectura de este hallazgo era imprecisa):** al leer
+`dashboard-client.tsx` se confirma que la acción principal ("Iniciar entrenamiento"/"Continuar
+sesión") **sí** está visible y reconocible en el encabezado, antes que cualquier otra cosa — no
+hay violación del criterio "mantén visible la acción principal". El orden (aviso de membresía
+antes que los indicadores) es además una decisión **deliberada y documentada en el propio código**
+("Antes que nada: si la membresía no está vigente, eso es lo que la persona necesita ver y
+resolver... Mismo orden que Inicio en el móvil"), pensada para el caso mayoritario: un socio cuya
+cuota venció. El hallazgo real es más angosto: **ese mismo dashboard, con ese mismo mensaje
+orientado a un socio pagante, se le muestra también a cuentas de personal** (`ADMIN`,
+`FRONT_DESK`) que además tienen acceso a `/admin` — no distingue "eres un socio sin pagar" de
+"eres personal del gimnasio y de paso tienes (o no) tu propia membresía".
+
+**Candidatas a evaluar en fase 02** (no aplicado, es una decisión de producto): condicionar la
+tarjeta a cuando el usuario no tiene además rol de personal, o suavizar su copy/tono cuando sí lo
+tiene. Baja prioridad frente a H01/H02.
 
 ## Nota de entorno (no es hallazgo de producto)
 

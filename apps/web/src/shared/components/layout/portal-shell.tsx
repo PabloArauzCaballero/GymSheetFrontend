@@ -141,7 +141,7 @@ function NavAlert({ count }: Readonly<{ count: number }>) {
   return (
     <span
       aria-label={`${count} novedades`}
-      className="ml-auto grid min-w-5 place-items-center rounded-full bg-[var(--volt)] px-1.5 text-[11px] font-bold text-[var(--accent-contrast)]"
+      className="ml-auto grid min-w-5 place-items-center rounded-full bg-[var(--volt)] px-1.5 text-[11px] font-semibold text-[var(--accent-contrast)]"
     >
       {count > 99 ? '99+' : count}
     </span>

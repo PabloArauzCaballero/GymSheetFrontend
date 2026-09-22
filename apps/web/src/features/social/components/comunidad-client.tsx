@@ -245,7 +245,7 @@ function CountBadge({ label, value }: Readonly<{ label: string; value: number }>
   return (
     <span
       aria-hidden
-      className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full border-2 border-[var(--background)] bg-[var(--volt)] px-1 text-[10px] font-bold tabular-nums text-[var(--accent-contrast)]"
+      className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full border-2 border-[var(--background)] bg-[var(--volt)] px-1 text-[10px] font-semibold tabular-nums text-[var(--accent-contrast)]"
       title={label}
     >
       {value > 99 ? '99+' : value}
