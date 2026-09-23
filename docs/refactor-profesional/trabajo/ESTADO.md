@@ -1,5 +1,26 @@
 # Estado — registro de sesión
 
+## 2026-09-23 — cierre de la sesión
+
+- **Entrega escrita en `ENTREGA.md`** (fase 11): qué cambió, qué se verificó, qué no se hizo y
+  cómo revertir cada pieza.
+- **Revisión del usuario probando el portal como `ADMIN`** produjo el cambio más importante de la
+  sesión: el personal del gimnasio veía la aplicación del socio por delante de sus herramientas.
+  Corregido en `f9813eb` (`navigationFor()` por audiencia + `/dashboard` → `/admin/operacion`).
+  El análisis completo del rol —qué existe, qué estaba enterrado, qué falta— está en
+  `ADMIN_GIMNASIO.md`.
+- **Error propio corregido:** el fix de H02 usaba `sessionStorage`, que `source-check` prohíbe.
+  Revertido en `30b183a`; H02 vuelve a estar abierto y documentado.
+- **Rebase sobre `origin/dev`**: la historia había divergido (el remoto traía 17 commits, 4 con
+  el mismo mensaje y distinto hash). Rebase limpio, sin conflictos; git saltó los 4 ya aplicados.
+  Rama de respaldo: `respaldo/dev-antes-de-rebase-20260923`.
+- **Entorno dejado así**: backend desde fuente en `:3005` (con `AUTH_RATE_LIMIT_MAX=100` para la
+  suite E2E) y web en `:3006`. El contenedor Docker `gymsheet-web` se detuvo para liberar el
+  puerto 3002 y **se volvió a levantar al cerrar**.
+- **Lo más urgente que queda**: el backend del portal admin V2 sigue sin commitear en
+  `GymSheetBackend`. Sin eso, las pantallas de auditoría/moderación/permisos que ya van
+  desplegadas en el frontend llamarán a endpoints inexistentes.
+
 ## 2026-09-22 (continuación misma sesión, parte 2 — "no te detengas")
 
 El usuario reafirmó con urgencia ("ABSOLUTELY EVERYTHING") avanzar por todas las fases sin pausas
