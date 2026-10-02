@@ -7,20 +7,31 @@ import {
   Text,
   useWindowDimensions,
   View,
+  type LayoutChangeEvent,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
 import Animated, {
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui';
-import { PressableScale } from '@/components/motion';
+import { DURATION, PREMIUM_EASING, PressableScale, SETTLE_SPRING } from '@/components/motion';
+import { useReduceMotion } from '@/notifications/use-reduce-motion';
+import {
+  ANCHOR_WAIT_MS,
+  decideTourOpen,
+  HALO,
+  placeCard,
+  scrollDeltaFor,
+} from '@/state/tour-queue';
 import { useTourStore, type TargetRect, type TourKey } from '@/state/tour-store';
 import { colors, fontSizes, iconSizes, radii, spacing, useActiveTenant } from '@/theme';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type TourStep = {
   readonly icon: keyof typeof Ionicons.glyphMap;
@@ -33,17 +44,27 @@ type TourStep = {
    * wrong for anything that refers to a specific control.
    */
   readonly target?: string;
+  /**
+   * El elemento puede no estar en pantalla y el paso sigue teniendo sentido: se
+   * muestra como tarjeta central. Sin esto, un paso cuyo elemento no aparece se
+   * salta, porque explicar un control que no se ve es peor que no explicarlo.
+   */
+  readonly optional?: boolean;
+  /**
+   * El elemento no pertenece a la lista que se desplaza —la barra de pestañas—,
+   * así que traerlo «a la vista» sólo movería, sin motivo, la pantalla de detrás.
+   */
+  readonly fixed?: boolean;
 };
 
 /**
  * What the app is, in the order someone actually meets it.
  *
- * Each step names a tab and says what it is *for*, not what it contains: "aquí
- * están tus rutinas" describes a screen, "esto responde qué te toca hoy"
- * describes a reason to open it. The difference is whether the tour teaches the
- * product or merely narrates the navigation bar.
- */
-/**
+ * Cada paso nombra una pestaña y dice para qué SIRVE, no qué contiene, y señala
+ * su icono real de la barra: «aquí están tus rutinas» describe una pantalla,
+ * «esto responde qué te toca hoy» describe una razón para abrirla. Son las cinco
+ * pestañas que hay —Entrenos ya no es una: se alcanza desde Inicio y Perfil—.
+ *
  * `null` en el título significa «rellénalo con el nombre del gimnasio al
  * pintar». Es el único paso que lo menciona, así que no compensa convertir todo
  * el arreglo en una función solo por este título.
@@ -55,24 +76,44 @@ const WELCOME: readonly TourStep[] = [
     body: 'Tu entrenamiento, tus cargas y tu progreso en un solo sitio. Cada pantalla se explica sola la primera vez que entras.',
   },
   {
+    icon: 'home-outline',
+    title: 'Inicio',
+    body: 'Lo que has movido esta semana, qué músculos trabajaste y tus últimas sesiones.',
+    target: 'tab.home',
+    optional: true,
+    fixed: true,
+  },
+  {
     icon: 'albums-outline',
     title: 'Rutinas',
     body: 'Tu semana de un vistazo: qué toca hoy y qué días entrenas. Toca un día para abrir su rutina.',
+    target: 'tab.routines',
+    optional: true,
+    fixed: true,
   },
   {
     icon: 'barbell-outline',
     title: 'Ejercicios',
     body: 'El catálogo por zona del cuerpo y músculo, con la lámina de cada ejercicio para reconocerlo al instante.',
+    target: 'tab.exercises',
+    optional: true,
+    fixed: true,
   },
   {
-    icon: 'flame-outline',
-    title: 'Entrenos',
-    body: 'Registra series con un toque: repite la anterior o supera la de la semana pasada. El descanso arranca solo.',
+    icon: 'people-outline',
+    title: 'Comunidad',
+    body: 'Conoce a otros socios, mira el podio de tu gimnasio y escribe a quienes aceptaron tu conexión.',
+    target: 'tab.comunidad',
+    optional: true,
+    fixed: true,
   },
   {
     icon: 'person-outline',
     title: 'Tu perfil',
     body: 'Tus datos, tu membresía y la descarga de tu avance. Desde aquí puedes repetir todos estos tutoriales.',
+    target: 'tab.profile',
+    optional: true,
+    fixed: true,
   },
 ];
 
@@ -258,8 +299,8 @@ const SCREEN_TOURS: Record<Exclude<TourKey, 'welcome'>, readonly TourStep[]> = {
   ],
 };
 
-/** Breathing room between the highlighted element and the hole cut around it. */
-const HALO = 8;
+/** Cuánto se espera un elemento «opcional» antes de explicar el paso sin él. */
+const OPTIONAL_WAIT_MS = 900;
 
 /**
  * Marks an element as a tour anchor.
@@ -268,8 +309,19 @@ const HALO = 8;
  * the overlay is a `Modal`, which has its own coordinate space: a rect relative
  * to a scroll view would place the spotlight somewhere else entirely once the
  * user had scrolled.
+ *
+ * `grow` ensancha el hueco: un icono de la barra mide 24 px y rodearlo tal cual
+ * da un anillo apretado que parece un error.
  */
-export function TourTarget({ id, children }: { id: string; children: ReactNode }) {
+export function TourTarget({
+  id,
+  children,
+  grow = 0,
+}: {
+  id: string;
+  children: ReactNode;
+  grow?: number;
+}) {
   const measure = useTourStore((state) => state.measure);
   const forget = useTourStore((state) => state.forget);
   const active = useTourStore((state) => state.active);
@@ -278,35 +330,40 @@ export function TourTarget({ id, children }: { id: string; children: ReactNode }
 
   useEffect(() => () => forget(id), [forget, id]);
 
+  const read = useCallback(() => {
+    ref.current?.measureInWindow((x, y, width, height) => {
+      if (width > 0 && height > 0) {
+        measure(id, {
+          x: x - grow,
+          y: y - grow,
+          width: width + grow * 2,
+          height: height + grow * 2,
+        });
+      }
+    });
+  }, [grow, id, measure]);
+
   const onLayout = useCallback(() => {
     // `measureInWindow` has to run after layout has been committed; calling it
     // inside onLayout itself returns the pre-commit frame on iOS.
-    requestAnimationFrame(() => {
-      ref.current?.measureInWindow((x, y, width, height) => {
-        if (width > 0 && height > 0) measure(id, { x, y, width, height });
-      });
-    });
-  }, [id, measure]);
+    requestAnimationFrame(read);
+  }, [read]);
 
   /**
-   * Measure again when a tour opens.
+   * Measure again whenever someone asks for it.
    *
-   * Layout is not the last word on where something is: the screen's entrance
-   * animation, an image resolving, or a card appearing above this one all move
-   * it after `onLayout` has already fired, and a spotlight drawn on the stale
-   * rect lands next to the thing it means to point at. The moment the tour
-   * opens is the only moment the position is guaranteed to matter, so that is
-   * when it is read.
+   * Layout is not the last word on where something is: `onLayout` no se dispara
+   * cuando se mueve un ANCESTRO —un esqueleto que se sustituye por datos, una
+   * entrada animada, una cifra que cambia de ancho— ni al desplazar la lista. El
+   * `nonce` es la forma de decir «vuelve a leer ya»: lo sube el overlay al
+   * cambiar de paso, al terminar un desplazamiento y al girar el teléfono, y lo
+   * sube `useScreenTour` mientras espera que este elemento exista.
    */
   useEffect(() => {
-    if (!active) return;
-    const timer = setTimeout(() => {
-      ref.current?.measureInWindow((x, y, width, height) => {
-        if (width > 0 && height > 0) measure(id, { x, y, width, height });
-      });
-    }, 120);
+    if (nonce === 0 && !active) return;
+    const timer = setTimeout(read, 60);
     return () => clearTimeout(timer);
-  }, [active, id, measure, nonce]);
+  }, [active, nonce, read]);
 
   return (
     <View collapsable={false} onLayout={onLayout} ref={ref}>
@@ -318,69 +375,234 @@ export function TourTarget({ id, children }: { id: string; children: ReactNode }
 /**
  * Opens a screen's tour the first time that screen is reached.
  *
- * Deliberately not tied to focus events: re-entering a screen is not a new
- * first impression, and a tour that replays on every visit is the single most
+ * Deliberately not tied to remount: re-entering a screen is not a new first
+ * impression, and a tour that replays on every visit is the single most
  * effective way to make people stop reading tours.
+ *
+ * Pero SÍ está atado al foco. Las pestañas se quedan montadas para siempre, así
+ * que un temporizador desde el montaje podía disparar el tour de una pestaña que
+ * la persona ya no tenía delante —sobre otra pantalla, con rectángulos de la
+ * primera—. Aquí la pantalla declara cuándo recibe el foco y `decideTourOpen`
+ * decide el resto (ver `tour-queue.ts`).
+ *
+ * `enabled` deja a la pantalla vetar la apertura: Trayectoria abre sola una carta
+ * de recompensa, y dos modales a la vez dejan a iOS con uno que no llega a
+ * presentarse y el tour «activo» sin nada a la vista.
  */
-export function useScreenTour(key: Exclude<TourKey, 'welcome'>): void {
+export function useScreenTour(key: Exclude<TourKey, 'welcome'>, enabled = true): void {
+  const hydrated = useTourStore((state) => state.seen !== null);
+  const done = useTourStore((state) => state.seen?.[key] === true);
+  const anotherActive = useTourStore((state) => state.active !== null);
+  const closedAt = useTourStore((state) => state.closedAt);
   const openOnce = useTourStore((state) => state.openOnce);
-  const seen = useTourStore((state) => state.seen);
+  const firstTarget = SCREEN_TOURS[key][0]?.target ?? null;
+  const anchorMeasuredAt = useTourStore((state) =>
+    firstTarget ? (state.measuredAt[firstTarget] ?? null) : null,
+  );
+  const [focusedAt, setFocusedAt] = useState<number | null>(null);
+  const [tick, setTick] = useState(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      setFocusedAt(Date.now());
+      return () => setFocusedAt(null);
+    }, []),
+  );
+
   useEffect(() => {
-    if (seen === null) return;
-    let retry: ReturnType<typeof setTimeout> | null = null;
-    // A beat after mount so the screen's own entrance animation and the first
-    // layout pass are done: highlighting a rect that is still moving reads as
-    // a misaligned overlay rather than as a spotlight.
-    const timer = setTimeout(() => {
-      // El intento puede rebotar porque otro tour acaba de cerrarse —el caso
-      // del arranque en frío, donde la bienvenida termina justo antes de que
-      // esta pantalla monte—. Se vuelve a intentar una vez pasado el descanso
-      // en lugar de perder el tutorial de la pantalla para siempre.
-      if (openOnce(key)) return;
-      retry = setTimeout(() => openOnce(key), 1400);
-    }, 650);
-    return () => {
-      clearTimeout(timer);
-      if (retry) clearTimeout(retry);
-    };
-  }, [key, openOnce, seen]);
+    if (!enabled) return;
+    const decision = decideTourOpen({
+      hydrated,
+      done,
+      anotherActive,
+      focusedAt,
+      closedAt,
+      needsAnchor: firstTarget !== null,
+      anchorMeasuredAt,
+      now: Date.now(),
+    });
+    if (decision.kind === 'open') {
+      openOnce(key);
+      return;
+    }
+    if (decision.kind === 'wait') {
+      const timer = setTimeout(() => {
+        if (decision.remeasure) useTourStore.getState().remeasure();
+        setTick((value) => value + 1);
+      }, decision.retryInMs);
+      return () => clearTimeout(timer);
+    }
+  }, [
+    anchorMeasuredAt,
+    anotherActive,
+    closedAt,
+    done,
+    enabled,
+    firstTarget,
+    focusedAt,
+    hydrated,
+    key,
+    openOnce,
+    tick,
+  ]);
 }
 
-/** The dimmed area, drawn as four rectangles around the hole. */
-function Scrim({ hole }: { hole: TargetRect | null }) {
-  const { width, height } = useWindowDimensions();
+/**
+ * La parte oscurecida con el hueco recortado, y el anillo que lo rodea.
+ *
+ * Cuatro bandas alrededor del hueco, sin máscara SVG: ninguna dependencia, ningún
+ * trazado por fotograma, y en un tema oscuro las costuras no se ven porque todas
+ * son del mismo color. La diferencia con la versión anterior es que el hueco ES
+ * ANIMADO: vive en valores compartidos y viaja de un paso al siguiente con el
+ * mismo muelle que el resto de la app. Antes cada paso era un fotograma nuevo en
+ * el que el anillo aparecía en otro sitio, que es lo que hacía parecer que el
+ * tutorial «saltaba».
+ *
+ * Con «reducir movimiento» el hueco cambia de sitio sin viajar.
+ */
+function Spotlight({
+  hole,
+  stageWidth,
+  stageHeight,
+  reduceMotion,
+}: {
+  hole: TargetRect | null;
+  stageWidth: number;
+  stageHeight: number;
+  reduceMotion: boolean;
+}) {
+  const x = useSharedValue(0);
+  const y = useSharedValue(0);
+  const w = useSharedValue(0);
+  const h = useSharedValue(0);
+  const present = useSharedValue(0);
+  const placed = useRef(false);
+
+  const holeX = hole?.x;
+  const holeY = hole?.y;
+  const holeW = hole?.width;
+  const holeH = hole?.height;
+  useEffect(() => {
+    if (holeX === undefined || holeY === undefined || holeW === undefined || holeH === undefined) {
+      placed.current = false;
+      present.value = reduceMotion ? 0 : withTiming(0, { duration: DURATION.exit, easing: PREMIUM_EASING });
+      return;
+    }
+    const next = { x: holeX - HALO, y: holeY - HALO, w: holeW + HALO * 2, h: holeH + HALO * 2 };
+    if (!placed.current || reduceMotion) {
+      // La primera vez no viaja desde (0, 0): aparece donde va.
+      x.value = next.x;
+      y.value = next.y;
+      w.value = next.w;
+      h.value = next.h;
+      placed.current = true;
+    } else {
+      x.value = withSpring(next.x, SETTLE_SPRING);
+      y.value = withSpring(next.y, SETTLE_SPRING);
+      w.value = withSpring(next.w, SETTLE_SPRING);
+      h.value = withSpring(next.h, SETTLE_SPRING);
+    }
+    present.value = reduceMotion
+      ? 1
+      : withTiming(1, { duration: DURATION.standard, easing: PREMIUM_EASING });
+  }, [h, holeH, holeW, holeX, holeY, present, reduceMotion, w, x, y]);
+
   const dim = 'rgba(0,0,0,0.86)';
-  if (!hole) return <View style={{ position: 'absolute', inset: 0, backgroundColor: dim }} />;
+  const fullStyle = useAnimatedStyle(() => ({ opacity: 1 - present.value }));
+  const topStyle = useAnimatedStyle(() => ({
+    height: Math.max(0, y.value),
+    opacity: present.value,
+  }));
+  const bottomStyle = useAnimatedStyle(() => ({
+    top: Math.min(stageHeight, y.value + h.value),
+    opacity: present.value,
+  }));
+  const leftStyle = useAnimatedStyle(() => {
+    const top = Math.max(0, y.value);
+    return {
+      top,
+      width: Math.max(0, x.value),
+      height: Math.max(0, Math.min(stageHeight, y.value + h.value) - top),
+      opacity: present.value,
+    };
+  });
+  const rightStyle = useAnimatedStyle(() => {
+    const top = Math.max(0, y.value);
+    return {
+      top,
+      left: Math.min(stageWidth, x.value + w.value),
+      height: Math.max(0, Math.min(stageHeight, y.value + h.value) - top),
+      opacity: present.value,
+    };
+  });
+  const ringStyle = useAnimatedStyle(() => ({
+    left: x.value,
+    top: y.value,
+    width: w.value,
+    height: h.value,
+    opacity: present.value,
+  }));
 
-  const top = Math.max(0, hole.y - HALO);
-  const bottom = Math.min(height, hole.y + hole.height + HALO);
-  const left = Math.max(0, hole.x - HALO);
-  const right = Math.min(width, hole.x + hole.width + HALO);
-
-  // Four solid bands rather than an SVG mask: no extra dependency, no
-  // per-frame path, and on a dark theme the seams are invisible because every
-  // band is the same colour.
   return (
     <>
-      <View style={{ position: 'absolute', left: 0, right: 0, top: 0, height: top, backgroundColor: dim }} />
-      <View style={{ position: 'absolute', left: 0, right: 0, top: bottom, bottom: 0, backgroundColor: dim }} />
-      <View style={{ position: 'absolute', left: 0, width: left, top, height: bottom - top, backgroundColor: dim }} />
-      <View style={{ position: 'absolute', left: right, right: 0, top, height: bottom - top, backgroundColor: dim }} />
-      {/* The ring is what turns "a gap in the dimming" into "this thing here". */}
-      <View
+      <Animated.View
         pointerEvents="none"
-        style={{
-          position: 'absolute',
-          left,
-          top,
-          width: right - left,
-          height: bottom - top,
-          borderRadius: radii.lg,
-          borderWidth: 2,
-          borderColor: colors.volt,
-        }}
+        style={[StyleSheet.absoluteFill, { backgroundColor: dim }, fullStyle]}
+      />
+      <Animated.View
+        pointerEvents="none"
+        style={[{ position: 'absolute', left: 0, right: 0, top: 0, backgroundColor: dim }, topStyle]}
+      />
+      <Animated.View
+        pointerEvents="none"
+        style={[{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: dim }, bottomStyle]}
+      />
+      <Animated.View
+        pointerEvents="none"
+        style={[{ position: 'absolute', left: 0, backgroundColor: dim }, leftStyle]}
+      />
+      <Animated.View
+        pointerEvents="none"
+        style={[{ position: 'absolute', right: 0, backgroundColor: dim }, rightStyle]}
+      />
+      {/* The ring is what turns "a gap in the dimming" into "this thing here". */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          {
+            position: 'absolute',
+            borderRadius: radii.lg,
+            borderWidth: 2,
+            borderColor: colors.volt,
+          },
+          ringStyle,
+        ]}
       />
     </>
+  );
+}
+
+/** Un punto del indicador de pasos: el activo se ensancha en vez de cambiar de golpe. */
+function StepDot({ active, reduceMotion }: { active: boolean; reduceMotion: boolean }) {
+  const width = useSharedValue(active ? 18 : 6);
+  useEffect(() => {
+    const target = active ? 18 : 6;
+    width.value = reduceMotion
+      ? target
+      : withTiming(target, { duration: DURATION.quick, easing: PREMIUM_EASING });
+  }, [active, reduceMotion, width]);
+  const style = useAnimatedStyle(() => ({ width: width.value }));
+  return (
+    <Animated.View
+      style={[
+        {
+          height: 6,
+          borderRadius: radii.full,
+          backgroundColor: active ? colors.volt : colors.surfaceHighest,
+        },
+        style,
+      ]}
+    />
   );
 }
 
@@ -392,6 +614,9 @@ function Scrim({ hole }: { hole: TargetRect | null }) {
  * stack the user is trying to get through. Each step re-runs the zoom, so
  * advancing feels like a new card is handed over instead of text swapping in
  * place — which at this size is nearly invisible.
+ *
+ * Tocar DENTRO del hueco avanza al siguiente paso; tocar fuera cierra. Antes todo
+ * cerraba, incluido el elemento que el propio texto invitaba a tocar.
  */
 export function TourOverlay() {
   const active = useTourStore((state) => state.active);
@@ -400,26 +625,98 @@ export function TourOverlay() {
   const complete = useTourStore((state) => state.complete);
   const targets = useTourStore((state) => state.targets);
   const scroller = useTourStore((state) => state.scroller);
-  const { height } = useWindowDimensions();
+  const window = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const tenant = useActiveTenant();
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
 
-  const scale = useSharedValue(reduceMotion ? 1 : 0.86);
+  /**
+   * El tamaño REAL del escenario, medido en el propio Modal. `useWindowDimensions`
+   * sale de las métricas del recurso y en Android con borde a borde puede no
+   * incluir la barra de gestos, mientras que las posiciones de los anclajes sí
+   * cuentan la ventana entera: mezclarlas desplazaba la tarjeta inferior.
+   */
+  const [stage, setStage] = useState<{ width: number; height: number } | null>(null);
+  const stageWidth = stage?.width ?? window.width;
+  const stageHeight = stage?.height ?? window.height;
+  const onStageLayout = useCallback((event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    setStage((previous) =>
+      previous && previous.width === width && previous.height === height
+        ? previous
+        : { width, height },
+    );
+  }, []);
+
+  const scale = useSharedValue(reduceMotion ? 1 : 0.9);
   const opacity = useSharedValue(reduceMotion ? 1 : 0);
 
   const steps = active === 'welcome' ? WELCOME : active ? SCREEN_TOURS[active] : [];
   const rawStep = steps[step];
   // La bienvenida saluda con el nombre del gimnasio, no con el del producto: la
   // persona instaló la aplicación de su gimnasio y eso es lo que espera leer.
-  const current = rawStep
+  const live = rawStep
     ? { ...rawStep, title: rawStep.title ?? `Bienvenido a ${tenant.name}` }
     : undefined;
   const isLast = step === steps.length - 1;
-  const hole = current?.target ? (targets[current.target] ?? null) : null;
+  const targetId = live?.target ?? null;
+  const liveHole = targetId ? (targets[targetId] ?? null) : null;
+
+  /**
+   * Lo último que se mostró, para el desvanecimiento de salida. Al cerrar, el
+   * paso pasa a `undefined` en el mismo render en que el Modal empieza a
+   * ocultarse: sin esto el contenido desaparecía de golpe y lo que se
+   * desvanecía era una ventana vacía que aún bloqueaba los toques.
+   */
+  const lastFrame = useRef<{
+    step: NonNullable<typeof live>;
+    hole: TargetRect | null;
+    index: number;
+    count: number;
+    last: boolean;
+  } | null>(null);
+  if (live) {
+    lastFrame.current = {
+      step: live,
+      hole: liveHole,
+      index: step,
+      count: steps.length,
+      last: isLast,
+    };
+  }
+  const frame = lastFrame.current;
+  const current = frame?.step;
+  const hole = live ? liveHole : (frame?.hole ?? null);
+
+  // Un paso cuyo elemento aún no se ha medido no enseña la tarjeta: aparecería
+  // suelta y luego saltaría al sitio. Se espera; si el elemento no llega, un paso
+  // «opcional» se explica sin él y uno que no lo es se salta.
+  const stepKey = active ? `${active}:${step}` : null;
+  const missingAnchor = Boolean(live && targetId && !liveHole);
+  const [givenUp, setGivenUp] = useState<string | null>(null);
+  const waiting = missingAnchor && givenUp !== stepKey;
+
+  const close = useCallback(() => void complete(), [complete]);
+  const advance = useCallback(() => {
+    if (isLast) close();
+    else setStep(step + 1);
+  }, [close, isLast, setStep, step]);
 
   useEffect(() => {
-    if (!active) return;
+    if (!waiting || !live || !stepKey) return;
+    const optional = live.optional === true;
+    const timer = setTimeout(
+      () => {
+        if (optional) setGivenUp(stepKey);
+        else advance();
+      },
+      optional ? OPTIONAL_WAIT_MS : ANCHOR_WAIT_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [advance, live, stepKey, waiting]);
+
+  useEffect(() => {
+    if (!active || waiting) return;
     if (reduceMotion) {
       scale.value = 1;
       opacity.value = 1;
@@ -427,11 +724,11 @@ export function TourOverlay() {
     }
     // Restart from slightly small on every step so the zoom is the transition,
     // not just the entrance.
-    scale.value = 0.86;
+    scale.value = 0.9;
     opacity.value = 0;
-    scale.value = withSpring(1, { damping: 14, stiffness: 170, mass: 0.7 });
-    opacity.value = withTiming(1, { duration: 220 });
-  }, [active, opacity, reduceMotion, scale, step]);
+    scale.value = withSpring(1, SETTLE_SPRING);
+    opacity.value = withTiming(1, { duration: DURATION.standard, easing: PREMIUM_EASING });
+  }, [active, opacity, reduceMotion, scale, step, waiting]);
 
   const animated = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -439,51 +736,75 @@ export function TourOverlay() {
   }));
 
   /**
+   * Leer otra vez dónde están los elementos cuando algo ha podido moverlos: al
+   * cambiar de paso, al girar el teléfono o al cambiar el tamaño del escenario.
+   * Dos lecturas porque el viaje de una transición dura más que la primera.
+   */
+  useEffect(() => {
+    if (!active) return;
+    const timers = [
+      setTimeout(() => useTourStore.getState().remeasure(), 80),
+      setTimeout(() => useTourStore.getState().remeasure(), 420),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [active, stageHeight, stageWidth, step]);
+
+  /**
    * Bring the anchor into the band the spotlight can actually use.
    *
    * A tour that highlights something below the fold is worse than no tour: the
    * ring lands on the tab bar and the card explains a control the user cannot
-   * see. The safe band excludes the top and bottom fifths — the callout card
-   * occupies one of them, and which one depends on where the anchor sits — so
-   * the target is nudged to sit comfortably inside it rather than merely
-   * on-screen. The anchor's own re-measure then corrects the rect.
+   * see. La cuenta está en `scrollDeltaFor` (probada aparte); aquí sólo se
+   * decide cuándo.
    */
-  const targetId = current?.target ?? null;
-  const anchor = targetId ? (targets[targetId] ?? null) : null;
-  const anchorTop = anchor?.y ?? 0;
-  const anchorHeight = anchor?.height ?? 0;
+  const anchorTop = liveHole?.y ?? 0;
+  const anchorHeight = liveHole?.height ?? 0;
+  const anchorMeasuredAt = useTourStore((state) =>
+    targetId ? (state.measuredAt[targetId] ?? 0) : 0,
+  );
   /**
-   * Which step has already been scrolled to.
+   * Cuándo y cuántas veces se ha desplazado la lista para este paso.
    *
-   * Without this the effect is a loop with the measurement it triggers:
-   * scrolling moves the anchor, the new rect re-runs the effect, and if the
-   * list cannot travel far enough — a target near the end of a short page —
-   * the delta never falls under the threshold and the screen keeps jumping
-   * under the user. One scroll per step, and the step is done.
+   * La versión anterior daba el paso por «ya desplazado» en la PRIMERA lectura,
+   * aunque fuese una medida vieja que caía dentro de la zona útil; cuando llegaba
+   * la lectura buena —con el elemento ya fuera de pantalla— no volvía a mirar, y
+   * el anillo se quedaba señalando una barra vacía. Ahora sólo se decide con una
+   * lectura POSTERIOR a que el paso arranque o a que termine el desplazamiento
+   * anterior, y el paso se da por hecho cuando esa lectura ya no pide mover nada
+   * (o tras dos intentos, para no sacudir la pantalla en una lista corta).
    */
-  const scrolledFor = useRef<string | null>(null);
+  const scroll = useRef({ stepKey: null as string | null, startedAt: 0, lastAt: 0, attempts: 0, done: false });
+  const settleTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => {
-    if (!active) scrolledFor.current = null;
+    if (!active) {
+      scroll.current = { stepKey: null, startedAt: 0, lastAt: 0, attempts: 0, done: false };
+      settleTimers.current.forEach(clearTimeout);
+      settleTimers.current = [];
+    }
   }, [active]);
   useEffect(() => {
-    if (!active || !anchor || !scroller) return;
-    const stepKey = `${active}:${step}`;
-    if (scrolledFor.current === stepKey) return;
-    const safeTop = height * 0.22;
-    const safeBottom = height * 0.78;
-    const bottom = anchorTop + anchorHeight;
-    const delta =
-      bottom > safeBottom
-        ? bottom - safeBottom
-        : anchorTop < safeTop
-          ? anchorTop - safeTop
-          : 0;
-    // A pixel or two of drift is not worth a scroll animation under the user.
-    if (Math.abs(delta) < 12) {
-      scrolledFor.current = stepKey;
+    if (!active || !stepKey) return;
+    const state = scroll.current;
+    if (state.stepKey !== stepKey) {
+      scroll.current = { stepKey, startedAt: Date.now(), lastAt: 0, attempts: 0, done: false };
+    }
+  }, [active, stepKey]);
+  useEffect(() => {
+    if (!active || !liveHole || !scroller || !stepKey || live?.fixed) return;
+    const state = scroll.current;
+    if (state.stepKey !== stepKey || state.done) return;
+    // Una lectura sólo vale si es posterior a que el paso se asentara y, tras un
+    // desplazamiento, a que éste terminara (la lista viaja ~650 ms).
+    const freshAfter = Math.max(state.startedAt + 120, state.lastAt > 0 ? state.lastAt + 650 : 0);
+    if (anchorMeasuredAt < freshAfter) return;
+
+    const delta = scrollDeltaFor({ anchorTop, anchorHeight, stageHeight });
+    if (delta === 0 || state.attempts >= 2) {
+      state.done = true;
       return;
     }
-    scrolledFor.current = stepKey;
+    state.attempts += 1;
+    state.lastAt = Date.now();
     // Antes del primer desplazamiento se anota dónde estaba la lista, para
     // devolverla ahí al cerrar el tour.
     useTourStore.getState().rememberOffset();
@@ -492,28 +813,16 @@ export function TourOverlay() {
     // it has landed or the ring stays where the element used to be.
     //
     // The timers deliberately outlive this effect instead of being cleared by
-    // its cleanup. Scrolling changes `anchorTop`, which re-runs the effect,
-    // and a cleanup here would cancel the very re-measure the scroll just
-    // made necessary — leaving the ring drawn around wherever the element used
-    // to be, which is what makes a spotlight point at the wrong card. Two
-    // readings rather than one because the settle time depends on the travel
-    // distance and the device, and a stale ring is worse than a redundant
-    // measurement. `remeasure` is a no-op when the rect has not changed.
+    // its cleanup: scrolling changes `anchorTop`, which re-runs the effect, and
+    // a cleanup here would cancel the very re-measure the scroll just made
+    // necessary. Dos lecturas porque lo que tarda en asentarse depende de la
+    // distancia y del dispositivo; la segunda cae pasados los 650 ms.
     settleTimers.current.forEach(clearTimeout);
     settleTimers.current = [
-      setTimeout(() => useTourStore.getState().remeasure(), 260),
-      setTimeout(() => useTourStore.getState().remeasure(), 700),
+      setTimeout(() => useTourStore.getState().remeasure(), 300),
+      setTimeout(() => useTourStore.getState().remeasure(), 760),
     ];
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- position only
-  }, [active, anchorHeight, anchorTop, height, scroller, step]);
-
-  // Pending re-measures are only abandoned when the tour itself goes away.
-  const settleTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  useEffect(() => {
-    if (active) return;
-    settleTimers.current.forEach(clearTimeout);
-    settleTimers.current = [];
-  }, [active]);
+  }, [active, anchorHeight, anchorMeasuredAt, anchorTop, live?.fixed, liveHole, scroller, stageHeight, stepKey]);
   useEffect(
     () => () => {
       settleTimers.current.forEach(clearTimeout);
@@ -521,34 +830,141 @@ export function TourOverlay() {
     [],
   );
 
-  /**
-   * Which side of the hole the callout sits on.
-   *
-   * Not «the opposite half of the screen» — that rule put the card below a
-   * target sitting just above centre, and on a shorter phone the card then ran
-   * off the bottom with its own button unreachable. What decides it is which
-   * gap is actually bigger: the space above the hole or the space below it.
-   * The card goes in the roomier one, whatever half the target is in.
-   */
-  const spaceAbove = hole ? hole.y - HALO : 0;
-  const spaceBelow = hole ? height - (hole.y + hole.height + HALO) : 0;
-  /** True cuando cabe mejor encima del elemento. */
-  const cardAbove = hole ? spaceAbove > spaceBelow : false;
-  /**
-   * Alto máximo de la tarjeta. Descuenta la barra de estado y la de gestos
-   * (el Modal es translúcido y empieza en y=0), y vale también para la
-   * bienvenida sin hueco: con letra grande del sistema tampoco cabía entera.
-   */
-  const cardMaxHeight = Math.max(
+  const visible = active !== null && live !== undefined;
+  const placement = hole
+    ? placeCard({
+        hole,
+        stageHeight,
+        insetTop: insets.top,
+        insetBottom: insets.bottom,
+      })
+    : null;
+
+  const cardWidth = Math.min(420, stageWidth - spacing.lg * 2);
+  const cardLeft = (stageWidth - cardWidth) / 2;
+  const arrowX = hole
+    ? Math.max(20, Math.min(cardWidth - 34, hole.x + hole.width / 2 - cardLeft - 7))
+    : 0;
+
+  const centeredMaxHeight = Math.max(
     220,
-    hole
-      ? (cardAbove ? spaceAbove - insets.top : spaceBelow - insets.bottom) - spacing.lg
-      : height - insets.top - insets.bottom - spacing.lg * 2,
+    stageHeight - insets.top - insets.bottom - spacing.lg * 2,
   );
 
-  const close = () => void complete();
-  const advance = () => (isLast ? close() : setStep(step + 1));
-  const visible = active !== null && current !== undefined;
+  const content = current ? (
+    <Animated.View
+      accessibilityViewIsModal
+      style={[
+        {
+          width: cardWidth,
+          maxHeight: placement ? placement.maxHeight : centeredMaxHeight,
+          gap: spacing.md,
+          padding: hole ? spacing.lg : spacing.xl,
+          borderRadius: radii.xl,
+          borderWidth: 1,
+          borderColor: colors.border,
+          backgroundColor: colors.surface,
+        },
+        animated,
+      ]}
+    >
+      {placement && placement.side !== 'floating' ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: arrowX,
+            width: 14,
+            height: 14,
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+            transform: [{ rotate: '45deg' }],
+            ...(placement.side === 'below'
+              ? { top: -8, borderTopWidth: 1, borderLeftWidth: 1 }
+              : { bottom: -8, borderBottomWidth: 1, borderRightWidth: 1 }),
+          }}
+        />
+      ) : null}
+
+      {/* El texto se desplaza y los botones no: si el paso no cabe, lo que
+          se recorta nunca es la salida. `key` devuelve el scroll arriba en
+          cada paso nuevo. */}
+      <ScrollView
+        bounces={false}
+        contentContainerStyle={{
+          gap: spacing.md,
+          alignItems: hole ? 'flex-start' : 'center',
+        }}
+        key={`${active ?? 'closing'}:${frame?.index ?? 0}`}
+        persistentScrollbar
+        style={{ flexGrow: 0, flexShrink: 1 }}
+      >
+        <View
+          style={{
+            width: hole ? 44 : 72,
+            height: hole ? 44 : 72,
+            borderRadius: radii.full,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: colors.surfaceHigh,
+            borderWidth: 1,
+            borderColor: colors.volt,
+          }}
+        >
+          <Ionicons
+            color={colors.volt}
+            name={current.icon}
+            size={hole ? iconSizes.lg : iconSizes.xl}
+          />
+        </View>
+
+        <Text
+          style={{
+            color: colors.text,
+            fontSize: hole ? fontSizes.lg : fontSizes.xl,
+            fontWeight: '700',
+            textAlign: hole ? 'left' : 'center',
+            letterSpacing: fontSizes.xl * -0.03,
+          }}
+        >
+          {current.title}
+        </Text>
+        <Text
+          style={{
+            color: colors.textMuted,
+            fontSize: fontSizes.sm,
+            lineHeight: 22,
+            textAlign: hole ? 'left' : 'center',
+          }}
+        >
+          {current.body}
+        </Text>
+
+        {/* Dots, not a numbered counter: the point is "almost done", and a
+            shape communicates that faster than "4 de 5". */}
+        {(frame?.count ?? 0) > 1 ? (
+          <View style={{ flexDirection: 'row', gap: spacing.xs, paddingVertical: spacing.xs }}>
+            {Array.from({ length: frame?.count ?? 0 }, (_, index) => (
+              <StepDot active={index === frame?.index} key={index} reduceMotion={reduceMotion} />
+            ))}
+          </View>
+        ) : null}
+      </ScrollView>
+
+      <View style={{ width: '100%', gap: spacing.sm }}>
+        <Button label={frame?.last ? 'Entendido' : 'Siguiente'} onPress={advance} />
+        {!frame?.last ? (
+          <PressableScale
+            accessibilityLabel="Saltar tutorial"
+            onPress={close}
+            style={{ alignItems: 'center', paddingVertical: spacing.xs }}
+          >
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Saltar</Text>
+          </PressableScale>
+        ) : null}
+      </View>
+    </Animated.View>
+  ) : null;
 
   return (
     <Modal
@@ -556,11 +972,14 @@ export function TourOverlay() {
       // Android: sin esto el boton fisico de atras no hace nada y el tutorial
       // se convierte en la trampa que este componente existe para evitar.
       onRequestClose={close}
-      // Android: el Modal es una ventana aparte y, sin esto, empieza bajo la
-      // barra de estado. Las posiciones que miden los anclajes son de la
-      // ventana de la app, asi que el foco se dibujaria desplazado justo esa
-      // altura. Con la ventana translucida ambos espacios coinciden.
+      // Android: el Modal es una ventana aparte. Con borde a borde las dos
+      // barras son translúcidas y el escenario coincide con la ventana de la
+      // app, que es el espacio en el que miden los anclajes.
+      navigationBarTranslucent
       statusBarTranslucent
+      // Sin esto iOS fuerza vertical al abrir el Modal en un iPhone girado, y
+      // todos los rectángulos medidos dejan de valer.
+      supportedOrientations={['portrait', 'portrait-upside-down', 'landscape', 'landscape-left', 'landscape-right']}
       transparent
       // `visible={false}` y no desmontar el Modal.
       //
@@ -572,133 +991,72 @@ export function TourOverlay() {
       // oculte es lo que le permite retirarse por su cuenta.
       visible={visible}
     >
-      <View style={{ flex: 1 }}>
-        {/* Tocar fuera cierra. Un tutorial a pantalla completa que sólo se deja
-            salir por su propio botón es indistinguible de una app colgada, y
-            quien lo sufre no vuelve a leer ninguno. */}
+      <View onLayout={onStageLayout} style={{ flex: 1 }}>
         {current === undefined ? null : (
           <>
-        <Pressable
-          accessibilityLabel="Cerrar tutorial"
-          onPress={close}
-          style={StyleSheet.absoluteFill}
-        >
-          <Scrim hole={hole} />
-        </Pressable>
-
-        <View
-          style={{
-            flex: 1,
-            paddingHorizontal: spacing.lg,
-            paddingTop: insets.top + spacing.lg,
-            paddingBottom: insets.bottom + spacing.lg,
-            alignItems: 'center',
-            justifyContent: hole ? (cardAbove ? 'flex-start' : 'flex-end') : 'center',
-          }}
-        >
-          <Animated.View
-            style={[
-              {
-                width: '100%',
-                maxWidth: 420,
-                maxHeight: cardMaxHeight,
-                gap: spacing.md,
-                padding: hole ? spacing.lg : spacing.xl,
-                borderRadius: radii.xl,
-                borderWidth: 1,
-                borderColor: colors.border,
-                backgroundColor: colors.surface,
-              },
-              animated,
-            ]}
-          >
-            {/* El texto se desplaza y los botones no: si el paso no cabe, lo que
-                se recorta nunca es la salida. `key` devuelve el scroll arriba en
-                cada paso nuevo. */}
-            <ScrollView
-              bounces={false}
-              contentContainerStyle={{
-                gap: spacing.md,
-                alignItems: hole ? 'flex-start' : 'center',
-              }}
-              key={`${active}:${step}`}
-              persistentScrollbar
-              style={{ flexGrow: 0, flexShrink: 1 }}
+            {/* Tocar fuera cierra. Un tutorial a pantalla completa que sólo se deja
+                salir por su propio botón es indistinguible de una app colgada, y
+                quien lo sufre no vuelve a leer ninguno. */}
+            <Pressable
+              accessibilityLabel="Cerrar tutorial"
+              onPress={close}
+              style={StyleSheet.absoluteFill}
             >
-              <View
+              <Spotlight
+                hole={waiting ? null : hole}
+                reduceMotion={reduceMotion}
+                stageHeight={stageHeight}
+                stageWidth={stageWidth}
+              />
+            </Pressable>
+
+            {/* Tocar el elemento resaltado avanza: el texto suele invitar a
+                tocarlo y cerrar el tutorial ahí era lo contrario de lo pedido. */}
+            {hole && !waiting ? (
+              <AnimatedPressable
+                accessibilityLabel={frame?.last ? 'Entendido' : 'Siguiente paso'}
+                accessibilityRole="button"
+                onPress={advance}
                 style={{
-                  width: hole ? 44 : 72,
-                  height: hole ? 44 : 72,
-                  borderRadius: radii.full,
+                  position: 'absolute',
+                  left: hole.x - HALO,
+                  top: hole.y - HALO,
+                  width: hole.width + HALO * 2,
+                  height: hole.height + HALO * 2,
+                  borderRadius: radii.lg,
+                }}
+              />
+            ) : null}
+
+            {waiting ? null : placement ? (
+              <View
+                pointerEvents="box-none"
+                style={[
+                  {
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    alignItems: 'center',
+                  },
+                  placement.side === 'below' ? { top: placement.top } : { bottom: placement.bottom },
+                ]}
+              >
+                {content}
+              </View>
+            ) : (
+              <View
+                pointerEvents="box-none"
+                style={{
+                  ...StyleSheet.absoluteFill,
+                  paddingTop: insets.top + spacing.lg,
+                  paddingBottom: insets.bottom + spacing.lg,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: colors.surfaceHigh,
-                  borderWidth: 1,
-                  borderColor: colors.volt,
                 }}
               >
-                <Ionicons
-                  color={colors.volt}
-                  name={current.icon}
-                  size={hole ? iconSizes.lg : iconSizes.xl}
-                />
+                {content}
               </View>
-
-              <Text
-                style={{
-                  color: colors.text,
-                  fontSize: hole ? fontSizes.lg : fontSizes.xl,
-                  fontWeight: '700',
-                  textAlign: hole ? 'left' : 'center',
-                  letterSpacing: fontSizes.xl * -0.03,
-                }}
-              >
-                {current.title}
-              </Text>
-              <Text
-                style={{
-                  color: colors.textMuted,
-                  fontSize: fontSizes.sm,
-                  lineHeight: 22,
-                  textAlign: hole ? 'left' : 'center',
-                }}
-              >
-                {current.body}
-              </Text>
-
-              {/* Dots, not a numbered counter: the point is "almost done", and a
-                  shape communicates that faster than "4 de 5". */}
-              {steps.length > 1 ? (
-                <View style={{ flexDirection: 'row', gap: spacing.xs, paddingVertical: spacing.xs }}>
-                  {steps.map((item, index) => (
-                    <View
-                      key={item.title ?? index}
-                      style={{
-                        width: index === step ? 18 : 6,
-                        height: 6,
-                        borderRadius: radii.full,
-                        backgroundColor: index === step ? colors.volt : colors.surfaceHighest,
-                      }}
-                    />
-                  ))}
-                </View>
-              ) : null}
-            </ScrollView>
-
-            <View style={{ width: '100%', gap: spacing.sm }}>
-              <Button label={isLast ? 'Entendido' : 'Siguiente'} onPress={advance} />
-              {!isLast ? (
-                <PressableScale
-                  accessibilityLabel="Saltar tutorial"
-                  onPress={close}
-                  style={{ alignItems: 'center', paddingVertical: spacing.xs }}
-                >
-                  <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Saltar</Text>
-                </PressableScale>
-              ) : null}
-            </View>
-          </Animated.View>
-        </View>
+            )}
           </>
         )}
       </View>

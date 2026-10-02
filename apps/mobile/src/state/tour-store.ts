@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
+import { TOUR_GRACE_MS } from './tour-queue';
 
 /**
  * Which tours have been seen, which one is running, and where its targets are.
@@ -33,14 +34,8 @@ export type TourKey =
 
 const STORAGE_PREFIX = 'gymsheet.tour.v2.';
 
-/**
- * Descanso mínimo entre el cierre de un tour y la apertura del siguiente.
- *
- * Cubre la animación de salida del modal con margen. Por debajo de esto iOS
- * puede quedarse con la ventana que se va como frontal, y la pantalla de
- * detrás deja de existir para el sistema aunque se vea perfectamente.
- */
-const TOUR_GRACE_MS = 1200;
+/** Lo que tarda el Modal en desvanecerse; la lista no se mueve hasta entonces. */
+const RESTORE_DELAY_MS = 260;
 
 /**
  * Lo que el tour necesita de la lista que tiene delante.
@@ -71,6 +66,12 @@ interface TourState {
   step: number;
   /** Measured position of each anchor, by target id. */
   targets: Record<string, TargetRect>;
+  /**
+   * Cuándo se midió cada ancla por última vez, aunque el rectángulo no cambiara.
+   * Es lo que permite saber que una medida es posterior a que la pantalla se
+   * asentara, que es lo que `decideTourOpen` exige para abrir.
+   */
+  measuredAt: Record<string, number>;
   hydrate: () => Promise<void>;
   /** Opens a tour unconditionally — the «ver tutorial» path. */
   open: (key: TourKey) => void;
@@ -136,6 +137,7 @@ export const useTourStore = create<TourState>((set, get) => ({
   active: null,
   step: 0,
   targets: {},
+  measuredAt: {},
   scroller: null,
   nonce: 0,
   closedAt: null,
@@ -173,11 +175,14 @@ export const useTourStore = create<TourState>((set, get) => ({
   setStep: (step) => set({ step }),
   complete: async () => {
     const key = get().active;
-    // Devolver la lista a donde estaba antes del tour.
     const { scroller, restoreOffset } = get();
-    if (scroller && restoreOffset !== null) scroller.scrollTo(restoreOffset);
-    set({ restoreOffset: null });
-    set({ active: null, step: 0, closedAt: Date.now() });
+    set({ restoreOffset: null, active: null, step: 0, closedAt: Date.now() });
+    // Devolver la lista a donde estaba, pero DESPUÉS de que el modal termine de
+    // desvanecerse: hacerlo en el mismo fotograma mostraba cómo la pantalla
+    // saltaba bajo un velo que aún se estaba yendo.
+    if (scroller && restoreOffset !== null) {
+      setTimeout(() => scroller.scrollTo(restoreOffset), RESTORE_DELAY_MS);
+    }
     if (!key) return;
     set((state) => ({ seen: { ...(state.seen ?? {}), [key]: true } }));
     try {
@@ -188,9 +193,11 @@ export const useTourStore = create<TourState>((set, get) => ({
   },
   measure: (id, rect) =>
     set((state) => {
+      const measuredAt = { ...state.measuredAt, [id]: Date.now() };
       const current = state.targets[id];
       // Layout fires often — scrolling, keyboard, rotation — and writing an
-      // identical rect back would rerender the overlay on every frame.
+      // identical rect back would rerender the overlay on every frame. La marca
+      // de tiempo sí se anota: que se midió y salió igual también es información.
       if (
         current &&
         current.x === rect.x &&
@@ -198,16 +205,18 @@ export const useTourStore = create<TourState>((set, get) => ({
         current.width === rect.width &&
         current.height === rect.height
       ) {
-        return state;
+        return { measuredAt };
       }
-      return { targets: { ...state.targets, [id]: rect } };
+      return { targets: { ...state.targets, [id]: rect }, measuredAt };
     }),
   forget: (id) =>
     set((state) => {
-      if (!(id in state.targets)) return state;
-      const next = { ...state.targets };
-      delete next[id];
-      return { targets: next };
+      if (!(id in state.targets) && !(id in state.measuredAt)) return state;
+      const targets = { ...state.targets };
+      const measuredAt = { ...state.measuredAt };
+      delete targets[id];
+      delete measuredAt[id];
+      return { targets, measuredAt };
     }),
   registerScroller: (scroll) => set({ scroller: scroll }),
   remeasure: () => set((state) => ({ nonce: state.nonce + 1 })),
