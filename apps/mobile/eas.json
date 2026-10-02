@@ -9,7 +9,7 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_ENVIRONMENT": "development",
-        "EXPO_PUBLIC_API_URL": "https://gymsheet-backend.taila8f993.ts.net/api/v1",
+        "EXPO_PUBLIC_API_URL": "https://repp.api.test.arauzsoftware.com/api/v1",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       },
       "android": {
@@ -20,8 +20,9 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_ENVIRONMENT": "staging",
-        "EXPO_PUBLIC_API_URL": "https://gymsheet-backend.taila8f993.ts.net/api/v1",
-        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+        "EXPO_PUBLIC_API_URL": "https://repp.api.test.arauzsoftware.com/api/v1",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "CLEARTEXT_DOMAINS": "161.97.85.216.sslip.io"
       },
       "android": {
         "buildType": "apk"
@@ -31,7 +32,8 @@
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_ENVIRONMENT": "production",
-        "EXPO_PUBLIC_API_URL": "https://gymsheet-backend.taila8f993.ts.net/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://gymsheet-backend.taila8f993.ts.net/api/v1",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     }
   },

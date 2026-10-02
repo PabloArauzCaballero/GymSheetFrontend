@@ -5,15 +5,15 @@ import path from 'node:path';
  * Keeps exactly one React in the hoisted dependency tree.
  *
  * The two apps need different React majors — `apps/web` runs Next 16 (React
- * 19.2), `apps/mobile` runs Expo SDK 53 / react-native 0.79, which is built
- * against React 19.0 and refuses to render against anything else
+ * 19.2.0), `apps/mobile` runs Expo SDK 57 / react-native 0.86, which is built
+ * against React 19.2.3 exactly and refuses to render against anything else
  * ("Incompatible React versions: react vs react-native-renderer"). Yarn 1 has no
  * per-workspace version pinning: a global `resolutions` entry would force one
  * version on both, and nested (`pkg/dep`) resolutions are ignored.
  *
- * `apps/mobile` is in `nohoist`, so it legitimately keeps its own React 19.0
+ * `apps/mobile` is in `nohoist`, so it legitimately keeps its own React 19.2.3
  * under `apps/mobile/node_modules` — that copy is never touched. What Yarn does
- * additionally is nest a second React 19.0 under root packages shared by both
+ * additionally is nest a second (mobile) React under root packages shared by both
  * apps (@tanstack/react-query, react-hook-form). Two Reacts inside one render
  * tree make every hook fail with "Cannot read properties of null (reading
  * 'useEffect')", which is exactly how the web test suite breaks.

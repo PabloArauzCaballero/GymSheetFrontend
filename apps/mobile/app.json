@@ -6,13 +6,7 @@
     "orientation": "default",
     "scheme": "gymsheet",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
     "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#000000"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.gymsheet.mobile",
@@ -28,7 +22,6 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
-      "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
@@ -37,6 +30,15 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "imageWidth": 300,
+          "resizeMode": "contain",
+          "backgroundColor": "#000000"
+        }
+      ],
       [
         "expo-secure-store",
         {
@@ -78,10 +80,8 @@
           "color": "#000000"
         }
       ],
-      "./plugins/with-fmt-consteval-fix",
-      "./plugins/with-pods-min-ios-target",
-      "@sentry/react-native",
-      "./plugins/with-path-spaces-fix"
+      "./plugins/with-path-spaces-fix",
+      "./plugins/with-cleartext-domains"
     ],
     "experiments": {
       "typedRoutes": true
