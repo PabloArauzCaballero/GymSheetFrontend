@@ -14,7 +14,8 @@
       },
       "android": {
         "buildType": "apk"
-      }
+      },
+      "channel": "development"
     },
     "preview": {
       "distribution": "internal",
@@ -26,7 +27,8 @@
       },
       "android": {
         "buildType": "apk"
-      }
+      },
+      "channel": "preview"
     },
     "production": {
       "autoIncrement": true,
@@ -34,6 +36,17 @@
         "EXPO_PUBLIC_ENVIRONMENT": "production",
         "EXPO_PUBLIC_API_URL": "https://gymsheet-backend.taila8f993.ts.net/api/v1",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      },
+      "channel": "production"
+    },
+    "testflight": {
+      "extends": "production",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_ENVIRONMENT": "staging",
+        "EXPO_PUBLIC_API_URL": "https://repp.api.test.arauzsoftware.com/api/v1",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "CLEARTEXT_DOMAINS": "161.97.85.216.sslip.io"
       }
     }
   },

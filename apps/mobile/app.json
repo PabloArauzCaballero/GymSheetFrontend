@@ -92,6 +92,12 @@
         "projectId": "f836e62f-66c6-4216-a7bd-8d5ac49c8dd8"
       }
     },
-    "owner": "pablo28809"
+    "owner": "pablo28809",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/f836e62f-66c6-4216-a7bd-8d5ac49c8dd8"
+    }
   }
 }
