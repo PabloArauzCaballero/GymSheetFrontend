@@ -10,6 +10,7 @@
     "type-check": "tsc --noEmit",
     "lint": "expo lint",
     "test": "jest --passWithNoTests",
+    "test:unit": "node --test \"src/**/*.test.ts\"",
     "eas-build-pre-install": "node scripts/ensure-install.mjs && node scripts/check-api-url.mjs",
     "check:api-url": "node scripts/check-api-url.mjs"
   },
@@ -53,6 +54,7 @@
     "react-native-reanimated": "~3.17.0",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.0",
+    "react-native-svg": "15.11.2",
     "rn-emoji-keyboard": "^1.7.0",
     "socket.io-client": "^4.8.1",
     "zod": "^4.1.0",

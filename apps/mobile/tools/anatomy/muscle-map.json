@@ -1,0 +1,255 @@
+{
+  "$comment": "Correspondencia entre los códigos de la taxonomía del backend (GymSheetBackend/src/modules/exercises/muscles/muscle-taxonomy.ts) y los objetos del modelo Z-Anatomy (CC BY-SA 4.0). Cada nombre de objeto se escribe sin el sufijo de lado (.l/.r): ambos lados se incluyen. Un mismo objeto puede pertenecer a códigos distintos según la capa (p. ej. el infraespinoso es INFRASPINATUS en la superficial y ROTATOR_CUFF en la profunda). Qué vista muestra cada músculo no se declara: lo decide la oclusión real del render.",
+  "source": "Z-Anatomy, MuscularSystem100.fbx, rama PC-Version",
+  "license": "CC BY-SA 4.0",
+  "excludePattern": "Cross Section|bursa|fascia(?!e latae)|septum|sheath|trochlea|tarsus|retinaculum",
+  "aggregates": {
+    "DELTOID": [
+      "DELTOID_ANTERIOR",
+      "DELTOID_LATERAL",
+      "DELTOID_POSTERIOR"
+    ]
+  },
+  "notRenderedAsMuscle": [
+    "CARDIOVASCULAR"
+  ],
+  "layers": {
+    "surface": {
+      "PECTORALIS_MAJOR": [
+        "Clavicular head of pectoralis major muscle",
+        "Sternocostal head of pectoralis major muscle"
+      ],
+      "SERRATUS_ANTERIOR": [
+        "Serratus anterior muscle"
+      ],
+      "LATISSIMUS_DORSI": [
+        "Latissimus dorsi muscle"
+      ],
+      "TRAPEZIUS": [
+        "Descending part of trapezius muscle",
+        "Transverse part of trapezius muscle",
+        "Ascending part of trapezius muscle"
+      ],
+      "TERES_MAJOR": [
+        "Teres major muscle"
+      ],
+      "INFRASPINATUS": [
+        "Infraspinatus muscle"
+      ],
+      "DELTOID_ANTERIOR": [
+        "Clavicular part of deltoid muscle"
+      ],
+      "DELTOID_LATERAL": [
+        "Acromial part of deltoid muscle"
+      ],
+      "DELTOID_POSTERIOR": [
+        "Scapular spinal part of deltoid muscle"
+      ],
+      "BICEPS_BRACHII": [
+        "Long head of biceps brachii",
+        "Short head of biceps brachii"
+      ],
+      "BRACHIORADIALIS": [
+        "Brachioradialis muscle"
+      ],
+      "TRICEPS_BRACHII": [
+        "Long head of triceps brachii",
+        "Lateral head of triceps brachii",
+        "Medial head of triceps brachii"
+      ],
+      "FOREARM_FLEXORS": [
+        "Flexor carpi radialis",
+        "Humeral head of flexor carpi ulnaris",
+        "Ulnar head of flexor carpi ulnaris",
+        "Radial head of flexor digitorum superficialis",
+        "Humero-ulnar head of flexor digitorum superficialis",
+        "Superficial head of pronator teres"
+      ],
+      "FOREARM_EXTENSORS": [
+        "Extensor carpi radialis longus",
+        "Extensor carpi radialis brevis",
+        "Extensor digitorum",
+        "Extensor digiti minimi",
+        "Humeral head of extensor carpi ulnaris",
+        "Ulnar head of extensor carpi ulnaris"
+      ],
+      "RECTUS_ABDOMINIS": [
+        "Rectus abdominis muscle",
+        "Pyramidalis muscle"
+      ],
+      "OBLIQUES": [
+        "External abdominal oblique muscle"
+      ],
+      "QUADRICEPS": [
+        "Rectus femoris muscle",
+        "Vastus lateralis muscle",
+        "Vastus medialis muscle"
+      ],
+      "HAMSTRINGS": [
+        "Long head of biceps femoris",
+        "Short head of biceps femoris",
+        "Semitendinosus muscle",
+        "Semimembranosus muscle"
+      ],
+      "ADDUCTORS": [
+        "Adductor longus",
+        "Adductor brevis",
+        "Adductor magnus",
+        "(Adductor minimus)",
+        "Pectineus muscle",
+        "Gracilis muscle"
+      ],
+      "ABDUCTORS": [
+        "Tensor fasciae latae"
+      ],
+      "TIBIALIS_ANTERIOR": [
+        "Tibialis anterior muscle"
+      ],
+      "GLUTEUS_MAXIMUS": [
+        "Gluteus maximus muscle"
+      ],
+      "GLUTEUS_MEDIUS": [
+        "Gluteus medius muscle"
+      ],
+      "GASTROCNEMIUS": [
+        "Lateral head of gastrocnemius",
+        "Medial head of gastrocnemius"
+      ],
+      "SOLEUS": [
+        "Soleus muscle"
+      ],
+      "STERNOCLEIDOMASTOID": [
+        "Sternocleidomastoid muscle"
+      ]
+    },
+    "deep": {
+      "PECTORALIS_MINOR": [
+        "Pectoralis minor muscle"
+      ],
+      "SERRATUS_ANTERIOR": [
+        "Serratus anterior muscle"
+      ],
+      "RHOMBOIDS": [
+        "Rhomboid major muscle",
+        "Rhomboid minor muscle"
+      ],
+      "ERECTOR_SPINAE": [
+        "Iliocostalis lumborum muscle",
+        "Iliocostalis thoracis muscle",
+        "Iliocostalis colli muscle",
+        "Longissimus thoracis muscle",
+        "Longissimus colli muscle",
+        "Longissimus capitis muscle",
+        "Spinalis thoracis muscle",
+        "Spinalis colli muscle",
+        "Spinalis capitis muscle"
+      ],
+      "ROTATOR_CUFF": [
+        "Supraspinatus muscle",
+        "Infraspinatus muscle",
+        "Teres minor muscle",
+        "Subscapularis muscle"
+      ],
+      "LEVATOR_SCAPULAE": [
+        "Levator scapulae"
+      ],
+      "TERES_MAJOR": [
+        "Teres major muscle"
+      ],
+      "BRACHIALIS": [
+        "Brachialis muscle"
+      ],
+      "BRACHIORADIALIS": [
+        "Brachioradialis muscle"
+      ],
+      "TRICEPS_BRACHII": [
+        "Long head of triceps brachii",
+        "Lateral head of triceps brachii",
+        "Medial head of triceps brachii"
+      ],
+      "FOREARM_FLEXORS": [
+        "Flexor digitorum profundus",
+        "Flexor carpi radialis",
+        "Humeral head of flexor carpi ulnaris",
+        "Ulnar head of flexor carpi ulnaris",
+        "Radial head of flexor digitorum superficialis",
+        "Humero-ulnar head of flexor digitorum superficialis",
+        "Superficial head of pronator teres",
+        "Deep head of pronator teres",
+        "Pronator quadratus"
+      ],
+      "FOREARM_EXTENSORS": [
+        "Extensor carpi radialis longus",
+        "Extensor carpi radialis brevis",
+        "Extensor digitorum",
+        "Extensor digiti minimi",
+        "Extensor indicis",
+        "Humeral head of extensor carpi ulnaris",
+        "Ulnar head of extensor carpi ulnaris"
+      ],
+      "OBLIQUES": [
+        "Internal abdominal oblique muscle"
+      ],
+      "TRANSVERSE_ABDOMINIS": [
+        "Transversus abdominis muscle"
+      ],
+      "RECTUS_ABDOMINIS": [
+        "Rectus abdominis muscle",
+        "Pyramidalis muscle"
+      ],
+      "HIP_FLEXORS": [
+        "Psoas major",
+        "Iliacus muscle"
+      ],
+      "QUADRICEPS": [
+        "Rectus femoris muscle",
+        "Vastus lateralis muscle",
+        "Vastus medialis muscle",
+        "Vastus intermedius muscle"
+      ],
+      "HAMSTRINGS": [
+        "Long head of biceps femoris",
+        "Short head of biceps femoris",
+        "Semitendinosus muscle",
+        "Semimembranosus muscle"
+      ],
+      "ADDUCTORS": [
+        "Adductor longus",
+        "Adductor brevis",
+        "Adductor magnus",
+        "(Adductor minimus)",
+        "Pectineus muscle",
+        "Gracilis muscle"
+      ],
+      "ABDUCTORS": [
+        "Tensor fasciae latae",
+        "Gluteus minimus muscle"
+      ],
+      "TIBIALIS_ANTERIOR": [
+        "Tibialis anterior muscle"
+      ],
+      "GLUTEUS_MEDIUS": [
+        "Gluteus medius muscle"
+      ],
+      "SOLEUS": [
+        "Soleus muscle"
+      ]
+    }
+  },
+  "hiddenInDeepLayer": {
+    "$comment": "Se retiran en la capa profunda todos los objetos de la capa superficial que no figuran en la profunda (p. ej. pectoral mayor, deltoides, trapecio, glúteo mayor, oblicuo externo, bíceps, gastrocnemio): son los que tapan a los profundos. 'extra' lista los que hay que retirar aunque no estén mapeados.",
+    "extra": [
+      "Sternocleidomastoid muscle"
+    ]
+  },
+  "idPriority": {
+    "$comment": "Solo en el pase de IDs, estos objetos se adelantan 4 cm hacia la cámara para ganar la oclusión frente a la aponeurosis que los cubre (la imagen visible no cambia). Clave: capa -> vista -> objetos.",
+    "offsetMeters": 0.04,
+    "surface": {
+      "front": [
+        "Rectus abdominis muscle",
+        "Pyramidalis muscle"
+      ]
+    }
+  }
+}

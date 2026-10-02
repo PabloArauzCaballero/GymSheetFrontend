@@ -79,6 +79,7 @@
         }
       ],
       "./plugins/with-fmt-consteval-fix",
+      "./plugins/with-pods-min-ios-target",
       "@sentry/react-native",
       "./plugins/with-path-spaces-fix"
     ],

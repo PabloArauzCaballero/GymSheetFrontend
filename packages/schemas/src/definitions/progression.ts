@@ -159,6 +159,62 @@ export const muscleCatalogEntrySchema = z.object({
 
 export const muscleCatalogSchema = z.array(muscleCatalogEntrySchema);
 
+/**
+ * Un ejercicio dentro de la lista de un músculo, con la lámina ya resuelta.
+ *
+ * `rol` dice cómo trabaja ese músculo en el ejercicio: protagonista (`PRIMARY`),
+ * apoyo (`SECONDARY`) o estabilizador (`STABILIZER`). La lista llega ordenada
+ * con los protagonistas primero.
+ */
+export const muscleExerciseSchema = z.object({
+  id: z.string(),
+  nombre: z.string(),
+  rol: z.enum(['PRIMARY', 'SECONDARY', 'STABILIZER']),
+  recomendado: z.number().nullable(),
+  diversion: z.number().nullable(),
+  imagen: z.object({ url: z.string(), textoAlternativo: z.string().nullable() }).nullable(),
+});
+
+/**
+ * Página de ejercicios de un músculo. `total` es el de todo el músculo (o del
+ * músculo relacionado, si hay `aproximado`), no el de esta página: sirve para
+ * saber si queda más por pedir con `offset`.
+ */
+export const muscleExercisesPageSchema = z.object({
+  musculo: z.object({ code: z.string(), nombre: z.string() }),
+  /**
+   * Presente cuando el músculo no tiene ejercicios propios y la lista es la de
+   * un músculo relacionado (los fascículos del deltoides enseñan los del
+   * deltoides). La pantalla debe decirlo: no son ejercicios «de» este músculo.
+   */
+  aproximado: z.object({ code: z.string(), nombre: z.string() }).nullable().optional(),
+  total: z.number().int(),
+  limit: z.number().int(),
+  offset: z.number().int(),
+  ejercicios: z.array(muscleExerciseSchema),
+});
+
+/**
+ * Los músculos que trabaja un ejercicio, separados por cómo lo trabajan. Cada
+ * uno lleva su código de la taxonomía, que es lo que abre su pantalla.
+ */
+const exerciseMuscleRefSchema = z.object({
+  code: z.string(),
+  nombre: z.string(),
+  nombreLatin: z.string(),
+});
+
+export const exerciseMusclesSchema = z.object({
+  ejercicioId: z.string(),
+  primarios: z.array(exerciseMuscleRefSchema),
+  secundarios: z.array(exerciseMuscleRefSchema),
+  estabilizadores: z.array(exerciseMuscleRefSchema),
+});
+
+export type ExerciseMuscles = z.infer<typeof exerciseMusclesSchema>;
+export type MuscleExercise = z.infer<typeof muscleExerciseSchema>;
+export type MuscleExercisesPage = z.infer<typeof muscleExercisesPageSchema>;
+
 export type MuscleCatalogEntry = z.infer<typeof muscleCatalogEntrySchema>;
 export type ProgressionLevel = z.infer<typeof progressionLevelSchema>;
 export type ProgressionBadge = z.infer<typeof progressionBadgeSchema>;

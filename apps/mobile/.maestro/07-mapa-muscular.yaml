@@ -1,0 +1,65 @@
+# La figura anatómica de la pestaña Ejercicios: tocar un músculo abre SU pantalla.
+#
+# ESTADO: escrito, SIN EJECUTAR. Maestro no está instalado en la máquina donde se
+# escribió, así que ningún punto de este flujo está verificado por Maestro. El
+# mismo recorrido (tocar el pecho → «Pectoral mayor», volver, girar a la espalda)
+# sí se comprobó a mano en el simulador de iPhone 17 Pro; las capturas están en
+# `ios-evidence/mapa-muscular/`. Hasta que lo ejecute alguien con Maestro, las
+# coordenadas en porcentaje son una estimación sobre esa misma pantalla.
+#
+# Por qué coordenadas y no texto: la figura es una imagen con una capa de
+# contornos vectoriales, no tiene un nodo de accesibilidad por músculo. La
+# alternativa accesible es la lista («Lista»), que sí se prueba por texto.
+appId: app.gymsheet.mobile
+name: 07 · Mapa muscular — tocar la figura abre el músculo
+---
+- runFlow: login.subflow.yaml
+- tapOn: 'Ejercicios, tab.*'
+- runFlow: cerrar-tour.subflow.yaml
+- extendedWaitUntil:
+    visible: 'Figura anatómica interactiva'
+    timeout: 60000
+- takeScreenshot: 07a-figura-frente
+
+# Pectoral: pecho izquierdo del cuerpo, vista frontal, capa externa.
+- tapOn:
+    point: '56%,51%'
+- extendedWaitUntil:
+    visible: 'Pectoral mayor'
+    timeout: 60000
+- assertVisible: 'Pecho · Pectoralis major'
+- takeScreenshot: 07b-musculo-pectoral
+- tapOn: 'Volver'
+
+# La espalda: otra lámina, otras zonas.
+- extendedWaitUntil:
+    visible: 'Figura anatómica interactiva'
+    timeout: 30000
+- tapOn: 'Espalda'
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: 07c-figura-espalda
+# Dorsal ancho: bajo los omóplatos, a la izquierda del centro.
+- tapOn:
+    point: '44%,51%'
+- extendedWaitUntil:
+    visible: 'Dorsal ancho|Trapecio'
+    timeout: 60000
+- takeScreenshot: 07d-musculo-espalda
+- tapOn: 'Volver'
+
+# La alternativa accesible: la lista lleva a las mismas pantallas.
+- extendedWaitUntil:
+    visible: 'Figura anatómica interactiva'
+    timeout: 30000
+- tapOn: 'Lista'
+- extendedWaitUntil:
+    visible: 'Elige uno para ver sus ejercicios'
+    timeout: 30000
+- takeScreenshot: 07e-lista-musculos
+- tapOn: 'Cuádriceps, Quadriceps femoris'
+- extendedWaitUntil:
+    visible: 'Cuádriceps'
+    timeout: 60000
+- assertVisible: 'Piernas · Quadriceps femoris'
+- takeScreenshot: 07f-musculo-cuadriceps

@@ -7,7 +7,7 @@ import { ErrorState, Skeleton } from '@/components/feedback';
 import { ExerciseDemo, ExerciseImage } from '@/components/media';
 import { PressableScale } from '@/components/motion';
 import { BackLink } from '@/components/nav';
-import { accountService, exerciseService } from '@/api/services';
+import { accountService, exerciseService, muscleService } from '@/api/services';
 import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
 
 /**
@@ -16,6 +16,44 @@ import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
  */
 function stepsOf(steps: Record<string, string[]>): string[] {
   return steps['es-BO'] ?? steps['es'] ?? steps['en'] ?? Object.values(steps)[0] ?? [];
+}
+
+/** Músculo tocable: lleva a su pantalla, donde está la figura y sus ejercicios. */
+function MuscleChip({
+  name,
+  primary,
+  onPress,
+}: {
+  name: string;
+  primary: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <PressableScale
+      accessibilityLabel={`${name}, ver músculo`}
+      onPress={onPress}
+      style={{
+        paddingHorizontal: spacing.md - 2,
+        paddingVertical: spacing.sm,
+        minHeight: 36,
+        borderRadius: radii.full,
+        borderWidth: 1,
+        borderColor: primary ? colors.accentInk : colors.border,
+        backgroundColor: primary ? `${colors.volt}14` : colors.surfaceHigh,
+        justifyContent: 'center',
+      }}
+    >
+      <Text
+        style={{
+          color: primary ? colors.accentInk : colors.text,
+          fontSize: fontSizes.sm,
+          fontWeight: semibold,
+        }}
+      >
+        {name}
+      </Text>
+    </PressableScale>
+  );
 }
 
 /** Long copy starts folded: a wall of text is the fastest way to lose a reader. */
@@ -58,6 +96,16 @@ export default function ExerciseDetailScreen() {
    * en vez de pedir la cuenta otra vez.
    */
   const account = useQuery({ queryKey: ['user', 'me'], queryFn: () => accountService.getMe() });
+
+  // Los músculos con su código canónico: son los que se pueden abrir. Si la
+  // consulta falla o aún no llega, la sección simplemente no aparece y quedan
+  // los textos de «Objetivo técnico»; no se bloquea nada por ella.
+  const muscles = useQuery({
+    queryKey: ['exercise', id, 'muscles'],
+    queryFn: () => muscleService.forExercise(id),
+    enabled: Boolean(id),
+    staleTime: 30 * 60 * 1000,
+  });
 
   const group = exercise.data?.grupoMuscular;
   // Same muscle group, minus this exercise: the natural "what else trains
@@ -120,6 +168,45 @@ export default function ExerciseDetailScreen() {
           ) : null}
         </Card>
       </Section>
+
+      {muscles.data &&
+      muscles.data.primarios.length + muscles.data.secundarios.length + muscles.data.estabilizadores.length >
+        0 ? (
+        <Section icon="body-outline" index={1} title="Músculos que trabaja">
+          <Card>
+            {(
+              [
+                ['Principales', muscles.data.primarios, true],
+                ['Secundarios', muscles.data.secundarios, false],
+                ['Estabilizadores', muscles.data.estabilizadores, false],
+              ] as const
+            )
+              .filter(([, list]) => list.length > 0)
+              .map(([label, list, primary], groupIndex) => (
+                <View key={label}>
+                  {groupIndex > 0 ? <Divider /> : null}
+                  <View style={{ gap: spacing.sm, paddingVertical: spacing.xs }}>
+                    <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, fontWeight: semibold }}>
+                      {label}
+                    </Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+                      {list.map((muscle) => (
+                        <MuscleChip
+                          key={muscle.code}
+                          name={muscle.nombre}
+                          onPress={() =>
+                            router.push({ pathname: '/exercises/muscle/[code]', params: { code: muscle.code } })
+                          }
+                          primary={primary}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              ))}
+          </Card>
+        </Section>
+      ) : null}
 
       {data.descripcion ? (
         <Section index={1} title="Descripción">
