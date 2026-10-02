@@ -4,6 +4,7 @@ import { type LayoutChangeEvent, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { colors, radii } from '@/theme';
 import { toPathData } from './hit-test';
+import { HIGHLIGHT } from './highlight';
 import { IMAGES, type ImageTag } from './images';
 import { AGGREGATES, muscleInfo } from './muscle-catalog';
 import { boundsArea, boundsOf, placeBounds } from './region-fit';
@@ -84,13 +85,13 @@ export function MuscleHero({ code }: { code: string }) {
             {view.regions.map((region, index) => (
               <Path
                 d={toPathData(region.rings)}
-                fill={colors.volt}
-                fillOpacity={0.4}
+                fill={HIGHLIGHT.fill}
+                fillOpacity={HIGHLIGHT.fillOpacity}
                 fillRule="evenodd"
                 key={`${region.code}-${index}`}
-                stroke={colors.volt}
+                stroke={HIGHLIGHT.stroke}
                 strokeLinejoin="round"
-                strokeWidth={2.5}
+                strokeWidth={HIGHLIGHT.strokeWidth}
               />
             ))}
           </Svg>

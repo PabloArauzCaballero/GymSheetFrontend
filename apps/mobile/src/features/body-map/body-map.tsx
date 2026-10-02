@@ -24,6 +24,7 @@ import Animated, {
 import Svg, { Path } from 'react-native-svg';
 import { colors, fontSizes, iconSizes, minTouchTarget, motion, radii, semibold, spacing } from '@/theme';
 import { hitTest, toPathData } from './hit-test';
+import { HIGHLIGHT } from './highlight';
 import { IMAGES } from './images';
 import { muscleInfo } from './muscle-catalog';
 import { IMAGE_ASPECT, REGIONS, REGION_VIEWBOX } from './regions.generated';
@@ -407,13 +408,13 @@ export function BodyMap({
                     {selectedRegions.map((region, index) => (
                       <Path
                         d={toPathData(region.rings)}
-                        fill={colors.volt}
-                        fillOpacity={0.5}
+                        fill={HIGHLIGHT.fill}
+                        fillOpacity={HIGHLIGHT.fillOpacity}
                         fillRule="evenodd"
                         key={`sel-${region.code}-${index}`}
-                        stroke={colors.volt}
+                        stroke={HIGHLIGHT.stroke}
                         strokeLinejoin="round"
-                        strokeWidth={3}
+                        strokeWidth={HIGHLIGHT.strokeWidth}
                       />
                     ))}
                   </Svg>
