@@ -24,6 +24,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
+  FadeIn,
   SlideInDown,
   SlideOutDown,
   cancelAnimation,
@@ -36,10 +37,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { StoryFeedEntry } from '@gymsheet/schemas';
 import { storiesService } from '@/api/services';
-import { PREMIUM_EASING } from '@/components/motion';
+import { DURATION, PREMIUM_EASING, PressableScale } from '@/components/motion';
 import { confirmDelete, notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { initialsOf } from '@/lib/format';
+import { storyViewersPresentation } from '@/components/story-viewers-presentation';
 import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 /** Lo que dura una foto en pantalla antes de pasar sola a la siguiente. */
@@ -329,6 +331,7 @@ function ViewersSheet({
     queryFn: () => storiesService.viewers(storyId),
     staleTime: 15_000,
   });
+  const presentation = storyViewersPresentation(viewers.data?.total ?? null);
 
   return (
     <View style={[StyleSheet.absoluteFill, { justifyContent: 'flex-end', zIndex: 5 }]}>
@@ -386,13 +389,21 @@ function ViewersSheet({
           </Pressable>
         </View>
 
+        <Text
+          style={{ color: colors.textMuted, fontSize: fontSizes.sm, paddingHorizontal: spacing.lg, paddingBottom: spacing.md }}
+        >
+          {presentation.detailLabel}
+        </Text>
+
         <ScrollView contentContainerStyle={{ paddingHorizontal: spacing.lg, gap: spacing.md }}>
           {viewers.isPending ? (
             <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Cargando…</Text>
           ) : viewers.isError ? (
-            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+            <Text accessibilityRole="alert" style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
               No se pudo cargar quién vio tu story.
             </Text>
+          ) : viewers.data.viewers.length === 0 ? (
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{presentation.detailLabel}</Text>
           ) : (
             viewers.data.viewers.map((viewer) => (
               <View key={viewer.userId} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
@@ -887,9 +898,8 @@ export function StoryViewer({
    * no se puede pulsar.
    */
   const viewerTotal = viewers.data?.total ?? null;
-  const viewersLabel =
-    viewerTotal === null ? 'Vistas' : viewerTotal > 0 ? `Visto por ${viewerTotal}` : 'Sin vistas todavía';
-  const viewersDisabled = viewerTotal === null || viewerTotal === 0;
+  const viewersPresentation = storyViewersPresentation(viewerTotal);
+  const viewersDisabled = !viewersPresentation.isOpenable;
 
   async function handleDelete() {
     setBusy(true);
@@ -947,8 +957,8 @@ export function StoryViewer({
                 // mismo. El sonido y la pausa viven en la cabecera y en el
                 // gesto, que es donde el usuario ya los busca.
                 <VideoView
-                  allowsFullscreen={false}
                   allowsPictureInPicture={false}
+                  fullscreenOptions={{ enable: false }}
                   contentFit="contain"
                   nativeControls={false}
                   player={player}
@@ -1097,11 +1107,11 @@ export function StoryViewer({
                     conmutador y se anuncia como tal: la etiqueta dice lo que va
                     a pasar al pulsar, y el valor, en qué estado está ahora. */}
                 {isVideo ? (
-                  <Pressable
+                  <PressableScale
                     accessibilityLabel={muted ? 'Activar el sonido' : 'Silenciar'}
-                    accessibilityRole="button"
-                    accessibilityValue={{ text: muted ? 'Silenciado' : 'Con sonido' }}
+                    haptic="selection"
                     onPress={() => setMuted((value) => !value)}
+                    scaleTo={0.9}
                     style={{
                       width: minTouchTarget,
                       height: minTouchTarget,
@@ -1109,20 +1119,23 @@ export function StoryViewer({
                       justifyContent: 'center',
                     }}
                   >
-                    <Ionicons
-                      color="#fff"
-                      name={muted ? 'volume-mute-outline' : 'volume-high-outline'}
-                      size={iconSizes.lg}
-                    />
-                  </Pressable>
+                    <Animated.View entering={FadeIn.duration(DURATION.quick)} key={muted ? 'muted' : 'sound'}>
+                      <Ionicons
+                        color="#fff"
+                        name={muted ? 'volume-mute-outline' : 'volume-high-outline'}
+                        size={iconSizes.lg}
+                      />
+                    </Animated.View>
+                  </PressableScale>
                 ) : null}
                 {isMine ? (
-                  <Pressable
+                  <PressableScale
                     accessibilityLabel="Eliminar esta story"
-                    accessibilityRole="button"
                     accessibilityState={{ disabled: busy, busy }}
                     disabled={busy}
+                    haptic="none"
                     onPress={() => void handleDelete()}
+                    scaleTo={0.9}
                     style={{
                       width: minTouchTarget,
                       height: minTouchTarget,
@@ -1131,12 +1144,13 @@ export function StoryViewer({
                     }}
                   >
                     <Ionicons color={busy ? colors.textDisabled : '#fff'} name="trash-outline" size={iconSizes.lg} />
-                  </Pressable>
+                  </PressableScale>
                 ) : null}
-                <Pressable
+                <PressableScale
                   accessibilityLabel="Cerrar"
-                  accessibilityRole="button"
+                  haptic="none"
                   onPress={onClose}
+                  scaleTo={0.9}
                   style={{
                     width: minTouchTarget,
                     height: minTouchTarget,
@@ -1145,7 +1159,7 @@ export function StoryViewer({
                   }}
                 >
                   <Ionicons color="#fff" name="close" size={iconSizes.lg} />
-                </Pressable>
+                </PressableScale>
               </View>
             </Animated.View>
 
@@ -1171,9 +1185,7 @@ export function StoryViewer({
                 ]}
               >
                 <Pressable
-                  accessibilityLabel={
-                    viewersDisabled ? 'Tu story todavía no tiene vistas' : 'Ver quién vio tu story'
-                  }
+                  accessibilityLabel={viewersPresentation.accessibilityLabel}
                   accessibilityRole="button"
                   accessibilityState={{ disabled: viewersDisabled }}
                   disabled={viewersDisabled}
@@ -1191,7 +1203,7 @@ export function StoryViewer({
                 >
                   <Ionicons color="#fff" name="eye-outline" size={iconSizes.md} />
                   <Text style={{ color: '#fff', fontSize: fontSizes.sm, fontWeight: semibold }}>
-                    {viewersLabel}
+                    {viewersPresentation.controlLabel}
                   </Text>
                 </Pressable>
               </Animated.View>

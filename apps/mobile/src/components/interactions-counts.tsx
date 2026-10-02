@@ -2,6 +2,7 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { Text, View } from 'react-native';
 import type { InteractionCounts } from '@gymsheet/schemas';
 import { interactionsService } from '@/api/services';
+import { BadgePop } from '@/components/motion';
 import { accentContrast, colors, fontSizes, radii, semibold } from '@/theme';
 
 /**
@@ -62,37 +63,39 @@ export function InteractionsBadge({ total }: { total: number }) {
   const label = formatBadgeCount(total);
 
   return (
-    <View
-      // Decorativo para el lector de pantalla: quien lo necesita ya recibe la
-      // cuenta en la etiqueta del botón que lo contiene, y anunciarla dos veces
-      // hace que «Interacciones, 3, 3» sea lo que se escucha.
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      style={{
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        minWidth: 20,
-        height: 20,
-        paddingHorizontal: 5,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: radii.full,
-        backgroundColor: colors.volt,
-        borderWidth: 2,
-        borderColor: colors.background,
-      }}
-    >
-      <Text
+    // La insignia da un golpe de escala cuando la cuenta cambia: que haya
+    // novedades es justo lo que el número existe para decir, y un número que
+    // cambia sin moverse pasa desapercibido.
+    <BadgePop style={{ position: 'absolute', top: 0, right: 0 }} value={label}>
+      <View
+        // Decorativo para el lector de pantalla: quien lo necesita ya recibe la
+        // cuenta en la etiqueta del botón que lo contiene, y anunciarla dos veces
+        // hace que «Interacciones, 3, 3» sea lo que se escucha.
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
         style={{
-          color: accentContrast(),
-          fontSize: fontSizes.xs,
-          fontWeight: semibold,
-          fontVariant: ['tabular-nums'],
+          minWidth: 20,
+          height: 20,
+          paddingHorizontal: 5,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: radii.full,
+          backgroundColor: colors.volt,
+          borderWidth: 2,
+          borderColor: colors.background,
         }}
       >
-        {label}
-      </Text>
-    </View>
+        <Text
+          style={{
+            color: accentContrast(),
+            fontSize: fontSizes.xs,
+            fontWeight: semibold,
+            fontVariant: ['tabular-nums'],
+          }}
+        >
+          {label}
+        </Text>
+      </View>
+    </BadgePop>
   );
 }

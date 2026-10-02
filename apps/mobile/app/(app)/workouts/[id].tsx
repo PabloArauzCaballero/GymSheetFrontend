@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { Button } from '@/components/ui';
 import { SetEntryForm } from '@/components/set-entry-form';
 import { RestTimer } from '@/components/rest-timer';
@@ -12,7 +13,7 @@ import { ErrorState, Skeleton } from '@/components/feedback';
 import { ExerciseImage } from '@/components/media';
 import { BackLink } from '@/components/nav';
 import { useExerciseMedia } from '@/api/use-exercise-media';
-import { PressableScale } from '@/components/motion';
+import { DURATION, PREMIUM_EASING, PressableScale, useListMotion } from '@/components/motion';
 import { accountService, workoutService } from '@/api/services';
 import { useAmbientStore } from '@/state/ambient-store';
 import { useSessionRewardStore } from '@/state/session-reward-store';
@@ -31,6 +32,7 @@ export default function WorkoutDetailScreen() {
   const queryClient = useQueryClient();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [restingFor, setRestingFor] = useState<number | null>(null);
+  const listMotion = useListMotion();
   const setFinishedSession = useSessionRewardStore((state) => state.setLast);
 
   const workout = useQuery({
@@ -242,7 +244,15 @@ export default function WorkoutDetailScreen() {
       // that an inline timer scrolls out of sight exactly when it matters.
       overlay={
         live && restingFor !== null ? (
-          <RestTimer autoStart onDone={() => setRestingFor(null)} seconds={restingFor} />
+          // El descanso arranca solo al registrar una serie: entra desde abajo
+          // —de donde viene el dedo— y se va hacia allí, en vez de aparecer y
+          // desaparecer de golpe sobre el contenido.
+          <Animated.View
+            entering={SlideInDown.duration(DURATION.standard).easing(PREMIUM_EASING)}
+            exiting={SlideOutDown.duration(DURATION.exit)}
+          >
+            <RestTimer autoStart onDone={() => setRestingFor(null)} seconds={restingFor} />
+          </Animated.View>
         ) : null
       }
       refreshing={workout.isFetching}
@@ -308,8 +318,14 @@ export default function WorkoutDetailScreen() {
                 {[...item.series]
                   .sort((a, b) => a.numeroSerie - b.numeroSerie)
                   .map((set) => (
-                    <View
+                    // La serie recién registrada entra y la deshecha sale, y las demás
+                    // se acomodan: sin esto la fila aparecía de golpe tras el
+                    // refresco, y era difícil ver QUÉ había cambiado.
+                    <Animated.View
+                      entering={listMotion.entering}
+                      exiting={listMotion.exiting}
                       key={set.id}
+                      layout={listMotion.layout}
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -347,7 +363,7 @@ export default function WorkoutDetailScreen() {
                       >
                         RIR {set.rir}
                       </Text>
-                    </View>
+                    </Animated.View>
                   ))}
               </View>
             ) : null}

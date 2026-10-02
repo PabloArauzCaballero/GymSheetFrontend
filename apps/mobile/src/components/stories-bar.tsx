@@ -6,8 +6,8 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import type { StoryFeedEntry } from '@gymsheet/schemas';
 import { profilePhotosService, storiesService } from '@/api/services';
+import { PressableScale } from '@/components/motion';
 import { StoryViewer } from '@/components/story-viewer';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { Button } from '@/components/ui';
@@ -380,27 +380,28 @@ export function StoriesBar() {
               el padre se queda con el toque destinado al hijo, y el «+» dejaba
               de responder justo en la acción que la tira existe para ofrecer. */}
           <View style={{ alignItems: 'center', gap: 4, width: COLUMN_WIDTH }}>
-            <Pressable
+            <PressableScale
               accessibilityLabel={myEntry ? 'Ver tu story' : 'Publicar una story'}
-              accessibilityRole="button"
+              haptic="none"
               onPress={() => (myEntry ? setOpenUserId(myEntry.userId) : openSourceSheet())}
+              scaleTo={0.94}
             >
               <StoryRing
                 fullName={myFullName}
                 photoUrl={myPhotoUrl}
                 state={!myEntry ? 'none' : myEntry.hasUnviewed ? 'unviewed' : 'viewed'}
               />
-            </Pressable>
+            </PressableScale>
             <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.xs, maxWidth: COLUMN_WIDTH }}>
               Tu historia
             </Text>
-            <Pressable
+            <PressableScale
               accessibilityLabel={upload.isPending ? 'Publicando story…' : 'Agregar story'}
-              accessibilityRole="button"
               accessibilityState={{ disabled: upload.isPending, busy: upload.isPending }}
               disabled={upload.isPending}
               hitSlop={ADD_BADGE_HIT_SLOP}
               onPress={openSourceSheet}
+              scaleTo={0.88}
               style={{
                 position: 'absolute',
                 // Esquina inferior derecha del anillo, desbordándolo 2pt.
@@ -421,17 +422,18 @@ export function StoriesBar() {
               ) : (
                 <Ionicons color={colors.background} name="add" size={14} />
               )}
-            </Pressable>
+            </PressableScale>
           </View>
 
           {otherEntries.map((entry) => (
-            <Pressable
+            <PressableScale
               // El estado del anillo es visual; para un lector de pantalla hay
               // que decirlo con palabras o no existe.
               accessibilityLabel={`Ver story de ${entry.fullName}${entry.hasUnviewed ? ', sin ver' : ''}`}
-              accessibilityRole="button"
+              haptic="none"
               key={entry.userId}
               onPress={() => setOpenUserId(entry.userId)}
+              scaleTo={0.94}
               style={{ alignItems: 'center', gap: 4, width: COLUMN_WIDTH }}
             >
               <StoryRing
@@ -442,7 +444,7 @@ export function StoriesBar() {
               <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.xs, maxWidth: COLUMN_WIDTH }}>
                 {entry.fullName.split(' ')[0]}
               </Text>
-            </Pressable>
+            </PressableScale>
           ))}
         </ScrollView>
       )}

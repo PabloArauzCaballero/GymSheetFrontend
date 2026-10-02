@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Modal, Pressable, Text, View } from 'react-native';
+import { PressableScale } from '@/components/motion';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import {
@@ -73,14 +74,14 @@ export function Select<T extends string>({
     <View style={{ gap: spacing.xs }}>
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{label}</Text>
 
-      <Pressable
+      <PressableScale
         // Se anuncia como botón con su valor actual: sin `accessibilityValue`,
         // VoiceOver leía sólo la etiqueta y no decía qué había elegido.
         accessibilityHint="Abre la lista de opciones"
         accessibilityLabel={label}
-        accessibilityRole="button"
-        accessibilityValue={{ text: selected?.label ?? placeholder }}
+        haptic="none"
         onPress={() => setOpen(true)}
+        scaleTo={0.985}
         style={{
           minHeight: minTouchTarget,
           borderRadius: radii.md,
@@ -111,7 +112,7 @@ export function Select<T extends string>({
           name="chevron-down"
           size={iconSizes.md}
         />
-      </Pressable>
+      </PressableScale>
 
       {error ? (
         <Text
@@ -191,11 +192,15 @@ export function Select<T extends string>({
             {options.map((option) => {
               const active = option.value === value;
               return (
-                <Pressable
+                <PressableScale
                   accessibilityRole="radio"
                   accessibilityState={{ selected: active }}
+                  // `choose` ya da su propio háptico de selección: dos golpes
+                  // por elegir una opción se sienten como un fallo.
+                  haptic="none"
                   key={option.value || 'unspecified'}
                   onPress={() => choose(option.value)}
+                  scaleTo={0.99}
                   style={{
                     minHeight: minTouchTarget + spacing.xs,
                     paddingHorizontal: spacing.lg,
@@ -217,7 +222,7 @@ export function Select<T extends string>({
                   {active ? (
                     <Ionicons color={colors.volt} name="checkmark" size={iconSizes.md} />
                   ) : null}
-                </Pressable>
+                </PressableScale>
               );
             })}
           </Animated.View>

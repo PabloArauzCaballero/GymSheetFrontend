@@ -16,7 +16,7 @@ import { NavRow } from '@/components/list';
 import { RankBadge } from '@/components/rank-badge';
 import { StoriesBar } from '@/components/stories-bar';
 import { Button, Input } from '@/components/ui';
-import { CountUpText, PressableScale } from '@/components/motion';
+import { CountUpText, PressableScale, SegmentedPill } from '@/components/motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import {
   InteractionsBadge,
@@ -710,42 +710,40 @@ function DirectoryViewToggle({
   ];
 
   return (
-    <View
+    <SegmentedPill
+      gap={spacing.xs}
+      itemStyle={{
+        width: minTouchTarget,
+        height: 34,
+        borderRadius: radii.full,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+      onChange={onChange}
+      options={options.map((option) => ({
+        value: option.value,
+        accessibilityLabel: mode === option.value ? `${option.label} (activo)` : option.label,
+      }))}
+      pillColor={colors.surfaceHigh}
+      renderItem={(option, active) => {
+        const entry = options.find((candidate) => candidate.value === option.value);
+        return (
+          <Ionicons
+            color={active ? colors.text : colors.textMuted}
+            name={entry?.icon ?? 'list-outline'}
+            size={iconSizes.md}
+          />
+        );
+      }}
       style={{
-        flexDirection: 'row',
-        gap: spacing.xs,
         padding: 2,
         borderRadius: radii.full,
         borderWidth: 1,
         borderColor: colors.border,
         backgroundColor: colors.surfaceLow,
       }}
-    >
-      {options.map((option) => {
-        const active = mode === option.value;
-        return (
-          <PressableScale
-            accessibilityLabel={active ? `${option.label} (activo)` : option.label}
-            key={option.value}
-            onPress={() => onChange(option.value)}
-            style={{
-              width: minTouchTarget,
-              height: 34,
-              borderRadius: radii.full,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: active ? colors.surfaceHigh : 'transparent',
-            }}
-          >
-            <Ionicons
-              color={active ? colors.text : colors.textMuted}
-              name={option.icon}
-              size={iconSizes.md}
-            />
-          </PressableScale>
-        );
-      })}
-    </View>
+      value={mode}
+    />
   );
 }
 

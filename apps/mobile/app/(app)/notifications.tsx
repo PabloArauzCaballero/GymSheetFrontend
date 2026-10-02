@@ -7,6 +7,7 @@ import { apiClient } from '@/api/client';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { Card, Divider, Row, ScreenHeader, ScrollScreen, Section } from '@/components/layout';
 import { BackLink } from '@/components/nav';
+import * as Haptics from 'expo-haptics';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { formatDate } from '@/lib/format';
 import { notify } from '@/notifications';
@@ -93,7 +94,12 @@ function PreferenceSwitch({
         disabled={disabled}
         // iOS paints the off track white by default, which is a hole on black.
         ios_backgroundColor={colors.surfaceHigh}
-        onValueChange={onChange}
+        // Un toque de selección al conmutar: el `Switch` nativo ya anima el
+        // interruptor, pero no dice nada a la mano.
+        onValueChange={(next) => {
+          void Haptics.selectionAsync();
+          onChange(next);
+        }}
         thumbColor={disabled ? colors.textDisabled : colors.surfaceHigh}
         trackColor={{ false: colors.surfaceHigh, true: colors.volt }}
         value={checked}

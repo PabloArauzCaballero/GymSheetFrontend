@@ -13,6 +13,7 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 import { DURATION, PREMIUM_EASING } from '@/components/motion';
 import { accentContrast, accentGradient, colors, fontSizes, useActiveTenant } from '@/theme';
@@ -721,7 +722,7 @@ function Letter({
 }: {
   glyph: string;
   index: number;
-  progress: Animated.SharedValue<number>;
+  progress: SharedValue<number>;
   size: number;
   total: number;
   tracking: number;

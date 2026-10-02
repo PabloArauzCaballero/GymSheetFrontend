@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import type { RoutineExercise } from '@gymsheet/types';
 import { Badge, Card, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { ErrorState, Skeleton } from '@/components/feedback';

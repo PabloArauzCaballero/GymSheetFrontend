@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Pressable, Text } from 'react-native';
-import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, semibold, spacing } from '@/theme';
+import { Text } from 'react-native';
+import { PressableScale } from '@/components/motion';
+import { accentPolicy, fontSizes, iconSizes, minTouchTarget, semibold, spacing } from '@/theme';
 
 /**
  * Explicit way back from a detail screen. Android has the system back gesture
@@ -12,18 +13,20 @@ import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, semibold, s
 export function BackLink({ label = 'Volver' }: { label?: string }) {
   const router = useRouter();
   return (
-    <Pressable
-      accessibilityRole="button"
+    // Volver sólo navega: sin háptico (un golpe en cada «atrás» acaba siendo
+    // ruido) y con el hundimiento compartido, que es lo que hace que responda.
+    <PressableScale
+      haptic="none"
       hitSlop={spacing.sm}
       onPress={() => router.back()}
-      style={({ pressed }) => ({
+      scaleTo={0.94}
+      style={{
         flexDirection: 'row',
         alignItems: 'center',
         alignSelf: 'flex-start',
         gap: spacing.xs,
         minHeight: minTouchTarget,
-        opacity: pressed ? 0.6 : 1,
-      })}
+      }}
     >
       {/* Tono tranquilo, no el acento. Volver es cromo de navegación, no la
           acción por la que se entra en la pantalla; en una pantalla de detalle
@@ -41,6 +44,6 @@ export function BackLink({ label = 'Volver' }: { label?: string }) {
       >
         {label}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }

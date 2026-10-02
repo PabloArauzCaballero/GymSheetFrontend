@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { Animated, Easing } from 'react-native';
+import { Animated, Easing, type ColorValue } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Redirect, Tabs } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { Tabs } from 'expo-router';
 import ReAnimated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -9,13 +10,12 @@ import ReAnimated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { useAuthStore } from '@/state/auth-store';
-import { useTourStore } from '@/state/tour-store';
 import {
   formatBadgeCount,
   interactionsAlertTotal,
   useInteractionCounts,
 } from '@/components/interactions-counts';
+import { TourTarget } from '@/components/tour';
 import { accentContrast, colors, fontSizes, iconSizes, semibold } from '@/theme';
 
 /** Outline when resting, filled when active — the platform convention. */
@@ -83,7 +83,7 @@ const sceneStyleInterpolator = ({ current }: { current: { progress: Animated.Val
  * overshoot is what makes the bar feel responsive instead of merely correct.
  */
 function tabIcon(screen: keyof typeof ICONS) {
-  return function TabIcon({ color, focused }: { color: string; focused: boolean }) {
+  return function TabIcon({ color, focused }: { color: ColorValue; focused: boolean }) {
     const reduceMotion = useReducedMotion();
     const scale = useSharedValue(focused ? 1 : 0.9);
 
@@ -130,9 +130,13 @@ function tabIcon(screen: keyof typeof ICONS) {
     }));
 
     return (
-      <ReAnimated.View style={style}>
-        <Ionicons color={color} name={ICONS[screen][focused ? 1 : 0]} size={iconSizes.lg} />
-      </ReAnimated.View>
+      // El icono es el ancla del tutorial de bienvenida: la tarjeta que habla de
+      // «Rutinas» señala el botón real de Rutinas, no una lista abstracta.
+      <TourTarget grow={10} id={`tab.${screen}`}>
+        <ReAnimated.View style={style}>
+          <Ionicons color={color} name={ICONS[screen][focused ? 1 : 0]} size={iconSizes.lg} />
+        </ReAnimated.View>
+      </TourTarget>
     );
   };
 }
@@ -170,6 +174,14 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      // Un toque de selección al cambiar de pestaña. Sólo cuando la pestaña
+      // cambia de verdad: pulsar la que ya está activa no es una selección, y un
+      // golpe ahí hace que la barra «vibre» sin que haya pasado nada.
+      screenListeners={({ navigation }) => ({
+        tabPress: () => {
+          if (!navigation.isFocused()) void Haptics.selectionAsync();
+        },
+      })}
       screenOptions={{
         headerShown: false,
         animation: 'shift',

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { pointRuleLines, pointsFigures, type PointRuleLine } from '@gymsheet/domain';
 import type { PointRules, ProgressionBadge, ProgressionStats } from '@gymsheet/schemas';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { PressableScale } from '@/components/motion';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { progressionService } from '@/api/services';
 import { ErrorState, Skeleton } from '@/components/feedback';
@@ -105,11 +106,12 @@ export function PointsRulesSheet({
                   Cada regla con tus números al lado.
                 </Text>
               </View>
-              <Pressable
+              <PressableScale
                 accessibilityLabel="Cerrar"
-                accessibilityRole="button"
+                haptic="none"
                 hitSlop={8}
                 onPress={onClose}
+                scaleTo={0.9}
                 style={{
                   width: minTouchTarget,
                   height: minTouchTarget,
@@ -120,7 +122,7 @@ export function PointsRulesSheet({
                 }}
               >
                 <Ionicons color={colors.text} name="close" size={iconSizes.md} />
-              </Pressable>
+              </PressableScale>
             </View>
 
             {rules.isPending ? (
