@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
+import { isRunningInExpoGo } from 'expo';
 import { deviceTokenService } from '@/api/services';
 
 /**
@@ -15,7 +16,6 @@ import { deviceTokenService } from '@/api/services';
  */
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
     shouldShowBanner: true,
@@ -30,10 +30,19 @@ async function resolveProjectId(): Promise<string | undefined> {
   );
 }
 
+/**
+ * Expo Go no puede recibir push remotas (Android lo quitó en SDK 53 y desde SDK
+ * 55 pedir el token **lanza**). Allí la app se prueba sin push; las builds de
+ * EAS —TestFlight incluida— sí las registran.
+ */
+function pushUnavailable(): boolean {
+  return !Device.isDevice || isRunningInExpoGo();
+}
+
 export async function registerForPushNotifications(): Promise<void> {
   // Un emulador/simulador sin Google Play Services no tiene forma de recibir push
   // real; pedir el token igual solo produce un error de "no physical device".
-  if (!Device.isDevice) return;
+  if (pushUnavailable()) return;
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
@@ -76,7 +85,7 @@ export async function registerForPushNotifications(): Promise<void> {
  * pero solo cuando ese siguiente inicio ocurre.
  */
 export async function unregisterPushNotifications(): Promise<void> {
-  if (!Device.isDevice) return;
+  if (pushUnavailable()) return;
   try {
     const { status } = await Notifications.getPermissionsAsync();
     if (status !== 'granted') return;
