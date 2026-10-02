@@ -1,4 +1,6 @@
-import * as FileSystem from 'expo-file-system';
+// API clásica (descargas con cabeceras + Storage Access Framework). Desde SDK 54
+// vive en `expo-file-system/legacy`; la API nueva no trae SAF todavía.
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Platform } from 'react-native';
 import { env } from '@/config/env';

@@ -68,6 +68,29 @@ Además, `@testing-library/jest-dom` se `nohoist`ea en web para co-ubicarse con 
 `vite` (misma versión, copias físicas distintas).
 **Estado**: implementado y verificado (21 tests, type-check, lint y build de web en verde).
 
+## ADR-010 — Expo SDK 57 para que Expo Go de las tiendas abra el proyecto
+
+**Contexto**: la Expo Go de App Store / Play Store sólo ejecuta el SDK más reciente
+(57 en octubre de 2026; `api.expo.dev/v2/versions/latest → expoGoSdkVersion`). Con SDK 53
+el proyecto no abría en ningún iPhone físico: en iOS no se puede instalar una Expo Go vieja.
+**Decisión**: subir a SDK 57 (RN 0.86.3, React 19.2.3, Reanimated 4.5 + worklets, expo-router
+57). Cambios de código: `expo-file-system/legacy` en la exportación, tipos de navegación desde
+`expo-router` (ya no depende de React Navigation), `fullscreenOptions` en `VideoView`,
+`SharedValue` importado de Reanimated, `ColorValue` en los iconos de pestañas. Config:
+fuera `newArchEnabled`, `splash` (pasa al plugin `expo-splash-screen`) y `edgeToEdgeEnabled`;
+fuera el plugin `with-fmt-consteval-fix` (RN 0.86 trae fmt 12, arreglado) y el plugin de
+Sentry duplicado; el preset de Babel ya añade el plugin de worklets.
+Expo Go no admite push remotas: `registerForPushNotifications` se salta allí
+(`isRunningInExpoGo()`). En desarrollo, un `EXPO_PUBLIC_API_URL` en `localhost` se reescribe
+a la IP de LAN con la que el dispositivo alcanzó Metro, también en las URL de medios que
+devuelve el backend, para que cualquier teléfono en la misma Wi-Fi funcione sin editar `.env`.
+**Consecuencia**: iOS mínimo 16.4, Xcode ≥ 26.4 para builds locales; `ios/` y `android/`
+locales hay que regenerarlos (`npx expo prebuild --clean`). `expo-doctor` deja dos avisos
+asumidos: `disableHierarchicalLookup` (necesario con Yarn 1 + nohoist para no cargar el React
+de la web) y copias de React bajo `@radix-ui` (sólo web).
+**Estado**: implementado; type-check, lint, `expo export` iOS+Android y arranque en Expo Go
+SDK 57 (simulador iPhone 17 Pro, iOS 26.5) verificados.
+
 ## Decisiones pendientes
 
 - Deduplicar React/react-query en Metro para poder compartir hooks acoplados a UI.

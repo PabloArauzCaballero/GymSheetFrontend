@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createApiClient } from '@gymsheet/api-client';
-import { env } from '@/config/env';
+import { env, loopbackRewrite } from '@/config/env';
 import { notify } from '@/notifications';
 import { secureStoreAuthStorage, secureStoreTokenProvider } from '@/storage/secure-store';
 
@@ -79,8 +79,33 @@ async function refreshSession(): Promise<boolean> {
   }
 }
 
+/**
+ * En desarrollo, con el backend en `localhost` del Mac, las URL de medios que
+ * devuelve apuntan a un `localhost` que un teléfono no alcanza (ver
+ * `loopbackRewrite`). Se corrigen aquí, en el texto JSON, antes de que nadie lo
+ * lea: un único punto en vez de cada pantalla que pinta una imagen. En builds
+ * de EAS `loopbackRewrite` es `null` y esto es el `fetch` de siempre.
+ */
+const rewrite = loopbackRewrite;
+const deviceFetch: typeof fetch = rewrite
+  ? async (input, init) => {
+      const response = await fetch(input, init);
+      if (!(response.headers.get('content-type') ?? '').includes('application/json')) {
+        return response;
+      }
+      let text = await response.text();
+      for (const origin of rewrite.from) text = text.split(origin).join(rewrite.to);
+      return new Response(text, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      });
+    }
+  : fetch;
+
 export const apiClient = createApiClient({
   baseUrl: env.apiUrl,
+  fetchImpl: deviceFetch,
   tokenProvider: secureStoreTokenProvider,
   refreshSession,
   onUnauthorized: async () => {
