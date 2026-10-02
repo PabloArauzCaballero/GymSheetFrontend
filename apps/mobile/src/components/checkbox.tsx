@@ -1,12 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, Text, View } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useReducedMotion,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
-import { DURATION, PREMIUM_EASING } from '@/components/motion';
+import { Text, View } from 'react-native';
+import Animated, { useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
+import { DURATION, PREMIUM_EASING, PRESS_SPRING, PressableScale } from '@/components/motion';
+import { useReduceMotion } from '@/notifications/use-reduce-motion';
 import { accentContrast, colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 const AnimatedView = Animated.createAnimatedComponent(View);
@@ -37,7 +33,7 @@ export function Checkbox({
   label: string;
   accessibilityHint?: string;
 }) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
 
   // Los colores se leen **fuera** del worklet y entran como valores sueltos.
   // Referenciar `colors` dentro haría que Reanimated capturase el objeto entero
@@ -60,21 +56,19 @@ export function Checkbox({
   }));
 
   const mark = useAnimatedStyle(() => ({
-    opacity: withTiming(checked ? 1 : 0, { duration: reduceMotion ? 0 : 120 }),
-    transform: [
-      {
-        scale: reduceMotion
-          ? 1
-          : withSpring(checked ? 1 : 0.4, { damping: 12, stiffness: 260, mass: 0.5 }),
-      },
-    ],
+    opacity: withTiming(checked ? 1 : 0, { duration: reduceMotion ? 0 : DURATION.quick }),
+    // Sin rebote: la marca entra con el mismo muelle de pulsación que el resto
+    // de la app. El `damping: 12` de antes sobrepasaba, y el arquetipo Premium
+    // de `motion.tsx` dice «se asienta, no rebota».
+    transform: [{ scale: reduceMotion ? 1 : withSpring(checked ? 1 : 0.4, PRESS_SPRING) }],
   }));
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityHint={accessibilityHint}
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
+      haptic="selection"
       hitSlop={spacing.sm}
       onPress={() => onChange(!checked)}
       style={({ pressed }) => ({
@@ -107,6 +101,6 @@ export function Checkbox({
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, fontWeight: semibold }}>
         {label}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }

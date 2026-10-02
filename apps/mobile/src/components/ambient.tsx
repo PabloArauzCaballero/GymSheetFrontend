@@ -10,7 +10,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { colors, getActiveTenant } from '@/theme';
+import { getActiveTenant } from '@/theme';
 import { useAmbientStore } from '@/state/ambient-store';
 
 /**

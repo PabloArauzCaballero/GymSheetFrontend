@@ -15,7 +15,7 @@ import {
   useResponsive,
 } from '@/components/layout';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
-import { CountUpText } from '@/components/motion';
+import { CountUpText, Reveal } from '@/components/motion';
 import { ProgressTrack } from '@/components/progression';
 import { membershipService, progressionService, routineService, workoutService } from '@/api/services';
 import { useRouter } from 'expo-router';
@@ -304,7 +304,10 @@ export default function HomeScreen() {
         ) : workouts.isError ? (
           <ErrorState error={workouts.error} onRetry={() => void workouts.refetch()} />
         ) : (
-          <View style={{ gap: spacing.md }}>
+          // Los datos que sustituyen al esqueleto se desvelan en vez de aparecer
+          // de golpe: la carga termina cuando termina, sin avisar, y un cambio
+          // instantáneo se lee como un parpadeo del diseño.
+          <Reveal style={{ gap: spacing.md }}>
             <TourTarget id="home.progress">
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <StatTile
@@ -409,7 +412,7 @@ export default function HomeScreen() {
               )}
             </Card>
             </TourTarget>
-          </View>
+          </Reveal>
         )}
       </Section>
 
@@ -419,7 +422,7 @@ export default function HomeScreen() {
         ) : workouts.isError ? (
           <ErrorState error={workouts.error} onRetry={() => void workouts.refetch()} />
         ) : (
-          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          <Reveal style={{ flexDirection: 'row', gap: spacing.sm }}>
             <StatTile icon="list-outline" label="Sesiones" value={`${workouts.data?.total ?? 0}`} />
             <StatTile
               icon="checkmark-done-outline"
@@ -431,7 +434,7 @@ export default function HomeScreen() {
               label="Última"
               value={sessions[0] ? relativeDay(sessions[0].fechaInicio) : '—'}
             />
-          </View>
+          </Reveal>
         )}
       </Section>
 
