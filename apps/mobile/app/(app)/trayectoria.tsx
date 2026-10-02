@@ -21,7 +21,7 @@ import {
   type CelebrationSubject,
 } from '@/components/celebration';
 import { BadgeTile, PathNode, RankHero } from '@/components/progression';
-import { CountUpText } from '@/components/motion';
+import { CountUpText, SegmentLabel, SegmentedPill } from '@/components/motion';
 import { RankBadge } from '@/components/rank-badge';
 import { useAuthStore } from '@/state/auth-store';
 import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
@@ -74,7 +74,6 @@ export default function TrayectoriaScreen() {
   // las mismas reglas publicadas por el servidor.
   const [rulesOpen, setRulesOpen] = useState(false);
   const rules = usePointRules();
-  useScreenTour('trayectoria');
   const leaderboard = useQuery({
     queryKey: ['progression', 'leaderboard', leaderboardSort],
     queryFn: () => progressionService.leaderboard(5, leaderboardSort),
@@ -122,7 +121,6 @@ export default function TrayectoriaScreen() {
   const newlyEarnedCount = pendingBadges.length;
   useEffect(() => {
     if (newlyEarnedCount > 0) acknowledge.mutate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newlyEarnedCount]);
 
   const refresh = () => {
@@ -148,6 +146,10 @@ export default function TrayectoriaScreen() {
    * que interrumpe. Revisitar una insignia o el rango sigue esperando a un toque.
    */
   const [celebrationQueue, setCelebrationQueue] = useState<CelebrationSubject[]>([]);
+  // La carta de recompensa se abre sola y es otro Modal: dos a la vez dejan a iOS
+  // con uno que no llega a presentarse. El tutorial espera a que la cola esté
+  // vacía y entonces entra, en vez de competir con ella.
+  useScreenTour('trayectoria', celebrationQueue.length === 0);
   const setCelebration = (subject: CelebrationSubject) => setCelebrationQueue([subject]);
 
   const principal = useAuthStore((state) => state.principal);
@@ -246,14 +248,13 @@ export default function TrayectoriaScreen() {
           accessibilityLabel="Cómo se ganan los puntos"
           accessibilityRole="button"
           onPress={() => setRulesOpen(true)}
-          style={({ pressed }) => ({
+          style={{
             flexDirection: 'row',
             alignItems: 'center',
             gap: spacing.xs,
             alignSelf: 'flex-start',
             minHeight: minTouchTarget,
-            opacity: pressed ? 0.6 : 1,
-          })}
+          }}
         >
           <Ionicons color={accentPolicy.ink} name="information-circle-outline" size={iconSizes.md} />
           <Text style={{ color: accentPolicy.ink, fontSize: fontSizes.sm, fontWeight: semibold }}>
@@ -416,7 +417,7 @@ export default function TrayectoriaScreen() {
                       : [...current, day.value];
                     setRestDays.mutate(next);
                   }}
-                  style={({ pressed }) => ({
+                  style={{
                     width: 36,
                     height: 36,
                     borderRadius: radii.full,
@@ -425,8 +426,7 @@ export default function TrayectoriaScreen() {
                     borderWidth: 1,
                     borderColor: active ? colors.volt : colors.border,
                     backgroundColor: active ? colors.volt : 'transparent',
-                    opacity: pressed ? 0.6 : 1,
-                  })}
+                  }}
                 >
                   <Text
                     style={{
@@ -475,45 +475,36 @@ export default function TrayectoriaScreen() {
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
             Los cinco primeros de tu gimnasio.
           </Text>
-          <View
+          <SegmentedPill
+            gap={spacing.xs}
+            itemStyle={{
+              paddingHorizontal: spacing.md,
+              paddingVertical: spacing.xs,
+              borderRadius: radii.full,
+            }}
+            onChange={setLeaderboardSort}
+            options={[
+              { value: 'points' as const },
+              { value: 'streak' as const },
+            ]}
+            pillColor={colors.volt}
+            renderItem={(option, active) => (
+              <SegmentLabel
+                active={active}
+                activeColor={colors.background}
+                inactiveColor={colors.textMuted}
+                label={option.value === 'points' ? 'Puntos' : 'Racha'}
+                style={{ fontSize: fontSizes.xs, fontWeight: semibold }}
+              />
+            )}
             style={{
-              flexDirection: 'row',
-              gap: spacing.xs,
               backgroundColor: colors.surfaceHigh,
               borderRadius: radii.full,
               padding: 4,
               alignSelf: 'flex-start',
             }}
-          >
-            {(
-              [
-                { value: 'points' as const, label: 'Puntos' },
-                { value: 'streak' as const, label: 'Racha' },
-              ]
-            ).map((option) => (
-              <Pressable
-                key={option.value}
-                onPress={() => setLeaderboardSort(option.value)}
-                style={({ pressed }) => ({
-                  paddingHorizontal: spacing.md,
-                  paddingVertical: spacing.xs,
-                  borderRadius: radii.full,
-                  backgroundColor: leaderboardSort === option.value ? colors.volt : 'transparent',
-                  opacity: pressed ? 0.6 : 1,
-                })}
-              >
-                <Text
-                  style={{
-                    fontSize: fontSizes.xs,
-                    fontWeight: semibold,
-                    color: leaderboardSort === option.value ? colors.background : colors.textMuted,
-                  }}
-                >
-                  {option.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+            value={leaderboardSort}
+          />
           {leaderboard.isPending ? (
             <Skeleton height={140} />
           ) : leaderboard.isError ? (

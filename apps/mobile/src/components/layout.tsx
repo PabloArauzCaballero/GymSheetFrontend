@@ -1,4 +1,4 @@
-import { Children, useCallback, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { Children, useCallback, useContext, useMemo, useRef, type ReactNode } from 'react';
 import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
@@ -42,7 +42,6 @@ export function Columns({ children }: { children: ReactNode }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.lg }}>
       {items.map((child, index) => (
-        // eslint-disable-next-line react/no-array-index-key -- positional slots
         <View key={index} style={{ flex: 1 }}>
           {child}
         </View>
