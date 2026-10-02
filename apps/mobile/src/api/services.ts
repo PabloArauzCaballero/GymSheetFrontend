@@ -16,7 +16,10 @@ import {
   messageSchema,
   onboardingSchema,
   profilePhotoSchema,
+  exerciseMusclesSchema,
+  muscleCatalogEntrySchema,
   muscleEquipmentInferenceSchema,
+  muscleExercisesPageSchema,
   pointRulesSchema,
   progressionAcknowledgedSchema,
   progressionSchema,
@@ -319,6 +322,32 @@ export const exerciseService = {
   get: (id: string) => apiClient.request(`/exercises/${id}`, exerciseSchema, { method: 'GET' }),
   taxonomy: () =>
     apiClient.request('/exercises/taxonomy', exerciseTaxonomySchema, { method: 'GET' }),
+};
+
+/**
+ * Músculos por código de la taxonomía (`PECTORALIS_MAJOR`…): el detalle de uno y
+ * los ejercicios que lo trabajan. Es lo que abre el toque sobre la figura.
+ */
+export const muscleService = {
+  get: (code: string) =>
+    apiClient.request(`/muscles/${encodeURIComponent(code)}`, muscleCatalogEntrySchema, {
+      method: 'GET',
+    }),
+  /** Los músculos que trabaja un ejercicio, por rol; enlazan con `get`. */
+  forExercise: (exerciseId: string) =>
+    apiClient.request(`/exercises/${encodeURIComponent(exerciseId)}/muscles`, exerciseMusclesSchema, {
+      method: 'GET',
+    }),
+  /** Protagonistas primero; `offset` pide la página siguiente. */
+  exercises: (code: string, { limit = 30, offset = 0 }: { limit?: number; offset?: number } = {}) =>
+    apiClient.request(
+      `/muscles/${encodeURIComponent(code)}/exercises?${new URLSearchParams({
+        limit: String(limit),
+        offset: String(offset),
+      })}`,
+      muscleExercisesPageSchema,
+      { method: 'GET' },
+    ),
 };
 
 /**

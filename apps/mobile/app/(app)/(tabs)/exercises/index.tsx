@@ -4,13 +4,14 @@ import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Exercise } from '@gymsheet/types';
-import { Card, Divider, ScrollScreen, ScreenHeader } from '@/components/layout';
+import { Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { ExerciseImage } from '@/components/media';
 import { PressableScale } from '@/components/motion';
 import { Button, Input } from '@/components/ui';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { DrillBack, Grid, GridTile, iconFor, titleCase } from '@/components/catalogue-grid';
+import { BodyMap } from '@/features/body-map';
 import { exerciseService } from '@/api/services';
 import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
@@ -151,7 +152,7 @@ export default function ExercisesScreen() {
       ? `${titleCase(muscle)} · ${titleCase(bodyPart ?? '')}`
       : bodyPart
         ? titleCase(bodyPart)
-        : 'Elige una zona para empezar';
+        : 'Toca un músculo o elige una zona';
 
   return (
     <ScrollScreen
@@ -162,6 +163,21 @@ export default function ExercisesScreen() {
       refreshing={taxonomy.isFetching || exercises.isFetching}
     >
       <ScreenHeader subtitle={subtitle} title="Ejercicios" tourKey="exercises" />
+
+      {/* NIVEL 0 — la figura. Tocar un músculo lleva directo a su pantalla, sin
+          pasar por la zona ni por la lista: es el camino más corto a «qué
+          entreno para este músculo». */}
+      {!searching && !bodyPart ? (
+        <TourTarget id="exercises.grid">
+          <BodyMap
+            onOpenList={() => router.push('/exercises/muscles')}
+            onSelectMuscle={(code) =>
+              router.push({ pathname: '/exercises/muscle/[code]', params: { code } })
+            }
+          />
+        </TourTarget>
+      ) : null}
+
 
       {/* Crear va arriba y no escondido tras el catálogo: quien viene a añadir
           su propio ejercicio ya sabe que no está en la lista, y hacerle
@@ -195,32 +211,33 @@ export default function ExercisesScreen() {
         <DrillBack label="Todas las zonas" onPress={() => setBodyPart(null)} />
       ) : null}
 
-      {/* LEVEL 1 — body parts */}
+      {/* NIVEL 1 — zonas del cuerpo. Sigue ahí para quien prefiere recorrer por
+          zona y músculo en vez de apuntar con el dedo. */}
       {!searching && !bodyPart ? (
-        taxonomy.isPending ? (
-          <View style={{ gap: spacing.sm }}>
-            <Skeleton height={116} />
-            <Skeleton height={116} />
-          </View>
-        ) : taxonomy.isError ? (
-          <ErrorState error={taxonomy.error} onRetry={() => void taxonomy.refetch()} />
-        ) : (
-          <TourTarget id="exercises.grid">
-          <Grid>
-            {groups.map((group, index) => (
-              <GridTile
-                icon={iconFor(group.bodyPart)}
-                index={index}
-                key={group.bodyPart}
-                imageUrl={group.imageUrl}
-                label={titleCase(group.bodyPart)}
-                onPress={() => setBodyPart(group.bodyPart)}
-                total={group.total}
-              />
-            ))}
-          </Grid>
-          </TourTarget>
-        )
+        <Section index={1} title="Por zona">
+          {taxonomy.isPending ? (
+            <View style={{ gap: spacing.sm }}>
+              <Skeleton height={116} />
+              <Skeleton height={116} />
+            </View>
+          ) : taxonomy.isError ? (
+            <ErrorState error={taxonomy.error} onRetry={() => void taxonomy.refetch()} />
+          ) : (
+            <Grid>
+              {groups.map((group, index) => (
+                <GridTile
+                  icon={iconFor(group.bodyPart)}
+                  index={index}
+                  key={group.bodyPart}
+                  imageUrl={group.imageUrl}
+                  label={titleCase(group.bodyPart)}
+                  onPress={() => setBodyPart(group.bodyPart)}
+                  total={group.total}
+                />
+              ))}
+            </Grid>
+          )}
+        </Section>
       ) : null}
 
       {/* LEVEL 2 — muscles inside the chosen body part */}
