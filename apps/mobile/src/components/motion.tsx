@@ -1,11 +1,14 @@
 import { countUpDuration } from '@gymsheet/domain';
-import { useEffect, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, type ReactNode } from 'react';
 import {
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
+  type AccessibilityRole,
+  type AccessibilityState,
+  type Insets,
   type StyleProp,
   type TextInputProps,
   type TextStyle,
@@ -17,9 +20,10 @@ import Animated, {
   Easing,
   FadeIn,
   FadeInDown,
+  FadeOut,
+  LinearTransition,
   useAnimatedProps,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withDelay,
   withRepeat,
@@ -27,6 +31,8 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { useReduceMotion } from '@/notifications/use-reduce-motion';
+import { radii } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -60,59 +66,329 @@ export const DURATION = {
  * settles, it does not bounce. High damping plus low mass keeps it responsive
  * without wobble.
  */
-const PRESS_SPRING = { damping: 26, stiffness: 340, mass: 0.5, overshootClamping: true } as const;
+export const PRESS_SPRING = { damping: 26, stiffness: 340, mass: 0.5, overshootClamping: true } as const;
+
+/**
+ * Para lo que se ASIENTA en un sitio —píldoras, anillos, hojas— en vez de
+ * responder a un dedo: algo más lento que `PRESS_SPRING`, sin rebote. Es el
+ * muelle de toda transición de posición, para que dos cosas que se mueven a la
+ * vez en pantalla compartan el mismo carácter.
+ */
+export const SETTLE_SPRING = { damping: 24, stiffness: 220, mass: 0.7, overshootClamping: true } as const;
 
 /** Micro-cascade delay; capped so the last row never waits on a queue. */
 const STAGGER_MS = 40;
 const MAX_STAGGERED = 6;
 
 /**
+ * Qué responde el teléfono al tocar. Los hápticos son para confirmar y para
+ * marcar una selección, no para decorar: `light` es el por defecto histórico de
+ * la app y `none` es lo correcto para lo que sólo navega (volver, cerrar), donde
+ * un golpe en cada toque acaba siendo ruido.
+ */
+export type PressHaptic = 'none' | 'light' | 'selection' | 'medium';
+
+const HAPTICS: Record<Exclude<PressHaptic, 'none'>, () => void> = {
+  light: () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
+  medium: () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium),
+  selection: () => void Haptics.selectionAsync(),
+};
+
+/**
  * Tactile surface. Scale plus a slight dim: two properties, "polished" on the
  * simplicity scale, and neither one touches layout so nothing around it shifts.
+ *
+ * `scaleTo` baja de 0.97 para lo pequeño: un icono de 24 px que se hunde un 3 %
+ * se hunde 0,7 px, que no se ve; 0.94 es lo que se nota sin salirse de la banda
+ * de 0.95–1.05 que recomienda la guía de interacción para controles táctiles.
+ * Con «Reducir movimiento» (leído EN VIVO, no al arrancar) no hay escala, sólo
+ * el atenuado.
  */
 export function PressableScale({
   children,
   onPress,
+  onLongPress,
   disabled = false,
   accessibilityLabel,
+  accessibilityHint,
+  accessibilityRole = 'button',
+  accessibilityState,
+  hitSlop,
+  haptic = 'light',
+  scaleTo = 0.97,
   style,
+  testID,
 }: {
   children: ReactNode;
   onPress: () => void;
+  onLongPress?: () => void;
   disabled?: boolean;
   accessibilityLabel?: string;
+  accessibilityHint?: string;
+  accessibilityRole?: AccessibilityRole;
+  accessibilityState?: AccessibilityState;
+  hitSlop?: number | Insets;
+  haptic?: PressHaptic;
+  scaleTo?: number;
   style?: StyleProp<ViewStyle>;
+  testID?: string;
 }) {
   const pressed = useSharedValue(0);
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
 
   const animated = useAnimatedStyle(() => ({
-    transform: [{ scale: reduceMotion ? 1 : 1 - pressed.value * 0.03 }],
+    transform: [{ scale: reduceMotion ? 1 : 1 - pressed.value * (1 - scaleTo) }],
     opacity: 1 - pressed.value * 0.12,
   }));
 
   return (
     <AnimatedPressable
+      accessibilityHint={accessibilityHint}
       accessibilityLabel={accessibilityLabel}
-      accessibilityRole="button"
+      accessibilityRole={accessibilityRole}
+      accessibilityState={{ ...accessibilityState, disabled: disabled || accessibilityState?.disabled }}
       disabled={disabled}
+      hitSlop={hitSlop}
+      onLongPress={onLongPress}
       onPress={onPress}
       onPressIn={() => {
         pressed.value = withSpring(1, PRESS_SPRING);
-        // A light tick on contact. Fired on press-in, not on press-out, so the
-        // phone answers the finger at the moment of touch rather than after the
+        // A tick on contact. Fired on press-in, not on press-out, so the phone
+        // answers the finger at the moment of touch rather than after the
         // action resolves — that delay is what reads as an unresponsive app.
-        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        if (haptic !== 'none') HAPTICS[haptic]();
       }}
       onPressOut={() => {
         // Release settles a touch slower than the press — follow-through.
         pressed.value = withTiming(0, { duration: DURATION.quick, easing: PREMIUM_EASING });
       }}
       style={[animated, style]}
+      testID={testID}
     >
       {children}
     </AnimatedPressable>
   );
+}
+
+/**
+ * Lo que aparece donde antes había un esqueleto. Sube 8 px y se desvela en
+ * `DURATION.standard`: el contenido que llega tras una carga es un cambio de
+ * estado, y un cambio que se produce de golpe se lee como un parpadeo. Más corto
+ * que `EnterUp` a propósito —no hay cascada que guiar, sólo un relevo.
+ */
+export function Reveal({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const reduceMotion = useReduceMotion();
+  return (
+    <Animated.View
+      entering={
+        reduceMotion
+          ? FadeIn.duration(1)
+          : FadeInDown.duration(DURATION.standard)
+              .easing(PREMIUM_EASING)
+              .withInitialValues({ transform: [{ translateY: 8 }] })
+      }
+      style={style}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+/**
+ * Entrada, salida y reacomodo de las filas de una lista que crece o se acorta
+ * (series registradas, mensajes). La salida dura la mitad de la entrada —lo que
+ * se va no debe retrasar a lo que llega— y el reacomodo mueve a las demás filas
+ * al sitio nuevo en vez de dejar que salten.
+ *
+ * Con «Reducir movimiento» las filas aparecen y desaparecen sin viaje.
+ */
+export function useListMotion() {
+  const reduceMotion = useReduceMotion();
+  if (reduceMotion) {
+    return { entering: FadeIn.duration(1), exiting: FadeOut.duration(1), layout: undefined };
+  }
+  return {
+    entering: FadeInDown.duration(DURATION.standard)
+      .easing(PREMIUM_EASING)
+      .withInitialValues({ transform: [{ translateY: 10 }] }),
+    exiting: FadeOut.duration(DURATION.exit),
+    layout: LinearTransition.duration(DURATION.standard).easing(PREMIUM_EASING),
+  };
+}
+
+/**
+ * El número que cambia: da un golpe de escala breve para que se note que ha
+ * cambiado, sin moverlo de sitio. No late al montarse —un número que ya estaba
+ * ahí no es una novedad— y no se repite si el valor es el mismo.
+ */
+export function BadgePop({
+  value,
+  children,
+  style,
+}: {
+  value: string | number;
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const reduceMotion = useReduceMotion();
+  const scale = useSharedValue(1);
+  const previous = useRef(value);
+
+  useEffect(() => {
+    if (previous.current === value) return;
+    previous.current = value;
+    if (reduceMotion) return;
+    scale.value = withSequence(
+      withTiming(1.28, { duration: 90, easing: PREMIUM_EASING }),
+      withSpring(1, SETTLE_SPRING),
+    );
+  }, [reduceMotion, scale, value]);
+
+  const animated = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return <Animated.View style={[style, animated]}>{children}</Animated.View>;
+}
+
+type SegmentLayout = { x: number; y: number; width: number; height: number };
+
+/**
+ * Control segmentado cuya píldora ACTIVA SE DESLIZA hasta la opción nueva, en vez
+ * de apagarse en una y encenderse en otra. Es el cambio de estado más frecuente
+ * de la app y el que más se nota cuando salta: el fondo viaja, y eso es lo que le
+ * dice al ojo qué ha cambiado y de dónde viene.
+ *
+ * `renderItem` pinta cada opción; la píldora va detrás. Mide el hueco de cada
+ * opción en vez de suponer anchos iguales, así que sirve igual para etiquetas de
+ * distinto largo y para botones de icono. Selecciona con un háptico de selección
+ * (no al volver a tocar la ya activa) y con «Reducir movimiento» la píldora
+ * salta sin viajar.
+ */
+export function SegmentedPill<T extends string>({
+  options,
+  value,
+  onChange,
+  pillColor,
+  style,
+  itemStyle,
+  renderItem,
+  gap = 0,
+}: {
+  options: readonly { value: T; accessibilityLabel?: string }[];
+  value: T;
+  onChange: (next: T) => void;
+  pillColor: string;
+  /** El contenedor: fondo, borde, relleno. */
+  style?: StyleProp<ViewStyle>;
+  /** Cada opción: tamaño y alineación del contenido. */
+  itemStyle?: StyleProp<ViewStyle>;
+  renderItem: (option: { value: T }, active: boolean) => ReactNode;
+  gap?: number;
+}) {
+  const reduceMotion = useReduceMotion();
+  const layouts = useRef(new Map<string, SegmentLayout>());
+  const x = useSharedValue(0);
+  const y = useSharedValue(0);
+  const w = useSharedValue(0);
+  const h = useSharedValue(0);
+  const shown = useSharedValue(0);
+  const placed = useRef(false);
+
+  const moveTo = useCallback(
+    (key: string) => {
+      const layout = layouts.current.get(key);
+      if (!layout) return;
+      if (!placed.current || reduceMotion) {
+        x.value = layout.x;
+        y.value = layout.y;
+        w.value = layout.width;
+        h.value = layout.height;
+        shown.value = 1;
+        placed.current = true;
+        return;
+      }
+      x.value = withSpring(layout.x, SETTLE_SPRING);
+      y.value = withSpring(layout.y, SETTLE_SPRING);
+      w.value = withSpring(layout.width, SETTLE_SPRING);
+      h.value = withSpring(layout.height, SETTLE_SPRING);
+    },
+    [h, reduceMotion, shown, w, x, y],
+  );
+
+  useEffect(() => {
+    moveTo(value);
+  }, [moveTo, value]);
+
+  const pill = useAnimatedStyle(() => ({
+    left: x.value,
+    top: y.value,
+    width: w.value,
+    height: h.value,
+    opacity: shown.value,
+  }));
+
+  return (
+    <View style={style}>
+      <View style={{ flexDirection: 'row', gap }}>
+        <Animated.View
+          pointerEvents="none"
+          style={[{ position: 'absolute', borderRadius: radii.full, backgroundColor: pillColor }, pill]}
+        />
+        {options.map((option) => {
+          const active = option.value === value;
+          return (
+            <View
+              key={option.value}
+              onLayout={(event) => {
+                layouts.current.set(option.value, event.nativeEvent.layout);
+                if (option.value === value) moveTo(option.value);
+              }}
+            >
+              <PressableScale
+                accessibilityLabel={option.accessibilityLabel}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                haptic={active ? 'none' : 'selection'}
+                onPress={() => onChange(option.value)}
+                style={itemStyle}
+              >
+                {renderItem(option, active)}
+              </PressableScale>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+/** La etiqueta de una opción de `SegmentedPill`: cambia de color con la píldora, no antes. */
+export function SegmentLabel({
+  label,
+  active,
+  activeColor,
+  inactiveColor,
+  style,
+}: {
+  label: string;
+  active: boolean;
+  activeColor: string;
+  inactiveColor: string;
+  style?: StyleProp<TextStyle>;
+}) {
+  // Los colores entran como valores sueltos y no como `colors.*` dentro del
+  // worklet: ver el comentario de `Checkbox` sobre la marca del gimnasio.
+  const animated = useAnimatedStyle(() => ({
+    color: withTiming(active ? activeColor : inactiveColor, {
+      duration: DURATION.standard,
+      easing: PREMIUM_EASING,
+    }),
+  }));
+  return <Animated.Text style={[style, animated]}>{label}</Animated.Text>;
 }
 
 /**
@@ -128,7 +404,7 @@ export function EnterUp({
   index?: number;
   style?: StyleProp<ViewStyle>;
 }) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
   const delay = Math.min(index, MAX_STAGGERED) * STAGGER_MS;
 
   return (
@@ -195,7 +471,7 @@ export function Heartbeat({
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
   const scale = useSharedValue(1);
 
   useEffect(() => {
@@ -274,7 +550,7 @@ export function CountUpText({
   suffix?: string;
   style?: StyleProp<TextStyle>;
 }) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
   const current = useSharedValue(reduceMotion ? value : from);
 
   useEffect(() => {
@@ -328,8 +604,9 @@ export function CountUpText({
   );
 }
 
+// Reanimated 4 ya anima `text` en un TextInput sin registrarlo antes: el
+// antiguo `addWhitelistedNativeProps` es un no-op desde esa versión.
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
-Animated.addWhitelistedNativeProps({ text: true });
 
 /** Dígitos de ancho fijo: la cifra no baila mientras cuenta. */
 const COUNTER_BASE: TextStyle = { fontVariant: ['tabular-nums'] };
