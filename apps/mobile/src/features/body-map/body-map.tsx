@@ -1,4 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
@@ -21,10 +24,11 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { colors, fontSizes, iconSizes, minTouchTarget, motion, radii, semibold, spacing } from '@/theme';
 import { hitTest, toPathData } from './hit-test';
-import { HIGHLIGHT } from './highlight';
+import { HIGHLIGHT, dimPathData } from './highlight';
 import { IMAGES } from './images';
 import { muscleInfo } from './muscle-catalog';
 import { IMAGE_ASPECT, REGIONS, REGION_VIEWBOX } from './regions.generated';
@@ -56,6 +60,27 @@ const FINGER_SLOP_POINTS = 14;
 const OPEN_DELAY_MS = 260;
 const ZOOM_STEP = 1.6;
 
+/**
+ * Pastilla de vidrio sobre la figura. Va encima de la imagen, así que lleva
+ * desenfoque propio para que el texto se lea pase lo que pase por debajo.
+ */
+function Glass({ children, round = false }: { children: React.ReactNode; round?: boolean }) {
+  return (
+    <View
+      style={{
+        borderRadius: radii.full,
+        overflow: 'hidden',
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: 'rgba(255,255,255,0.14)',
+        ...(round ? { width: 40, height: 40 } : null),
+      }}
+    >
+      <BlurView intensity={40} style={StyleSheet.absoluteFill} tint="systemThinMaterialDark" />
+      {children}
+    </View>
+  );
+}
+
 function Chip({
   icon,
   label,
@@ -68,39 +93,42 @@ function Chip({
   active?: boolean;
 }) {
   return (
-    <Pressable
-      accessibilityLabel={label}
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      hitSlop={6}
-      onPress={onPress}
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.xs + 2,
-        minHeight: minTouchTarget - 8,
-        paddingHorizontal: spacing.md - 2,
-        borderRadius: radii.full,
-        borderWidth: 1,
-        borderColor: active ? colors.accentInk : colors.border,
-        backgroundColor: active ? `${colors.volt}14` : colors.surfaceHigh,
-      }}
-    >
-      <Ionicons color={active ? colors.accentInk : colors.textMuted} name={icon} size={iconSizes.sm} />
-      <Text
-        style={{
-          color: active ? colors.accentInk : colors.textMuted,
-          fontSize: fontSizes.xs,
-          fontWeight: semibold,
+    <Glass>
+      <Pressable
+        accessibilityLabel={label}
+        accessibilityRole="button"
+        accessibilityState={{ selected: active }}
+        hitSlop={6}
+        onPress={() => {
+          void Haptics.selectionAsync();
+          onPress();
         }}
+        style={({ pressed }) => ({
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.xs + 2,
+          height: 36,
+          paddingHorizontal: spacing.md - 2,
+          backgroundColor: active ? 'rgba(255,255,255,0.16)' : 'transparent',
+          opacity: pressed ? 0.6 : 1,
+        })}
       >
-        {label}
-      </Text>
-    </Pressable>
+        <Ionicons color={active ? colors.text : colors.textMuted} name={icon} size={iconSizes.sm} />
+        <Text
+          style={{
+            color: active ? colors.text : colors.textMuted,
+            fontSize: fontSizes.xs,
+            fontWeight: semibold,
+          }}
+        >
+          {label}
+        </Text>
+      </Pressable>
+    </Glass>
   );
 }
 
-/** Botón redondo de zoom, sobre la figura. */
+/** Botón redondo de zoom, de vidrio, sobre la figura. */
 function ZoomButton({
   icon,
   label,
@@ -111,26 +139,40 @@ function ZoomButton({
   onPress: () => void;
 }) {
   return (
-    <Pressable
-      accessibilityLabel={label}
-      accessibilityRole="button"
-      hitSlop={4}
-      onPress={onPress}
-      style={{
-        width: 40,
-        height: 40,
-        borderRadius: radii.full,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: `${colors.surfaceHighest}e6`,
-        borderWidth: 1,
-        borderColor: colors.border,
-      }}
-    >
-      <Ionicons color={colors.text} name={icon} size={iconSizes.md} />
-    </Pressable>
+    <Glass round>
+      <Pressable
+        accessibilityLabel={label}
+        accessibilityRole="button"
+        hitSlop={4}
+        onPress={() => {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onPress();
+        }}
+        style={({ pressed }) => ({
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: pressed ? 0.55 : 1,
+        })}
+      >
+        <Ionicons color={colors.text} name={icon} size={iconSizes.md} />
+      </Pressable>
+    </Glass>
   );
 }
+
+/**
+ * Lo que ocupa la pantalla de Ejercicios por encima y por debajo de la figura:
+ * el margen superior, el título y su subtítulo, el selector de cara y capa con
+ * sus separaciones y un respiro sobre la barra de pestañas. Con esto la figura
+ * entera, con todos sus controles, cabe en la primera pantalla sin desplazarse.
+ */
+const SCREEN_CHROME = 32 + 70 + 32 + 44 + spacing.md + spacing.md;
+/** Franjas reservadas dentro de la tarjeta: herramientas arriba, texto abajo. */
+const FIGURE_INSET_TOP = 26;
+const FIGURE_INSET_BOTTOM = 34;
+/** Por debajo de esto un músculo pequeño ya no se acierta con el dedo. */
+const MIN_FIGURE_HEIGHT = 380;
 
 /**
  * La figura anatómica interactiva.
@@ -156,22 +198,38 @@ export function BodyMap({
   onOpenList: () => void;
 }) {
   const reduceMotion = useReducedMotion();
-  const { height: windowHeight } = useWindowDimensions();
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = useContext(BottomTabBarHeightContext) ?? insets.bottom;
 
   const [view, setView] = useState<BodyView>('front');
   const [layer, setLayer] = useState<BodyLayer>('surface');
   const [selected, setSelected] = useState<string | null>(null);
   const [showZones, setShowZones] = useState(false);
   const [zoomed, setZoomed] = useState(false);
-  const [width, setWidth] = useState(0);
+  // Antes de medir se estima con el ancho de pantalla menos los márgenes de
+  // `Screen`: así la figura reserva su alto desde el primer fotograma y la
+  // página no salta cuando llega la medida real.
+  const [width, setWidth] = useState(windowWidth - spacing.lg * 2);
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const tag = `${layer}-${view}` as const;
   const regions = REGIONS[tag] ?? [];
-  // La figura manda en el alto, pero nunca pasa de la proporción de la imagen.
-  const height = Math.round(Math.min(windowHeight * 0.72, width * 2));
+  // La figura ocupa lo que queda de pantalla, sin pasar de la proporción de la
+  // imagen ni bajar del mínimo en que los músculos pequeños se aciertan.
+  const available = windowHeight - insets.top - tabBarHeight - SCREEN_CHROME;
+  const height = Math.round(Math.min(width * 2, Math.max(MIN_FIGURE_HEIGHT, available)));
   const size = useMemo(() => ({ width, height }), [width, height]);
-  const frame = useMemo(() => containFrame(size, IMAGE_ASPECT), [size]);
+  // La lámina se encaja dejando libres la franja de las herramientas (arriba) y
+  // la del texto (abajo): sin eso la cabeza quedaba bajo los botones y la
+  // pista se escribía encima de los pies.
+  const frame = useMemo(() => {
+    const inner = containFrame(
+      { width: size.width, height: Math.max(1, size.height - FIGURE_INSET_TOP - FIGURE_INSET_BOTTOM) },
+      IMAGE_ASPECT,
+    );
+    return { ...inner, y: inner.y + FIGURE_INSET_TOP };
+  }, [size]);
 
   const scale = useSharedValue(1);
   const tx = useSharedValue(0);
@@ -339,7 +397,7 @@ export function BodyMap({
 
   const selectedRegions = selected ? regions.filter((region) => region.code === selected) : [];
   const info = selected ? muscleInfo(selected) : undefined;
-  const ready = width > 0;
+  const musclePaths = selectedRegions.map((region) => toPathData(region.rings));
 
   return (
     <View style={{ gap: spacing.md }}>
@@ -351,67 +409,87 @@ export function BodyMap({
       <View
         onLayout={(event: LayoutChangeEvent) => setWidth(Math.round(event.nativeEvent.layout.width))}
         style={{
-          height: ready ? height : 0,
+          height,
           borderRadius: radii.xl,
           overflow: 'hidden',
           backgroundColor: colors.surfaceLowest,
-          borderWidth: 1,
-          borderColor: colors.borderSubtle,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: colors.border,
         }}
       >
-        {ready ? (
-          <>
-            <GestureDetector gesture={gesture}>
-              <View
-                accessibilityHint="Toca un músculo para ver sus ejercicios. Para una lista, usa el botón Lista."
-                accessibilityLabel="Figura anatómica interactiva"
-                accessible
-                style={StyleSheet.absoluteFill}
+        <GestureDetector gesture={gesture}>
+          <View
+            accessibilityHint="Toca un músculo para ver sus ejercicios. Para una lista, usa el botón Lista."
+            accessibilityLabel="Figura anatómica interactiva"
+            accessible
+            style={StyleSheet.absoluteFill}
+          >
+            <Animated.View style={[StyleSheet.absoluteFill, contentStyle]}>
+              <Animated.View
+                entering={reduceMotion ? undefined : FadeIn.duration(motion.enter)}
+                exiting={reduceMotion ? undefined : FadeOut.duration(motion.exit)}
+                key={tag}
+                style={{ position: 'absolute', left: frame.x, top: frame.y, width: frame.width, height: frame.height }}
               >
-                <Animated.View style={[StyleSheet.absoluteFill, contentStyle]}>
-                  <Animated.View
-                    entering={reduceMotion ? undefined : FadeIn.duration(motion.enter)}
-                    exiting={reduceMotion ? undefined : FadeOut.duration(motion.exit)}
-                    key={tag}
-                    style={{ position: 'absolute', left: frame.x, top: frame.y, width: frame.width, height: frame.height }}
-                  >
-                    <Image
-                      accessibilityIgnoresInvertColors
-                      cachePolicy="memory-disk"
-                      contentFit="contain"
-                      source={IMAGES[tag]}
-                      style={{ width: '100%', height: '100%' }}
-                      transition={0}
-                    />
-                  </Animated.View>
+                <Image
+                  accessibilityIgnoresInvertColors
+                  cachePolicy="memory-disk"
+                  contentFit="contain"
+                  source={IMAGES[tag]}
+                  style={{ width: '100%', height: '100%' }}
+                  transition={0}
+                />
+              </Animated.View>
 
+              {showZones ? (
+                <Svg
+                  height={frame.height}
+                  pointerEvents="none"
+                  style={{ position: 'absolute', left: frame.x, top: frame.y }}
+                  viewBox={`0 0 ${REGION_VIEWBOX.width} ${REGION_VIEWBOX.height}`}
+                  width={frame.width}
+                >
+                  {regions.map((region, index) => (
+                    <Path
+                      d={toPathData(region.rings)}
+                      fill="none"
+                      fillRule="evenodd"
+                      key={`${region.code}-${index}`}
+                      stroke="#ffffff"
+                      strokeOpacity={0.5}
+                      strokeWidth={1.5}
+                    />
+                  ))}
+                </Svg>
+              ) : null}
+
+              {selected ? (
+                // El resaltado entra con un fundido corto: aparecer de golpe
+                // se leía como un parpadeo, no como una respuesta al dedo.
+                <Animated.View
+                  entering={reduceMotion ? undefined : FadeIn.duration(HIGHLIGHT.fadeMs)}
+                  key={`sel-${tag}-${selected}`}
+                  pointerEvents="none"
+                  style={{ position: 'absolute', left: frame.x, top: frame.y, width: frame.width, height: frame.height }}
+                >
                   <Svg
                     height={frame.height}
-                    pointerEvents="none"
-                    style={{ position: 'absolute', left: frame.x, top: frame.y }}
                     viewBox={`0 0 ${REGION_VIEWBOX.width} ${REGION_VIEWBOX.height}`}
                     width={frame.width}
                   >
-                    {showZones
-                      ? regions.map((region, index) => (
-                          <Path
-                            d={toPathData(region.rings)}
-                            fill="none"
-                            fillRule="evenodd"
-                            key={`${region.code}-${index}`}
-                            stroke="#ffffff"
-                            strokeOpacity={0.55}
-                            strokeWidth={2}
-                          />
-                        ))
-                      : null}
-                    {selectedRegions.map((region, index) => (
+                    <Path
+                      d={dimPathData(musclePaths, REGION_VIEWBOX.width, REGION_VIEWBOX.height)}
+                      fill={HIGHLIGHT.dim}
+                      fillOpacity={HIGHLIGHT.dimOpacity}
+                      fillRule="evenodd"
+                    />
+                    {musclePaths.map((d, index) => (
                       <Path
-                        d={toPathData(region.rings)}
+                        d={d}
                         fill={HIGHLIGHT.fill}
                         fillOpacity={HIGHLIGHT.fillOpacity}
                         fillRule="evenodd"
-                        key={`sel-${region.code}-${index}`}
+                        key={index}
                         stroke={HIGHLIGHT.stroke}
                         strokeLinejoin="round"
                         strokeWidth={HIGHLIGHT.strokeWidth}
@@ -419,37 +497,73 @@ export function BodyMap({
                     ))}
                   </Svg>
                 </Animated.View>
-              </View>
-            </GestureDetector>
+              ) : null}
+            </Animated.View>
+          </View>
+        </GestureDetector>
 
-            <View pointerEvents="box-none" style={{ position: 'absolute', right: spacing.sm + 4, bottom: spacing.sm + 4, gap: spacing.sm }}>
-              {zoomed ? <ZoomButton icon="contract-outline" label="Volver a la vista completa" onPress={resetZoom} /> : null}
-              <ZoomButton icon="add" label="Acercar" onPress={() => zoomBy(ZOOM_STEP)} />
-              <ZoomButton icon="remove" label="Alejar" onPress={() => zoomBy(1 / ZOOM_STEP)} />
-            </View>
-          </>
-        ) : null}
-      </View>
-
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: minTouchTarget - 8 }}>
-        <View style={{ flex: 1, gap: 2 }}>
-          {info ? (
-            <>
-              <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
-                {info.name}
-              </Text>
-              <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-                {info.group.name} · {info.latinName}
-              </Text>
-            </>
-          ) : (
-            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-              {zoomed ? 'Arrastra para moverte' : 'Toca un músculo · pellizca para acercar'}
-            </Text>
-          )}
+        {/* Arriba, las herramientas: a la izquierda qué se ve (zonas, lista),
+            a la derecha cuánto se ve (zoom). Encima de la figura y no debajo,
+            para que estén a la vista sin desplazar la página. */}
+        <View
+          pointerEvents="box-none"
+          style={{
+            position: 'absolute',
+            top: spacing.sm + 4,
+            left: spacing.sm + 4,
+            right: spacing.sm + 4,
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+          }}
+        >
+          <View pointerEvents="box-none" style={{ flex: 1, flexDirection: 'row', gap: spacing.sm }}>
+            <Chip active={showZones} icon="scan-outline" label="Zonas" onPress={() => setShowZones((value) => !value)} />
+            <Chip icon="list-outline" label="Lista" onPress={onOpenList} />
+          </View>
+          <View pointerEvents="box-none" style={{ gap: spacing.sm }}>
+            <ZoomButton icon="add" label="Acercar" onPress={() => zoomBy(ZOOM_STEP)} />
+            <ZoomButton icon="remove" label="Alejar" onPress={() => zoomBy(1 / ZOOM_STEP)} />
+            {zoomed ? <ZoomButton icon="contract-outline" label="Volver a la vista completa" onPress={resetZoom} /> : null}
+          </View>
         </View>
-        <Chip active={showZones} icon="scan-outline" label="Zonas" onPress={() => setShowZones((value) => !value)} />
-        <Chip icon="list-outline" label="Lista" onPress={onOpenList} />
+
+        {/* Abajo, el resultado: el músculo tocado o, sin selección, la pista
+            de uso. Sobre un degradado para que se lea encima de las piernas. */}
+        <LinearGradient
+          colors={['rgba(13,13,13,0)', 'rgba(13,13,13,0.86)']}
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            paddingTop: spacing.lg,
+            paddingBottom: spacing.sm + 4,
+            paddingHorizontal: spacing.md + 2,
+          }}
+        >
+          <Animated.View
+            accessibilityLiveRegion="polite"
+            entering={reduceMotion ? undefined : FadeIn.duration(HIGHLIGHT.fadeMs)}
+            key={info ? info.code : zoomed ? 'pan' : 'hint'}
+            style={{ gap: 2 }}
+          >
+            {info ? (
+              <>
+                <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
+                  {info.name}
+                </Text>
+                <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                  {info.group.name} · {info.latinName}
+                </Text>
+              </>
+            ) : (
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, textAlign: 'center' }}>
+                {zoomed ? 'Arrastra para moverte' : 'Toca un músculo · pellizca para acercar'}
+              </Text>
+            )}
+          </Animated.View>
+        </LinearGradient>
       </View>
     </View>
   );

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -249,11 +249,17 @@ const GLOW_COUNT = 2;
 
 function glowSpecs(accent: string) {
   return [
-    { colors: [rgba(accent, 0.09), rgba(accent, 0)] as const, size: 1.35, x: -0.22, y: -0.12, px: 41000, py: 52000 },
-    { colors: ['rgba(120,110,255,0.08)', 'rgba(120,110,255,0)'] as const, size: 1.2, x: 0.42, y: 0.55, px: 58000, py: 44000 },
+    { color: accent, alpha: 0.11, size: 1.5, x: -0.4, y: -0.3, px: 41000, py: 52000 },
+    { color: '#786eff', alpha: 0.08, size: 1.4, x: 0.25, y: 0.5, px: 58000, py: 44000 },
   ];
 }
 
+/**
+ * Cada luz es un degradado radial de verdad, con la caída en cuatro paradas
+ * para que se apague como una luz y no como un disco. Antes era un degradado
+ * lineal recortado en círculo: en pantalla se veían arcos con el borde duro,
+ * justo el ruido que una superficie premium no se puede permitir.
+ */
 function Glow({ index, width, moving }: { index: number; width: number; moving: boolean }) {
   // Se resuelve en cada render: el gimnasio se conoce al iniciar sesión, y un
   // valor calculado al cargar el módulo se quedaría con la marca de referencia.
@@ -261,11 +267,12 @@ function Glow({ index, width, moving }: { index: number; width: number; moving: 
   const clockX = useClock(spec.px, moving);
   const clockY = useClock(spec.py, moving);
   const diameter = width * spec.size;
+  const id = `ambient-glow-${index}`;
 
   const animated = useAnimatedStyle(() => ({
     transform: [
-      { translateX: width * 0.22 * Math.sin(clockX.value * TAU) },
-      { translateY: width * 0.16 * Math.cos(clockY.value * TAU) },
+      { translateX: width * 0.18 * Math.sin(clockX.value * TAU) },
+      { translateY: width * 0.14 * Math.cos(clockY.value * TAU) },
     ],
   }));
 
@@ -282,12 +289,17 @@ function Glow({ index, width, moving }: { index: number; width: number; moving: 
         animated,
       ]}
     >
-      <LinearGradient
-        colors={spec.colors}
-        end={{ x: 0.5, y: 1 }}
-        start={{ x: 0.5, y: 0 }}
-        style={{ flex: 1, borderRadius: diameter / 2 }}
-      />
+      <Svg height={diameter} width={diameter}>
+        <Defs>
+          <RadialGradient cx="50%" cy="50%" id={id} r="50%">
+            <Stop offset="0" stopColor={spec.color} stopOpacity={spec.alpha} />
+            <Stop offset="0.35" stopColor={spec.color} stopOpacity={spec.alpha * 0.6} />
+            <Stop offset="0.7" stopColor={spec.color} stopOpacity={spec.alpha * 0.18} />
+            <Stop offset="1" stopColor={spec.color} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Rect fill={`url(#${id})`} height={diameter} width={diameter} />
+      </Svg>
     </Animated.View>
   );
 }
@@ -295,8 +307,13 @@ function Glow({ index, width, moving }: { index: number; width: number; moving: 
 /**
  * Mounted once behind every screen. Non-interactive by construction so it can
  * never intercept a touch meant for content.
+ *
+ * `waveform` decide si van las barras. Detrás de una pantalla con contenido
+ * (las de `Screen`) asomaban entre tarjetas y bajo el título como ruido, así que
+ * ahí van apagadas; siguen en las pantallas casi vacías (entrada, chat,
+ * descubrir), donde son la identidad del fondo y no compiten con nada.
  */
-export function AmbientBackground() {
+export function AmbientBackground({ waveform = true }: { waveform?: boolean } = {}) {
   const { width, height } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
   const moving = !reduceMotion;
@@ -311,7 +328,7 @@ export function AmbientBackground() {
       {Array.from({ length: GLOW_COUNT }, (_, index) => (
         <Glow index={index} key={index} moving={moving} width={width} />
       ))}
-      {BANDS.map((spec, index) => (
+      {(waveform ? BANDS : []).map((spec, index) => (
         <Band
           energy={energy}
           height={height}

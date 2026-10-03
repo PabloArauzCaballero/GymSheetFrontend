@@ -56,7 +56,7 @@ export default function RoutinesScreen() {
 
       {assigned.length > 0 ? (
         <Section icon="person-outline" index={1} title="Asignadas por tu entrenador">
-          <Card>
+          <Card list>
             {assigned.map((assignment, index) => (
               <View key={assignment.id}>
                 {index > 0 ? <Divider /> : null}
@@ -87,7 +87,7 @@ export default function RoutinesScreen() {
             title="Sin rutinas"
           />
         ) : (
-          <Card>
+          <Card list>
             {items.map((routine, index) => (
               <View key={routine.id}>
                 {index > 0 ? <Divider /> : null}

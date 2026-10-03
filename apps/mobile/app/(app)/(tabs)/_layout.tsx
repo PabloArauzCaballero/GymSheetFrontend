@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { Animated, Easing } from 'react-native';
+import { Animated, Easing, StyleSheet } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
 import ReAnimated, {
@@ -183,7 +184,10 @@ export default function TabsLayout() {
             easing: Easing.bezier(0.2, 0, 0, 1),
           },
         },
-        tabBarActiveTintColor: colors.volt,
+        // La tinta legible del acento, no el acento a pelo: el rojo de la marca
+        // mide 4,22:1 sobre la barra (ver `theme/index.ts`) y la etiqueta activa
+        // es texto de 10 pt, justo donde el contraste no se puede regatear.
+        tabBarActiveTintColor: colors.accentInk,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontSize: fontSizes.xs, fontWeight: semibold },
         // Cinco pestañas, no seis. Es el techo que este proyecto ya se había
@@ -207,7 +211,21 @@ export default function TabsLayout() {
         // deje de verse; ninguna lo arregla.
         //
         // La causa era el número de destinos, así que se corrige ahí.
-        tabBarStyle: { backgroundColor: colors.surfaceLow, borderTopColor: colors.borderSubtle },
+        //
+        // La barra flota sobre el contenido con un vidrio esmerilado: la lista
+        // sigue viéndose, desenfocada, al pasar por debajo, que es lo que da
+        // profundidad sin añadir ningún elemento. `Screen` reserva su altura
+        // al final del scroll para que nada quede tapado.
+        tabBarStyle: {
+          position: 'absolute',
+          backgroundColor: 'transparent',
+          borderTopColor: colors.borderSubtle,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          elevation: 0,
+        },
+        tabBarBackground: () => (
+          <BlurView intensity={60} style={StyleSheet.absoluteFill} tint="systemChromeMaterialDark" />
+        ),
       }}
     >
       <Tabs.Screen name="home" options={{ title: 'Inicio', tabBarIcon: tabIcon('home') }} />

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect } from 'react';
-import { View, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -56,6 +56,60 @@ export function Skeleton({ height = 72 }: { height?: number }) {
         animated,
       ]}
     />
+  );
+}
+
+/**
+ * Esqueleto de una lista de filas con miniatura, con la forma de lo que va a
+ * llegar: una tarjeta, filas de lámina más dos líneas de texto, y divisores.
+ * Tres cajas sueltas de 72 pt anunciaban otra cosa y la página saltaba al
+ * cambiar de forma cuando llegaban los datos.
+ */
+export function RowsSkeleton({ rows = 4, thumb = 64 }: { rows?: number; thumb?: number }) {
+  const progress = useSharedValue(0);
+  const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    progress.value = withRepeat(
+      withTiming(1, { duration: 900, easing: Easing.inOut(Easing.quad) }),
+      -1,
+      true,
+    );
+    return () => {
+      cancelAnimation(progress);
+    };
+  }, [progress, reduceMotion]);
+
+  const animated = useAnimatedStyle(() => ({ opacity: 0.45 + progress.value * 0.35 }));
+  const bone = { backgroundColor: colors.surfaceHigh, borderRadius: radii.sm } as const;
+
+  return (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{
+        borderRadius: radii.lg,
+        borderWidth: 1,
+        borderColor: colors.borderSubtle,
+        backgroundColor: colors.surfaceLow,
+        paddingHorizontal: 22,
+        paddingVertical: 8,
+      }}
+    >
+      {Array.from({ length: rows }, (_, index) => (
+        <View key={index}>
+          {index > 0 ? <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border }} /> : null}
+          <Animated.View style={[{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 8 }, animated]}>
+            <View style={[bone, { width: thumb, height: thumb, borderRadius: radii.lg }]} />
+            <View style={{ flex: 1, gap: 8 }}>
+              <View style={[bone, { height: 14, width: '72%' }]} />
+              <View style={[bone, { height: 10, width: '40%' }]} />
+            </View>
+          </Animated.View>
+        </View>
+      ))}
+    </View>
   );
 }
 

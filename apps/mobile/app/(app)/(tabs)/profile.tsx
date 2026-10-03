@@ -243,7 +243,7 @@ export default function ProfileScreen() {
         ) : profile.isError ? (
           <ErrorState error={profile.error} onRetry={() => void profile.refetch()} />
         ) : profile.data ? (
-          <Card>
+          <Card list>
             <Row icon="scale-outline" label="Peso" value={`${profile.data.pesoKg} kg`} />
             <Divider />
             <Row icon="resize-outline" label="Estatura" value={`${profile.data.estaturaCm} cm`} />
@@ -281,7 +281,7 @@ export default function ProfileScreen() {
         ) : membership.isError ? (
           <ErrorState error={membership.error} onRetry={() => void membership.refetch()} />
         ) : membership.data?.membership ? (
-          <Card>
+          <Card list>
             <Row
               icon="pricetag-outline"
               label="Plan"
@@ -375,7 +375,7 @@ export default function ProfileScreen() {
 
       <WeightIncrementPreference />
 
-      <Card>
+      <Card list>
         <NavRow
           onPress={() => router.push('/trayectoria')}
           subtitle="El camino completo, la clasificación y tus días de descanso"
@@ -392,7 +392,7 @@ export default function ProfileScreen() {
           subtitle="Todas tus sesiones, con sus ejercicios y series"
           title="Mis entrenos"
         />
-
+        <Divider />
         <NavRow onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />
         <Divider />
         <NavRow

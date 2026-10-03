@@ -146,7 +146,7 @@ export default function WorkoutsScreen() {
           title="Todavía sin entrenos"
         />
       ) : (
-        <Card>
+        <Card list>
           {sessions.map((session, index) => {
             const duration = formatDuration(session.fechaInicio, session.fechaFin);
             return (
