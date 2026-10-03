@@ -16,6 +16,8 @@
 | `(cd apps/mobile && npx tsc --noEmit -p . && yarn -s test:unit)` | TypeScript correcto. `test:unit` terminó con código 0, pero informó **0 pruebas**; no se interpreta como cobertura del móvil. |
 | Pruebas dirigidas de rutas, ajustes, filtro, plan semanal, programación, ubicación y comparación | Correctas; el BFF rechazó inicialmente la ruta de programación y la aceptó tras el cambio. |
 | `yarn workspace @gymsheet/web source-check` y `type-check` | Correctos; también incluidos en la pasada final de Turbo. |
+| Cherry-pick sobre `origin/test` en worktree temporal | Commit `70fff5a`; se conservó la navegación propia de `test` y se añadió Ajustes. En ese árbol: 25/25 tareas y 274/274 pruebas web; TypeScript móvil correcto. |
+| Push a `test` | Avance rápido `e20c83f` → `70fff5a`, confirmado por `git push origin HEAD:test`. No se subió a `dev`. |
 
 ## No ejecutado o pendiente
 
