@@ -28,6 +28,8 @@ import { Input } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { RoutineImportDialog } from './routine-import-dialog';
+import { WeekPlan } from './week-plan';
+import { useRouter } from 'next/navigation';
 
 const schema = z.object({
   nombre: z.string().trim().min(2).max(160),
@@ -38,10 +40,15 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
+  const router = useRouter();
   const staff = isStaff(role);
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const mine = useQuery({ queryKey: queryKeys.routines('mine'), queryFn: () => trainingService.list('mine') });
+  const assignments = useQuery({
+    queryKey: ['routines', 'assignments', 'me'],
+    queryFn: trainingService.myAssignments,
+  });
   const templates = useQuery({
     queryKey: queryKeys.routines('templates'),
     queryFn: () => trainingService.list('templates'),
@@ -165,6 +172,10 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
         eyebrow="Planes de entrenamiento"
         title="Rutinas"
       />
+
+      {assignments.data ? (
+        <WeekPlan assignments={assignments.data} onPickRoutine={(id) => router.push(`/routines/${id}`)} />
+      ) : null}
 
       {routines.length ? (
         <section className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

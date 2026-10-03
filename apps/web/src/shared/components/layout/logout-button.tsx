@@ -6,7 +6,11 @@ import { useState } from 'react';
 import { logout as logoutRequest } from '@/features/auth/services/auth-client';
 import { Button } from '@/shared/components/ui/button';
 
-export function LogoutButton() {
+/**
+ * Cierra la sesión. En la barra va como icono; en Ajustes, con su nombre
+ * (`withLabel`), porque ahí es una acción de la página y no un atajo.
+ */
+export function LogoutButton({ withLabel = false }: Readonly<{ withLabel?: boolean }>) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   async function logout() {
@@ -24,10 +28,11 @@ export function LogoutButton() {
       aria-label="Cerrar sesión"
       loading={loading}
       onClick={logout}
-      size="icon"
-      variant="ghost"
+      size={withLabel ? 'md' : 'icon'}
+      variant={withLabel ? 'danger' : 'ghost'}
     >
-      <LogOut className="size-4" />
+      {loading && withLabel ? null : <LogOut aria-hidden className="size-4" />}
+      {withLabel ? 'Cerrar sesión' : null}
     </Button>
   );
 }

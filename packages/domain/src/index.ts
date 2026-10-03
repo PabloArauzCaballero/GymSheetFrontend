@@ -6,3 +6,6 @@ export * from './auth-options';
 export * from './celebration';
 export * from './points-figures';
 export * from './exercise-media';
+export * from './training-metrics';
+export * from './week-plan';
+export * from './streak-location';

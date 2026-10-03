@@ -52,6 +52,7 @@ export const knownRoutes = new Set([
   'plans',
   'profile',
   'routines',
+  'settings',
   // Consola de plataforma (`SYSTEM_ADMIN`). Como el resto, tiene que figurar
   // aquí para que no se confunda con el prefijo de un gimnasio.
   'sistema',

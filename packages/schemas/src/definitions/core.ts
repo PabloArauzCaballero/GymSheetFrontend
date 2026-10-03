@@ -182,3 +182,29 @@ export function pageSchema<T extends z.ZodType>(itemSchema: T) {
     totalPages: z.number().int(),
   });
 }
+
+/**
+ * Zonas del cuerpo y, dentro de cada una, los músculos que entrenan, con
+ * cuántos ejercicios tiene cada uno (`GET /exercises/taxonomy`). Alimenta la
+ * navegación por zona del catálogo en web y móvil, así ninguna de las dos
+ * arrastra una lista de músculos escrita a mano que se separe de los datos.
+ *
+ * `imageUrl` es una lámina representativa: las del dataset pintan en rojo el
+ * músculo trabajado, de modo que identifican el grupo mejor que un icono.
+ */
+export const exerciseTaxonomySchema = z.array(
+  z.object({
+    bodyPart: z.string(),
+    total: z.number().int(),
+    imageUrl: z.string().nullable().default(null),
+    muscles: z.array(
+      z.object({
+        targetMuscle: z.string(),
+        total: z.number().int(),
+        imageUrl: z.string().nullable().default(null),
+      }),
+    ),
+  }),
+);
+
+export type ExerciseTaxonomy = z.infer<typeof exerciseTaxonomySchema>;
