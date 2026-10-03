@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { confirm, notify } from '@/shared/notifications';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
 import { ExerciseMediaManager } from '@/features/exercises/components/exercise-media-manager';
+import { ExerciseMuscles } from '@/features/anatomy/components/exercise-muscles';
 import { profileService } from '@/features/profile/services/profile-service';
 import type { UserRole } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -207,6 +208,7 @@ export function ExerciseDetail({
               </div>
             </CardContent>
           </Card>
+          <ExerciseMuscles exerciseId={item.id} />
           <Card>
             <CardHeader title="Equipamiento" />
             <CardContent>

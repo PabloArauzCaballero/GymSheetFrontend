@@ -27,6 +27,19 @@ vi.mock('@/features/exercises/services/exercise-service', () => ({
   },
 }));
 
+// Los chips de músculos piden su propia consulta; aquí no son el tema.
+vi.mock('@/features/anatomy/services/muscle-service', () => ({
+  muscleKeys: { forExercise: (id: string) => ['exercise', id, 'muscles'] },
+  muscleService: {
+    forExercise: vi.fn().mockResolvedValue({
+      ejercicioId: 'x',
+      primarios: [],
+      secundarios: [],
+      estabilizadores: [],
+    }),
+  },
+}));
+
 vi.mock('@/features/profile/services/profile-service', () => ({
   profileService: { getUser },
 }));

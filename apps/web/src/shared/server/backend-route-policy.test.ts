@@ -19,6 +19,10 @@ const allowedCases: Array<[string[], string]> = [
   [['me', 'progression', 'rules'], '/me/progression/rules'],
   [['exercises', 'equipment-suggestion'], '/exercises/equipment-suggestion'],
   [['muscles'], '/muscles'],
+  [['muscles', 'PECTORALIS_MAJOR'], '/muscles/PECTORALIS_MAJOR'],
+  [['muscles', 'DELTOID_ANTERIOR', 'exercises'], '/muscles/DELTOID_ANTERIOR/exercises'],
+  [['exercises', id, 'muscles'], `/exercises/${id}/muscles`],
+  [['exercises', 'taxonomy'], '/exercises/taxonomy'],
   [['auth', 'socket-ticket'], '/auth/socket-ticket'],
   [['me', 'connections'], '/me/connections'],
   [['me', 'connections', id], `/me/connections/${id}`],
@@ -53,6 +57,8 @@ const allowedCases: Array<[string[], string]> = [
   [['notifications', 'device-tokens'], '/notifications/device-tokens'],
 ];
 const blockedCases: Array<[string[]]> = [
+  [['muscles', 'PECTORALIS_MAJOR', 'secrets']],
+  [['muscles', '_hidden']],
   [['admin', 'access', 'mock', 'events']],
   [['admin', 'unknown']],
   [['..', 'secrets']],

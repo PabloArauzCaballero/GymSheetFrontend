@@ -1,4 +1,10 @@
 const resourceId = '[A-Za-z0-9-]+';
+/**
+ * Código de músculo de la taxonomía (`PECTORALIS_MAJOR`, `DELTOID_ANTERIOR`).
+ * Va aparte de `resourceId` porque lleva guion bajo, y abrir el guion bajo a
+ * todos los identificadores ampliaría cada ruta de la lista sin necesidad.
+ */
+const muscleCode = '[A-Za-z][A-Za-z0-9_]{0,63}';
 
 const allowedPathPatterns = [
   /^\/access\/me$/u,
@@ -39,6 +45,8 @@ const allowedPathPatterns = [
   // Máquina que corresponde a un músculo, para el alta de ejercicio propio.
   /^\/exercises\/equipment-suggestion$/u,
   new RegExp(`^/exercises/${resourceId}(/media)?$`, 'u'),
+  // Los músculos que trabaja un ejercicio, para los chips que abren cada uno.
+  new RegExp(`^/exercises/${resourceId}/muscles$`, 'u'),
   /^\/export\/workout-history(\/csv)?$/u,
   /^\/memberships\/me$/u,
   /^\/membership\/plans$/u,
@@ -117,6 +125,9 @@ const allowedPathPatterns = [
   // Catálogo anatómico: alimenta el selector de músculo del ejercicio propio.
   /^\/muscles$/u,
   /^\/muscle-groups$/u,
+  // La figura anatómica: la ficha de un músculo y sus ejercicios por rol.
+  new RegExp(`^/muscles/${muscleCode}$`, 'u'),
+  new RegExp(`^/muscles/${muscleCode}/exercises$`, 'u'),
   /^\/routines$/u,
   /^\/routines\/import$/u,
   /^\/routines\/assignments\/(me|coach)$/u,
