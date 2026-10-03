@@ -5,10 +5,10 @@ const securityHeaders = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'X-Frame-Options', value: 'DENY' },
   // `camera=(self)`: la consola de administración captura rostros y códigos QR
-  // con la cámara del equipo desde su propio origen. Micrófono y geolocalización
-  // siguen denegados por completo porque ninguna pantalla los usa, y ningún
-  // origen incrustado obtiene la cámara.
-  { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
+  // con la cámara del equipo desde su propio origen. La ubicación se usa al
+  // finalizar una sesión para verificar la racha; solo el propio origen puede
+  // pedirla. El micrófono permanece denegado.
+  { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=(self)' },
   // HSTS sólo tiene efecto sobre HTTPS, así que en local es inerte; se declara
   // aquí para que el despliegue no dependa de que alguien lo recuerde.
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },

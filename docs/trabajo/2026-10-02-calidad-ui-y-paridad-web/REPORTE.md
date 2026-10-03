@@ -7,6 +7,7 @@
 - El BFF permite `/routines/:id/schedule`; se verificó el contrato con el código del backend NestJS. El cierre acepta coordenadas opcionales y sigue si se deniega la ubicación.
 - Se amplió el área táctil del filtro y del selector a 44 px y se respetó `prefers-reduced-motion`.
 - Se corrigieron las dos muescas rectangulares del borde inferior del pectoral. `contour_corrections.py` aplica la corrección al regenerar `regions.generated.ts` y falla si cambia el modelo anatómico esperado.
+- La cabecera `Permissions-Policy` permite ahora pedir ubicación desde el propio origen al terminar una sesión. Una prueba fija este contrato; el micrófono permanece denegado.
 
 ## Evidencia ejecutada
 
@@ -29,6 +30,7 @@
 - No hubo recorrido visual autenticado de la web a 390, 768 y 1440 px, claro/oscuro ni de dos tenants. El VPS redirige `/exercises` a `/login`; las credenciales las introduce el usuario. No se levantó un servidor local por la restricción de carga de la Mac.
 - Las miniaturas de ejercicio en el VPS y el recorrido E2E con sesión iniciada no se comprobaron. No se afirma que funcionen.
 - La ubicación del navegador exige un contexto seguro; el sitio compartido en el relevo usa HTTP, por lo que esa verificación puede quedar sin coordenadas hasta servir la web por HTTPS. La sesión se cierra igualmente.
+- La comprobación de `https://gym.161.97.85.216.sslip.io/settings` devolvió HTTP 503 y un certificado sin validar el 3 de octubre. La configuración TLS de Coolify queda pendiente para que la ubicación funcione en producción.
 - No se ejecutó `next build`, Docker, Postgres ni el backend local, por instrucción del usuario.
 
 ## Revisión de interfaz
