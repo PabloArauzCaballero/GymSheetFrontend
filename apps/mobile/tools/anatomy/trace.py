@@ -1,7 +1,7 @@
 """Vectoriza las máscaras de identificadores y empaqueta las imágenes.
 
     python tools/anatomy/trace.py --src tools/anatomy/.out \
-        --assets assets/anatomy --ts src/features/body-map/regions.generated.ts
+        --assets assets/anatomy --ts ../../packages/anatomy/src/regions.generated.ts
 
 Entrada (la deja `render.py`): `<capa>-<vista>-ids.png`, `-beauty.png`,
 `palette.json`, `meta.json`.

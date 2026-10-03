@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
+    "@gymsheet/anatomy": "*",
     "@gymsheet/api-client": "*",
     "@gymsheet/auth": "*",
     "@gymsheet/design-tokens": "*",

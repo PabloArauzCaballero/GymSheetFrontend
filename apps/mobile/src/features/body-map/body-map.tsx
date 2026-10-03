@@ -26,23 +26,28 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import { colors, fontSizes, iconSizes, minTouchTarget, motion, radii, semibold, spacing } from '@/theme';
-import { hitTest, toPathData } from './hit-test';
-import { HIGHLIGHT, dimPathData } from './highlight';
-import { IMAGES } from './images';
-import { muscleInfo } from './muscle-catalog';
-import { IMAGE_ASPECT, REGIONS, REGION_VIEWBOX } from './regions.generated';
-import { Segmented } from './segmented';
-import type { BodyLayer, BodyView } from './types';
+import { colors, fontSizes, iconSizes, motion, radii, semibold, spacing } from '@/theme';
 import {
-  IDENTITY,
   clampTransform,
   containFrame,
   contentToViewBox,
+  dimPathData,
+  HIGHLIGHT,
+  hitTest,
+  IDENTITY,
+  IMAGE_ASPECT,
+  muscleInfo,
   pointsToViewBox,
+  REGION_VIEWBOX,
+  REGIONS,
   screenToContent,
+  toPathData,
   zoomAbout,
-} from './view-transform';
+  type BodyLayer,
+  type BodyView,
+} from '@gymsheet/anatomy';
+import { IMAGES } from './images';
+import { Segmented } from './segmented';
 
 const VIEW_OPTIONS = [
   { value: 'front', label: 'Frente' },
