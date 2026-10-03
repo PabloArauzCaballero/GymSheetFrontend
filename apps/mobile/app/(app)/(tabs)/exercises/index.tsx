@@ -278,7 +278,7 @@ export default function ExercisesScreen() {
             title="Sin resultados"
           />
         ) : (
-          <Card>
+          <Card list>
             {items.map((exercise, index) => (
               <View key={exercise.id}>
                 {index > 0 ? <Divider /> : null}

@@ -1,17 +1,22 @@
 import { useMemo, useState } from 'react';
 import { Image } from 'expo-image';
-import { type LayoutChangeEvent, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { type LayoutChangeEvent, StyleSheet, View, useWindowDimensions } from 'react-native';
+import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
-import { colors, radii } from '@/theme';
+import { colors, radii, spacing } from '@/theme';
 import { toPathData } from './hit-test';
-import { HIGHLIGHT } from './highlight';
+import { HIGHLIGHT, dimPathData } from './highlight';
 import { IMAGES, type ImageTag } from './images';
 import { AGGREGATES, muscleInfo } from './muscle-catalog';
 import { boundsArea, boundsOf, placeBounds } from './region-fit';
 import { REGIONS, REGION_VIEWBOX } from './regions.generated';
 import type { BodyRegion } from './types';
 
-const HEIGHT = 240;
+/** Proporción de la cabecera (alto / ancho): apaisada, como una lámina. */
+const ASPECT = 3 / 4;
+/** Aire alrededor del músculo: con 1.5 la cabeza o los pies tocaban el borde. */
+const PADDING = 1.9;
 const TAGS: readonly ImageTag[] = ['surface-front', 'surface-back', 'deep-front', 'deep-back'];
 
 /** La vista donde el músculo ocupa más: es donde mejor se lee. */
@@ -34,14 +39,21 @@ function bestView(codes: readonly string[]): { tag: ImageTag; regions: BodyRegio
  * pinta nada en vez de enseñar un cuerpo sin resaltar que no significa nada.
  */
 export function MuscleHero({ code }: { code: string }) {
-  const [width, setWidth] = useState(0);
+  const { width: windowWidth } = useWindowDimensions();
+  const reduceMotion = useReducedMotion();
+  // Se estima antes de medir para reservar el alto desde el primer fotograma.
+  const [width, setWidth] = useState(windowWidth - spacing.lg * 2);
+  const height = Math.round(width * ASPECT);
   const codes = AGGREGATES[code.toUpperCase()] ?? [code.toUpperCase()];
   const view = useMemo(() => bestView(codes), [codes.join('|')]);
 
   if (!view || !muscleInfo(code)) return null;
   const bounds = boundsOf(view.regions);
   const placement =
-    bounds && width > 0 ? placeBounds(bounds, { width, height: HEIGHT }, REGION_VIEWBOX) : null;
+    bounds && width > 0
+      ? placeBounds(bounds, { width, height }, REGION_VIEWBOX, { padding: PADDING })
+      : null;
+  const paths = view.regions.map((region) => toPathData(region.rings));
 
   return (
     <View
@@ -49,12 +61,12 @@ export function MuscleHero({ code }: { code: string }) {
       importantForAccessibility="no-hide-descendants"
       onLayout={(event: LayoutChangeEvent) => setWidth(Math.round(event.nativeEvent.layout.width))}
       style={{
-        height: HEIGHT,
+        height,
         borderRadius: radii.xl,
         overflow: 'hidden',
         backgroundColor: colors.surfaceLowest,
-        borderWidth: 1,
-        borderColor: colors.borderSubtle,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: colors.border,
       }}
     >
       {placement ? (
@@ -75,28 +87,50 @@ export function MuscleHero({ code }: { code: string }) {
             style={{ width: '100%', height: '100%' }}
             transition={120}
           />
-          <Svg
-            height={placement.height}
-            pointerEvents="none"
-            style={{ position: 'absolute', left: 0, top: 0 }}
-            viewBox={`0 0 ${REGION_VIEWBOX.width} ${REGION_VIEWBOX.height}`}
-            width={placement.width}
+          <Animated.View
+            entering={reduceMotion ? undefined : FadeIn.duration(HIGHLIGHT.fadeMs * 2)}
+            style={StyleSheet.absoluteFill}
           >
-            {view.regions.map((region, index) => (
+            <Svg
+              height={placement.height}
+              pointerEvents="none"
+              viewBox={`0 0 ${REGION_VIEWBOX.width} ${REGION_VIEWBOX.height}`}
+              width={placement.width}
+            >
               <Path
-                d={toPathData(region.rings)}
-                fill={HIGHLIGHT.fill}
-                fillOpacity={HIGHLIGHT.fillOpacity}
+                d={dimPathData(paths, REGION_VIEWBOX.width, REGION_VIEWBOX.height)}
+                fill={HIGHLIGHT.dim}
+                fillOpacity={HIGHLIGHT.dimOpacity}
                 fillRule="evenodd"
-                key={`${region.code}-${index}`}
-                stroke={HIGHLIGHT.stroke}
-                strokeLinejoin="round"
-                strokeWidth={HIGHLIGHT.strokeWidth}
               />
-            ))}
-          </Svg>
+              {paths.map((d, index) => (
+                <Path
+                  d={d}
+                  fill={HIGHLIGHT.fill}
+                  fillOpacity={HIGHLIGHT.fillOpacity}
+                  fillRule="evenodd"
+                  key={index}
+                  stroke={HIGHLIGHT.stroke}
+                  strokeLinejoin="round"
+                  strokeWidth={HIGHLIGHT.strokeWidth}
+                />
+              ))}
+            </Svg>
+          </Animated.View>
         </View>
       ) : null}
+      {/* Los bordes de arriba y abajo se funden con la tarjeta: la lámina
+          recortada no termina en un corte seco a media pierna. */}
+      <LinearGradient
+        colors={[colors.surfaceLowest, `${colors.surfaceLowest}00`]}
+        pointerEvents="none"
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: spacing.xl }}
+      />
+      <LinearGradient
+        colors={[`${colors.surfaceLowest}00`, colors.surfaceLowest]}
+        pointerEvents="none"
+        style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: spacing.xl }}
+      />
     </View>
   );
 }

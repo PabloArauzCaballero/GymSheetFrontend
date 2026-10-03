@@ -12,8 +12,25 @@
  * marca.
  */
 export const HIGHLIGHT = {
-  fill: '#00d9ff',
-  fillOpacity: 0.62,
-  stroke: '#d6fbff',
-  strokeWidth: 3,
+  fill: '#1fbcf2',
+  fillOpacity: 0.55,
+  stroke: '#c9f3ff',
+  strokeWidth: 2,
+  /**
+   * Velo sobre el resto del cuerpo. El músculo destaca porque lo demás se
+   * apaga, no porque el relleno grite: así el cian puede ser más suave y la
+   * textura del músculo sigue viéndose debajo.
+   */
+  dim: '#000000',
+  dimOpacity: 0.5,
+  /** Fundido de entrada del resaltado, en ms. */
+  fadeMs: 180,
 } as const;
+
+/**
+ * Path del velo: un rectángulo del tamaño de la lámina con los contornos del
+ * músculo como agujeros (se pinta con `evenodd`).
+ */
+export function dimPathData(musclePaths: readonly string[], width: number, height: number): string {
+  return [`M0 0H${width}V${height}H0Z`, ...musclePaths].join(' ');
+}

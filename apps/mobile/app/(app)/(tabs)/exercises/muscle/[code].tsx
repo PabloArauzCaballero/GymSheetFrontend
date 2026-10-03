@@ -5,10 +5,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 import type { MuscleExercise } from '@gymsheet/schemas';
 import { Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
-import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
+import { EmptyState, ErrorState, RowsSkeleton } from '@/components/feedback';
 import { PressableScale } from '@/components/motion';
 import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
+import { titleCase } from '@/components/catalogue-grid';
 import { MuscleHero, muscleInfo } from '@/features/body-map';
 import { muscleService } from '@/api/services';
 import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
@@ -22,14 +23,18 @@ const ROLES: readonly { role: MuscleExercise['rol']; title: string; icon: keyof 
   { role: 'STABILIZER', title: 'Lo estabilizan', icon: 'shield-checkmark-outline' },
 ];
 
-/** Lámina del ejercicio sobre fondo claro, como en el resto del catálogo. */
+/**
+ * Lámina del ejercicio sobre fondo claro, con el mismo tamaño y radio que las
+ * filas del catálogo (`ExerciseImage` a 64 pt): dos listas de ejercicios que se
+ * ven distintas parecen dos apps.
+ */
 function Thumb({ uri, label }: { uri: string | null; label: string }) {
   return (
     <View
       style={{
-        width: 56,
-        height: 56,
-        borderRadius: radii.md,
+        width: 64,
+        height: 64,
+        borderRadius: radii.lg,
         overflow: 'hidden',
         alignItems: 'center',
         justifyContent: 'center',
@@ -70,7 +75,7 @@ function ExerciseRow({ exercise, onPress }: { exercise: MuscleExercise; onPress:
     >
       <Thumb label={exercise.imagen?.textoAlternativo ?? exercise.nombre} uri={exercise.imagen?.url ?? null} />
       <Text numberOfLines={2} style={{ flex: 1, color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
-        {exercise.nombre}
+        {titleCase(exercise.nombre)}
       </Text>
       <Ionicons
         accessibilityElementsHidden
@@ -146,22 +151,25 @@ export default function MuscleScreen() {
     >
       <BackLink />
       <MuscleHero code={code} />
-      <ScreenHeader subtitle={subtitle} title={title} />
-
-      {muscle.data?.descripcion ? (
-        <Card>
-          <Text style={{ color: colors.text, fontSize: fontSizes.sm, lineHeight: 22 }}>
+      <View style={{ gap: spacing.md }}>
+        <ScreenHeader detail subtitle={subtitle} title={title} />
+        {/* La descripción es texto de lectura, no un bloque aparte: en una
+            tarjeta parecía un aviso y competía con la lista de debajo. */}
+        {muscle.data?.descripcion ? (
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.md, lineHeight: 24 }}>
             {muscle.data.descripcion}
           </Text>
-        </Card>
-      ) : null}
+        ) : null}
+        {exercises.data ? (
+          <Text style={{ color: colors.textDisabled, fontSize: fontSizes.sm, fontWeight: semibold }}>
+            {total} {total === 1 ? 'ejercicio' : 'ejercicios'}
+            {related ? ` de ${related.nombre.toLowerCase()}` : ''}
+          </Text>
+        ) : null}
+      </View>
 
       {exercises.isPending ? (
-        <View style={{ gap: spacing.sm }}>
-          <Skeleton height={72} />
-          <Skeleton height={72} />
-          <Skeleton height={72} />
-        </View>
+        <RowsSkeleton />
       ) : exercises.isError ? (
         <ErrorState error={exercises.error} onRetry={() => void exercises.refetch()} />
       ) : items.length === 0 ? (
@@ -193,16 +201,12 @@ export default function MuscleScreen() {
               </View>
             </Card>
           ) : null}
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-            {total} {total === 1 ? 'ejercicio' : 'ejercicios'}
-            {related ? ` de ${related.nombre.toLowerCase()}` : ''}
-          </Text>
           {ROLES.map(({ role, title: roleTitle, icon }, index) => {
             const rows = items.filter((item) => item.rol === role);
             if (rows.length === 0) return null;
             return (
               <Section icon={icon} index={index} key={role} title={roleTitle}>
-                <Card>
+                <Card list>
                   {rows.map((exercise, rowIndex) => (
                     <View key={exercise.id}>
                       {rowIndex > 0 ? <Divider /> : null}

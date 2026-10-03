@@ -50,7 +50,7 @@ export default function MusclesListScreen() {
       <ScreenHeader subtitle="Elige uno para ver sus ejercicios" title="Músculos" />
       {musclesByGroup().map(({ group, muscles }, index) => (
         <Section index={index} key={group.code} title={group.name}>
-          <Card>
+          <Card list>
             {muscles.map((muscle, rowIndex) => (
               <View key={muscle.code}>
                 {rowIndex > 0 ? <Divider /> : null}

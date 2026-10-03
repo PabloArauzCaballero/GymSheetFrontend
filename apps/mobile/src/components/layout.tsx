@@ -1,6 +1,8 @@
-import { Children, useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { Children, useCallback, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   RefreshControl,
   ScrollView,
@@ -135,10 +137,15 @@ export function ScrollScreen({
   // On Android the safe-area inset can come back shorter than the drawn status
   // bar, which left scrolled content half-visible under the clock.
   const topInset = Math.max(insets.top, StatusBar.currentHeight ?? 0);
+  // La barra de pestañas flota sobre el contenido (vidrio). Dentro de una
+  // pestaña su altura ya incluye el área segura de abajo; fuera de ellas el
+  // contexto no existe y se usa el área segura sin más.
+  const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
+  const bottomInset = Math.max(insets.bottom, tabBarHeight);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <AmbientBackground />
+      <AmbientBackground waveform={false} />
       <ScrollView
         // El desplazamiento se anota al terminar el gesto, no en cada
         // fotograma. `onScroll` con `scrollEventThrottle` instala un evento
@@ -155,7 +162,7 @@ export function ScrollScreen({
         ref={scrollRef}
         contentContainerStyle={{
           paddingTop: topInset + spacing.xl,
-          paddingBottom: insets.bottom + spacing['2xl'],
+          paddingBottom: bottomInset + spacing['2xl'],
           paddingLeft: gutter + insets.left,
           paddingRight: gutter + insets.right,
           gap: screenGap,
@@ -195,7 +202,7 @@ export function ScrollScreen({
         <View
           style={{
             position: 'absolute',
-            bottom: insets.bottom + spacing.md,
+            bottom: bottomInset + spacing.md,
             left: gutter + insets.left,
             right: gutter + insets.right,
           }}
@@ -204,22 +211,29 @@ export function ScrollScreen({
         </View>
       ) : null}
 
-      {/* Opaque band over the status bar: without it, scrolled content slides
-          under the clock and battery and the two become unreadable. */}
-      <View
+      {/* Band over the status bar: without it, scrolled content slides under
+          the clock and battery and the two become unreadable. Opaque under the
+          clock, then fading out over a short tail, so it reads as the content
+          dissolving into the top edge rather than as a black strip with a hard
+          line under it. */}
+      <LinearGradient
+        colors={[colors.background, colors.background, `${colors.background}00`]}
+        locations={[0, topInset / (topInset + STATUS_FADE), 1]}
         pointerEvents="none"
         style={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
-          height: topInset,
-          backgroundColor: colors.background,
+          height: topInset + STATUS_FADE,
         }}
       />
     </View>
   );
 }
+
+/** Lo que tarda en desvanecerse la franja de la barra de estado, en pt. */
+const STATUS_FADE = 24;
 
 /** Page title plus an optional line of context underneath. */
 /**
@@ -254,9 +268,17 @@ export function ScreenHeader({
   title,
   subtitle,
   tourKey,
+  detail = false,
 }: {
   title: string;
   subtitle?: string;
+  /**
+   * Título de una pantalla de detalle (un músculo, un ejercicio). El tamaño de
+   * display es para las secciones de la app; un nombre largo como «Flexores del
+   * antebrazo» a 40 pt partía en dos líneas y empujaba la página entera, cuando
+   * aquí el protagonista es lo que va debajo del nombre.
+   */
+  detail?: boolean;
   /** Si se pasa, la cabecera ofrece «?» para repetir la guía de la pantalla. */
   tourKey?: Exclude<TourKey, 'welcome'>;
 }) {
@@ -275,7 +297,7 @@ export function ScreenHeader({
           // title when the step down to body text is unmistakable; at 32 against
           // a 16 body it was merely "bigger", and the page leaned on colour for
           // hierarchy instead of on type.
-          fontSize: fontSizes.display,
+          fontSize: detail ? fontSizes['2xl'] : fontSizes.display,
           // 600, no 800. Al tamaño de display el peso ya no aporta jerarquía —
           // la aporta el salto de tamaño— y lo que añade es densidad: la letra
           // se cierra sobre sí misma y la página se lee pesada. Un display
@@ -285,8 +307,8 @@ export function ScreenHeader({
           // Optical tracking: large type set at default spacing looks loose and
           // amateur. Negative tracking is most of what separates a display face
           // from body text scaled up.
-          letterSpacing: fontSizes.display * -0.03,
-          lineHeight: fontSizes.display * 1.05,
+          letterSpacing: (detail ? fontSizes['2xl'] : fontSizes.display) * -0.03,
+          lineHeight: (detail ? fontSizes['2xl'] : fontSizes.display) * 1.08,
         }}
       >
         {title}
@@ -366,26 +388,36 @@ export function Section({
 export function Card({
   children,
   accent,
+  list = false,
   onPress,
   accessibilityLabel,
   style,
 }: {
   children: ReactNode;
   accent?: string;
+  /**
+   * Tarjeta que es una lista de filas separadas por `Divider`. Sin hueco entre
+   * hijos y con menos relleno vertical: con el hueco normal cada fila sumaba
+   * 16 pt arriba y abajo de su propio alto táctil y una lista de seis filas
+   * ocupaba media pantalla. Las filas ya traen su altura; el divisor separa.
+   */
+  list?: boolean;
   onPress?: () => void;
   accessibilityLabel?: string;
   /** Escape hatch for a card that carries a whole screen, not a summary. */
   style?: StyleProp<ViewStyle>;
 }) {
+  // El acento ya no es una franja de color en el borde izquierdo —ese recurso
+  // de aviso de blog abarataba la tarjeta—, sino el contorno entero teñido muy
+  // levemente: la tarjeta se distingue sin que ningún lado grite.
   const surface = {
-    gap: cardGap,
+    gap: list ? 0 : cardGap,
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderLeftWidth: accent ? 2 : 1,
-    borderLeftColor: accent ?? colors.borderSubtle,
+    borderColor: accent ? `${accent}55` : colors.borderSubtle,
     backgroundColor: colors.surfaceLow,
-    padding: cardPadding,
+    paddingHorizontal: cardPadding,
+    paddingVertical: list ? spacing.sm : cardPadding,
   } as const;
 
   // Lo que había aquí y ya no está, y por qué:
@@ -538,7 +570,9 @@ export function StatTile({
         borderRadius: radii.lg,
         borderWidth: 1,
         borderColor: colors.borderSubtle,
-        backgroundColor: colors.surface,
+        // La misma superficie que `Card`: una cifra junto a una tarjeta no debe
+        // parecer de otro material.
+        backgroundColor: colors.surfaceLow,
         paddingVertical: spacing.lg,
         paddingHorizontal: spacing.md,
       }}
@@ -623,14 +657,15 @@ export type BadgeTone = keyof typeof tones.dark;
  * dentro de seis meses, cuando alguien añada el chip numero veinte sin haber
  * leido esto. Es el mismo latido que la web (`@keyframes chip-heartbeat`).
  *
- * `latido={false}` para el chip que ya vive dentro de algo que se mueve —una
- * tarjeta que entra, una baraja que se arrastra—: dos movimientos superpuestos
- * no suman, se pelean.
+ * Ahora late sólo si se pide (`latido`). Un estado fijo («Activa»,
+ * «Asignada») que palpita sin parar llama la atención sobre algo que no ha
+ * cambiado, y una pantalla con trece chips latiendo deja de ser sobria. Se
+ * reserva para lo que de verdad pide mirarlo ahora (algo nuevo, algo urgente).
  */
 export function Badge({
   label,
   tone = 'info',
-  latido = true,
+  latido = false,
 }: {
   label: string;
   tone?: BadgeTone;

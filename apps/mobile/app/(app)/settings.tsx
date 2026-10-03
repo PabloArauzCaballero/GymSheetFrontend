@@ -51,7 +51,7 @@ export default function SettingsScreen() {
       <ScreenHeader title="Ajustes" />
 
       <Section icon="person-outline" title="Cuenta">
-        <Card>
+        <Card list>
           <Row icon="mail-outline" label="Correo" value={principal?.email ?? '—'} />
           <Divider />
           <Row icon="key-outline" label="Sesión" value="Guardada en el llavero del dispositivo" />
@@ -59,7 +59,7 @@ export default function SettingsScreen() {
       </Section>
 
       <Section icon="phone-portrait-outline" title="Aplicación">
-        <Card>
+        <Card list>
           <Row icon="pricetag-outline" label="Versión" value="1.0.0" />
           <Divider />
           <Row icon="server-outline" label="Entorno" value={ENVIRONMENT_LABEL[env.environment] ?? env.environment} />
