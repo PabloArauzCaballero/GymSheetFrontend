@@ -11,6 +11,7 @@ import {
   equipmentSchema,
   exerciseMediaSchema,
   exerciseSchema,
+  exerciseTaxonomySchema,
   favoriteExerciseSchema,
   pageSchema,
 } from '@/shared/api/schemas';
@@ -63,6 +64,8 @@ export const exerciseService = {
   list: (filters: ExerciseFilters) =>
     apiRequest<Page<Exercise>>(`/exercises?${queryString(filters)}`, pageSchema(exerciseSchema)),
   get: (id: string) => apiRequest<Exercise>(`/exercises/${id}`, exerciseSchema),
+  /** Zonas del cuerpo con sus músculos y cuántos ejercicios tiene cada uno. */
+  taxonomy: () => apiRequest('/exercises/taxonomy', exerciseTaxonomySchema),
   createPersonal: (input: ExerciseInput) =>
     apiRequest<Exercise>('/exercises/personal', exerciseSchema, { method: 'POST', body: input }),
   updatePersonal: (id: string, input: Partial<ExerciseInput>) =>

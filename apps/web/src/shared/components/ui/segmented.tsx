@@ -58,7 +58,7 @@ export function Segmented<T extends string>({
           <button
             aria-checked={active}
             className={
-              'relative z-[1] h-9 min-w-[5.5rem] rounded-full px-4 text-sm transition-colors duration-[var(--dur-1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-ink)] ' +
+              'relative z-[1] min-h-11 min-w-[5.5rem] rounded-full px-4 text-sm transition-colors duration-[var(--dur-1)] motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-ink)] ' +
               (active ? 'font-semibold text-[var(--text)]' : 'font-medium text-[var(--text-muted)] hover:text-[var(--text)]')
             }
             key={option.value}

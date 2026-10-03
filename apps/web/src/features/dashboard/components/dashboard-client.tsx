@@ -28,6 +28,7 @@ import { ButtonLink } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { MetricCard } from '@/shared/components/ui/metric-card';
 import { formatDateTime, formatDuration } from '@/shared/lib/date';
+import { DashboardTrainingSummary } from './dashboard-training-summary';
 
 function totalVolume(workouts: Awaited<ReturnType<typeof workoutService.list>>['items']) {
   return workouts.reduce(
@@ -45,8 +46,9 @@ function totalVolume(workouts: Awaited<ReturnType<typeof workoutService.list>>['
 
 export function DashboardClient() {
   const workouts = useQuery({
-    queryKey: queryKeys.workouts(1),
-    queryFn: () => workoutService.list(1, 5),
+    // La comparación semanal requiere más historial que las cinco filas visibles.
+    queryKey: ['workouts', 'dashboard'],
+    queryFn: () => workoutService.list(1, 40),
   });
   const favorites = useQuery({
     queryKey: queryKeys.favorites,
@@ -145,6 +147,8 @@ export function DashboardClient() {
         <SendaCard progression={progression.data} />
       ) : null}
 
+      <DashboardTrainingSummary workouts={sessions} />
+
       <section
         aria-label="Indicadores"
         data-tutorial-id="dashboard:metrics"
@@ -191,7 +195,7 @@ export function DashboardClient() {
               </div>
             ) : (
               <div className="stagger divide-y divide-[var(--border-subtle)]">
-                {sessions.map((session) => (
+                {sessions.slice(0, 5).map((session) => (
                   <Link
                     className="tap group flex items-center gap-4 p-5 hover:bg-[var(--surface-low)]"
                     href={`/workouts/${session.id}`}

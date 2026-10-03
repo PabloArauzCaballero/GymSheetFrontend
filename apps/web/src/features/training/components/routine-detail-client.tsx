@@ -20,6 +20,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from '@/shared/components/ui/dialog';
 import { Field } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
+import { ScheduleRoutine } from './schedule-routine';
 
 const WEEKDAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
@@ -187,6 +188,8 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
         eyebrow={`${routine.visibilidad} · ${routine.objetivo ?? 'objetivo libre'}`}
         title={routine.nombre}
       />
+
+      <ScheduleRoutine routineId={id} />
 
       <section className="panel overflow-hidden">
         <div className="border-b border-[var(--border-subtle)] p-5">

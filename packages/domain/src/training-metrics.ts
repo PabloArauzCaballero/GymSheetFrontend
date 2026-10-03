@@ -1,5 +1,10 @@
 import type { Workout, WorkoutExercise } from '@gymsheet/types';
 
+// Vive en el dominio compartido desde que la web también compara esta semana
+// con la anterior: dos copias del cálculo acabarían dando dos cifras distintas
+// para la misma persona según dónde abra el panel. Sólo importa tipos, para
+// que `node --test` lo cargue sin resolver el resto del paquete.
+
 /**
  * What a training log actually says, derived on the client.
  *

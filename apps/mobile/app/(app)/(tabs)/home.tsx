@@ -37,7 +37,7 @@ import {
   formatVolume,
   overloadDelta,
   summariseTraining,
-} from '@/lib/training-metrics';
+} from '@gymsheet/domain';
 
 /**
  * The client's dashboard: where the membership stands, what training is

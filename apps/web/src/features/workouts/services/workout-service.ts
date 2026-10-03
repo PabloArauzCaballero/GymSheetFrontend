@@ -9,6 +9,7 @@ import type {
 } from '@/shared/api/contracts';
 import { pageSchema, workoutFinishSchema, workoutSchema } from '@/shared/api/schemas';
 import type { WorkoutFinish } from '@/shared/api/schemas';
+import type { StreakLocation } from '@gymsheet/domain';
 
 const deleteSchema = z.object({ deleted: z.literal(true) });
 const objectSchema = z.record(z.string(), z.unknown());
@@ -23,8 +24,11 @@ export const workoutService = {
   start: (input: CreateWorkoutInput) =>
     apiRequest<Workout>('/workouts', workoutSchema, { method: 'POST', body: input }),
   /** Cierra la sesión y trae lo que movió en la senda (puntos, insignias, rango). */
-  finish: (id: string) =>
-    apiRequest<WorkoutFinish>(`/workouts/${id}/finish`, workoutFinishSchema, { method: 'PATCH' }),
+  finish: (id: string, location?: StreakLocation | null) =>
+    apiRequest<WorkoutFinish>(`/workouts/${id}/finish`, workoutFinishSchema, {
+      method: 'PATCH',
+      body: location ?? {},
+    }),
   cancel: (id: string) =>
     apiRequest<Workout>(`/workouts/${id}/cancel`, workoutSchema, { method: 'PATCH' }),
   addExercise: (sessionId: string, input: AddWorkoutExerciseInput) =>

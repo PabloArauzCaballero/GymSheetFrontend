@@ -48,6 +48,12 @@ export type AssignRoutineInput = {
   nota?: string | null;
 };
 
+export type ScheduleRoutineInput = {
+  diasSemana: number[];
+  repiteDesde: string;
+  repiteHasta: string | null;
+};
+
 export type ImportRoutinePayload = {
   nombre: string;
   descripcion?: string | null;
@@ -82,6 +88,11 @@ export const trainingService = {
     }),
   assign: (routineId: string, input: AssignRoutineInput) =>
     apiRequest<RoutineAssignment>(`/routines/${routineId}/assign`, routineAssignmentSchema, {
+      method: 'POST',
+      body: input,
+    }),
+  schedule: (routineId: string, input: ScheduleRoutineInput) =>
+    apiRequest<RoutineAssignment>(`/routines/${routineId}/schedule`, routineAssignmentSchema, {
       method: 'POST',
       body: input,
     }),

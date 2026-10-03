@@ -17,6 +17,7 @@ import {
   onboardingSchema,
   profilePhotoSchema,
   exerciseMusclesSchema,
+  exerciseTaxonomySchema,
   muscleCatalogEntrySchema,
   muscleEquipmentInferenceSchema,
   muscleExercisesPageSchema,
@@ -277,32 +278,8 @@ export interface ExerciseFilters {
   pageSize?: number;
 }
 
-/**
- * Body parts and, inside each, the muscles they train, with how many exercises
- * each holds. Powers the catalogue's grid navigation, so the app never has to
- * carry a hardcoded list of muscles that would drift from the data.
- */
-export const exerciseTaxonomySchema = z.array(
-  z.object({
-    bodyPart: z.string(),
-    total: z.number().int(),
-    /**
-     * A representative plate from the catalogue. The dataset illustrations
-     * highlight the worked muscle in red, so they identify a group far faster
-     * than any icon could — the picture *is* the label.
-     */
-    imageUrl: z.string().nullable().default(null),
-    muscles: z.array(
-      z.object({
-        targetMuscle: z.string(),
-        total: z.number().int(),
-        imageUrl: z.string().nullable().default(null),
-      }),
-    ),
-  }),
-);
-
-export type ExerciseTaxonomy = z.infer<typeof exerciseTaxonomySchema>;
+// El esquema de la taxonomía vive en @gymsheet/schemas: la web lo usa igual.
+export type { ExerciseTaxonomy } from '@gymsheet/schemas';
 
 function queryString(filters: ExerciseFilters): string {
   const params = new URLSearchParams();

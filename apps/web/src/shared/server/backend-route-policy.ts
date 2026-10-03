@@ -44,6 +44,7 @@ const allowedPathPatterns = [
   /^\/exercises\/personal$/u,
   // Máquina que corresponde a un músculo, para el alta de ejercicio propio.
   /^\/exercises\/equipment-suggestion$/u,
+  /^\/exercises\/taxonomy$/u,
   new RegExp(`^/exercises/${resourceId}(/media)?$`, 'u'),
   // Los músculos que trabaja un ejercicio, para los chips que abren cada uno.
   new RegExp(`^/exercises/${resourceId}/muscles$`, 'u'),
@@ -133,7 +134,7 @@ const allowedPathPatterns = [
   /^\/routines\/assignments\/(me|coach)$/u,
   new RegExp(`^/routines/exercises/${resourceId}$`, 'u'),
   new RegExp(`^/routines/${resourceId}$`, 'u'),
-  new RegExp(`^/routines/${resourceId}/(exercises|assign|start)$`, 'u'),
+  new RegExp(`^/routines/${resourceId}/(exercises|assign|schedule|start)$`, 'u'),
   /^\/user-exercises$/u,
   new RegExp(`^/user-exercises/${resourceId}$`, 'u'),
   /^\/users\/me$/u,

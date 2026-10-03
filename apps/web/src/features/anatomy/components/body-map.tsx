@@ -23,7 +23,7 @@ import { ANATOMY_CANVAS, ANATOMY_ZONE_LINE } from '@/shared/theme/anatomy-canvas
 import { anatomyImage } from '../images';
 import { FigureChrome } from './figure-chrome';
 import { groupByCode, usePrefersReducedMotion } from './figure-utils';
-import { Segmented } from './segmented';
+import { Segmented } from '@/shared/components/ui/segmented';
 import { useFigureGestures } from './use-figure-gestures';
 
 const VIEW_OPTIONS = [

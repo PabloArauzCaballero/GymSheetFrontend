@@ -23,6 +23,7 @@ const allowedCases: Array<[string[], string]> = [
   [['muscles', 'DELTOID_ANTERIOR', 'exercises'], '/muscles/DELTOID_ANTERIOR/exercises'],
   [['exercises', id, 'muscles'], `/exercises/${id}/muscles`],
   [['exercises', 'taxonomy'], '/exercises/taxonomy'],
+  [['routines', id, 'schedule'], `/routines/${id}/schedule`],
   [['auth', 'socket-ticket'], '/auth/socket-ticket'],
   [['me', 'connections'], '/me/connections'],
   [['me', 'connections', id], `/me/connections/${id}`],

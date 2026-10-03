@@ -18,7 +18,7 @@ import { useAmbientStore } from '@/state/ambient-store';
 import { useSessionRewardStore } from '@/state/session-reward-store';
 import { WORKOUT_LABEL, WORKOUT_TONE, formatDuration, relativeDay } from '@/lib/format';
 import { captureStreakLocation } from '@/lib/streak-location';
-import { previousPerformance, topSet } from '@/lib/training-metrics';
+import { previousPerformance, topSet } from '@gymsheet/domain';
 import { accentPolicy, colors, fontSizes, iconSizes, semibold, spacing, tones } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 

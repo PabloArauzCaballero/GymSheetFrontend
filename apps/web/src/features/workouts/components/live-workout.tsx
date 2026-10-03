@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import { useState, type CSSProperties } from 'react';
 import { confirm, notify } from '@/shared/notifications';
 import { workoutService } from '@/features/workouts/services/workout-service';
+import { captureStreakLocation } from '@/features/workouts/services/streak-location';
 import { queryKeys } from '@/shared/api/query-keys';
 import type { SessionReward } from '@/shared/api/schemas';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
@@ -47,7 +48,7 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
     await queryClient.invalidateQueries({ queryKey: ['workouts'] });
   };
   const finish = useMutation({
-    mutationFn: () => workoutService.finish(id),
+    mutationFn: async () => workoutService.finish(id, await captureStreakLocation()),
     onSuccess: async (result) => {
       await refresh();
       await queryClient.invalidateQueries({ queryKey: ['progression'] });

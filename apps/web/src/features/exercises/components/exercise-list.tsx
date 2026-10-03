@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, SlidersHorizontal } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useMemo, useState, type CSSProperties } from 'react';
 import { notify } from '@/shared/notifications';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
@@ -16,25 +16,27 @@ import { ButtonLink } from '@/shared/components/ui/button';
 import { Field } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
 import { Pagination } from '@/shared/components/ui/pagination';
-import { Select } from '@/shared/components/ui/select';
 import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
 import { BodyMap } from '@/features/anatomy/components/body-map';
 import { ExerciseCard } from './exercise-card';
+import { ExerciseZoneFilter } from './exercise-zone-filter';
 
 export function ExerciseList() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [group, setGroup] = useState('');
+  const [bodyPart, setBodyPart] = useState<string | null>(null);
+  const [muscle, setMuscle] = useState<string | null>(null);
   const debouncedSearch = useDebouncedValue(search.trim(), 300);
   const filters = useMemo(
     () => ({
       page,
       pageSize: 24,
       search: debouncedSearch || undefined,
-      grupoMuscular: group || undefined,
+      bodyPart: bodyPart ?? undefined,
+      targetMuscle: muscle ?? undefined,
     }),
-    [debouncedSearch, group, page],
+    [bodyPart, debouncedSearch, muscle, page],
   );
   const filterKey = new URLSearchParams(
     Object.entries(filters)
@@ -44,6 +46,11 @@ export function ExerciseList() {
   const exercises = useQuery({
     queryKey: queryKeys.exercises(filterKey),
     queryFn: () => exerciseService.list(filters),
+  });
+  const taxonomy = useQuery({
+    queryKey: ['exercises', 'taxonomy'],
+    queryFn: exerciseService.taxonomy,
+    staleTime: 10 * 60 * 1000,
   });
   const favorites = useQuery({
     queryKey: queryKeys.favorites,
@@ -60,7 +67,6 @@ export function ExerciseList() {
     onError: (error: Error) => notify.error(error),
   });
 
-  const groups = [...new Set(exercises.data?.items.map((item) => item.grupoMuscular) ?? [])].sort();
   return (
     <div className="grid gap-8">
       <PageHeader
@@ -81,7 +87,7 @@ export function ExerciseList() {
           «qué entreno para esto». El buscador y la lista siguen debajo para
           quien ya sabe el nombre del ejercicio. */}
       <BodyMap />
-      <section className="panel grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_240px]">
+      <section className="panel grid gap-4 p-4">
         <Field htmlFor="exercise-search" label="Buscar">
           <div className="relative" data-tutorial-id="exercises:search">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]" />
@@ -102,27 +108,24 @@ export function ExerciseList() {
             />
           </div>
         </Field>
-        <Field htmlFor="muscle-group" label="Grupo muscular">
-          <div className="relative" data-tutorial-id="exercises:filter">
-            <SlidersHorizontal className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]" />
-            <Select
-              className="pl-10"
-              id="muscle-group"
-              onChange={(event) => {
-                setGroup(event.target.value);
+        {taxonomy.data?.length ? (
+          <div data-tutorial-id="exercises:filter">
+            <ExerciseZoneFilter
+              bodyPart={bodyPart}
+              muscle={muscle}
+              onBodyPart={(value) => {
+                setBodyPart(value);
+                setMuscle(null);
                 setPage(1);
               }}
-              value={group}
-            >
-              <option value="">Todos</option>
-              {groups.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </Select>
+              onMuscle={(value) => {
+                setMuscle(value);
+                setPage(1);
+              }}
+              taxonomy={taxonomy.data}
+            />
           </div>
-        </Field>
+        ) : null}
       </section>
       {exercises.isLoading ? (
         <SkeletonCardGrid count={6} withMedia />

@@ -14,6 +14,7 @@ import {
   MessageCircle,
   ScanFace,
   Settings,
+  UserRound,
   ShieldCheck,
   Signpost,
   Sparkles,
@@ -52,7 +53,8 @@ export const primaryNavigation: NavigationItem[] = [
   { href: '/membership', label: 'Membresía', icon: IdCard },
   { href: '/access', label: 'Acceso', icon: KeyRound },
   { href: '/notifications', label: 'Avisos', icon: Bell },
-  { href: '/profile', label: 'Mi perfil', icon: Settings },
+  { href: '/profile', label: 'Mi perfil', icon: UserRound },
+  { href: '/settings', label: 'Ajustes', icon: Settings },
   { href: '/tutorials', label: 'Centro de ayuda', icon: GraduationCap },
 ];
 
