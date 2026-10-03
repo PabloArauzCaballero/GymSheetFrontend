@@ -14,12 +14,13 @@
 | Comprobación | Resultado |
 | --- | --- |
 | `curl` a `/anatomy/surface-front.webp` en Contabo | HTTP 200, `image/webp` el 3 de octubre; el despliegue anterior de las láminas terminó. |
-| `yarn -s turbo run source-check type-check lint test --filter=!@gymsheet/mobile` | 25/25 tareas correctas; web 47 archivos y 284 pruebas correctas en la pasada final. |
+| `yarn -s turbo run source-check type-check lint test --filter=!@gymsheet/mobile` | 25/25 tareas correctas; web 285/285 pruebas correctas tras la corrección de `Permissions-Policy`. |
 | `(cd apps/mobile && npx tsc --noEmit -p . && yarn -s test:unit)` | TypeScript correcto. `test:unit` terminó con código 0, pero informó **0 pruebas**; no se interpreta como cobertura del móvil. |
 | Pruebas dirigidas de rutas, ajustes, filtro, plan semanal, programación, ubicación y comparación | Correctas; el BFF rechazó inicialmente la ruta de programación y la aceptó tras el cambio. |
 | `yarn workspace @gymsheet/web source-check` y `type-check` | Correctos; también incluidos en la pasada final de Turbo. |
 | Cherry-pick sobre `origin/test` en worktree temporal | Commit `70fff5a`; se conservó la navegación propia de `test` y se añadió Ajustes. En ese árbol: 25/25 tareas y 274/274 pruebas web; TypeScript móvil correcto. |
-| Push a `test` | Avance rápido `e20c83f` → `70fff5a`, confirmado por `git push origin HEAD:test`. No se subió a `dev`. |
+| Push a `dev` y `feat/mapa-muscular` | Ambas ramas avanzaron por fast-forward hasta `af19278`, confirmado con `git ls-remote`. |
+| Push a `test` | Avance rápido hasta `f1e98b0`, equivalente por cherry-pick a `af19278`, confirmado con `git push origin HEAD:test`. La instalación de dependencias en el worktree temporal falló en la fase de enlaces de Yarn; esa última prueba no se repitió allí. La misma corrección sí pasó la batería completa en la rama de trabajo. |
 | `yarn workspace @gymsheet/anatomy test` | 91/91 pruebas correctas, incluida una nueva comprobación de los dos puntos antes ausentes del pectoral. |
 | Superposición del pectoral con Playwright | [Antes](evidencia/pectoral-antes.png) y [después](evidencia/pectoral-despues.png), sobre la misma lámina local. El contorno cian ya no tiene escalones rectangulares. |
 
