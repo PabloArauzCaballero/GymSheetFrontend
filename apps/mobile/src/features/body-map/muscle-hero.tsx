@@ -5,13 +5,20 @@ import { type LayoutChangeEvent, StyleSheet, View, useWindowDimensions } from 'r
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { colors, radii, spacing } from '@/theme';
-import { toPathData } from './hit-test';
-import { HIGHLIGHT, dimPathData } from './highlight';
+import {
+  AGGREGATES,
+  boundsArea,
+  boundsOf,
+  dimPathData,
+  HIGHLIGHT,
+  muscleInfo,
+  placeBounds,
+  REGION_VIEWBOX,
+  REGIONS,
+  toPathData,
+  type BodyRegion,
+} from '@gymsheet/anatomy';
 import { IMAGES, type ImageTag } from './images';
-import { AGGREGATES, muscleInfo } from './muscle-catalog';
-import { boundsArea, boundsOf, placeBounds } from './region-fit';
-import { REGIONS, REGION_VIEWBOX } from './regions.generated';
-import type { BodyRegion } from './types';
 
 /** Proporción de la cabecera (alto / ancho): apaisada, como una lámina. */
 const ASPECT = 3 / 4;
