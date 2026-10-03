@@ -81,7 +81,7 @@ export function Select<T extends string>({
         accessibilityRole="button"
         accessibilityValue={{ text: selected?.label ?? placeholder }}
         onPress={() => setOpen(true)}
-        style={{
+        style={({ pressed }) => ({
           minHeight: minTouchTarget,
           borderRadius: radii.md,
           borderWidth: 1,
@@ -92,7 +92,8 @@ export function Select<T extends string>({
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: spacing.sm,
-        }}
+          opacity: pressed ? 0.6 : 1,
+        })}
       >
         <Text
           numberOfLines={1}
@@ -196,14 +197,15 @@ export function Select<T extends string>({
                   accessibilityState={{ selected: active }}
                   key={option.value || 'unspecified'}
                   onPress={() => choose(option.value)}
-                  style={{
+                  style={({ pressed }) => ({
                     minHeight: minTouchTarget + spacing.xs,
                     paddingHorizontal: spacing.lg,
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     gap: spacing.sm,
-                  }}
+                    opacity: pressed ? 0.6 : 1,
+                  })}
                 >
                   <Text
                     style={{

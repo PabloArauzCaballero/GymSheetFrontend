@@ -245,7 +245,7 @@ function ExerciseVideo({
       accessibilityLabel={`Reproducir demostración. ${altText}`}
       accessibilityRole="button"
       onPress={() => setPlaying(true)}
-      style={frame}
+      style={({ pressed }) => ({ ...frame, opacity: pressed ? 0.6 : 1 })}
     >
       {poster ? (
         <Image

@@ -290,6 +290,7 @@ export function Input({
   error,
   icon,
   revealable = false,
+  labelHidden = false,
   revealLabel = 'Mostrar contraseña',
   hideLabel = 'Ocultar contraseña',
   onBlur,
@@ -301,6 +302,12 @@ export function Input({
   icon?: keyof typeof Ionicons.glyphMap;
   /** Añade el ojo y gestiona `secureTextEntry` por su cuenta. */
   revealable?: boolean;
+  /**
+   * Oculta la etiqueta visible y la deja solo para el lector de pantalla. Para
+   * un buscador, donde la lupa y el texto de ayuda ya dicen qué es el campo y
+   * una etiqueta «Buscar» encima sólo repetía lo mismo.
+   */
+  labelHidden?: boolean;
   revealLabel?: string;
   hideLabel?: string;
 }) {
@@ -315,7 +322,9 @@ export function Input({
 
   return (
     <View style={{ gap: spacing.xs }}>
-      <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{label}</Text>
+      {labelHidden ? null : (
+        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{label}</Text>
+      )}
       <View style={{ justifyContent: 'center' }}>
         {icon ? (
           <Ionicons

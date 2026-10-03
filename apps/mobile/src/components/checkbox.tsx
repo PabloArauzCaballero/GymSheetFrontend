@@ -77,14 +77,15 @@ export function Checkbox({
       accessibilityState={{ checked }}
       hitSlop={spacing.sm}
       onPress={() => onChange(!checked)}
-      style={{
+      style={({ pressed }) => ({
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.sm,
         minHeight: minTouchTarget,
         alignSelf: 'flex-start',
         paddingRight: spacing.sm,
-      }}
+        opacity: pressed ? 0.6 : 1,
+      })}
     >
       <AnimatedView
         style={[

@@ -194,7 +194,10 @@ export default function ExercisesScreen() {
       <Input
         autoCapitalize="none"
         autoCorrect={false}
-        label="Buscar"
+        clearButtonMode="while-editing"
+        icon="search"
+        label="Buscar ejercicios"
+        labelHidden
         onChangeText={setSearch}
         placeholder="Nombre, grupo muscular…"
         returnKeyType="search"

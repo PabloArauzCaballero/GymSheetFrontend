@@ -1,7 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 import type { RoutineAssignment } from '@gymsheet/types';
 import { PressableScale } from '@/components/motion';
-import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
 
 /**
  * Weekday initials, indexed the way `Date.getDay()` indexes them — 0 is Sunday.
@@ -122,7 +123,15 @@ export function WeekPlan({
 
               </>
             ) : (
-              <Text style={{ color: colors.textDisabled, fontSize: 9 }}>descanso</Text>
+              // Una luna en vez de la palabra: «descanso» a 9 pt no cabía en
+              // una columna de un séptimo de pantalla y se partía en «descans /
+              // o». El nombre sigue llegando a VoiceOver.
+              <Ionicons
+                accessibilityLabel="Descanso"
+                color={colors.textDisabled}
+                name="moon-outline"
+                size={iconSizes.sm}
+              />
             )}
           </PressableScale>
         );
