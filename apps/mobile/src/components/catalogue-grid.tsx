@@ -12,18 +12,23 @@ import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, spacing } 
  * fallback glyph — instead of vanishing from the grid. That way a new body part
  * added in the catalogue never silently disappears from navigation.
  */
-const BODY_PART_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
-  'upper arms': 'barbell-outline',
-  'lower arms': 'hand-left-outline',
-  'upper legs': 'walk-outline',
-  'lower legs': 'footsteps-outline',
-  back: 'body-outline',
-  chest: 'heart-outline',
-  waist: 'ellipse-outline',
-  shoulders: 'triangle-outline',
-  cardio: 'pulse-outline',
-  neck: 'accessibility-outline',
-};
+const BODY_PART_ICON: ReadonlyArray<readonly [RegExp, keyof typeof Ionicons.glyphMap]> = [
+  // El catálogo devuelve las zonas en inglés (dataset) o en español (las que
+  // definió el gimnasio: «Tren superior», «Cadena posterior»). Con una tabla
+  // de nombres exactos en inglés, todas las zonas en español caían en el mismo
+  // icono de reserva y la cuadrícula se leía como seis tarjetas iguales.
+  [/cardio|aer[oó]bic/i, 'pulse-outline'],
+  [/upper arm|brazo|b[ií]ceps|tr[ií]ceps/i, 'barbell-outline'],
+  [/lower arm|antebrazo|forearm/i, 'hand-left-outline'],
+  [/lower leg|pantorrilla|gemelo|calf/i, 'footsteps-outline'],
+  [/upper leg|pierna|tren inferior|cu[aá]driceps|gl[uú]teo|leg/i, 'walk-outline'],
+  [/cadena posterior|posterior|back|espalda|dorsal/i, 'body-outline'],
+  [/chest|pecho|pectoral/i, 'shield-outline'],
+  [/waist|core|abdom|cintura/i, 'ellipse-outline'],
+  [/shoulder|hombro|delto/i, 'triangle-outline'],
+  [/tren superior|upper/i, 'barbell-outline'],
+  [/neck|cuello/i, 'accessibility-outline'],
+];
 
 const FALLBACK_ICON: keyof typeof Ionicons.glyphMap = 'fitness-outline';
 
@@ -33,7 +38,7 @@ export function titleCase(value: string): string {
 }
 
 export function iconFor(bodyPart: string): keyof typeof Ionicons.glyphMap {
-  return BODY_PART_ICON[bodyPart.toLowerCase()] ?? FALLBACK_ICON;
+  return BODY_PART_ICON.find(([pattern]) => pattern.test(bodyPart))?.[1] ?? FALLBACK_ICON;
 }
 
 /**

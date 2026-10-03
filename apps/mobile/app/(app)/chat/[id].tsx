@@ -372,7 +372,7 @@ export default function ChatThreadScreen() {
       return (
         <Pressable
           onPress={() => void Linking.openURL(mapsUrlFor(message.locationLat as number, message.locationLng as number))}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
+          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, opacity: pressed ? 0.6 : 1 })}
         >
           <Ionicons color={textColor} name="location" size={iconSizes.md} />
           <View>
@@ -416,7 +416,7 @@ export default function ChatThreadScreen() {
           <Pressable
             disabled={viewOnceOpen.isPending}
             onPress={() => viewOnceOpen.mutate(message.id)}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
+            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, opacity: pressed ? 0.6 : 1 })}
           >
             <Ionicons color={textColor} name="eye-outline" size={iconSizes.md} />
             <Text style={{ color: textColor, fontSize: fontSizes.sm, fontWeight: semibold }}>
@@ -435,7 +435,7 @@ export default function ChatThreadScreen() {
         return (
           <Pressable
             onPress={() => void Linking.openURL(url)}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
+            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, opacity: pressed ? 0.6 : 1 })}
           >
             <Ionicons color={textColor} name="play-circle-outline" size={iconSizes.lg} />
             <Text style={{ color: textColor, fontSize: fontSizes.sm, fontWeight: semibold }}>Video</Text>
@@ -444,7 +444,7 @@ export default function ChatThreadScreen() {
       }
 
       return (
-        <Pressable onPress={() => setViewerUri(url)}>
+        <Pressable onPress={() => setViewerUri(url)} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
           <Image
             contentFit="cover"
             source={{ uri: url }}
@@ -611,13 +611,19 @@ export default function ChatThreadScreen() {
                     }}
                     value={nicknameDraft}
                   />
-                  <Pressable accessibilityLabel="Guardar apodo" accessibilityRole="button" onPress={saveNickname}>
+                  <Pressable
+                    accessibilityLabel="Guardar apodo"
+                    accessibilityRole="button"
+                    onPress={saveNickname}
+                    style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                  >
                     <Ionicons color={colors.volt} name="checkmark" size={iconSizes.md} />
                   </Pressable>
                   <Pressable
                     accessibilityLabel="Cancelar"
                     accessibilityRole="button"
                     onPress={() => setEditingNickname(false)}
+                    style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
                   >
                     <Ionicons color={colors.textMuted} name="close" size={iconSizes.md} />
                   </Pressable>
@@ -627,7 +633,7 @@ export default function ChatThreadScreen() {
                   accessibilityHint="Ponerle un apodo privado a esta conversación"
                   accessibilityLabel={`${displayName ?? 'Conversación'}, tocar para editar apodo`}
                   onPress={startEditingNickname}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
+                  style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, opacity: pressed ? 0.6 : 1 })}
                 >
                   <Text
                     numberOfLines={1}
@@ -708,7 +714,7 @@ export default function ChatThreadScreen() {
                   accessibilityRole="button"
                   disabled={sendingMedia}
                   onPress={() => setEmojiOpen(true)}
-                  style={{ padding: 6 }}
+                  style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
                 >
                   <Ionicons color={colors.textMuted} name="happy-outline" size={iconSizes.md} />
                 </Pressable>
@@ -717,7 +723,7 @@ export default function ChatThreadScreen() {
                   accessibilityRole="button"
                   disabled={sendingMedia}
                   onPress={() => void handleAttach()}
-                  style={{ padding: 6 }}
+                  style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
                 >
                   <Ionicons color={colors.textMuted} name="image-outline" size={iconSizes.md} />
                 </Pressable>
@@ -726,7 +732,7 @@ export default function ChatThreadScreen() {
                   accessibilityRole="button"
                   disabled={sendingMedia}
                   onPress={() => void handleShareLocation()}
-                  style={{ padding: 6 }}
+                  style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
                 >
                   <Ionicons color={colors.textMuted} name="location-outline" size={iconSizes.md} />
                 </Pressable>
@@ -736,7 +742,7 @@ export default function ChatThreadScreen() {
                   accessibilityState={{ selected: viewOnceNext }}
                   disabled={sendingMedia}
                   onPress={() => setViewOnceNext((current) => !current)}
-                  style={{ padding: 6 }}
+                  style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
                 >
                   <Ionicons
                     color={viewOnceNext ? colors.volt : colors.textMuted}

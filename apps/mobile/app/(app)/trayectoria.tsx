@@ -246,13 +246,14 @@ export default function TrayectoriaScreen() {
           accessibilityLabel="Cómo se ganan los puntos"
           accessibilityRole="button"
           onPress={() => setRulesOpen(true)}
-          style={{
+          style={({ pressed }) => ({
             flexDirection: 'row',
             alignItems: 'center',
             gap: spacing.xs,
             alignSelf: 'flex-start',
             minHeight: minTouchTarget,
-          }}
+            opacity: pressed ? 0.6 : 1,
+          })}
         >
           <Ionicons color={accentPolicy.ink} name="information-circle-outline" size={iconSizes.md} />
           <Text style={{ color: accentPolicy.ink, fontSize: fontSizes.sm, fontWeight: semibold }}>
@@ -415,7 +416,7 @@ export default function TrayectoriaScreen() {
                       : [...current, day.value];
                     setRestDays.mutate(next);
                   }}
-                  style={{
+                  style={({ pressed }) => ({
                     width: 36,
                     height: 36,
                     borderRadius: radii.full,
@@ -424,7 +425,8 @@ export default function TrayectoriaScreen() {
                     borderWidth: 1,
                     borderColor: active ? colors.volt : colors.border,
                     backgroundColor: active ? colors.volt : 'transparent',
-                  }}
+                    opacity: pressed ? 0.6 : 1,
+                  })}
                 >
                   <Text
                     style={{
@@ -492,12 +494,13 @@ export default function TrayectoriaScreen() {
               <Pressable
                 key={option.value}
                 onPress={() => setLeaderboardSort(option.value)}
-                style={{
+                style={({ pressed }) => ({
                   paddingHorizontal: spacing.md,
                   paddingVertical: spacing.xs,
                   borderRadius: radii.full,
                   backgroundColor: leaderboardSort === option.value ? colors.volt : 'transparent',
-                }}
+                  opacity: pressed ? 0.6 : 1,
+                })}
               >
                 <Text
                   style={{

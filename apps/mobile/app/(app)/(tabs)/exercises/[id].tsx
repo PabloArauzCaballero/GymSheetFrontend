@@ -71,6 +71,7 @@ function Description({ text }: { text: string }) {
         accessibilityRole="button"
         hitSlop={spacing.sm}
         onPress={() => setExpanded((value) => !value)}
+        style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
       >
         <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}>
           {expanded ? 'Ver menos' : 'Leer más'}

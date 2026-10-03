@@ -37,7 +37,7 @@ function ToggleChip({
   return (
     <Pressable
       onPress={onPress}
-      style={{
+      style={({ pressed }) => ({
         minHeight: minTouchTarget,
         justifyContent: 'center',
         paddingHorizontal: spacing.md,
@@ -45,7 +45,8 @@ function ToggleChip({
         borderWidth: 1,
         borderColor: active ? colors.volt : colors.border,
         backgroundColor: active ? colors.volt : colors.surface,
-      }}
+        opacity: pressed ? 0.6 : 1,
+      })}
     >
       <Text
         style={{
@@ -205,13 +206,14 @@ export default function OnboardingScreen() {
               <Pressable
                 key={option.value}
                 onPress={() => setGoal(option.value)}
-                style={{
+                style={({ pressed }) => ({
                   padding: spacing.md,
                   borderRadius: radii.md,
                   borderWidth: 1,
                   borderColor: goal === option.value ? colors.volt : colors.border,
                   backgroundColor: goal === option.value ? colors.surfaceHigh : colors.surface,
-                }}
+                  opacity: pressed ? 0.6 : 1,
+                })}
               >
                 <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
                   {option.label}
