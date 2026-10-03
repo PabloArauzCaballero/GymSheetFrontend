@@ -6,6 +6,7 @@
 - La web añade Ajustes (cuenta, tema, versión, créditos y salida), filtro de ejercicios por zona y músculo, programación de una rutina en la semana, vista semanal, ubicación opcional al finalizar y comparación semanal en el panel.
 - El BFF permite `/routines/:id/schedule`; se verificó el contrato con el código del backend NestJS. El cierre acepta coordenadas opcionales y sigue si se deniega la ubicación.
 - Se amplió el área táctil del filtro y del selector a 44 px y se respetó `prefers-reduced-motion`.
+- Se corrigieron las dos muescas rectangulares del borde inferior del pectoral. `contour_corrections.py` aplica la corrección al regenerar `regions.generated.ts` y falla si cambia el modelo anatómico esperado.
 
 ## Evidencia ejecutada
 
@@ -18,10 +19,12 @@
 | `yarn workspace @gymsheet/web source-check` y `type-check` | Correctos; también incluidos en la pasada final de Turbo. |
 | Cherry-pick sobre `origin/test` en worktree temporal | Commit `70fff5a`; se conservó la navegación propia de `test` y se añadió Ajustes. En ese árbol: 25/25 tareas y 274/274 pruebas web; TypeScript móvil correcto. |
 | Push a `test` | Avance rápido `e20c83f` → `70fff5a`, confirmado por `git push origin HEAD:test`. No se subió a `dev`. |
+| `yarn workspace @gymsheet/anatomy test` | 91/91 pruebas correctas, incluida una nueva comprobación de los dos puntos antes ausentes del pectoral. |
+| Superposición del pectoral con Playwright | [Antes](evidencia/pectoral-antes.png) y [después](evidencia/pectoral-despues.png), sobre la misma lámina local. El contorno cian ya no tiene escalones rectangulares. |
 
 ## No ejecutado o pendiente
 
-- La muesca rectangular del pectoral mayor sigue pendiente. Los archivos `*-ids.png` que necesita `tools/anatomy/trace.py` no están en este worktree y faltan `cv2`/`Pillow` en el Python local. No se modificó `regions.generated.ts` a mano.
+- La regeneración completa desde los archivos `*-ids.png` no se ejecutó: esas máscaras no están en este worktree y faltan `cv2`/`Pillow` en el Python local. La corrección puntual sí se aplicó a la geometría existente y quedó en el trazador para futuras regeneraciones.
 - No hubo capturas nuevas autenticadas del móvil: el iPhone del simulador ya no está arrancado. Solo están las dos capturas «antes» en `apps/mobile/ios-evidence/calidad-ui/antes/`.
 - No hubo recorrido visual autenticado de la web a 390, 768 y 1440 px, claro/oscuro ni de dos tenants. El VPS redirige `/exercises` a `/login`; las credenciales las introduce el usuario. No se levantó un servidor local por la restricción de carga de la Mac.
 - Las miniaturas de ejercicio en el VPS y el recorrido E2E con sesión iniciada no se comprobaron. No se afirma que funcionen.

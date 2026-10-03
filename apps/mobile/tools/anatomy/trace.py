@@ -25,6 +25,7 @@ import os
 import cv2
 import numpy as np
 from PIL import Image
+from contour_corrections import fill_pectoral_notches
 
 VIEWBOX_W, VIEWBOX_H = 1000, 2000
 LAYERS = ("surface", "deep")
@@ -114,6 +115,8 @@ def main():
                 if px == 0:
                     continue
                 rings = contours_of(mask, sx, sy, min_area)
+                if code == "PECTORALIS_MAJOR" and tag == "surface-front" and rings:
+                    rings = fill_pectoral_notches(rings)
                 coverage.setdefault(code, {})[tag] = round(100.0 * px / body, 3)
                 if rings:
                     entries.append({"code": code, "rings": rings})
