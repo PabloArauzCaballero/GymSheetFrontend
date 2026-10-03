@@ -21,6 +21,7 @@
     "verify": "yarn source-check && yarn type-check && yarn lint && yarn test && yarn build"
   },
   "dependencies": {
+    "@gymsheet/anatomy": "*",
     "@gymsheet/api-client": "*",
     "@gymsheet/auth": "*",
     "@gymsheet/design-tokens": "*",

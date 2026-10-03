@@ -18,6 +18,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Pagination } from '@/shared/components/ui/pagination';
 import { Select } from '@/shared/components/ui/select';
 import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
+import { BodyMap } from '@/features/anatomy/components/body-map';
 import { ExerciseCard } from './exercise-card';
 
 export function ExerciseList() {
@@ -76,6 +77,10 @@ export function ExerciseList() {
         title="Ejercicios"
         tutorialId="page:exercises"
       />
+      {/* La figura va primero: elegir el músculo es el camino más corto a
+          «qué entreno para esto». El buscador y la lista siguen debajo para
+          quien ya sabe el nombre del ejercicio. */}
+      <BodyMap />
       <section className="panel grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_240px]">
         <Field htmlFor="exercise-search" label="Buscar">
           <div className="relative" data-tutorial-id="exercises:search">

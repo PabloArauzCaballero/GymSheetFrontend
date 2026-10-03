@@ -50,6 +50,7 @@ const nextConfig: NextConfig = {
   // Solo afecta al modo desarrollo.
   allowedDevOrigins: ['127.0.0.1'],
   transpilePackages: [
+    '@gymsheet/anatomy',
     '@gymsheet/types',
     '@gymsheet/schemas',
     '@gymsheet/api-client',
