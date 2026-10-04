@@ -1,5 +1,8 @@
 import { Children, useCallback, useContext, useMemo, useRef, type ReactNode } from 'react';
-import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
+// En SDK 57 expo-router trae React Navigation embebido y no lo reexporta: este
+// es el mismo módulo que usa su `Tabs`, así que el contexto es el mismo objeto.
+// Si una actualización de expo-router lo mueve, el type-check lo dirá.
+import { BottomTabBarHeightContext } from 'expo-router/build/react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';

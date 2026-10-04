@@ -71,15 +71,14 @@ export function Checkbox({
       haptic="selection"
       hitSlop={spacing.sm}
       onPress={() => onChange(!checked)}
-      style={({ pressed }) => ({
+      style={{
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.sm,
         minHeight: minTouchTarget,
         alignSelf: 'flex-start',
         paddingRight: spacing.sm,
-        opacity: pressed ? 0.6 : 1,
-      })}
+      }}
     >
       <AnimatedView
         style={[
