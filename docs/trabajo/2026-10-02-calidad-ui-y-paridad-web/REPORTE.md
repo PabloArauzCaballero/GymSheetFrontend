@@ -28,6 +28,7 @@
 | Recorrido visual autenticado | 36 capturas de seis rutas a 390, 768 y 1440 px en claro y oscuro. 28 cargaron con HTTP 200 sin desborde horizontal ni errores JavaScript; ocho devolvieron 404/502 intermitentes. Las cuatro rutas afectadas dieron 200 en tres reintentos cada una. [Panel](evidencia/web-qa-dashboard-390.png). |
 | Rutina y semana en el VPS | Creación HTTP 201 y programación HTTP 201 para lunes y miércoles; la asignación activa apareció en `Tu semana`. [Captura](evidencia/web-qa-rutina-programada-390.png). |
 | Cierre de sesión en el VPS | Inicio HTTP 201, cierre HTTP 200 con cuerpo `{}` y estado `FINALIZADA`. `isSecureContext` fue `false`, de modo que no hubo coordenadas. La sesión de prueba vacía recibió 85 puntos; conviene revisar esa regla del backend. [Captura](evidencia/web-qa-cierre-sesion-390.png). |
+| Smoke test posterior al último redeploy | Tras iniciar sesión de nuevo, `/dashboard`, `/routines`, `/exercises`, `/settings` y tres endpoints de datos respondieron HTTP 200. El webhook de GitHub recibió el push de `test` con HTTP 200. |
 
 ## Hallazgos de producción
 
@@ -35,6 +36,7 @@
 - El catálogo general sí devuelve 1.324 ejercicios y diez zonas en la taxonomía del filtro, pero ninguno de los primeros veinte ejercicios consultados traía imagen. Las miniaturas de esa muestra no están disponibles en el VPS.
 - Se observaron respuestas transitorias 404/502 durante el recorrido de 36 pantallas. La repetición dirigida de `/routines`, `/settings`, `/dashboard` y `/exercises` obtuvo 12/12 respuestas HTTP 200. No se determinó la causa en Coolify.
 - La URL principal HTTPS seguía respondiendo 503. La geolocalización web requiere un origen seguro; el cierre sin ubicación sí quedó comprobado.
+- El JWT de la cuenta QA venció a los 15 minutos, mientras la cookie web tiene `maxAge` de ocho horas. Al vencer el token, las rutas redirigieron a login; un nuevo inicio de sesión las recuperó. Queda pendiente alinear la duración de sesión o implementar renovación en la web.
 
 ## No ejecutado o pendiente
 
