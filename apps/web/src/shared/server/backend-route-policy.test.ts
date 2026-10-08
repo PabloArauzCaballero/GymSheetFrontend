@@ -126,7 +126,6 @@ const blockedCases: Array<[string[]]> = [
   [['routines', id, 'shares']],
   [['exercises', id, 'likes']],
   [['exercises', id, 'like', 'extra']],
-  [['exercises', 'like']],
   [['me', 'exercises', id]],
   [['me', 'exercises', id, 'preferences']],
   [['me', 'exercises', 'preferences']],
