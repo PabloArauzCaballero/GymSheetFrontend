@@ -5,3 +5,4 @@ export * from './persistence';
 export * from './quality';
 export * from './reducer';
 export * from './validation';
+export * from './save';

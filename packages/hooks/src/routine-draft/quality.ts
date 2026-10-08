@@ -1,6 +1,7 @@
 import {
   WEEKDAYS,
   WEEKDAY_NAMES,
+  ZONES_WITHOUT_FREQUENCY_WARNING,
   durationInWeeks,
   totalSets,
   type RoutineDraft,
@@ -59,7 +60,7 @@ export function evaluateQuality(draft: RoutineDraft): QualityReport {
     for (const day of draft.dias) {
       for (const exercise of day.ejercicios) {
         const group = exercise.grupoMuscular.trim();
-        if (!group) continue;
+        if (!group || ZONES_WITHOUT_FREQUENCY_WARNING.includes(group)) continue;
         const days = daysByGroup.get(group) ?? new Set<Weekday>();
         days.add(day.diaSemana);
         daysByGroup.set(group, days);

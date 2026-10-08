@@ -177,14 +177,45 @@ export function defaultsForGoal(
   }
 }
 
+/** Zonas del dataset (`bodyPart`) a la etiqueta que se muestra y se cuenta en los avisos. */
+const ZONE_LABELS: Record<string, string> = {
+  chest: 'Pecho',
+  back: 'Espalda',
+  shoulders: 'Hombros',
+  'upper arms': 'Brazos',
+  'lower arms': 'Antebrazos',
+  'upper legs': 'Piernas',
+  'lower legs': 'Gemelos',
+  waist: 'Abdomen',
+  cardio: 'Cardio',
+  neck: 'Cuello',
+  pecho: 'Pecho',
+  pierna: 'Piernas',
+};
+
+/** Zonas que no cuentan para el aviso de frecuencia por músculo. */
+export const ZONES_WITHOUT_FREQUENCY_WARNING: readonly string[] = ['Cardio', 'Cuello'];
+
+/**
+ * Zona muscular de un ejercicio, unificada: el catálogo trae `bodyPart` en
+ * inglés (dataset) o `grupoMuscular` en mayúsculas (ejercicios propios), y los
+ * avisos de frecuencia tienen que contar «Pecho» una sola vez.
+ */
+export function muscleZone(exercise: { grupoMuscular: string; bodyPart?: string | null }): string {
+  const raw = (exercise.bodyPart ?? exercise.grupoMuscular).trim().toLowerCase();
+  const known = ZONE_LABELS[raw];
+  if (known) return known;
+  return raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : '';
+}
+
 export function createDraftExercise(
-  exercise: { id: string; nombre: string; grupoMuscular: string },
+  exercise: { id: string; nombre: string; grupoMuscular: string; bodyPart?: string | null },
   goal: TrainingGoal | null,
 ): DraftExercise {
   return {
     ejercicioId: exercise.id,
     nombre: exercise.nombre,
-    grupoMuscular: exercise.grupoMuscular,
+    grupoMuscular: muscleZone(exercise),
     ...defaultsForGoal(goal),
     pesoObjetivoKg: null,
     rirObjetivo: null,

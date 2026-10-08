@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   canAdvance,
   createDraftExercise,
@@ -9,6 +9,9 @@ import {
   evaluateQuality,
   firstInvalidStep,
   hasContent,
+  muscleZone,
+  saveRoutineDraft,
+  type RoutineSaveServices,
   parseDraft,
   planWeeks,
   progressLabel,
@@ -411,5 +414,75 @@ describe('estado sucio y guardado', () => {
   it('intentar un paso lo registra una sola vez', () => {
     const state = run([{ type: 'intentar', paso: 0 }, { type: 'intentar', paso: 0 }]);
     expect(state.intentados).toEqual([0]);
+  });
+});
+
+describe('zona muscular', () => {
+  it('unifica el dataset en inglés y los ejercicios propios en mayúsculas', () => {
+    expect(muscleZone({ grupoMuscular: 'triceps', bodyPart: 'chest' })).toBe('Pecho');
+    expect(muscleZone({ grupoMuscular: 'PECHO', bodyPart: null })).toBe('Pecho');
+    expect(muscleZone({ grupoMuscular: 'PIERNA' })).toBe('Piernas');
+    expect(muscleZone({ grupoMuscular: 'glutes', bodyPart: 'upper legs' })).toBe('Piernas');
+    expect(muscleZone({ grupoMuscular: 'otra cosa' })).toBe('Otra cosa');
+  });
+
+  it('el cardio no genera aviso de frecuencia', () => {
+    const cardio = createDraftExercise({ id: 'c', nombre: 'Cinta', grupoMuscular: 'x', bodyPart: 'cardio' }, null);
+    const state = run([{ type: 'agregarEjercicio', destino: 1, ejercicio: cardio }], withDays([1, 3]));
+    expect(evaluateQuality(state.draft).avisos).toEqual([]);
+  });
+});
+
+describe('guardado del borrador', () => {
+  const routineStub = { id: 'r1' } as never;
+  function services(overrides: Partial<RoutineSaveServices> = {}): RoutineSaveServices {
+    return {
+      createWithDays: vi.fn().mockResolvedValue(routineStub),
+      replaceStructure: vi.fn().mockResolvedValue(routineStub),
+      setWeek: vi.fn().mockResolvedValue({}),
+      ...overrides,
+    };
+  }
+  const filled = () =>
+    run(
+      [
+        { type: 'campo', campo: 'nombre', valor: 'QA' },
+        { type: 'agregarEjercicio', destino: 1, ejercicio: exercise('a') },
+        { type: 'ajustarSemana', numero: 6, eleccion: 'DESCARGA' },
+      ],
+      withDays([1]),
+    ).draft;
+
+  it('crea con los días, avisa del id y envía los ajustes de semana', async () => {
+    const api = services();
+    const onCreated = vi.fn();
+    const result = await saveRoutineDraft(api, filled(), onCreated);
+    expect(api.createWithDays).toHaveBeenCalledOnce();
+    expect(api.replaceStructure).not.toHaveBeenCalled();
+    expect(onCreated).toHaveBeenCalledWith('r1');
+    expect(api.setWeek).toHaveBeenCalledWith('r1', 6, expect.objectContaining({ esDescarga: true }));
+    expect(result.semanasFallidas).toEqual([]);
+  });
+
+  it('si ya hay id reemplaza la estructura en vez de crear otra rutina', async () => {
+    const api = services();
+    await saveRoutineDraft(api, { ...filled(), routineId: 'r9' });
+    expect(api.createWithDays).not.toHaveBeenCalled();
+    expect(api.replaceStructure).toHaveBeenCalledWith('r9', expect.objectContaining({ dias: expect.any(Array) }));
+  });
+
+  it('un ajuste de semana que falla no pierde la rutina ya creada', async () => {
+    const api = services({ setWeek: vi.fn().mockRejectedValue(new Error('x')) });
+    const onCreated = vi.fn();
+    const result = await saveRoutineDraft(api, filled(), onCreated);
+    expect(onCreated).toHaveBeenCalledWith('r1');
+    expect(result.semanasFallidas).toEqual([6]);
+  });
+
+  it('si crear falla, propaga el error y no avisa de ningún id', async () => {
+    const api = services({ createWithDays: vi.fn().mockRejectedValue(new Error('boom')) });
+    const onCreated = vi.fn();
+    await expect(saveRoutineDraft(api, filled(), onCreated)).rejects.toThrow('boom');
+    expect(onCreated).not.toHaveBeenCalled();
   });
 });
