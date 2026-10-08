@@ -20,6 +20,10 @@ jobs:
         with:
           node-version: 22
           cache: yarn
+      # Yarn 1 + nohoist hace lstat de node_modules de cada workspace y falla
+      # en un clon limpio si no existen (ENOENT).
+      - name: Preparar node_modules de los workspaces
+        run: mkdir -p apps/*/node_modules packages/*/node_modules
       - run: yarn install --frozen-lockfile
       # Shared packages + web are the fully-gated core.
       - run: yarn turbo run source-check type-check lint test --filter=!@gymsheet/mobile
@@ -35,6 +39,10 @@ jobs:
         with:
           node-version: 22
           cache: yarn
+      # Yarn 1 + nohoist hace lstat de node_modules de cada workspace y falla
+      # en un clon limpio si no existen (ENOENT).
+      - name: Preparar node_modules de los workspaces
+        run: mkdir -p apps/*/node_modules packages/*/node_modules
       - run: yarn install --frozen-lockfile
       - run: yarn workspace @gymsheet/mobile type-check
       - name: Expo Doctor
