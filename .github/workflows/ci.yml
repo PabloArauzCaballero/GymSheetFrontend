@@ -20,7 +20,11 @@ jobs:
         with:
           node-version: 22
           cache: yarn
-      - run: yarn install --frozen-lockfile
+      # Yarn 1 + nohoist: la primera pasada falla con ENOENT (lstat de
+      # node_modules de un workspace) en un clon limpio y deja el árbol a medias;
+      # la segunda termina bien. Reproducido en local con caché fría.
+      - name: Instalar dependencias
+        run: yarn install --frozen-lockfile || yarn install --frozen-lockfile
       # Shared packages + web are the fully-gated core.
       - run: yarn turbo run source-check type-check lint test --filter=!@gymsheet/mobile
       - run: yarn turbo run build --filter=@gymsheet/web
@@ -35,7 +39,11 @@ jobs:
         with:
           node-version: 22
           cache: yarn
-      - run: yarn install --frozen-lockfile
+      # Yarn 1 + nohoist: la primera pasada falla con ENOENT (lstat de
+      # node_modules de un workspace) en un clon limpio y deja el árbol a medias;
+      # la segunda termina bien. Reproducido en local con caché fría.
+      - name: Instalar dependencias
+        run: yarn install --frozen-lockfile || yarn install --frozen-lockfile
       - run: yarn workspace @gymsheet/mobile type-check
       - name: Expo Doctor
         run: yarn workspace @gymsheet/mobile dlx expo-doctor || true
