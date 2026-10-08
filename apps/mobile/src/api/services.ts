@@ -58,6 +58,10 @@ import type {
   SwipeDirection,
 } from '@gymsheet/schemas';
 import type { UserGender } from '@gymsheet/types';
+import {
+  createExerciseCommunityServices,
+  createRoutineServices,
+} from '@gymsheet/api-client';
 import { apiClient } from '@/api/client';
 
 /** Endpoints that answer with a free-form object we do not need to model. */
@@ -261,6 +265,12 @@ export const routineService = {
     }),
 };
 
+/** Rutinas por días: crear con `dias`, `PUT structure`, calendario y semanas. */
+export const routineBuilderService = createRoutineServices(apiClient.request);
+
+/** Me gusta (público) y favorito (privado) de un ejercicio. */
+export const exerciseCommunityService = createExerciseCommunityServices(apiClient.request);
+
 export interface RoutineScheduleInput {
   diasSemana: number[];
   repiteDesde?: string | null;
@@ -274,6 +284,8 @@ export interface ExerciseFilters {
   /** Server-side drill-down: the catalogue is far too large to filter locally. */
   bodyPart?: string;
   targetMuscle?: string;
+  /** Sólo los ejercicios que la persona marcó como favoritos (privado). */
+  favoritos?: boolean;
   page?: number;
   pageSize?: number;
 }

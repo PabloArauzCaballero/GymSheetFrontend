@@ -306,7 +306,7 @@ function DraftRow({
  * committed in one action. The backend has no bulk endpoint for this, so saving
  * is `POST /routines` followed by one `POST /routines/{id}/exercises` per row.
  */
-export default function NewRoutineScreen() {
+export function NewRoutineScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [drafts, setDrafts] = useState<DraftExercise[]>([]);

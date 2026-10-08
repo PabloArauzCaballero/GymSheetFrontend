@@ -118,13 +118,26 @@ export function routineDraftReducer(state: WizardState, action: WizardAction): W
   const { draft } = state;
   switch (action.type) {
     case 'hidratar':
-      return { ...createInitialState(), draft: action.draft, paso: action.paso };
+      // Un borrador recuperado sigue sin estar guardado en el servidor: cuenta como sucio.
+      return { ...createInitialState(), draft: action.draft, paso: action.paso, sucio: true };
     case 'reiniciar':
       return createInitialState();
     case 'campo':
       return withDraft(state, { ...draft, [action.campo]: action.valor });
     case 'objetivo':
-      return withDraft(state, { ...draft, objetivo: action.objetivo });
+      // La progresión automática arranca encendida en Hipertrofia y Fuerza (D5);
+      // en el resto de objetivos queda apagada hasta que la persona la pida.
+      return withDraft(state, {
+        ...draft,
+        objetivo: action.objetivo,
+        progresion: {
+          ...draft.progresion,
+          activa:
+            action.objetivo === null ||
+            action.objetivo === 'HIPERTROFIA' ||
+            action.objetivo === 'FUERZA',
+        },
+      });
     case 'duracion':
       return withDraft(state, { ...draft, duracion: action.duracion });
     case 'progresion':

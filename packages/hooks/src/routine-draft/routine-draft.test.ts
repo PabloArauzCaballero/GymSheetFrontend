@@ -78,6 +78,18 @@ describe('validación por paso', () => {
   });
 });
 
+describe('progresión según el objetivo (D5)', () => {
+  it('arranca encendida en Hipertrofia y Fuerza y apagada en el resto', () => {
+    const progression = (goal: Parameters<typeof routineDraftReducer>[1] extends infer A ? A : never) =>
+      routineDraftReducer(createInitialState(), goal).draft.progresion.activa;
+    expect(progression({ type: 'objetivo', objetivo: 'HIPERTROFIA' })).toBe(true);
+    expect(progression({ type: 'objetivo', objetivo: 'FUERZA' })).toBe(true);
+    expect(progression({ type: 'objetivo', objetivo: 'RESISTENCIA' })).toBe(false);
+    expect(progression({ type: 'objetivo', objetivo: 'SALUD_GENERAL' })).toBe(false);
+    expect(progression({ type: 'objetivo', objetivo: null })).toBe(true);
+  });
+});
+
 describe('duración y resumen', () => {
   it('3 meses son 12 semanas y el resumen lo dice', () => {
     const state = run([
