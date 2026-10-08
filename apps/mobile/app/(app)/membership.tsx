@@ -21,7 +21,6 @@ import { apiClient } from '@/api/client';
 import { membershipService } from '@/api/services';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { Badge, Card, Divider, Row, ScreenHeader, ScrollScreen, Section, StatTile } from '@/components/layout';
-import { MetricChip } from '@/components/list';
 import { PressableScale } from '@/components/motion';
 import { DateTimeline, StepProgress, type FlowStep } from '@/components/step-flow';
 import { BackLink } from '@/components/nav';

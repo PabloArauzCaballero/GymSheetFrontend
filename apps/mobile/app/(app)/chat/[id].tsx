@@ -20,6 +20,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import EmojiPicker from 'rn-emoji-keyboard';
 import type { Message } from '@gymsheet/schemas';
 import { chatService } from '@/api/services';
@@ -28,6 +29,8 @@ import { BackLink } from '@/components/nav';
 import { AmbientBackground } from '@/components/ambient';
 import { ScrollScreen, useResponsive } from '@/components/layout';
 import { Button } from '@/components/ui';
+import { DURATION, PREMIUM_EASING, PressableScale } from '@/components/motion';
+import { useReduceMotion } from '@/notifications/use-reduce-motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
@@ -95,6 +98,14 @@ export default function ChatThreadScreen() {
   const reconnectedRef = useRef(false);
   const markedReadRef = useRef<string | null>(null);
   const listRef = useRef<FlatList<Message>>(null);
+  /**
+   * El mensaje más reciente que había al abrir el hilo. Sólo lo posterior entra
+   * con animación: animar las 40 burbujas de la carga inicial es ruido, y animar
+   * las de una página anterior al hacer scroll hacia arriba sería peor. `null`
+   * hasta que la primera carga termina, para que esa primera tanda no se anime.
+   */
+  const newestAtOpen = useRef<string | null>(null);
+  const reduceMotion = useReduceMotion();
 
   const history = useQuery({
     queryKey: ['chat', 'messages', conversationId],
@@ -194,6 +205,12 @@ export default function ChatThreadScreen() {
   );
   /** La lista se pinta invertida, así que los datos van del más nuevo al más viejo. */
   const timeline = useMemo(() => [...messages].reverse(), [messages]);
+  const historyLoaded = !history.isPending;
+  useEffect(() => {
+    if (historyLoaded && newestAtOpen.current === null) {
+      newestAtOpen.current = messages[messages.length - 1]?.createdAt ?? '';
+    }
+  }, [historyLoaded, messages]);
 
   // Una primera página corta ya es todo el hilo: no hay nada anterior que pedir.
   const hasMoreOlder = !reachedStart && (history.data?.length ?? 0) >= PAGE_SIZE;
@@ -370,16 +387,17 @@ export default function ChatThreadScreen() {
 
     if (message.type === 'location' && message.locationLat !== null && message.locationLng !== null) {
       return (
-        <Pressable
+        <PressableScale
+          haptic="none"
           onPress={() => void Linking.openURL(mapsUrlFor(message.locationLat as number, message.locationLng as number))}
-          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, opacity: pressed ? 0.6 : 1 })}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
         >
           <Ionicons color={textColor} name="location" size={iconSizes.md} />
           <View>
             <Text style={{ color: textColor, fontSize: fontSizes.sm, fontWeight: semibold }}>Ubicación compartida</Text>
             <Text style={{ color: mutedOnBubble, fontSize: fontSizes.xs }}>Toca para abrir en el mapa</Text>
           </View>
-        </Pressable>
+        </PressableScale>
       );
     }
 
@@ -413,16 +431,17 @@ export default function ChatThreadScreen() {
           );
         }
         return (
-          <Pressable
+          <PressableScale
             disabled={viewOnceOpen.isPending}
+            haptic="none"
             onPress={() => viewOnceOpen.mutate(message.id)}
-            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, opacity: pressed ? 0.6 : 1 })}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
           >
             <Ionicons color={textColor} name="eye-outline" size={iconSizes.md} />
             <Text style={{ color: textColor, fontSize: fontSizes.sm, fontWeight: semibold }}>
               Toca para ver una vez
             </Text>
-          </Pressable>
+          </PressableScale>
         );
       }
 
@@ -433,18 +452,19 @@ export default function ChatThreadScreen() {
 
       if (message.type === 'video') {
         return (
-          <Pressable
+          <PressableScale
+            haptic="none"
             onPress={() => void Linking.openURL(url)}
-            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, opacity: pressed ? 0.6 : 1 })}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
           >
             <Ionicons color={textColor} name="play-circle-outline" size={iconSizes.lg} />
             <Text style={{ color: textColor, fontSize: fontSizes.sm, fontWeight: semibold }}>Video</Text>
-          </Pressable>
+          </PressableScale>
         );
       }
 
       return (
-        <Pressable onPress={() => setViewerUri(url)} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
+        <PressableScale accessibilityLabel="Abrir foto" haptic="none" onPress={() => setViewerUri(url)} scaleTo={0.98}>
           <Image
             contentFit="cover"
             source={{ uri: url }}
@@ -453,7 +473,7 @@ export default function ChatThreadScreen() {
           {message.body ? (
             <Text style={{ color: textColor, fontSize: fontSizes.sm, marginTop: spacing.xs }}>{message.body}</Text>
           ) : null}
-        </Pressable>
+        </PressableScale>
       );
     }
 
@@ -470,8 +490,19 @@ export default function ChatThreadScreen() {
     // siguiente del arreglo, y en pantalla queda justo encima de este.
     const previous = timeline[index + 1];
     const groupedWithPrevious = previous?.senderId === item.senderId;
+    const baseline = newestAtOpen.current;
+    const arrivedLater = baseline !== null && item.createdAt > baseline;
     return (
-      <View
+      <Animated.View
+        entering={
+          arrivedLater
+            ? reduceMotion
+              ? FadeIn.duration(1)
+              : FadeInDown.duration(DURATION.quick + 60)
+                  .easing(PREMIUM_EASING)
+                  .withInitialValues({ transform: [{ translateY: 10 }] })
+            : undefined
+        }
         style={{
           alignSelf: mine ? 'flex-end' : 'flex-start',
           maxWidth: '80%',
@@ -505,7 +536,7 @@ export default function ChatThreadScreen() {
             />
           ) : null}
         </View>
-      </View>
+      </Animated.View>
     );
   }
 
@@ -611,29 +642,32 @@ export default function ChatThreadScreen() {
                     }}
                     value={nicknameDraft}
                   />
-                  <Pressable
+                  <PressableScale
                     accessibilityLabel="Guardar apodo"
-                    accessibilityRole="button"
+                    hitSlop={spacing.sm}
                     onPress={saveNickname}
-                    style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                    scaleTo={0.9}
                   >
                     <Ionicons color={colors.volt} name="checkmark" size={iconSizes.md} />
-                  </Pressable>
-                  <Pressable
+                  </PressableScale>
+                  <PressableScale
                     accessibilityLabel="Cancelar"
-                    accessibilityRole="button"
+                    haptic="none"
+                    hitSlop={spacing.sm}
                     onPress={() => setEditingNickname(false)}
-                    style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                    scaleTo={0.9}
                   >
                     <Ionicons color={colors.textMuted} name="close" size={iconSizes.md} />
-                  </Pressable>
+                  </PressableScale>
                 </View>
               ) : (
-                <Pressable
+                <PressableScale
                   accessibilityHint="Ponerle un apodo privado a esta conversación"
                   accessibilityLabel={`${displayName ?? 'Conversación'}, tocar para editar apodo`}
+                  haptic="none"
                   onPress={startEditingNickname}
-                  style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, opacity: pressed ? 0.6 : 1 })}
+                  scaleTo={0.98}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
                 >
                   <Text
                     numberOfLines={1}
@@ -648,7 +682,7 @@ export default function ChatThreadScreen() {
                     {displayName ?? 'Conversación'}
                   </Text>
                   <Ionicons color={colors.textMuted} name="pencil-outline" size={fontSizes.sm} />
-                </Pressable>
+                </PressableScale>
               )}
               <Text style={{ color: otherOnline ? colors.success : colors.textMuted, fontSize: fontSizes.xs }}>
                 {presenceLabel(otherOnline, otherLastSeenAt)}
@@ -709,47 +743,65 @@ export default function ChatThreadScreen() {
                   padding: spacing.sm,
                 }}
               >
-                <Pressable
+                {/* Los cuatro iconos del compositor: antes eran `Pressable` mudos
+                    de 24 px, que es justo el control que se toca muchas veces
+                    seguidas y del que más se espera respuesta. Hundimiento sin
+                    háptico —abren cosas, no confirman nada— y un área de toque
+                    ampliada hasta los 44 pt. */}
+                <PressableScale
                   accessibilityLabel="Emojis"
-                  accessibilityRole="button"
                   disabled={sendingMedia}
+                  haptic="none"
+                  hitSlop={spacing.sm}
                   onPress={() => setEmojiOpen(true)}
-                  style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
+                  scaleTo={0.9}
+                  style={{ padding: 6 }}
                 >
                   <Ionicons color={colors.textMuted} name="happy-outline" size={iconSizes.md} />
-                </Pressable>
-                <Pressable
+                </PressableScale>
+                <PressableScale
                   accessibilityLabel="Adjuntar foto o video"
-                  accessibilityRole="button"
                   disabled={sendingMedia}
+                  haptic="none"
+                  hitSlop={spacing.sm}
                   onPress={() => void handleAttach()}
-                  style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
+                  scaleTo={0.9}
+                  style={{ padding: 6 }}
                 >
                   <Ionicons color={colors.textMuted} name="image-outline" size={iconSizes.md} />
-                </Pressable>
-                <Pressable
+                </PressableScale>
+                <PressableScale
                   accessibilityLabel="Compartir ubicación"
-                  accessibilityRole="button"
                   disabled={sendingMedia}
+                  haptic="none"
+                  hitSlop={spacing.sm}
                   onPress={() => void handleShareLocation()}
-                  style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
+                  scaleTo={0.9}
+                  style={{ padding: 6 }}
                 >
                   <Ionicons color={colors.textMuted} name="location-outline" size={iconSizes.md} />
-                </Pressable>
-                <Pressable
+                </PressableScale>
+                <PressableScale
                   accessibilityLabel="Vista única para la próxima foto o video"
-                  accessibilityRole="button"
                   accessibilityState={{ selected: viewOnceNext }}
                   disabled={sendingMedia}
+                  haptic="selection"
+                  hitSlop={spacing.sm}
                   onPress={() => setViewOnceNext((current) => !current)}
-                  style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
+                  scaleTo={0.9}
+                  style={{ padding: 6 }}
                 >
-                  <Ionicons
-                    color={viewOnceNext ? colors.volt : colors.textMuted}
-                    name={viewOnceNext ? 'eye' : 'eye-outline'}
-                    size={iconSizes.md}
-                  />
-                </Pressable>
+                  {/* El interruptor cambia de icono Y de color: se desvanece de
+                      uno a otro en lugar de saltar, que es lo que dice «ahora
+                      está activo» sin que haga falta leer nada. */}
+                  <Animated.View entering={FadeIn.duration(DURATION.quick)} key={viewOnceNext ? 'on' : 'off'}>
+                    <Ionicons
+                      color={viewOnceNext ? colors.volt : colors.textMuted}
+                      name={viewOnceNext ? 'eye' : 'eye-outline'}
+                      size={iconSizes.md}
+                    />
+                  </Animated.View>
+                </PressableScale>
                 <TextInput
                   keyboardAppearance="dark"
                   onChangeText={setDraft}

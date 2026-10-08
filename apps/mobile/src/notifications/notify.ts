@@ -4,7 +4,6 @@ import {
   nativePolicy,
   setTelemetrySink,
 } from '@gymsheet/notifications';
-import * as Haptics from 'expo-haptics';
 import { ApiError } from '@gymsheet/api-client';
 import { consoleLogger } from '@gymsheet/observability';
 

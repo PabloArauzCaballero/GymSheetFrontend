@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { PressableScale } from '@/components/motion';
 import { profilePhotosService } from '@/api/services';
 import { Card, Section } from '@/components/layout';
 import { ErrorState, Skeleton } from '@/components/feedback';
@@ -88,10 +89,13 @@ export function ProfilePhotoGallery() {
                     backgroundColor: colors.surfaceHigh,
                   }}
                 />
-                <Pressable
+                <PressableScale
                   accessibilityLabel="Eliminar foto"
                   disabled={remove.isPending}
+                  haptic="none"
+                  hitSlop={10}
                   onPress={() => remove.mutate(photo.id)}
+                  scaleTo={0.88}
                   style={{
                     position: 'absolute',
                     top: 4,
@@ -105,14 +109,15 @@ export function ProfilePhotoGallery() {
                   }}
                 >
                   <Ionicons color="#fff" name="close" size={14} />
-                </Pressable>
+                </PressableScale>
               </View>
             ))}
             {!atLimit ? (
-              <Pressable
+              <PressableScale
                 accessibilityLabel="Agregar foto"
                 disabled={upload.isPending}
                 onPress={() => void pickAndUpload()}
+                scaleTo={0.95}
                 style={{
                   width: THUMB_SIZE,
                   height: THUMB_SIZE,
@@ -125,7 +130,7 @@ export function ProfilePhotoGallery() {
                 }}
               >
                 <Ionicons color={colors.textMuted} name="add" size={iconSizes.lg} />
-              </Pressable>
+              </PressableScale>
             ) : null}
           </View>
         </Card>
