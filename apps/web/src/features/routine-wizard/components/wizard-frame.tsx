@@ -30,7 +30,7 @@ export function WizardFrame({
   children: ReactNode;
 }>) {
   return (
-    <div className="mx-auto grid w-full max-w-3xl gap-8 pb-28">
+    <div className="mx-auto grid w-full max-w-3xl gap-8">
       <div className="grid gap-5">
         <div>
           <ButtonLink href={back?.href ?? '/routines'} variant="ghost">
@@ -47,13 +47,16 @@ export function WizardFrame({
         </header>
       </div>
       {children}
+      {/* Pegada al borde inferior de la ventana mientras el contenido es más alto que
+          ella (`sticky`, no `fixed`: la página entra con una transformación que
+          convertiría a `fixed` en relativa a su propio contenedor). */}
       <div
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--border-subtle)] bg-[var(--surface-low)] px-4 py-3 [padding-bottom:calc(0.75rem+env(safe-area-inset-bottom))]"
+        aria-label="Acciones del asistente"
+        className="sticky bottom-0 z-30 rounded-t-[var(--radius-lg)] border border-b-0 border-[var(--border-subtle)] bg-[var(--surface-low)] px-4 py-3 [padding-bottom:calc(0.75rem+env(safe-area-inset-bottom))]"
         data-testid="wizard-actions"
         role="region"
-        aria-label="Acciones del asistente"
       >
-        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <p aria-live="polite" className="text-sm font-semibold text-[var(--text-muted)]">
             {info ?? ''}
           </p>

@@ -25,7 +25,7 @@ export function WizardProgress({ actual }: Readonly<{ actual: number }>) {
             <span
               aria-hidden
               className={cn(
-                'block h-1.5 rounded-full transition-colors',
+                'block h-1.5 w-full rounded-full transition-colors',
                 reached ? 'bg-[var(--volt)]' : 'bg-[var(--surface-high)]',
                 reached && index !== actual && 'opacity-55',
               )}

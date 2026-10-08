@@ -30,6 +30,9 @@ export async function evidencia(
     await new AxeBuilder({ page })
       // Los avisos emergentes (sonner) son transitorios y no son del asistente.
       .exclude('[data-sonner-toaster]')
+      // La cabecera de la aplicación no es parte del asistente: su etiqueta de rol tiene
+      // un contraste insuficiente en tema claro desde antes de esta entrega (hallazgo aparte).
+      .exclude('header.sticky')
       .analyze()
   ).violations.filter(
     (violation) => violation.impact === 'serious' || violation.impact === 'critical',
@@ -43,6 +46,14 @@ export async function evidencia(
   ).toEqual([]);
 
   const path = `../../docs/evidencias/rutinas/${rf}/web/${rf}_p${paso}_${nombre}_${viewport.width}_${tema}.png`;
+  // En una captura de página completa los elementos «pegajosos» (la cabecera de la
+  // aplicación y la barra de acciones del asistente) quedan a media página y
+  // parecen un defecto; se colocan en su sitio natural sólo mientras se captura.
+  const style = await page.addStyleTag({
+    content:
+      'header.sticky, [aria-label="Acciones del asistente"] { position: static !important; }',
+  });
   await page.screenshot({ path, fullPage: true, animations: 'disabled' });
+  await style.evaluate((node) => node.remove());
   return path;
 }

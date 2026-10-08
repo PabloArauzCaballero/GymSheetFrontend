@@ -1,0 +1,16 @@
+# Busca un ejercicio por su nombre exacto en el selector del asistente y lo añade
+# con su «+». Uso: runFlow con `env: { NOMBRE: 'barbell bench press' }`.
+#
+# El campo se borra antes de escribir: el selector conserva la búsqueda anterior y
+# el ejercicio siguiente no estaría entre sus resultados.
+appId: app.gymsheet.mobile
+---
+- tapOn:
+    id: 'exercise-search'
+- eraseText: 60
+- inputText: ${NOMBRE}
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: 'Añadir ${NOMBRE}'
+    timeout: 30000
+- tapOn: 'Añadir ${NOMBRE}'

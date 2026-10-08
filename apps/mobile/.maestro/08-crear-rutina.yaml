@@ -51,7 +51,6 @@ name: 08 · Crear rutina — asistente por pasos
 # RF-04 · p01: 3 meses y descarga cada 4 (valores por defecto en Hipertrofia).
 - tapOn:
     id: 'duration-3m'
-- takeScreenshot: RF-04_p01_duracion-3-meses_ios_oscuro
 - scroll
 - tapOn: 'Descarga cada 5 semanas'
 - assertVisible: '12 semanas · descarga cada 5'
@@ -123,7 +122,7 @@ name: 08 · Crear rutina — asistente por pasos
 # RF-06 · p08: Atrás vuelve al paso de días sin perder nada.
 - tapOn: 'Listo'
 - assertVisible: 'Paso 5 de 6.*'
-- assertVisible: '2 ejercicios'
+- assertVisible: 'Lunes. 2 ejercicios'
 - takeScreenshot: RF-06_p08_atras-conserva_ios_oscuro
 
 # RF-08 · p04: un día vacío bloquea el guardado.
@@ -143,6 +142,7 @@ name: 08 · Crear rutina — asistente por pasos
 # RF-08 · p01: vista Mes de 12 semanas con S4, S8 y S12 en descarga.
 - assertVisible: 'Semana 4, descarga.*'
 - assertVisible: 'Semana 12, descarga.*'
+- scroll
 - takeScreenshot: RF-08_p01_vista-mes-descargas_ios_oscuro
 
 # RF-08 · p02: tocar S6 y marcarla como descarga; S5 sigue normal.

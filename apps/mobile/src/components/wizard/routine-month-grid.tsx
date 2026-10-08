@@ -37,12 +37,10 @@ function rowLabel(week: PlannedWeek, columns: readonly MonthColumn[]): string {
 export function RoutineMonthGrid({
   semanas,
   columnas,
-  seleccionada,
   onSelectWeek,
 }: {
   semanas: readonly PlannedWeek[];
   columnas: readonly MonthColumn[];
-  seleccionada?: number | null;
   onSelectWeek?: (numero: number) => void;
 }) {
   return (
@@ -69,11 +67,9 @@ export function RoutineMonthGrid({
         ))}
       </View>
       {semanas.map((week) => {
-        const selected = seleccionada === week.numero;
         return (
           <PressableScale
             accessibilityLabel={rowLabel(week, columnas)}
-            accessibilityState={{ selected }}
             disabled={!onSelectWeek}
             haptic="selection"
             key={week.numero}
@@ -85,8 +81,6 @@ export function RoutineMonthGrid({
               gap: spacing.xs,
               minHeight: minTouchTarget,
               borderRadius: radii.md,
-              borderWidth: 1,
-              borderColor: selected ? colors.volt : 'transparent',
               backgroundColor: week.esDescarga ? colors.surfaceHigh : colors.surfaceLow,
               opacity: week.esDescarga ? 0.8 : 1,
               paddingVertical: spacing.xs,

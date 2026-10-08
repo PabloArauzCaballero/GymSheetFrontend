@@ -132,12 +132,6 @@ export function ReviewStep() {
 
       <section aria-label="Vista Mes" className="grid gap-3">
         <h2 className="data-label">Vista Mes</h2>
-        <RoutineMonthGrid
-          columnas={columns}
-          onSelectWeek={(numero) => setWeek(week === numero ? null : numero)}
-          seleccionada={week}
-          semanas={weeks}
-        />
         {selectedWeek ? (
           <div className="panel grid gap-3 p-4">
             <p className="text-sm font-semibold">{`Semana ${selectedWeek.numero}`}</p>
@@ -169,6 +163,12 @@ export function ReviewStep() {
             Toca una semana para marcarla como descarga o normal.
           </p>
         )}
+        <RoutineMonthGrid
+          columnas={columns}
+          onSelectWeek={(numero) => setWeek(week === numero ? null : numero)}
+          seleccionada={week}
+          semanas={weeks}
+        />
       </section>
     </WizardFrame>
   );

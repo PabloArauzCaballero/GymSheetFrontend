@@ -6,6 +6,14 @@ name: 10 · Ficha del ejercicio — favorito y me gusta
 - runFlow: login.subflow.yaml
 - tapOn: 'Ejercicios, tab.*'
 - runFlow: cerrar-tour.subflow.yaml
+# La figura muscular captura el desplazamiento dentro de su lienzo: se desliza por el
+# margen izquierdo de la pantalla, fuera de ella, hasta el buscador.
+- swipe:
+    start: 3%, 75%
+    end: 3%, 20%
+- swipe:
+    start: 3%, 75%
+    end: 3%, 20%
 - tapOn:
     id: 'exercise-search'
 - inputText: 'barbell bench press'

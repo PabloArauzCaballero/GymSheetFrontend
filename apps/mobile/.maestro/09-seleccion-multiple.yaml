@@ -53,16 +53,18 @@ name: 09 · Selección múltiple de días
 # RF-05 · p04: «Configurar juntos», añadir 3 ejercicios y Listo: los dos días quedan con 3.
 - tapOn: 'Configurar juntos'
 - assertVisible: 'Configurar juntos'
-- tapOn:
-    id: 'exercise-search'
-- inputText: 'barbell bench press'
-- pressKey: Enter
-- extendedWaitUntil:
-    visible: 'Añadir barbell bench press'
-    timeout: 30000
-- tapOn: 'Añadir barbell bench press'
-- tapOn: 'Añadir barbell incline bench press'
-- tapOn: 'Añadir barbell decline bench press'
+- runFlow:
+    file: agregar-ejercicio.subflow.yaml
+    env:
+      NOMBRE: 'barbell bench press'
+- runFlow:
+    file: agregar-ejercicio.subflow.yaml
+    env:
+      NOMBRE: 'barbell incline bench press'
+- runFlow:
+    file: agregar-ejercicio.subflow.yaml
+    env:
+      NOMBRE: 'barbell decline bench press'
 - assertVisible: '3 ejercicios'
 - takeScreenshot: RF-05_p04a_configurar-juntos-3-ejercicios_ios_oscuro
 - tapOn: 'Listo'
@@ -76,17 +78,13 @@ name: 09 · Selección múltiple de días
 - takeScreenshot: RF-05_p05_boton-seleccionar_ios_oscuro
 - tapOn: 'Cancelar'
 
-# RF-08 · p03: un grupo que sólo se entrena un día avisa (no bloquea). El bíceps sólo va el lunes.
+# RF-08 · p03: un grupo que sólo se entrena un día avisa (no bloquea). Las piernas sólo van el lunes.
 - tapOn:
     id: 'day-row-1'
-- tapOn:
-    id: 'exercise-search'
-- inputText: 'barbell curl'
-- pressKey: Enter
-- extendedWaitUntil:
-    visible: 'Añadir barbell curl'
-    timeout: 30000
-- tapOn: 'Añadir barbell curl'
+- runFlow:
+    file: agregar-ejercicio.subflow.yaml
+    env:
+      NOMBRE: 'barbell front squat'
 - tapOn: 'Listo'
 - tapOn: 'Siguiente'
 - assertVisible: 'Paso 6 de 6.*'

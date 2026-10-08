@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Text, View } from 'react-native';
+import { useMemo } from 'react';
+import { Alert, Text, View } from 'react-native';
 import { ApiError } from '@gymsheet/api-client';
 import {
   describeSaveError,
@@ -16,7 +16,6 @@ import {
 } from '@gymsheet/hooks';
 import { routineBuilderService } from '@/api/services';
 import { Card, Section } from '@/components/layout';
-import { ChoiceChip } from '@/components/wizard/choice-chip';
 import { RoutineMonthGrid } from '@/components/wizard/routine-month-grid';
 import { WizardActionBar } from '@/components/wizard/wizard-action-bar';
 import { WizardShell } from '@/components/wizard/wizard-shell';
@@ -62,7 +61,6 @@ function IssueRow({ issue, blocking }: { issue: QualityIssue; blocking: boolean 
 export function ReviewStep() {
   const { draft, dispatch } = useRoutineDraft();
   const queryClient = useQueryClient();
-  const [week, setWeek] = useState<number | null>(null);
 
   const quality = useMemo(() => evaluateQuality(draft), [draft]);
   const weeks = useMemo(() => planWeeks(draft), [draft]);
@@ -95,7 +93,25 @@ export function ReviewStep() {
     },
   });
 
-  const selectedWeek = week === null ? null : weeks.find((candidate) => candidate.numero === week);
+  /** Hoja nativa con las dos opciones de la semana tocada: no depende de dónde esté la lista. */
+  const chooseWeek = (numero: number) => {
+    const week = weeks.find((candidate) => candidate.numero === numero);
+    if (!week) return;
+    const apply = (deload: boolean) => {
+      if (deload !== week.esDescarga) {
+        dispatch({ type: 'ajustarSemana', numero, eleccion: toggledWeekChoice(draft, numero) });
+      }
+    };
+    Alert.alert(
+      `Semana ${numero}`,
+      week.esDescarga ? 'Ahora es una semana de descarga.' : 'Ahora es una semana normal.',
+      [
+        { text: 'Descarga', onPress: () => apply(true) },
+        { text: 'Normal', onPress: () => apply(false) },
+        { text: 'Cancelar', style: 'cancel' },
+      ],
+    );
+  };
 
   return (
     <WizardShell
@@ -153,51 +169,10 @@ export function ReviewStep() {
       ) : null}
 
       <Section icon="calendar-number-outline" index={1} title="Vista Mes">
-        <RoutineMonthGrid
-          columnas={columns}
-          onSelectWeek={(numero) => setWeek(week === numero ? null : numero)}
-          seleccionada={week}
-          semanas={weeks}
-        />
-        {selectedWeek ? (
-          <Card>
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: fontSizes.sm,
-                fontWeight: semibold,
-              }}
-            >
-              {`Semana ${selectedWeek.numero}`}
-            </Text>
-            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              {(['DESCARGA', 'NORMAL'] as const).map((choice) => (
-                <ChoiceChip
-                  key={choice}
-                  label={choice === 'DESCARGA' ? 'Descarga' : 'Normal'}
-                  onSelect={() => {
-                    const wantsDeload = choice === 'DESCARGA';
-                    if (wantsDeload !== selectedWeek.esDescarga) {
-                      dispatch({
-                        type: 'ajustarSemana',
-                        numero: selectedWeek.numero,
-                        eleccion: toggledWeekChoice(draft, selectedWeek.numero),
-                      });
-                    }
-                  }}
-                  selected={
-                    choice === 'DESCARGA' ? selectedWeek.esDescarga : !selectedWeek.esDescarga
-                  }
-                  testID={`week-${choice === 'DESCARGA' ? 'deload' : 'normal'}`}
-                />
-              ))}
-            </View>
-          </Card>
-        ) : (
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-            Toca una semana para marcarla como descarga o normal.
-          </Text>
-        )}
+        <RoutineMonthGrid columnas={columns} onSelectWeek={chooseWeek} semanas={weeks} />
+        <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+          Toca una semana para marcarla como descarga o normal.
+        </Text>
       </Section>
     </WizardShell>
   );

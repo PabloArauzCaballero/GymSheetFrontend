@@ -278,10 +278,10 @@ export function ExerciseDetail({
       {pick ? (
         <div
           aria-label="Acciones del asistente"
-          className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--border-subtle)] bg-[var(--surface-low)] px-4 py-3 [padding-bottom:calc(0.75rem+env(safe-area-inset-bottom))]"
+          className="sticky bottom-0 z-30 rounded-t-[var(--radius-lg)] border border-b-0 border-[var(--border-subtle)] bg-[var(--surface-low)] px-4 py-3"
           role="region"
         >
-          <div className="mx-auto flex w-full max-w-3xl justify-end">
+          <div className="flex justify-end">
             <Button onClick={pick.onToggle} size="lg" variant={pick.added ? 'secondary' : 'primary'}>
               {pick.added ? 'Quitar de la rutina' : 'Añadir a la rutina'}
             </Button>
