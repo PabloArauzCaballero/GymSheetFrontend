@@ -25,7 +25,7 @@ export const reppListKey = ['sistema', 'rutinas-repp', 'lista'] as const;
  * solo paso.
  */
 export function CreateOfficialDialog({ onClose }: Readonly<{ onClose: () => void }>) {
-  const [draft, setDraft] = useState<OfficialDraft>(emptyDraft);
+  const [draft, setDraftState] = useState<OfficialDraft>(emptyDraft);
   const [problem, setProblem] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
@@ -38,6 +38,12 @@ export function CreateOfficialDialog({ onClose }: Readonly<{ onClose: () => void
     },
     onError: (error: Error) => notify.error(error),
   });
+
+  /** Tocar el formulario retira el aviso anterior: ya no describe lo que hay en pantalla. */
+  const setDraft = (next: OfficialDraft) => {
+    setDraftState(next);
+    setProblem(null);
+  };
 
   const submit = () => {
     const found = validateDraft(draft);

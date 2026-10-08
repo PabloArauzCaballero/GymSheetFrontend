@@ -5,9 +5,22 @@ import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
-import { exerciseService } from '@/features/exercises/services/exercise-service';
+import { z } from 'zod';
+import { apiRequest } from '@/shared/api/api-client';
 
 export type PickedExercise = { id: string; nombre: string };
+
+/**
+ * Sólo lo que el buscador pinta, y con el id como texto.
+ *
+ * No se usa el esquema compartido de `Exercise`: exige UUID estricto y el
+ * catálogo trae ejercicios sembrados con ids como `00000000-…-00e2`, que ese
+ * esquema rechaza y tumbaría toda la página de resultados. El backend valida el
+ * id al crear la rutina, que es donde importa.
+ */
+const exerciseHitsSchema = z.object({
+  items: z.array(z.object({ id: z.string().min(1), nombre: z.string(), grupoMuscular: z.string() })),
+});
 
 /**
  * Busca en el catálogo de ejercicios y devuelve el elegido.
@@ -24,7 +37,12 @@ export function ExerciseSearch({
   const search = term.trim();
   const results = useQuery({
     queryKey: ['sistema', 'rutinas-repp', 'ejercicios', search],
-    queryFn: () => exerciseService.list({ search, pageSize: 6 }),
+    queryFn: () =>
+      apiRequest(
+        `/exercises?${new URLSearchParams({ search, pageSize: '6' }).toString()}`,
+        exerciseHitsSchema,
+        { method: 'GET' },
+      ),
     enabled: search.length >= 2,
   });
 

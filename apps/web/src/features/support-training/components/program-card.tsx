@@ -56,7 +56,8 @@ export function ProgramCard({
         <ul className="flex flex-col">
           {program.semanas.map((week) => {
             const result = results.get(week.numero);
-            const closedAndOpen = week.cerradaEn !== null && week.cumplida !== true;
+            // Una semana ya cumplida también se puede recalcular: el backend responde «ya estaba cumplida» y no paga dos veces.
+            const closed = week.cerradaEn !== null;
             return (
               <li
                 className="flex flex-col gap-2 border-t border-[var(--border-subtle)] py-3 first:border-t-0"
@@ -68,7 +69,7 @@ export function ProgramCard({
                     <WeekStatus week={week} />
                     {week.esDescarga ? <Badge tone="info">Descarga</Badge> : null}
                   </p>
-                  {closedAndOpen ? (
+                  {closed ? (
                     <RecomputeWeekButton
                       canRespond={canRespond}
                       onResult={(number, outcome) =>
@@ -81,7 +82,8 @@ export function ProgramCard({
                   ) : null}
                 </div>
                 <p className="text-xs text-[var(--text-muted)]">
-                  {week.sesionesHechas} de {week.sesionesPlan} sesiones
+                  {week.sesionesHechas} de {week.sesionesPlan}{' '}
+                  {week.sesionesPlan === 1 ? 'sesión' : 'sesiones'}
                   {week.cardioMinutos > 0 ? ` · ${week.cardioMinutos} min de cardio` : ''}
                   {week.multiplicador === null ? '' : ` · ×${week.multiplicador.toFixed(2)}`} · desde el{' '}
                   {isoDayLabel(week.inicio)}

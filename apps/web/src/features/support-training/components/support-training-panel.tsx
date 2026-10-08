@@ -58,12 +58,10 @@ export function SupportTrainingPanel({
               ['Rutinas públicas', training.data.rutinas.publicas],
               ['Rutinas ocultas', training.data.rutinas.ocultas],
             ].map(([name, value]) => (
-              <Card key={name}>
-                <CardContent className="p-4">
-                  <dt className="text-xs text-[var(--text-muted)]">{name}</dt>
-                  <dd className="mt-1 text-2xl font-semibold tabular-nums">{value}</dd>
-                </CardContent>
-              </Card>
+              <div className="panel p-4" key={name}>
+                <dt className="text-xs text-[var(--text-muted)]">{name}</dt>
+                <dd className="mt-1 text-2xl font-semibold tabular-nums">{value}</dd>
+              </div>
             ))}
           </dl>
 

@@ -30,6 +30,48 @@ function loadE2EEnvironment(): void {
 loadE2EEnvironment();
 
 /*
+ * Evidencia de rutinas REPP (RF-B1..B3): los mismos specs en cuatro
+ * combinaciones, 390 y 1440 px de ancho por tema claro y oscuro. El tema lo fija
+ * la cookie que lee el script anti-FOUC, y el nombre del proyecto es la clave
+ * del juego de datos de cada combinación (ver `e2e/evidencia.ts`). Se corren con
+ * `--project=evidencia-390-claro` (y así) o con `--grep` sobre los specs.
+ */
+const evidenciaSpecs =
+  /(admin-moderation-routines|sistema-rutinas-repp|admin-support-training)\.spec\.ts$/u;
+
+const evidenciaProjects = (
+  [
+    ['390-claro', 390, 844, 'light'],
+    ['390-oscuro', 390, 844, 'dark'],
+    ['1440-claro', 1440, 900, 'light'],
+    ['1440-oscuro', 1440, 900, 'dark'],
+  ] as const
+).map(([combo, width, height, theme]) => ({
+  name: `evidencia-${combo}`,
+  testMatch: evidenciaSpecs,
+  use: {
+    viewport: { width, height },
+    colorScheme: theme,
+    reducedMotion: 'reduce' as const,
+    storageState: {
+      cookies: [
+        {
+          name: 'gymsheet-theme',
+          value: theme,
+          domain: 'localhost',
+          path: '/',
+          expires: -1,
+          httpOnly: false,
+          secure: false,
+          sameSite: 'Lax' as const,
+        },
+      ],
+      origins: [],
+    },
+  },
+}));
+
+/*
  * Requisito del backend que no es obvio hasta que la suite se atasca.
  *
  * Casi todos los flujos inician sesión, y el backend limita la autenticación a
@@ -92,7 +134,8 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile', use: { ...devices['Pixel 7'] } },
+    { name: 'chromium', testIgnore: evidenciaSpecs, use: { ...devices['Desktop Chrome'] } },
+    { name: 'mobile', testIgnore: evidenciaSpecs, use: { ...devices['Pixel 7'] } },
+    ...evidenciaProjects,
   ],
 });
