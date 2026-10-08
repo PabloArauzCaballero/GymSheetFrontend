@@ -151,9 +151,20 @@ export const ratingSummarySchema = z.object({
   total: z.number().int(),
 });
 
+/**
+ * Identificador con forma de UUID, sin exigir versión ni variante.
+ *
+ * Zod 4 valida RFC 9562 de verdad (`z.string().uuid()` rechaza
+ * `00000000-0000-0000-0000-0000000000e2`), mientras que el backend valida con
+ * Zod 3, que sólo mira la forma. Los ejercicios de la siembra de demostración
+ * llevan ids así, y con la validación estricta una sola fila rota la página
+ * entera del catálogo con «Respuesta no válida».
+ */
+const uuidShape = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu);
+
 export const exerciseSchema = z
   .object({
-    id: z.string().uuid(),
+    id: uuidShape,
     nombre: z.string(),
     grupoMuscular: z.string(),
     descripcion: z.string().nullable(),

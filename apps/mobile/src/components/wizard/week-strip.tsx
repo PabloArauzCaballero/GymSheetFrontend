@@ -43,7 +43,9 @@ export function WeekStrip({
         return (
           <PressableScale
             accessibilityHint={
-              selecting ? 'Toca para marcar o desmarcar' : 'Toca para editar. Mantén pulsado para seleccionar varios.'
+              selecting
+                ? 'Toca para marcar o desmarcar'
+                : 'Toca para editar. Mantén pulsado para seleccionar varios.'
             }
             accessibilityLabel={`${name}. ${subtitle}`}
             accessibilityRole={selecting ? 'checkbox' : 'button'}
@@ -79,7 +81,13 @@ export function WeekStrip({
               />
             ) : null}
             <View style={{ flex: 1, gap: 2 }}>
-              <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
+              <Text
+                style={{
+                  color: colors.text,
+                  fontSize: fontSizes.md,
+                  fontWeight: semibold,
+                }}
+              >
                 {name}
               </Text>
               <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>

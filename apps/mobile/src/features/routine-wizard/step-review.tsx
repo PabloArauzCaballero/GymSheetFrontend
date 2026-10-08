@@ -29,7 +29,14 @@ import { colors, fontSizes, iconSizes, semibold, spacing } from '@/theme';
 function IssueRow({ issue, blocking }: { issue: QualityIssue; blocking: boolean }) {
   const tone = blocking ? colors.danger : colors.warning;
   return (
-    <View accessibilityLabel={`${blocking ? 'Bloquea' : 'Aviso'}: ${issue.mensaje}`} style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' }}>
+    <View
+      accessibilityLabel={`${blocking ? 'Bloquea' : 'Aviso'}: ${issue.mensaje}`}
+      style={{
+        flexDirection: 'row',
+        gap: spacing.sm,
+        alignItems: 'flex-start',
+      }}
+    >
       <Ionicons
         accessibilityElementsHidden
         color={tone}
@@ -37,7 +44,14 @@ function IssueRow({ issue, blocking }: { issue: QualityIssue; blocking: boolean 
         name={blocking ? 'close-circle' : 'alert-circle'}
         size={iconSizes.md}
       />
-      <Text style={{ flex: 1, color: colors.text, fontSize: fontSizes.sm, lineHeight: 20 }}>
+      <Text
+        style={{
+          flex: 1,
+          color: colors.text,
+          fontSize: fontSizes.sm,
+          lineHeight: 20,
+        }}
+      >
         {issue.mensaje}
       </Text>
     </View>
@@ -87,7 +101,11 @@ export function ReviewStep() {
     <WizardShell
       actions={
         <WizardActionBar
-          info={quality.bloqueos.length > 0 ? 'Resuelve lo marcado para guardar' : summarizeStructure(draft)}
+          info={
+            quality.bloqueos.length > 0
+              ? 'Resuelve lo marcado para guardar'
+              : summarizeStructure(draft)
+          }
           primary={{
             label: 'Guardar',
             disabled: quality.bloqueos.length > 0,
@@ -101,11 +119,21 @@ export function ReviewStep() {
       title="Revisión"
     >
       <Card>
-        <Text style={{ color: colors.text, fontSize: fontSizes.lg, fontWeight: semibold }}>
+        <Text
+          style={{
+            color: colors.text,
+            fontSize: fontSizes.lg,
+            fontWeight: semibold,
+          }}
+        >
           {draft.nombre.trim()}
         </Text>
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-          {[draft.objetivo ? GOAL_LABEL[draft.objetivo] : null, summarizeStructure(draft), 'Privada']
+          {[
+            draft.objetivo ? GOAL_LABEL[draft.objetivo] : null,
+            summarizeStructure(draft),
+            'Privada',
+          ]
             .filter(Boolean)
             .join(' · ')}
         </Text>
@@ -133,7 +161,13 @@ export function ReviewStep() {
         />
         {selectedWeek ? (
           <Card>
-            <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
+            <Text
+              style={{
+                color: colors.text,
+                fontSize: fontSizes.sm,
+                fontWeight: semibold,
+              }}
+            >
               {`Semana ${selectedWeek.numero}`}
             </Text>
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
@@ -151,7 +185,9 @@ export function ReviewStep() {
                       });
                     }
                   }}
-                  selected={choice === 'DESCARGA' ? selectedWeek.esDescarga : !selectedWeek.esDescarga}
+                  selected={
+                    choice === 'DESCARGA' ? selectedWeek.esDescarga : !selectedWeek.esDescarga
+                  }
                   testID={`week-${choice === 'DESCARGA' ? 'deload' : 'normal'}`}
                 />
               ))}

@@ -47,12 +47,22 @@ export function RoutineMonthGrid({
 }) {
   return (
     <View accessibilityLabel="Vista Mes" style={{ gap: spacing.xs }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <View
+        style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
         <View style={{ width: WEEK_LABEL_WIDTH }} />
         {WEEKDAYS.map((dia) => (
           <Text
             key={dia}
-            style={{ flex: 1, textAlign: 'center', color: colors.textMuted, fontSize: fontSizes.xs, fontWeight: semibold }}
+            style={{
+              flex: 1,
+              textAlign: 'center',
+              color: colors.textMuted,
+              fontSize: fontSizes.xs,
+              fontWeight: semibold,
+            }}
           >
             {WEEKDAY_INITIALS[dia]}
           </Text>
@@ -88,11 +98,25 @@ export function RoutineMonthGrid({
               importantForAccessibility="no-hide-descendants"
               style={{ width: WEEK_LABEL_WIDTH, alignItems: 'center' }}
             >
-              <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
+              <Text
+                style={{
+                  color: colors.text,
+                  fontSize: fontSizes.sm,
+                  fontWeight: semibold,
+                }}
+              >
                 {`S${week.numero}`}
               </Text>
               {week.esDescarga ? (
-                <Text style={{ color: colors.warning, fontSize: 9, fontWeight: semibold }}>Descarga</Text>
+                <Text
+                  style={{
+                    color: colors.warning,
+                    fontSize: 9,
+                    fontWeight: semibold,
+                  }}
+                >
+                  Descarga
+                </Text>
               ) : null}
             </View>
             {columnas.map((column) => (

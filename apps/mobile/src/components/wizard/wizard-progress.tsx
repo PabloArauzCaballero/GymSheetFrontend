@@ -2,7 +2,10 @@ import { Text, View } from 'react-native';
 import { PressableScale } from '@/components/motion';
 import { colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
-export type WizardProgressStep = { readonly id: string; readonly titulo: string };
+export type WizardProgressStep = {
+  readonly id: string;
+  readonly titulo: string;
+};
 
 /**
  * Barra de progreso del asistente: «Paso 2 de 6 · Descripción» y un segmento
@@ -27,7 +30,11 @@ export function WizardProgress({
     <View style={{ gap: spacing.xs }}>
       <Text
         accessibilityLiveRegion="polite"
-        style={{ color: colors.textMuted, fontSize: fontSizes.sm, fontWeight: semibold }}
+        style={{
+          color: colors.textMuted,
+          fontSize: fontSizes.sm,
+          fontWeight: semibold,
+        }}
       >
         {`Paso ${actual + 1} de ${pasos.length}`}
         {current ? ` · ${current.titulo}` : ''}
@@ -39,13 +46,20 @@ export function WizardProgress({
           return (
             <PressableScale
               accessibilityLabel={`Paso ${index + 1}: ${paso.titulo}${index === actual ? ', actual' : reached ? ', completado' : ''}`}
-              accessibilityState={{ disabled: !canGo, selected: index === actual }}
+              accessibilityState={{
+                disabled: !canGo,
+                selected: index === actual,
+              }}
               disabled={!canGo}
               haptic="selection"
               key={paso.id}
               onPress={() => onIr(index)}
               scaleTo={0.96}
-              style={{ flex: 1, minHeight: minTouchTarget, justifyContent: 'center' }}
+              style={{
+                flex: 1,
+                minHeight: minTouchTarget,
+                justifyContent: 'center',
+              }}
             >
               <View
                 style={{

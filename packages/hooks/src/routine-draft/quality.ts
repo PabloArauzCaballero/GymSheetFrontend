@@ -39,7 +39,9 @@ export function evaluateQuality(draft: RoutineDraft): QualityReport {
   const avisos: QualityIssue[] = [];
 
   for (const day of draft.dias) {
-    const name = day.nombre.trim() ? `${WEEKDAY_NAMES[day.diaSemana]} · ${day.nombre.trim()}` : WEEKDAY_NAMES[day.diaSemana];
+    const name = day.nombre.trim()
+      ? `${WEEKDAY_NAMES[day.diaSemana]} · ${day.nombre.trim()}`
+      : WEEKDAY_NAMES[day.diaSemana];
     if (day.ejercicios.length === 0) {
       bloqueos.push({
         codigo: 'DIA_VACIO',
@@ -68,7 +70,10 @@ export function evaluateQuality(draft: RoutineDraft): QualityReport {
     }
     for (const [group, days] of daysByGroup) {
       if (days.size === 1) {
-        avisos.push({ codigo: 'FRECUENCIA_BAJA', mensaje: `${group} solo se entrena 1 vez por semana` });
+        avisos.push({
+          codigo: 'FRECUENCIA_BAJA',
+          mensaje: `${group} solo se entrena 1 vez por semana`,
+        });
       }
     }
   }

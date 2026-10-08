@@ -25,6 +25,8 @@ export type WizardState = {
   intentados: number[];
   /** Hay cambios respecto de lo último guardado o abierto («¿Salir sin guardar?»). */
   sucio: boolean;
+  /** El borrador viene de una visita anterior y todavía no se ha tocado: se ofrece retomarlo. */
+  retomado: boolean;
 };
 
 export type WizardAction =
@@ -66,6 +68,7 @@ export function createInitialState(): WizardState {
     grupo: null,
     intentados: [],
     sucio: false,
+    retomado: false,
   };
 }
 
@@ -74,7 +77,7 @@ function sortDays(days: RoutineDraft['dias']): RoutineDraft['dias'] {
 }
 
 function withDraft(state: WizardState, draft: RoutineDraft): WizardState {
-  return { ...state, draft, sucio: true };
+  return { ...state, draft, sucio: true, retomado: false };
 }
 
 function updateList(
@@ -84,7 +87,10 @@ function updateList(
 ): WizardState {
   if (destino === 'grupo') {
     if (!state.grupo) return state;
-    return { ...state, grupo: { ...state.grupo, ejercicios: change(state.grupo.ejercicios) } };
+    return {
+      ...state,
+      grupo: { ...state.grupo, ejercicios: change(state.grupo.ejercicios) },
+    };
   }
   if (!findDay(state.draft, destino)) return state;
   return withDraft(state, {
@@ -119,7 +125,13 @@ export function routineDraftReducer(state: WizardState, action: WizardAction): W
   switch (action.type) {
     case 'hidratar':
       // Un borrador recuperado sigue sin estar guardado en el servidor: cuenta como sucio.
-      return { ...createInitialState(), draft: action.draft, paso: action.paso, sucio: true };
+      return {
+        ...createInitialState(),
+        draft: action.draft,
+        paso: action.paso,
+        sucio: true,
+        retomado: true,
+      };
     case 'reiniciar':
       return createInitialState();
     case 'campo':
@@ -175,7 +187,10 @@ export function routineDraftReducer(state: WizardState, action: WizardAction): W
         ...draft,
         dias: draft.dias.map((day) =>
           action.hacia.includes(day.diaSemana) && day.diaSemana !== action.desde
-            ? { ...day, ejercicios: appendUnique(day.ejercicios, source.ejercicios) }
+            ? {
+                ...day,
+                ejercicios: appendUnique(day.ejercicios, source.ejercicios),
+              }
             : day,
         ),
       });
@@ -208,11 +223,12 @@ export function routineDraftReducer(state: WizardState, action: WizardAction): W
     case 'salirSeleccion':
       return { ...state, seleccion: null };
     case 'iniciarGrupo': {
-      const dias = sortDays(
-        draft.dias.filter((day) => state.seleccion?.includes(day.diaSemana)),
-      );
+      const dias = sortDays(draft.dias.filter((day) => state.seleccion?.includes(day.diaSemana)));
       if (dias.length === 0) return state;
-      return { ...state, grupo: { dias: dias.map((day) => day.diaSemana), ejercicios: [] } };
+      return {
+        ...state,
+        grupo: { dias: dias.map((day) => day.diaSemana), ejercicios: [] },
+      };
     }
     case 'confirmarGrupo': {
       const group = state.grupo;
@@ -222,7 +238,10 @@ export function routineDraftReducer(state: WizardState, action: WizardAction): W
           ...draft,
           dias: draft.dias.map((day) =>
             group.dias.includes(day.diaSemana)
-              ? { ...day, ejercicios: appendUnique(day.ejercicios, group.ejercicios) }
+              ? {
+                  ...day,
+                  ejercicios: appendUnique(day.ejercicios, group.ejercicios),
+                }
               : day,
           ),
         }),
@@ -239,7 +258,11 @@ export function routineDraftReducer(state: WizardState, action: WizardAction): W
       return withDraft(state, { ...draft, semanas });
     }
     case 'guardado':
-      return { ...state, draft: { ...draft, routineId: action.routineId }, sucio: false };
+      return {
+        ...state,
+        draft: { ...draft, routineId: action.routineId },
+        sucio: false,
+      };
     default:
       return state;
   }

@@ -12,7 +12,10 @@ import { parseDayTarget } from '@/lib/wizard-routes';
  * ficha de la pestaña Ejercicios, con el botón fijo «Añadir a la rutina».
  */
 export default function WizardExerciseRoute() {
-  const { id, pickFor } = useLocalSearchParams<{ id: string; pickFor: string }>();
+  const { id, pickFor } = useLocalSearchParams<{
+    id: string;
+    pickFor: string;
+  }>();
   const target = parseDayTarget(pickFor);
   const { state, draft, dispatch } = useRoutineDraft();
   const exercise = useQuery({
@@ -32,7 +35,11 @@ export default function WizardExerciseRoute() {
         added,
         onToggle: () => {
           if (added) {
-            dispatch({ type: 'quitarEjercicio', destino: target, ejercicioId: id });
+            dispatch({
+              type: 'quitarEjercicio',
+              destino: target,
+              ejercicioId: id,
+            });
             return;
           }
           if (!exercise.data) return;

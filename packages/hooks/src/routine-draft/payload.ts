@@ -61,7 +61,11 @@ export function toWeekOverrides(
       numero,
       cuerpo:
         choice === 'DESCARGA'
-          ? { esDescarga: true, factorVolumen: DELOAD_VOLUME, factorCarga: DELOAD_LOAD }
+          ? {
+              esDescarga: true,
+              factorVolumen: DELOAD_VOLUME,
+              factorCarga: DELOAD_LOAD,
+            }
           : { esDescarga: false, factorVolumen: 1, factorCarga: 1 },
     }));
 }

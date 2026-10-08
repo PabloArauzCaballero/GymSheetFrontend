@@ -1,5 +1,13 @@
 import { Pressable, Text } from 'react-native';
-import { accentContrast, colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import {
+  accentContrast,
+  colors,
+  fontSizes,
+  minTouchTarget,
+  radii,
+  semibold,
+  spacing,
+} from '@/theme';
 
 /**
  * Opción seleccionable. Las fichas ganan a un selector nativo en estos grupos

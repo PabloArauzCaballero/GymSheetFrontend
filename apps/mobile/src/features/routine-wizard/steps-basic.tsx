@@ -28,18 +28,19 @@ function PendingDraftCard() {
   return (
     <Card accent={colors.volt}>
       <View style={{ gap: spacing.xs }}>
-        <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
+        <Text
+          style={{
+            color: colors.text,
+            fontSize: fontSizes.md,
+            fontWeight: semibold,
+          }}
+        >
           Tienes un borrador sin terminar
         </Text>
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{`«${name}»`}</Text>
       </View>
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-        <Button
-          label="Empezar de nuevo"
-          onPress={descartar}
-          style={{ flex: 1 }}
-          variant="ghost"
-        />
+        <Button label="Empezar de nuevo" onPress={descartar} style={{ flex: 1 }} variant="ghost" />
         <Button
           label="Retomar"
           onPress={() => {
@@ -146,7 +147,13 @@ export function DescriptionStep() {
         testID="routine-description"
         value={draft.descripcion}
       />
-      <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, textAlign: 'right' }}>
+      <Text
+        style={{
+          color: colors.textMuted,
+          fontSize: fontSizes.xs,
+          textAlign: 'right',
+        }}
+      >
         {`${draft.descripcion.length} / 1000`}
       </Text>
     </WizardShell>
@@ -156,7 +163,10 @@ export function DescriptionStep() {
 export function GoalStep() {
   const { draft, dispatch, next } = useRoutineDraft();
   const select = (goal: TrainingGoal) =>
-    dispatch({ type: 'objetivo', objetivo: draft.objetivo === goal ? null : goal });
+    dispatch({
+      type: 'objetivo',
+      objetivo: draft.objetivo === goal ? null : goal,
+    });
   return (
     <WizardShell
       actions={<WizardActionBar primary={{ label: 'Siguiente', onPress: () => next(2) }} />}
@@ -202,7 +212,8 @@ function WeeksStepper({
   onChange: (next: number) => void;
   error?: string;
 }) {
-  const step = (delta: number) => onChange(Math.min(WEEKS_STEPPER_MAX + 1, Math.max(1, value + delta)));
+  const step = (delta: number) =>
+    onChange(Math.min(WEEKS_STEPPER_MAX + 1, Math.max(1, value + delta)));
   const button = (label: string, icon: 'remove' | 'add', delta: number) => (
     <PressableScale
       accessibilityLabel={label}
@@ -228,7 +239,13 @@ function WeeksStepper({
         {button('Una semana menos', 'remove', -1)}
         <Text
           accessibilityLiveRegion="polite"
-          style={{ color: colors.text, fontSize: fontSizes.lg, fontWeight: semibold, minWidth: 110, textAlign: 'center' }}
+          style={{
+            color: colors.text,
+            fontSize: fontSizes.lg,
+            fontWeight: semibold,
+            minWidth: 110,
+            textAlign: 'center',
+          }}
         >
           {`${value} ${value === 1 ? 'semana' : 'semanas'}`}
         </Text>
@@ -249,17 +266,34 @@ export function DurationStep() {
   const cycle = [4, 5, 6] as const;
   return (
     <WizardShell
-      actions={<WizardActionBar info={progressionSummary(state)} primary={{ label: 'Siguiente', onPress: () => next(3) }} />}
+      actions={
+        <WizardActionBar
+          info={progressionSummary(state)}
+          primary={{ label: 'Siguiente', onPress: () => next(3) }}
+        />
+      }
       paso={3}
       subtitle="Cuánto dura el programa y quién la puede ver."
       title="Duración y visibilidad"
     >
       <Section icon="lock-closed-outline" index={0} title="Visibilidad">
         <Card>
-          <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
+          <Text
+            style={{
+              color: colors.text,
+              fontSize: fontSizes.md,
+              fontWeight: semibold,
+            }}
+          >
             Privada
           </Text>
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
+          <Text
+            style={{
+              color: colors.textMuted,
+              fontSize: fontSizes.sm,
+              lineHeight: 20,
+            }}
+          >
             Solo tú la ves. Más adelante podrás compartirla o publicarla.
           </Text>
         </Card>
@@ -272,7 +306,10 @@ export function DurationStep() {
               key={months}
               label={`${months} ${months === 1 ? 'mes' : 'meses'}`}
               onSelect={() =>
-                dispatch({ type: 'duracion', duracion: { unidad: 'meses', cantidad: months } })
+                dispatch({
+                  type: 'duracion',
+                  duracion: { unidad: 'meses', cantidad: months },
+                })
               }
               selected={!custom && draft.duracion.cantidad === months}
               testID={`duration-${months}m`}
@@ -283,7 +320,10 @@ export function DurationStep() {
             onSelect={() =>
               dispatch({
                 type: 'duracion',
-                duracion: { unidad: 'semanas', cantidad: durationInWeeks(draft.duracion) },
+                duracion: {
+                  unidad: 'semanas',
+                  cantidad: durationInWeeks(draft.duracion),
+                },
               })
             }
             selected={custom}
@@ -294,7 +334,10 @@ export function DurationStep() {
           <WeeksStepper
             error={errors(3).duracion}
             onChange={(cantidad) =>
-              dispatch({ type: 'duracion', duracion: { unidad: 'semanas', cantidad } })
+              dispatch({
+                type: 'duracion',
+                duracion: { unidad: 'semanas', cantidad },
+              })
             }
             value={draft.duracion.cantidad}
           />
@@ -303,12 +346,30 @@ export function DurationStep() {
 
       <Section icon="trending-up-outline" index={2} title="Progresión">
         <Card>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.md,
+            }}
+          >
             <View style={{ flex: 1, gap: 2 }}>
-              <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
+              <Text
+                style={{
+                  color: colors.text,
+                  fontSize: fontSizes.md,
+                  fontWeight: semibold,
+                }}
+              >
                 Progresión automática
               </Text>
-              <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
+              <Text
+                style={{
+                  color: colors.textMuted,
+                  fontSize: fontSizes.sm,
+                  lineHeight: 20,
+                }}
+              >
                 Genera las semanas y propone una semana de descarga.
               </Text>
             </View>
@@ -316,14 +377,23 @@ export function DurationStep() {
               accessibilityLabel="Progresión automática"
               ios_backgroundColor={colors.surfaceHigh}
               onValueChange={(activa) =>
-                dispatch({ type: 'progresion', progresion: { ...draft.progresion, activa } })
+                dispatch({
+                  type: 'progresion',
+                  progresion: { ...draft.progresion, activa },
+                })
               }
               trackColor={{ false: colors.surfaceHigh, true: colors.volt }}
               value={draft.progresion.activa}
             />
           </View>
           {draft.progresion.activa ? (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                gap: spacing.sm,
+              }}
+            >
               {cycle.map((every) => (
                 <ChoiceChip
                   accessibilityLabel={`Descarga cada ${every} semanas`}
@@ -342,7 +412,10 @@ export function DurationStep() {
               <ChoiceChip
                 label="Sin descarga"
                 onSelect={() =>
-                  dispatch({ type: 'progresion', progresion: { activa: true, descargaCada: null } })
+                  dispatch({
+                    type: 'progresion',
+                    progresion: { activa: true, descargaCada: null },
+                  })
                 }
                 selected={draft.progresion.descargaCada === null}
                 testID="deload-none"

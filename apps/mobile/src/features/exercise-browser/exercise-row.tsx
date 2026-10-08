@@ -92,7 +92,13 @@ export function PickButton({
         size={iconSizes.md}
       />
       {added ? (
-        <Text style={{ color: accentContrast(), fontSize: fontSizes.sm, fontWeight: semibold }}>
+        <Text
+          style={{
+            color: accentContrast(),
+            fontSize: fontSizes.sm,
+            fontWeight: semibold,
+          }}
+        >
           Añadido
         </Text>
       ) : null}
@@ -139,7 +145,11 @@ export function ExerciseRow({
       <View style={{ flex: 1, gap: spacing.xs }}>
         <Text
           numberOfLines={2}
-          style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}
+          style={{
+            color: colors.text,
+            fontSize: fontSizes.md,
+            fontWeight: semibold,
+          }}
         >
           {exercise.nombre}
         </Text>

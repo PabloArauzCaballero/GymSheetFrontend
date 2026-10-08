@@ -5,9 +5,10 @@ import { createExerciseCommunityServices, createRoutineServices } from './routin
 
 type Call = { url: string; method: string; body: unknown };
 
-function fakeBackend(
-  reply: (call: Call) => { status?: number; body: unknown },
-): { fetchImpl: typeof fetch; calls: Call[] } {
+function fakeBackend(reply: (call: Call) => { status?: number; body: unknown }): {
+  fetchImpl: typeof fetch;
+  calls: Call[];
+} {
   const calls: Call[] = [];
   const fetchImpl = (async (url: string, init: RequestInit) => {
     const call: Call = {
@@ -72,28 +73,47 @@ describe('servicios de rutinas', () => {
       'POST /api/routines',
       `PUT /api/routines/${UUID}/structure`,
     ]);
-    expect(calls[0]?.body).toMatchObject({ duracionSemanas: 12, progresion: { descargaCada: 4 } });
+    expect(calls[0]?.body).toMatchObject({
+      duracionSemanas: 12,
+      progresion: { descargaCada: 4 },
+    });
   });
 
   it('rechaza una rutina que no cumple el contrato', async () => {
     const { fetchImpl } = fakeBackend(() => ok({ ...routine, dias: 'no' }));
     const services = createRoutineServices(createApiClient({ baseUrl: '/api', fetchImpl }).request);
-    await expect(services.get(UUID)).rejects.toMatchObject({ kind: 'contract' });
+    await expect(services.get(UUID)).rejects.toMatchObject({
+      kind: 'contract',
+    });
   });
 
   it('pide el calendario con y sin semanas, y ajusta o quita una semana', async () => {
-    const calendar = { rutinaId: UUID, duracionSemanas: 12, progresion: {}, semanas: [] };
+    const calendar = {
+      rutinaId: UUID,
+      duracionSemanas: 12,
+      progresion: {},
+      semanas: [],
+    };
     const { fetchImpl, calls } = fakeBackend((call) =>
       call.method === 'DELETE'
         ? ok({ deleted: true })
         : call.url.includes('/weeks/')
-          ? ok({ semana: 6, esDescarga: true, factorVolumen: 0.5, factorCarga: 0.9 })
+          ? ok({
+              semana: 6,
+              esDescarga: true,
+              factorVolumen: 0.5,
+              factorCarga: 0.9,
+            })
           : ok(calendar),
     );
     const services = createRoutineServices(createApiClient({ baseUrl: '/api', fetchImpl }).request);
     await services.calendar(UUID);
     await services.calendar(UUID, 12);
-    await services.setWeek(UUID, 6, { esDescarga: true, factorVolumen: 0.5, factorCarga: 0.9 });
+    await services.setWeek(UUID, 6, {
+      esDescarga: true,
+      factorVolumen: 0.5,
+      factorCarga: 0.9,
+    });
     await services.clearWeek(UUID, 6);
     expect(calls.map((c) => `${c.method} ${c.url.replace(UUID, ':id')}`)).toEqual([
       'GET /api/routines/:id/calendar',
@@ -108,15 +128,31 @@ describe('servicios de comunidad de ejercicios', () => {
   it('me gusta y quitar me gusta devuelven el contador; favorito manda isFavorite', async () => {
     const { fetchImpl, calls } = fakeBackend((call) =>
       call.url.endsWith('/preference')
-        ? ok({ ejercicioId: UUID, favorito: true, valoracionPersonal: null, notas: null })
-        : ok({ meGusta: call.method === 'POST', meGustaTotal: call.method === 'POST' ? 4 : 3 }),
+        ? ok({
+            ejercicioId: UUID,
+            favorito: true,
+            valoracionPersonal: null,
+            notas: null,
+          })
+        : ok({
+            meGusta: call.method === 'POST',
+            meGustaTotal: call.method === 'POST' ? 4 : 3,
+          }),
     );
     const services = createExerciseCommunityServices(
       createApiClient({ baseUrl: '/api', fetchImpl }).request,
     );
-    await expect(services.like(UUID)).resolves.toEqual({ meGusta: true, meGustaTotal: 4 });
-    await expect(services.unlike(UUID)).resolves.toEqual({ meGusta: false, meGustaTotal: 3 });
-    await expect(services.setFavorite(UUID, true)).resolves.toMatchObject({ favorito: true });
+    await expect(services.like(UUID)).resolves.toEqual({
+      meGusta: true,
+      meGustaTotal: 4,
+    });
+    await expect(services.unlike(UUID)).resolves.toEqual({
+      meGusta: false,
+      meGustaTotal: 3,
+    });
+    await expect(services.setFavorite(UUID, true)).resolves.toMatchObject({
+      favorito: true,
+    });
     expect(calls.map((c) => `${c.method} ${c.url.replace(UUID, ':id')}`)).toEqual([
       'POST /api/exercises/:id/like',
       'DELETE /api/exercises/:id/like',
@@ -155,10 +191,19 @@ describe('errores con código estable', () => {
   });
 
   it('sin code en el cuerpo, el error no inventa uno', async () => {
-    const { fetchImpl } = fakeBackend(() => ({ status: 404, body: { detail: 'Rutina no encontrada.' } }));
+    const { fetchImpl } = fakeBackend(() => ({
+      status: 404,
+      body: { detail: 'Rutina no encontrada.' },
+    }));
     const client = createApiClient({ baseUrl: '/api', fetchImpl });
-    const error = await createRoutineServices(client.request).get(UUID).catch((e: unknown) => e);
-    expect(error).toMatchObject({ status: 404, kind: 'not-found', message: 'Rutina no encontrada.' });
+    const error = await createRoutineServices(client.request)
+      .get(UUID)
+      .catch((e: unknown) => e);
+    expect(error).toMatchObject({
+      status: 404,
+      kind: 'not-found',
+      message: 'Rutina no encontrada.',
+    });
     expect((error as ApiError).code).toBeUndefined();
   });
 });

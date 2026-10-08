@@ -70,7 +70,10 @@ export type DurationUnit = 'semanas' | 'meses';
 
 export type DraftDuration = { unidad: DurationUnit; cantidad: number };
 
-export type DraftProgression = { activa: boolean; descargaCada: 4 | 5 | 6 | null };
+export type DraftProgression = {
+  activa: boolean;
+  descargaCada: 4 | 5 | 6 | null;
+};
 
 /** Ajuste manual de una semana de la revisión (RF-08). */
 export type WeekChoice = 'DESCARGA' | 'NORMAL';
@@ -107,6 +110,16 @@ export const WIZARD_STEPS = [
 ] as const;
 
 export type WizardStepId = (typeof WIZARD_STEPS)[number]['id'];
+
+/** Etiqueta en español de cada objetivo de entrenamiento. */
+export const GOAL_LABELS: Record<TrainingGoal, string> = {
+  HIPERTROFIA: 'Hipertrofia',
+  FUERZA: 'Fuerza',
+  RESISTENCIA: 'Resistencia',
+  PERDIDA_GRASA: 'Pérdida de grasa',
+  SALUD_GENERAL: 'Salud general',
+  REHABILITACION: 'Rehabilitación',
+};
 
 export const MAX_WEEKS = 52;
 export const WEEKS_PER_MONTH = 4;
@@ -209,7 +222,12 @@ export function muscleZone(exercise: { grupoMuscular: string; bodyPart?: string 
 }
 
 export function createDraftExercise(
-  exercise: { id: string; nombre: string; grupoMuscular: string; bodyPart?: string | null },
+  exercise: {
+    id: string;
+    nombre: string;
+    grupoMuscular: string;
+    bodyPart?: string | null;
+  },
   goal: TrainingGoal | null,
 ): DraftExercise {
   return {

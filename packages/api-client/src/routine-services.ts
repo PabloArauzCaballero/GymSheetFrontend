@@ -35,7 +35,10 @@ export function createRoutineServices(request: RequestFn) {
       request('/routines', routineSchema, { method: 'POST', body: input }),
     /** `PUT /routines/:id/structure`: reemplaza días y ejercicios en una transacción. */
     replaceStructure: (id: string, input: RoutineStructureInput) =>
-      request(`/routines/${id}/structure`, routineSchema, { method: 'PUT', body: input }),
+      request(`/routines/${id}/structure`, routineSchema, {
+        method: 'PUT',
+        body: input,
+      }),
     /** Semanas generadas por la progresión (semana base + descarga). */
     calendar: (id: string, semanas?: number) =>
       request(
@@ -49,7 +52,9 @@ export function createRoutineServices(request: RequestFn) {
         body: input,
       }),
     clearWeek: (id: string, semana: number) =>
-      request(`/routines/${id}/weeks/${semana}`, deletedSchema, { method: 'DELETE' }),
+      request(`/routines/${id}/weeks/${semana}`, deletedSchema, {
+        method: 'DELETE',
+      }),
   };
 }
 
@@ -58,9 +63,13 @@ export function createExerciseCommunityServices(request: RequestFn) {
   return {
     /** Idempotente: dar «me gusta» dos veces deja uno solo. */
     like: (exerciseId: string) =>
-      request(`/exercises/${exerciseId}/like`, exerciseLikeResultSchema, { method: 'POST' }),
+      request(`/exercises/${exerciseId}/like`, exerciseLikeResultSchema, {
+        method: 'POST',
+      }),
     unlike: (exerciseId: string) =>
-      request(`/exercises/${exerciseId}/like`, exerciseLikeResultSchema, { method: 'DELETE' }),
+      request(`/exercises/${exerciseId}/like`, exerciseLikeResultSchema, {
+        method: 'DELETE',
+      }),
     setFavorite: (exerciseId: string, isFavorite: boolean) =>
       request(`/me/exercises/${exerciseId}/preference`, exercisePreferenceResultSchema, {
         method: 'PUT',

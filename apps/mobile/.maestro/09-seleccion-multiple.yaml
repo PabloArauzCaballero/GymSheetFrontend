@@ -1,0 +1,95 @@
+# Selección de días en el asistente de rutinas (plan Rutinas REPP · F2): RF-05 y el
+# aviso de frecuencia de RF-08.
+#
+# Toque simple edita el día; toque sostenido (500 ms, háptico) activa la selección
+# múltiple con casillas; el botón «Seleccionar» es la alternativa accesible.
+# Capturas `RF-XX_pNN_<paso>_ios_oscuro` (la app móvil es sólo de tema oscuro).
+appId: app.gymsheet.mobile
+name: 09 · Selección múltiple de días
+---
+- runFlow: login.subflow.yaml
+- tapOn: 'Rutinas, tab.*'
+- runFlow: cerrar-tour.subflow.yaml
+- tapOn: 'Crear rutina'
+- extendedWaitUntil:
+    visible: 'Paso 1 de 6.*'
+    timeout: 30000
+- tapOn:
+    text: 'Empezar de nuevo'
+    optional: true
+- tapOn:
+    id: 'routine-name'
+- inputText: 'QA Selección de días'
+- tapOn: '¿Cómo se llama tu rutina?'
+- tapOn: 'Siguiente'
+- tapOn: 'Siguiente'
+- tapOn: 'Siguiente'
+- tapOn: 'Siguiente'
+- assertVisible: 'Paso 5 de 6.*'
+- tapOn: 'Lunes'
+- tapOn: 'Jueves'
+- assertVisible: '2 días · 12 semanas'
+
+# RF-05 · p01: toque simple en Lunes abre su pantalla de ejercicios.
+- tapOn:
+    id: 'day-row-1'
+- assertVisible: 'Paso 5 de 6.*'
+- assertVisible: '0 ejercicios'
+- takeScreenshot: RF-05_p01_toque-simple-abre-dia_ios_oscuro
+- tapOn: 'Volver'
+
+# RF-05 · p02: toque sostenido en Lunes entra al modo selección con Lunes marcado.
+- longPressOn:
+    id: 'day-row-1'
+- assertVisible: '1 día seleccionado'
+- takeScreenshot: RF-05_p02_toque-sostenido-selecciona_ios_oscuro
+
+# RF-05 · p03: un toque en Jueves lo añade a la selección.
+- tapOn:
+    id: 'day-row-4'
+- assertVisible: '2 días seleccionados'
+- takeScreenshot: RF-05_p03_dos-dias-seleccionados_ios_oscuro
+
+# RF-05 · p04: «Configurar juntos», añadir 3 ejercicios y Listo: los dos días quedan con 3.
+- tapOn: 'Configurar juntos'
+- assertVisible: 'Configurar juntos'
+- tapOn:
+    id: 'exercise-search'
+- inputText: 'barbell bench press'
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: 'Añadir barbell bench press'
+    timeout: 30000
+- tapOn: 'Añadir barbell bench press'
+- tapOn: 'Añadir barbell incline bench press'
+- tapOn: 'Añadir barbell decline bench press'
+- assertVisible: '3 ejercicios'
+- takeScreenshot: RF-05_p04a_configurar-juntos-3-ejercicios_ios_oscuro
+- tapOn: 'Listo'
+- assertVisible: 'Paso 5 de 6.*'
+- assertVisible: '.*3 ejercicios.*Lunes.*|Lunes.*3 ejercicios.*'
+- takeScreenshot: RF-05_p04_lunes-y-jueves-con-3_ios_oscuro
+
+# RF-05 · p05: el botón «Seleccionar» entra al mismo modo (alternativa accesible).
+- tapOn: 'Seleccionar'
+- assertVisible: 'Toca los días que quieras configurar juntos'
+- takeScreenshot: RF-05_p05_boton-seleccionar_ios_oscuro
+- tapOn: 'Cancelar'
+
+# RF-08 · p03: un grupo que sólo se entrena un día avisa (no bloquea). El bíceps sólo va el lunes.
+- tapOn:
+    id: 'day-row-1'
+- tapOn:
+    id: 'exercise-search'
+- inputText: 'barbell curl'
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: 'Añadir barbell curl'
+    timeout: 30000
+- tapOn: 'Añadir barbell curl'
+- tapOn: 'Listo'
+- tapOn: 'Siguiente'
+- assertVisible: 'Paso 6 de 6.*'
+- assertVisible: 'Aviso: .* solo se entrena 1 vez por semana'
+- takeScreenshot: RF-08_p03_aviso-frecuencia_ios_oscuro
+- assertNotVisible: 'Error'

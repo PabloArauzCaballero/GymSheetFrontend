@@ -33,7 +33,10 @@ function run(actions: WizardAction[], from: WizardState = createInitialState()):
 }
 
 function exercise(id: string, group = 'Pecho', sets = 3): DraftExercise {
-  return { ...createDraftExercise({ id, nombre: `Ej ${id}`, grupoMuscular: group }, 'HIPERTROFIA'), seriesObjetivo: sets };
+  return {
+    ...createDraftExercise({ id, nombre: `Ej ${id}`, grupoMuscular: group }, 'HIPERTROFIA'),
+    seriesObjetivo: sets,
+  };
 }
 
 const withDays = (days: Array<1 | 2 | 3 | 4 | 5 | 6 | 7>) =>
@@ -43,7 +46,9 @@ describe('validación por paso', () => {
   it('el nombre es obligatorio, de 3 a 160 caracteres', () => {
     const draft = createEmptyDraft();
     expect(validateStep(draft, 'nombre').nombre).toBe('Escribe un nombre');
-    expect(validateStep({ ...draft, nombre: '  ab ' }, 'nombre').nombre).toBe('Usa al menos 3 caracteres');
+    expect(validateStep({ ...draft, nombre: '  ab ' }, 'nombre').nombre).toBe(
+      'Usa al menos 3 caracteres',
+    );
     expect(validateStep({ ...draft, nombre: 'a'.repeat(161) }, 'nombre').nombre).toMatch(/160/);
     expect(validateStep({ ...draft, nombre: 'QA Empuje 4 días' }, 'nombre')).toEqual({});
   });
@@ -51,12 +56,16 @@ describe('validación por paso', () => {
   it('la descripción es opcional pero acotada a 1000', () => {
     const draft = createEmptyDraft();
     expect(validateStep(draft, 'descripcion')).toEqual({});
-    expect(validateStep({ ...draft, descripcion: 'x'.repeat(1001) }, 'descripcion').descripcion).toMatch(/1000/);
+    expect(
+      validateStep({ ...draft, descripcion: 'x'.repeat(1001) }, 'descripcion').descripcion,
+    ).toMatch(/1000/);
   });
 
   it('la duración no pasa de 52 semanas (13 meses = 52, 14 = 56)', () => {
     const draft = createEmptyDraft();
-    expect(validateStep({ ...draft, duracion: { unidad: 'meses', cantidad: 13 } }, 'duracion')).toEqual({});
+    expect(
+      validateStep({ ...draft, duracion: { unidad: 'meses', cantidad: 13 } }, 'duracion'),
+    ).toEqual({});
     expect(
       validateStep({ ...draft, duracion: { unidad: 'meses', cantidad: 14 } }, 'duracion').duracion,
     ).toMatch(/52/);
@@ -80,8 +89,9 @@ describe('validación por paso', () => {
 
 describe('progresión según el objetivo (D5)', () => {
   it('arranca encendida en Hipertrofia y Fuerza y apagada en el resto', () => {
-    const progression = (goal: Parameters<typeof routineDraftReducer>[1] extends infer A ? A : never) =>
-      routineDraftReducer(createInitialState(), goal).draft.progresion.activa;
+    const progression = (
+      goal: Parameters<typeof routineDraftReducer>[1] extends infer A ? A : never,
+    ) => routineDraftReducer(createInitialState(), goal).draft.progresion.activa;
     expect(progression({ type: 'objetivo', objetivo: 'HIPERTROFIA' })).toBe(true);
     expect(progression({ type: 'objetivo', objetivo: 'FUERZA' })).toBe(true);
     expect(progression({ type: 'objetivo', objetivo: 'RESISTENCIA' })).toBe(false);
@@ -94,7 +104,10 @@ describe('duración y resumen', () => {
   it('3 meses son 12 semanas y el resumen lo dice', () => {
     const state = run([
       { type: 'duracion', duracion: { unidad: 'meses', cantidad: 3 } },
-      ...[1, 2, 4, 5].map((dia) => ({ type: 'alternarDia' as const, dia: dia as 1 })),
+      ...[1, 2, 4, 5].map((dia) => ({
+        type: 'alternarDia' as const,
+        dia: dia as 1,
+      })),
     ]);
     expect(durationInWeeks(state.draft.duracion)).toBe(12);
     expect(summarizeStructure(state.draft)).toBe('4 días · 12 semanas');
@@ -119,28 +132,58 @@ describe('días y ejercicios', () => {
         { type: 'agregarEjercicio', destino: 1, ejercicio: exercise('c') },
         { type: 'moverEjercicio', destino: 1, desde: 2, hacia: 0 },
         { type: 'quitarEjercicio', destino: 1, ejercicioId: 'b' },
-        { type: 'editarEjercicio', destino: 1, ejercicioId: 'a', cambios: { seriesObjetivo: 4, repsMin: 6, repsMax: 8 } },
+        {
+          type: 'editarEjercicio',
+          destino: 1,
+          ejercicioId: 'a',
+          cambios: { seriesObjetivo: 4, repsMin: 6, repsMax: 8 },
+        },
       ],
       state,
     );
     const day = state.draft.dias[0];
     expect(day?.ejercicios.map((e) => e.ejercicioId)).toEqual(['c', 'a']);
-    expect(day?.ejercicios[1]).toMatchObject({ seriesObjetivo: 4, repsMin: 6, repsMax: 8 });
+    expect(day?.ejercicios[1]).toMatchObject({
+      seriesObjetivo: 4,
+      repsMin: 6,
+      repsMax: 8,
+    });
   });
 
   it('ignora movimientos fuera de rango', () => {
     let state = withDays([1]);
     state = run([{ type: 'agregarEjercicio', destino: 1, ejercicio: exercise('a') }], state);
-    const moved = routineDraftReducer(state, { type: 'moverEjercicio', destino: 1, desde: 0, hacia: 9 });
+    const moved = routineDraftReducer(state, {
+      type: 'moverEjercicio',
+      destino: 1,
+      desde: 0,
+      hacia: 9,
+    });
     expect(moved.draft.dias[0]?.ejercicios).toHaveLength(1);
   });
 
   it('los valores por defecto dependen del objetivo', () => {
     const base = { id: 'x', nombre: 'X', grupoMuscular: 'Pecho' };
-    expect(createDraftExercise(base, 'FUERZA')).toMatchObject({ seriesObjetivo: 5, repsMin: 3, repsMax: 5 });
-    expect(createDraftExercise(base, 'HIPERTROFIA')).toMatchObject({ seriesObjetivo: 3, repsMin: 8, repsMax: 12 });
-    expect(createDraftExercise(base, 'RESISTENCIA')).toMatchObject({ seriesObjetivo: 3, repsMin: 15, repsMax: 20 });
-    expect(createDraftExercise(base, null)).toMatchObject({ seriesObjetivo: 3, repsMin: 8, repsMax: 12 });
+    expect(createDraftExercise(base, 'FUERZA')).toMatchObject({
+      seriesObjetivo: 5,
+      repsMin: 3,
+      repsMax: 5,
+    });
+    expect(createDraftExercise(base, 'HIPERTROFIA')).toMatchObject({
+      seriesObjetivo: 3,
+      repsMin: 8,
+      repsMax: 12,
+    });
+    expect(createDraftExercise(base, 'RESISTENCIA')).toMatchObject({
+      seriesObjetivo: 3,
+      repsMin: 15,
+      repsMax: 20,
+    });
+    expect(createDraftExercise(base, null)).toMatchObject({
+      seriesObjetivo: 3,
+      repsMin: 8,
+      repsMax: 12,
+    });
   });
 });
 
@@ -148,19 +191,33 @@ describe('selección múltiple (RF-05)', () => {
   it('el toque sostenido entra al modo con ese día marcado y el siguiente toque añade', () => {
     let state = withDays([1, 3, 4]);
     expect(state.seleccion).toBeNull();
-    state = run([{ type: 'entrarSeleccion', dia: 1 }, { type: 'alternarSeleccion', dia: 4 }], state);
+    state = run(
+      [
+        { type: 'entrarSeleccion', dia: 1 },
+        { type: 'alternarSeleccion', dia: 4 },
+      ],
+      state,
+    );
     expect(state.seleccion).toEqual([1, 4]);
   });
 
   it('el botón «Seleccionar» entra sin ningún día marcado', () => {
-    const state = routineDraftReducer(withDays([1, 3]), { type: 'entrarSeleccion' });
+    const state = routineDraftReducer(withDays([1, 3]), {
+      type: 'entrarSeleccion',
+    });
     expect(state.seleccion).toEqual([]);
   });
 
   it('alternar una marca ya puesta la quita; fuera del modo no hace nada', () => {
     const base = withDays([1, 3]);
     expect(routineDraftReducer(base, { type: 'alternarSeleccion', dia: 1 })).toBe(base);
-    const state = run([{ type: 'entrarSeleccion', dia: 1 }, { type: 'alternarSeleccion', dia: 1 }], base);
+    const state = run(
+      [
+        { type: 'entrarSeleccion', dia: 1 },
+        { type: 'alternarSeleccion', dia: 1 },
+      ],
+      base,
+    );
     expect(state.seleccion).toEqual([]);
   });
 
@@ -171,14 +228,28 @@ describe('selección múltiple (RF-05)', () => {
         { type: 'entrarSeleccion', dia: 1 },
         { type: 'alternarSeleccion', dia: 4 },
         { type: 'iniciarGrupo' },
-        { type: 'agregarEjercicio', destino: 'grupo', ejercicio: exercise('a') },
-        { type: 'agregarEjercicio', destino: 'grupo', ejercicio: exercise('b') },
-        { type: 'agregarEjercicio', destino: 'grupo', ejercicio: exercise('c') },
+        {
+          type: 'agregarEjercicio',
+          destino: 'grupo',
+          ejercicio: exercise('a'),
+        },
+        {
+          type: 'agregarEjercicio',
+          destino: 'grupo',
+          ejercicio: exercise('b'),
+        },
+        {
+          type: 'agregarEjercicio',
+          destino: 'grupo',
+          ejercicio: exercise('c'),
+        },
         { type: 'confirmarGrupo' },
       ],
       state,
     );
-    const counts = Object.fromEntries(state.draft.dias.map((d) => [d.diaSemana, d.ejercicios.length]));
+    const counts = Object.fromEntries(
+      state.draft.dias.map((d) => [d.diaSemana, d.ejercicios.length]),
+    );
     expect(counts).toEqual({ 1: 3, 3: 0, 4: 3 });
     expect(state.grupo).toBeNull();
     expect(state.seleccion).toBeNull();
@@ -191,7 +262,11 @@ describe('selección múltiple (RF-05)', () => {
         { type: 'entrarSeleccion', dia: 1 },
         { type: 'alternarSeleccion', dia: 4 },
         { type: 'iniciarGrupo' },
-        { type: 'agregarEjercicio', destino: 'grupo', ejercicio: exercise('a') },
+        {
+          type: 'agregarEjercicio',
+          destino: 'grupo',
+          ejercicio: exercise('a'),
+        },
         { type: 'confirmarGrupo' },
         { type: 'quitarEjercicio', destino: 1, ejercicioId: 'a' },
       ],
@@ -210,7 +285,11 @@ describe('selección múltiple (RF-05)', () => {
 
   it('desmarcar un día lo saca también de la selección', () => {
     const state = run(
-      [{ type: 'entrarSeleccion', dia: 1 }, { type: 'alternarSeleccion', dia: 3 }, { type: 'alternarDia', dia: 3 }],
+      [
+        { type: 'entrarSeleccion', dia: 1 },
+        { type: 'alternarSeleccion', dia: 3 },
+        { type: 'alternarDia', dia: 3 },
+      ],
       withDays([1, 3]),
     );
     expect(state.seleccion).toEqual([1]);
@@ -240,9 +319,21 @@ describe('avisos de calidad (RF-08)', () => {
   it('avisa si un grupo sólo se entrena un día, sin bloquear', () => {
     const state = run(
       [
-        { type: 'agregarEjercicio', destino: 1, ejercicio: exercise('a', 'Pecho') },
-        { type: 'agregarEjercicio', destino: 1, ejercicio: exercise('b', 'Espalda') },
-        { type: 'agregarEjercicio', destino: 3, ejercicio: exercise('c', 'Espalda') },
+        {
+          type: 'agregarEjercicio',
+          destino: 1,
+          ejercicio: exercise('a', 'Pecho'),
+        },
+        {
+          type: 'agregarEjercicio',
+          destino: 1,
+          ejercicio: exercise('b', 'Espalda'),
+        },
+        {
+          type: 'agregarEjercicio',
+          destino: 3,
+          ejercicio: exercise('c', 'Espalda'),
+        },
       ],
       withDays([1, 3]),
     );
@@ -252,7 +343,10 @@ describe('avisos de calidad (RF-08)', () => {
   });
 
   it('con un solo día no avisa de frecuencia', () => {
-    const state = run([{ type: 'agregarEjercicio', destino: 1, ejercicio: exercise('a') }], withDays([1]));
+    const state = run(
+      [{ type: 'agregarEjercicio', destino: 1, ejercicio: exercise('a') }],
+      withDays([1]),
+    );
     expect(evaluateQuality(state.draft).avisos).toEqual([]);
   });
 
@@ -270,22 +364,38 @@ describe('avisos de calidad (RF-08)', () => {
 });
 
 describe('semanas y descarga (RF-08)', () => {
-  const twelveWeeks = () => run([{ type: 'duracion', duracion: { unidad: 'meses', cantidad: 3 } }]).draft;
+  const twelveWeeks = () =>
+    run([{ type: 'duracion', duracion: { unidad: 'meses', cantidad: 3 } }]).draft;
 
   it('con descarga cada 4, las semanas 4, 8 y 12 son descarga', () => {
-    const deloads = planWeeks(twelveWeeks()).filter((w) => w.esDescarga).map((w) => w.numero);
+    const deloads = planWeeks(twelveWeeks())
+      .filter((w) => w.esDescarga)
+      .map((w) => w.numero);
     expect(deloads).toEqual([4, 8, 12]);
   });
 
   it('con descarga cada 5 se refleja en la revisión', () => {
-    const draft = { ...twelveWeeks(), progresion: { activa: true, descargaCada: 5 as const } };
-    expect(planWeeks(draft).filter((w) => w.esDescarga).map((w) => w.numero)).toEqual([5, 10]);
+    const draft = {
+      ...twelveWeeks(),
+      progresion: { activa: true, descargaCada: 5 as const },
+    };
+    expect(
+      planWeeks(draft)
+        .filter((w) => w.esDescarga)
+        .map((w) => w.numero),
+    ).toEqual([5, 10]);
   });
 
   it('sin progresión o más corta que el ciclo no hay descarga', () => {
-    const off = { ...twelveWeeks(), progresion: { activa: false, descargaCada: null } };
+    const off = {
+      ...twelveWeeks(),
+      progresion: { activa: false, descargaCada: null },
+    };
     expect(planWeeks(off).some((w) => w.esDescarga)).toBe(false);
-    const short = { ...createEmptyDraft(), duracion: { unidad: 'semanas' as const, cantidad: 3 } };
+    const short = {
+      ...createEmptyDraft(),
+      duracion: { unidad: 'semanas' as const, cantidad: 3 },
+    };
     expect(planWeeks(short).some((w) => w.esDescarga)).toBe(false);
   });
 
@@ -301,7 +411,10 @@ describe('semanas y descarga (RF-08)', () => {
     expect(weeks[5]).toMatchObject({ esDescarga: true, ajustada: true });
     expect(weeks[4]?.esDescarga).toBe(false);
     expect(toWeekOverrides(state.draft)).toEqual([
-      { numero: 6, cuerpo: { esDescarga: true, factorVolumen: 0.5, factorCarga: 0.9 } },
+      {
+        numero: 6,
+        cuerpo: { esDescarga: true, factorVolumen: 0.5, factorCarga: 0.9 },
+      },
     ]);
   });
 
@@ -352,21 +465,35 @@ describe('carga útil para el backend', () => {
   });
 
   it('sin progresión manda descargaCada null', () => {
-    const draft = { ...createEmptyDraft(), progresion: { activa: false, descargaCada: 4 as const } };
-    expect(toCreateInput(draft).progresion).toEqual({ activa: false, descargaCada: null });
+    const draft = {
+      ...createEmptyDraft(),
+      progresion: { activa: false, descargaCada: 4 as const },
+    };
+    expect(toCreateInput(draft).progresion).toEqual({
+      activa: false,
+      descargaCada: null,
+    });
   });
 });
 
 describe('mapeo de errores', () => {
   it('compara el code estable, no el texto', () => {
-    const view = describeSaveError({ message: 'cualquier texto', status: 400, code: 'ROUTINE_HAS_NO_DAYS' });
+    const view = describeSaveError({
+      message: 'cualquier texto',
+      status: 400,
+      code: 'ROUTINE_HAS_NO_DAYS',
+    });
     expect(view.paso).toBe(4);
     expect(view.reintentable).toBe(false);
     expect(view.mensaje).toMatch(/al menos un ejercicio/);
   });
 
   it('la red caída es reintentable y recuerda que el borrador se conserva', () => {
-    const view = describeSaveError({ message: 'x', status: 0, kind: 'network' });
+    const view = describeSaveError({
+      message: 'x',
+      status: 0,
+      kind: 'network',
+    });
     expect(view.titulo).toBe('Sin conexión');
     expect(view.reintentable).toBe(true);
     expect(view.mensaje).toMatch(/borrador/);
@@ -384,7 +511,13 @@ describe('mapeo de errores', () => {
   });
 
   it('un duplicado remite a la revisión', () => {
-    expect(describeSaveError({ message: 'x', status: 409, code: 'ROUTINE_DUPLICATE' }).paso).toBe(5);
+    expect(
+      describeSaveError({
+        message: 'x',
+        status: 409,
+        code: 'ROUTINE_DUPLICATE',
+      }).paso,
+    ).toBe(5);
   });
 });
 
@@ -414,17 +547,42 @@ describe('persistencia del borrador', () => {
   });
 });
 
+describe('borrador retomado', () => {
+  it('un borrador recuperado se ofrece hasta que se toca, y tocarlo apaga la oferta', () => {
+    const restored = routineDraftReducer(createInitialState(), {
+      type: 'hidratar',
+      draft: { ...createEmptyDraft(), nombre: 'Antes' },
+      paso: 2,
+    });
+    expect(restored).toMatchObject({ retomado: true, sucio: true, paso: 2 });
+    expect(
+      routineDraftReducer(restored, {
+        type: 'campo',
+        campo: 'nombre',
+        valor: 'Ahora',
+      }).retomado,
+    ).toBe(false);
+    expect(routineDraftReducer(restored, { type: 'reiniciar' }).retomado).toBe(false);
+  });
+});
+
 describe('estado sucio y guardado', () => {
   it('editar marca el borrador como sucio y guardar guarda el id y lo limpia', () => {
     const state = run([{ type: 'campo', campo: 'nombre', valor: 'QA' }]);
     expect(state.sucio).toBe(true);
-    const saved = routineDraftReducer(state, { type: 'guardado', routineId: 'r1' });
+    const saved = routineDraftReducer(state, {
+      type: 'guardado',
+      routineId: 'r1',
+    });
     expect(saved.sucio).toBe(false);
     expect(saved.draft.routineId).toBe('r1');
   });
 
   it('intentar un paso lo registra una sola vez', () => {
-    const state = run([{ type: 'intentar', paso: 0 }, { type: 'intentar', paso: 0 }]);
+    const state = run([
+      { type: 'intentar', paso: 0 },
+      { type: 'intentar', paso: 0 },
+    ]);
     expect(state.intentados).toEqual([0]);
   });
 });
@@ -439,8 +597,14 @@ describe('zona muscular', () => {
   });
 
   it('el cardio no genera aviso de frecuencia', () => {
-    const cardio = createDraftExercise({ id: 'c', nombre: 'Cinta', grupoMuscular: 'x', bodyPart: 'cardio' }, null);
-    const state = run([{ type: 'agregarEjercicio', destino: 1, ejercicio: cardio }], withDays([1, 3]));
+    const cardio = createDraftExercise(
+      { id: 'c', nombre: 'Cinta', grupoMuscular: 'x', bodyPart: 'cardio' },
+      null,
+    );
+    const state = run(
+      [{ type: 'agregarEjercicio', destino: 1, ejercicio: cardio }],
+      withDays([1, 3]),
+    );
     expect(evaluateQuality(state.draft).avisos).toEqual([]);
   });
 });
@@ -472,7 +636,11 @@ describe('guardado del borrador', () => {
     expect(api.createWithDays).toHaveBeenCalledOnce();
     expect(api.replaceStructure).not.toHaveBeenCalled();
     expect(onCreated).toHaveBeenCalledWith('r1');
-    expect(api.setWeek).toHaveBeenCalledWith('r1', 6, expect.objectContaining({ esDescarga: true }));
+    expect(api.setWeek).toHaveBeenCalledWith(
+      'r1',
+      6,
+      expect.objectContaining({ esDescarga: true }),
+    );
     expect(result.semanasFallidas).toEqual([]);
   });
 
@@ -480,11 +648,16 @@ describe('guardado del borrador', () => {
     const api = services();
     await saveRoutineDraft(api, { ...filled(), routineId: 'r9' });
     expect(api.createWithDays).not.toHaveBeenCalled();
-    expect(api.replaceStructure).toHaveBeenCalledWith('r9', expect.objectContaining({ dias: expect.any(Array) }));
+    expect(api.replaceStructure).toHaveBeenCalledWith(
+      'r9',
+      expect.objectContaining({ dias: expect.any(Array) }),
+    );
   });
 
   it('un ajuste de semana que falla no pierde la rutina ya creada', async () => {
-    const api = services({ setWeek: vi.fn().mockRejectedValue(new Error('x')) });
+    const api = services({
+      setWeek: vi.fn().mockRejectedValue(new Error('x')),
+    });
     const onCreated = vi.fn();
     const result = await saveRoutineDraft(api, filled(), onCreated);
     expect(onCreated).toHaveBeenCalledWith('r1');
@@ -492,7 +665,9 @@ describe('guardado del borrador', () => {
   });
 
   it('si crear falla, propaga el error y no avisa de ningún id', async () => {
-    const api = services({ createWithDays: vi.fn().mockRejectedValue(new Error('boom')) });
+    const api = services({
+      createWithDays: vi.fn().mockRejectedValue(new Error('boom')),
+    });
     const onCreated = vi.fn();
     await expect(saveRoutineDraft(api, filled(), onCreated)).rejects.toThrow('boom');
     expect(onCreated).not.toHaveBeenCalled();

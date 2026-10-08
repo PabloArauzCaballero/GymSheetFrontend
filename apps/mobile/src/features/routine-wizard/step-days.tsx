@@ -37,7 +37,11 @@ export function DaysStep() {
         `Se perderán sus ${day.ejercicios.length} ejercicios.`,
         [
           { text: 'Cancelar', style: 'cancel' },
-          { text: 'Quitar', style: 'destructive', onPress: () => dispatch({ type: 'alternarDia', dia }) },
+          {
+            text: 'Quitar',
+            style: 'destructive',
+            onPress: () => dispatch({ type: 'alternarDia', dia }),
+          },
         ],
       );
       return;
@@ -60,12 +64,19 @@ export function DaysStep() {
           router.push(dayPath('grupo'));
         },
       }}
-      secondary={{ label: 'Cancelar', onPress: () => dispatch({ type: 'salirSeleccion' }) }}
+      secondary={{
+        label: 'Cancelar',
+        onPress: () => dispatch({ type: 'salirSeleccion' }),
+      }}
     />
   ) : (
     <WizardActionBar
       info={draft.dias.length > 0 ? summarizeStructure(draft) : undefined}
-      primary={{ label: 'Siguiente', disabled: draft.dias.length === 0, onPress: () => next(4) }}
+      primary={{
+        label: 'Siguiente',
+        disabled: draft.dias.length === 0,
+        onPress: () => next(4),
+      }}
     />
   );
 
@@ -77,7 +88,10 @@ export function DaysStep() {
       title="¿Qué días entrenas?"
     >
       <Section icon="calendar-outline" index={0} title="Días de entrenamiento">
-        <View accessibilityLabel="Días de la semana" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+        <View
+          accessibilityLabel="Días de la semana"
+          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}
+        >
           {WEEKDAYS.map((dia) => (
             <ChoiceChip
               accessibilityLabel={WEEKDAY_NAMES[dia]}

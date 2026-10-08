@@ -84,14 +84,24 @@ export function ExerciseSocial({ exercise }: { exercise: Exercise }) {
   const key = ['exercise', exercise.id] as const;
 
   const patch = (change: Patch) =>
-    queryClient.setQueryData<Exercise>(key, (current) => (current ? { ...current, ...change } : current));
+    queryClient.setQueryData<Exercise>(key, (current) =>
+      current ? { ...current, ...change } : current,
+    );
 
   const like = useMutation({
     mutationFn: (next: boolean) =>
-      next ? exerciseCommunityService.like(exercise.id) : exerciseCommunityService.unlike(exercise.id),
+      next
+        ? exerciseCommunityService.like(exercise.id)
+        : exerciseCommunityService.unlike(exercise.id),
     onMutate: (next) => {
-      const previous = { meGusta: exercise.meGusta ?? false, meGustaTotal: exercise.meGustaTotal };
-      patch({ meGusta: next, meGustaTotal: Math.max(0, exercise.meGustaTotal + (next ? 1 : -1)) });
+      const previous = {
+        meGusta: exercise.meGusta ?? false,
+        meGustaTotal: exercise.meGustaTotal,
+      };
+      patch({
+        meGusta: next,
+        meGustaTotal: Math.max(0, exercise.meGustaTotal + (next ? 1 : -1)),
+      });
       return previous;
     },
     onSuccess: (result) => patch({ meGusta: result.meGusta, meGustaTotal: result.meGustaTotal }),
@@ -136,7 +146,9 @@ export function ExerciseSocial({ exercise }: { exercise: Exercise }) {
         testID="exercise-like"
       />
       <ToggleButton
-        accessibilityLabel={isFavorite ? 'Favorito, activado. Solo tú lo ves' : 'Marcar como favorito. Solo tú lo ves'}
+        accessibilityLabel={
+          isFavorite ? 'Favorito, activado. Solo tú lo ves' : 'Marcar como favorito. Solo tú lo ves'
+        }
         active={isFavorite}
         activeIcon="star"
         disabled={favorite.isPending}

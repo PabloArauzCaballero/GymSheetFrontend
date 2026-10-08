@@ -62,7 +62,8 @@ export function MusclePickList({ code, pick }: { code: string; pick: PickConfig 
   const queryClient = useQueryClient();
   const exercises = useInfiniteQuery({
     queryKey: ['muscle', code, 'exercises'],
-    queryFn: ({ pageParam }) => muscleService.exercises(code, { limit: PAGE_SIZE, offset: pageParam }),
+    queryFn: ({ pageParam }) =>
+      muscleService.exercises(code, { limit: PAGE_SIZE, offset: pageParam }),
     initialPageParam: 0,
     getNextPageParam: (last) =>
       last.offset + last.ejercicios.length < last.total ? last.offset + last.limit : undefined,
@@ -90,7 +91,14 @@ export function MusclePickList({ code, pick }: { code: string; pick: PickConfig 
 
   return (
     <View style={{ gap: spacing.md }}>
-      <Text accessibilityRole="header" style={{ color: colors.text, fontSize: fontSizes.xl, fontWeight: semibold }}>
+      <Text
+        accessibilityRole="header"
+        style={{
+          color: colors.text,
+          fontSize: fontSizes.xl,
+          fontWeight: semibold,
+        }}
+      >
         {name}
       </Text>
       {exercises.isPending ? (
@@ -105,19 +113,38 @@ export function MusclePickList({ code, pick }: { code: string; pick: PickConfig 
         />
       ) : (
         <>
-          <Text style={{ color: colors.textDisabled, fontSize: fontSizes.sm, fontWeight: semibold }}>
+          <Text
+            style={{
+              color: colors.textDisabled,
+              fontSize: fontSizes.sm,
+              fontWeight: semibold,
+            }}
+          >
             {total} {total === 1 ? 'ejercicio' : 'ejercicios'}
           </Text>
           <Card list>
             {items.map((exercise, index) => (
               <View key={exercise.id}>
                 {index > 0 ? <Divider /> : null}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: minTouchTarget, paddingVertical: spacing.sm }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.sm,
+                    minHeight: minTouchTarget,
+                    paddingVertical: spacing.sm,
+                  }}
+                >
                   <PressableScale
                     accessibilityHint="Abre la ficha del ejercicio"
                     accessibilityLabel={exercise.nombre}
                     onPress={() => pick.onOpen(exercise.id)}
-                    style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.md }}
+                    style={{
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: spacing.md,
+                    }}
                   >
                     <Thumb
                       label={exercise.imagen?.textoAlternativo ?? exercise.nombre}
@@ -125,7 +152,12 @@ export function MusclePickList({ code, pick }: { code: string; pick: PickConfig 
                     />
                     <Text
                       numberOfLines={2}
-                      style={{ flex: 1, color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}
+                      style={{
+                        flex: 1,
+                        color: colors.text,
+                        fontSize: fontSizes.md,
+                        fontWeight: semibold,
+                      }}
                     >
                       {titleCase(exercise.nombre)}
                     </Text>

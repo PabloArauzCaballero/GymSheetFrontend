@@ -29,6 +29,13 @@ function loadE2EEnvironment(): void {
 
 loadE2EEnvironment();
 
+/**
+ * Puerto del servidor de pruebas. 3002 por omisión; `E2E_PORT` lo cambia cuando
+ * ese puerto ya lo usa otro `next dev` (por ejemplo, otro worktree): con
+ * `reuseExistingServer` la suite acabaría probando el código de otro checkout.
+ */
+const port = Number(process.env.E2E_PORT ?? 3002);
+
 /*
  * Requisito del backend que no es obvio hasta que la suite se atasca.
  *
@@ -73,7 +80,7 @@ export default defineConfig({
    */
   expect: { timeout: 15_000 },
   use: {
-    baseURL: 'http://localhost:3002',
+    baseURL: `http://localhost:${port}`,
     trace: 'on-first-retry',
   },
   webServer: {
@@ -87,8 +94,8 @@ export default defineConfig({
     //
     // `require.resolve` pregunta a Node dónde está de verdad, así que funciona
     // igual con el paquete elevado, sin elevar, o con un `nohoist` futuro.
-    command: `"${process.execPath}" "${require.resolve('next/dist/bin/next')}" dev --port 3002`,
-    url: 'http://localhost:3002',
+    command: `"${process.execPath}" "${require.resolve('next/dist/bin/next')}" dev --port ${port}`,
+    url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
   },
   projects: [

@@ -69,8 +69,8 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
     queryFn: () =>
       exerciseService.list({
         search: search.trim() || undefined,
-        bodyPart: searching || onlyFavorites ? undefined : bodyPart ?? undefined,
-        targetMuscle: searching || onlyFavorites ? undefined : muscle ?? undefined,
+        bodyPart: searching || onlyFavorites ? undefined : (bodyPart ?? undefined),
+        targetMuscle: searching || onlyFavorites ? undefined : (muscle ?? undefined),
         favoritos: onlyFavorites || undefined,
         pageSize: 50,
       }),
@@ -94,6 +94,36 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
           : bodyPart
             ? titleCase(bodyPart)
             : 'Toca un músculo o elige una zona';
+
+  const searchBlock = (
+    <>
+      <TourTarget id="exercises.search">
+        <Input
+          autoCapitalize="none"
+          autoCorrect={false}
+          clearButtonMode="while-editing"
+          icon="search"
+          label="Buscar ejercicios"
+          labelHidden
+          onChangeText={setSearch}
+          placeholder="Nombre, grupo muscular…"
+          returnKeyType="search"
+          testID="exercise-search"
+          value={search}
+        />
+      </TourTarget>
+
+      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+        <ChoiceChip
+          accessibilityLabel={onlyFavorites ? 'Favoritos, activado' : 'Favoritos'}
+          label="☆ Favoritos"
+          onSelect={() => setOnlyFavorites((current) => !current)}
+          selected={onlyFavorites}
+          testID="filter-favorites"
+        />
+      </View>
+    </>
+  );
 
   const showFigure = !searching && !bodyPart && !onlyFavorites && !muscleCode;
 
@@ -120,6 +150,10 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
         </>
       ) : (
         <>
+          {/* En el selector la búsqueda va primero: se viene a elegir ejercicios, y la
+              figura —alta— empujaba el campo fuera de la pantalla. */}
+          {picking ? searchBlock : null}
+
           {/* NIVEL 0 — la figura. Tocar un músculo lleva directo a su pantalla, sin
               pasar por la zona ni por la lista: es el camino más corto a «qué
               entreno para este músculo». */}
@@ -127,12 +161,17 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
             <TourTarget id="exercises.grid">
               <BodyMap
                 onOpenList={() =>
-                  picking ? setShowMuscleList((current) => !current) : router.push('/exercises/muscles')
+                  picking
+                    ? setShowMuscleList((current) => !current)
+                    : router.push('/exercises/muscles')
                 }
                 onSelectMuscle={(code) =>
                   picking
                     ? setMuscleCode(code)
-                    : router.push({ pathname: '/exercises/muscle/[code]', params: { code } })
+                    : router.push({
+                        pathname: '/exercises/muscle/[code]',
+                        params: { code },
+                      })
                 }
               />
             </TourTarget>
@@ -171,30 +210,7 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
             />
           )}
 
-          <TourTarget id="exercises.search">
-            <Input
-              autoCapitalize="none"
-              autoCorrect={false}
-              clearButtonMode="while-editing"
-              icon="search"
-              label="Buscar ejercicios"
-              labelHidden
-              onChangeText={setSearch}
-              placeholder="Nombre, grupo muscular…"
-              returnKeyType="search"
-              value={search}
-            />
-          </TourTarget>
-
-          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            <ChoiceChip
-              accessibilityLabel={onlyFavorites ? 'Favoritos, activado' : 'Favoritos'}
-              label="☆ Favoritos"
-              onSelect={() => setOnlyFavorites((current) => !current)}
-              selected={onlyFavorites}
-              testID="filter-favorites"
-            />
-          </View>
+          {picking ? null : searchBlock}
 
           {/* Breadcrumb: one step back at a time, so the user can widen the filter
               without losing the zone they were exploring. */}
@@ -283,14 +299,19 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
                       onPress={() =>
                         picking
                           ? pick?.onOpen(exercise.id)
-                          : router.push({ pathname: '/exercises/[id]', params: { id: exercise.id } })
+                          : router.push({
+                              pathname: '/exercises/[id]',
+                              params: { id: exercise.id },
+                            })
                       }
                       pick={
                         picking
                           ? {
                               added: pick.isAdded(exercise.id),
                               onToggle: () =>
-                                pick.isAdded(exercise.id) ? pick.remove(exercise.id) : pick.add(exercise),
+                                pick.isAdded(exercise.id)
+                                  ? pick.remove(exercise.id)
+                                  : pick.add(exercise),
                             }
                           : undefined
                       }

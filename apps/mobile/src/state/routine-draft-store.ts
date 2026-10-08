@@ -104,13 +104,19 @@ export const useRoutineDraftStore = create<RoutineDraftStore>((set, get) => ({
       return;
     }
     const persisted = parseDraft(await readFile());
-    set({ pendiente: persisted && hasContent(persisted.draft) ? persisted : null });
+    set({
+      pendiente: persisted && hasContent(persisted.draft) ? persisted : null,
+    });
   },
 
   retomar: () => {
     const pendiente = get().pendiente;
     if (!pendiente) return null;
-    get().dispatch({ type: 'hidratar', draft: pendiente.draft, paso: pendiente.paso });
+    get().dispatch({
+      type: 'hidratar',
+      draft: pendiente.draft,
+      paso: pendiente.paso,
+    });
     set({ pendiente: null });
     return pendiente;
   },

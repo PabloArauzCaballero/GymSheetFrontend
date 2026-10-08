@@ -74,7 +74,11 @@ export function describeSaveError(error: ApiErrorLike): SaveErrorView {
     };
   }
   if (error.status === 400 || error.status === 422 || error.kind === 'validation') {
-    return { titulo: 'Revisa los datos', mensaje: error.message, reintentable: false };
+    return {
+      titulo: 'Revisa los datos',
+      mensaje: error.message,
+      reintentable: false,
+    };
   }
   return {
     titulo: 'No se pudo guardar',

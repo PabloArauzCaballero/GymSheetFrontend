@@ -132,14 +132,38 @@ function ExerciseEditor({
     <Card>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         <View style={{ flex: 1, gap: 2 }}>
-          <Text numberOfLines={2} style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
+          <Text
+            numberOfLines={2}
+            style={{
+              color: colors.text,
+              fontSize: fontSizes.md,
+              fontWeight: semibold,
+            }}
+          >
             {`${position}. ${exercise.nombre}`}
           </Text>
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{exercise.grupoMuscular}</Text>
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+            {exercise.grupoMuscular}
+          </Text>
         </View>
-        <IconButton disabled={position === 1} icon="chevron-up" label={`Subir ${exercise.nombre}`} onPress={() => onMove(-1)} />
-        <IconButton disabled={position === total} icon="chevron-down" label={`Bajar ${exercise.nombre}`} onPress={() => onMove(1)} />
-        <IconButton icon="trash-outline" label={`Quitar ${exercise.nombre}`} onPress={onRemove} tone={colors.danger} />
+        <IconButton
+          disabled={position === 1}
+          icon="chevron-up"
+          label={`Subir ${exercise.nombre}`}
+          onPress={() => onMove(-1)}
+        />
+        <IconButton
+          disabled={position === total}
+          icon="chevron-down"
+          label={`Bajar ${exercise.nombre}`}
+          onPress={() => onMove(1)}
+        />
+        <IconButton
+          icon="trash-outline"
+          label={`Quitar ${exercise.nombre}`}
+          onPress={onRemove}
+          tone={colors.danger}
+        />
       </View>
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
         <NumberField
@@ -148,12 +172,32 @@ function ExerciseEditor({
           placeholder="3"
           value={exercise.seriesObjetivo}
         />
-        <NumberField label="Reps mín." onChange={(raw) => setReps('repsMin', raw)} placeholder="8" value={exercise.repsMin} />
-        <NumberField label="Reps máx." onChange={(raw) => setReps('repsMax', raw)} placeholder="12" value={exercise.repsMax} />
+        <NumberField
+          label="Reps mín."
+          onChange={(raw) => setReps('repsMin', raw)}
+          placeholder="8"
+          value={exercise.repsMin}
+        />
+        <NumberField
+          label="Reps máx."
+          onChange={(raw) => setReps('repsMax', raw)}
+          placeholder="12"
+          value={exercise.repsMax}
+        />
       </View>
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-        <NumberField label="RIR" onChange={(raw) => onChange({ rirObjetivo: digits(raw, 10) })} placeholder="2" value={exercise.rirObjetivo} />
-        <NumberField label="Descanso (s)" onChange={(raw) => onChange({ descansoSeg: digits(raw, 7200) })} placeholder="90" value={exercise.descansoSeg} />
+        <NumberField
+          label="RIR"
+          onChange={(raw) => onChange({ rirObjetivo: digits(raw, 10) })}
+          placeholder="2"
+          value={exercise.rirObjetivo}
+        />
+        <NumberField
+          label="Descanso (s)"
+          onChange={(raw) => onChange({ descansoSeg: digits(raw, 7200) })}
+          placeholder="90"
+          value={exercise.descansoSeg}
+        />
       </View>
       <Input
         label="Nota"
@@ -180,7 +224,8 @@ export function OrderScreen({ dia }: { dia: DayTarget }) {
   if (!list) return <Redirect href={wizardStepPath(DAYS_STEP)} />;
 
   const others = WEEKDAYS.filter(
-    (candidate): candidate is Weekday => candidate !== dia && findDay(draft, candidate) !== undefined,
+    (candidate): candidate is Weekday =>
+      candidate !== dia && findDay(draft, candidate) !== undefined,
   );
 
   const clear = () =>
@@ -190,7 +235,14 @@ export function OrderScreen({ dia }: { dia: DayTarget }) {
         text: 'Vaciar',
         style: 'destructive',
         onPress: () => {
-          if (dia === 'grupo') list.forEach((e) => dispatch({ type: 'quitarEjercicio', destino: dia, ejercicioId: e.ejercicioId }));
+          if (dia === 'grupo')
+            list.forEach((e) =>
+              dispatch({
+                type: 'quitarEjercicio',
+                destino: dia,
+                ejercicioId: e.ejercicioId,
+              }),
+            );
           else dispatch({ type: 'vaciarDia', dia });
           router.back();
         },
@@ -225,10 +277,28 @@ export function OrderScreen({ dia }: { dia: DayTarget }) {
             exercise={exercise}
             key={exercise.ejercicioId}
             onChange={(cambios) =>
-              dispatch({ type: 'editarEjercicio', destino: dia, ejercicioId: exercise.ejercicioId, cambios })
+              dispatch({
+                type: 'editarEjercicio',
+                destino: dia,
+                ejercicioId: exercise.ejercicioId,
+                cambios,
+              })
             }
-            onMove={(delta) => dispatch({ type: 'moverEjercicio', destino: dia, desde: index, hacia: index + delta })}
-            onRemove={() => dispatch({ type: 'quitarEjercicio', destino: dia, ejercicioId: exercise.ejercicioId })}
+            onMove={(delta) =>
+              dispatch({
+                type: 'moverEjercicio',
+                destino: dia,
+                desde: index,
+                hacia: index + delta,
+              })
+            }
+            onRemove={() =>
+              dispatch({
+                type: 'quitarEjercicio',
+                destino: dia,
+                ejercicioId: exercise.ejercicioId,
+              })
+            }
             position={index + 1}
             total={list.length}
           />

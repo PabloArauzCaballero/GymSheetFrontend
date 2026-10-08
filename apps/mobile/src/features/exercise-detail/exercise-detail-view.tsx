@@ -1,7 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
-import { Badge, Card, Divider, Row, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
+import {
+  Badge,
+  Card,
+  Divider,
+  Row,
+  ScrollScreen,
+  ScreenHeader,
+  Section,
+} from '@/components/layout';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { ExerciseDemo, ExerciseImage } from '@/components/media';
 import { PressableScale } from '@/components/motion';
@@ -36,7 +44,10 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
    * la app (`['user','me']`), así que se sirve de la caché ya cargada en Perfil
    * en vez de pedir la cuenta otra vez.
    */
-  const account = useQuery({ queryKey: ['user', 'me'], queryFn: () => accountService.getMe() });
+  const account = useQuery({
+    queryKey: ['user', 'me'],
+    queryFn: () => accountService.getMe(),
+  });
 
   // Los músculos con su código canónico: son los que se pueden abrir. Si la
   // consulta falla o aún no llega, la sección simplemente no aparece y quedan
@@ -58,7 +69,15 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
   });
 
   const pickBar = pick ? (
-    <View style={{ borderRadius: radii.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, padding: spacing.sm }}>
+    <View
+      style={{
+        borderRadius: radii.lg,
+        borderWidth: 1,
+        borderColor: colors.border,
+        backgroundColor: colors.surface,
+        padding: spacing.sm,
+      }}
+    >
       <Button
         icon={pick.added ? 'checkmark' : 'add'}
         label={pick.added ? 'Quitar de la rutina' : 'Añadir a la rutina'}
@@ -129,7 +148,9 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
 
       {!pick &&
       muscles.data &&
-      muscles.data.primarios.length + muscles.data.secundarios.length + muscles.data.estabilizadores.length >
+      muscles.data.primarios.length +
+        muscles.data.secundarios.length +
+        muscles.data.estabilizadores.length >
         0 ? (
         <Section icon="body-outline" index={1} title="Músculos que trabaja">
           <Card>
@@ -145,16 +166,31 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
                 <View key={label}>
                   {groupIndex > 0 ? <Divider /> : null}
                   <View style={{ gap: spacing.sm, paddingVertical: spacing.xs }}>
-                    <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, fontWeight: semibold }}>
+                    <Text
+                      style={{
+                        color: colors.textMuted,
+                        fontSize: fontSizes.xs,
+                        fontWeight: semibold,
+                      }}
+                    >
                       {label}
                     </Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        flexWrap: 'wrap',
+                        gap: spacing.sm,
+                      }}
+                    >
                       {list.map((muscle) => (
                         <MuscleChip
                           key={muscle.code}
                           name={muscle.nombre}
                           onPress={() =>
-                            router.push({ pathname: '/exercises/muscle/[code]', params: { code: muscle.code } })
+                            router.push({
+                              pathname: '/exercises/muscle/[code]',
+                              params: { code: muscle.code },
+                            })
                           }
                           primary={primary}
                         />
@@ -179,7 +215,11 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
             {steps.map((step, index) => (
               <View
                 key={`${index}-${step}`}
-                style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' }}
+                style={{
+                  flexDirection: 'row',
+                  gap: spacing.sm,
+                  alignItems: 'flex-start',
+                }}
               >
                 <View
                   style={{
@@ -203,7 +243,12 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
                   </Text>
                 </View>
                 <Text
-                  style={{ color: colors.text, fontSize: fontSizes.sm, lineHeight: 22, flex: 1 }}
+                  style={{
+                    color: colors.text,
+                    fontSize: fontSizes.sm,
+                    lineHeight: 22,
+                    flex: 1,
+                  }}
                 >
                   {step}
                 </Text>
@@ -218,20 +263,32 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
           {/* Horizontal rail: browsing alternatives should not push the page down. */}
           <ScrollView
             horizontal
-            contentContainerStyle={{ gap: spacing.sm, paddingRight: spacing.lg }}
+            contentContainerStyle={{
+              gap: spacing.sm,
+              paddingRight: spacing.lg,
+            }}
             showsHorizontalScrollIndicator={false}
           >
             {others.map((item) => (
               <PressableScale
                 accessibilityLabel={item.nombre}
                 key={item.id}
-                onPress={() => router.push({ pathname: '/exercises/[id]', params: { id: item.id } })}
+                onPress={() =>
+                  router.push({
+                    pathname: '/exercises/[id]',
+                    params: { id: item.id },
+                  })
+                }
                 style={{ width: 132, gap: spacing.xs }}
               >
                 <ExerciseImage exercise={item} size={132} />
                 <Text
                   numberOfLines={2}
-                  style={{ color: colors.text, fontSize: fontSizes.xs, fontWeight: semibold }}
+                  style={{
+                    color: colors.text,
+                    fontSize: fontSizes.xs,
+                    fontWeight: semibold,
+                  }}
                 >
                   {item.nombre}
                 </Text>

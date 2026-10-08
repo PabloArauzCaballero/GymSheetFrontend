@@ -1,0 +1,162 @@
+# Asistente de creación de rutinas (plan Rutinas REPP · F2): RF-03, RF-04, RF-06 y RF-08.
+#
+# Requiere la bandera `routinesV2` encendida (por defecto lo está en una build
+# de desarrollo) y el backend con la rama de F1. Las capturas se llaman
+# `RF-XX_pNN_<paso>_ios_oscuro`; `scripts/run-rutinas-evidencia.sh` las coloca en
+# `docs/evidencias/rutinas/RF-XX/movil/`. La app móvil es sólo de tema oscuro.
+appId: app.gymsheet.mobile
+name: 08 · Crear rutina — asistente por pasos
+---
+- runFlow: login.subflow.yaml
+- tapOn: 'Rutinas, tab.*'
+- runFlow: cerrar-tour.subflow.yaml
+- tapOn: 'Crear rutina'
+- extendedWaitUntil:
+    visible: 'Paso 1 de 6.*'
+    timeout: 30000
+# Si quedó un borrador de una corrida anterior, se descarta para empezar limpio.
+- tapOn:
+    text: 'Empezar de nuevo'
+    optional: true
+- assertNotVisible: 'Error'
+- takeScreenshot: RF-03_p01_paso1-vacio_ios_oscuro
+
+# RF-03 · p02: sin nombre no avanza y el error sale en el campo.
+- tapOn: 'Siguiente'
+- assertVisible: 'Escribe un nombre'
+- assertVisible: 'Paso 1 de 6.*'
+- takeScreenshot: RF-03_p02_paso1-error-nombre_ios_oscuro
+
+# RF-03 · p03: con nombre avanza.
+- tapOn:
+    id: 'routine-name'
+- inputText: 'QA Empuje 4 días'
+- tapOn: '¿Cómo se llama tu rutina?'
+- tapOn: 'Siguiente'
+- assertVisible: 'Paso 2 de 6.*'
+- takeScreenshot: RF-03_p03_paso2_ios_oscuro
+
+# RF-03 · p04: volver conserva lo escrito.
+- tapOn: 'Volver'
+- assertVisible: 'QA Empuje 4 días'
+- takeScreenshot: RF-03_p04_volver-conserva_ios_oscuro
+- tapOn: 'Siguiente'
+- tapOn: 'Siguiente'
+- assertVisible: 'Paso 3 de 6.*'
+- tapOn:
+    id: 'goal-HIPERTROFIA'
+- tapOn: 'Siguiente'
+- assertVisible: 'Paso 4 de 6.*'
+
+# RF-04 · p01: 3 meses y descarga cada 4 (valores por defecto en Hipertrofia).
+- tapOn:
+    id: 'duration-3m'
+- takeScreenshot: RF-04_p01_duracion-3-meses_ios_oscuro
+- scroll
+- tapOn: 'Descarga cada 5 semanas'
+- assertVisible: '12 semanas · descarga cada 5'
+- takeScreenshot: RF-04_p03_descarga-cada-5_ios_oscuro
+- tapOn: 'Descarga cada 4 semanas'
+- tapOn: 'Siguiente'
+- assertVisible: 'Paso 5 de 6.*'
+
+# RF-04 · p02: sin días no se puede avanzar.
+- assertVisible: 'Elige al menos un día'
+- takeScreenshot: RF-04_p02_sin-dias_ios_oscuro
+- tapOn: 'Lunes'
+- tapOn: 'Miércoles'
+- tapOn: 'Jueves'
+- tapOn: 'Viernes'
+- assertVisible: '4 días · 12 semanas'
+- takeScreenshot: RF-04_p01_resumen-4-dias-12-semanas_ios_oscuro
+
+# RF-06 · p01: el día se edita en una pantalla completa (no modal).
+- tapOn:
+    id: 'day-row-1'
+- assertVisible: 'Lunes'
+- assertVisible: '0 ejercicios'
+- takeScreenshot: RF-06_p01_dia-pantalla-completa_ios_oscuro
+
+# RF-06 · p02: buscar «bench press».
+- scrollUntilVisible:
+    element: 'Buscar ejercicios'
+    visibilityPercentage: 50
+- tapOn: 'Buscar ejercicios'
+- inputText: 'barbell bench press'
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: 'Añadir barbell bench press'
+    timeout: 30000
+- takeScreenshot: RF-06_p02_buscar-press_ios_oscuro
+
+# RF-06 · p03: «+» cambia a «✓ Añadido» y la barra cuenta.
+- tapOn: 'Añadir barbell bench press'
+- assertVisible: '1 ejercicio'
+- assertVisible: 'Quitar barbell bench press.*'
+- takeScreenshot: RF-06_p03_anadido-1-ejercicio_ios_oscuro
+
+# RF-06 · p05: la ficha de otro ejercicio tiene el botón fijo «Añadir a la rutina».
+- tapOn:
+    id: 'exercise-search'
+- eraseText: 40
+- inputText: 'barbell close-grip bench press'
+- pressKey: Enter
+- tapOn:
+    text: 'barbell close-grip bench press\. .*'
+- extendedWaitUntil:
+    visible: 'Dar me gusta.*'
+    timeout: 30000
+- assertVisible: 'Añadir a la rutina'
+- takeScreenshot: RF-06_p05_ficha-anadir-a-la-rutina_ios_oscuro
+
+# RF-06 · p06: añadir desde la ficha vuelve a la lista con el contador en 2.
+- tapOn: 'Añadir a la rutina'
+- assertVisible: '2 ejercicios'
+- takeScreenshot: RF-06_p06_anadido-desde-ficha-2-ejercicios_ios_oscuro
+
+# RF-06 · p07: ver y ordenar, editar series.
+- tapOn: 'Ver y ordenar'
+- assertVisible: 'Series'
+- takeScreenshot: RF-06_p07_ver-y-ordenar_ios_oscuro
+- tapOn: 'Listo'
+
+# RF-06 · p08: Atrás vuelve al paso de días sin perder nada.
+- tapOn: 'Listo'
+- assertVisible: 'Paso 5 de 6.*'
+- assertVisible: '2 ejercicios'
+- takeScreenshot: RF-06_p08_atras-conserva_ios_oscuro
+
+# RF-08 · p04: un día vacío bloquea el guardado.
+- tapOn: 'Siguiente'
+- assertVisible: 'Paso 6 de 6.*'
+- assertVisible: 'Hay un día sin ejercicios.*'
+- takeScreenshot: RF-08_p04_dia-vacio-bloquea_ios_oscuro
+- tapOn: 'Volver'
+
+# Se quitan los días vacíos (Mié, Jue y Vie) para poder guardar.
+- tapOn: 'Miércoles'
+- tapOn: 'Jueves'
+- tapOn: 'Viernes'
+- tapOn: 'Siguiente'
+- assertVisible: 'Paso 6 de 6.*'
+
+# RF-08 · p01: vista Mes de 12 semanas con S4, S8 y S12 en descarga.
+- assertVisible: 'Semana 4, descarga.*'
+- assertVisible: 'Semana 12, descarga.*'
+- takeScreenshot: RF-08_p01_vista-mes-descargas_ios_oscuro
+
+# RF-08 · p02: tocar S6 y marcarla como descarga; S5 sigue normal.
+- tapOn:
+    id: 'week-row-6'
+- tapOn: 'Descarga'
+- assertVisible: 'Semana 6, descarga.*'
+- assertVisible: 'Semana 5\. .*'
+- takeScreenshot: RF-08_p02_s6-descarga_ios_oscuro
+
+# RF-03: guardar crea la rutina y abre su detalle.
+- tapOn: 'Guardar'
+- extendedWaitUntil:
+    visible: '.*QA Empuje 4 días.*'
+    timeout: 30000
+- assertNotVisible: 'Error'
+- takeScreenshot: RF-03_p07_rutina-guardada_ios_oscuro

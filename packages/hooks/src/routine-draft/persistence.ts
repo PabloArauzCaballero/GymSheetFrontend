@@ -37,15 +37,31 @@ const draftSchema = z.object({
   nombre: z.string(),
   descripcion: z.string(),
   objetivo: z
-    .enum(['HIPERTROFIA', 'FUERZA', 'RESISTENCIA', 'PERDIDA_GRASA', 'SALUD_GENERAL', 'REHABILITACION'])
+    .enum([
+      'HIPERTROFIA',
+      'FUERZA',
+      'RESISTENCIA',
+      'PERDIDA_GRASA',
+      'SALUD_GENERAL',
+      'REHABILITACION',
+    ])
     .nullable(),
   visibilidad: z.literal('PRIVATE'),
-  duracion: z.object({ unidad: z.enum(['semanas', 'meses']), cantidad: z.number().int().min(1) }),
+  duracion: z.object({
+    unidad: z.enum(['semanas', 'meses']),
+    cantidad: z.number().int().min(1),
+  }),
   progresion: z.object({
     activa: z.boolean(),
     descargaCada: z.union([z.literal(4), z.literal(5), z.literal(6)]).nullable(),
   }),
-  dias: z.array(z.object({ diaSemana: weekday, nombre: z.string(), ejercicios: z.array(exerciseSchema) })),
+  dias: z.array(
+    z.object({
+      diaSemana: weekday,
+      nombre: z.string(),
+      ejercicios: z.array(exerciseSchema),
+    }),
+  ),
   semanas: z.record(z.string(), z.enum(['DESCARGA', 'NORMAL'])),
 });
 

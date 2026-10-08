@@ -1,8 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
-const pkg = (name: string) =>
-  fileURLToPath(new URL(`../${name}/src/index.ts`, import.meta.url));
+const pkg = (name: string) => fileURLToPath(new URL(`../${name}/src/index.ts`, import.meta.url));
 
 export default defineConfig({
   resolve: {

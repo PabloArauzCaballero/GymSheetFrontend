@@ -17,7 +17,10 @@ const nameSchema = z
   .min(3, 'Usa al menos 3 caracteres')
   .max(160, 'El nombre admite hasta 160 caracteres');
 
-const descriptionSchema = z.string().trim().max(1000, 'La descripción admite hasta 1000 caracteres');
+const descriptionSchema = z
+  .string()
+  .trim()
+  .max(1000, 'La descripción admite hasta 1000 caracteres');
 
 const durationSchema = z
   .number()
