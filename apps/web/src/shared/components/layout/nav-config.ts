@@ -1,5 +1,6 @@
 import {
   Activity,
+  Award,
   BarChart3,
   Bell,
   Building2,
@@ -205,6 +206,21 @@ export const systemNavigation: NavigationItem[] = [
     icon: ScrollText,
     roles: ['SYSTEM_ADMIN'],
     description: 'Toda la actividad administrativa de la plataforma.',
+  },
+  {
+    href: '/sistema/moderacion',
+    label: 'Moderación global',
+    icon: ShieldAlert,
+    roles: ['SYSTEM_ADMIN'],
+    description: 'Rutinas, ejercicios y comentarios públicos denunciados, lo urgente primero.',
+    requiredPermission: 'moderation:read',
+  },
+  {
+    href: '/sistema/rutinas-repp',
+    label: 'Rutinas REPP',
+    icon: Award,
+    roles: ['SYSTEM_ADMIN'],
+    description: 'Catálogo oficial: crear, marcar y desmarcar rutinas recomendadas por REPP.',
   },
 ];
 

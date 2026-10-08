@@ -15,7 +15,7 @@ import { Select } from '@/shared/components/ui/select';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { notify } from '@/shared/notifications';
 import {
-  moderationReasons,
+  reasonsFor,
   moderationService,
   REASON_LABEL,
   type ModerationReason,
@@ -94,7 +94,7 @@ export function ReportDialog({
               onChange={(event) => setReason(event.target.value as ModerationReason)}
               value={reason}
             >
-              {moderationReasons.map((value) => (
+              {reasonsFor(targetKind).map((value) => (
                 <option key={value} value={value}>
                   {REASON_LABEL[value]}
                 </option>
