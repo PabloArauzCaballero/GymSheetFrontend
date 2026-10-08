@@ -16,12 +16,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import Animated, {
+  FadeIn,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
 import { AmbientBackground } from '@/components/ambient';
+import { DURATION, PressableScale } from '@/components/motion';
 import { accentContrast, accentPolicy, colors, fontSizes, iconSizes, maxContentWidth, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -379,13 +381,14 @@ export function Input({
           {...(revealable ? { secureTextEntry: !revealed } : {})}
         />
         {revealable ? (
-          <Pressable
+          <PressableScale
             accessibilityHint="Alterna entre ocultar y mostrar lo que escribes"
             accessibilityLabel={revealed ? hideLabel : revealLabel}
-            accessibilityRole="button"
             accessibilityState={{ selected: revealed }}
+            haptic="none"
             hitSlop={spacing.sm}
             onPress={() => setRevealed((current) => !current)}
+            scaleTo={0.9}
             style={{
               position: 'absolute',
               right: spacing.xs,
@@ -395,12 +398,16 @@ export function Input({
               justifyContent: 'center',
             }}
           >
-            <Ionicons
-              color={revealed ? colors.accentInk : colors.textMuted}
-              name={revealed ? 'eye-off-outline' : 'eye-outline'}
-              size={iconSizes.md}
-            />
-          </Pressable>
+            {/* El ojo se desvanece de un icono al otro: es el único indicio de
+                que el campo cambió de estado sin leer lo que hay escrito. */}
+            <Animated.View entering={FadeIn.duration(DURATION.quick)} key={revealed ? 'shown' : 'hidden'}>
+              <Ionicons
+                color={revealed ? colors.accentInk : colors.textMuted}
+                name={revealed ? 'eye-off-outline' : 'eye-outline'}
+                size={iconSizes.md}
+              />
+            </Animated.View>
+          </PressableScale>
         ) : null}
       </View>
       {error ? (

@@ -124,7 +124,6 @@ export default function OnboardingScreen() {
     setConsentData(state.data.consentData);
     // Solo al cargar el estado inicial: no queremos que un refetch posterior
     // pise lo que la persona está escribiendo en este momento.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.data === undefined]);
 
   const save = useMutation({
