@@ -13,3 +13,6 @@
  * `resolver.extraNodeModules`). See docs/mobile/registro-de-decisiones.md (ADR-008).
  */
 export * from './query-keys';
+
+/** Lógica pura del asistente de creación de rutinas (sin React; ver ADR-008). */
+export * from './routine-draft';

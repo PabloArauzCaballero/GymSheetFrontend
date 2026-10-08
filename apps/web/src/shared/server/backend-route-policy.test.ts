@@ -81,6 +81,13 @@ const allowedCases: Array<[string[], string]> = [
   ],
   [['admin', 'moderation', 'users', id, 'history'], `/admin/moderation/users/${id}/history`],
   [['me', 'reports'], '/me/reports'],
+  // Rutinas REPP F1: estructura por días, calendario, semanas, me gusta y favorito.
+  [['routines', id, 'calendar'], `/routines/${id}/calendar`],
+  [['routines', id, 'structure'], `/routines/${id}/structure`],
+  [['routines', id, 'weeks', '6'], `/routines/${id}/weeks/6`],
+  [['routines', id, 'weeks', '52'], `/routines/${id}/weeks/52`],
+  [['exercises', id, 'like'], `/exercises/${id}/like`],
+  [['me', 'exercises', id, 'preference'], `/me/exercises/${id}/preference`],
 ];
 const blockedCases: Array<[string[]]> = [
   [['muscles', 'PECTORALIS_MAJOR', 'secrets']],
@@ -106,6 +113,24 @@ const blockedCases: Array<[string[]]> = [
   // `push` no es un prefijo abierto: sólo la configuración pública pasa.
   [['notifications', 'push']],
   [['notifications', 'device-tokens', id]],
+  // Rutinas REPP F1: cada ruta nueva tiene una parecida que NO debe pasar. Las
+  // de publicar, copiar, compartir y programas llegan en otras fases.
+  [['routines', id, 'calendars']],
+  [['routines', id, 'structure', 'extra']],
+  [['routines', id, 'weeks']],
+  [['routines', id, 'weeks', 'abc']],
+  [['routines', id, 'weeks', '123']],
+  [['routines', id, 'weeks', '6', 'extra']],
+  [['routines', id, 'publish']],
+  [['routines', id, 'copy']],
+  [['routines', id, 'shares']],
+  [['exercises', id, 'likes']],
+  [['exercises', id, 'like', 'extra']],
+  [['exercises', 'like']],
+  [['me', 'exercises', id]],
+  [['me', 'exercises', id, 'preferences']],
+  [['me', 'exercises', 'preferences']],
+  [['programs', 'active']],
 ];
 
 describe('backend route policy', () => {

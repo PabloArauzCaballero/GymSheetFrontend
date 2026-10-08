@@ -77,6 +77,10 @@ const allowedPathPatterns = [
   new RegExp(`^/exercises/${resourceId}(/media)?$`, 'u'),
   // Los músculos que trabaja un ejercicio, para los chips que abren cada uno.
   new RegExp(`^/exercises/${resourceId}/muscles$`, 'u'),
+  // Me gusta público de un ejercicio (POST y DELETE, idempotentes) y el
+  // favorito privado de quien mira (PUT con `{ isFavorite }`).
+  new RegExp(`^/exercises/${resourceId}/like$`, 'u'),
+  new RegExp(`^/me/exercises/${resourceId}/preference$`, 'u'),
   /^\/export\/workout-history(\/csv)?$/u,
   /^\/memberships\/me$/u,
   /^\/membership\/plans$/u,
@@ -166,6 +170,10 @@ const allowedPathPatterns = [
   new RegExp(`^/routines/exercises/${resourceId}$`, 'u'),
   new RegExp(`^/routines/${resourceId}$`, 'u'),
   new RegExp(`^/routines/${resourceId}/(exercises|assign|schedule|start)$`, 'u'),
+  // Rutinas por días (asistente de creación): estructura completa, semanas
+  // generadas y el ajuste de una semana concreta (1 a 52, de uno o dos dígitos).
+  new RegExp(`^/routines/${resourceId}/(calendar|structure)$`, 'u'),
+  new RegExp(`^/routines/${resourceId}/weeks/[0-9]{1,2}$`, 'u'),
   /^\/user-exercises$/u,
   new RegExp(`^/user-exercises/${resourceId}$`, 'u'),
   /^\/users\/me$/u,

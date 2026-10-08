@@ -8,10 +8,8 @@ import { Pressable, Text, View } from 'react-native';
 import { z } from 'zod';
 import { routineSchema } from '@gymsheet/schemas';
 import {
-  routineVisibilities,
   trainingGoals,
   type Exercise,
-  type RoutineVisibility,
   type TrainingGoal,
 } from '@gymsheet/types';
 import { apiClient } from '@/api/client';
@@ -36,7 +34,7 @@ import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing 
 type CreateRoutineBody = {
   nombre: string;
   descripcion: string | null;
-  visibilidad: RoutineVisibility;
+  visibilidad: LegacyVisibility;
   objetivo: TrainingGoal;
 };
 
@@ -63,7 +61,10 @@ const routineWrites = {
 };
 
 /** Spanish copy for the visibility enum; mirrors the wording used on the web. */
-const VISIBILITY_LABEL: Record<RoutineVisibility, string> = {
+const LEGACY_VISIBILITIES = ['PRIVATE', 'SHARED', 'TEMPLATE'] as const;
+type LegacyVisibility = (typeof LEGACY_VISIBILITIES)[number];
+
+const VISIBILITY_LABEL: Record<LegacyVisibility, string> = {
   PRIVATE: 'Privada',
   SHARED: 'Compartida',
   TEMPLATE: 'Plantilla',
@@ -83,7 +84,7 @@ const routineFormSchema = z.object({
     .max(500, 'La descripción no puede superar los 500 caracteres.')
     .transform((value) => (value === '' ? null : value)),
   objetivo: z.enum(trainingGoals),
-  visibilidad: z.enum(routineVisibilities),
+  visibilidad: z.enum(LEGACY_VISIBILITIES),
 });
 
 type RoutineFormValues = z.input<typeof routineFormSchema>;
@@ -495,7 +496,7 @@ export default function NewRoutineScreen() {
           render={({ field: { onChange, value } }) => (
             <View style={{ gap: spacing.xs }}>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-                {routineVisibilities.map((visibility) => (
+                {LEGACY_VISIBILITIES.map((visibility) => (
                   <ChoiceChip
                     key={visibility}
                     label={VISIBILITY_LABEL[visibility]}

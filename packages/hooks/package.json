@@ -10,10 +10,16 @@
   },
   "scripts": {
     "type-check": "tsc --noEmit",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@gymsheet/tsconfig": "*",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^3.2.0"
+  },
+  "dependencies": {
+    "@gymsheet/types": "*",
+    "zod": "^4.1.0"
   }
 }

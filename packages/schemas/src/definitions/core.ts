@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { equipmentStatuses, equipmentTypes, trainingGoals, userRoles } from '@gymsheet/types';
 
 export const problemSchema = z.object({
+  /** Código estable de dominio (`ROUTINE_HAS_NO_DAYS`…). */
+  code: z.string().optional(),
+  details: z.record(z.string(), z.unknown()).optional(),
   type: z.string().optional(),
   title: z.string().optional(),
   status: z.number().optional(),
@@ -143,6 +146,11 @@ export const exerciseMediaSchema = z
   })
   .passthrough();
 
+export const ratingSummarySchema = z.object({
+  promedio: z.number().nullable(),
+  total: z.number().int(),
+});
+
 export const exerciseSchema = z
   .object({
     id: z.string().uuid(),
@@ -164,6 +172,11 @@ export const exerciseSchema = z
     metadata: z.record(z.string(), z.unknown()),
     equipment: z.array(equipmentSchema),
     media: z.array(exerciseMediaSchema),
+    meGustaTotal: z.number().int().default(0),
+    valoracion: ratingSummarySchema.default({ promedio: null, total: 0 }),
+    estadoModeracion: z.string().default('VISIBLE'),
+    meGusta: z.boolean().optional(),
+    esFavorito: z.boolean().optional(),
   })
   .passthrough();
 
