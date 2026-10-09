@@ -1,4 +1,4 @@
-import type { CardioPlanInput, CardioSessionBlock } from '@gymsheet/schemas';
+import type { CardioPlanInput, CardioSessionExtras } from '@gymsheet/types';
 
 /** Tanaka: 208 − 0,7 × edad. Es el valor por defecto de la FC máxima (editable). */
 export function maxHeartRate(age: number): number {
@@ -53,7 +53,7 @@ export function formatClock(totalSeconds: number): string {
 }
 
 /** «96 / 90 min»: minutos que cuentan frente al objetivo de la semana. */
-export function cardioProgressLabel(block: Pick<CardioSessionBlock, 'minutosSemana' | 'objetivoMinutosSemana'>): string {
+export function cardioProgressLabel(block: Pick<CardioSessionExtras, 'minutosSemana' | 'objetivoMinutosSemana'>): string {
   return `${Math.round(block.minutosSemana)} / ${Math.round(block.objetivoMinutosSemana)} min`;
 }
 

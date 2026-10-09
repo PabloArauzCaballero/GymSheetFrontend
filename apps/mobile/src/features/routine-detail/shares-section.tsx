@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Text, View } from 'react-native';
-import { shareStatusLabels } from '@gymsheet/schemas';
+import { shareStatusLabels } from '@gymsheet/hooks';
 import { routineSharingService } from '@/api/services';
 import { Skeleton } from '@/components/feedback';
 import { Badge } from '@/components/layout';

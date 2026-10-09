@@ -12,13 +12,14 @@ import {
   Rows3,
   Weight,
 } from 'lucide-react';
+import { isStrengthSet, setVolumeKg } from '@gymsheet/domain';
 import { useRouter } from 'next/navigation';
 import { useState, type CSSProperties } from 'react';
 import { confirm, notify } from '@/shared/notifications';
 import { workoutService } from '@/features/workouts/services/workout-service';
 import { captureStreakLocation } from '@/features/workouts/services/streak-location';
 import { queryKeys } from '@/shared/api/query-keys';
-import type { SessionReward } from '@/shared/api/schemas';
+import type { SessionReward, WorkoutFinish } from '@/shared/api/schemas';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
 import { PageHeader } from '@/shared/components/layout/page-header';
@@ -29,6 +30,7 @@ import { formatDateTime, formatDuration } from '@/shared/lib/date';
 import { AddExerciseDialog } from './add-exercise-dialog';
 import { GuidedWorkout } from './guided-workout';
 import { RestTimer } from './rest-timer';
+import { ProgramSessionPanel } from './program-session-panel';
 import { SessionSummary } from './session-summary';
 import { WorkoutExercisePanel } from './workout-exercise-panel';
 
@@ -38,6 +40,9 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
   const [guided, setGuided] = useState(true);
   // Lo que movió la sesión recién cerrada. Mientras existe, se ve el resumen.
   const [reward, setReward] = useState<SessionReward | null>(null);
+  const [modeExtras, setModeExtras] = useState<Pick<WorkoutFinish, 'programa' | 'cardio'> | null>(
+    null,
+  );
   const query = useQuery({
     queryKey: queryKeys.workout(id),
     queryFn: () => workoutService.get(id),
@@ -53,6 +58,7 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
       await refresh();
       await queryClient.invalidateQueries({ queryKey: ['progression'] });
       if (result.progression) {
+        setModeExtras({ programa: result.programa, cardio: result.cardio });
         setReward(result.progression);
         return;
       }
@@ -81,17 +87,15 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
     );
   const workout = query.data;
   const editable = workout.estado === 'EN_PROGRESO';
-  const sets = workout.ejercicios.reduce((total, item) => total + item.series.length, 0);
-  const volume = workout.ejercicios.reduce(
-    (total, item) =>
-      total + item.series.reduce((sum, set) => sum + (set.pesoKg ?? 0) * (set.repeticiones ?? 0), 0),
-    0,
+  // Las series de cardio no tienen peso, repeticiones ni RIR: no suman al volumen ni al promedio.
+  const allSets = workout.ejercicios.flatMap((item) => item.series);
+  const sets = allSets.filter(isStrengthSet).length;
+  const volume = allSets.reduce((sum, set) => sum + setVolumeKg(set), 0);
+  const rirValues = allSets.flatMap((set) =>
+    isStrengthSet(set) && set.rir != null ? [set.rir] : [],
   );
-  const averageRir = sets
-    ? workout.ejercicios.reduce(
-        (total, item) => total + item.series.reduce((sum, set) => sum + (set.rir ?? 0), 0),
-        0,
-      ) / sets
+  const averageRir = rirValues.length
+    ? rirValues.reduce((sum, value) => sum + value, 0) / rirValues.length
     : 0;
   return (
     <div className="grid gap-8">
@@ -177,26 +181,26 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
           {editable ? <RestTimer /> : null}
           <section className="stagger grid gap-5">
             {workout.ejercicios.length ? (
-          workout.ejercicios.map((item, position) => (
-            <div key={item.id} style={{ '--i': position } as CSSProperties}>
-              <WorkoutExercisePanel editable={editable} item={item} workoutId={workout.id} />
-            </div>
-          ))
-        ) : (
-          <div className="grid min-h-64 place-items-center rounded-[8px] border border-dashed border-[var(--border)] p-8 text-center">
-            <div>
-              <Dumbbell className="mx-auto size-10 text-[var(--text-disabled)]" />
-              <h2 className="mt-4 text-xl font-semibold">Sesión vacía</h2>
-              <p className="mt-2 text-sm text-[var(--text-muted)]">
-                Agrega el primer ejercicio para comenzar a registrar series.
-              </p>
-              {editable ? (
-                <div className="mt-5">
-                  <AddExerciseDialog nextOrder={1} workoutId={workout.id} />
+              workout.ejercicios.map((item, position) => (
+                <div key={item.id} style={{ '--i': position } as CSSProperties}>
+                  <WorkoutExercisePanel editable={editable} item={item} workoutId={workout.id} />
                 </div>
-              ) : null}
-            </div>
-          </div>
+              ))
+            ) : (
+              <div className="grid min-h-64 place-items-center rounded-[8px] border border-dashed border-[var(--border)] p-8 text-center">
+                <div>
+                  <Dumbbell className="mx-auto size-10 text-[var(--text-disabled)]" />
+                  <h2 className="mt-4 text-xl font-semibold">Sesión vacía</h2>
+                  <p className="mt-2 text-sm text-[var(--text-muted)]">
+                    Agrega el primer ejercicio para comenzar a registrar series.
+                  </p>
+                  {editable ? (
+                    <div className="mt-5">
+                      <AddExerciseDialog nextOrder={1} workoutId={workout.id} />
+                    </div>
+                  ) : null}
+                </div>
+              </div>
             )}
           </section>
         </>
@@ -208,6 +212,22 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
             setReward(null);
             router.refresh();
           }}
+          extras={
+            modeExtras && (modeExtras.programa || modeExtras.cardio) ? (
+              <ProgramSessionPanel
+                cardio={modeExtras.cardio}
+                programa={modeExtras.programa}
+                sessionId={id}
+                sessionNames={
+                  new Map(
+                    workout.ejercicios.flatMap((item) =>
+                      item.ejercicio ? [[item.ejercicio.id, item.ejercicio.nombre] as const] : [],
+                    ),
+                  )
+                }
+              />
+            ) : null
+          }
           reward={reward}
           sets={sets}
         />

@@ -29,20 +29,24 @@ export function startOfWeek(date: Date): Date {
   return copy;
 }
 
-/** Serie de fuerza con peso, repeticiones y RIR presentes (las de cardio traen nulos). */
-export type StrengthSet = WorkoutSet & { pesoKg: number; repeticiones: number; rir: number };
-
-export function isStrengthSet(set: WorkoutSet): set is StrengthSet {
-  return set.pesoKg !== null && set.repeticiones !== null && set.rir !== null;
+/**
+ * Load moved in one set, in kilograms. Cardio sets carry no weight or reps
+ * (`null`), so they move no load: they contribute zero instead of `NaN`.
+ */
+function setVolume(weightKg: number | null, reps: number | null): number {
+  return weightKg == null || reps == null ? 0 : weightKg * reps;
 }
 
-/**
- * Load moved in one set, in kilograms. Una serie de cardio trae peso y
- * repeticiones nulos y aporta cero: ninguna suma de kilos puede romperse (RF-17).
- */
-export function setVolume(weightKg: number | null, reps: number | null): number {
-  if (weightKg === null || reps === null) return 0;
-  return weightKg * reps;
+/** A strength set is one with weight and reps; cardio sets are timed, not lifted. */
+export function isStrengthSet(
+  set: WorkoutSet,
+): set is WorkoutSet & { pesoKg: number; repeticiones: number } {
+  return set.tipoSerie !== 'CARDIO' && set.pesoKg != null && set.repeticiones != null;
+}
+
+/** Kilograms moved in one set. Zero for cardio, which never has weight or reps. */
+export function setVolumeKg(set: WorkoutSet): number {
+  return setVolume(set.pesoKg, set.repeticiones);
 }
 
 /**
@@ -93,14 +97,15 @@ function summarise(start: Date, workouts: readonly Workout[]): WeekSummary {
   let volumeKg = 0;
   for (const workout of workouts) {
     for (const exercise of workout.ejercicios) {
-      sets += exercise.series.length;
+      const strength = exercise.series.filter(isStrengthSet);
+      sets += strength.length;
       volumeKg += exercise.series.reduce(
         (sum, item) => sum + setVolume(item.pesoKg, item.repeticiones),
         0,
       );
       const muscle = muscleOf(exercise);
-      if (muscle && exercise.series.length > 0) {
-        muscles.set(muscle, (muscles.get(muscle) ?? 0) + exercise.series.length);
+      if (muscle && strength.length > 0) {
+        muscles.set(muscle, (muscles.get(muscle) ?? 0) + strength.length);
       }
     }
   }
@@ -217,7 +222,7 @@ export function previousPerformance(
     .sort((a, b) => new Date(b.fechaInicio).getTime() - new Date(a.fechaInicio).getTime());
   for (const workout of candidates) {
     const exercise = workout.ejercicios.find(
-      (item) => item.ejercicio?.id === exerciseId && item.series.length > 0,
+      (item) => item.ejercicio?.id === exerciseId && item.series.some(isStrengthSet),
     );
     if (exercise) return { workout, exercise };
   }
@@ -230,8 +235,7 @@ export function topSet(
 ): { readonly pesoKg: number; readonly repeticiones: number } | null {
   let best: { pesoKg: number; repeticiones: number } | null = null;
   for (const item of exercise.series) {
-    // Las series de cardio no tienen peso: no compiten por «la más pesada».
-    if (item.pesoKg === null || item.repeticiones === null) continue;
+    if (item.pesoKg == null || item.repeticiones == null) continue;
     if (!best || item.pesoKg > best.pesoKg) {
       best = { pesoKg: item.pesoKg, repeticiones: item.repeticiones };
     }

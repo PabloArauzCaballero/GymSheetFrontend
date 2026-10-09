@@ -4,8 +4,8 @@ import type { WorkoutStatus } from './enums';
 export type WorkoutSet = {
   id: string;
   numeroSerie: number;
+  /** `CARDIO` no lleva repeticiones, peso ni RIR (llegan `null`). Sin él se asume fuerza. */
   tipoSerie: 'FUERZA' | 'CARDIO';
-  /** Nulos en las series de cardio. */
   repeticiones: number | null;
   pesoKg: number | null;
   rir: number | null;
@@ -53,15 +53,4 @@ export type WorkoutSetInput = {
   pesoKg: number;
   rir: number;
   descansoSegAnterior: number;
-};
-
-/** Serie de cardio (`tipoSerie: 'CARDIO'`): lo único obligatorio es la duración. */
-export type CardioSetInput = {
-  tipoSerie: 'CARDIO';
-  numeroSerie: number;
-  duracionSeg: number;
-  distanciaM?: number;
-  fcMedia?: number;
-  rpe?: number;
-  descansoSegAnterior?: number;
 };

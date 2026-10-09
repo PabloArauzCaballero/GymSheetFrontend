@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Activity, Bell, CalendarDays, ChevronRight, Dumbbell, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
+import { setVolumeKg } from '@gymsheet/domain';
 import { accessService } from '@/features/access/services/access-service';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
 import { MembershipGate } from '@/features/membership/components/membership-gate';
@@ -37,7 +38,7 @@ function totalVolume(workouts: Awaited<ReturnType<typeof workoutService.list>>['
       workout.ejercicios.reduce(
         (exerciseTotal, exercise) =>
           exerciseTotal +
-          exercise.series.reduce((setTotal, set) => setTotal + (set.pesoKg ?? 0) * (set.repeticiones ?? 0), 0),
+          exercise.series.reduce((setTotal, set) => setTotal + setVolumeKg(set), 0),
         0,
       ),
     0,

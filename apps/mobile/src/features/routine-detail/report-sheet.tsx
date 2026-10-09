@@ -2,12 +2,8 @@ import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { ApiError } from '@gymsheet/api-client';
-import {
-  reportReasonLabels,
-  reportReasons,
-  type ReportReason,
-  type ReportTargetKind,
-} from '@gymsheet/schemas';
+import { reportReasonLabels, reportReasons, type ReportReason } from '@gymsheet/hooks';
+import type { ReportTargetKind } from '@gymsheet/types';
 import { communityService } from '@/api/services';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Button, Input } from '@/components/ui';

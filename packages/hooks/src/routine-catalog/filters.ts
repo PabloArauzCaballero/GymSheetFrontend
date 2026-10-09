@@ -1,5 +1,9 @@
-import type { RoutineCatalogFilters, RoutineOrder, RoutineScope } from '@gymsheet/schemas';
-import type { TrainingGoal } from '@gymsheet/types';
+import type {
+  RoutineCatalogOrder,
+  RoutineCatalogQuery,
+  RoutineCatalogScope,
+  TrainingGoal,
+} from '@gymsheet/types';
 
 /** Lo que la persona puede cambiar en la barra de filtros del catálogo. */
 export type CatalogFilterState = {
@@ -7,7 +11,7 @@ export type CatalogFilterState = {
   objetivo: TrainingGoal | null;
   diasPorSemana: number | null;
   deMiGimnasio: boolean;
-  orden: RoutineOrder;
+  orden: RoutineCatalogOrder;
 };
 
 export const emptyCatalogFilters: CatalogFilterState = {
@@ -18,7 +22,7 @@ export const emptyCatalogFilters: CatalogFilterState = {
   orden: 'populares',
 };
 
-export const ORDER_LABELS: Record<RoutineOrder, string> = {
+export const ORDER_LABELS: Record<RoutineCatalogOrder, string> = {
   populares: 'Populares',
   recientes: 'Recientes',
   valoradas: 'Mejor valoradas',
@@ -28,7 +32,7 @@ export const CATALOG_TABS = [
   { scope: 'public', label: 'Públicas' },
   { scope: 'official', label: 'REPP' },
   { scope: 'mine', label: 'Mías' },
-] as const satisfies readonly { scope: RoutineScope; label: string }[];
+] as const satisfies readonly { scope: RoutineCatalogScope; label: string }[];
 
 export type CatalogTab = (typeof CATALOG_TABS)[number]['scope'];
 
@@ -56,8 +60,8 @@ export function toCatalogQuery(
   chip: MineChip,
   state: CatalogFilterState,
   cursor?: string | null,
-): RoutineCatalogFilters {
-  const scope: RoutineScope = tab === 'mine' ? (chip === 'shared' ? 'shared' : 'mine') : tab;
+): RoutineCatalogQuery {
+  const scope: RoutineCatalogScope = tab === 'mine' ? (chip === 'shared' ? 'shared' : 'mine') : tab;
   const filtered = tab === 'public';
   return {
     scope,

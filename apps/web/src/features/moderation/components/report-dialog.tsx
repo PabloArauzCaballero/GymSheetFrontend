@@ -39,15 +39,24 @@ export function ReportDialog({
   targetId,
   subjectName,
   trigger,
+  defaultReason = 'ACOSO',
+  successMessage = 'Gracias por avisar. Lo revisaremos y dejará de aparecerte.',
+  consequence = 'Al enviarlo, esta persona deja de aparecerte y se deshace vuestra conexión. Alguien del equipo lo revisará.',
 }: Readonly<{
   targetKind: ModerationTargetKind;
   targetId: string;
   /** Sobre quién o qué va, para decirlo en el diálogo. */
   subjectName?: string;
   trigger?: React.ReactNode;
+  /** Motivo preseleccionado (el más probable según lo que se denuncia). */
+  defaultReason?: ModerationReason;
+  /** Lo que pasa al enviar; distinto para una persona y para un contenido. */
+  consequence?: string;
+  /** Qué se dice al terminar cuando el contenido no se retira al instante. */
+  successMessage?: string;
 }>) {
   const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState<ModerationReason>('ACOSO');
+  const [reason, setReason] = useState<ModerationReason>(defaultReason);
   const [details, setDetails] = useState('');
 
   const submit = useMutation({
@@ -64,7 +73,7 @@ export function ReportDialog({
       notify.success(
         result.contentHidden
           ? 'Gracias por avisar. Retiramos el contenido mientras lo revisamos.'
-          : 'Gracias por avisar. Lo revisaremos y dejará de aparecerte.',
+          : successMessage,
       );
     },
     onError: (error: Error) => notify.error(error),
@@ -113,8 +122,7 @@ export function ReportDialog({
           </Field>
 
           <p className="text-xs leading-5 text-[var(--text-muted)]">
-            Al enviarlo, esta persona deja de aparecerte y se deshace vuestra conexión.
-            Alguien del equipo lo revisará.
+            {consequence}
           </p>
 
           <div className="flex justify-end gap-2">

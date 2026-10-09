@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 import { formatKg } from '@gymsheet/hooks';
-import type { LiftTargetView } from '@gymsheet/schemas';
+import type { LiftTargetView } from '@gymsheet/types';
 import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
 
 /** Fracción (0–1) del camino entre la marca inicial y la meta. */

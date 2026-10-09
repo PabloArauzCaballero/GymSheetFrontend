@@ -2,7 +2,7 @@
 
 import { pointRuleLines, pointsFigures, type PointRuleLine } from '@gymsheet/domain';
 import { useQuery } from '@tanstack/react-query';
-import { Award, CheckCheck, Dumbbell, Flame, Layers, type LucideIcon } from 'lucide-react';
+import { Award, CheckCheck, Dumbbell, Flame, Layers, Zap, type LucideIcon } from 'lucide-react';
 import type { ProgressionBadge, ProgressionStats } from '@/shared/api/schemas';
 import { progressionService } from '@/features/progression/services/progression-service';
 import { Button } from '@/shared/components/ui/button';
@@ -98,6 +98,10 @@ function RuleList({
   figures: ReturnType<typeof pointsFigures>;
   points: number;
 }>) {
+  // Lo que los programas con modo aportan (multiplicador semanal y metas): no sale de las
+  // tarifas por sesión sino del libro de bonos, así que es lo que sobra al explicar el total.
+  const explained = lines.reduce((sum, line) => sum + figures[line.key].total, 0);
+  const modes = Math.max(0, points - explained);
   return (
     <div className="grid gap-4">
       <ul className="divide-y divide-[var(--border-subtle)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-low)]">
@@ -119,6 +123,18 @@ function RuleList({
             </li>
           );
         })}
+        {modes > 0 ? (
+          <li className="flex items-center gap-4 p-4" data-testid="rule-modes">
+            <Zap aria-hidden className="size-5 shrink-0 text-[var(--text-muted)]" />
+            <div className="grid min-w-0 flex-1 gap-0.5">
+              <span className="text-sm font-semibold text-[var(--text)]">Programas con modo</span>
+              <span className="text-xs text-[var(--text-muted)]">
+                Bono semanal por multiplicador, metas de marca y programas completados. Nunca baja.
+              </span>
+            </div>
+            <span className="text-base font-semibold tabular-nums text-[var(--text)]">{format(modes)}</span>
+          </li>
+        ) : null}
       </ul>
       <p className="flex items-baseline justify-between px-4">
         <span className="text-sm text-[var(--text-muted)]">Tu total</span>

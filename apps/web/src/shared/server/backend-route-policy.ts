@@ -16,6 +16,11 @@ const permissionKey = '[a-z-]+%3A[a-z-]+';
 // de todos modos, pero sin llegar a intentarlo.
 const moderationTargetKind = 'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER|ROUTINE|EXERCISE|COMMENT';
 
+// Lo que se valora y se comenta (`ContentKind`, enum cerrado).
+const contentKind = 'ROUTINE|EXERCISE';
+// UUID con guiones: el segmento de un comentario no puede ser `ROUTINE` ni nada parecido.
+const uuid = '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}';
+
 const allowedPathPatterns = [
   /^\/access\/me$/u,
   /^\/access\/credentials\/me$/u,
@@ -183,6 +188,23 @@ const allowedPathPatterns = [
   // generadas y el ajuste de una semana concreta (1 a 52, de uno o dos dígitos).
   new RegExp(`^/routines/${resourceId}/(calendar|structure)$`, 'u'),
   new RegExp(`^/routines/${resourceId}/weeks/[0-9]{1,2}$`, 'u'),
+  // Publicar, copiar y compartir (RF-09, RF-10, RF-13). Una alternativa
+  // explícita por sufijo: `/routines/:id/<otra cosa>` no pasa.
+  new RegExp(`^/routines/${resourceId}/(publish|unpublish|copy|sync-from-source|shares)$`, 'u'),
+  new RegExp(`^/routines/${resourceId}/shares/${resourceId}$`, 'u'),
+  /^\/me\/routine-invitations$/u,
+  new RegExp(`^/routine-shares/${resourceId}/(accept|decline)$`, 'u'),
+  // Valoraciones y comentarios (RF-12): `kind` es el enum cerrado, y el borrado
+  // de un comentario se identifica por su UUID, no por un comodín.
+  new RegExp(`^/(ratings|comments)/(?:${contentKind})/${resourceId}$`, 'u'),
+  new RegExp(`^/comments/${uuid}$`, 'u'),
+  // Programas (RF-14..16, RF-19, RF-20) y cardio (RF-17).
+  /^\/programs\/active$/u,
+  /^\/programs\/(strength|cardio)\/activate$/u,
+  new RegExp(`^/programs/${resourceId}/(stop|progress|next-loads|close)$`, 'u'),
+  new RegExp(`^/workouts/${resourceId}/apply-to-routine$`, 'u'),
+  /^\/cardio-plans$/u,
+  new RegExp(`^/cardio-plans/${resourceId}$`, 'u'),
   /^\/user-exercises$/u,
   new RegExp(`^/user-exercises/${resourceId}$`, 'u'),
   /^\/users\/me$/u,

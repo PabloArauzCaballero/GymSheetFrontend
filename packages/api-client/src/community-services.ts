@@ -1,46 +1,40 @@
 import { z } from 'zod';
-import {
-  commentPageSchema,
-  commentSchema,
-  ratingResultSchema,
-  reportResultSchema,
-} from '@gymsheet/schemas';
-import type { CommunityKind, ReportReason, ReportTargetKind } from '@gymsheet/schemas';
+import { commentDeletedSchema, commentPageSchema, contentRatingSchema, routineCommentSchema } from '@gymsheet/schemas';
+import type { ContentKind, CreateCommentInput, ReportTargetKind } from '@gymsheet/types';
 import type { RequestFn } from './routine-services';
 
-/** Valoraciones, comentarios y denuncias de rutinas y ejercicios (RF-12). */
+const reportResultSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+  contentHidden: z.boolean(),
+});
+
+/** Valoraciones, comentarios y denuncias de rutinas y ejercicios privados (RF-12). */
 export function createCommunityServices(request: RequestFn) {
   return {
-    ratingSummary: (kind: CommunityKind, id: string) =>
-      request(`/ratings/${kind}/${id}`, ratingResultSchema, { method: 'GET' }),
-    /** `400 CANNOT_RATE_OWN` si el contenido es de quien valora. */
-    rate: (kind: CommunityKind, id: string, estrellas: number) =>
-      request(`/ratings/${kind}/${id}`, ratingResultSchema, {
+    rating: (kind: ContentKind, id: string) =>
+      request(`/ratings/${kind}/${id}`, contentRatingSchema, { method: 'GET' }),
+    rate: (kind: ContentKind, id: string, estrellas: number) =>
+      request(`/ratings/${kind}/${id}`, contentRatingSchema, {
         method: 'PUT',
         body: { estrellas },
       }),
-    removeRating: (kind: CommunityKind, id: string) =>
-      request(`/ratings/${kind}/${id}`, ratingResultSchema, { method: 'DELETE' }),
-    comments: (kind: CommunityKind, id: string, cursor?: string | null) =>
+    removeRating: (kind: ContentKind, id: string) =>
+      request(`/ratings/${kind}/${id}`, contentRatingSchema, { method: 'DELETE' }),
+    comments: (kind: ContentKind, id: string, cursor?: string) =>
       request(
-        `/comments/${kind}/${id}?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`,
+        `/comments/${kind}/${id}${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`,
         commentPageSchema,
         { method: 'GET' },
       ),
-    /** 10 por minuto y por persona: el 11.º devuelve `429`. */
-    comment: (kind: CommunityKind, id: string, texto: string, respuestaA?: string | null) =>
-      request(`/comments/${kind}/${id}`, commentSchema, {
-        method: 'POST',
-        body: { texto, ...(respuestaA ? { respuestaA } : {}) },
-      }),
-    deleteComment: (commentId: string) =>
-      request(`/comments/${commentId}`, z.object({ deleted: z.literal(true) }), {
-        method: 'DELETE',
-      }),
+    comment: (kind: ContentKind, id: string, input: CreateCommentInput) =>
+      request(`/comments/${kind}/${id}`, routineCommentSchema, { method: 'POST', body: input }),
+    removeComment: (commentId: string) =>
+      request(`/comments/${commentId}`, commentDeletedSchema, { method: 'DELETE' }),
     report: (input: {
       targetKind: ReportTargetKind;
       targetId: string;
-      reason: ReportReason;
+      reason: string;
       details?: string;
     }) => request('/me/reports', reportResultSchema, { method: 'POST', body: input }),
   };

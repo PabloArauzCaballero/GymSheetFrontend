@@ -62,8 +62,8 @@ export type Routine = {
   basadaEnRutinaId: string | null;
   basadaEnVersion: number | null;
   version: number;
-  /** Hay una versión nueva del original de esta copia (D2). */
-  hayVersionNueva?: boolean;
+  /** Verdadero en una copia cuyo original subió de versión (D2: nunca se aplica solo). */
+  hayVersionNueva: boolean;
   huellaCorta: string | null;
   valoracion: RatingSummary;
   copias: number;
@@ -154,6 +154,8 @@ export type RoutineWeek = {
       repsMin: number | null;
       repsMax: number | null;
       pesoObjetivoKg: number | null;
+      /** Solo si el usuario tiene un programa activo con esta rutina (modo con cargas). */
+      pesoSugeridoKg?: number | null;
     }>;
   }>;
 };

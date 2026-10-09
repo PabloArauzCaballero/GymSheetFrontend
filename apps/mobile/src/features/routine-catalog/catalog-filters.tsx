@@ -4,8 +4,7 @@ import {
   emptyCatalogFilters,
   type CatalogFilterState,
 } from '@gymsheet/hooks';
-import { routineOrders } from '@gymsheet/schemas';
-import { trainingGoals } from '@gymsheet/types';
+import { routineCatalogOrders, trainingGoals } from '@gymsheet/types';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { ChoiceChip } from '@/components/wizard/choice-chip';
 import { Button } from '@/components/ui';
@@ -73,7 +72,7 @@ export function CatalogFiltersSheet({
         />
       </Group>
       <Group title="Ordenar por">
-        {routineOrders.map((order) => (
+        {routineCatalogOrders.map((order) => (
           <ChoiceChip
             key={order}
             label={ORDER_LABELS[order]}

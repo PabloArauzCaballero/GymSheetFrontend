@@ -10,9 +10,19 @@ import { queryKeys } from '@/shared/api/query-keys';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { cn } from '@/shared/lib/cn';
+import { CardioSetRow } from './cardio-set-row';
 import { SET_GRID_COLS } from './set-grid';
 
-export function WorkoutSetRow({
+/** Una serie de cardio no tiene peso, repeticiones ni RIR: se lee como «32 min · 8 km». */
+export function WorkoutSetRow(props: Readonly<{ workoutId: string; set: WorkoutSet; editable: boolean }>) {
+  return props.set.tipoSerie === 'CARDIO' ? (
+    <CardioSetRow {...props} />
+  ) : (
+    <StrengthSetRow {...props} />
+  );
+}
+
+function StrengthSetRow({
   workoutId,
   set,
   editable,
@@ -21,7 +31,7 @@ export function WorkoutSetRow({
   const [editing, setEditing] = useState(false);
   const [values, setValues] = useState({
     pesoKg: set.pesoKg ?? 0,
-    repeticiones: set.repeticiones ?? 0,
+    repeticiones: set.repeticiones ?? 1,
     rir: set.rir ?? 0,
     descansoSegAnterior: set.descansoSegAnterior,
   });
@@ -111,9 +121,9 @@ export function WorkoutSetRow({
       <span className="data-value grid size-7 place-items-center justify-self-center rounded-full border border-[var(--border-subtle)] text-[var(--text-muted)]">
         {set.numeroSerie}
       </span>
-      <span className="data-value">{set.pesoKg}</span>
-      <span className="data-value">{set.repeticiones}</span>
-      <span className="data-value">{set.rir}</span>
+      <span className="data-value">{set.pesoKg ?? '–'}</span>
+      <span className="data-value">{set.repeticiones ?? '–'}</span>
+      <span className="data-value">{set.rir ?? '–'}</span>
       <div className="flex justify-end gap-1 opacity-100 transition-opacity duration-150 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
         {editable ? (
           <>

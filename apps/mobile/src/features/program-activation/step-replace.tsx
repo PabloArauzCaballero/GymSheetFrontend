@@ -1,5 +1,5 @@
 import { Text, View } from 'react-native';
-import type { Program } from '@gymsheet/schemas';
+import type { Program } from '@gymsheet/types';
 import { Button } from '@/components/ui';
 import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
 

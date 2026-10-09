@@ -1,11 +1,11 @@
 import { Text, View } from 'react-native';
 import { cardioProgressLabel } from '@gymsheet/hooks';
-import type { CardioSessionBlock } from '@gymsheet/schemas';
+import type { CardioSessionExtras } from '@gymsheet/types';
 import { Card } from '@/components/layout';
 import { colors, fontSizes, semibold, spacing } from '@/theme';
 
 /** Lo que dice el plan de cardio al terminar la sesión (RF-17): minutos que cuentan y avance semanal. */
-export function SessionCardioBlock({ block }: { block: CardioSessionBlock }) {
+export function SessionCardioBlock({ block }: { block: CardioSessionExtras }) {
   return (
     <Card>
       <View style={{ gap: spacing.sm }} testID="session-cardio">

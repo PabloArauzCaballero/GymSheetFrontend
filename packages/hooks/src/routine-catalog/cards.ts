@@ -1,4 +1,4 @@
-import type { RoutineCard } from '@gymsheet/schemas';
+import type { RoutineCard } from '@gymsheet/types';
 import { WEEKDAYS, type Weekday } from '../routine-draft/model';
 
 /** «3 meses», «12 semanas», «Sin duración fija». */

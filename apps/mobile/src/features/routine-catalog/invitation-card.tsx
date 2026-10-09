@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Text, View } from 'react-native';
 import { cardSubtitle, invitationHeadline } from '@gymsheet/hooks';
-import type { RoutineCard } from '@gymsheet/schemas';
+import type { RoutineCard } from '@gymsheet/types';
 import { routineSharingService } from '@/api/services';
 import { Badge } from '@/components/layout';
 import { Button } from '@/components/ui';

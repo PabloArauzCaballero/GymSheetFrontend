@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Workout, WorkoutExercise, WorkoutSet } from '@gymsheet/types';
-import { setVolume, topSet, workoutVolume } from './training-metrics';
+import { setVolumeKg, topSet, workoutVolume } from './training-metrics';
 
 const strength = (pesoKg: number, repeticiones: number): WorkoutSet => ({
   id: 's', numeroSerie: 1, tipoSerie: 'FUERZA', repeticiones, pesoKg, rir: 2,
@@ -18,9 +18,9 @@ const workout = (...exercises: WorkoutExercise[]): Workout =>
 
 describe('series de cardio y sumas de kilos (regresión RF-17)', () => {
   it('una serie de cardio aporta cero kilos', () => {
-    expect(setVolume(null, null)).toBe(0);
-    expect(setVolume(60, null)).toBe(0);
-    expect(setVolume(60, 10)).toBe(600);
+    expect(setVolumeKg(cardio(1900))).toBe(0);
+    expect(setVolumeKg({ ...strength(60, 10), repeticiones: null })).toBe(0);
+    expect(setVolumeKg(strength(60, 10))).toBe(600);
   });
   it('una sesión mixta no cambia el volumen de fuerza', () => {
     const onlyStrength = workout(exercise([strength(60, 10), strength(80, 5)]));

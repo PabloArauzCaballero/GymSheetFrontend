@@ -14,7 +14,8 @@ import {
   zoneLabel,
   type CardioForm,
 } from '@gymsheet/hooks';
-import { cardioModalities, cardioModalityLabels } from '@gymsheet/schemas';
+import { cardioModalityLabels } from '@gymsheet/hooks';
+import { cardioModalities } from '@gymsheet/types';
 import { ApiError } from '@gymsheet/api-client';
 import { confirm } from '@gymsheet/notifications';
 import { programService } from '@/api/services';

@@ -8,7 +8,7 @@ import {
   type LiftErrors,
   type LiftForm,
 } from '@gymsheet/hooks';
-import type { ProgramMode } from '@gymsheet/schemas';
+import type { ProgramMode } from '@gymsheet/types';
 import { Checkbox } from '@/components/checkbox';
 import { numericInputProps } from '@/components/keyboard';
 import { Input } from '@/components/ui';

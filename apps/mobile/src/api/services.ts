@@ -41,7 +41,7 @@ import {
   storyViewersResponseSchema,
   swipeResultSchema,
   undoSwipeResultSchema,
-  workoutFinishWithProgramsSchema,
+  workoutFinishSchema,
   workoutSchema,
 } from '@gymsheet/schemas';
 import type {
@@ -60,12 +60,13 @@ import type {
 } from '@gymsheet/schemas';
 import type { UserGender } from '@gymsheet/types';
 import {
+  createCardioServices,
+  createCatalogServices,
   createCommunityServices,
   createExerciseCommunityServices,
   createProgramServices,
-  createRoutineCatalogServices,
   createRoutineServices,
-  createRoutineSharingServices,
+  createSharingServices,
 } from '@gymsheet/api-client';
 import { apiClient } from '@/api/client';
 
@@ -222,7 +223,7 @@ export const workoutService = {
       ...(routineDayId ? { body: { routineDayId } } : {}),
     }),
   finish: (id: string, location?: { latitude: number; longitude: number }) =>
-    apiClient.request(`/workouts/${id}/finish`, workoutFinishWithProgramsSchema, {
+    apiClient.request(`/workouts/${id}/finish`, workoutFinishSchema, {
       method: 'PATCH',
       body: location ?? {},
     }),
@@ -276,17 +277,56 @@ export const routineService = {
 /** Rutinas por días: crear con `dias`, `PUT structure`, calendario y semanas. */
 export const routineBuilderService = createRoutineServices(apiClient.request);
 
-/** Programas de fuerza y cardio: activar, progreso, cargas sugeridas, cierre y RF-20. */
-export const programService = createProgramServices(apiClient.request);
+const catalogApi = createCatalogServices(apiClient.request);
+const sharingApi = createSharingServices(apiClient.request);
+const communityApi = createCommunityServices(apiClient.request);
+const programsApi = createProgramServices(apiClient.request);
+const cardioApi = createCardioServices(apiClient.request);
 
-/** Catálogo por pestañas, publicar, copiar y sincronizar (F3 y F4 del plan Rutinas REPP). */
-export const routineCatalogService = createRoutineCatalogServices(apiClient.request);
+/**
+ * Los servicios compartidos (`@gymsheet/api-client`) son los mismos que usa la web; aquí se agrupan
+ * con los nombres que las pantallas del móvil ya usan (catálogo y publicar, compartir, comunidad,
+ * programas y cardio).
+ */
+export const routineCatalogService = {
+  list: catalogApi.list,
+  publish: sharingApi.publish,
+  unpublish: sharingApi.unpublish,
+  copy: sharingApi.copy,
+  syncFromSource: sharingApi.syncFromSource,
+};
 
-/** Compartir con invitación: invitar, revocar, aceptar y rechazar. */
-export const routineSharingService = createRoutineSharingServices(apiClient.request);
+export const routineSharingService = {
+  invite: sharingApi.invite,
+  listShares: sharingApi.listShares,
+  revoke: sharingApi.revokeShare,
+  myInvitations: sharingApi.myInvitations,
+  accept: sharingApi.accept,
+  decline: sharingApi.decline,
+};
 
-/** Valoraciones, comentarios y denuncias. */
-export const communityService = createCommunityServices(apiClient.request);
+export const communityService = {
+  ratingSummary: communityApi.rating,
+  rate: communityApi.rate,
+  removeRating: communityApi.removeRating,
+  comments: (kind: Parameters<typeof communityApi.comments>[0], id: string, cursor?: string | null) =>
+    communityApi.comments(kind, id, cursor ?? undefined),
+  comment: (
+    kind: Parameters<typeof communityApi.comment>[0],
+    id: string,
+    texto: string,
+    respuestaA?: string | null,
+  ) => communityApi.comment(kind, id, { texto, ...(respuestaA ? { respuestaA } : {}) }),
+  deleteComment: communityApi.removeComment,
+  report: communityApi.report,
+};
+
+export const programService = {
+  ...programsApi,
+  cardioPlans: cardioApi.listPlans,
+  createCardioPlan: cardioApi.createPlan,
+  activateCardio: cardioApi.activate,
+};
 
 /** Me gusta (público) y favorito (privado) de un ejercicio. */
 export const exerciseCommunityService = createExerciseCommunityServices(apiClient.request);

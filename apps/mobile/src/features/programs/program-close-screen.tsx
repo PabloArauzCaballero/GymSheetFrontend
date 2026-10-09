@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 import { multiplierLabel } from '@gymsheet/hooks';
-import type { CloseAction } from '@gymsheet/schemas';
+import type { CloseAction } from '@gymsheet/types';
 import { ApiError } from '@gymsheet/api-client';
 import { programService } from '@/api/services';
 import { ErrorState, Skeleton } from '@/components/feedback';

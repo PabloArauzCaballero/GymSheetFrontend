@@ -1,25 +1,44 @@
 import { z } from 'zod';
-import { inviteResultSchema, myInvitationSchema, routineShareSchema } from '@gymsheet/schemas';
+import {
+  inviteResultSchema,
+  routineInvitationSchema,
+  routineSchema,
+  routineShareSchema,
+} from '@gymsheet/schemas';
 import type { RequestFn } from './routine-services';
 
-/** Compartir con invitación (RF-13). */
-export function createRoutineSharingServices(request: RequestFn) {
+/**
+ * Publicar, copiar y compartir (RF-09, RF-10, RF-13).
+ *
+ * `publish` puede responder `409 ROUTINE_DUPLICATE` con `details.existingRoutineId`;
+ * `share.invite` envía `usuarioIds` y devuelve creados y omitidos.
+ */
+export function createSharingServices(request: RequestFn) {
   return {
-    invite: (routineId: string, usuarioIds: readonly string[]) =>
-      request(`/routines/${routineId}/shares`, inviteResultSchema, {
+    publish: (id: string) => request(`/routines/${id}/publish`, routineSchema, { method: 'POST' }),
+    unpublish: (id: string) =>
+      request(`/routines/${id}/unpublish`, routineSchema, { method: 'POST' }),
+    copy: (id: string) => request(`/routines/${id}/copy`, routineSchema, { method: 'POST' }),
+    /** Aplica la versión nueva del original a mi copia; nunca se hace sola (D2). */
+    syncFromSource: (id: string) =>
+      request(
+        `/routines/${id}/sync-from-source`,
+        routineSchema.extend({ actualizada: z.boolean() }),
+        { method: 'POST' },
+      ),
+    invite: (id: string, usuarioIds: string[]) =>
+      request(`/routines/${id}/shares`, inviteResultSchema, {
         method: 'POST',
         body: { usuarioIds },
       }),
-    listShares: (routineId: string) =>
-      request(`/routines/${routineId}/shares`, z.array(routineShareSchema), { method: 'GET' }),
-    revoke: (routineId: string, shareId: string) =>
-      request(`/routines/${routineId}/shares/${shareId}`, routineShareSchema, {
-        method: 'DELETE',
-      }),
+    listShares: (id: string) =>
+      request(`/routines/${id}/shares`, z.array(routineShareSchema), { method: 'GET' }),
+    revokeShare: (id: string, shareId: string) =>
+      request(`/routines/${id}/shares/${shareId}`, routineShareSchema, { method: 'DELETE' }),
     myInvitations: (estado?: 'PENDING' | 'ACCEPTED') =>
       request(
         `/me/routine-invitations${estado ? `?estado=${estado}` : ''}`,
-        z.array(myInvitationSchema),
+        z.array(routineInvitationSchema),
         { method: 'GET' },
       ),
     accept: (shareId: string) =>
@@ -29,4 +48,4 @@ export function createRoutineSharingServices(request: RequestFn) {
   };
 }
 
-export type RoutineSharingServices = ReturnType<typeof createRoutineSharingServices>;
+export type SharingServices = ReturnType<typeof createSharingServices>;

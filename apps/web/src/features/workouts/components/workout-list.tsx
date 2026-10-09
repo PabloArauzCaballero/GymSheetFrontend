@@ -12,6 +12,7 @@ import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import {
   SkeletonList,
 } from '@/shared/components/feedback/skeleton';
+import { setVolumeKg } from '@gymsheet/domain';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button, ButtonLink } from '@/shared/components/ui/button';
@@ -23,7 +24,7 @@ function sessionVolume(session: Awaited<ReturnType<typeof workoutService.get>>) 
   return session.ejercicios.reduce(
     (total, exercise) =>
       total +
-      exercise.series.reduce((subtotal, set) => subtotal + (set.pesoKg ?? 0) * (set.repeticiones ?? 0), 0),
+      exercise.series.reduce((subtotal, set) => subtotal + setVolumeKg(set), 0),
     0,
   );
 }

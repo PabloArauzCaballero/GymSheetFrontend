@@ -1,12 +1,11 @@
-import type { RoutineProposal } from '@gymsheet/schemas';
-import type { Routine } from '@gymsheet/types';
+import type { Routine, RoutineChangeProposal } from '@gymsheet/types';
 import { formatKg } from './strength';
 
 /**
  * Líneas legibles de la hoja RF-20 «¿Actualizar tu rutina?»: qué se cambió respecto de la
  * rutina durante la sesión. Los nombres salen de la propia rutina.
  */
-export function describeProposal(proposal: RoutineProposal, routine: Pick<Routine, 'ejercicios'> | null): string[] {
+export function describeProposal(proposal: RoutineChangeProposal, routine: Pick<Routine, 'ejercicios'> | null): string[] {
   const nameOf = (routineExerciseId: string) =>
     routine?.ejercicios.find((item) => item.id === routineExerciseId)?.ejercicio?.nombre ?? 'Un ejercicio';
   const lines: string[] = [];
@@ -24,5 +23,5 @@ export function describeProposal(proposal: RoutineProposal, routine: Pick<Routin
   return lines;
 }
 
-export const proposalSize = (proposal: RoutineProposal): number =>
+export const proposalSize = (proposal: RoutineChangeProposal): number =>
   proposal.cambios.length + proposal.agregar.length + proposal.quitar.length;

@@ -8,8 +8,7 @@ import {
   validateLifts,
   type LiftForm,
 } from '@gymsheet/hooks';
-import type { ActivateStrengthInput, ProgramMode } from '@gymsheet/schemas';
-import type { Routine } from '@gymsheet/types';
+import type { ActivateStrengthInput, ProgramMode, Routine } from '@gymsheet/types';
 
 export type ActivationStep = 'replace' | 'dates' | 'mode' | 'data' | 'summary';
 

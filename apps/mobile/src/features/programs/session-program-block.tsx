@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { describeProposal, formatKg, multiplierLabel, proposalSize } from '@gymsheet/hooks';
-import type { ProgramSessionBlock } from '@gymsheet/schemas';
+import type { ProgramSessionExtras } from '@gymsheet/types';
 import { programService, routineService } from '@/api/services';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Card } from '@/components/layout';
@@ -24,7 +24,7 @@ const ACTION_COPY: Record<string, string> = {
  * (x1,4)», las sugerencias para la próxima y, si cambiaste algo respecto de la rutina, la hoja
  * «¿Actualizar tu rutina?».
  */
-export function SessionProgramBlock({ workoutId, block }: { workoutId: string; block: ProgramSessionBlock }) {
+export function SessionProgramBlock({ workoutId, block }: { workoutId: string; block: ProgramSessionExtras }) {
   const queryClient = useQueryClient();
   const [sheet, setSheet] = useState(false);
   const [done, setDone] = useState(false);

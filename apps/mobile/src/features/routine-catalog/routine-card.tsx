@@ -8,7 +8,7 @@ import {
   ratingLabel,
   weekDots,
 } from '@gymsheet/hooks';
-import type { RoutineCard } from '@gymsheet/schemas';
+import type { RoutineCard } from '@gymsheet/types';
 import { Badge } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { GOAL_LABEL } from '@/lib/format';

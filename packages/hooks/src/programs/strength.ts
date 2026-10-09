@@ -1,5 +1,4 @@
-import type { ActivateStrengthInput, Program, ProgramMode } from '@gymsheet/schemas';
-import type { Routine } from '@gymsheet/types';
+import type { ActivateStrengthInput, Program, ProgramMode, Routine } from '@gymsheet/types';
 
 /** Estimación de 1RM de Epley: peso × (1 + reps / 30). Mismo cálculo que el motor del backend. */
 export function epley(weightKg: number, reps: number): number {

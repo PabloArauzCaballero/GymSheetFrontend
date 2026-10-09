@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 import { MODE_COPY } from '@gymsheet/hooks';
-import { programModes, type ProgramMode } from '@gymsheet/schemas';
+import { programModes, type ProgramMode } from '@gymsheet/types';
 import { Checkbox } from '@/components/checkbox';
 import { PressableScale } from '@/components/motion';
 import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';

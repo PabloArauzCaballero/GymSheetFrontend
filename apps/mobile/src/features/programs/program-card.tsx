@@ -10,7 +10,7 @@ import {
   weekLabel,
   type Weekday,
 } from '@gymsheet/hooks';
-import type { Program } from '@gymsheet/schemas';
+import type { Program } from '@gymsheet/types';
 import { routineService } from '@/api/services';
 import { Badge } from '@/components/layout';
 import { PressableScale } from '@/components/motion';

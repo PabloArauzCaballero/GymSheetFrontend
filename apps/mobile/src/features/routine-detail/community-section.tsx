@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { ApiError } from '@gymsheet/api-client';
 import { ratingLabel } from '@gymsheet/hooks';
-import type { CommentView } from '@gymsheet/schemas';
-import type { Routine } from '@gymsheet/types';
+import type { Routine, RoutineComment } from '@gymsheet/types';
 import { communityService } from '@/api/services';
 import { PressableScale } from '@/components/motion';
 import { Button, Input } from '@/components/ui';
@@ -53,9 +52,9 @@ function CommentRow({
   onReport,
   onDelete,
 }: {
-  comment: CommentView;
+  comment: RoutineComment;
   nested: boolean;
-  onReply: (comment: CommentView) => void;
+  onReply: (comment: RoutineComment) => void;
   onReport: (target: ReportTarget) => void;
   onDelete: (id: string) => void;
 }) {
@@ -118,7 +117,7 @@ export function CommunitySection({
 }) {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState('');
-  const [replyTo, setReplyTo] = useState<CommentView | null>(null);
+  const [replyTo, setReplyTo] = useState<RoutineComment | null>(null);
   const ratingKey = ['community', 'rating', routine.id] as const;
   const commentsKey = ['community', 'comments', routine.id] as const;
 

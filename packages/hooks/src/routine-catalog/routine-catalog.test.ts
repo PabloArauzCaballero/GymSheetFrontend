@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { RoutineCard } from '@gymsheet/schemas';
-import type { Routine } from '@gymsheet/types';
+import type { Routine, RoutineCard } from '@gymsheet/types';
 import {
   activeFilterCount,
   authorLabel,
