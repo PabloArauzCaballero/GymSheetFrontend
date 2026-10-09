@@ -62,6 +62,8 @@ export type Routine = {
   basadaEnRutinaId: string | null;
   basadaEnVersion: number | null;
   version: number;
+  /** Hay una versión nueva del original de esta copia (D2). */
+  hayVersionNueva?: boolean;
   huellaCorta: string | null;
   valoracion: RatingSummary;
   copias: number;

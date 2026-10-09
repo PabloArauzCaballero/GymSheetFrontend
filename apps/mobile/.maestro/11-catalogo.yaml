@@ -1,0 +1,75 @@
+# Catálogo de rutinas (plan Rutinas REPP · F3): RF-01.
+# Requiere el backend con F1–F4 y `node scripts/seed-rutinas-evidencia.mjs`.
+appId: app.gymsheet.mobile
+name: 11 · Catálogo de rutinas por pestañas
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+---
+- runFlow: login-as.subflow.yaml
+- tapOn: 'Rutinas, tab.*'
+- runFlow: cerrar-tour.subflow.yaml
+- extendedWaitUntil:
+    visible: 'Crear rutina'
+    timeout: 60000
+- assertVisible: 'Pestaña Públicas'
+- assertNotVisible: 'Error'
+
+# RF-01 · p02: Públicas con autor, valoración y copias; orden Populares.
+- tapOn:
+    id: 'routine-search'
+- inputText: 'Empuje 4'
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: 'Empuje 4 días.*'
+    timeout: 30000
+- assertVisible: 'Orden: Populares'
+- takeScreenshot: RF-01_p02_publicas-populares_ios_oscuro
+
+# RF-01 · p03: filtro Fuerza + 4 días (la búsqueda se limpia para ver el filtro solo).
+- tapOn: 'Filtros'
+- tapOn:
+    id: 'filter-goal-HIPERTROFIA'
+- tapOn:
+    id: 'filter-days-4'
+- assertVisible: 'Limpiar filtros'
+- takeScreenshot: RF-01_p03_filtros-hipertrofia-4-dias_ios_oscuro
+- tapOn: 'Listo'
+- assertVisible: 'Filtros, 2 aplicados'
+- assertVisible: 'Empuje 4 días.*'
+- takeScreenshot: RF-01_p03b_resultado-filtrado_ios_oscuro
+
+# RF-01 · p04: sin resultados → vacío con «Limpiar filtros».
+- tapOn:
+    id: 'routine-search'
+- eraseText: 40
+- inputText: 'zzzzzz-no-existe'
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: 'Aún no hay rutinas públicas con estos filtros'
+    timeout: 30000
+- takeScreenshot: RF-01_p04_sin-resultados_ios_oscuro
+- tapOn: 'Limpiar filtros'
+- extendedWaitUntil:
+    visible: 'Orden: Populares'
+    timeout: 30000
+
+# RF-01 · p05: pestaña REPP con el sello.
+- tapOn: 'Pestaña REPP'
+- extendedWaitUntil:
+    visible: '.*Recomendada por REPP.*'
+    timeout: 30000
+- takeScreenshot: RF-01_p05_pestana-repp_ios_oscuro
+
+# RF-01 · p06: Mías › Creadas por mí.
+- tapOn: 'Pestaña Mías'
+- assertVisible: 'Creadas por mí'
+- extendedWaitUntil:
+    visible: 'Borrador privado.*'
+    timeout: 30000
+- takeScreenshot: RF-01_p06_mias-creadas_ios_oscuro
+
+# RF-01 · p01: la tarjeta de programa llega en F5; aquí queda la vista general.
+- tapOn: 'Pestaña Públicas'
+- assertNotVisible: 'Error'
+- takeScreenshot: RF-01_p01_catalogo-pestanas_ios_oscuro

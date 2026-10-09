@@ -8,3 +8,6 @@ export * from './definitions/social';
 export * from './definitions/stories';
 export * from './definitions/public-facilities';
 export * from './forms';
+export * from './definitions/catalog';
+export * from './definitions/sharing';
+export * from './definitions/community';

@@ -59,8 +59,11 @@ import type {
 } from '@gymsheet/schemas';
 import type { UserGender } from '@gymsheet/types';
 import {
+  createCommunityServices,
   createExerciseCommunityServices,
+  createRoutineCatalogServices,
   createRoutineServices,
+  createRoutineSharingServices,
 } from '@gymsheet/api-client';
 import { apiClient } from '@/api/client';
 
@@ -211,8 +214,11 @@ export const workoutService = {
       body: { observacion: observacion ?? null },
     }),
   /** Starts a session pre-filled from a routine. */
-  startFromRoutine: (routineId: string) =>
-    apiClient.request(`/routines/${routineId}/start`, workoutSchema, { method: 'POST' }),
+  startFromRoutine: (routineId: string, routineDayId?: string) =>
+    apiClient.request(`/routines/${routineId}/start`, workoutSchema, {
+      method: 'POST',
+      ...(routineDayId ? { body: { routineDayId } } : {}),
+    }),
   finish: (id: string, location?: { latitude: number; longitude: number }) =>
     apiClient.request(`/workouts/${id}/finish`, workoutFinishSchema, {
       method: 'PATCH',
@@ -267,6 +273,15 @@ export const routineService = {
 
 /** Rutinas por días: crear con `dias`, `PUT structure`, calendario y semanas. */
 export const routineBuilderService = createRoutineServices(apiClient.request);
+
+/** Catálogo por pestañas, publicar, copiar y sincronizar (F3 y F4 del plan Rutinas REPP). */
+export const routineCatalogService = createRoutineCatalogServices(apiClient.request);
+
+/** Compartir con invitación: invitar, revocar, aceptar y rechazar. */
+export const routineSharingService = createRoutineSharingServices(apiClient.request);
+
+/** Valoraciones, comentarios y denuncias. */
+export const communityService = createCommunityServices(apiClient.request);
 
 /** Me gusta (público) y favorito (privado) de un ejercicio. */
 export const exerciseCommunityService = createExerciseCommunityServices(apiClient.request);

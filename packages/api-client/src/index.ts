@@ -2,3 +2,6 @@ export * from './api-error';
 export * from './token-provider';
 export * from './client';
 export * from './routine-services';
+export * from './catalog-services';
+export * from './sharing-services';
+export * from './community-services';

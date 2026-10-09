@@ -19,6 +19,7 @@
     "vitest": "^3.2.0"
   },
   "dependencies": {
+    "@gymsheet/schemas": "*",
     "@gymsheet/types": "*",
     "zod": "^4.1.0"
   }

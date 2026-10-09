@@ -61,6 +61,7 @@ export const routineSchema = z.object({
   basadaEnRutinaId: z.string().nullable(),
   basadaEnVersion: z.number().int().nullable(),
   version: z.number().int(),
+  hayVersionNueva: z.boolean().optional().default(false),
   huellaCorta: z.string().nullable(),
   valoracion: ratingSummarySchema,
   copias: z.number().int(),
