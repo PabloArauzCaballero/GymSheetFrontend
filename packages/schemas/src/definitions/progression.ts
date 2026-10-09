@@ -26,6 +26,8 @@ export const badgeCategories = [
   'VARIEDAD',
   'HITO',
   'SECRETA',
+  /** Insignias de los programas de pesas y de cardio (F6). */
+  'MODO',
 ] as const;
 export type BadgeCategory = (typeof badgeCategories)[number];
 
@@ -237,6 +239,8 @@ export const pointsBreakdownSchema = z.object({
   volume: z.number().int(),
   streak: z.number().int(),
   badges: z.number().int(),
+  /** Bono de los modos de programa (sobrecarga, metas, cardio); 0 en servidores anteriores. */
+  modes: z.number().int().optional().default(0),
 });
 
 export const sessionRewardSchema = z.object({

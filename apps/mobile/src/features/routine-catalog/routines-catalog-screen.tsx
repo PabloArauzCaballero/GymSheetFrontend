@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
@@ -54,6 +54,7 @@ const EMPTY_COPY: Record<string, { title: string; message: string }> = {
 /** Pestaña Rutinas con la bandera `routinesV2` (RF-01). */
 export function RoutinesCatalogScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<CatalogTab>('public');
   const [chip, setChip] = useState<MineChip>('created');
   const [filters, setFilters] = useState<CatalogFilterState>(emptyCatalogFilters);
@@ -97,7 +98,7 @@ export function RoutinesCatalogScreen() {
         void catalog.refetch();
         void assignments.refetch();
         void invitations.refetch();
-        void programs.refetch();
+        void queryClient.invalidateQueries({ queryKey: ['programs'] });
       }}
       refreshing={catalog.isRefetching}
     >
@@ -106,6 +107,10 @@ export function RoutinesCatalogScreen() {
       <TourTarget id="routines.create">
         <Button label="Crear rutina" onPress={() => router.push('/routines/new')} />
       </TourTarget>
+
+      {programs.data && !programs.data.cardio ? (
+        <Button label="Añadir plan de cardio" onPress={() => router.push('/routines/cardio/new')} variant="ghost" />
+      ) : null}
 
       {programs.data?.fuerza ? <StrengthProgramCard program={programs.data.fuerza} /> : null}
       {programs.data?.cardio ? (

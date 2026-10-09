@@ -133,6 +133,8 @@ export default function WorkoutDetailScreen() {
       // La senda se recalculó al cerrar: cualquier pantalla que la muestre
       // debe volver a pedirla.
       void queryClient.invalidateQueries({ queryKey: ['progression'] });
+      // Los programas (semana, minutos de cardio, cargas sugeridas) cambian con la sesión.
+      void queryClient.invalidateQueries({ queryKey: ['programs'] });
       if (session.progression || session.programa || session.cardio) {
         // Con recompensa, el cierre no es un aviso: es una pantalla que enseña
         // cuánto ganaste y por qué. Reemplaza a la sesión para que «atrás» no

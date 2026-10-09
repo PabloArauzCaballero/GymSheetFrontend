@@ -36,7 +36,7 @@ import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, spacing } 
  */
 
 const ROW_STEP = 90;
-const BREAKDOWN_ORDER: readonly (keyof PointsBreakdown)[] = ['session', 'sets', 'volume', 'streak', 'badges'];
+const BREAKDOWN_ORDER: readonly (keyof PointsBreakdown)[] = ['session', 'sets', 'volume', 'streak', 'badges', 'modes'];
 
 /** La barra del tramo: avanza lo que movió la sesión; si hubo ascenso, se llena y vuelve a empezar. */
 function RewardTrack({
