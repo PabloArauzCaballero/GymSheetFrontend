@@ -1,0 +1,140 @@
+{
+  "descripcion": "Capturas web (390 y 1440 px, claro y oscuro) de las fases F3 a F6 de Rutinas REPP. Móvil: las aporta la rama móvil.",
+  "pasos": [
+    {
+      "rf": "RF-01",
+      "paso": "01",
+      "nombre": "programa-y-pestanas",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Programa activo arriba, pestañas Públicas / Recomendadas por REPP / Mías con el contador de invitaciones."
+    },
+    {
+      "rf": "RF-01",
+      "paso": "02",
+      "nombre": "publicas-populares",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Pestaña Públicas ordenada por populares: tarjetas con autor, valoración, copias y miniatura de la semana (filtrada por la etiqueta de la ejecución)."
+    },
+    {
+      "rf": "RF-01",
+      "paso": "03",
+      "nombre": "filtro-fuerza-3-dias",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Objetivo Fuerza + 3 días: solo coincide una rutina; «3 filtros activos»."
+    },
+    {
+      "rf": "RF-01",
+      "paso": "04",
+      "nombre": "filtro-sin-resultados",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Sin resultados: «Ninguna rutina coincide» con «Limpiar filtros»."
+    },
+    {
+      "rf": "RF-01",
+      "paso": "05",
+      "nombre": "repp",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Recomendadas por REPP: sello REPP en la tarjeta."
+    },
+    {
+      "rf": "RF-01",
+      "paso": "06",
+      "nombre": "mias-creadas",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Mías › Yo creé: solo las de la cuenta, con su visibilidad."
+    },
+    {
+      "rf": "RF-01",
+      "paso": "07",
+      "nombre": "mias-compartidas-invitacion",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Compartidas conmigo: invitación pendiente primero, sin ejercicios, con Aceptar y Rechazar."
+    },
+    {
+      "rf": "RF-01",
+      "paso": "08",
+      "nombre": "sin-conexion-con-cache",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Sin conexión: aviso y las rutinas ya cargadas siguen a la vista."
+    },
+    {
+      "rf": "RF-01",
+      "paso": "09",
+      "nombre": "error-500",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Error 500 simulado: panel de error con «Reintentar»."
+    },
+    {
+      "rf": "RF-02",
+      "paso": "01",
+      "nombre": "detalle-semana",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Cabecera, vista Semana de la semana 1 y hoja del día con sus ejercicios."
+    },
+    {
+      "rf": "RF-02",
+      "paso": "02",
+      "nombre": "mes-con-descargas",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Vista Mes: 12 semanas; S4, S8 y S12 con «Descarga»."
+    },
+    {
+      "rf": "RF-02",
+      "paso": "03",
+      "nombre": "hoja-del-dia-s2-martes",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "S2 › martes: hoja del día «Tirón» con las series de esa semana."
+    },
+    {
+      "rf": "RF-02",
+      "paso": "04",
+      "nombre": "ficha-del-ejercicio",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "La ficha del ejercicio abierta desde la hoja del día."
+    },
+    {
+      "rf": "RF-02",
+      "paso": "05",
+      "nombre": "volver-conserva-mes",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Atrás desde la ficha: sigue en Mes, semana 2, el mismo día."
+    },
+    {
+      "rf": "RF-02",
+      "paso": "06",
+      "nombre": "rutina-antigua-un-dia",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Rutina anterior a los días: «Rutina de un día (cualquier día)», sin selector Mes."
+    }
+  ]
+}

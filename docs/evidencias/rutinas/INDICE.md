@@ -1,4 +1,4 @@
-# Evidencia — Rutinas REPP (F2 · RF-03 a RF-08)
+# Evidencia — Rutinas REPP
 
 Generado por `scripts/evidencia/generar-indice-rutinas.mjs` a partir de lo que existe en disco. Un archivo que falta sale como **falta**; un paso que no se pudo capturar lleva su motivo. Una captura cuenta como **revisada** sólo si está en `revisiones.json` con lo que se observó.
 
@@ -8,6 +8,8 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 
 | RF | Web (capturas) | Móvil (capturas) | Pasos sin captura |
 |---|---|---|---|
+| RF-01 | 36 / 36 | 0 / 0 | 0 |
+| RF-02 | 24 / 24 | 0 / 0 | 0 |
 | RF-03 | 20 / 20 | 5 / 5 | 2 |
 | RF-04 | 12 / 12 | 3 / 3 | 0 |
 | RF-05 | 12 / 12 | 6 / 6 | 0 |
@@ -19,6 +21,21 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 
 | RF | Paso | Plataforma | Archivo | Qué debe verse | Estado |
 |---|---|---|---|---|---|
+| RF-01 | 01 | Web | `RF-01/web/RF-01_p01_programa-y-pestanas_*` | Programa activo arriba, pestañas Públicas / Recomendadas por REPP / Mías con el contador de invitaciones. | ✅ 4/4 capturadas · 1 revisadas |
+| RF-01 | 02 | Web | `RF-01/web/RF-01_p02_publicas-populares_*` | Pestaña Públicas ordenada por populares: tarjetas con autor, valoración, copias y miniatura de la semana (filtrada por la etiqueta de la ejecución). | ✅ 4/4 capturadas · sin revisar |
+| RF-01 | 03 | Web | `RF-01/web/RF-01_p03_filtro-fuerza-3-dias_*` | Objetivo Fuerza + 3 días: solo coincide una rutina; «3 filtros activos». | ✅ 4/4 capturadas · sin revisar |
+| RF-01 | 04 | Web | `RF-01/web/RF-01_p04_filtro-sin-resultados_*` | Sin resultados: «Ninguna rutina coincide» con «Limpiar filtros». | ✅ 4/4 capturadas · sin revisar |
+| RF-01 | 05 | Web | `RF-01/web/RF-01_p05_repp_*` | Recomendadas por REPP: sello REPP en la tarjeta. | ✅ 4/4 capturadas · sin revisar |
+| RF-01 | 06 | Web | `RF-01/web/RF-01_p06_mias-creadas_*` | Mías › Yo creé: solo las de la cuenta, con su visibilidad. | ✅ 4/4 capturadas · sin revisar |
+| RF-01 | 07 | Web | `RF-01/web/RF-01_p07_mias-compartidas-invitacion_*` | Compartidas conmigo: invitación pendiente primero, sin ejercicios, con Aceptar y Rechazar. | ✅ 4/4 capturadas · 1 revisadas |
+| RF-01 | 08 | Web | `RF-01/web/RF-01_p08_sin-conexion-con-cache_*` | Sin conexión: aviso y las rutinas ya cargadas siguen a la vista. | ✅ 4/4 capturadas · 1 revisadas |
+| RF-01 | 09 | Web | `RF-01/web/RF-01_p09_error-500_*` | Error 500 simulado: panel de error con «Reintentar». | ✅ 4/4 capturadas · 1 revisadas |
+| RF-02 | 01 | Web | `RF-02/web/RF-02_p01_detalle-semana_*` | Cabecera, vista Semana de la semana 1 y hoja del día con sus ejercicios. | ✅ 4/4 capturadas · sin revisar |
+| RF-02 | 02 | Web | `RF-02/web/RF-02_p02_mes-con-descargas_*` | Vista Mes: 12 semanas; S4, S8 y S12 con «Descarga». | ✅ 4/4 capturadas · 1 revisadas |
+| RF-02 | 03 | Web | `RF-02/web/RF-02_p03_hoja-del-dia-s2-martes_*` | S2 › martes: hoja del día «Tirón» con las series de esa semana. | ✅ 4/4 capturadas · 1 revisadas |
+| RF-02 | 04 | Web | `RF-02/web/RF-02_p04_ficha-del-ejercicio_*` | La ficha del ejercicio abierta desde la hoja del día. | ✅ 4/4 capturadas · sin revisar |
+| RF-02 | 05 | Web | `RF-02/web/RF-02_p05_volver-conserva-mes_*` | Atrás desde la ficha: sigue en Mes, semana 2, el mismo día. | ✅ 4/4 capturadas · sin revisar |
+| RF-02 | 06 | Web | `RF-02/web/RF-02_p06_rutina-antigua-un-dia_*` | Rutina anterior a los días: «Rutina de un día (cualquier día)», sin selector Mes. | ✅ 4/4 capturadas · sin revisar |
 | RF-03 | 01 | Web | `RF-03/web/RF-03_p01_paso1-vacio_*` | «Paso 1 de 6 · Nombre», campo vacío, barra de progreso con el primer segmento activo. | ✅ 4/4 capturadas · sin revisar |
 | RF-03 | 01 | Móvil | `RF-03/movil/RF-03_p01_paso1-vacio_*` | «Paso 1 de 6 · Nombre», campo vacío, barra de progreso con el primer segmento activo. | ✅ 1/1 capturadas · sin revisar |
 | RF-03 | 02 | Web | `RF-03/web/RF-03_p02_paso1-error-nombre_*` | Siguiente sin nombre: «Escribe un nombre» bajo el campo y sigue en el paso 1. | ✅ 4/4 capturadas · sin revisar |
@@ -85,6 +102,12 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 
 | Captura | Observación |
 |---|---|
+| `RF-01_p01_programa-y-pestanas_1440_claro.png` | Revisada (agente, 2026-10-09): tarjeta del programa «Empuje 4 días» con x1,0, barra y «Cumple esta semana para llegar a x1,2», Tu semana, pestañas con el contador «1» en Mías, filtros y tarjetas. Las tarjetas de abajo son rutinas públicas que dejaron otras pruebas en la misma base (no filtradas en este paso). Sin defectos. |
+| `RF-01_p07_mias-compartidas-invitacion_390_oscuro.png` | Revisada (agente, 2026-10-09): chip «Compartidas conmigo (1)» activo, tarjeta «Invitación» de Bruno con «Verás los ejercicios cuando la aceptes», Aceptar y Rechazar completos. Sin defectos. |
+| `RF-01_p08_sin-conexion-con-cache_390_claro.png` | Revisada (agente, 2026-10-09): aviso ámbar «Sin conexión. Te mostramos lo último que cargamos.» sobre las tres tarjetas ya cargadas. |
+| `RF-01_p09_error-500_1440_oscuro.png` | Revisada (agente, 2026-10-09): panel «No se pudo cargar la información» con «Reintentar». Un aviso global «Algo salió mal» sobrevuela arriba a la derecha (lo emite la app ante el fallo simulado). |
+| `RF-02_p02_mes-con-descargas_390_oscuro.png` | Revisada (agente, 2026-10-09): tabla Mes de 12 semanas cabe en 390 px con 7 columnas; S4, S8 y S12 con «Descarga»; indicación «Toca un día del calendario…». |
+| `RF-02_p03_hoja-del-dia-s2-martes_1440_claro.png` | Revisada (agente, 2026-10-09): celda S2·Mar seleccionada y hoja «Tirón» (Semana 2 · Martes) con barbell deadlift y lat pulldown y sus series; ficha «Detalles» a la derecha. Sin defectos. |
 | `RF-05_p02_lunes-jueves-con-3_1440_claro.png` | Revisada (agente, 2026-10-08): Lunes y Jueves con «3 ejercicios», Miércoles y Viernes con 0; barra «4 días · 12 semanas» y Siguiente visibles. Sin defectos. |
 | `RF-07_p02_filtro-favoritos_390_claro.png` | Revisada (agente, 2026-10-08): filtro «Favoritos» activo y la lista muestra «barbell bench press». La imagen del ejercicio no carga (la siembra local no sirve medios); es un hecho del entorno. |
 | `RF-07_p05_cuenta-b-ve-contador_1440_claro.png` | Revisada (agente, 2026-10-08): cuenta B (expiring.mock) ve «Me gusta · 1» (el de la cuenta A) y ☆ Favorito sin marcar. Junto a la cabecera sigue el botón «Agregar a frecuentes», que es el favorito antiguo de la biblioteca y no el nuevo (hallazgo: dos conceptos con icono de corazón en la misma ficha). |
@@ -94,39 +117,3 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | `RF-05_p04_lunes-y-jueves-con-3_ios_oscuro.png` | Revisada (agente, 2026-10-08): tras Configurar juntos, Lunes y Jueves con «3 ejercicios». |
 | `RF-06_p07_ver-y-ordenar_ios_oscuro.png` | Revisada (agente, 2026-10-08): primer ejercicio editado a Series 4, Reps 6–8 (el valor se escribió con el teclado, borrando el anterior). Limitación: la lista se ordena con flechas, no arrastrando. |
 | `RF-08_p01_vista-mes-descargas_ios_oscuro.png` | Revisada (agente, 2026-10-08): S4, S8 y S12 atenuadas y con la etiqueta «Descarga». La captura es de la ventana, así que S1 y S2 quedan fuera de plano. |
-
-## Backoffice (RF-B1..B3)
-
-# Índice de evidencia · Rutinas REPP (backoffice web)
-
-Capturas de Playwright (`apps/web/e2e/*.spec.ts`, proyectos `evidencia-{390,1440}-{claro,oscuro}`), inspeccionadas a mano
-una muestra por RF. Nombre: `RF-Bx_pNN_<paso>_<ancho>_<tema>.png`. Corrida: 32 pruebas en verde (8,8 min), con
-`console.error`, respuestas 5xx y axe (WCAG A/AA serio/crítico) vigilados en cada paso.
-Datos: `apps/web/scripts/seed-evidencia-rutinas.mjs` contra Postgres desechable y backend de la rama `feat/rutinas-repp-f1-datos`.
-
-| RF | Estado | API | Móvil | Web | TEST | CI | Observaciones |
-|---|---|---|---|---|---|---|---|
-| RF-B1 | 🟡 | verificada en el spec (estado y aviso al autor vía backend) | n/a | [36 capturas](RF-B1/web) | no probado | `yarn turbo run source-check type-check lint test` en verde | Falta paso 05 con dos gimnasios en TEST; comentario sin texto (ver abajo) |
-| RF-B2 | 🟡 | verificada en el spec | «sello en el móvil» NO probado | [32 capturas](RF-B2/web) | no probado | idem | Crear oficial desde el formulario web simple, no el asistente |
-| RF-B3 | 🟡 | verificada en el spec (bono único, auditoría) | n/a | [28 capturas](RF-B3/web) | no probado | idem | |
-
-## Pasos capturados
-
-| RF | Paso | Captura (prefijo) |
-|---|---|---|
-| RF-B1 | 01 cola con un caso de cada tipo | `p01_cola-tipos-nuevos` |
-| RF-B1 | 02 vista previa rutina / ejercicio / comentario | `p02_vista-previa-*` |
-| RF-B1 | 03 tomar y ocultar | `p03_rutina-ocultada` |
-| RF-B1 | 04 restaurar | `p04_boton-restaurar`, `p04_rutina-restaurada` |
-| RF-B1 | 05 admin de otro gimnasio | `p05_otro-gimnasio-sin-casos` |
-| RF-B1 | extra: SYSTEM_ADMIN | `p06_sistema-moderacion-global` |
-| RF-B2 | 01 lista de oficiales | `p01_lista-oficiales` |
-| RF-B2 | 02 crear oficial | `p02_formulario-crear-oficial`, `p02_oficial-creada` |
-| RF-B2 | 03 desmarcar / marcar | `p03_desmarcada`, `p03_marcada-otra-vez` |
-| RF-B2 | 04 métricas | `p04_metricas` |
-| RF-B2 | 05 admin de gimnasio sin acceso | `p05_sin-acceso-admin-gimnasio` |
-| RF-B2 | 06 auditoría | `p06_auditoria-acciones` |
-| RF-B3 | 01 ficha | `p01_ficha-entrenamiento` |
-| RF-B3 | 02 recalcular (confirmar, resultado, idempotente, sigue sin cumplir) | `p02_*` |
-| RF-B3 | 03 botón desactivado sin `support:respond` | `p03_boton-desactivado-sin-permiso` |
-| RF-B3 | 04 sin `support:read` | `p04_sin-permiso-de-lectura` |

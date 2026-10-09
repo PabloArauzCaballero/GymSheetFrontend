@@ -1,0 +1,8 @@
+{
+  "RF-01_p01_programa-y-pestanas_1440_claro.png": "Revisada (agente, 2026-10-09): tarjeta del programa «Empuje 4 días» con x1,0, barra y «Cumple esta semana para llegar a x1,2», Tu semana, pestañas con el contador «1» en Mías, filtros y tarjetas. Las tarjetas de abajo son rutinas públicas que dejaron otras pruebas en la misma base (no filtradas en este paso). Sin defectos.",
+  "RF-01_p07_mias-compartidas-invitacion_390_oscuro.png": "Revisada (agente, 2026-10-09): chip «Compartidas conmigo (1)» activo, tarjeta «Invitación» de Bruno con «Verás los ejercicios cuando la aceptes», Aceptar y Rechazar completos. Sin defectos.",
+  "RF-01_p08_sin-conexion-con-cache_390_claro.png": "Revisada (agente, 2026-10-09): aviso ámbar «Sin conexión. Te mostramos lo último que cargamos.» sobre las tres tarjetas ya cargadas.",
+  "RF-01_p09_error-500_1440_oscuro.png": "Revisada (agente, 2026-10-09): panel «No se pudo cargar la información» con «Reintentar». Un aviso global «Algo salió mal» sobrevuela arriba a la derecha (lo emite la app ante el fallo simulado).",
+  "RF-02_p02_mes-con-descargas_390_oscuro.png": "Revisada (agente, 2026-10-09): tabla Mes de 12 semanas cabe en 390 px con 7 columnas; S4, S8 y S12 con «Descarga»; indicación «Toca un día del calendario…».",
+  "RF-02_p03_hoja-del-dia-s2-martes_1440_claro.png": "Revisada (agente, 2026-10-09): celda S2·Mar seleccionada y hoja «Tirón» (Semana 2 · Martes) con barbell deadlift y lat pulldown y sus series; ficha «Detalles» a la derecha. Sin defectos."
+}

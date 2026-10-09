@@ -10,15 +10,24 @@
  *
  * Uso: node scripts/evidencia/generar-indice-rutinas.mjs
  */
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const base = join(root, 'docs', 'evidencias', 'rutinas');
-const { pasos } = JSON.parse(readFileSync(join(base, 'pasos.json'), 'utf8'));
-const reviewsPath = join(base, 'revisiones.json');
-const reviews = existsSync(reviewsPath) ? JSON.parse(readFileSync(reviewsPath, 'utf8')) : {};
+// Cada fase aporta sus propios `pasos*.json` y `revisiones*.json` (por ejemplo
+// `pasos-web-f3-f6.json`): así dos ramas que añaden evidencia a la vez no
+// chocan en el mismo archivo. Se leen todos, en orden alfabético.
+const filesOf = (prefix) =>
+  readdirSync(base)
+    .filter((name) => name.startsWith(prefix) && name.endsWith('.json'))
+    .sort();
+const pasos = filesOf('pasos').flatMap((name) => JSON.parse(readFileSync(join(base, name), 'utf8')).pasos);
+const reviews = Object.assign(
+  {},
+  ...filesOf('revisiones').map((name) => JSON.parse(readFileSync(join(base, name), 'utf8'))),
+);
 
 const WEB_COMBOS = [
   [390, 'claro'],
@@ -59,7 +68,7 @@ for (const step of pasos) {
 }
 
 const lines = [];
-lines.push('# Evidencia — Rutinas REPP (F2 · RF-03 a RF-08)', '');
+lines.push('# Evidencia — Rutinas REPP', '');
 lines.push(
   'Generado por `scripts/evidencia/generar-indice-rutinas.mjs` a partir de lo que existe en disco. ' +
     'Un archivo que falta sale como **falta**; un paso que no se pudo capturar lleva su motivo. ' +

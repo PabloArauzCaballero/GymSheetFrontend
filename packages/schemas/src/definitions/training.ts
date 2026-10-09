@@ -93,6 +93,7 @@ export const routineWeekSchema = z.object({
           repsMin: z.number().int().nullable(),
           repsMax: z.number().int().nullable(),
           pesoObjetivoKg: z.number().nullable(),
+          pesoSugeridoKg: z.number().nullable().optional(),
         }),
       ),
     }),

@@ -154,6 +154,8 @@ export type RoutineWeek = {
       repsMin: number | null;
       repsMax: number | null;
       pesoObjetivoKg: number | null;
+      /** Solo si el usuario tiene un programa activo con esta rutina (modo con cargas). */
+      pesoSugeridoKg?: number | null;
     }>;
   }>;
 };
