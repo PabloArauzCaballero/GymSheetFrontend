@@ -22,7 +22,14 @@ runs_dir="$(mktemp -d)"
 echo "Registros de Maestro en $runs_dir"
 
 failed=()
-for flow in .maestro/08-crear-rutina.yaml .maestro/09-seleccion-multiple.yaml .maestro/10-ficha-favorito-like.yaml; do
+# Sin argumentos corre los tres; con argumentos, sólo esos flujos (por ejemplo `08 09`).
+flows=(.maestro/08-crear-rutina.yaml .maestro/09-seleccion-multiple.yaml .maestro/10-ficha-favorito-like.yaml)
+if [ "$#" -gt 0 ]; then
+  flows=()
+  for number in "$@"; do flows+=(.maestro/"$number"-*.yaml); done
+fi
+
+for flow in "${flows[@]}"; do
   name="$(basename "$flow" .yaml)"
   echo "── $flow"
   if maestro test --debug-output "$runs_dir/$name" "$flow" > "$runs_dir/$name.log" 2>&1; then

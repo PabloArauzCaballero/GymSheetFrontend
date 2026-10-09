@@ -242,9 +242,17 @@ for (const combo of combos) {
       await page.getByRole('button', { name: 'Ver y ordenar' }).click();
       await expect(page).toHaveURL(/\/ordenar/u);
       await page.getByRole('button', { name: `Bajar ${CLOSE_GRIP}` }).click();
-      await page.getByLabel('Series').first().fill('4');
-      await page.getByLabel('Reps mín.').first().fill('6');
-      await page.getByLabel('Reps máx.').first().fill('8');
+      // Se borra y se teclea (no `fill` directo): borrar «3» y escribir «4» tiene que dar «4».
+      for (const [label, value] of [
+        ['Series', '4'],
+        ['Reps mín.', '6'],
+        ['Reps máx.', '8'],
+      ] as const) {
+        const field = page.getByLabel(label).first();
+        await field.fill('');
+        await field.pressSequentially(value);
+        await expect(field).toHaveValue(value);
+      }
       await expect(page.getByLabel('Series').first()).toHaveValue('4');
       await evidencia(page, 'RF-06', '07', 'ver-y-ordenar');
       await page.getByRole('button', { name: 'Listo' }).click();
@@ -354,7 +362,9 @@ for (const combo of combos) {
       const pageB = await other.newPage();
       await pageB.emulateMedia({ reducedMotion: 'reduce' });
       await signIn(pageB, accountB);
+      await autoCloseTour(pageB);
       await pageB.goto(exerciseUrl);
+      await dismissTour(pageB);
       await expect(pageB.getByTestId('exercise-like')).toContainText(`Me gusta · ${base + 1}`, {
         timeout: 30_000,
       });

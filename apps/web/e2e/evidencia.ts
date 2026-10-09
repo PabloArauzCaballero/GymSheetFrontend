@@ -51,9 +51,13 @@ export async function evidencia(
   // parecen un defecto; se colocan en su sitio natural sólo mientras se captura.
   const style = await page.addStyleTag({
     content:
-      'header.sticky, [aria-label="Acciones del asistente"] { position: static !important; }',
+      'header.sticky, [aria-label="Acciones del asistente"] { position: static !important; } ' +
+      // El indicador de `next dev` (la «N» flotante) no es parte de la pantalla.
+      'nextjs-portal { display: none !important; }',
   });
   await page.screenshot({ path, fullPage: true, animations: 'disabled' });
-  await style.evaluate((node) => node.remove());
+  await style.evaluate((node) => {
+    if (node instanceof Element) node.remove();
+  });
   return path;
 }

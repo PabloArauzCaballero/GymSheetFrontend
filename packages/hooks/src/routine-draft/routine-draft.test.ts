@@ -464,6 +464,19 @@ describe('carga útil para el backend', () => {
     expect(toStructureInput(state.draft).dias).toEqual(input.dias);
   });
 
+  it('un rango de repeticiones invertido se corrige al enviar, sin tocar el borrador', () => {
+    const inverted = { ...exercise('a'), repsMin: 12, repsMax: 8 };
+    const state = run(
+      [{ type: 'agregarEjercicio', destino: 1, ejercicio: inverted }],
+      withDays([1]),
+    );
+    expect(toStructureInput(state.draft).dias[0]?.ejercicios[0]).toMatchObject({
+      repsMin: 12,
+      repsMax: 12,
+    });
+    expect(state.draft.dias[0]?.ejercicios[0]?.repsMax).toBe(8);
+  });
+
   it('sin progresión manda descargaCada null', () => {
     const draft = {
       ...createEmptyDraft(),

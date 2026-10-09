@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, router } from 'expo-router';
+import { useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 import {
   WEEKDAYS,
@@ -76,26 +77,43 @@ function IconButton({
   );
 }
 
+/**
+ * Campo numérico con texto propio mientras se edita.
+ *
+ * Mientras la persona escribe se muestra lo tecleado (que puede quedar vacío un
+ * instante: borrar «3» para escribir «4»), y el borrador sólo recibe valores
+ * válidos; al salir del campo vuelve a mostrar el valor del borrador. Sin esto, un
+ * campo obligatorio como las series se rellenaba con «1» al borrar y el siguiente
+ * dígito se pegaba detrás («14»).
+ */
 function NumberField({
   label,
   value,
   onChange,
   placeholder,
+  testID,
 }: {
   label: string;
+  testID: string;
   value: number | null;
   onChange: (value: string) => void;
   placeholder: string;
 }) {
+  const [typed, setTyped] = useState<string | null>(null);
   return (
     <View style={{ flex: 1 }}>
       <Input
         keyboardType="number-pad"
         {...numericInputProps}
         label={label}
-        onChangeText={onChange}
+        onBlur={() => setTyped(null)}
+        onChangeText={(raw) => {
+          setTyped(raw.replace(/[^0-9]/gu, ''));
+          onChange(raw);
+        }}
         placeholder={placeholder}
-        value={show(value)}
+        testID={testID}
+        value={typed ?? show(value)}
       />
     </View>
   );
@@ -117,17 +135,10 @@ function ExerciseEditor({
   onRemove: () => void;
   onChange: (cambios: Partial<DraftExercise>) => void;
 }) {
-  const setReps = (field: 'repsMin' | 'repsMax', raw: string) => {
-    const next = digits(raw, 1000);
-    const other = field === 'repsMin' ? exercise.repsMax : exercise.repsMin;
-    // Un rango invertido (12–8) es un descuido, no una intención: se ajusta el
-    // otro extremo en vez de dejar que el servidor rechace toda la rutina.
-    const fix =
-      next !== null && other !== null && (field === 'repsMin' ? next > other : next < other)
-        ? { [field === 'repsMin' ? 'repsMax' : 'repsMin']: next }
-        : {};
-    onChange({ [field]: next, ...fix });
-  };
+  const setReps = (field: 'repsMin' | 'repsMax', raw: string) =>
+    onChange({ [field]: digits(raw, 1000) });
+  const invertedReps =
+    exercise.repsMin !== null && exercise.repsMax !== null && exercise.repsMin > exercise.repsMax;
   return (
     <Card>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
@@ -168,32 +179,45 @@ function ExerciseEditor({
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
         <NumberField
           label="Series"
-          onChange={(raw) => onChange({ seriesObjetivo: digits(raw, 100) ?? 1 })}
+          testID="field-series"
+          onChange={(raw) => {
+            const series = digits(raw, 100);
+            if (series !== null && series > 0) onChange({ seriesObjetivo: series });
+          }}
           placeholder="3"
           value={exercise.seriesObjetivo}
         />
         <NumberField
           label="Reps mín."
+          testID="field-reps-min"
           onChange={(raw) => setReps('repsMin', raw)}
           placeholder="8"
           value={exercise.repsMin}
         />
         <NumberField
           label="Reps máx."
+          testID="field-reps-max"
           onChange={(raw) => setReps('repsMax', raw)}
           placeholder="12"
           value={exercise.repsMax}
         />
       </View>
+      {invertedReps ? (
+        <Text accessibilityRole="alert" style={{ color: colors.warning, fontSize: fontSizes.xs }}>
+          El máximo es menor que el mínimo: se guardará igual al mínimo.
+        </Text>
+      ) : null}
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
         <NumberField
           label="RIR"
+          testID="field-rir"
           onChange={(raw) => onChange({ rirObjetivo: digits(raw, 10) })}
           placeholder="2"
           value={exercise.rirObjetivo}
         />
         <NumberField
           label="Descanso (s)"
+          testID="field-rest"
           onChange={(raw) => onChange({ descansoSeg: digits(raw, 7200) })}
           placeholder="90"
           value={exercise.descansoSeg}

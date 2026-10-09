@@ -116,6 +116,28 @@ name: 08 · Crear rutina — asistente por pasos
 # RF-06 · p07: ver y ordenar, editar series.
 - tapOn: 'Ver y ordenar'
 - assertVisible: 'Series'
+# Se edita el primer ejercicio a 4 series de 6 a 8 repeticiones; el toque va al extremo
+# derecho del campo para que el cursor quede al final y `eraseText` borre todo.
+- tapOn:
+    id: 'field-series'
+    index: 0
+    point: 90%,50%
+- eraseText: 3
+- inputText: '4'
+- tapOn:
+    id: 'field-reps-min'
+    index: 0
+    point: 90%,50%
+- eraseText: 3
+- inputText: '6'
+- tapOn:
+    id: 'field-reps-max'
+    index: 0
+    point: 90%,50%
+- eraseText: 3
+- inputText: '8'
+# Un toque en el texto de ayuda cierra el teclado numérico.
+- tapOn: 'Ordena los ejercicios.*'
 - takeScreenshot: RF-06_p07_ver-y-ordenar_ios_oscuro
 - tapOn: 'Listo'
 
@@ -148,7 +170,11 @@ name: 08 · Crear rutina — asistente por pasos
 # RF-08 · p02: tocar S6 y marcarla como descarga; S5 sigue normal.
 - tapOn:
     id: 'week-row-6'
-- tapOn: 'Descarga'
+# La hoja nativa con las opciones de la semana tarda un instante en salir.
+- extendedWaitUntil:
+    visible: 'Ahora es una semana normal.'
+    timeout: 10000
+- tapOn: 'Marcar como descarga'
 - assertVisible: 'Semana 6, descarga.*'
 - assertVisible: 'Semana 5\. .*'
 - takeScreenshot: RF-08_p02_s6-descarga_ios_oscuro

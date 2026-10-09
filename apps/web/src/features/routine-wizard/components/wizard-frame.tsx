@@ -30,7 +30,7 @@ export function WizardFrame({
   children: ReactNode;
 }>) {
   return (
-    <div className="mx-auto grid w-full max-w-3xl gap-8">
+    <div className="mx-auto grid w-full max-w-3xl grid-cols-[minmax(0,1fr)] gap-8">
       <div className="grid gap-5">
         <div>
           <ButtonLink href={back?.href ?? '/routines'} variant="ghost">

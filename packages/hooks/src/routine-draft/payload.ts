@@ -18,7 +18,12 @@ export function toDayInputs(draft: RoutineDraft): RoutineDayInput[] {
       ejercicioId: exercise.ejercicioId,
       seriesObjetivo: exercise.seriesObjetivo,
       repsMin: exercise.repsMin,
-      repsMax: exercise.repsMax,
+      // Un rango invertido (12–8) es un descuido, no una intención: el servidor rechazaría
+      // toda la rutina, así que el máximo nunca queda por debajo del mínimo.
+      repsMax:
+        exercise.repsMin !== null && exercise.repsMax !== null
+          ? Math.max(exercise.repsMin, exercise.repsMax)
+          : exercise.repsMax,
       pesoObjetivoKg: exercise.pesoObjetivoKg,
       rirObjetivo: exercise.rirObjetivo,
       descansoSeg: exercise.descansoSeg,

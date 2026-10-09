@@ -69,7 +69,11 @@ name: 09 · Selección múltiple de días
 - takeScreenshot: RF-05_p04a_configurar-juntos-3-ejercicios_ios_oscuro
 - tapOn: 'Listo'
 - assertVisible: 'Paso 5 de 6.*'
-- assertVisible: '.*3 ejercicios.*Lunes.*|Lunes.*3 ejercicios.*'
+- assertVisible: 'Lunes. 3 ejercicios'
+# Se baja la semana para que Jueves también quede a la vista (la barra tapa la fila de abajo).
+- scroll
+- assertVisible: 'Jueves. 3 ejercicios'
+- waitForAnimationToEnd
 - takeScreenshot: RF-05_p04_lunes-y-jueves-con-3_ios_oscuro
 
 # RF-05 · p05: el botón «Seleccionar» entra al mismo modo (alternativa accesible).
@@ -88,6 +92,6 @@ name: 09 · Selección múltiple de días
 - tapOn: 'Listo'
 - tapOn: 'Siguiente'
 - assertVisible: 'Paso 6 de 6.*'
-- assertVisible: 'Aviso: .* solo se entrena 1 vez por semana'
+- assertVisible: 'Piernas solo se entrena 1 vez por semana'
 - takeScreenshot: RF-08_p03_aviso-frecuencia_ios_oscuro
 - assertNotVisible: 'Error'

@@ -106,8 +106,8 @@ export function ReviewStep() {
       `Semana ${numero}`,
       week.esDescarga ? 'Ahora es una semana de descarga.' : 'Ahora es una semana normal.',
       [
-        { text: 'Descarga', onPress: () => apply(true) },
-        { text: 'Normal', onPress: () => apply(false) },
+        { text: 'Marcar como descarga', onPress: () => apply(true) },
+        { text: 'Marcar como normal', onPress: () => apply(false) },
         { text: 'Cancelar', style: 'cancel' },
       ],
     );

@@ -57,7 +57,7 @@ export function WizardActionBar({
             disabled={secondary.disabled}
             label={secondary.label}
             onPress={secondary.onPress}
-            style={{ flex: 1 }}
+            style={{ paddingHorizontal: spacing.lg }}
             variant="ghost"
           />
         ) : null}

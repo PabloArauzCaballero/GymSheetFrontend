@@ -36,11 +36,11 @@ export function RoutineMonthGrid({
     <div className="overflow-x-auto">
       <table
         aria-label="Vista Mes"
-        className="w-full min-w-[420px] border-separate border-spacing-y-1 text-sm"
+        className="w-full table-fixed border-separate border-spacing-y-1 text-sm"
       >
         <thead>
           <tr>
-            <th className="w-24 text-left" scope="col">
+            <th className="w-16 text-left sm:w-24" scope="col">
               <span className="sr-only">Semana</span>
             </th>
             {WEEKDAYS.map((dia) => (

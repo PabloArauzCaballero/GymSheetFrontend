@@ -2,11 +2,14 @@
 # con su «+». Uso: runFlow con `env: { NOMBRE: 'barbell bench press' }`.
 #
 # El campo se borra antes de escribir: el selector conserva la búsqueda anterior y
-# el ejercicio siguiente no estaría entre sus resultados.
+# el ejercicio siguiente no estaría entre sus resultados. Se toca en el extremo
+# derecho del campo para que el cursor quede al final del texto: `eraseText`
+# borra hacia atrás desde el cursor, y un toque a mitad deja restos.
 appId: app.gymsheet.mobile
 ---
 - tapOn:
     id: 'exercise-search'
+    point: 95%,50%
 - eraseText: 60
 - inputText: ${NOMBRE}
 - pressKey: Enter
