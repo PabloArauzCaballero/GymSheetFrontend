@@ -25,20 +25,20 @@ appId: app.gymsheet.mobile
           when:
             notVisible: 'Hola, ${FIRST}.*'
           commands:
-            - tapOn: 'Perfil, tab.*'
+            - openLink: gymsheet:///settings
             - extendedWaitUntil:
-                visible: 'Editar mis datos'
-                timeout: 60000
-            - repeat:
-                times: 3
-                commands:
-                  - scroll
-            - tapOn: 'Ajustes. Cuenta, versión y cierre de sesión'
-            - extendedWaitUntil:
-                visible: 'Cerrar sesión'
+                visible: 'Ajustes'
+                timeout: 30000
+            - scrollUntilVisible:
+                element: 'Cerrar sesión'
                 timeout: 30000
             - tapOn: 'Cerrar sesión'
-            - tapOn: 'Cerrar sesión'
+            - extendedWaitUntil:
+                visible: 'Volver'
+                timeout: 10000
+            # El diálogo y el botón de atrás se llaman igual: se pulsa el del diálogo por posición.
+            - tapOn:
+                point: 70%,55%
             - extendedWaitUntil:
                 visible: 'Vuelve al trabajo.'
                 timeout: 60000

@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
-import { setsLabel, type DayView } from '@gymsheet/hooks';
+import { setsLabel, type DayExerciseView, type DayView } from '@gymsheet/hooks';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Badge } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
@@ -20,6 +20,7 @@ export function DaySheet({
   isDeload,
   onTrain,
   training,
+  onReportExercise,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -28,6 +29,8 @@ export function DaySheet({
   isDeload: boolean;
   onTrain?: () => void;
   training?: boolean;
+  /** Denunciar un ejercicio privado de otra persona. */
+  onReportExercise?: (exercise: DayExerciseView) => void;
 }) {
   const router = useRouter();
   return (
@@ -78,6 +81,20 @@ export function DaySheet({
           </View>
         </PressableScale>
       ))}
+      {onReportExercise && day?.ejercicios.some((item) => item.esPrivado) ? (
+        <View style={{ gap: spacing.xs }}>
+          {day.ejercicios
+            .filter((item) => item.esPrivado)
+            .map((item) => (
+              <Button
+                key={item.routineExerciseId}
+                label={`Denunciar «${item.nombre}»`}
+                onPress={() => onReportExercise(item)}
+                variant="ghost"
+              />
+            ))}
+        </View>
+      ) : null}
       {onTrain && day && day.ejercicios.length > 0 ? (
         <Button label="Entrenar este día" loading={training} onPress={onTrain} />
       ) : null}

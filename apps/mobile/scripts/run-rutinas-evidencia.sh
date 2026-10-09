@@ -23,7 +23,7 @@ echo "Registros de Maestro en $runs_dir"
 
 failed=()
 # Sin argumentos corre los tres; con argumentos, sólo esos flujos (por ejemplo `08 09`).
-flows=(.maestro/08-crear-rutina.yaml .maestro/09-seleccion-multiple.yaml .maestro/10-ficha-favorito-like.yaml)
+flows=(.maestro/08-crear-rutina.yaml .maestro/09-seleccion-multiple.yaml .maestro/10-ficha-favorito-like.yaml .maestro/1[1-9]-*.yaml .maestro/2[0-3]-*.yaml)
 if [ "$#" -gt 0 ]; then
   flows=()
   for number in "$@"; do flows+=(.maestro/"$number"-*.yaml); done
@@ -46,6 +46,11 @@ for flow in "${flows[@]}"; do
     mkdir -p "$evidence_root/$rf/movil"
     cp "$png" "$evidence_root/$rf/movil/$file"
   done < <(find "$runs_dir/$name" -path '*takeScreenshot*' -name 'RF-*.png' -print0)
+  # El directorio de depuración de Maestro pesa cientos de MB (capturas de cada paso y
+  # el vídeo): se borra en cuanto se recogen las capturas de evidencia. El .log queda.
+  # La captura que Maestro toma al fallar sirve para diagnosticar: se deja junto al log.
+  find "$runs_dir/$name" -name 'screenshot-*.png' -exec cp {} "$runs_dir/$name-fallo.png" \; 2>/dev/null || true
+  rm -rf "$runs_dir/$name"
 done
 
 if [ "${#failed[@]}" -gt 0 ]; then

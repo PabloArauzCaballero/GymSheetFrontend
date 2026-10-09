@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableScale } from '@/components/motion';
 import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
@@ -28,7 +28,12 @@ export function BottomSheet({
   const insets = useSafeAreaInsets();
   return (
     <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
-      <View style={{ flex: 1, justifyContent: 'flex-end' }} testID={testID}>
+      {/* Con el teclado abierto la hoja sube con él: el botón de abajo no queda tapado. */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1, justifyContent: 'flex-end' }}
+        testID={testID}
+      >
         <Pressable
           accessibilityLabel="Cerrar"
           onPress={onClose}
@@ -48,6 +53,7 @@ export function BottomSheet({
         >
           <ScrollView
             contentContainerStyle={{ gap: spacing.md, padding: spacing.lg }}
+            keyboardDismissMode="on-drag"
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
@@ -91,7 +97,7 @@ export function BottomSheet({
             {children}
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

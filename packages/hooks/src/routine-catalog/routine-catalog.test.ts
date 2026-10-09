@@ -16,6 +16,7 @@ import {
   setsLabel,
   toCatalogQuery,
   weekDots,
+  diffRoutineVersions,
 } from './index';
 
 const card = (patch: Partial<RoutineCard> = {}): RoutineCard => ({
@@ -130,5 +131,31 @@ describe('calendario', () => {
     expect(setsLabel({ series: 3, repsMin: 8, repsMax: 12 })).toBe('3 × 8-12');
     expect(setsLabel({ series: 5, repsMin: 5, repsMax: 5 })).toBe('5 × 5');
     expect(setsLabel({ series: 4, repsMin: null, repsMax: null })).toBe('4 series');
+  });
+});
+
+describe('versión nueva', () => {
+  const item = (id: string, nombre: string, series: number, reps: [number, number]) => ({
+    id: `re-${id}`, orden: 1, seriesObjetivo: series, repsMin: reps[0], repsMax: reps[1], pesoObjetivoKg: null,
+    rirObjetivo: null, descansoSeg: null, nota: null, ejercicio: exercise(id, nombre),
+  });
+  const day = (diaSemana: number | null, ejercicios: ReturnType<typeof item>[]) => ({
+    id: `d${diaSemana}`, diaSemana, nombre: null, orden: 1, ejercicios,
+  });
+  const as = (dias: ReturnType<typeof day>[]) => ({ dias }) as unknown as Routine;
+
+  it('lista lo añadido, quitado y ajustado', () => {
+    const copy = as([day(1, [item('a', 'Press', 3, [8, 12]), item('b', 'Remo', 3, [8, 12])]), day(3, [item('c', 'Sentadilla', 4, [5, 5])])]);
+    const source = as([day(1, [item('a', 'Press', 4, [6, 8]), item('d', 'Fondos', 3, [10, 12])]), day(5, [item('e', 'Curl', 3, [10, 12])])]);
+    const texts = diffRoutineVersions(copy, source).map((c) => c.texto);
+    expect(texts).toContain('Lunes: Press pasa de 3 × 8-12 a 4 × 6-8');
+    expect(texts).toContain('Lunes: se añade Fondos');
+    expect(texts).toContain('Lunes: se quita Remo');
+    expect(texts).toContain('Día nuevo: Viernes (1 ejercicios)');
+    expect(texts).toContain('Se quita el día Miércoles');
+  });
+  it('sin diferencias no devuelve nada', () => {
+    const r = as([day(1, [item('a', 'Press', 3, [8, 12])])]);
+    expect(diffRoutineVersions(r, r)).toEqual([]);
   });
 });

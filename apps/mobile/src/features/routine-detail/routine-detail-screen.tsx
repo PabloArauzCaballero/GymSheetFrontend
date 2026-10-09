@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import { ApiError } from '@gymsheet/api-client';
+import type { Routine } from '@gymsheet/types';
 import {
   dayView,
   isAnyDayRoutine,
@@ -19,7 +20,11 @@ import { ScheduleRoutine } from '@/components/schedule-routine';
 import { DaySheet } from '@/features/routine-detail/day-sheet';
 import { DetailHeader } from '@/features/routine-detail/detail-header';
 import { MonthView, WeekView } from '@/features/routine-detail/calendar-views';
+import { DetailSocial } from '@/features/routine-detail/detail-social';
+import { ReportSheet, type ReportTarget } from '@/features/routine-detail/report-sheet';
+import { useRoutineActions } from '@/features/routine-detail/use-routine-actions';
 import { useStartRoutine } from '@/features/routine-detail/use-start-routine';
+import { VersionBanner } from '@/features/routine-detail/version-banner';
 import { accentContrast, colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 type ViewMode = 'week' | 'month';
@@ -35,6 +40,8 @@ export function RoutineDetailScreen() {
   const [mode, setMode] = useState<ViewMode>('week');
   const [weekNumber, setWeekNumber] = useState(1);
   const [picked, setPicked] = useState<{ semana: number; diaId: string } | null>(null);
+  const [ignored, setIgnored] = useState(false);
+  const [report, setReport] = useState<ReportTarget | null>(null);
   const start = useStartRoutine(id);
 
   const routine = useQuery({
@@ -49,6 +56,7 @@ export function RoutineDetailScreen() {
   });
 
   const data = routine.data;
+  const actions = useRoutineActions(data ?? ({ id } as Routine));
   const columns = useMemo(() => (data ? routineColumns(data) : []), [data]);
   const weeks = calendar.data?.semanas ?? [];
   const total = calendar.data?.duracionSemanas ?? weeks.length;
@@ -92,6 +100,15 @@ export function RoutineDetailScreen() {
     <ScrollScreen onRefresh={() => void routine.refetch()} refreshing={routine.isRefetching}>
       <BackLink />
       <DetailHeader routine={data} />
+
+      {data.hayVersionNueva && !ignored ? (
+        <VersionBanner
+          applying={actions.syncing}
+          onApply={actions.sync}
+          onIgnore={() => setIgnored(true)}
+          routine={data}
+        />
+      ) : null}
 
       <Button
         label="Empezar rutina"
@@ -177,8 +194,10 @@ export function RoutineDetailScreen() {
         )}
       </Section>
 
+      <DetailSocial actions={actions} onReport={setReport} routine={data} />
+
       {data.esMia ? (
-        <Section index={1} title="Programar">
+        <Section index={4} title="Programar">
           <ScheduleRoutine routineId={data.id} />
         </Section>
       ) : null}
@@ -194,8 +213,13 @@ export function RoutineDetailScreen() {
         }}
         training={start.isPending}
         visible={picked !== null}
+        onReportExercise={data.esMia ? undefined : (exercise) => {
+          setPicked(null);
+          setReport({ kind: 'EXERCISE', id: exercise.ejercicioId, label: exercise.nombre });
+        }}
         weekNumber={picked?.semana ?? 1}
       />
+      <ReportSheet onClose={() => setReport(null)} target={report} />
     </ScrollScreen>
   );
 }

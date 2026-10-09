@@ -1,0 +1,35 @@
+# Abre el detalle de una rutina buscándola por nombre en una pestaña del catálogo.
+# Variables: TAB (Públicas|REPP|Mías), NAME (texto a buscar y nombre exacto de la tarjeta).
+appId: app.gymsheet.mobile
+---
+- tapOn: 'Rutinas, tab.*'
+# Si la pila de Rutinas quedó en un detalle de una corrida anterior, se vuelve a la lista.
+- openLink: gymsheet:///routines
+- runFlow: cerrar-tour.subflow.yaml
+- extendedWaitUntil:
+    visible: 'Crear rutina'
+    timeout: 60000
+- tapOn: 'Pestaña ${TAB}'
+- tapOn:
+    id: 'routine-search'
+    point: 85%,50%
+- eraseText: 60
+- inputText: ${NAME}
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: '${NAME}\. .*'
+    timeout: 30000
+- tapOn: '${NAME}\. .*'
+# El primer arranque tras un rato de silencio puede agotar la espera del cliente
+# («Sin conexión»): se pulsa el propio «Reintentar» de la app, como haría una persona.
+- tapOn:
+    text: 'Reintentar'
+    optional: true
+- extendedWaitUntil:
+    visible: 'Empezar rutina'
+    timeout: 30000
+# El calendario carga después de la cabecera: se espera a que acabe para que el
+# contenido no se desplace mientras el flujo desplaza la pantalla.
+- extendedWaitUntil:
+    visible: 'Semana 1 de .*|Rutina de un día.*'
+    timeout: 30000

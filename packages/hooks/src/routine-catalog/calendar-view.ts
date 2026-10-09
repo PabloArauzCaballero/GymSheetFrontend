@@ -38,6 +38,8 @@ export type DayExerciseView = {
   repsMin: number | null;
   repsMax: number | null;
   pesoObjetivoKg: number | null;
+  /** Ejercicio personal (privado) de otra persona: se puede denunciar. */
+  esPrivado: boolean;
   /** Las series o el peso de la semana difieren de la rutina base (descarga). */
   ajustado: boolean;
 };
@@ -75,6 +77,7 @@ export function dayView(
       ejercicioId: item.ejercicio?.id ?? planned?.ejercicioId ?? '',
       nombre: item.ejercicio?.nombre ?? 'Ejercicio no disponible',
       grupoMuscular: item.ejercicio?.grupoMuscular ?? null,
+      esPrivado: item.ejercicio?.tipoEjercicio === 'PERSONAL',
       series,
       repsMin: planned?.repsMin ?? item.repsMin,
       repsMax: planned?.repsMax ?? item.repsMax,
