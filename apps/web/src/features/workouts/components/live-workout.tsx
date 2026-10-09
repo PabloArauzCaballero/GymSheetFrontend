@@ -12,6 +12,7 @@ import {
   Rows3,
   Weight,
 } from 'lucide-react';
+import { isStrengthSet, setVolumeKg } from '@gymsheet/domain';
 import { useRouter } from 'next/navigation';
 import { useState, type CSSProperties } from 'react';
 import { confirm, notify } from '@/shared/notifications';
@@ -81,17 +82,13 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
     );
   const workout = query.data;
   const editable = workout.estado === 'EN_PROGRESO';
-  const sets = workout.ejercicios.reduce((total, item) => total + item.series.length, 0);
-  const volume = workout.ejercicios.reduce(
-    (total, item) =>
-      total + item.series.reduce((sum, set) => sum + set.pesoKg * set.repeticiones, 0),
-    0,
-  );
-  const averageRir = sets
-    ? workout.ejercicios.reduce(
-        (total, item) => total + item.series.reduce((sum, set) => sum + set.rir, 0),
-        0,
-      ) / sets
+  // Las series de cardio no tienen peso, repeticiones ni RIR: no suman al volumen ni al promedio.
+  const allSets = workout.ejercicios.flatMap((item) => item.series);
+  const sets = allSets.filter(isStrengthSet).length;
+  const volume = allSets.reduce((sum, set) => sum + setVolumeKg(set), 0);
+  const rirValues = allSets.flatMap((set) => (isStrengthSet(set) && set.rir != null ? [set.rir] : []));
+  const averageRir = rirValues.length
+    ? rirValues.reduce((sum, value) => sum + value, 0) / rirValues.length
     : 0;
   return (
     <div className="grid gap-8">
