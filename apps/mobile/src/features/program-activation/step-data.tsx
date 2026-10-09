@@ -127,7 +127,9 @@ export function DataStep({ state, mode }: { state: Activation; mode: ProgramMode
       ) : null}
       {state.forms.map((form) => {
         const included = !goals || state.chosen.includes(form.ejercicioId);
-        const errors = state.errors[state.visibleForms.findIndex((f) => f.ejercicioId === form.ejercicioId)] ?? {};
+        const errors = state.showErrors
+          ? (state.errors[state.visibleForms.findIndex((f) => f.ejercicioId === form.ejercicioId)] ?? {})
+          : {};
         return (
           <View
             key={form.ejercicioId}

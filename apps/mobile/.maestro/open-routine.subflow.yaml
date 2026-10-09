@@ -25,16 +25,23 @@ appId: app.gymsheet.mobile
 - eraseText: 60
 - inputText: ${NAME}
 - pressKey: Enter
-- extendedWaitUntil:
-    visible: '${NAME}\. .*'
-    timeout: 30000
-# Con un programa activo el catálogo queda más abajo: se desplaza hasta centrar la tarjeta para
-# que el toque no caiga sobre la barra de pestañas.
-- scrollUntilVisible:
-    element: '${NAME}\. .*'
-    centerElement: true
-    timeout: 30000
-- tapOn: '${NAME}\. .*'
+# La búsqueda tarda un instante en traer los resultados.
+- waitForAnimationToEnd:
+    timeout: 3000
+# `scrollUntilVisible` desplaza ANTES de mirar: si la tarjeta ya está en pantalla, se la pasaría de
+# largo. Por eso solo se desplaza cuando todavía no se ve (con un programa activo queda más abajo).
+- runFlow:
+    when:
+      notVisible: '${NAME}\. .*'
+    commands:
+      - scrollUntilVisible:
+          element: '${NAME}\. .*'
+          centerElement: true
+          timeout: 30000
+# Se toca la parte alta de la tarjeta: aunque quede cerca de la barra de pestañas, no cae sobre ella.
+- tapOn:
+    text: '${NAME}\. .*'
+    point: 50%,15%
 # El primer arranque tras un rato de silencio puede agotar la espera del cliente
 # («Sin conexión»): se pulsa el propio «Reintentar» de la app, como haría una persona.
 - tapOn:

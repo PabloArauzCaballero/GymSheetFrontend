@@ -35,6 +35,7 @@ export function useActivation(routine: Routine, hasActive: boolean) {
   const [mode, setMode] = useState<ProgramMode>('NONE');
   const [withCardio, setWithCardio] = useState(false);
   const [chosen, setChosen] = useState<string[]>(() => mainLifts(routine).slice(0, 1).map((l) => l.ejercicioId));
+  const [showErrors, setShowErrors] = useState(false);
   const [forms, setForms] = useState<LiftForm[]>(() =>
     mainLifts(routine).map((lift) => emptyLiftForm(lift.ejercicioId, lift.nombre)),
   );
@@ -66,6 +67,11 @@ export function useActivation(routine: Routine, hasActive: boolean) {
 
   /** Pasos posteriores: sin modo no hay datos que pedir. */
   const next = () => {
+    // Los errores de los datos solo se enseñan al intentar seguir: no regañan un campo sin tocar.
+    if (step === 'data' && hasErrors(errors)) {
+      setShowErrors(true);
+      return;
+    }
     if (step === 'replace') setStep('dates');
     else if (step === 'dates') setStep('mode');
     else if (step === 'mode') setStep(mode === 'NONE' ? 'summary' : 'data');
@@ -85,7 +91,7 @@ export function useActivation(routine: Routine, hasActive: boolean) {
     replace, setReplace, start, setStart, weeks, setWeeks, days, toggleDay,
     mode, setMode, withCardio, setWithCardio, forms, updateForm, errors,
     chosen, toggleChosen, visibleForms: forModeForms,
-    canContinueData: !hasErrors(errors) && (mode !== 'STRENGTH_GOALS' || forModeForms.length > 0),
+    showErrors,
     body, startIso, todayIso,
   };
 }

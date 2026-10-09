@@ -36,12 +36,14 @@ env:
 - tapOn:
     id: 'comment-input'
 - inputText: 'Gran rutina, la sigo desde hace dos semanas'
+# El teclado tapa el botón: se cierra antes de pulsar «Comentar».
+- hideKeyboard
 - tapOn: 'Comentar'
+# El comentario publicado lleva el nombre de su autor; el borrador del campo no.
 - extendedWaitUntil:
-    visible: 'Gran rutina.*'
+    visible: '.*Expiring.*'
     timeout: 20000
-- scrollUntilVisible:
-    element: 'Gran rutina.*'
+- hideKeyboard
 - takeScreenshot: RF-12_p03_comentario-publicado_ios_oscuro
 - tapOn: 'Rutinas, tab.*'
 
@@ -64,6 +66,4 @@ env:
 - takeScreenshot: RF-12_p04b_hoja-de-denuncia_ios_oscuro
 - tapOn: 'Enviar denuncia'
 # El aviso dura pocos segundos: se espera sin exigirlo y la captura dice si llegó a verse.
-- waitForAnimationToEnd:
-    timeout: 1500
 - takeScreenshot: RF-12_p04_gracias-lo-revisaremos_ios_oscuro

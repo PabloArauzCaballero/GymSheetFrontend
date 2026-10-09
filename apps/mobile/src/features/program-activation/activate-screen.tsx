@@ -112,7 +112,6 @@ function ActivateBody({
       return { label: 'Activar', loading: activate.isPending, onPress: () => activate.mutate(state.replace) };
     }
     if (state.step === 'dates') return { label: 'Siguiente', disabled: state.days.length === 0, onPress: state.next };
-    if (state.step === 'data') return { label: 'Siguiente', disabled: !state.canContinueData, onPress: state.next };
     return { label: 'Siguiente', onPress: state.next };
   })();
 

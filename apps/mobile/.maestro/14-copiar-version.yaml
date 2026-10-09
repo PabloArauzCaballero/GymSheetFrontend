@@ -18,8 +18,6 @@ env:
 # El aviso «Copiada a Mías» dura pocos segundos y el árbol de accesibilidad no siempre lo
 # expone a tiempo: se intenta esperarlo y la captura se toma de todos modos; si no llegó a
 # verse, la revisión lo anota y lo prueba el paso siguiente (la copia existe en Mías).
-- waitForAnimationToEnd:
-    timeout: 1500
 - takeScreenshot: RF-10_p01_toast-copiada-a-mias_ios_oscuro
 # RF-10 · p02: la copia (en Mías) muestra «Basada en … de …».
 - tapOn: 'Rutinas, tab.*'

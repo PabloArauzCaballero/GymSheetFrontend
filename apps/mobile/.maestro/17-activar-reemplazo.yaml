@@ -56,14 +56,9 @@ env:
     timeout: 60000
 - assertVisible: 'Programa de pesas\. Torso de Leo.*'
 - takeScreenshot: RF-14_p02_activada-copia-de-ajena_ios_oscuro
-- tapOn: 'Pestaña Mías'
-- tapOn:
-    id: 'routine-search'
-    point: 85%,50%
-- eraseText: 40
-- inputText: 'Torso de Leo'
-- pressKey: Enter
-- tapOn: 'Torso de Leo\. .*'
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Torso de Leo' }
 - extendedWaitUntil:
     visible: 'Basada en.*'
     timeout: 30000

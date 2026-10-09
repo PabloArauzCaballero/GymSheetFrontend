@@ -20,17 +20,17 @@ env:
     timeout: 10000
 - takeScreenshot: RF-09_p01_confirmacion-publicar_ios_oscuro
 - tapOn: 'Publicar'
-# RF-09 · p02: queda pública (el botón pasa a «Despublicar»).
+# RF-09 · p02: queda pública (el botón pasa a «Despublicar»); el aviso dura pocos segundos, así que
+# se captura nada más confirmar.
+- takeScreenshot: RF-09_p02a_aviso-de-rutina-publicada_ios_oscuro
 - extendedWaitUntil:
     visible: 'Despublicar'
     timeout: 20000
 - takeScreenshot: RF-09_p02_publicada-despublicar_ios_oscuro
-- tapOn: 'Volver'
 - runFlow:
     file: open-routine.subflow.yaml
     env: { TAB: 'Públicas', NAME: 'Pierna para publicar' }
 - takeScreenshot: RF-09_p02b_aparece-en-publicas-con-autor_ios_oscuro
-- tapOn: 'Volver'
 
 # RF-09 · p03: una rutina idéntica a la de Leo se bloquea y ofrece verla.
 - runFlow:

@@ -65,7 +65,7 @@ env:
 - tapOn: 'Pestaña Mías'
 - assertVisible: 'Creadas por mí'
 - extendedWaitUntil:
-    visible: 'Borrador privado.*'
+    visible: '[0-9]+ rutinas.*'
     timeout: 30000
 - takeScreenshot: RF-01_p06_mias-creadas_ios_oscuro
 

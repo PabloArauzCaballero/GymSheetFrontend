@@ -6,16 +6,9 @@ env:
   FIRST: Athlete
 ---
 - runFlow: login-as.subflow.yaml
-- tapOn: 'Rutinas, tab.*'
-- runFlow: cerrar-tour.subflow.yaml
-- extendedWaitUntil:
-    visible: 'Crear rutina'
-    timeout: 60000
-- tapOn: 'Pestaña Mías'
-- extendedWaitUntil:
-    visible: 'Empuje 4 días.*'
-    timeout: 30000
-- tapOn: 'Empuje 4 días.*'
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Empuje 4 días' }
 
 # RF-02 · p01: cabecera + vista Semana.
 - extendedWaitUntil:
@@ -60,12 +53,9 @@ env:
     direction: DOWN
 
 # RF-02 · p06: rutina de «cualquier día».
-- tapOn: 'Volver'
-- tapOn:
-    id: 'routine-search'
-- inputText: 'Borrador privado'
-- pressKey: Enter
-- tapOn: 'Borrador privado\. .*'
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Borrador privado' }
 - extendedWaitUntil:
     visible: 'Rutina de un día, cualquier día.*'
     timeout: 30000
