@@ -1,4 +1,4 @@
-import type { SessionReward } from '@gymsheet/schemas';
+import type { CardioSessionBlock, ProgramSessionBlock, SessionReward } from '@gymsheet/schemas';
 import { create } from 'zustand';
 
 /**
@@ -16,7 +16,11 @@ export interface FinishedSession {
   sets: number;
   volumeKg: number;
   geoVerified: boolean;
-  reward: SessionReward;
+  /** Nula si el servidor no pudo calcular la senda; la sesión se cerró igual. */
+  reward: SessionReward | null;
+  /** Bloques del programa de pesas y del de cardio (F5 y F6), cuando existen. */
+  programa?: ProgramSessionBlock | null;
+  cardio?: CardioSessionBlock | null;
 }
 
 interface SessionRewardState {

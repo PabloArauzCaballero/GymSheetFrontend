@@ -20,9 +20,9 @@ export function WorkoutSetRow({
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [values, setValues] = useState({
-    pesoKg: set.pesoKg,
-    repeticiones: set.repeticiones,
-    rir: set.rir,
+    pesoKg: set.pesoKg ?? 0,
+    repeticiones: set.repeticiones ?? 0,
+    rir: set.rir ?? 0,
     descansoSegAnterior: set.descansoSegAnterior,
   });
   const refresh = () => queryClient.invalidateQueries({ queryKey: queryKeys.workout(workoutId) });

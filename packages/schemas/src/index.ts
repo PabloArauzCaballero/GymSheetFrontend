@@ -11,3 +11,5 @@ export * from './forms';
 export * from './definitions/catalog';
 export * from './definitions/sharing';
 export * from './definitions/community';
+export * from './definitions/programs';
+export * from './definitions/cardio';

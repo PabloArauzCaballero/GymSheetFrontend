@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Flame, MoreHorizontal, Trash2 } from 'lucide-react';
 import { confirmDelete, notify } from '@/shared/notifications';
 import { workoutService } from '@/features/workouts/services/workout-service';
+import { isStrengthSet } from '@gymsheet/domain';
 import type { WorkoutExercise } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { Badge } from '@/shared/components/ui/badge';
@@ -37,7 +38,7 @@ export function WorkoutExercisePanel({
     onError: (error: Error) => notify.error(error),
   });
   const exercise = item.ejercicio;
-  const volume = item.series.reduce((total, set) => total + set.pesoKg * set.repeticiones, 0);
+  const volume = item.series.reduce((total, set) => total + (set.pesoKg ?? 0) * (set.repeticiones ?? 0), 0);
   return (
     <article className="panel overflow-hidden transition-colors duration-200 hover:border-[var(--border)]">
       <header className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--surface-lowest)] p-5 sm:flex-row sm:items-start sm:justify-between">
@@ -124,8 +125,8 @@ export function WorkoutExercisePanel({
       {editable ? (
         <SetEntryForm
           lastSet={
-            item.series.length
-              ? item.series.reduce((latest, set) =>
+            item.series.filter(isStrengthSet).length
+              ? item.series.filter(isStrengthSet).reduce((latest, set) =>
                   set.numeroSerie > latest.numeroSerie ? set : latest,
                 )
               : undefined

@@ -21,6 +21,8 @@ import { PressableScale } from '@/components/motion';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { Button, Input } from '@/components/ui';
 import { WeekPlan } from '@/components/week-plan';
+import { useActivePrograms } from '@/features/programs/use-active-programs';
+import { StrengthProgramCard } from '@/features/programs/program-card';
 import { CatalogFiltersSheet } from '@/features/routine-catalog/catalog-filters';
 import { CatalogTabBar, MineChips, ResultCount } from '@/features/routine-catalog/catalog-tab-bar';
 import { InvitationCard } from '@/features/routine-catalog/invitation-card';
@@ -69,6 +71,7 @@ export function RoutinesCatalogScreen() {
     queryFn: () => routineSharingService.myInvitations('PENDING'),
   });
 
+  const programs = useActivePrograms();
   const assigned = assignments.data?.filter((item) => item.estado === 'ACTIVE') ?? [];
   const pending = invitations.data?.length ?? 0;
   const cards = catalog.data?.pages.flatMap((page) => page.items) ?? [];
@@ -84,6 +87,7 @@ export function RoutinesCatalogScreen() {
         void catalog.refetch();
         void assignments.refetch();
         void invitations.refetch();
+        void programs.refetch();
       }}
       refreshing={catalog.isRefetching}
     >
@@ -92,6 +96,8 @@ export function RoutinesCatalogScreen() {
       <TourTarget id="routines.create">
         <Button label="Crear rutina" onPress={() => router.push('/routines/new')} />
       </TourTarget>
+
+      {programs.data?.fuerza ? <StrengthProgramCard program={programs.data.fuerza} /> : null}
 
       {assigned.length > 0 ? (
         <Section icon="calendar-outline" index={0} title="Tu semana">

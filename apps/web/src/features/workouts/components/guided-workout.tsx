@@ -2,6 +2,7 @@
 
 import { CheckCircle2, ChevronRight, Dumbbell, Timer } from 'lucide-react';
 import { useState } from 'react';
+import { isStrengthSet } from '@gymsheet/domain';
 import type { Workout } from '@/shared/api/contracts';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -46,7 +47,7 @@ export function GuidedWorkout({
   }
 
   const completedSets = current.series.length;
-  const volume = current.series.reduce((sum, set) => sum + set.pesoKg * set.repeticiones, 0);
+  const volume = current.series.reduce((sum, set) => sum + (set.pesoKg ?? 0) * (set.repeticiones ?? 0), 0);
 
   return (
     <div className="grid gap-6">
@@ -111,8 +112,8 @@ export function GuidedWorkout({
 
         <SetEntryForm
           lastSet={
-            current.series.length
-              ? current.series.reduce((latest, set) =>
+            current.series.filter(isStrengthSet).length
+              ? current.series.filter(isStrengthSet).reduce((latest, set) =>
                   set.numeroSerie > latest.numeroSerie ? set : latest,
                 )
               : undefined

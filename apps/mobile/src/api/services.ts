@@ -41,11 +41,12 @@ import {
   storyViewersResponseSchema,
   swipeResultSchema,
   undoSwipeResultSchema,
-  workoutFinishSchema,
+  workoutFinishWithProgramsSchema,
   workoutSchema,
 } from '@gymsheet/schemas';
 import type {
   AddWorkoutExerciseInput,
+  CardioSetInput,
   FitnessGoal,
   TrainingGoal,
   WorkoutSetInput,
@@ -61,6 +62,7 @@ import type { UserGender } from '@gymsheet/types';
 import {
   createCommunityServices,
   createExerciseCommunityServices,
+  createProgramServices,
   createRoutineCatalogServices,
   createRoutineServices,
   createRoutineSharingServices,
@@ -220,7 +222,7 @@ export const workoutService = {
       ...(routineDayId ? { body: { routineDayId } } : {}),
     }),
   finish: (id: string, location?: { latitude: number; longitude: number }) =>
-    apiClient.request(`/workouts/${id}/finish`, workoutFinishSchema, {
+    apiClient.request(`/workouts/${id}/finish`, workoutFinishWithProgramsSchema, {
       method: 'PATCH',
       body: location ?? {},
     }),
@@ -237,7 +239,7 @@ export const workoutService = {
       method: 'DELETE',
     }),
 
-  addSet: (sessionExerciseId: string, input: WorkoutSetInput) =>
+  addSet: (sessionExerciseId: string, input: WorkoutSetInput | CardioSetInput) =>
     apiClient.request(`/workouts/session-exercises/${sessionExerciseId}/sets`, looseObject, {
       method: 'POST',
       body: input,
@@ -273,6 +275,9 @@ export const routineService = {
 
 /** Rutinas por días: crear con `dias`, `PUT structure`, calendario y semanas. */
 export const routineBuilderService = createRoutineServices(apiClient.request);
+
+/** Programas de fuerza y cardio: activar, progreso, cargas sugeridas, cierre y RF-20. */
+export const programService = createProgramServices(apiClient.request);
 
 /** Catálogo por pestañas, publicar, copiar y sincronizar (F3 y F4 del plan Rutinas REPP). */
 export const routineCatalogService = createRoutineCatalogServices(apiClient.request);

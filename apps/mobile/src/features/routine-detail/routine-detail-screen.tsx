@@ -115,6 +115,11 @@ export function RoutineDetailScreen() {
         loading={start.isPending}
         onPress={() => start.mutate(undefined)}
       />
+      <Button
+        label="Activar programa"
+        onPress={() => router.push({ pathname: '/routines/activate/[id]', params: { id: data.id } })}
+        variant="ghost"
+      />
 
       <Section icon="calendar-outline" index={0} title="Plan">
         {anyDay ? (

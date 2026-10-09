@@ -22,6 +22,9 @@ import { captureStreakLocation } from '@/lib/streak-location';
 import { previousPerformance, topSet } from '@gymsheet/domain';
 import { accentPolicy, colors, fontSizes, iconSizes, semibold, spacing, tones } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { formatClock } from '@gymsheet/hooks';
+import { CardioLogger } from '@/features/cardio/cardio-logger';
+import { SuggestedLoad, useNextLoads } from '@/features/programs/suggested-load';
 
 /** Standard rest between working sets; the timer can be extended in place. */
 const DEFAULT_REST_SECONDS = 90;
@@ -50,6 +53,7 @@ export default function WorkoutDetailScreen() {
    * request. A failure here is silent by design: not knowing last week's load
    * must never stand between someone and logging today's set.
    */
+  const loads = useNextLoads();
   const history = useQuery({
     queryKey: ['workouts', 'recent'],
     queryFn: () => workoutService.list(40),
@@ -82,6 +86,16 @@ export default function WorkoutDetailScreen() {
       // Logging a set is exactly when rest starts, so the clock appears without
       // being asked for — one less tap while the user is out of breath.
       setRestingFor((current) => current ?? DEFAULT_REST_SECONDS);
+    },
+    onError: (error: Error) => notify.error(error),
+  });
+
+  const addCardioSet = useMutation({
+    mutationFn: (input: { sessionExerciseId: string; set: Parameters<typeof workoutService.addSet>[1] }) =>
+      workoutService.addSet(input.sessionExerciseId, input.set),
+    onSuccess: async () => {
+      await refreshAll();
+      notify.success('Cardio registrado.');
     },
     onError: (error: Error) => notify.error(error),
   });
@@ -119,13 +133,13 @@ export default function WorkoutDetailScreen() {
       // La senda se recalculó al cerrar: cualquier pantalla que la muestre
       // debe volver a pedirla.
       void queryClient.invalidateQueries({ queryKey: ['progression'] });
-      if (session.progression) {
+      if (session.progression || session.programa || session.cardio) {
         // Con recompensa, el cierre no es un aviso: es una pantalla que enseña
         // cuánto ganaste y por qué. Reemplaza a la sesión para que «atrás» no
         // vuelva a algo ya cerrado.
         const sets = session.ejercicios.reduce((sum, item) => sum + item.series.length, 0);
         const volumeKg = session.ejercicios.reduce(
-          (sum, item) => sum + item.series.reduce((acc, set) => acc + set.pesoKg * set.repeticiones, 0),
+          (sum, item) => sum + item.series.reduce((acc, set) => acc + (set.pesoKg ?? 0) * (set.repeticiones ?? 0), 0),
           0,
         );
         setFinishedSession({
@@ -135,6 +149,8 @@ export default function WorkoutDetailScreen() {
           volumeKg,
           geoVerified: session.geoVerificada,
           reward: session.progression,
+          programa: session.programa,
+          cardio: session.cardio,
         });
         router.replace('/workouts/resumen');
         return;
@@ -205,7 +221,7 @@ export default function WorkoutDetailScreen() {
   // Tonnage: the single number that says how much work the session actually was.
   const volume = ordered.reduce(
     (sum, item) =>
-      sum + item.series.reduce((acc, set) => acc + set.pesoKg * set.repeticiones, 0),
+      sum + item.series.reduce((acc, set) => acc + (set.pesoKg ?? 0) * (set.repeticiones ?? 0), 0),
     0,
   );
   const duration = formatDuration(data.fechaInicio, data.fechaFin);
@@ -307,6 +323,7 @@ export default function WorkoutDetailScreen() {
                 <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
                   {item.series.length} {item.series.length === 1 ? 'serie' : 'series'}
                 </Text>
+                <SuggestedLoad exerciseId={item.ejercicio?.id} loads={loads} />
               </View>
               {item.esEnfasis ? <Badge label="Énfasis" tone="success" /> : null}
             </PressableScale>
@@ -352,7 +369,15 @@ export default function WorkoutDetailScreen() {
                           flex: 1,
                         }}
                       >
-                        {set.pesoKg} kg × {set.repeticiones}
+                        {set.tipoSerie === 'CARDIO'
+                          ? [
+                              formatClock(set.duracionSeg ?? 0),
+                              set.distanciaM ? `${(set.distanciaM / 1000).toFixed(1).replace('.', ',')} km` : null,
+                              set.fcMedia ? `${set.fcMedia} lpm` : null,
+                            ]
+                              .filter(Boolean)
+                              .join(' · ')
+                          : `${set.pesoKg} kg × ${set.repeticiones}`}
                       </Text>
                       <Text
                         style={{
@@ -361,7 +386,7 @@ export default function WorkoutDetailScreen() {
                           fontVariant: ['tabular-nums'],
                         }}
                       >
-                        RIR {set.rir}
+                        {set.tipoSerie === 'CARDIO' ? (set.rpe ? `Esf. ${set.rpe}` : '') : `RIR ${set.rir}`}
                       </Text>
                     </Animated.View>
                   ))}
@@ -434,30 +459,38 @@ export default function WorkoutDetailScreen() {
                 ) : null}
                 {/* Pre-filled from the last set: the next one is usually the
                     same load, so a repeat costs one tap. */}
-                <SetEntryForm
-                  previous={previousTop ?? undefined}
-                  initial={(() => {
-                    const last = [...item.series].sort(
-                      (a, b) => b.numeroSerie - a.numeroSerie,
-                    )[0];
-                    return last
-                      ? {
-                          pesoKg: String(last.pesoKg),
-                          repeticiones: String(last.repeticiones),
-                          rir: String(last.rir),
-                        }
-                      : undefined;
-                  })()}
-                  onSubmit={(draft) =>
-                    addSet.mutate({
-                      sessionExerciseId: item.id,
-                      numeroSerie: item.series.length + 1,
-                      ...draft,
-                    })
-                  }
-                  pending={addSet.isPending}
-                  weightIncrementKg={account.data?.pesoIncrementoKg}
-                />
+                {item.ejercicio?.category === 'cardio' ? (
+                  <CardioLogger
+                    onSubmit={(set) => addCardioSet.mutate({ sessionExerciseId: item.id, set })}
+                    pending={addCardioSet.isPending}
+                    setNumber={item.series.length + 1}
+                  />
+                ) : (
+                  <SetEntryForm
+                    previous={previousTop ?? undefined}
+                    initial={(() => {
+                      const last = [...item.series].sort(
+                        (a, b) => b.numeroSerie - a.numeroSerie,
+                      )[0];
+                      return last
+                        ? {
+                            pesoKg: String(last.pesoKg ?? ''),
+                            repeticiones: String(last.repeticiones ?? ''),
+                            rir: String(last.rir ?? ''),
+                          }
+                        : undefined;
+                    })()}
+                    onSubmit={(draft) =>
+                      addSet.mutate({
+                        sessionExerciseId: item.id,
+                        numeroSerie: item.series.length + 1,
+                        ...draft,
+                      })
+                    }
+                    pending={addSet.isPending}
+                    weightIncrementKg={account.data?.pesoIncrementoKg}
+                  />
+                )}
                 {item.series.length > 0 ? (
                   <PressableScale
                     accessibilityLabel="Deshacer última serie"

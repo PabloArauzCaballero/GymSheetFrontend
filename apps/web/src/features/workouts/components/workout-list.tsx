@@ -23,7 +23,7 @@ function sessionVolume(session: Awaited<ReturnType<typeof workoutService.get>>) 
   return session.ejercicios.reduce(
     (total, exercise) =>
       total +
-      exercise.series.reduce((subtotal, set) => subtotal + set.pesoKg * set.repeticiones, 0),
+      exercise.series.reduce((subtotal, set) => subtotal + (set.pesoKg ?? 0) * (set.repeticiones ?? 0), 0),
     0,
   );
 }

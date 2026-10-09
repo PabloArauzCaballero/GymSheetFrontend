@@ -1,4 +1,4 @@
-import type { Workout, WorkoutExercise } from '@gymsheet/types';
+import type { Workout, WorkoutExercise, WorkoutSet } from '@gymsheet/types';
 
 // Vive en el dominio compartido desde que la web también compara esta semana
 // con la anterior: dos copias del cálculo acabarían dando dos cifras distintas
@@ -29,8 +29,19 @@ export function startOfWeek(date: Date): Date {
   return copy;
 }
 
-/** Load moved in one set, in kilograms. */
-function setVolume(weightKg: number, reps: number): number {
+/** Serie de fuerza con peso, repeticiones y RIR presentes (las de cardio traen nulos). */
+export type StrengthSet = WorkoutSet & { pesoKg: number; repeticiones: number; rir: number };
+
+export function isStrengthSet(set: WorkoutSet): set is StrengthSet {
+  return set.pesoKg !== null && set.repeticiones !== null && set.rir !== null;
+}
+
+/**
+ * Load moved in one set, in kilograms. Una serie de cardio trae peso y
+ * repeticiones nulos y aporta cero: ninguna suma de kilos puede romperse (RF-17).
+ */
+export function setVolume(weightKg: number | null, reps: number | null): number {
+  if (weightKg === null || reps === null) return 0;
   return weightKg * reps;
 }
 
@@ -219,6 +230,8 @@ export function topSet(
 ): { readonly pesoKg: number; readonly repeticiones: number } | null {
   let best: { pesoKg: number; repeticiones: number } | null = null;
   for (const item of exercise.series) {
+    // Las series de cardio no tienen peso: no compiten por «la más pesada».
+    if (item.pesoKg === null || item.repeticiones === null) continue;
     if (!best || item.pesoKg > best.pesoKg) {
       best = { pesoKg: item.pesoKg, repeticiones: item.repeticiones };
     }

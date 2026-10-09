@@ -1,0 +1,90 @@
+# Activar un programa de pesas y reemplazarlo (plan Rutinas REPP · F5): RF-14.
+# Antes: `node scripts/seed-rutinas-evidencia.mjs` y `node scripts/reset-programas-evidencia.mjs`.
+appId: app.gymsheet.mobile
+name: 17 · Activar y reemplazar programa
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+---
+- runFlow: login-as.subflow.yaml
+
+# RF-14 · p01: activar una rutina propia sin programa previo (A2 → A5).
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Pierna 3 días' }
+- tapOn: 'Activar programa'
+- extendedWaitUntil:
+    visible: 'Paso 1 de 3.*'
+    timeout: 30000
+- takeScreenshot: RF-14_p01a_a2-fechas_ios_oscuro
+- tapOn: 'Siguiente'
+- assertVisible: 'Metas de marca.*'
+- takeScreenshot: RF-14_p01b_a3-modo_ios_oscuro
+- tapOn: 'Siguiente'
+- extendedWaitUntil:
+    visible: 'Paso 3 de 3.*'
+    timeout: 10000
+- assertVisible: 'Pierna 3 días'
+- takeScreenshot: RF-14_p01c_a5-resumen_ios_oscuro
+- tapOn: 'Activar'
+- extendedWaitUntil:
+    visible:
+      id: 'program-card-strength'
+    timeout: 60000
+- assertVisible: 'Semana 1 de .*'
+- takeScreenshot: RF-14_p01d_programcard-en-rutinas_ios_oscuro
+
+# RF-14 · p02: una rutina pública ajena se copia y se activa la copia (reemplaza la anterior).
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Públicas', NAME: 'Torso de Leo' }
+- tapOn: 'Activar programa'
+- extendedWaitUntil:
+    visible: 'Ya tienes «Pierna 3 días».*'
+    timeout: 30000
+- takeScreenshot: RF-14_p03_a1-reemplazo_ios_oscuro
+- tapOn: 'Apagar y activar'
+- extendedWaitUntil:
+    visible: 'Paso 2 de 4.*'
+    timeout: 20000
+- tapOn: 'Siguiente'
+- tapOn: 'Siguiente'
+- tapOn: 'Activar'
+- extendedWaitUntil:
+    visible:
+      id: 'program-card-strength'
+    timeout: 60000
+- assertVisible: 'Programa de pesas\. Torso de Leo.*'
+- takeScreenshot: RF-14_p02_activada-copia-de-ajena_ios_oscuro
+- tapOn: 'Pestaña Mías'
+- tapOn:
+    id: 'routine-search'
+    point: 85%,50%
+- eraseText: 40
+- inputText: 'Torso de Leo'
+- pressKey: Enter
+- tapOn: 'Torso de Leo\. .*'
+- extendedWaitUntil:
+    visible: 'Basada en.*'
+    timeout: 30000
+- takeScreenshot: RF-14_p02b_la-copia-lleva-atribucion_ios_oscuro
+
+# RF-14 · p04: confirmar el reemplazo cambia la tarjeta; la anterior queda reemplazada.
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Empuje 4 días' }
+- tapOn: 'Activar programa'
+- extendedWaitUntil:
+    visible: 'Ya tienes «Torso de Leo».*'
+    timeout: 30000
+- tapOn: 'Apagar y activar'
+- tapOn: 'Siguiente'
+- tapOn: 'Siguiente'
+- tapOn: 'Activar'
+- extendedWaitUntil:
+    visible:
+      id: 'program-card-strength'
+    timeout: 60000
+- assertVisible: 'Programa de pesas\. Empuje 4 días.*'
+- assertNotVisible: 'Programa de pesas\. Torso de Leo.*'
+- takeScreenshot: RF-14_p04_la-tarjeta-cambia_ios_oscuro

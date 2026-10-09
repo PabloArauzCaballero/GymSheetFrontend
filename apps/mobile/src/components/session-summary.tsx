@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BREAKDOWN_LABEL, countUpDuration } from '@gymsheet/domain';
-import type { PointsBreakdown } from '@gymsheet/schemas';
+import type { PointsBreakdown, SessionReward } from '@gymsheet/schemas';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import Animated, {
@@ -94,7 +94,7 @@ export function SessionSummary({
   session,
   onContinue,
 }: {
-  session: FinishedSession;
+  session: Omit<FinishedSession, 'reward'> & { reward: SessionReward };
   onContinue: () => void;
 }) {
   const reduceMotion = useReducedMotion();

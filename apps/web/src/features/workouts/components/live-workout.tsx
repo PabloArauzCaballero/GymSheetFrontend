@@ -84,12 +84,12 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
   const sets = workout.ejercicios.reduce((total, item) => total + item.series.length, 0);
   const volume = workout.ejercicios.reduce(
     (total, item) =>
-      total + item.series.reduce((sum, set) => sum + set.pesoKg * set.repeticiones, 0),
+      total + item.series.reduce((sum, set) => sum + (set.pesoKg ?? 0) * (set.repeticiones ?? 0), 0),
     0,
   );
   const averageRir = sets
     ? workout.ejercicios.reduce(
-        (total, item) => total + item.series.reduce((sum, set) => sum + set.rir, 0),
+        (total, item) => total + item.series.reduce((sum, set) => sum + (set.rir ?? 0), 0),
         0,
       ) / sets
     : 0;

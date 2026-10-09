@@ -19,3 +19,6 @@ export * from './routine-draft';
 
 /** Catálogo de rutinas, tarjetas y vistas del calendario (sin React). */
 export * from './routine-catalog';
+
+/** Programas de fuerza y cardio: activación, metas, propuesta RF-20 y cálculo de zonas. */
+export * from './programs';

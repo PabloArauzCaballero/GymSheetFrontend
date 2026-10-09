@@ -37,7 +37,7 @@ function totalVolume(workouts: Awaited<ReturnType<typeof workoutService.list>>['
       workout.ejercicios.reduce(
         (exerciseTotal, exercise) =>
           exerciseTotal +
-          exercise.series.reduce((setTotal, set) => setTotal + set.pesoKg * set.repeticiones, 0),
+          exercise.series.reduce((setTotal, set) => setTotal + (set.pesoKg ?? 0) * (set.repeticiones ?? 0), 0),
         0,
       ),
     0,
