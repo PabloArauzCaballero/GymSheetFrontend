@@ -8,31 +8,119 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 
 | RF | Web (capturas) | Móvil (capturas) | Pasos sin captura |
 |---|---|---|---|
-| RF-01 | 36 / 36 | 0 / 0 | 0 |
-| RF-02 | 24 / 24 | 0 / 0 | 0 |
+| RF-01 | 36 / 36 | 7 / 7 | 3 |
+| RF-02 | 24 / 24 | 7 / 7 | 0 |
 | RF-03 | 20 / 20 | 5 / 5 | 2 |
 | RF-04 | 12 / 12 | 3 / 3 | 0 |
 | RF-05 | 12 / 12 | 6 / 6 | 0 |
 | RF-06 | 32 / 32 | 7 / 7 | 1 |
 | RF-07 | 20 / 20 | 4 / 4 | 1 |
 | RF-08 | 16 / 16 | 4 / 4 | 0 |
-| RF-09 | 20 / 20 | 0 / 0 | 0 |
-| RF-10 | 28 / 28 | 0 / 0 | 0 |
-| RF-11 | 12 / 12 | 0 / 0 | 0 |
-| RF-12 | 33 / 36 | 0 / 0 | 1 |
-| RF-13 | 44 / 44 | 0 / 0 | 0 |
-| RF-14 | 32 / 32 | 0 / 0 | 0 |
-| RF-15 | 28 / 28 | 0 / 0 | 0 |
-| RF-16 | 24 / 24 | 0 / 0 | 0 |
-| RF-17 | 28 / 28 | 0 / 0 | 0 |
-| RF-18 | 28 / 28 | 0 / 0 | 1 |
-| RF-19 | 12 / 12 | 0 / 0 | 1 |
-| RF-20 | 20 / 20 | 0 / 0 | 0 |
+| RF-09 | 20 / 20 | 6 / 6 | 2 |
+| RF-10 | 28 / 28 | 6 / 6 | 1 |
+| RF-11 | 12 / 12 | 0 / 0 | 1 |
+| RF-12 | 33 / 36 | 6 / 6 | 2 |
+| RF-13 | 44 / 44 | 7 / 7 | 2 |
+| RF-14 | 32 / 32 | 9 / 9 | 0 |
+| RF-15 | 28 / 28 | 6 / 6 | 2 |
+| RF-16 | 24 / 24 | 5 / 5 | 0 |
+| RF-17 | 28 / 28 | 6 / 6 | 0 |
+| RF-18 | 28 / 28 | 0 / 0 | 5 |
+| RF-19 | 12 / 12 | 3 / 3 | 2 |
+| RF-20 | 20 / 20 | 3 / 3 | 0 |
 
 ## Detalle
 
 | RF | Paso | Plataforma | Archivo | Qué debe verse | Estado |
 |---|---|---|---|---|---|
+| RF-01 | 01 | Móvil | `RF-01/movil/RF-01_p01_catalogo-pestanas_*` | Catalogo pestanas. | ✅ 1/1 capturadas · sin revisar |
+| RF-01 | 02 | Móvil | `RF-01/movil/RF-01_p02_publicas-populares_*` | Publicas populares. | ✅ 1/1 capturadas · sin revisar |
+| RF-01 | 03 | Móvil | `RF-01/movil/RF-01_p03_filtros-hipertrofia-4-dias_*` | Filtros hipertrofia 4 dias. | ✅ 1/1 capturadas · sin revisar |
+| RF-01 | 03b | Móvil | `RF-01/movil/RF-01_p03b_resultado-filtrado_*` | Resultado filtrado. | ✅ 1/1 capturadas · sin revisar |
+| RF-01 | 04 | Móvil | `RF-01/movil/RF-01_p04_sin-resultados_*` | Sin resultados. | ✅ 1/1 capturadas · sin revisar |
+| RF-01 | 05 | Móvil | `RF-01/movil/RF-01_p05_pestana-repp_*` | Pestana repp. | ✅ 1/1 capturadas · sin revisar |
+| RF-01 | 06 | Móvil | `RF-01/movil/RF-01_p06_mias-creadas_*` | Mias creadas. | ✅ 1/1 capturadas · sin revisar |
+| RF-02 | 01 | Móvil | `RF-02/movil/RF-02_p01_cabecera-vista-semana_*` | Cabecera vista semana. | ✅ 1/1 capturadas · sin revisar |
+| RF-02 | 02 | Móvil | `RF-02/movil/RF-02_p02_vista-mes-descargas_*` | Vista mes descargas. | ✅ 1/1 capturadas · sin revisar |
+| RF-02 | 02b | Móvil | `RF-02/movil/RF-02_p02b_vista-mes-s8-s12-descarga_*` | Vista mes s8 s12 descarga. | ✅ 1/1 capturadas · sin revisar |
+| RF-02 | 03 | Móvil | `RF-02/movil/RF-02_p03_s2-martes-hoja-del-dia_*` | S2 martes hoja del dia. | ✅ 1/1 capturadas · sin revisar |
+| RF-02 | 04 | Móvil | `RF-02/movil/RF-02_p04_ficha-del-ejercicio_*` | Ficha del ejercicio. | ✅ 1/1 capturadas · sin revisar |
+| RF-02 | 05 | Móvil | `RF-02/movil/RF-02_p05_volver-sigue-en-mes_*` | Volver sigue en mes. | ✅ 1/1 capturadas · sin revisar |
+| RF-02 | 06 | Móvil | `RF-02/movil/RF-02_p06_rutina-cualquier-dia_*` | Rutina cualquier dia. | ✅ 1/1 capturadas · sin revisar |
+| RF-09 | 01 | Móvil | `RF-09/movil/RF-09_p01_confirmacion-publicar_*` | Confirmacion publicar. | ✅ 1/1 capturadas · sin revisar |
+| RF-09 | 02 | Móvil | `RF-09/movil/RF-09_p02_publicada-despublicar_*` | Publicada despublicar. | ✅ 1/1 capturadas · sin revisar |
+| RF-09 | 02a | Móvil | `RF-09/movil/RF-09_p02a_aviso-de-rutina-publicada_*` | Aviso de rutina publicada. | ✅ 1/1 capturadas · sin revisar |
+| RF-09 | 02b | Móvil | `RF-09/movil/RF-09_p02b_aparece-en-publicas-con-autor_*` | Aparece en publicas con autor. | ✅ 1/1 capturadas · sin revisar |
+| RF-09 | 03 | Móvil | `RF-09/movil/RF-09_p03_ya-existe-identica_*` | Ya existe identica. | ✅ 1/1 capturadas · sin revisar |
+| RF-09 | 03b | Móvil | `RF-09/movil/RF-09_p03b_ver-la-existente_*` | Ver la existente. | ✅ 1/1 capturadas · sin revisar |
+| RF-10 | 01 | Móvil | `RF-10/movil/RF-10_p01_toast-copiada-a-mias_*` | Toast copiada a mias. | ✅ 1/1 capturadas · sin revisar |
+| RF-10 | 02 | Móvil | `RF-10/movil/RF-10_p02_franja-basada-en_*` | Franja basada en. | ✅ 1/1 capturadas · sin revisar |
+| RF-10 | 04 | Móvil | `RF-10/movil/RF-10_p04_hay-version-nueva_*` | Hay version nueva. | ✅ 1/1 capturadas · sin revisar |
+| RF-10 | 05 | Móvil | `RF-10/movil/RF-10_p05_ver-cambios_*` | Ver cambios. | ✅ 1/1 capturadas · sin revisar |
+| RF-10 | 05b | Móvil | `RF-10/movil/RF-10_p05b_copia-actualizada_*` | Copia actualizada. | ✅ 1/1 capturadas · sin revisar |
+| RF-10 | 06 | Móvil | `RF-10/movil/RF-10_p06_sin-franja_*` | Sin franja. | ✅ 1/1 capturadas · sin revisar |
+| RF-12 | 01 | Móvil | `RF-12/movil/RF-12_p01_valoracion-4-estrellas_*` | Valoracion 4 estrellas. | ✅ 1/1 capturadas · sin revisar |
+| RF-12 | 02 | Móvil | `RF-12/movil/RF-12_p02_no-puedes-valorar-la-tuya_*` | No puedes valorar la tuya. | ✅ 1/1 capturadas · sin revisar |
+| RF-12 | 03 | Móvil | `RF-12/movil/RF-12_p03_comentario-publicado_*` | Comentario publicado. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-12 | 04 | Móvil | `RF-12/movil/RF-12_p04_gracias-lo-revisaremos_*` | Gracias lo revisaremos. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-12 | 04a | Móvil | `RF-12/movil/RF-12_p04a_dia-con-ejercicio-privado_*` | Dia con ejercicio privado. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-12 | 04b | Móvil | `RF-12/movil/RF-12_p04b_hoja-de-denuncia_*` | Hoja de denuncia. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-13 | 01 | Móvil | `RF-13/movil/RF-13_p01_buscar-persona-sin-email_*` | Buscar persona sin email. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-13 | 02 | Móvil | `RF-13/movil/RF-13_p02_compartida-con-pendiente_*` | Compartida con pendiente. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-13 | 04 | Móvil | `RF-13/movil/RF-13_p04_invitacion-sin-ejercicios_*` | Invitacion sin ejercicios. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-13 | 05 | Móvil | `RF-13/movil/RF-13_p05_detalle-bloqueado-antes-de-aceptar_*` | Detalle bloqueado antes de aceptar. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-13 | 06 | Móvil | `RF-13/movil/RF-13_p06_aceptada-ve-la-rutina_*` | Aceptada ve la rutina. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-13 | 07 | Móvil | `RF-13/movil/RF-13_p07_autora-ve-acepto_*` | Autora ve acepto. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-13 | 09 | Móvil | `RF-13/movil/RF-13_p09_revocada_*` | Revocada. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-14 | 01a | Móvil | `RF-14/movil/RF-14_p01a_a2-fechas_*` | A2 fechas. | ✅ 1/1 capturadas · sin revisar |
+| RF-14 | 01b | Móvil | `RF-14/movil/RF-14_p01b_a3-modo_*` | A3 modo. | ✅ 1/1 capturadas · sin revisar |
+| RF-14 | 01c | Móvil | `RF-14/movil/RF-14_p01c_a5-resumen_*` | A5 resumen. | ✅ 1/1 capturadas · sin revisar |
+| RF-14 | 01d | Móvil | `RF-14/movil/RF-14_p01d_programcard-en-rutinas_*` | Programcard en rutinas. | ✅ 1/1 capturadas · sin revisar |
+| RF-14 | 02 | Móvil | `RF-14/movil/RF-14_p02_activada-copia-de-ajena_*` | Activada copia de ajena. | ✅ 1/1 capturadas · sin revisar |
+| RF-14 | 02b | Móvil | `RF-14/movil/RF-14_p02b_la-copia-lleva-atribucion_*` | La copia lleva atribucion. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-14 | 03 | Móvil | `RF-14/movil/RF-14_p03_a1-reemplazo_*` | A1 reemplazo. | ✅ 1/1 capturadas · sin revisar |
+| RF-14 | 04 | Móvil | `RF-14/movil/RF-14_p04_la-tarjeta-cambia_*` | La tarjeta cambia. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-14 | 05 | Móvil | `RF-14/movil/RF-14_p05_ambas-tarjetas-pesas-y-cardio_*` | Ambas tarjetas pesas y cardio. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-15 | 01 | Móvil | `RF-15/movil/RF-15_p01_resumen-de-activacion_*` | Resumen de activacion. | ✅ 1/1 capturadas · sin revisar |
+| RF-15 | 01a | Móvil | `RF-15/movil/RF-15_p01a_a4-datos-de-sobrecarga_*` | A4 datos de sobrecarga. | ✅ 1/1 capturadas · sin revisar |
+| RF-15 | 02 | Móvil | `RF-15/movil/RF-15_p02_sube-a-62-5-kg_*` | Sube a 62 5 kg. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-15 | 02a | Móvil | `RF-15/movil/RF-15_p02a_sugerido-60-kg_*` | Sugerido 60 kg. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-15 | 02b | Móvil | `RF-15/movil/RF-15_p02b_bloque-de-programa_*` | Bloque de programa. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-15 | 03 | Móvil | `RF-15/movil/RF-15_p03_sugerido-62-5-kg_*` | Sugerido 62 5 kg. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-16 | 01 | Móvil | `RF-16/movil/RF-16_p01_1rm-estimado-116-7_*` | 1rm estimado 116 7. | ✅ 1/1 capturadas · sin revisar |
+| RF-16 | 02 | Móvil | `RF-16/movil/RF-16_p02_meta-125-kg-realista_*` | Meta 125 kg realista. | ✅ 1/1 capturadas · sin revisar |
+| RF-16 | 02b | Móvil | `RF-16/movil/RF-16_p02b_resumen-de-metas_*` | Resumen de metas. | ✅ 1/1 capturadas · sin revisar |
+| RF-16 | 03 | Móvil | `RF-16/movil/RF-16_p03_barra-hacia-la-meta_*` | Barra hacia la meta. | ✅ 1/1 capturadas · sin revisar |
+| RF-16 | 04 | Móvil | `RF-16/movil/RF-16_p04_meta-lograda_*` | Meta lograda. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-17 | 01 | Móvil | `RF-17/movil/RF-17_p01_zonas-calculadas-con-su-fc_*` | Zonas calculadas con su fc. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-17 | 01b | Móvil | `RF-17/movil/RF-17_p01b_tarjeta-de-cardio_*` | Tarjeta de cardio. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-17 | 02 | Móvil | `RF-17/movil/RF-17_p02_serie-de-cardio-guardada_*` | Serie de cardio guardada. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-17 | 02a | Móvil | `RF-17/movil/RF-17_p02a_formulario-de-cardio_*` | Formulario de cardio. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-17 | 03 | Móvil | `RF-17/movil/RF-17_p03_progreso-semanal-96-min_*` | Progreso semanal 96 min. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-17 | 04 | Móvil | `RF-17/movil/RF-17_p04_sin-pulsometro-cuenta-igual_*` | Sin pulsometro cuenta igual. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-19 | 02 | Móvil | `RF-19/movil/RF-19_p02_pantalla-de-cierre_*` | Pantalla de cierre. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-19 | 03 | Móvil | `RF-19/movil/RF-19_p03_repetir-programa-nuevo_*` | Repetir programa nuevo. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-19 | 04 | Móvil | `RF-19/movil/RF-19_p04_apagar-sin-programa-de-pesas_*` | Apagar sin programa de pesas. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-20 | 01 | Móvil | `RF-20/movil/RF-20_p01_hoja-con-la-lista-de-cambios_*` | Hoja con la lista de cambios. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-20 | 02 | Móvil | `RF-20/movil/RF-20_p02_la-rutina-refleja-los-cambios_*` | La rutina refleja los cambios. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-20 | 03 | Móvil | `RF-20/movil/RF-20_p03_solo-esta-vez-no-cambia-la-rutina_*` | Solo esta vez no cambia la rutina. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-01 | 07 | — | — | invitacion-pendiente-en-catalogo | ❌ Cubierto en RF-13 p04 (la tarjeta de invitación sale en Mías › Compartidas conmigo); no hay captura propia de RF-01. |
+| RF-01 | 08 | — | — | sin-conexion | ❌ No capturado: el simulador no se puso en modo avión y no se simuló `route.abort` en la app. |
+| RF-01 | 09 | — | — | error-500 | ❌ No capturado: no se forzó un 500 en el catálogo. |
+| RF-09 | 04 | — | — | cambiar-una-repeticion-publica | ❌ No capturado en móvil (lo cubre el e2e del backend y la web). |
+| RF-09 | 05 | — | — | cambiar-solo-el-nombre-sigue-bloqueada | ❌ No capturado en móvil (lo cubre el e2e del backend y la web). |
+| RF-10 | 03 | — | — | editar-la-copia-no-cambia-el-original | ❌ No capturado en móvil. |
+| RF-11 | 01 | — | — | crear-oficial-en-sistema | ❌ Solo web (consola del sistema); en móvil la pestaña REPP está en RF-01 p05. |
+| RF-12 | 05 | — | — | cola-de-moderacion | ❌ Solo web/backoffice. |
+| RF-13 | 03 | — | — | notificacion-de-invitacion | ❌ No capturado: la notificación push no se probó en el simulador. |
+| RF-13 | 08 | — | — | rechazar-invitacion | ❌ No capturado en móvil (la ruta de rechazar existe en la tarjeta y la cubre el e2e del backend). |
+| RF-15 | 04 | — | — | dos-fallos-bajan-la-carga | ❌ No capturado: necesita varias sesiones; lo cubren las pruebas del motor. |
+| RF-15 | 05 | — | — | semana-de-descarga | ❌ No capturado: depende del calendario del programa. |
+| RF-18 | 01 | — | — | x1-2-tras-semana-cumplida | ❌ NO TERMINADO: el flujo 23 (cierre semanal real con close-weeks) está escrito pero no llegó a pasar entera; el cierre semanal lo cubre el e2e `mode-rewards` del backend. |
+| RF-18 | 02 | — | — | semana-incumplida-vuelve-a-x1 | ❌ NO TERMINADO: ver RF-18 p01. |
+| RF-18 | 03 | — | — | insignia-por-racha-de-semanas | ❌ No capturado: necesita 4 semanas reales de sesiones. |
+| RF-18 | 04 | — | — | sin-modo-no-hay-bono | ❌ Flujo 23-recompensas-bono-y-modo escrito pero no completado en la última pasada. |
+| RF-19 | 01 | — | — | notificacion-de-fin-de-programa | ❌ No capturado: depende del fin real del programa (sin reloj simulado). |
 | RF-01 | 01 | Web | `RF-01/web/RF-01_p01_programa-y-pestanas_*` | Programa activo arriba, pestañas Públicas / Recomendadas por REPP / Mías con el contador de invitaciones. | ✅ 4/4 capturadas · 1 revisadas |
 | RF-01 | 02 | Web | `RF-01/web/RF-01_p02_publicas-populares_*` | Pestaña Públicas ordenada por populares: tarjetas con autor, valoración, copias y miniatura de la semana (filtrada por la etiqueta de la ejecución). | ✅ 4/4 capturadas · sin revisar |
 | RF-01 | 03 | Web | `RF-01/web/RF-01_p03_filtro-fuerza-3-dias_*` | Objetivo Fuerza + 3 días: solo coincide una rutina; «3 filtros activos». | ✅ 4/4 capturadas · sin revisar |
@@ -195,6 +283,37 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 
 | Captura | Observación |
 |---|---|
+| `RF-12_p03_comentario-publicado_ios_oscuro.png` | DEFECTO conocido: muestra el borrador en el campo con el teclado abierto, no el comentario ya publicado (el flujo esperaba un texto que también está en el campo). El flujo se corrigió después (cierra el teclado y espera el nombre del autor) pero no se volvió a grabar. |
+| `RF-12_p04_gracias-lo-revisaremos_ios_oscuro.png` | LIMITACIÓN: muestra el detalle de «Denuncia QA» tras enviar; el aviso «Gracias. Lo revisaremos.» dura pocos segundos y no salió en la captura. |
+| `RF-12_p04a_dia-con-ejercicio-privado_ios_oscuro.png` | Revisada (agente, 2026-10-09): hoja «Lunes · Empuje» con el ejercicio personal «Press raro de Ana» y el botón «Denunciar «…»». |
+| `RF-12_p04b_hoja-de-denuncia_ios_oscuro.png` | Revisada (agente, 2026-10-09): hoja «Denunciar» con motivos (Ejercicio peligroso seleccionado, Información engañosa, Copia de otra rutina…), detalle opcional y «Enviar denuncia». |
+| `RF-13_p01_buscar-persona-sin-email_ios_oscuro.png` | Revisada (agente, 2026-10-09): «Compartir con…» con «Expiring M.» (nombre corto, sin email) y Enviar desactivado hasta elegir. |
+| `RF-13_p02_compartida-con-pendiente_ios_oscuro.png` | Revisada (agente, 2026-10-09): «Compartida con» muestra al invitado con la insignia «Pendiente» y «Revocar». Observación: el nombre largo ocupa tres líneas junto a la insignia. |
+| `RF-13_p04_invitacion-sin-ejercicios_ios_oscuro.png` | Revisada (agente, 2026-10-09): Mías › Compartidas conmigo (1) con la tarjeta «Invitación», «te compartió «Plan para compartir»», «Verás los ejercicios cuando aceptes.» y Rechazar/Aceptar. |
+| `RF-13_p05_detalle-bloqueado-antes-de-aceptar_ios_oscuro.png` | Revisada (agente, 2026-10-09): por enlace directo antes de aceptar sale «Aún no aceptaste esta rutina» (SHARE_PENDING real del backend). |
+| `RF-13_p06_aceptada-ve-la-rutina_ios_oscuro.png` | Revisada (agente, 2026-10-09): tras Aceptar, B ve el detalle completo («Copiar a Mías»; sin acciones de la autora). |
+| `RF-13_p07_autora-ve-acepto_ios_oscuro.png` | Revisada (agente, 2026-10-09): la autora ve «Aceptó» junto al invitado. |
+| `RF-13_p09_revocada_ios_oscuro.png` | Revisada (agente, 2026-10-09): tras Revocar, «Todavía no la compartiste con nadie.» |
+| `RF-14_p02b_la-copia-lleva-atribucion_ios_oscuro.png` | Revisada (agente, 2026-10-09): la copia «Torso de Leo» lleva «Basada en Torso de Leo de Expiring Membership Mock». |
+| `RF-14_p04_la-tarjeta-cambia_ios_oscuro.png` | Revisada (agente, 2026-10-09): la tarjeta pasa a «Empuje 4 días» con «Hoy: Torso»; la anterior ya no está. |
+| `RF-14_p05_ambas-tarjetas-pesas-y-cardio_ios_oscuro.png` | Revisada (agente, 2026-10-09): tarjeta de pesas y de cardio («0 / 90 min») juntas; «Haz primero las pesas.» (también cubre RF-14 p06, que depende del día de la semana). |
+| `RF-15_p02_sube-a-62-5-kg_ios_oscuro.png` | Revisada (agente, 2026-10-09): Sesión terminada; abajo «Tu programa» con «+15 por sobrecarga (x1,2 al cumplir la semana)». |
+| `RF-15_p02a_sugerido-60-kg_ios_oscuro.png` | Revisada (agente, 2026-10-09): en la sesión, «Sugerido: 60 kg × 8–12» bajo el ejercicio. |
+| `RF-15_p02b_bloque-de-programa_ios_oscuro.png` | Revisada (agente, 2026-10-09): bloque «Tu programa» con el aviso de «Sube el peso → 62,5 kg la próxima». |
+| `RF-15_p03_sugerido-62-5-kg_ios_oscuro.png` | Revisada (agente, 2026-10-09): la siguiente sesión sugiere «62,5 kg × 8–12». |
+| `RF-16_p04_meta-lograda_ios_oscuro.png` | Revisada (agente, 2026-10-09): el bloque dice «¡Meta lograda! (137,5 kg)» y «+11 por metas». |
+| `RF-17_p01_zonas-calculadas-con-su-fc_ios_oscuro.png` | Revisada (agente, 2026-10-09): FC reposo 60 / máx 190, zona 2 = «138–151 lpm» (Karvonen). |
+| `RF-17_p01b_tarjeta-de-cardio_ios_oscuro.png` | Revisada (agente, 2026-10-09): tarjeta «Cardio · Bici» junto a la de pesas. |
+| `RF-17_p02_serie-de-cardio-guardada_ios_oscuro.png` | Revisada (agente, 2026-10-09): la serie guardada se lee «32:00 · 10,5 km · 142 lpm · Esf. 4» y el cronómetro vuelve a 00:00. |
+| `RF-17_p02a_formulario-de-cardio_ios_oscuro.png` | Revisada (agente, 2026-10-09): cronómetro 32:00 (minutos escritos), distancia, FC media y esfuerzo 4. |
+| `RF-17_p03_progreso-semanal-96-min_ios_oscuro.png` | Revisada (agente, 2026-10-09): «Tu cardio · Cuentan 32 min · Semana 1: 96 / 90 min» y «Cumpliste el objetivo de la sesión». Una sesión de cardio no rompe los kilos («0 kg»). |
+| `RF-17_p04_sin-pulsometro-cuenta-igual_ios_oscuro.png` | Revisada (agente, 2026-10-09): dos sesiones por esfuerzo (sin pulsómetro) suman «64 / 90 min». |
+| `RF-19_p02_pantalla-de-cierre_ios_oscuro.png` | Revisada (agente, 2026-10-09): «¿Qué sigue?» con 0/9 semanas, metas, multiplicador x1 y las tres salidas. |
+| `RF-19_p03_repetir-programa-nuevo_ios_oscuro.png` | Revisada (agente, 2026-10-09): tras Repetir, tarjeta nueva «Pierna 3 días · Sobrecarga». |
+| `RF-19_p04_apagar-sin-programa-de-pesas_ios_oscuro.png` | Revisada (agente, 2026-10-09): tras Apagar no hay tarjeta de pesas. |
+| `RF-20_p01_hoja-con-la-lista-de-cambios_ios_oscuro.png` | Revisada (agente, 2026-10-09): «¿Actualizar tu rutina?» con peso a 65 kg, ejercicio nuevo y ejercicio quitado, Actualizar / Solo esta vez. |
+| `RF-20_p02_la-rutina-refleja-los-cambios_ios_oscuro.png` | Revisada (agente, 2026-10-09): tras Actualizar, el lunes muestra 4 × 6-8 a 65 kg y el curl añadido. |
+| `RF-20_p03_solo-esta-vez-no-cambia-la-rutina_ios_oscuro.png` | Revisada (agente, 2026-10-09): tras «Solo esta vez» (sesión con 70 kg) el día sigue en 65 kg. |
 | `RF-01_p01_programa-y-pestanas_1440_claro.png` | Revisada (agente, 2026-10-09): tarjeta del programa «Empuje 4 días» con x1,0, barra y «Cumple esta semana para llegar a x1,2», Tu semana, pestañas con el contador «1» en Mías, filtros y tarjetas. Las tarjetas de abajo son rutinas públicas que dejaron otras pruebas en la misma base (no filtradas en este paso). Sin defectos. |
 | `RF-01_p07_mias-compartidas-invitacion_390_oscuro.png` | Revisada (agente, 2026-10-09): chip «Compartidas conmigo (1)» activo, tarjeta «Invitación» de Bruno con «Verás los ejercicios cuando la aceptes», Aceptar y Rechazar completos. Sin defectos. |
 | `RF-01_p08_sin-conexion-con-cache_390_claro.png` | Revisada (agente, 2026-10-09): aviso ámbar «Sin conexión. Te mostramos lo último que cargamos.» sobre las tres tarjetas ya cargadas. |
