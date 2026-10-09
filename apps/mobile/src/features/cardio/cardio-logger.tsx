@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { buildCardioSet, formatClock } from '@gymsheet/hooks';
+import { numericInputProps } from '@/components/keyboard';
 import { Input, Button } from '@/components/ui';
 import { ChoiceChip } from '@/components/wizard/choice-chip';
 import { useStopwatch } from '@/features/cardio/use-stopwatch';
@@ -59,6 +60,7 @@ export function CardioLogger({
         />
       </View>
       <Input
+        {...numericInputProps}
         keyboardType="decimal-pad"
         label="O escribe los minutos"
         onChangeText={(text) => {
@@ -71,10 +73,10 @@ export function CardioLogger({
       />
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
         <View style={{ flex: 1 }}>
-          <Input keyboardType="decimal-pad" label="Distancia (km)" onChangeText={setDistance} testID="cardio-distance" value={distance} />
+          <Input {...numericInputProps} keyboardType="decimal-pad" label="Distancia (km)" onChangeText={setDistance} testID="cardio-distance" value={distance} />
         </View>
         <View style={{ flex: 1 }}>
-          <Input keyboardType="number-pad" label="FC media (lpm)" onChangeText={setHeartRate} testID="cardio-hr" value={heartRate} />
+          <Input {...numericInputProps} keyboardType="number-pad" label="FC media (lpm)" onChangeText={setHeartRate} testID="cardio-hr" value={heartRate} />
         </View>
       </View>
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Esfuerzo (1 muy suave · 10 máximo)</Text>

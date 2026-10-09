@@ -10,6 +10,7 @@ import {
 } from '@gymsheet/hooks';
 import type { ProgramMode } from '@gymsheet/schemas';
 import { Checkbox } from '@/components/checkbox';
+import { numericInputProps } from '@/components/keyboard';
 import { Input } from '@/components/ui';
 import { ChoiceChip } from '@/components/wizard/choice-chip';
 import { toIsoDate, type Activation } from '@/features/program-activation/use-activation';
@@ -28,7 +29,7 @@ function Row({ children }: { children: React.ReactNode }) {
 function Field({ flex = 1, ...props }: React.ComponentProps<typeof Input> & { flex?: number }) {
   return (
     <View style={{ flex }}>
-      <Input {...props} />
+      <Input {...(props.keyboardType === 'decimal-pad' || props.keyboardType === 'number-pad' ? numericInputProps : {})} {...props} />
     </View>
   );
 }

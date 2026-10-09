@@ -1,0 +1,93 @@
+# Sobrecarga progresiva (plan Rutinas REPP · F5): RF-15.
+# Antes: seeds de rutinas y `node scripts/reset-programas-evidencia.mjs`.
+appId: app.gymsheet.mobile
+name: 18 · Sobrecarga progresiva
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+  BENCH: barbell bench press
+  BENCH_ID: b4371c4f-e8fa-4b50-926c-48cdddb77a36
+---
+- runFlow: login-as.subflow.yaml
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Empuje 4 días' }
+- tapOn: 'Activar programa'
+- extendedWaitUntil:
+    visible: 'Paso 1 de 3.*'
+    timeout: 30000
+- tapOn: 'Siguiente'
+- tapOn:
+    id: 'mode-PROGRESSIVE_OVERLOAD'
+- tapOn: 'Siguiente'
+# RF-15 · p01: A4 con press banca 60 kg, 8–12, RIR 2.
+- extendedWaitUntil:
+    visible: 'Paso 3 de 4.*'
+    timeout: 10000
+- tapOn:
+    id: 'work-${BENCH_ID}'
+- inputText: '60'
+- tapOn: 'Listo'
+- tapOn: '¿No lo sabes.*'
+- takeScreenshot: RF-15_p01a_a4-datos-de-sobrecarga_ios_oscuro
+- tapOn: 'Siguiente'
+- extendedWaitUntil:
+    visible: 'Paso 4 de 4.*'
+    timeout: 10000
+- assertVisible: 'Sobrecarga progresiva'
+- takeScreenshot: RF-15_p01_resumen-de-activacion_ios_oscuro
+- tapOn: 'Activar'
+- extendedWaitUntil:
+    visible:
+      id: 'program-card-strength'
+    timeout: 60000
+
+# La sesión: lunes (Empuje). Se muestra el peso sugerido y se registran 3×12 a 60 kg.
+- runFlow:
+    file: start-day.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Empuje 4 días', DIA: 'lunes' }
+- extendedWaitUntil:
+    visible: 'Sugerido: 60 kg × 8–12'
+    timeout: 30000
+- takeScreenshot: RF-15_p02a_sugerido-60-kg_ios_oscuro
+- runScript:
+    file: scripts-log-sets.js
+    env:
+      EMAIL: athlete.mock@gymsheet.local
+      EXERCISE: ${BENCH}
+      SETS: '[{"pesoKg":60,"repeticiones":12,"rir":2},{"pesoKg":60,"repeticiones":12,"rir":2},{"pesoKg":60,"repeticiones":12,"rir":2}]'
+# Las series entraron por API: se tira de la pantalla hacia abajo (pull to refresh) para recargarlas.
+- swipe:
+    start: 50%,25%
+    end: 50%,70%
+- extendedWaitUntil:
+    visible: '60 kg × 12'
+    timeout: 30000
+- repeat:
+    times: 4
+    commands:
+      - scroll
+- tapOn: 'Finalizar sesión'
+- tapOn: 'Finalizar'
+# Hubo cambios respecto de la rutina (3 series en vez de 4): la tarjeta ofrece revisarlos;
+# el flujo 21 cubre actualizarla.
+# RF-15 · p02: el resumen enseña el bono por sobrecarga y «sube a 62,5 kg».
+- extendedWaitUntil:
+    visible: 'Seguir'
+    timeout: 60000
+- scrollUntilVisible:
+    element: 'Tu programa'
+- assertVisible: '.*Sube el peso → 62,5 kg la próxima.*'
+- takeScreenshot: RF-15_p02_sube-a-62-5-kg_ios_oscuro
+- scrollUntilVisible:
+    element: 'Tu programa'
+- takeScreenshot: RF-15_p02b_bloque-de-programa_ios_oscuro
+
+# RF-15 · p03: la siguiente sesión sugiere 62,5 kg × 8–12.
+- runFlow:
+    file: start-day.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Empuje 4 días', DIA: 'lunes' }
+- extendedWaitUntil:
+    visible: 'Sugerido: 62,5 kg × 8–12'
+    timeout: 30000
+- takeScreenshot: RF-15_p03_sugerido-62-5-kg_ios_oscuro

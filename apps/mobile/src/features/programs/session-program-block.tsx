@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { describeProposal, formatKg, multiplierLabel, proposalSize } from '@gymsheet/hooks';
 import type { ProgramSessionBlock } from '@gymsheet/schemas';
@@ -36,11 +36,9 @@ export function SessionProgramBlock({ workoutId, block }: { workoutId: string; b
     enabled: Boolean(routineId),
   });
 
-  // La hoja se ofrece sola una vez, en cuanto hay una propuesta que enseñar.
+  // La hoja la abre la persona desde la tarjeta: el resumen puede estar mostrando antes una
+  // celebración (otra hoja nativa) y iOS no presenta dos a la vez.
   const hasProposal = block.cambiosRespectoRutina && proposalSize(block.propuesta) > 0;
-  useEffect(() => {
-    if (hasProposal && routine.isSuccess) setSheet(true);
-  }, [hasProposal, routine.isSuccess]);
 
   const apply = useMutation({
     mutationFn: () => programService.applyToRoutine(workoutId, block.propuesta),
@@ -68,7 +66,7 @@ export function SessionProgramBlock({ workoutId, block }: { workoutId: string; b
           </Text>
           {block.bonusModo ? (
             <Text style={{ color: colors.volt, fontSize: fontSizes.md, fontWeight: semibold }} testID="mode-bonus">
-              +{block.bonusModo.puntosPrevistos} por {block.modo === 'STRENGTH_GOALS' ? 'metas' : 'sobrecarga'} ({multiplierLabel(block.bonusModo.multiplicador)})
+              +{block.bonusModo.puntosPrevistos} por {block.modo === 'STRENGTH_GOALS' ? 'metas' : 'sobrecarga'} ({multiplierLabel(block.bonusModo.proximoMultiplicador)} al cumplir la semana)
             </Text>
           ) : null}
           {block.sugerencias.map((hint) => (
@@ -79,7 +77,12 @@ export function SessionProgramBlock({ workoutId, block }: { workoutId: string; b
             </Text>
           ))}
           {hasProposal && !done ? (
-            <Button label="Revisar cambios en la rutina" onPress={() => setSheet(true)} variant="ghost" />
+            <>
+              <Text style={{ color: colors.text, fontSize: fontSizes.sm, lineHeight: 20 }}>
+                Hiciste cambios respecto de tu rutina. ¿Quieres guardarlos?
+              </Text>
+              <Button label="Revisar cambios en la rutina" onPress={() => setSheet(true)} />
+            </>
           ) : null}
         </View>
       </Card>

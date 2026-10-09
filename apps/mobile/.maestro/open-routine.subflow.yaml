@@ -2,10 +2,19 @@
 # Variables: TAB (Públicas|REPP|Mías), NAME (texto a buscar y nombre exacto de la tarjeta).
 appId: app.gymsheet.mobile
 ---
-- tapOn: 'Rutinas, tab.*'
-# Si la pila de Rutinas quedó en un detalle de una corrida anterior, se vuelve a la lista.
+# Sale de donde esté (resumen, detalle de una corrida anterior…) y vuelve a la lista de Rutinas.
 - openLink: gymsheet:///routines
+- tapOn:
+    text: 'Rutinas, tab.*'
+    optional: true
 - runFlow: cerrar-tour.subflow.yaml
+# La lista conserva su posición de la visita anterior: se sube al principio.
+- repeat:
+    times: 3
+    commands:
+      - swipe:
+          direction: DOWN
+          duration: 200
 - extendedWaitUntil:
     visible: 'Crear rutina'
     timeout: 60000
@@ -18,6 +27,12 @@ appId: app.gymsheet.mobile
 - pressKey: Enter
 - extendedWaitUntil:
     visible: '${NAME}\. .*'
+    timeout: 30000
+# Con un programa activo el catálogo queda más abajo: se desplaza hasta centrar la tarjeta para
+# que el toque no caiga sobre la barra de pestañas.
+- scrollUntilVisible:
+    element: '${NAME}\. .*'
+    centerElement: true
     timeout: 30000
 - tapOn: '${NAME}\. .*'
 # El primer arranque tras un rato de silencio puede agotar la espera del cliente

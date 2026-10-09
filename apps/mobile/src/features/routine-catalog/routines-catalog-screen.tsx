@@ -7,6 +7,7 @@ import {
   activeFilterCount,
   emptyCatalogFilters,
   hasActiveFilters,
+  isoWeekday,
   isPendingInvitation,
   ORDER_LABELS,
   type CatalogFilterState,
@@ -22,6 +23,7 @@ import { TourTarget, useScreenTour } from '@/components/tour';
 import { Button, Input } from '@/components/ui';
 import { WeekPlan } from '@/components/week-plan';
 import { useActivePrograms } from '@/features/programs/use-active-programs';
+import { CardioProgramCard } from '@/features/cardio/cardio-program-card';
 import { StrengthProgramCard } from '@/features/programs/program-card';
 import { CatalogFiltersSheet } from '@/features/routine-catalog/catalog-filters';
 import { CatalogTabBar, MineChips, ResultCount } from '@/features/routine-catalog/catalog-tab-bar';
@@ -72,6 +74,14 @@ export function RoutinesCatalogScreen() {
   });
 
   const programs = useActivePrograms();
+  // ¿Hoy toca pesas? Con el plan de cardio el mismo día se avisa «Haz primero las pesas».
+  const strengthRoutine = useQuery({
+    queryKey: ['routine', programs.data?.fuerza?.rutinaId],
+    queryFn: () => routineService.get(programs.data?.fuerza?.rutinaId ?? ''),
+    enabled: Boolean(programs.data?.fuerza?.rutinaId),
+  });
+  const todayIso = isoWeekday(new Date());
+  const strengthToday = Boolean(strengthRoutine.data?.dias.some((day) => day.diaSemana === todayIso));
   const assigned = assignments.data?.filter((item) => item.estado === 'ACTIVE') ?? [];
   const pending = invitations.data?.length ?? 0;
   const cards = catalog.data?.pages.flatMap((page) => page.items) ?? [];
@@ -98,6 +108,9 @@ export function RoutinesCatalogScreen() {
       </TourTarget>
 
       {programs.data?.fuerza ? <StrengthProgramCard program={programs.data.fuerza} /> : null}
+      {programs.data?.cardio ? (
+        <CardioProgramCard program={programs.data.cardio} strengthToday={strengthToday} />
+      ) : null}
 
       {assigned.length > 0 ? (
         <Section icon="calendar-outline" index={0} title="Tu semana">
