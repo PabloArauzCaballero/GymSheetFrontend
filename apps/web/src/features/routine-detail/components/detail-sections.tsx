@@ -82,7 +82,7 @@ export function AboutCard({ routine }: Readonly<{ routine: Routine }>) {
       </dl>
       <p className="mt-4 flex items-center gap-2 text-xs text-[var(--text-muted)]">
         {routine.esMia ? <Share2 aria-hidden className="size-3.5" /> : <UserRound aria-hidden className="size-3.5" />}
-        {routine.esMia ? 'Es tuya' : routine.esOficial ? 'Rutina oficial de REPP' : 'Compartida contigo o pública'}
+        {routine.esMia ? 'Es tuya' : routine.esOficial ? 'Rutina oficial de REPP' : routine.visibilidad === 'PUBLIC' ? 'Rutina pública' : 'Compartida contigo'}
       </p>
     </section>
   );

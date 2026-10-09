@@ -8,6 +8,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { formatNumber } from '@/shared/lib/numbers';
 import { cardioSetLabel } from './cardio-set-label';
+import { SuggestedLoad } from './suggested-load';
 import { RestTimer } from './rest-timer';
 import { SetEntryForm } from './set-entry-form';
 
@@ -84,6 +85,9 @@ export function GuidedWorkout({
               <h2 className="mt-1 break-words text-2xl font-semibold tracking-[-0.03em]">
                 {current.ejercicio?.nombre ?? 'Ejercicio'}
               </h2>
+              <div className="mt-2">
+                <SuggestedLoad exerciseId={current.ejercicio?.id} />
+              </div>
               {current.nota ? (
                 <p className="mt-2 text-sm text-[var(--text-muted)]">{current.nota}</p>
               ) : null}

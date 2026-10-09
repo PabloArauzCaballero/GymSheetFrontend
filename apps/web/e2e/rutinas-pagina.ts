@@ -7,7 +7,7 @@
  * un 4xx tampoco, salvo que el flujo lo espere (`permitir`), como el 409 de una
  * publicación duplicada o el 403 de una invitación sin aceptar.
  */
-import { expect as baseExpect, type BrowserContext, type Page } from '@playwright/test';
+import { expect as baseExpect, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { THEME_COOKIE } from '../src/shared/theme/theme-script';
 import type { Cuenta } from './rutinas-datos';
 
@@ -35,13 +35,24 @@ export type Vigilante = {
 };
 
 /** Cierra el tour de bienvenida en cuanto aparece: su capa se come los clics. */
-async function cerrarTour(page: Page) {
-  await page.addLocatorHandler(
-    page.getByRole('button', { name: /Cerrar tutorial|Omitir/u }).first(),
-    async (skip) => {
-      await skip.click();
-    },
-  );
+export async function cerrarTour(page: Page) {
+  const boton = page.getByRole('button', { name: /Cerrar tutorial|Omitir/u }).first();
+  await page.addLocatorHandler(boton, async (skip) => {
+    await skip.click();
+  });
+  tours.set(page, boton);
+}
+
+const tours = new WeakMap<Page, ReturnType<Page['locator']>>();
+
+/**
+ * Deja de cerrar el tour automáticamente. Para pantallas que abren a la vez un modal propio (la
+ * celebración de una insignia): con el manejador puesto, el clic sobre el tour choca con ese modal
+ * y la prueba se atasca. Quien la llama cierra los dos con `Escape`.
+ */
+export async function dejarElTour(page: Page) {
+  const boton = tours.get(page);
+  if (boton) await page.removeLocatorHandler(boton);
 }
 
 export function vigilar(page: Page): Vigilante {
@@ -102,4 +113,36 @@ export async function iniciarSesion(page: Page, cuenta: Pick<Cuenta, 'email' | '
 
 export async function cerrarSesion(page: Page) {
   await page.context().clearCookies({ name: 'gymsheet_session' }).catch(() => undefined);
+}
+
+/**
+ * Una segunda persona en su propio contexto de navegador (cookies aparte), con la
+ * misma combinación de tamaño y tema. Para los flujos de dos cuentas.
+ */
+export async function abrirSegundo(
+  browser: Browser,
+  baseURL: string | undefined,
+  combo: Combo,
+  cuenta: Cuenta,
+): Promise<{ page: Page; context: BrowserContext; vigilante: Vigilante }> {
+  const context = await browser.newContext({
+    viewport: { width: combo.width, height: combo.height },
+    colorScheme: combo.theme,
+    ...(baseURL ? { baseURL } : {}),
+  });
+  const page = await context.newPage();
+  const vigilante = await abrirComo(page, context, baseURL, combo, cuenta);
+  return { page, context, vigilante };
+}
+
+/** Espera a que terminen las animaciones de entrada del resumen de sesión (cifras que cuentan y filas que aparecen). */
+export async function esperarResumen(page: Page) {
+  await page.getByTestId('program-session').waitFor();
+  await page.waitForFunction(
+    () =>
+      [...document.querySelectorAll('ul[aria-label="De dónde salen tus puntos"] > li')].every(
+        (item) => getComputedStyle(item).opacity === '1',
+      ),
+  );
+  await page.waitForTimeout(1_500);
 }

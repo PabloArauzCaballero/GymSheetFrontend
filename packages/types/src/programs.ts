@@ -141,7 +141,8 @@ export type ApplyToRoutineInput = {
 export type ProgramSuggestion = {
   ejercicioId: string;
   ejercicioNombre: string | null;
-  accion: 'RAISE' | 'HOLD' | 'LOWER' | 'DELOAD_SKIP' | 'NO_DATA' | 'ADD_LOAD' | 'GOAL_REACHED' | 'E1RM_UP';
+  /** `RAISE`, `HOLD`, `LOWER`, `DELOAD_SKIP`, `NO_DATA`, `ADD_LOAD`, `GOAL_REACHED` o `E1RM_UP`; abierto para no romper con acciones nuevas. */
+  accion: string;
   pesoSugeridoKg?: number;
   marcaActualKg?: number;
   mensaje: string;

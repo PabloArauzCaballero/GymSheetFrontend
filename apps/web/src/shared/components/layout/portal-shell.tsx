@@ -161,7 +161,7 @@ function NavigationLinks({
       {groups.map((group, index) => (
         <div className="flex flex-col gap-1" key={group.label ?? `grupo-${index}`}>
           {group.label ? (
-            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-disabled)]">
+            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
               {group.label}
             </p>
           ) : null}

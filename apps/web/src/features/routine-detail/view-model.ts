@@ -6,6 +6,10 @@ export type ExerciseLine = {
   routineExerciseId: string;
   ejercicioId: string;
   nombre: string;
+  /** Ejercicio personal de quien hizo la rutina: se valora, se comenta y se denuncia dentro de ella (D3). */
+  privado: boolean;
+  /** La moderación lo ocultó: la hoja lo dice en vez de enseñarlo. */
+  oculto: boolean;
   series: number;
   repsMin: number | null;
   repsMax: number | null;
@@ -34,10 +38,17 @@ export type WeekModel = {
  * de la propia rutina — la pantalla sigue siendo útil.
  */
 export function buildWeeks(routine: Routine, calendar: RoutineCalendar | null): WeekModel[] {
-  const names = new Map<string, string>();
+  const info = new Map<string, Pick<ExerciseLine, 'nombre' | 'privado' | 'oculto'>>();
   for (const day of routine.dias) {
-    for (const exercise of day.ejercicios) names.set(exercise.id, exercise.ejercicio?.nombre ?? 'Ejercicio');
+    for (const exercise of day.ejercicios) {
+      info.set(exercise.id, {
+        nombre: exercise.ejercicio?.nombre ?? 'Ejercicio',
+        privado: exercise.ejercicio?.tipoEjercicio === 'PERSONAL',
+        oculto: (exercise.ejercicio?.estadoModeracion ?? 'VISIBLE') !== 'VISIBLE',
+      });
+    }
   }
+  const fallback = { nombre: 'Ejercicio', privado: false, oculto: false };
   if (calendar && calendar.semanas.length > 0) {
     return calendar.semanas.map((week) => ({
       numero: week.numero,
@@ -55,7 +66,7 @@ export function buildWeeks(routine: Routine, calendar: RoutineCalendar | null): 
           .map((exercise) => ({
             routineExerciseId: exercise.routineExerciseId,
             ejercicioId: exercise.ejercicioId,
-            nombre: names.get(exercise.routineExerciseId) ?? 'Ejercicio',
+            ...(info.get(exercise.routineExerciseId) ?? fallback),
             series: exercise.series,
             repsMin: exercise.repsMin,
             repsMax: exercise.repsMax,
@@ -78,7 +89,7 @@ export function buildWeeks(routine: Routine, calendar: RoutineCalendar | null): 
         ejercicios: day.ejercicios.map((exercise) => ({
           routineExerciseId: exercise.id,
           ejercicioId: exercise.ejercicio?.id ?? '',
-          nombre: exercise.ejercicio?.nombre ?? 'Ejercicio',
+          ...(info.get(exercise.id) ?? fallback),
           series: exercise.seriesObjetivo,
           repsMin: exercise.repsMin,
           repsMax: exercise.repsMax,

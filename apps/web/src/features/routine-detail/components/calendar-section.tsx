@@ -18,6 +18,8 @@ export function CalendarSection({
   onStartDay,
   startingDayId,
   canStart,
+  isOwner,
+  showCommunity,
 }: Readonly<{
   weeks: readonly WeekModel[];
   view: DetailView;
@@ -25,6 +27,8 @@ export function CalendarSection({
   onStartDay: (day: DayModel) => void;
   startingDayId: string | null;
   canStart: boolean;
+  isOwner: boolean;
+  showCommunity: boolean;
 }>) {
   const week = weeks.find((candidate) => candidate.numero === view.semana) ?? weeks[0];
   if (!week) return null;
@@ -70,6 +74,8 @@ export function CalendarSection({
         <DaySheet
           canStart={canStart}
           day={selected}
+          isOwner={isOwner}
+          showCommunity={showCommunity}
           onStart={onStartDay}
           starting={startingDayId === selected.diaId}
           week={week}

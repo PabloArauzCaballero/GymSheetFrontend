@@ -10,6 +10,7 @@ import { queryKeys } from '@/shared/api/query-keys';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/cn';
+import { SuggestedLoad } from './suggested-load';
 import { SetEntryForm } from './set-entry-form';
 import { SET_GRID_COLS } from './set-grid';
 import { WorkoutSetRow } from './workout-set-row';
@@ -56,6 +57,9 @@ export function WorkoutExercisePanel({
           <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em]">
             {exercise?.nombre ?? 'Ejercicio no disponible'}
           </h2>
+          <div className="mt-2">
+            <SuggestedLoad exerciseId={exercise?.id} />
+          </div>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
             {exercise?.grupoMuscular ?? 'Sin grupo'} · Volumen{' '}
             {Math.round(volume).toLocaleString('es-BO')} KG

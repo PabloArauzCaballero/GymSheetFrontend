@@ -1,29 +1,29 @@
 'use client';
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Play } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
-import { isStaff } from '@gymsheet/domain';
 import { ApiError } from '@/shared/api/api-error';
 import { queryKeys } from '@/shared/api/query-keys';
 import type { UserRole } from '@/shared/api/contracts';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { SkeletonList, SkeletonPageHeader, SkeletonScreen } from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
-import { Button } from '@/shared/components/ui/button';
 import { replaceSearch } from '@/shared/lib/url-state';
 import { notify } from '@/shared/notifications';
 import { routineBuilderService } from '@/features/routine-wizard/services';
 import { routineV2Keys } from '@/features/routines-v2/keys';
 import { daysPerWeekLabel, durationLabel, goalLabel } from '@/features/routines-v2/labels';
-import { AssignRoutineDialog } from '@/features/training/components/assign-routine-dialog';
+import { CommunityPanel } from '@/features/routine-community/components/community-panel';
+import { SharedWith } from '@/features/routine-sharing/components/shared-with';
 import { trainingService } from '@/features/training/services/training-service';
 import { buildWeeks, type DayModel } from '../view-model';
 import { detailSearch, parseDetailView, type DetailView } from '../view-state';
 import { CalendarSection } from './calendar-section';
 import { AboutCard, AttributionStrip, RoutineBadges } from './detail-sections';
 import { PendingInvitation } from './pending-invitation';
+import { RoutineActions } from './routine-actions';
+import { VersionBanner } from './version-banner';
 
 /**
  * Detalle de una rutina con la experiencia nueva (RF-02): cabecera, calendario
@@ -94,18 +94,12 @@ export function RoutineDetailV2({ id, role }: Readonly<{ id: string; role: UserR
     <div className="grid gap-8">
       <PageHeader
         actions={
-          <div className="flex flex-wrap gap-2">
-            <Button
-              disabled={data.ejercicios.length === 0}
-              loading={start.isPending && start.variables === undefined}
-              onClick={() => start.mutate(undefined)}
-              variant="secondary"
-            >
-              <Play aria-hidden className="size-4" />
-              Empezar sesión
-            </Button>
-            {isStaff(role) ? <AssignRoutineDialog routineId={id} /> : null}
-          </div>
+          <RoutineActions
+            onStart={() => start.mutate(undefined)}
+            role={role}
+            routine={data}
+            starting={start.isPending && start.variables === undefined}
+          />
         }
         description={data.descripcion ?? 'Sin descripción.'}
         eyebrow={meta}
@@ -113,11 +107,14 @@ export function RoutineDetailV2({ id, role }: Readonly<{ id: string; role: UserR
       />
       <RoutineBadges routine={data} />
       <AttributionStrip routine={data} />
+      {data.esMia ? <VersionBanner routine={data} /> : null}
 
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="grid min-w-0 gap-6">
           <CalendarSection
             canStart={data.ejercicios.length > 0}
+            isOwner={data.esMia}
+            showCommunity={data.visibilidad === 'PUBLIC'}
             onStartDay={(day: DayModel) => start.mutate(day.diaId)}
             onView={setView}
             startingDayId={start.isPending ? (start.variables ?? null) : null}
@@ -127,6 +124,10 @@ export function RoutineDetailV2({ id, role }: Readonly<{ id: string; role: UserR
         </div>
         <aside className="grid content-start gap-6">
           <AboutCard routine={data} />
+          {data.esMia && data.visibilidad !== 'PUBLIC' ? <SharedWith routineId={data.id} /> : null}
+          {data.visibilidad === 'PUBLIC' ? (
+            <CommunityPanel id={data.id} isOwner={data.esMia} kind="ROUTINE" routineId={data.id} />
+          ) : null}
         </aside>
       </div>
     </div>

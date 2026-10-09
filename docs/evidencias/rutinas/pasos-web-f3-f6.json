@@ -135,6 +135,729 @@
         "web"
       ],
       "debeVerse": "Rutina anterior a los días: «Rutina de un día (cualquier día)», sin selector Mes."
+    },
+    {
+      "rf": "RF-09",
+      "paso": "01",
+      "nombre": "confirmar-publicacion",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Diálogo de confirmación: «Cualquiera podrá verla, valorarla, comentarla y copiarla»."
+    },
+    {
+      "rf": "RF-09",
+      "paso": "02",
+      "nombre": "aparece-en-publicas",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Otra cuenta ve la rutina en Públicas con su autora."
+    },
+    {
+      "rf": "RF-09",
+      "paso": "03",
+      "nombre": "duplicado-bloqueado",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Publicar una idéntica: «Ya existe una rutina idéntica» con el nombre y la autora de la existente, y «Ver rutina» / «Seguir editando»."
+    },
+    {
+      "rf": "RF-09",
+      "paso": "04",
+      "nombre": "cambia-una-repeticion-publica",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Cambiar una repetición permite publicar: el botón pasa a «Despublicar»."
+    },
+    {
+      "rf": "RF-09",
+      "paso": "05",
+      "nombre": "solo-nombre-sigue-bloqueada",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Cambiar solo el nombre sigue bloqueado por el mismo diálogo."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "01",
+      "nombre": "copiada-a-mias",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Aviso «Copiada a Mías» con la acción «Abrir»."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "02",
+      "nombre": "franja-de-atribucion",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "La copia lleva la franja «Basada en … de Ana Autora»."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "03",
+      "nombre": "original-no-cambia",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Tras editar la copia, el original de la autora sigue igual."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "04",
+      "nombre": "hay-version-nueva",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Banner «Hay una versión nueva de la rutina original» en la copia."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "05",
+      "nombre": "ver-cambios",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "«Ver cambios» lista lo que añade la versión nueva."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "06",
+      "nombre": "version-aplicada",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Tras «Aplicar» el banner desaparece y la copia conserva su nombre."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "07",
+      "nombre": "sin-atribucion-desde-cero",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Una rutina hecha desde cero no lleva franja de atribución."
+    },
+    {
+      "rf": "RF-11",
+      "paso": "02",
+      "nombre": "repp-con-sello",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Pestaña REPP con la rutina oficial y su sello."
+    },
+    {
+      "rf": "RF-11",
+      "paso": "02b",
+      "nombre": "detalle-oficial",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Detalle con la etiqueta «Recomendada por REPP»."
+    },
+    {
+      "rf": "RF-11",
+      "paso": "03",
+      "nombre": "repp-desmarcada",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Al desmarcarla desaparece de REPP («Ninguna rutina coincide»)."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "01",
+      "nombre": "valoracion-4-estrellas",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Cuatro estrellas marcadas y promedio «4,0 (1)»."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "02",
+      "nombre": "autora-no-puede-valorar",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Estrellas desactivadas con «No puedes valorar tu propia rutina»."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "03",
+      "nombre": "hilo-de-comentarios",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Comentario de un socio y respuesta de la autora en un hilo de un nivel."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "04",
+      "nombre": "denunciar-ejercicio-privado",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Hoja «Reportar» con «Ejercicio peligroso» preseleccionado para el ejercicio privado."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "04b",
+      "nombre": "denuncia-enviada",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "«Gracias. Lo revisaremos.» tras enviar."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "05",
+      "nombre": "cola-caso-ejercicio",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "El administrador del gimnasio ve el caso de ejercicio con «Ejercicio peligroso» en la cola."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "06",
+      "nombre": "ocultar-ejercicio-falla-500-backend",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "DEFECTO DEL BACKEND: ocultar el caso de un ejercicio responde 500 (restricción ck_ejercicio_moderacion); no se pudo capturar el caso resuelto."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "07",
+      "nombre": "ejercicio-oculto-por-moderacion",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "El ejercicio aparece como «Oculto por moderación» (estado aplicado por SQL por el defecto anterior)."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "08",
+      "nombre": "comentario-oculto-por-tres-denuncias",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Tras tres denunciantes distintos el comentario se oculta solo (solo 1440 claro, por el límite de 20 denuncias/hora)."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "01",
+      "nombre": "buscar-persona",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "«Compartir rutina»: buscador de personas, resultado sin email y persona elegida."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "02",
+      "nombre": "compartida-con-pendiente",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "«Compartida con» muestra a la persona como Pendiente."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "03",
+      "nombre": "aviso-de-invitacion",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "El invitado ve en Avisos «Ana Autora te compartió la rutina …»."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "04",
+      "nombre": "tarjeta-de-invitacion",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Mías › Compartidas conmigo: tarjeta de invitación sin ejercicios."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "05",
+      "nombre": "detalle-bloqueado-antes-de-aceptar",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Abrir el detalle por URL antes de aceptar: solo Aceptar / Rechazar, sin ejercicios (403 SHARE_PENDING)."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "06",
+      "nombre": "aceptada-ve-todo",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Tras aceptar se ve la rutina completa."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "07",
+      "nombre": "aviso-de-aceptacion",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "La autora recibe «… aceptó tu rutina …»."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "08",
+      "nombre": "rechazada-bruno-no-la-ve",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Tras rechazar la invitación desaparece de la lista del invitado."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "08b",
+      "nombre": "aviso-de-rechazo",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "La autora recibe «… no aceptó tu rutina …»."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "09",
+      "nombre": "revocada",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "«Compartida con» marca la invitación como Revocada."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "09b",
+      "nombre": "bruno-ya-no-la-ve",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "El invitado ya no puede abrir la rutina revocada."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "01",
+      "nombre": "a2-fechas",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "A2: pantalla «Paso 1 de 3 · Fechas» con inicio, duración y días."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "01b",
+      "nombre": "a3-modo",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "A3: tres modos (Normal, Sobrecarga progresiva, Metas de marca) y la casilla de cardio."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "01c",
+      "nombre": "a5-resumen",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "A5: resumen de lo que se va a activar."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "01d",
+      "nombre": "tarjeta-del-programa",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Tras activar, la tarjeta del programa aparece en Rutinas."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "02",
+      "nombre": "activar-ajena-crea-copia",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Activar una rutina pública ajena activa una copia propia con la franja «Basada en»."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "03",
+      "nombre": "a1-reemplazo",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "A1: «Solo puedes tener un programa de pesas a la vez», con el programa actual y el nuevo."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "04",
+      "nombre": "tarjeta-cambia-tras-reemplazo",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Tras apagar y activar, la tarjeta muestra el programa nuevo."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "05",
+      "nombre": "dos-tarjetas-fuerza-y-cardio",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Con pesas y cardio activos se ven las dos tarjetas."
+    },
+    {
+      "rf": "RF-15",
+      "paso": "01a",
+      "nombre": "a4-datos-sobrecarga",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "A4: press banca 60 kg, 8–12 reps, RIR 2."
+    },
+    {
+      "rf": "RF-15",
+      "paso": "01",
+      "nombre": "a5-resumen",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "A5: resumen con modo Sobrecarga progresiva y la carga."
+    },
+    {
+      "rf": "RF-15",
+      "paso": "02",
+      "nombre": "resumen-sube-a-62-5",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Resumen de sesión 3×12 a 60 kg: bono del modo y «Próxima: 62,5 kg»."
+    },
+    {
+      "rf": "RF-15",
+      "paso": "03",
+      "nombre": "sugerido-62-5",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Página del programa: «Sugerido: 62,5 kg × 8–12»."
+    },
+    {
+      "rf": "RF-15",
+      "paso": "03b",
+      "nombre": "sugerido-durante-la-sesion",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Durante la sesión, el ejercicio muestra «Sugerido: 62,5 kg × 8–12»."
+    },
+    {
+      "rf": "RF-15",
+      "paso": "04",
+      "nombre": "baja-tras-dos-fallos",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Dos sesiones seguidas bajo el mínimo: sugerido 60 kg."
+    },
+    {
+      "rf": "RF-15",
+      "paso": "05",
+      "nombre": "semana-de-descarga",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Semana de descarga (marcada por SQL): carga sugerida al 90 % (53,75 kg)."
+    },
+    {
+      "rf": "RF-16",
+      "paso": "01",
+      "nombre": "e1rm-116-7",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Marca 100 kg × 5: «1RM estimado: 116,7 kg»."
+    },
+    {
+      "rf": "RF-16",
+      "paso": "02",
+      "nombre": "meta-125-sugerencia-realista",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Meta de 125 kg con la sugerencia «entre 123 y 128 kg»."
+    },
+    {
+      "rf": "RF-16",
+      "paso": "03",
+      "nombre": "avance-hacia-la-meta",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Página del programa con la barra de avance hacia la meta."
+    },
+    {
+      "rf": "RF-16",
+      "paso": "04",
+      "nombre": "meta-lograda-en-el-resumen",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Resumen de sesión con «¡Nueva marca!»."
+    },
+    {
+      "rf": "RF-16",
+      "paso": "04b",
+      "nombre": "meta-lograda-en-el-programa",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "El programa marca «Meta lograda»."
+    },
+    {
+      "rf": "RF-16",
+      "paso": "04c",
+      "nombre": "aviso-meta-alcanzada",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "La bandeja de avisos trae «Nueva marca»."
+    },
+    {
+      "rf": "RF-17",
+      "paso": "01",
+      "nombre": "asistente-zonas-con-su-fc",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Asistente: Bici, L-X-V, 30 min, zonas con FC máx 180 y reposo 60 (Z2 132–144 lpm)."
+    },
+    {
+      "rf": "RF-17",
+      "paso": "02a",
+      "nombre": "registro-de-la-sesion",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Registro: actividad, minutos, distancia, pulso y esfuerzo."
+    },
+    {
+      "rf": "RF-17",
+      "paso": "02",
+      "nombre": "sesion-guardada",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Resultado: «Cuentan 32 min» y los minutos de la semana."
+    },
+    {
+      "rf": "RF-17",
+      "paso": "03",
+      "nombre": "progreso-semanal-96-minutos",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Programa de cardio: la semana con 96 minutos (semana parcial: el objetivo depende del día de la corrida)."
+    },
+    {
+      "rf": "RF-17",
+      "paso": "04a",
+      "nombre": "plan-por-esfuerzo",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Plan por sensación 1–10 sin pulsómetro: «Esfuerzo 5 … zona 3»."
+    },
+    {
+      "rf": "RF-17",
+      "paso": "04",
+      "nombre": "plan-sin-pulsometro-activo",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "El plan por esfuerzo queda activo en Rutinas."
+    },
+    {
+      "rf": "RF-17",
+      "paso": "05",
+      "nombre": "sin-dias-no-activa",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Sin días elegidos no se puede activar: «Elige al menos un día.»"
+    },
+    {
+      "rf": "RF-18",
+      "paso": "01",
+      "nombre": "semana-1-cumplida-x1-2",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Semana 1 cumplida: multiplicador x1,2 (cierre con la herramienta de soporte)."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "01b",
+      "nombre": "tarjeta-con-multiplicador",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Tarjeta del programa con x1,2 y «Cumple esta semana para llegar a x1,4»."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "03a",
+      "nombre": "cuatro-semanas-x1-8",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Cuatro semanas cumplidas seguidas: x1,8."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "03",
+      "nombre": "trayectoria-con-insignias-de-modo",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Trayectoria: «Cuatro semanas de sobrecarga» entre las insignias ganadas."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "02",
+      "nombre": "semana-incumplida-vuelve-a-x1-0",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Semana 5 no cumplida (SQL): multiplicador vuelve a x1,0."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "05",
+      "nombre": "puntos-de-modo-en-trayectoria",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "«Cómo se ganan los puntos»: línea «Programas con modo» con el bono acumulado."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "04",
+      "nombre": "sin-modo-no-hay-bono",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Con modo Normal el resumen de sesión no trae bono de modo."
+    },
+    {
+      "rf": "RF-19",
+      "paso": "02",
+      "nombre": "pantalla-de-cierre",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Fin del programa (fechas movidas por SQL): «¿Qué sigue?» con Repetir, Elegir otra y Apagar."
+    },
+    {
+      "rf": "RF-19",
+      "paso": "03",
+      "nombre": "repetir-con-cargas-nuevas",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Repetir: programa nuevo con «Sugerido: 62,5 kg × 8–12»."
+    },
+    {
+      "rf": "RF-19",
+      "paso": "04",
+      "nombre": "apagar-el-cardio-sigue",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Apagar: sin tarjeta de pesas y el cardio sigue."
+    },
+    {
+      "rf": "RF-20",
+      "paso": "01",
+      "nombre": "hoja-con-cambios",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Resumen de sesión: «¿Actualizar la rutina con estos cambios?» con la lista."
+    },
+    {
+      "rf": "RF-20",
+      "paso": "02a",
+      "nombre": "rutina-actualizada-aviso",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Tras Actualizar: «Rutina actualizada con los cambios de esta sesión.»"
+    },
+    {
+      "rf": "RF-20",
+      "paso": "02",
+      "nombre": "rutina-refleja-los-cambios",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "El detalle de la rutina muestra el peso nuevo y el ejercicio añadido."
+    },
+    {
+      "rf": "RF-20",
+      "paso": "03a",
+      "nombre": "solo-esta-vez-aviso",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Tras «Solo esta vez»: «Listo: la rutina no cambia.»"
+    },
+    {
+      "rf": "RF-20",
+      "paso": "03",
+      "nombre": "rutina-no-cambia",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "La rutina sigue con los valores anteriores."
+    },
+    {
+      "rf": "RF-19",
+      "paso": "01",
+      "nombre": "notificacion-programa-terminado",
+      "plataformas": [],
+      "faltante": "NO cubierto con captura: el aviso PROGRAM_FINISHED lo emite un trabajo del último día del programa y la app no tiene reloj; solo se verificó la pantalla de cierre moviendo las fechas por SQL."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "06",
+      "nombre": "cierre-real-del-trabajo-semanal",
+      "plataformas": [],
+      "faltante": "NO cubierto: el cierre semanal real (trabajo del lunes) no se ejecutó; las semanas se cerraron con la herramienta de soporte recompute-week y, para el multiplicador del programa y la semana incumplida, con SQL que replica lo que haría el trabajo."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "06",
+      "nombre": "caso-resuelto-oculto-ejercicio",
+      "plataformas": [],
+      "faltante": "NO capturado: ocultar un ejercicio desde la cola de moderación responde 500 en el backend (la restricción ck_ejercicio_moderacion solo admite OCULTO_*, pero el código escribe OCULTA_MODERACION). Se dejó la captura del fallo y se aplicó el estado por SQL para comprobar la pantalla."
     }
   ]
 }

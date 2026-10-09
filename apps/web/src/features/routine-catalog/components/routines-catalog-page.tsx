@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { HeartPulse, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { ButtonLink } from '@/shared/components/ui/button';
@@ -47,6 +47,10 @@ export function RoutinesCatalogPage() {
       <PageHeader
         actions={
           <div className="flex flex-wrap gap-2" data-tutorial-id="routines:actions">
+            <ButtonLink href="/cardio/new" variant="secondary">
+              <HeartPulse aria-hidden className="size-4" />
+              Plan de cardio
+            </ButtonLink>
             <RoutineImportDialog />
             <ButtonLink href="/routines/new" variant="primary">
               <Plus aria-hidden className="size-4" />

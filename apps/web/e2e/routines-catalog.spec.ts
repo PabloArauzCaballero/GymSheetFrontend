@@ -14,6 +14,8 @@ import {
   crearRutina,
   empujeCuatroDias,
   etiquetaUnica,
+  ejercicioAlAzar,
+  ejerciciosAlAzar,
   huellaPropia,
   promoverASistema,
   publicarRutina,
@@ -51,7 +53,7 @@ for (const combo of combos) {
         objetivo: 'FUERZA',
         duracionSemanas: 8,
         dias: [
-          { diaSemana: 1, nombre: 'Sentadilla', ejercicios: [{ nombre: 'barbell lunge', ...huellaPropia() }] },
+          { diaSemana: 1, nombre: 'Sentadilla', ejercicios: [{ nombre: ejercicioAlAzar(), ...huellaPropia() }] },
           { diaSemana: 3, nombre: 'Banca', ejercicios: [{ nombre: 'barbell bench press', repsMin: 3, repsMax: 5 }] },
           { diaSemana: 5, nombre: 'Peso muerto', ejercicios: [{ nombre: 'barbell deadlift', repsMin: 3, repsMax: 5 }] },
         ],
@@ -73,7 +75,7 @@ for (const combo of combos) {
         objetivo: 'RESISTENCIA',
         duracionSemanas: 4,
         dias: [
-          { diaSemana: 2, nombre: 'Circuito A', ejercicios: [{ nombre: 'barbell lunge', ...huellaPropia() }] },
+          { diaSemana: 2, nombre: 'Circuito A', ejercicios: ejerciciosAlAzar(2).map((nombre) => ({ nombre, ...huellaPropia() })) },
           { diaSemana: 6, nombre: 'Circuito B', ejercicios: [{ nombre: 'barbell romanian deadlift', repsMin: 15, repsMax: 20 }] },
         ],
       });
