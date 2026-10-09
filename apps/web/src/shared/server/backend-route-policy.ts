@@ -14,7 +14,7 @@ const permissionKey = '[a-z-]+%3A[a-z-]+';
 // alternativa explícita en vez de un comodín, igual que el token de activación
 // más abajo — así una URL no puede colar un valor que el backend rechazaría
 // de todos modos, pero sin llegar a intentarlo.
-const moderationTargetKind = 'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER';
+const moderationTargetKind = 'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER|ROUTINE|EXERCISE|COMMENT';
 
 const allowedPathPatterns = [
   /^\/access\/me$/u,
@@ -61,6 +61,15 @@ const allowedPathPatterns = [
     'u',
   ),
   new RegExp(`^/admin/moderation/users/${resourceId}/history$`, 'u'),
+  // Rutinas REPP (RF-B2): el listado y el alta de oficiales, marcar/desmarcar
+  // (POST/DELETE) y las métricas de una rutina. Una alternativa explícita por
+  // sufijo: `/admin/routines/:id/<otra cosa>` no pasa.
+  /^\/admin\/routines$/u,
+  new RegExp(`^/admin/routines/${resourceId}/(official|insights)$`, 'u'),
+  // Soporte de entrenamiento (RF-B3): la ficha de un socio y el recálculo de
+  // una semana cerrada. Son las dos únicas rutas de soporte que se abren.
+  new RegExp(`^/admin/support/users/${resourceId}/training$`, 'u'),
+  new RegExp(`^/admin/support/programs/${resourceId}/recompute-week$`, 'u'),
   // Permisos granulares del personal (H01): catálogo, los de un usuario,
   // otorgar y revocar. `/me` es la vista propia (qué puedo hacer yo).
   /^\/admin\/permissions\/me$/u,

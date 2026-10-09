@@ -88,6 +88,26 @@ const allowedCases: Array<[string[], string]> = [
   [['routines', id, 'weeks', '52'], `/routines/${id}/weeks/52`],
   [['exercises', id, 'like'], `/exercises/${id}/like`],
   [['me', 'exercises', id, 'preference'], `/me/exercises/${id}/preference`],
+  // RF-B1: los tipos nuevos de moderación, en la cola, el caso y las acciones.
+  [['admin', 'moderation', 'cases', 'ROUTINE', id], `/admin/moderation/cases/ROUTINE/${id}`],
+  [['admin', 'moderation', 'cases', 'EXERCISE', id, 'claim'], `/admin/moderation/cases/EXERCISE/${id}/claim`],
+  [['admin', 'moderation', 'cases', 'COMMENT', id, 'resolve'], `/admin/moderation/cases/COMMENT/${id}/resolve`],
+  // Los cuatro tipos antiguos siguen pasando.
+  ...(['STORY', 'PROFILE_PHOTO', 'CHAT_MESSAGE', 'USER'] as const).map(
+    (kind): [string[], string] => [
+      ['admin', 'moderation', 'cases', kind, id, 'release'],
+      `/admin/moderation/cases/${kind}/${id}/release`,
+    ],
+  ),
+  // RF-B2 y RF-B3.
+  [['admin', 'routines'], '/admin/routines'],
+  [['admin', 'routines', id, 'official'], `/admin/routines/${id}/official`],
+  [['admin', 'routines', id, 'insights'], `/admin/routines/${id}/insights`],
+  [['admin', 'support', 'users', id, 'training'], `/admin/support/users/${id}/training`],
+  [
+    ['admin', 'support', 'programs', id, 'recompute-week'],
+    `/admin/support/programs/${id}/recompute-week`,
+  ],
 ];
 const blockedCases: Array<[string[]]> = [
   [['muscles', 'PECTORALIS_MAJOR', 'secrets']],
@@ -99,6 +119,20 @@ const blockedCases: Array<[string[]]> = [
   [['admin', 'media', id]],
   // `targetKind` es el enum cerrado de moderación, no un comodín.
   [['admin', 'moderation', 'cases', 'BOGUS_KIND', id]],
+  [['admin', 'moderation', 'cases', 'ROUTINES', id]],
+  [['admin', 'moderation', 'cases', 'routine', id]],
+  // Rutinas y soporte: parecidas a las permitidas, pero no lo son.
+  [['admin', 'routines', id]],
+  [['admin', 'routines', id, 'insight']],
+  [['admin', 'routines', id, 'official', 'extra']],
+  [['admin', 'routines', 'official']],
+  [['admin', 'support']],
+  [['admin', 'support', 'users', id]],
+  [['admin', 'support', 'users', id, 'training', 'extra']],
+  [['admin', 'support', 'users', id, 'trainings']],
+  [['admin', 'support', 'programs', id]],
+  [['admin', 'support', 'programs', id, 'recompute']],
+  [['admin', 'support', 'programs', id, 'recompute-weeks']],
   // La administración del catálogo de la senda no pasa por el BFF: la pantalla
   // que la consumirá todavía no existe, y abrir la ruta antes de tener quien la
   // use sería dejar accesible desde el navegador una API que nadie vigila.

@@ -27,11 +27,16 @@ const DOMAIN_OPTIONS = [
   { value: 'files', label: 'Archivos' },
   { value: 'moderation', label: 'Moderación' },
   { value: 'support', label: 'Soporte' },
+  { value: 'routines', label: 'Rutinas' },
 ] as const;
 
 const ACTION_LABEL: Record<string, string> = {
   grant: 'Otorgó permiso',
   revoke: 'Revocó permiso',
+  'create-official': 'Creó una rutina oficial',
+  'mark-official': 'Marcó una rutina como oficial',
+  'unmark-official': 'Quitó una rutina de oficiales',
+  'recompute-week': 'Recalculó una semana de un programa',
 };
 
 /**
@@ -110,7 +115,9 @@ export function AuditPanel({
               />
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div aria-label="Registro de actividad" className="overflow-x-auto" role="region" tabIndex={0}>
+              {/* Una región que se desplaza necesita foco para que el teclado
+                  pueda recorrerla (axe: scrollable-region-focusable). */}
               <table className="w-full min-w-[760px] text-sm">
                 <thead>
                   <tr className="border-b border-[var(--border-subtle)] text-left text-xs uppercase tracking-wide text-[var(--text-muted)]">
