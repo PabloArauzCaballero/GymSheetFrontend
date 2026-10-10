@@ -144,6 +144,7 @@ export function ExerciseEditor({
       </div>
       <div>
         <Button
+          aria-label={`${porTiempo ? 'Pasar a repeticiones' : 'Por tiempo'} · ${exercise.nombre}`}
           aria-pressed={porTiempo}
           onClick={() => onPorTiempo(porTiempo ? null : 30)}
           size="sm"

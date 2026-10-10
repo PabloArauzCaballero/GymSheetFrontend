@@ -17,17 +17,18 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | RF-07 | 20 / 20 | 4 / 4 | 1 |
 | RF-08 | 16 / 16 | 4 / 4 | 0 |
 | RF-09 | 20 / 20 | 6 / 6 | 2 |
-| RF-10 | 28 / 28 | 6 / 6 | 1 |
+| RF-10 | 40 / 40 | 6 / 6 | 1 |
 | RF-11 | 12 / 12 | 0 / 0 | 1 |
 | RF-12 | 33 / 36 | 6 / 6 | 2 |
 | RF-13 | 44 / 44 | 7 / 7 | 2 |
-| RF-14 | 32 / 32 | 9 / 9 | 0 |
+| RF-14 | 36 / 36 | 9 / 9 | 0 |
 | RF-15 | 28 / 28 | 6 / 6 | 2 |
 | RF-16 | 24 / 24 | 5 / 5 | 0 |
 | RF-17 | 28 / 28 | 6 / 6 | 0 |
 | RF-18 | 28 / 28 | 0 / 0 | 5 |
 | RF-19 | 12 / 12 | 3 / 3 | 2 |
 | RF-20 | 20 / 20 | 3 / 3 | 0 |
+| RF-C3 | 16 / 16 | 0 / 0 | 0 |
 
 ## Detalle
 
@@ -121,6 +122,16 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | RF-18 | 03 | — | — | insignia-por-racha-de-semanas | ❌ No capturado: necesita 4 semanas reales de sesiones. |
 | RF-18 | 04 | — | — | sin-modo-no-hay-bono | ❌ Flujo 23-recompensas-bono-y-modo escrito pero no completado en la última pasada. |
 | RF-19 | 01 | — | — | notificacion-de-fin-de-programa | ❌ No capturado: depende del fin real del programa (sin reloj simulado). |
+| RF-10 | 01 | Web | `RF-10/web/RF-10_p01_guardar-en-mis-rutinas_*` | Rutina ajena: botón principal «Guardar en mis rutinas», «Probar un día» secundario y SIN «Activar». | ✅ 4/4 capturadas · 1 revisadas |
+| RF-10 | 01b | Web | `RF-10/web/RF-10_p01b_copia-v1-abierta_*` | Tras guardar se abre la copia «… · v1» (aviso «Guardada en tus rutinas») con «Activar». | ✅ 4/4 capturadas · 1 revisadas |
+| RF-10 | 02b | Web | `RF-10/web/RF-10_p02b_ya-la-guardaste-v1_*` | De vuelta en la original: «Ya la guardaste como v1 · Abrir». | ✅ 4/4 capturadas · 1 revisadas |
+| RF-10 | 02c | Web | `RF-10/web/RF-10_p02c_v1-y-v2-en-mias_*` | Dos copias seguidas «· v1» y «· v2» en Mías. | ✅ 4/4 capturadas · 1 revisadas |
+| RF-14 | 02 | Web | `RF-14/web/RF-14_p02_ajena-sin-activar_*` | Rutina ajena sin «Activar programa»; con «Guardar en mis rutinas». | ✅ 4/4 capturadas · sin revisar |
+| RF-14 | 02b | Web | `RF-14/web/RF-14_p02b_enlace-directo-a-ajena-avisa_*` | Enlace directo a /activate de una ajena: vuelve al detalle con «Guárdala en tus rutinas para activarla» y no crea copia. | ✅ 4/4 capturadas · 1 revisadas |
+| RF-C3 | 01 | Web | `RF-C3/web/RF-C3_p01_ordenar-con-unir_*` | Ver y ordenar con «Unir con el siguiente» entre cada par de ejercicios. | ✅ 4/4 capturadas · sin revisar |
+| RF-C3 | 02 | Web | `RF-C3/web/RF-C3_p02_superserie-a1-a2_*` | Recuadro «Superserie A» con A1 y A2, «Separar» y descanso entre ejercicios. | ✅ 4/4 capturadas · 1 revisadas |
+| RF-C3 | 03 | Web | `RF-C3/web/RF-C3_p03_descanso-entre-y-por-tiempo_*` | Descanso entre ejercicios 20 s y el tercer ejercicio por tiempo (Duración 30 s). | ✅ 4/4 capturadas · 1 revisadas |
+| RF-C3 | 04 | Web | `RF-C3/web/RF-C3_p04_detalle-con-superserie_*` | Detalle del día: «Superserie A · 3 vueltas», A1/A2, «Transición · 20 s», descanso tras la vuelta y «3 series · 30 s». | ✅ 4/4 capturadas · 1 revisadas |
 | RF-01 | 01 | Web | `RF-01/web/RF-01_p01_programa-y-pestanas_*` | Programa activo arriba, pestañas Públicas / Recomendadas por REPP / Mías con el contador de invitaciones. | ✅ 4/4 capturadas · 1 revisadas |
 | RF-01 | 02 | Web | `RF-01/web/RF-01_p02_publicas-populares_*` | Pestaña Públicas ordenada por populares: tarjetas con autor, valoración, copias y miniatura de la semana (filtrada por la etiqueta de la ejecución). | ✅ 4/4 capturadas · sin revisar |
 | RF-01 | 03 | Web | `RF-01/web/RF-01_p03_filtro-fuerza-3-dias_*` | Objetivo Fuerza + 3 días: solo coincide una rutina; «3 filtros activos». | ✅ 4/4 capturadas · sin revisar |
@@ -138,14 +149,13 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | RF-02 | 06 | Web | `RF-02/web/RF-02_p06_rutina-antigua-un-dia_*` | Rutina anterior a los días: «Rutina de un día (cualquier día)», sin selector Mes. | ✅ 4/4 capturadas · sin revisar |
 | RF-09 | 01 | Web | `RF-09/web/RF-09_p01_confirmar-publicacion_*` | Diálogo de confirmación: «Cualquiera podrá verla, valorarla, comentarla y copiarla». | ✅ 4/4 capturadas · sin revisar |
 | RF-09 | 02 | Web | `RF-09/web/RF-09_p02_aparece-en-publicas_*` | Otra cuenta ve la rutina en Públicas con su autora. | ✅ 4/4 capturadas · sin revisar |
-| RF-09 | 03 | Web | `RF-09/web/RF-09_p03_duplicado-bloqueado_*` | Publicar una idéntica: «Ya existe una rutina idéntica» con el nombre y la autora de la existente, y «Ver rutina» / «Seguir editando». | ✅ 4/4 capturadas · 1 revisadas |
+| RF-09 | 03 | Web | `RF-09/web/RF-09_p03_duplicado-bloqueado_*` | Publicar una idéntica: «Ya existe una rutina idéntica» con el nombre y la autora de la existente, y «Ver rutina» / «Seguir editando». | ✅ 4/4 capturadas · sin revisar |
 | RF-09 | 04 | Web | `RF-09/web/RF-09_p04_cambia-una-repeticion-publica_*` | Cambiar una repetición permite publicar: el botón pasa a «Despublicar». | ✅ 4/4 capturadas · sin revisar |
 | RF-09 | 05 | Web | `RF-09/web/RF-09_p05_solo-nombre-sigue-bloqueada_*` | Cambiar solo el nombre sigue bloqueado por el mismo diálogo. | ✅ 4/4 capturadas · sin revisar |
-| RF-10 | 01 | Web | `RF-10/web/RF-10_p01_copiada-a-mias_*` | Aviso «Copiada a Mías» con la acción «Abrir». | ✅ 4/4 capturadas · sin revisar |
 | RF-10 | 02 | Web | `RF-10/web/RF-10_p02_franja-de-atribucion_*` | La copia lleva la franja «Basada en … de Ana Autora». | ✅ 4/4 capturadas · sin revisar |
 | RF-10 | 03 | Web | `RF-10/web/RF-10_p03_original-no-cambia_*` | Tras editar la copia, el original de la autora sigue igual. | ✅ 4/4 capturadas · sin revisar |
 | RF-10 | 04 | Web | `RF-10/web/RF-10_p04_hay-version-nueva_*` | Banner «Hay una versión nueva de la rutina original» en la copia. | ✅ 4/4 capturadas · sin revisar |
-| RF-10 | 05 | Web | `RF-10/web/RF-10_p05_ver-cambios_*` | «Ver cambios» lista lo que añade la versión nueva. | ✅ 4/4 capturadas · 1 revisadas |
+| RF-10 | 05 | Web | `RF-10/web/RF-10_p05_ver-cambios_*` | «Ver cambios» lista lo que añade la versión nueva. | ✅ 4/4 capturadas · sin revisar |
 | RF-10 | 06 | Web | `RF-10/web/RF-10_p06_version-aplicada_*` | Tras «Aplicar» el banner desaparece y la copia conserva su nombre. | ✅ 4/4 capturadas · sin revisar |
 | RF-10 | 07 | Web | `RF-10/web/RF-10_p07_sin-atribucion-desde-cero_*` | Una rutina hecha desde cero no lleva franja de atribución. | ✅ 4/4 capturadas · sin revisar |
 | RF-11 | 02 | Web | `RF-11/web/RF-11_p02_repp-con-sello_*` | Pestaña REPP con la rutina oficial y su sello. | ✅ 4/4 capturadas · sin revisar |
@@ -175,10 +185,9 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | RF-14 | 01b | Web | `RF-14/web/RF-14_p01b_a3-modo_*` | A3: tres modos (Normal, Sobrecarga progresiva, Metas de marca) y la casilla de cardio. | ✅ 4/4 capturadas · sin revisar |
 | RF-14 | 01c | Web | `RF-14/web/RF-14_p01c_a5-resumen_*` | A5: resumen de lo que se va a activar. | ✅ 4/4 capturadas · sin revisar |
 | RF-14 | 01d | Web | `RF-14/web/RF-14_p01d_tarjeta-del-programa_*` | Tras activar, la tarjeta del programa aparece en Rutinas. | ✅ 4/4 capturadas · sin revisar |
-| RF-14 | 02 | Web | `RF-14/web/RF-14_p02_activar-ajena-crea-copia_*` | Activar una rutina pública ajena activa una copia propia con la franja «Basada en». | ✅ 4/4 capturadas · sin revisar |
 | RF-14 | 03 | Web | `RF-14/web/RF-14_p03_a1-reemplazo_*` | A1: «Solo puedes tener un programa de pesas a la vez», con el programa actual y el nuevo. | ✅ 4/4 capturadas · sin revisar |
 | RF-14 | 04 | Web | `RF-14/web/RF-14_p04_tarjeta-cambia-tras-reemplazo_*` | Tras apagar y activar, la tarjeta muestra el programa nuevo. | ✅ 4/4 capturadas · sin revisar |
-| RF-14 | 05 | Web | `RF-14/web/RF-14_p05_dos-tarjetas-fuerza-y-cardio_*` | Con pesas y cardio activos se ven las dos tarjetas. | ✅ 4/4 capturadas · 1 revisadas |
+| RF-14 | 05 | Web | `RF-14/web/RF-14_p05_dos-tarjetas-fuerza-y-cardio_*` | Con pesas y cardio activos se ven las dos tarjetas. | ✅ 4/4 capturadas · sin revisar |
 | RF-15 | 01a | Web | `RF-15/web/RF-15_p01a_a4-datos-sobrecarga_*` | A4: press banca 60 kg, 8–12 reps, RIR 2. | ✅ 4/4 capturadas · sin revisar |
 | RF-15 | 01 | Web | `RF-15/web/RF-15_p01_a5-resumen_*` | A5: resumen con modo Sobrecarga progresiva y la carga. | ✅ 4/4 capturadas · sin revisar |
 | RF-15 | 02 | Web | `RF-15/web/RF-15_p02_resumen-sube-a-62-5_*` | Resumen de sesión 3×12 a 60 kg: bono del modo y «Próxima: 62,5 kg». | ✅ 4/4 capturadas · 1 revisadas |
@@ -314,18 +323,23 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | `RF-20_p01_hoja-con-la-lista-de-cambios_ios_oscuro.png` | Revisada (agente, 2026-10-09): «¿Actualizar tu rutina?» con peso a 65 kg, ejercicio nuevo y ejercicio quitado, Actualizar / Solo esta vez. |
 | `RF-20_p02_la-rutina-refleja-los-cambios_ios_oscuro.png` | Revisada (agente, 2026-10-09): tras Actualizar, el lunes muestra 4 × 6-8 a 65 kg y el curl añadido. |
 | `RF-20_p03_solo-esta-vez-no-cambia-la-rutina_ios_oscuro.png` | Revisada (agente, 2026-10-09): tras «Solo esta vez» (sesión con 70 kg) el día sigue en 65 kg. |
+| `RF-10_p01_guardar-en-mis-rutinas_1440_claro.png` | Revisada (agente, 2026-10-10): rutina pública ajena de Ana vista por Bruno; botón volt «Guardar en mis rutinas», «Probar un día» secundario, «Reportar»; no hay «Activar». Sin defectos. |
+| `RF-10_p01b_copia-v1-abierta_390_claro.png` | Revisada (agente, 2026-10-10): toast «Guardada en tus rutinas», título «Empuje 4 días … · v1», «Activar» presente, franja «Basada en … de Ana Autora». Sin defectos. |
+| `RF-10_p02b_ya-la-guardaste-v1_1440_claro.png` | Revisada (agente, 2026-10-10): «Ya la guardaste como v1» con «Abrir» junto a los botones; el título pasa a 2 líneas por el ancho de las acciones (aceptable). Copias: 1. |
+| `RF-10_p02c_v1-y-v2-en-mias_390_oscuro.png` | Revisada (agente, 2026-10-10): Mías muestra «… · v2» y «… · v1» con «Basada en … de Ana Autora» más las otras rutinas de la prueba. Sin defectos. |
+| `RF-14_p02b_enlace-directo-a-ajena-avisa_1440_claro.png` | Revisada (agente, 2026-10-10): tras abrir /activate de una ajena queda en el detalle con el aviso «Guárdala en tus rutinas para activarla»; el aviso tapa en parte el nombre de usuario de la cabecera (toast transitorio). Sin «Activar». |
+| `RF-C3_p02_superserie-a1-a2_390_oscuro.png` | Revisada (agente, 2026-10-10): recuadro «Superserie A» con A1/A2, descanso entre ejercicios y «Separar»; en 390 px los nombres largos se truncan («A1. barbell bench…») al compartir fila con flechas y papelera (defecto menor, preexistente). |
+| `RF-C3_p03_descanso-entre-y-por-tiempo_1440_claro.png` | Revisada (agente, 2026-10-10): descanso 20, A1/A2 por repeticiones, tercero con «Duración (s) 30» y «Pasar a repeticiones»; «Unir con el siguiente» entre el bloque y el tercero. En la captura de página completa la barra lateral aparece a media altura (artefacto del captor, igual que en otras). |
+| `RF-C3_p04_detalle-con-superserie_1440_claro.png` | Revisada (agente, 2026-10-10): «Superserie A · 3 vueltas», «Descanso 1:30 tras la vuelta», A1/A2 con «Transición · 20 s» y el tercero suelto «3 series · 30 s». Sin defectos. |
 | `RF-01_p01_programa-y-pestanas_1440_claro.png` | Revisada (agente, 2026-10-09): tarjeta del programa «Empuje 4 días» con x1,0, barra y «Cumple esta semana para llegar a x1,2», Tu semana, pestañas con el contador «1» en Mías, filtros y tarjetas. Las tarjetas de abajo son rutinas públicas que dejaron otras pruebas en la misma base (no filtradas en este paso). Sin defectos. |
 | `RF-01_p07_mias-compartidas-invitacion_390_oscuro.png` | Revisada (agente, 2026-10-09): chip «Compartidas conmigo (1)» activo, tarjeta «Invitación» de Bruno con «Verás los ejercicios cuando la aceptes», Aceptar y Rechazar completos. Sin defectos. |
 | `RF-01_p08_sin-conexion-con-cache_390_claro.png` | Revisada (agente, 2026-10-09): aviso ámbar «Sin conexión. Te mostramos lo último que cargamos.» sobre las tres tarjetas ya cargadas. |
 | `RF-01_p09_error-500_1440_oscuro.png` | Revisada (agente, 2026-10-09): panel «No se pudo cargar la información» con «Reintentar». Un aviso global «Algo salió mal» sobrevuela arriba a la derecha (lo emite la app ante el fallo simulado). |
 | `RF-02_p02_mes-con-descargas_390_oscuro.png` | Revisada (agente, 2026-10-09): tabla Mes de 12 semanas cabe en 390 px con 7 columnas; S4, S8 y S12 con «Descarga»; indicación «Toca un día del calendario…». |
 | `RF-02_p03_hoja-del-dia-s2-martes_1440_claro.png` | Revisada (agente, 2026-10-09): celda S2·Mar seleccionada y hoja «Tirón» (Semana 2 · Martes) con barbell deadlift y lat pulldown y sus series; ficha «Detalles» a la derecha. Sin defectos. |
-| `RF-09_p03_duplicado-bloqueado_1440_claro.png` | Revisada (agente, 2026-10-09): diálogo «Ya existe una rutina idéntica» con el nombre de la existente y su autora, «Seguir editando» y «Ver rutina». El fondo desenfocado es el detalle de la rutina de quien publica. |
-| `RF-10_p05_ver-cambios_1440_claro.png` | Revisada (agente, 2026-10-09): franja «Basada en … de Ana Autora», banner azul «Hay una versión nueva» con «Empuje: se añade barbell lunge» y Aplicar/Ignorar; el día editado por Bruno conserva su nombre. Se ve «76 series × 153–508 reps» en el primer ejercicio: son datos aleatorios de la siembra para evitar duplicados, no un defecto. |
 | `RF-12_p03_hilo-de-comentarios_1440_claro.png` | Revisada (agente, 2026-10-09): valoración 4,0 (1), estrellas desactivadas con «No puedes valorar tu propia rutina», comentario de Bruno y respuesta anidada con «Eliminar». El hueco de la barra lateral a la izquierda es del fullPage con la barra pegajosa. |
 | `RF-12_p07_ejercicio-oculto-por-moderacion_1440_claro.png` | Revisada (agente, 2026-10-09): el ejercicio 2 sale como «Oculto por moderación» sin enlace; la valoración propia de Bruno (4 estrellas) se ve marcada. Estado aplicado por SQL por el defecto 500 del backend. |
 | `RF-13_p01_buscar-persona_390_oscuro.png` | Revisada (agente, 2026-10-09): tras corregir el cuadrado de la casilla, el resultado se ve con casilla marcada, nombre y objetivo, sin email. |
-| `RF-14_p05_dos-tarjetas-fuerza-y-cardio_1440_claro.png` | Revisada (agente, 2026-10-09): tarjeta de pesas (Normal) y de cardio (x1,0, barra y «Cumple esta semana…») una junto a otra; debajo el catálogo con rutinas públicas de otras pruebas. |
 | `RF-15_p02_resumen-sube-a-62-5_390_oscuro.png` | Revisada (agente, 2026-10-09): desglose con filas, «Semana 1 · 1 de 1 sesiones», «Bono del modo (x1,2 si cumples la semana) +15 pts previstos», «¡Sube a 62.5 kg! Próxima: 62,5 kg» y la hoja «¿Actualizar la rutina…?». La página de la sesión asoma debajo porque el diálogo es de pantalla completa y la captura es de página entera. El texto del servidor dice «62.5» con punto. |
 | `RF-19_p02_pantalla-de-cierre_390_claro.png` | Revisada (agente, 2026-10-09): «Terminaste «Ciclo corto»… ¿Qué sigue?» con Repetir / Elegir otra / Apagar, tres semanas cumplidas con x1,4 y la carga sugerida 62,5 kg. Defecto corregido tras la captura: el texto «Cumple esta semana para llegar a x1,2» no debe salir en un programa terminado (ahora dice «El programa terminó.»); la captura es anterior a la corrección. El multiplicador x1,0 del encabezado sale de preparar los datos por SQL. |
 | `RF-18_p05_puntos-de-modo-en-trayectoria_1440_claro.png` | Revisada (agente, 2026-10-09): «Cómo se ganan los puntos» con la línea «Programas con modo» (148) y el total 629; debajo, la senda y la insignia «Cuatro semanas de sobrecarga» ganada. El diálogo sale sobre una página con la cabecera partida por el fullPage. |
