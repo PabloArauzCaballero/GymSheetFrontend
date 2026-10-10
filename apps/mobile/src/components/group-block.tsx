@@ -17,6 +17,8 @@ export function GroupBlock({
   restSeconds,
   transition,
   status,
+  headerAction,
+  footer,
   children,
   testID,
 }: {
@@ -28,6 +30,10 @@ export function GroupBlock({
   transition?: string | null;
   /** Sustituye a «3 vueltas» a la derecha de la etiqueta (p. ej. «Vuelta 2/3» al entrenar). */
   status?: string;
+  /** Acción en la cabecera (el editor pone «Separar»). */
+  headerAction?: ReactNode;
+  /** Contenido tras las filas (el editor pone «Descanso entre ejercicios»). */
+  footer?: ReactNode;
   /** Filas `ExerciseRow grouped`. */
   children: ReactNode;
   testID?: string;
@@ -62,9 +68,12 @@ export function GroupBlock({
               {label}
             </Text>
           </View>
-          <Text strong tabular testID={testID ? `${testID}-status` : undefined} variant="subhead">
-            {status ?? roundsLabel}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <Text strong tabular testID={testID ? `${testID}-status` : undefined} variant="subhead">
+              {status ?? roundsLabel}
+            </Text>
+            {headerAction}
+          </View>
         </View>
         {items.map((child, index) => (
           <Fragment key={index}>
@@ -96,6 +105,7 @@ export function GroupBlock({
             {child}
           </Fragment>
         ))}
+        {footer}
         {restSeconds ? <RestPill seconds={restSeconds} suffix="tras la vuelta" /> : null}
       </View>
     </View>
