@@ -19,6 +19,14 @@ appId: app.gymsheet.mobile
     visible: 'Crear rutina'
     timeout: 60000
 - tapOn: 'Pestaña ${TAB}'
+# Con un programa activo la tarjeta empuja el buscador bajo el pliegue: tocarlo fuera de pantalla caería
+# sobre la barra de pestañas (Perfil). Se baja hasta que se vea.
+# (iOS cuenta como «visible» lo que está bajo la barra de pestañas, así que se sube la lista a ciegas: un
+# deslizamiento corto basta y, si ya cabía, no hay nada que desplazar.)
+- swipe:
+    start: 50%,60%
+    end: 50%,30%
+    duration: 400
 - tapOn:
     id: 'routine-search'
     point: 85%,50%

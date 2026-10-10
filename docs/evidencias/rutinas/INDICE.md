@@ -25,7 +25,7 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | RF-15 | 28 / 28 | 6 / 6 | 2 |
 | RF-16 | 24 / 24 | 5 / 5 | 0 |
 | RF-17 | 28 / 28 | 6 / 6 | 0 |
-| RF-18 | 28 / 28 | 0 / 0 | 5 |
+| RF-18 | 28 / 28 | 7 / 7 | 2 |
 | RF-19 | 12 / 12 | 3 / 3 | 2 |
 | RF-20 | 20 / 20 | 3 / 3 | 0 |
 
@@ -72,25 +72,25 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | RF-13 | 06 | Móvil | `RF-13/movil/RF-13_p06_aceptada-ve-la-rutina_*` | Aceptada ve la rutina. | ✅ 1/1 capturadas · 1 revisadas |
 | RF-13 | 07 | Móvil | `RF-13/movil/RF-13_p07_autora-ve-acepto_*` | Autora ve acepto. | ✅ 1/1 capturadas · 1 revisadas |
 | RF-13 | 09 | Móvil | `RF-13/movil/RF-13_p09_revocada_*` | Revocada. | ✅ 1/1 capturadas · 1 revisadas |
-| RF-14 | 01a | Móvil | `RF-14/movil/RF-14_p01a_a2-fechas_*` | A2 fechas. | ✅ 1/1 capturadas · sin revisar |
-| RF-14 | 01b | Móvil | `RF-14/movil/RF-14_p01b_a3-modo_*` | A3 modo. | ✅ 1/1 capturadas · sin revisar |
-| RF-14 | 01c | Móvil | `RF-14/movil/RF-14_p01c_a5-resumen_*` | A5 resumen. | ✅ 1/1 capturadas · sin revisar |
-| RF-14 | 01d | Móvil | `RF-14/movil/RF-14_p01d_programcard-en-rutinas_*` | Programcard en rutinas. | ✅ 1/1 capturadas · sin revisar |
-| RF-14 | 02 | Móvil | `RF-14/movil/RF-14_p02_activada-copia-de-ajena_*` | Activada copia de ajena. | ✅ 1/1 capturadas · sin revisar |
+| RF-14 | 01a | Móvil | `RF-14/movil/RF-14_p01a_a2-fechas_*` | A2 fechas. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-14 | 01b | Móvil | `RF-14/movil/RF-14_p01b_a3-modo_*` | A3 modo. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-14 | 01c | Móvil | `RF-14/movil/RF-14_p01c_a5-resumen_*` | A5 resumen. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-14 | 01d | Móvil | `RF-14/movil/RF-14_p01d_programcard-en-rutinas_*` | Programcard en rutinas. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-14 | 02 | Móvil | `RF-14/movil/RF-14_p02_activada-copia-de-ajena_*` | Activada copia de ajena. | ✅ 1/1 capturadas · 1 revisadas |
 | RF-14 | 02b | Móvil | `RF-14/movil/RF-14_p02b_la-copia-lleva-atribucion_*` | La copia lleva atribucion. | ✅ 1/1 capturadas · 1 revisadas |
-| RF-14 | 03 | Móvil | `RF-14/movil/RF-14_p03_a1-reemplazo_*` | A1 reemplazo. | ✅ 1/1 capturadas · sin revisar |
+| RF-14 | 03 | Móvil | `RF-14/movil/RF-14_p03_a1-reemplazo_*` | A1 reemplazo. | ✅ 1/1 capturadas · 1 revisadas |
 | RF-14 | 04 | Móvil | `RF-14/movil/RF-14_p04_la-tarjeta-cambia_*` | La tarjeta cambia. | ✅ 1/1 capturadas · 1 revisadas |
 | RF-14 | 05 | Móvil | `RF-14/movil/RF-14_p05_ambas-tarjetas-pesas-y-cardio_*` | Ambas tarjetas pesas y cardio. | ✅ 1/1 capturadas · 1 revisadas |
-| RF-15 | 01 | Móvil | `RF-15/movil/RF-15_p01_resumen-de-activacion_*` | Resumen de activacion. | ✅ 1/1 capturadas · sin revisar |
-| RF-15 | 01a | Móvil | `RF-15/movil/RF-15_p01a_a4-datos-de-sobrecarga_*` | A4 datos de sobrecarga. | ✅ 1/1 capturadas · sin revisar |
+| RF-15 | 01 | Móvil | `RF-15/movil/RF-15_p01_resumen-de-activacion_*` | Resumen de activacion. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-15 | 01a | Móvil | `RF-15/movil/RF-15_p01a_a4-datos-de-sobrecarga_*` | A4 datos de sobrecarga. | ✅ 1/1 capturadas · 1 revisadas |
 | RF-15 | 02 | Móvil | `RF-15/movil/RF-15_p02_sube-a-62-5-kg_*` | Sube a 62 5 kg. | ✅ 1/1 capturadas · 1 revisadas |
 | RF-15 | 02a | Móvil | `RF-15/movil/RF-15_p02a_sugerido-60-kg_*` | Sugerido 60 kg. | ✅ 1/1 capturadas · 1 revisadas |
 | RF-15 | 02b | Móvil | `RF-15/movil/RF-15_p02b_bloque-de-programa_*` | Bloque de programa. | ✅ 1/1 capturadas · 1 revisadas |
 | RF-15 | 03 | Móvil | `RF-15/movil/RF-15_p03_sugerido-62-5-kg_*` | Sugerido 62 5 kg. | ✅ 1/1 capturadas · 1 revisadas |
-| RF-16 | 01 | Móvil | `RF-16/movil/RF-16_p01_1rm-estimado-116-7_*` | 1rm estimado 116 7. | ✅ 1/1 capturadas · sin revisar |
-| RF-16 | 02 | Móvil | `RF-16/movil/RF-16_p02_meta-125-kg-realista_*` | Meta 125 kg realista. | ✅ 1/1 capturadas · sin revisar |
-| RF-16 | 02b | Móvil | `RF-16/movil/RF-16_p02b_resumen-de-metas_*` | Resumen de metas. | ✅ 1/1 capturadas · sin revisar |
-| RF-16 | 03 | Móvil | `RF-16/movil/RF-16_p03_barra-hacia-la-meta_*` | Barra hacia la meta. | ✅ 1/1 capturadas · sin revisar |
+| RF-16 | 01 | Móvil | `RF-16/movil/RF-16_p01_1rm-estimado-116-7_*` | 1rm estimado 116 7. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-16 | 02 | Móvil | `RF-16/movil/RF-16_p02_meta-125-kg-realista_*` | Meta 125 kg realista. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-16 | 02b | Móvil | `RF-16/movil/RF-16_p02b_resumen-de-metas_*` | Resumen de metas. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-16 | 03 | Móvil | `RF-16/movil/RF-16_p03_barra-hacia-la-meta_*` | Barra hacia la meta. | ✅ 1/1 capturadas · 1 revisadas |
 | RF-16 | 04 | Móvil | `RF-16/movil/RF-16_p04_meta-lograda_*` | Meta lograda. | ✅ 1/1 capturadas · 1 revisadas |
 | RF-17 | 01 | Móvil | `RF-17/movil/RF-17_p01_zonas-calculadas-con-su-fc_*` | Zonas calculadas con su fc. | ✅ 1/1 capturadas · 1 revisadas |
 | RF-17 | 01b | Móvil | `RF-17/movil/RF-17_p01b_tarjeta-de-cardio_*` | Tarjeta de cardio. | ✅ 1/1 capturadas · 1 revisadas |
@@ -116,10 +116,14 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | RF-13 | 08 | — | — | rechazar-invitacion | ❌ No capturado en móvil (la ruta de rechazar existe en la tarjeta y la cubre el e2e del backend). |
 | RF-15 | 04 | — | — | dos-fallos-bajan-la-carga | ❌ No capturado: necesita varias sesiones; lo cubren las pruebas del motor. |
 | RF-15 | 05 | — | — | semana-de-descarga | ❌ No capturado: depende del calendario del programa. |
-| RF-18 | 01 | — | — | x1-2-tras-semana-cumplida | ❌ NO TERMINADO: el flujo 23 (cierre semanal real con close-weeks) está escrito pero no llegó a pasar entera; el cierre semanal lo cubre el e2e `mode-rewards` del backend. |
-| RF-18 | 02 | — | — | semana-incumplida-vuelve-a-x1 | ❌ NO TERMINADO: ver RF-18 p01. |
-| RF-18 | 03 | — | — | insignia-por-racha-de-semanas | ❌ No capturado: necesita 4 semanas reales de sesiones. |
-| RF-18 | 04 | — | — | sin-modo-no-hay-bono | ❌ Flujo 23-recompensas-bono-y-modo escrito pero no completado en la última pasada. |
+| RF-18 | 00 | Móvil | `RF-18/movil/RF-18_p00_la-sesion-cuenta-para-la-semana_*` | Resumen de la sesión: «Esta sesión cuenta 1 de 1 de la semana 1» y el bono +20 por sobrecarga. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 01 | Móvil | `RF-18/movil/RF-18_p01_bono-del-modo-en-el-resumen_*` | Resumen con la línea de modo «+N por sobrecarga (x1,2 al cumplir la semana)». | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 01 | Móvil | `RF-18/movil/RF-18_p01_x1-2-tras-semana-cumplida_*` | Tarjeta del programa con «x1,2» tras cerrar la semana 1 como cumplida. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 01b | Móvil | `RF-18/movil/RF-18_p01b_semana-1-cumplida_*` | Detalle del programa: S1 «Cumplida» y chip «Multiplicador x1,2». | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 02 | Móvil | `RF-18/movil/RF-18_p02_semana-incumplida-vuelve-a-x1_*` | Tarjeta del programa sin multiplicador tras la semana 2 incumplida. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 02b | Móvil | `RF-18/movil/RF-18_p02b_semana-2-sin-cumplir-los-puntos-no-bajan_*` | Detalle: S2 «Sin cumplir», sin chip de multiplicador. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 04 | Móvil | `RF-18/movil/RF-18_p04_sin-modo-no-hay-bono_*` | Resumen de una sesión sin modo: «Tu programa» sin línea de bono. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 03 | — | — | insignia-por-racha-de-semanas | ❌ No capturado: la insignia de racha necesita 4 semanas reales; la insignia de modo en Trayectoria (flujo 23-bono) falló en la última pasada y no se repitió. |
 | RF-19 | 01 | — | — | notificacion-de-fin-de-programa | ❌ No capturado: depende del fin real del programa (sin reloj simulado). |
 | RF-01 | 01 | Web | `RF-01/web/RF-01_p01_programa-y-pestanas_*` | Programa activo arriba, pestañas Públicas / Recomendadas por REPP / Mías con el contador de invitaciones. | ✅ 4/4 capturadas · 1 revisadas |
 | RF-01 | 02 | Web | `RF-01/web/RF-01_p02_publicas-populares_*` | Pestaña Públicas ordenada por populares: tarjetas con autor, valoración, copias y miniatura de la semana (filtrada por la etiqueta de la ejecución). | ✅ 4/4 capturadas · sin revisar |
@@ -294,14 +298,14 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | `RF-13_p06_aceptada-ve-la-rutina_ios_oscuro.png` | Revisada (agente, 2026-10-09): tras Aceptar, B ve el detalle completo («Copiar a Mías»; sin acciones de la autora). |
 | `RF-13_p07_autora-ve-acepto_ios_oscuro.png` | Revisada (agente, 2026-10-09): la autora ve «Aceptó» junto al invitado. |
 | `RF-13_p09_revocada_ios_oscuro.png` | Revisada (agente, 2026-10-09): tras Revocar, «Todavía no la compartiste con nadie.» |
-| `RF-14_p02b_la-copia-lleva-atribucion_ios_oscuro.png` | Revisada (agente, 2026-10-09): la copia «Torso de Leo» lleva «Basada en Torso de Leo de Expiring Membership Mock». |
-| `RF-14_p04_la-tarjeta-cambia_ios_oscuro.png` | Revisada (agente, 2026-10-09): la tarjeta pasa a «Empuje 4 días» con «Hoy: Torso»; la anterior ya no está. |
+| `RF-14_p02b_la-copia-lleva-atribucion_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Detalle de la copia: «Basada en Torso de Leo de Expiring Membership Mock», Empezar rutina, Activar programa y calendario S1 de 8. |
+| `RF-14_p04_la-tarjeta-cambia_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): La tarjeta pasa a «Empuje 4 días · Semana 1 de 13»; la anterior ya no aparece. |
 | `RF-14_p05_ambas-tarjetas-pesas-y-cardio_ios_oscuro.png` | Revisada (agente, 2026-10-09): tarjeta de pesas y de cardio («0 / 90 min») juntas; «Haz primero las pesas.» (también cubre RF-14 p06, que depende del día de la semana). |
-| `RF-15_p02_sube-a-62-5-kg_ios_oscuro.png` | Revisada (agente, 2026-10-09): Sesión terminada; abajo «Tu programa» con «+15 por sobrecarga (x1,2 al cumplir la semana)». |
-| `RF-15_p02a_sugerido-60-kg_ios_oscuro.png` | Revisada (agente, 2026-10-09): en la sesión, «Sugerido: 60 kg × 8–12» bajo el ejercicio. |
-| `RF-15_p02b_bloque-de-programa_ios_oscuro.png` | Revisada (agente, 2026-10-09): bloque «Tu programa» con el aviso de «Sube el peso → 62,5 kg la próxima». |
-| `RF-15_p03_sugerido-62-5-kg_ios_oscuro.png` | Revisada (agente, 2026-10-09): la siguiente sesión sugiere «62,5 kg × 8–12». |
-| `RF-16_p04_meta-lograda_ios_oscuro.png` | Revisada (agente, 2026-10-09): el bloque dice «¡Meta lograda! (137,5 kg)» y «+11 por metas». |
+| `RF-15_p02_sube-a-62-5-kg_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Resumen de sesión con «+15 por sobrecarga (x1,2 al cumplir la semana)» y la sugerencia «Sube el peso → 62,5 kg». DEFECTO: el titular dice «+ 0 puntos» mientras las líneas suman +50 +6 +21 (la cuenta animada se capturó sin terminar); la sesión de 2 min no llega a los 10 que exige el programa. |
+| `RF-15_p02a_sugerido-60-kg_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Hoja del día con «Sugerido: 60 kg × 8–12». Observación: «La vez anterior · Hoy 125 kg × 3» viene de datos de un flujo previo, no de esta rutina. |
+| `RF-15_p02b_bloque-de-programa_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Resumen de sesión con el bloque «Tu programa»: «Para contar necesitas al menos 10 minutos y 3 series» y el bono por sobrecarga. Mismo defecto del titular «+ 0 puntos». |
+| `RF-15_p03_sugerido-62-5-kg_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Hoja del día con «Sugerido: 62,5 kg × 8–12» tras la sesión anterior (60 kg × 12). |
+| `RF-16_p04_meta-lograda_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Resumen con «+11 por metas (x1,2 al cumplir la semana)» y «¡Meta lograda! (137,5 kg)»; aparece «Revisar cambios en la rutina». Mismo titular «+ 0 puntos» (recortado por la parte alta). |
 | `RF-17_p01_zonas-calculadas-con-su-fc_ios_oscuro.png` | Revisada (agente, 2026-10-09): FC reposo 60 / máx 190, zona 2 = «138–151 lpm» (Karvonen). |
 | `RF-17_p01b_tarjeta-de-cardio_ios_oscuro.png` | Revisada (agente, 2026-10-09): tarjeta «Cardio · Bici» junto a la de pesas. |
 | `RF-17_p02_serie-de-cardio-guardada_ios_oscuro.png` | Revisada (agente, 2026-10-09): la serie guardada se lee «32:00 · 10,5 km · 142 lpm · Esf. 4» y el cronómetro vuelve a 00:00. |
@@ -314,6 +318,25 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | `RF-20_p01_hoja-con-la-lista-de-cambios_ios_oscuro.png` | Revisada (agente, 2026-10-09): «¿Actualizar tu rutina?» con peso a 65 kg, ejercicio nuevo y ejercicio quitado, Actualizar / Solo esta vez. |
 | `RF-20_p02_la-rutina-refleja-los-cambios_ios_oscuro.png` | Revisada (agente, 2026-10-09): tras Actualizar, el lunes muestra 4 × 6-8 a 65 kg y el curl añadido. |
 | `RF-20_p03_solo-esta-vez-no-cambia-la-rutina_ios_oscuro.png` | Revisada (agente, 2026-10-09): tras «Solo esta vez» (sesión con 70 kg) el día sigue en 65 kg. |
+| `RF-14_p01a_a2-fechas_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): «Paso 1 de 3 · Fechas» con Inicio Hoy/El próximo lunes, duración (8 sem) y días L X V marcados; Volver y Siguiente a la vista. |
+| `RF-14_p01b_a3-modo_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): «Paso 2 de 3 · Modo»: Normal (seleccionado), Sobrecarga progresiva y Metas de marca, con la casilla «Añadir plan de cardio». |
+| `RF-14_p01c_a5-resumen_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Resumen: Pierna 3 días, Modo Normal, Inicio «Hoy (2026-10-09)», 8 semanas, Lun/Mié/Vie y botón Activar. Observación: la fecha sale en ISO crudo entre paréntesis. |
+| `RF-14_p01d_programcard-en-rutinas_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Tarjeta del programa «Pierna 3 días · Normal · Semana 1 de 9 · Hoy: Accesorios» sobre Tu semana. |
+| `RF-14_p02_activada-copia-de-ajena_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): La tarjeta del programa pasa a «Torso de Leo · Semana 1 de 9» tras activar la copia de una pública ajena. |
+| `RF-14_p03_a1-reemplazo_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Paso 1 de 4 · Reemplazo: «Ya tienes «Pierna 3 días» activa (semana 1 de 9). ¿Apagarla y activar «Torso de Leo»?» con Apagar y activar / Cancelar. |
+| `RF-15_p01_resumen-de-activacion_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Paso 4 de 4 · Resumen: Modo Sobrecarga progresiva, 12 semanas, Lun/Mar/Jue/Vie; press banca 60 kg · 8-12 reps y «Peso por calcular» en remo y sentadilla. |
+| `RF-15_p01a_a4-datos-de-sobrecarga_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Paso 3 de 4 · Datos del modo: peso 60, reps 8-12, RIR 2 y el texto «¿No lo sabes? Hazlo en tu primera sesión». La barra Siguiente tapa parte del segundo ejercicio. |
+| `RF-16_p01_1rm-estimado-116-7_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Paso 3 de 4 de Metas de marca: 100 × 5 y «1RM estimado: 116,7 kg» con el campo Meta aún vacío y la guía «Realista: +5 a 10 %». |
+| `RF-16_p02_meta-125-kg-realista_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Meta 125 kg con fecha 2027-01-01 y «En 12 sem» seleccionado; aviso de rango realista (122,5–128,8 kg). |
+| `RF-16_p02b_resumen-de-metas_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Resumen: Modo Metas de marca, barbell bench press «100 × 5 → 125 kg». |
+| `RF-16_p03_barra-hacia-la-meta_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Detalle «Empuje 4 días» con chip Metas y «Tus metas»: barbell bench press 0 % «116,7 → 125 kg para el 2027-01-01», y semanas S1–S9 con sesiones 0/4. |
+| `RF-18_p00_la-sesion-cuenta-para-la-semana_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Sesión de 14 min y 6 series: «Esta sesión cuenta 1 de 1 de la semana 1» y «+20 por sobrecarga (x1,2 al cumplir la semana)». DEFECTOS: titular «+ 0 puntos» con +50 +12 +37 debajo; la línea de sugerencia muestra el código crudo «ADD_LOAD → 0 kg». |
+| `RF-18_p01_bono-del-modo-en-el-resumen_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Resumen con la línea de modo «+15 por sobrecarga (x1,2 al cumplir la semana)» (la vista del 18/19, sin cierre semanal). Mismo defecto del titular «+ 0 puntos». |
+| `RF-18_p01_x1-2-tras-semana-cumplida_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Tras el cierre real de la semana 1 (POST close-weeks): tarjeta «Cierre semanal QA · Sobrecarga · Semana 1 de 5 · x1,2». Observación: «Hoy: Hoy» (el día se llama «Hoy»). |
+| `RF-18_p01b_semana-1-cumplida_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Detalle: «Semana 1 de 5 · x1,2», chips Sobrecarga y «Multiplicador x1,2», S1 1/1 sesiones «✓ Cumplida». |
+| `RF-18_p02_semana-incumplida-vuelve-a-x1_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Tras cerrar la semana 2 sin entrenar: la tarjeta ya no lleva «x1,2» («Semana 1 de 5»). No se ve el total de puntos: que no bajan lo comprobó el flujo con un script (assertTrue puntos >= antes), no la captura. |
+| `RF-18_p02b_semana-2-sin-cumplir-los-puntos-no-bajan_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Detalle: S1 «✓ Cumplida», S2 «✕ Sin cumplir» y sin chip de multiplicador. Los puntos no se ven en esta pantalla. |
+| `RF-18_p04_sin-modo-no-hay-bono_ios_oscuro.png` | Revisada (agente, 2026-10-10, regrabada): Resumen de sesión sin modo: «Tu programa» sin línea de bono por sobrecarga («Hiciste cambios respecto de tu rutina»). |
 | `RF-01_p01_programa-y-pestanas_1440_claro.png` | Revisada (agente, 2026-10-09): tarjeta del programa «Empuje 4 días» con x1,0, barra y «Cumple esta semana para llegar a x1,2», Tu semana, pestañas con el contador «1» en Mías, filtros y tarjetas. Las tarjetas de abajo son rutinas públicas que dejaron otras pruebas en la misma base (no filtradas en este paso). Sin defectos. |
 | `RF-01_p07_mias-compartidas-invitacion_390_oscuro.png` | Revisada (agente, 2026-10-09): chip «Compartidas conmigo (1)» activo, tarjeta «Invitación» de Bruno con «Verás los ejercicios cuando la aceptes», Aceptar y Rechazar completos. Sin defectos. |
 | `RF-01_p08_sin-conexion-con-cache_390_claro.png` | Revisada (agente, 2026-10-09): aviso ámbar «Sin conexión. Te mostramos lo último que cargamos.» sobre las tres tarjetas ya cargadas. |

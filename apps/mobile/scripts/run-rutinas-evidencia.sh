@@ -24,7 +24,8 @@ echo "Registros de Maestro en $runs_dir"
 failed=()
 # La app pide la ubicación al finalizar una sesión: se concede de antemano para que el diálogo del
 # sistema no tape el flujo (la evidencia es de la app, no del permiso).
-xcrun simctl privacy booted grant location app.gymsheet.mobile 2>/dev/null || true
+device="${MAESTRO_DEVICE:-}"  # con varios simuladores arrancados, fija cuál usa Maestro
+xcrun simctl privacy "${device:-booted}" grant location app.gymsheet.mobile 2>/dev/null || true
 # Sin argumentos corre los tres; con argumentos, sólo esos flujos (por ejemplo `08 09`).
 flows=(.maestro/08-crear-rutina.yaml .maestro/09-seleccion-multiple.yaml .maestro/10-ficha-favorito-like.yaml .maestro/1[1-9]-*.yaml .maestro/2[0-3]-*.yaml)
 if [ "$#" -gt 0 ]; then
@@ -37,7 +38,7 @@ for flow in "${flows[@]}"; do
   echo "── $flow"
   # Los flujos de programas (17 en adelante) parten sin programa activo ni sesión abierta.
   case "$name" in 1[7-9]-*|2[0-9]-*) node scripts/reset-programas-evidencia.mjs > /dev/null ;; esac
-  if maestro test --debug-output "$runs_dir/$name" "$flow" > "$runs_dir/$name.log" 2>&1; then
+  if maestro ${device:+--device "$device"} test --debug-output "$runs_dir/$name" "$flow" > "$runs_dir/$name.log" 2>&1; then
     echo "   PASS"
   else
     echo "   FAIL (ver $runs_dir/$name.log)"

@@ -1,0 +1,11 @@
+# Una insignia nueva (p. ej. «Turno de noche» si se entrena de madrugada) abre un modal de celebración
+# encima del resumen de la sesión. Si aparece, se cierra con su «Seguir» para ver el resumen.
+appId: app.gymsheet.mobile
+---
+- runFlow:
+    when:
+      visible: '¡Insignia conseguida!'
+    commands:
+      - tapOn: 'Seguir'
+      - waitForAnimationToEnd:
+          timeout: 3000

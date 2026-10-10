@@ -39,6 +39,7 @@ env:
 - extendedWaitUntil:
     visible: 'Seguir'
     timeout: 60000
+- runFlow: cerrar-insignia.subflow.yaml
 - scrollUntilVisible:
     element: 'Tu programa'
 - assertVisible: '.*por sobrecarga.*al cumplir la semana.*'
@@ -75,6 +76,7 @@ env:
 - extendedWaitUntil:
     visible: 'Seguir'
     timeout: 60000
+- runFlow: cerrar-insignia.subflow.yaml
 - scrollUntilVisible:
     element: 'Tu programa'
 - assertNotVisible: '.*por sobrecarga.*'
@@ -82,8 +84,13 @@ env:
 
 # Insignias de modo en Trayectoria.
 - openLink: gymsheet:///trayectoria
+- runFlow: cerrar-insignia.subflow.yaml
 - extendedWaitUntil:
-    visible: '.*Insignias.*'
+    visible: 'Tu senda'
+    timeout: 60000
+# Las insignias están al final de la pantalla: hay que bajar hasta ellas.
+- scrollUntilVisible:
+    element: 'Insignias.*'
     timeout: 60000
 - scrollUntilVisible:
     element: 'Meta alcanzada.*'

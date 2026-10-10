@@ -738,34 +738,73 @@
     },
     {
       "rf": "RF-18",
+      "paso": "00",
+      "nombre": "la-sesion-cuenta-para-la-semana",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Resumen de la sesión: «Esta sesión cuenta 1 de 1 de la semana 1» y el bono +20 por sobrecarga."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "01",
+      "nombre": "bono-del-modo-en-el-resumen",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Resumen con la línea de modo «+N por sobrecarga (x1,2 al cumplir la semana)»."
+    },
+    {
+      "rf": "RF-18",
       "paso": "01",
       "nombre": "x1-2-tras-semana-cumplida",
-      "plataformas": [],
-      "faltante": "NO TERMINADO: el flujo 23 (cierre semanal real con close-weeks) está escrito pero no llegó a pasar entera; el cierre semanal lo cubre el e2e `mode-rewards` del backend.",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Tarjeta del programa con «x1,2» tras cerrar la semana 1 como cumplida."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "01b",
+      "nombre": "semana-1-cumplida",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Detalle del programa: S1 «Cumplida» y chip «Multiplicador x1,2»."
     },
     {
       "rf": "RF-18",
       "paso": "02",
       "nombre": "semana-incumplida-vuelve-a-x1",
-      "plataformas": [],
-      "faltante": "NO TERMINADO: ver RF-18 p01.",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Tarjeta del programa sin multiplicador tras la semana 2 incumplida."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "02b",
+      "nombre": "semana-2-sin-cumplir-los-puntos-no-bajan",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Detalle: S2 «Sin cumplir», sin chip de multiplicador."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "04",
+      "nombre": "sin-modo-no-hay-bono",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Resumen de una sesión sin modo: «Tu programa» sin línea de bono."
     },
     {
       "rf": "RF-18",
       "paso": "03",
       "nombre": "insignia-por-racha-de-semanas",
       "plataformas": [],
-      "faltante": "No capturado: necesita 4 semanas reales de sesiones.",
-      "debeVerse": "—"
-    },
-    {
-      "rf": "RF-18",
-      "paso": "04",
-      "nombre": "sin-modo-no-hay-bono",
-      "plataformas": [],
-      "faltante": "Flujo 23-recompensas-bono-y-modo escrito pero no completado en la última pasada.",
+      "faltante": "No capturado: la insignia de racha necesita 4 semanas reales; la insignia de modo en Trayectoria (flujo 23-bono) falló en la última pasada y no se repitió.",
       "debeVerse": "—"
     },
     {

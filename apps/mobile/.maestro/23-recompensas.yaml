@@ -50,6 +50,7 @@ env:
 - extendedWaitUntil:
     visible: 'Seguir'
     timeout: 60000
+- runFlow: cerrar-insignia.subflow.yaml
 - scrollUntilVisible:
     element: 'Tu programa'
 - assertVisible: 'Esta sesión cuenta.*'
