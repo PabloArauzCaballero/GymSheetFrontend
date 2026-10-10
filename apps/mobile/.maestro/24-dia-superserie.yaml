@@ -1,0 +1,59 @@
+# Día con superserie y circuito (C3 · C8.3): el Día dibuja el bloque A con A1/A2 y el descanso tras la
+# vuelta; al entrenar, la superserie pasa sola de A1 a A2, muestra «Vuelta 2/3» y el descanso es el
+# configurado (2:00), no los 90 s de antes.
+appId: app.gymsheet.mobile
+name: 24 · Día con superserie
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+---
+- runFlow: login-as.subflow.yaml
+- runScript:
+    file: scripts-superset-routine.js
+    env: { EMAIL: '${EMAIL}' }
+- openLink: gymsheet:///routines/${output.routineId}/dia/${output.diaId}?semana=1
+- extendedWaitUntil:
+    visible: 'Superserie A'
+    timeout: 60000
+# Las filas se anuncian con su posición: «A1. Remo…».
+- assertVisible: 'A1\. .*'
+- assertVisible: 'A2\. .*'
+- assertVisible: 'Descanso 2:00 tras la vuelta'
+- takeScreenshot: C3_dia_superserie_ios_oscuro
+- scrollUntilVisible:
+    element: 'Circuito B'
+- assertVisible: 'Circuito B'
+- assertVisible: '.*15 s.*'
+- assertVisible: '.*2 × 30 s.*'
+- takeScreenshot: C3_dia_circuito_ios_oscuro
+# Entrenar: el pie fijo sigue visible tras el scroll.
+- tapOn: 'Entrenar este día'
+- extendedWaitUntil:
+    visible: 'En progreso'
+    timeout: 60000
+# Se salta al remo (A1) desde la tira de miniaturas.
+- tapOn:
+    id: 'strip-2'
+- assertVisible: 'Vuelta 1/3'
+- tapOn:
+    id: 'log-set'
+# Sin transición: pasa sola a A2, sin descanso.
+- extendedWaitUntil:
+    visible: 'A2, .*0/3 series'
+    timeout: 20000
+- assertNotVisible:
+    id: 'rest-bar'
+- tapOn:
+    id: 'log-set'
+# Tras la vuelta: el descanso del plan (2:00) y la vuelta 2.
+- extendedWaitUntil:
+    visible: 'Quedan (2 minutos y 0|1 minuto y 5\d) segundos de descanso'
+    timeout: 20000
+- assertVisible: 'Vuelta 2/3'
+- takeScreenshot: C3_entreno_descanso_2min_ios_oscuro
+- tapOn:
+    id: 'rest-skip'
+# Se deja la cuenta sin sesión abierta para el flujo siguiente.
+- runScript:
+    file: scripts-cancel-open-session.js
+    env: { EMAIL: '${EMAIL}' }

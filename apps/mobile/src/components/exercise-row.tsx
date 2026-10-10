@@ -178,7 +178,7 @@ export function ExerciseRow({
         boxShadow: shadows.e1,
       };
 
-  const a11y = [name, meta, caption, note ? `Nota: ${note}` : null].filter(Boolean).join('. ');
+  const a11y = [badge, name, meta, caption, note ? `Nota: ${note}` : null].filter(Boolean).join('. ');
   if (!onPress) {
     return (
       <View accessibilityLabel={a11y} accessible style={frame} testID={testID}>
