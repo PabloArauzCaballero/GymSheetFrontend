@@ -62,7 +62,7 @@ env:
     id: 'chip-shared'
 - tapOn: 'Aceptar'
 - extendedWaitUntil:
-    visible: 'Empezar rutina'
+    visible: 'Guardar en mis rutinas|Activar programa'
     timeout: 30000
 - assertVisible: 'Plan para compartir'
 - takeScreenshot: RF-13_p06_aceptada-ve-la-rutina_ios_oscuro

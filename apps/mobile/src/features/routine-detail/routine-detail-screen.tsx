@@ -1,48 +1,48 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Share, View } from 'react-native';
 import { ApiError } from '@gymsheet/api-client';
 import type { Routine } from '@gymsheet/types';
-import {
-  dayView,
-  isAnyDayRoutine,
-  routineColumns,
-  type Weekday,
-} from '@gymsheet/hooks';
-import { routineBuilderService, routineService } from '@/api/services';
+import { isAnyDayRoutine, routineColumns } from '@gymsheet/hooks';
+import { routineBuilderService, routineCatalogService, routineService } from '@/api/services';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
-import { Card, ScrollScreen, Section } from '@/components/layout';
+import { ScrollScreen, Section } from '@/components/layout';
 import { BackLink } from '@/components/nav';
-import { SegmentLabel, SegmentedPill } from '@/components/motion';
 import { Button } from '@/components/ui';
 import { ScheduleRoutine } from '@/components/schedule-routine';
-import { DaySheet } from '@/features/routine-detail/day-sheet';
+import { DetailActions, type PrimaryIntent } from '@/features/routine-detail/detail-actions';
+import { DetailCover } from '@/features/routine-detail/detail-cover';
 import { DetailHeader } from '@/features/routine-detail/detail-header';
-import { MonthView, WeekView } from '@/features/routine-detail/calendar-views';
 import { DetailSocial } from '@/features/routine-detail/detail-social';
+import { DayCard } from '@/features/routine-detail/day-cards';
+import { MoreButton, MoreSheet, type MoreAction } from '@/features/routine-detail/more-sheet';
 import { ReportSheet, type ReportTarget } from '@/features/routine-detail/report-sheet';
+import { coverExercises, copyNumberOf, ownCopiesOf, todayWeekday } from '@/features/routine-detail/routine-plan';
 import { useRoutineActions } from '@/features/routine-detail/use-routine-actions';
 import { useStartRoutine } from '@/features/routine-detail/use-start-routine';
 import { VersionBanner } from '@/features/routine-detail/version-banner';
-import { accentContrast, colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { WeekSection, type ViewMode } from '@/features/routine-detail/week-section';
+import { useActivePrograms } from '@/features/programs/use-active-programs';
+import { spacing } from '@/theme';
 
-type ViewMode = 'week' | 'month';
-const MODES = [
-  { value: 'week', label: 'Semana' },
-  { value: 'month', label: 'Mes' },
-] as const;
-
-/** Detalle de rutina con la bandera `routinesV2`: cabecera, vista Semana/Mes y hoja del día (RF-02). */
+/**
+ * Detalle de rutina (C8.3.1, C1, C2): portada en mosaico, hechos, **un solo CTA
+ * principal** según el caso, secundarias compactas («Probar un día»,
+ * «Compartir»), lo poco frecuente en ⋯, y «Tu semana» con tarjetas de día que
+ * abren la pantalla completa del Día.
+ */
 export function RoutineDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [mode, setMode] = useState<ViewMode>('week');
   const [weekNumber, setWeekNumber] = useState(1);
-  const [picked, setPicked] = useState<{ semana: number; diaId: string } | null>(null);
   const [ignored, setIgnored] = useState(false);
   const [report, setReport] = useState<ReportTarget | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const start = useStartRoutine(id);
+  const programs = useActivePrograms();
 
   const routine = useQuery({
     queryKey: ['routine', id],
@@ -54,8 +54,17 @@ export function RoutineDetailScreen() {
     queryFn: () => routineBuilderService.calendar(id),
     enabled: Boolean(id) && routine.isSuccess,
   });
-
   const data = routine.data;
+  const foreign = data ? !data.esMia : false;
+  // C2: ¿ya guardaste esta rutina? Se busca en «Mías» por la atribución que
+  // congela la copia. Solo para rutinas ajenas.
+  const mine = useQuery({
+    queryKey: ['routines', 'mine', 'copies-of', id],
+    queryFn: () => routineCatalogService.list({ scope: 'mine', q: data?.nombre, limit: 50 }),
+    enabled: Boolean(data) && foreign,
+    staleTime: 30_000,
+  });
+
   const actions = useRoutineActions(data ?? ({ id } as Routine));
   const columns = useMemo(() => (data ? routineColumns(data) : []), [data]);
   const weeks = calendar.data?.semanas ?? [];
@@ -66,7 +75,8 @@ export function RoutineDetailScreen() {
     return (
       <ScrollScreen>
         <BackLink />
-        <Skeleton height={110} />
+        <Skeleton height={196} />
+        <Skeleton height={120} />
         <Skeleton height={180} />
       </ScrollScreen>
     );
@@ -91,15 +101,77 @@ export function RoutineDetailScreen() {
     );
   }
 
-  const anyDay = isAnyDayRoutine(data);
-  const diaIdOf = (dia: Weekday) => data.dias.find((day) => day.diaSemana === dia)?.id;
-  const sheetWeek = weeks.find((candidate) => candidate.numero === picked?.semana);
-  const sheetDay = picked ? dayView(data, sheetWeek, picked.diaId) : null;
+  const isPublic = data.visibilidad === 'PUBLIC';
+  const activeProgram = programs.data?.fuerza ?? null;
+  const programOfThis = activeProgram?.rutinaId === data.id;
+  const intent: PrimaryIntent = foreign ? 'save' : programOfThis ? 'train' : 'activate';
+  const todayDayId = data.dias.find((day) => day.diaSemana === todayWeekday())?.id;
+  const copies = data ? ownCopiesOf(data, mine.data?.items ?? []) : [];
+  const latestCopy = copies[0];
+  const copyNumber = latestCopy ? copyNumberOf(latestCopy.nombre) : null;
+
+  const openDay = (diaId: string, semana: number) =>
+    router.push({ pathname: '/routines/[id]/dia/[diaId]', params: { id: data.id, diaId, semana: String(semana) } });
+
+  const onPrimary = () => {
+    if (intent === 'save') actions.copy();
+    else if (intent === 'activate') router.push({ pathname: '/routines/activate/[id]', params: { id: data.id } });
+    else start.mutate(todayDayId);
+  };
+
+  const onShare = () => {
+    if (data.esMia && !isPublic) {
+      setSharing(true);
+      return;
+    }
+    void Share.share({ message: `«${data.nombre}» en REPP · gymsheet://routines/${data.id}` });
+  };
+
+  const more: MoreAction[] = [
+    ...(data.esMia && !isPublic
+      ? [{ key: 'publish', label: 'Publicar', icon: 'globe-outline' as const, onPress: () => void actions.publish() }]
+      : []),
+    ...(data.esMia && isPublic
+      ? [{ key: 'unpublish', label: 'Despublicar', icon: 'eye-off-outline' as const, onPress: () => void actions.unpublish() }]
+      : []),
+    ...(!data.esMia && isPublic
+      ? [
+          {
+            key: 'report',
+            label: 'Denunciar rutina',
+            icon: 'flag-outline' as const,
+            destructive: true,
+            onPress: () => setReport({ kind: 'ROUTINE', id: data.id, label: data.nombre }),
+          },
+        ]
+      : []),
+  ];
 
   return (
     <ScrollScreen onRefresh={() => void routine.refetch()} refreshing={routine.isRefetching}>
-      <BackLink />
-      <DetailHeader routine={data} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <BackLink />
+        {more.length > 0 ? <MoreButton onPress={() => setMoreOpen(true)} /> : null}
+      </View>
+
+      <View style={{ gap: spacing.lg }}>
+        <DetailCover exercises={coverExercises(data)} />
+        <DetailHeader routine={data} />
+        <DetailActions
+          existingCopy={
+            latestCopy
+              ? { id: latestCopy.id, label: copyNumber ? `Ya la guardaste como v${copyNumber}` : 'Ya la guardaste' }
+              : null
+          }
+          intent={intent}
+          onOpenCopy={(copyId) => router.push({ pathname: '/routines/[id]', params: { id: copyId } })}
+          onPrimary={onPrimary}
+          onShare={onShare}
+          onTryDay={intent === 'train' ? undefined : () => start.mutate(undefined)}
+          primaryLoading={intent === 'save' ? actions.copying : intent === 'train' ? start.isPending : false}
+          tryingDay={intent !== 'train' && start.isPending}
+        />
+      </View>
 
       {data.hayVersionNueva && !ignored ? (
         <VersionBanner
@@ -110,120 +182,45 @@ export function RoutineDetailScreen() {
         />
       ) : null}
 
-      <Button
-        label="Empezar rutina"
-        loading={start.isPending}
-        onPress={() => start.mutate(undefined)}
-      />
-      <Button
-        label="Activar programa"
-        onPress={() => router.push({ pathname: '/routines/activate/[id]', params: { id: data.id } })}
-        variant="ghost"
-      />
+      {isAnyDayRoutine(data) ? (
+        <View style={{ gap: spacing.md }}>
+          {data.dias[0] ? (
+            <DayCard day={data.dias[0]} number={1} onPress={() => openDay(data.dias[0]!.id, 1)} />
+          ) : null}
+        </View>
+      ) : (
+        <WeekSection
+          columns={columns}
+          error={calendar.isError ? calendar.error : null}
+          loading={calendar.isPending}
+          mode={mode}
+          onMode={setMode}
+          onNext={() => setWeekNumber((n) => Math.min(total, n + 1))}
+          onOpenDay={openDay}
+          onPrev={() => setWeekNumber((n) => Math.max(1, n - 1))}
+          onRetry={() => void calendar.refetch()}
+          routine={data}
+          total={total}
+          week={week}
+          weeks={weeks}
+        />
+      )}
 
-      <Section icon="calendar-outline" index={0} title="Plan">
-        {anyDay ? (
-          <Card
-            accessibilityLabel="Rutina de un día, cualquier día. Abrir"
-            onPress={() => setPicked({ semana: 1, diaId: data.dias[0]?.id ?? '' })}
-          >
-            <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
-              Rutina de un día (cualquier día)
-            </Text>
-            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-              Se entrena cuando quieras. Toca para ver los ejercicios.
-            </Text>
-          </Card>
-        ) : (
-          <View style={{ gap: spacing.md }}>
-            <SegmentedPill
-              itemStyle={{
-                minHeight: minTouchTarget,
-                flexGrow: 1,
-                minWidth: 96,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              onChange={setMode}
-              options={MODES.map((option) => ({
-                value: option.value,
-                accessibilityLabel: `Vista ${option.label}`,
-              }))}
-              pillColor={colors.volt}
-              renderItem={(option, active) => (
-                <SegmentLabel
-                  active={active}
-                  activeColor={accentContrast()}
-                  inactiveColor={colors.textMuted}
-                  label={MODES.find((m) => m.value === option.value)?.label ?? ''}
-                  style={{ fontSize: fontSizes.sm, fontWeight: semibold }}
-                />
-              )}
-              style={{
-                alignSelf: 'stretch',
-                borderRadius: radii.full,
-                backgroundColor: colors.surfaceLow,
-                borderWidth: 1,
-                borderColor: colors.borderSubtle,
-                padding: 4,
-              }}
-              value={mode}
-            />
-            {calendar.isPending ? (
-              <Skeleton height={160} />
-            ) : calendar.isError ? (
-              <ErrorState error={calendar.error} onRetry={() => void calendar.refetch()} />
-            ) : mode === 'week' ? (
-              <WeekView
-                columns={columns}
-                onNext={() => setWeekNumber((n) => Math.min(total, n + 1))}
-                onPickDay={(dia) => {
-                  const diaId = diaIdOf(dia);
-                  if (diaId) setPicked({ semana: week?.numero ?? 1, diaId });
-                }}
-                onPrev={() => setWeekNumber((n) => Math.max(1, n - 1))}
-                total={total}
-                week={week}
-              />
-            ) : (
-              <MonthView
-                columns={columns}
-                onPickDay={(semana, dia) => {
-                  const diaId = diaIdOf(dia);
-                  if (diaId) setPicked({ semana, diaId });
-                }}
-                semanas={calendar.data?.semanas ?? []}
-              />
-            )}
-          </View>
-        )}
-      </Section>
-
-      <DetailSocial actions={actions} onReport={setReport} routine={data} />
+      <DetailSocial
+        onReport={setReport}
+        onShareClose={() => setSharing(false)}
+        onShareOpen={() => setSharing(true)}
+        routine={data}
+        sharing={sharing}
+      />
 
       {data.esMia ? (
-        <Section index={4} title="Programar">
+        <Section title="Programar">
           <ScheduleRoutine routineId={data.id} />
         </Section>
       ) : null}
 
-      <DaySheet
-        day={sheetDay}
-        isDeload={sheetWeek?.esDescarga ?? false}
-        onClose={() => setPicked(null)}
-        onTrain={() => {
-          const diaId = picked?.diaId;
-          setPicked(null);
-          start.mutate(diaId);
-        }}
-        training={start.isPending}
-        visible={picked !== null}
-        onReportExercise={data.esMia ? undefined : (exercise) => {
-          setPicked(null);
-          setReport({ kind: 'EXERCISE', id: exercise.ejercicioId, label: exercise.nombre });
-        }}
-        weekNumber={picked?.semana ?? 1}
-      />
+      <MoreSheet actions={more} onClose={() => setMoreOpen(false)} title={data.nombre} visible={moreOpen} />
       <ReportSheet onClose={() => setReport(null)} target={report} />
     </ScrollScreen>
   );
