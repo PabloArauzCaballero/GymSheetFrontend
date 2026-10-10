@@ -186,7 +186,7 @@ export function RoutinesCatalogScreen() {
             label="Buscar rutinas"
             labelHidden
             onChangeText={setSearch}
-            placeholder="Nombre de la rutina…"
+            placeholder="Buscar rutina…"
             returnKeyType="search"
             testID="routine-search"
             value={search}

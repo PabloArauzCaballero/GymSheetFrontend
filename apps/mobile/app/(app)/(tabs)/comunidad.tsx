@@ -526,10 +526,12 @@ function DirectoryPersonRow({
   messaging: boolean;
   withdrawing: boolean;
 }) {
+  // Objetivo y rango en la línea de debajo del nombre; la columna derecha queda
+  // solo para la acción, y el texto deja de cortarse en «Hipertrofia · …».
   const subtitle =
     [
       entry.objetivo ? (TRAINING_GOAL_LABEL[entry.objetivo] ?? entry.objetivo) : null,
-      entry.branchName,
+      typeof entry.points === 'number' ? `${entry.points.toLocaleString('es-ES')} pts` : entry.levelCode ? levelTitle(entry.levelCode) : null,
     ]
       .filter(Boolean)
       .join(' · ') || undefined;
@@ -568,26 +570,7 @@ function DirectoryPersonRow({
           )
         }
         meta={
-          <View style={{ alignItems: 'flex-end', gap: spacing.xs }}>
-            {entry.levelCode ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-                <Ionicons color={colors.textMuted} name="trophy-outline" size={iconSizes.xs} />
-                <Text
-                  numberOfLines={1}
-                  style={{ color: colors.textMuted, fontSize: fontSizes.xs, fontWeight: semibold }}
-                >
-                  {levelTitle(entry.levelCode)}
-                  {typeof entry.points === 'number' ? ' · ' : ''}
-                </Text>
-                {typeof entry.points === 'number' ? (
-                  <CountUpText
-                    style={{ color: colors.textMuted, fontSize: fontSizes.xs, fontWeight: semibold }}
-                    suffix=" pts"
-                    value={entry.points}
-                  />
-                ) : null}
-              </View>
-            ) : null}
+          <View style={{ alignItems: 'flex-end' }}>
             {entry.connectionStatus === 'NONE' ? (
               <DirectoryRowAction
                 icon="person-add-outline"
@@ -779,7 +762,9 @@ export default function ComunidadScreen() {
       <Input
         autoCapitalize="none"
         autoCorrect={false}
-        label="Buscar"
+        icon="search"
+        label="Buscar socios"
+        labelHidden
         onChangeText={setQ}
         placeholder="Nombre de un socio…"
         returnKeyType="search"

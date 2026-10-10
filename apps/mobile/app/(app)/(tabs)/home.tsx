@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { formatVolume, isStaff, overloadDelta, summariseTraining } from '@gymsheet/domain';
 import { programService, membershipService, progressionService, routineService, workoutService } from '@/api/services';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
-import { Badge, Card, Divider, ScrollScreen, ScreenHeader, Section, StatTile } from '@/components/layout';
+import { Badge, Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { NavRow } from '@/components/list';
 import { MembershipGate } from '@/components/membership-gate';
 import { ProgressTrack } from '@/components/progression';
@@ -14,6 +14,7 @@ import { Button } from '@/components/ui';
 import { WeekDots } from '@/components/week-dots';
 import { homeWeekDots } from '@/features/home/home-week';
 import { MuscleSplit } from '@/features/home/muscle-split';
+import { ProgressStrip } from '@/features/home/progress-strip';
 import { TodayCard } from '@/features/home/today-card';
 import { activeProgramsKey } from '@/features/programs/use-active-programs';
 import { WORKOUT_LABEL, WORKOUT_TONE, formatDuration, formatTimeOfDay, relativeDay, shortName } from '@/lib/format';
@@ -119,11 +120,13 @@ export default function HomeScreen() {
           <ErrorState error={workouts.error} onRetry={() => void workouts.refetch()} />
         ) : (
           <TourTarget id="home.progress">
-            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <StatTile delta={overload} label="Carga esta semana" value={formatVolume(training.thisWeek.volumeKg)} />
-              <StatTile label="Semanas seguidas" value={`${training.streakWeeks}`} />
-              <StatTile label="En 4 semanas" value={`${training.recentSessions}`} />
-            </View>
+            <ProgressStrip
+              figures={[
+                { key: 'carga', value: formatVolume(training.thisWeek.volumeKg), label: 'Carga esta semana', delta: overload },
+                { key: 'racha', value: `${training.streakWeeks}`, label: 'Semanas seguidas' },
+                { key: 'mes', value: `${training.recentSessions}`, label: 'Sesiones en 4 semanas' },
+              ]}
+            />
           </TourTarget>
         )}
 
@@ -173,7 +176,12 @@ export default function HomeScreen() {
                 <View key={session.id}>
                   {index > 0 ? <Divider /> : null}
                   <NavRow
-                    meta={<Badge label={WORKOUT_LABEL[session.estado]} tone={WORKOUT_TONE[session.estado]} />}
+                    // «Finalizada» en cada fila es ruido: solo se marca lo que no lo está.
+                    meta={
+                      session.estado === 'FINALIZADA' ? undefined : (
+                        <Badge label={WORKOUT_LABEL[session.estado]} tone={WORKOUT_TONE[session.estado]} />
+                      )
+                    }
                     onPress={() => router.push({ pathname: '/workouts/[id]', params: { id: session.id } })}
                     subtitle={`${count} ${count === 1 ? 'ejercicio' : 'ejercicios'}${duration ? ` · ${duration}` : ''}`}
                     title={`${relativeDay(session.fechaInicio)}${startTime ? ` · ${startTime}` : ''}`}

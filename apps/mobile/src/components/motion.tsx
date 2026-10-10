@@ -277,8 +277,11 @@ export function SegmentedPill<T extends string>({
   itemStyle,
   renderItem,
   gap = 0,
+  fill = false,
 }: {
   options: readonly { value: T; accessibilityLabel?: string }[];
+  /** Las opciones se reparten el ancho a partes iguales (pestañas). */
+  fill?: boolean;
   value: T;
   onChange: (next: T) => void;
   /** Relleno de la opción activa; por defecto el de los controles. */
@@ -345,6 +348,7 @@ export function SegmentedPill<T extends string>({
           return (
             <View
               key={option.value}
+              style={fill ? { flex: 1 } : undefined}
               onLayout={(event) => {
                 layouts.current.set(option.value, event.nativeEvent.layout);
                 if (option.value === value) moveTo(option.value);

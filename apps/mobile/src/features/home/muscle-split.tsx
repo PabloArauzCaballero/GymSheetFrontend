@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import type { TrainingSummary } from '@gymsheet/domain';
+import { exerciseGroupLabelEs, type TrainingSummary } from '@gymsheet/domain';
 import { Card } from '@/components/layout';
 import { Text } from '@/components/text';
 import { accentPolicy, colors, radii, spacing } from '@/theme';
@@ -26,14 +26,14 @@ export function MuscleSplit({ week }: { week: TrainingSummary['thisWeek'] }) {
         <View style={{ gap: spacing.smd }}>
           {week.muscles.slice(0, 4).map((muscle) => (
             <View
-              accessibilityLabel={`${muscle.name}: ${muscle.sets} series`}
+              accessibilityLabel={`${exerciseGroupLabelEs(muscle.name) || muscle.name}: ${muscle.sets} series`}
               accessible
               key={muscle.name}
               style={{ gap: spacing.xs }}
             >
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm }}>
                 <Text numberOfLines={1} style={{ flex: 1 }} tone="secondary" variant="footnote">
-                  {muscle.name}
+                  {exerciseGroupLabelEs(muscle.name) || muscle.name}
                 </Text>
                 <Text strong tabular variant="footnote">
                   {muscle.sets}

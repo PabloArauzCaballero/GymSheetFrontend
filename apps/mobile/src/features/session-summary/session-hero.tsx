@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
 import type { SessionComparison } from '@gymsheet/domain';
-import { FactChips, type Fact } from '@/components/fact-chips';
+import type { Fact } from '@/components/fact-chips';
 import { Text, type TextTone } from '@/components/text';
 import { cardGap, colors, iconSizes, radii, shadows, spacing, tones } from '@/theme';
 
@@ -70,7 +70,9 @@ export function SessionHero({
           {copy.text}
         </Text>
       </View>
-      <FactChips facts={facts} />
+      <Text tabular tone="secondary" variant="subhead">
+        {facts.map((fact) => fact.label).join(' · ')}
+      </Text>
     </View>
   );
 }

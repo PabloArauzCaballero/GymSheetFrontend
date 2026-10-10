@@ -5,8 +5,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import Animated, {
   cancelAnimation,
-  FadeIn,
-  FadeInDown,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -160,7 +158,8 @@ export function SessionSummary({
   }, [hasQueue]);
 
   const levelName = reward.levelAfter?.name ?? null;
-  const trackColor = colors.volt;
+  // Neutra: en el resumen el acento es del récord y de «Seguir».
+  const trackColor = colors.textSecondary;
   const distance =
     reward.leveledUp && levelName
       ? `Has subido a ${levelName}.`
@@ -194,16 +193,10 @@ export function SessionSummary({
         )}
 
         <View style={{ gap: spacing.sm }}>
-          {rows.map((key, index) => (
-            <Animated.View
-              entering={
-                reduceMotion
-                  ? FadeIn.duration(1)
-                  : FadeInDown.duration(280)
-                      .easing(PREMIUM_EASING)
-                      .withInitialValues({ transform: [{ translateY: 10 }] })
-                      .delay(rowsAt + index * ROW_STEP)
-              }
+          {rows.map((key) => (
+            // Sin entrada escalonada (C8.1: el único rebote/efecto de la pantalla
+            // es el sello de récord; la cifra ya cuenta).
+            <View
               key={key}
               style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md }}
             >
@@ -211,7 +204,7 @@ export function SessionSummary({
               <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold, fontVariant: ['tabular-nums'] }}>
                 {`+${reward.breakdown[key].toLocaleString('es-ES')}`}
               </Text>
-            </Animated.View>
+            </View>
           ))}
         </View>
       </Card>

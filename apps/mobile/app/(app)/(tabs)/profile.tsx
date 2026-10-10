@@ -93,7 +93,7 @@ export default function ProfileScreen() {
     : missingProfile
       ? 'Completa tu perfil: peso, estatura y objetivo'
       : profile.data
-        ? `${profile.data.pesoKg} kg · ${profile.data.estaturaCm} cm · ${GOAL_LABEL[profile.data.objetivo]}`
+        ? `${profile.data.pesoKg.toLocaleString('es-ES')} kg · ${profile.data.estaturaCm} cm · ${GOAL_LABEL[profile.data.objetivo]}`
         : 'No se pudieron cargar tus datos';
 
   return (
@@ -142,8 +142,10 @@ export default function ProfileScreen() {
             <Text numberOfLines={1} selectable tone="muted" variant="subhead">
               {principal?.email}
             </Text>
+            <View style={{ marginTop: spacing.xs }}>
+              <Badge label={ROLE_LABEL[principal?.role ?? ''] ?? principal?.role ?? '—'} />
+            </View>
           </View>
-          <Badge label={ROLE_LABEL[principal?.role ?? ''] ?? principal?.role ?? '—'} />
         </View>
       </TourTarget>
 
@@ -192,7 +194,7 @@ export default function ProfileScreen() {
                 measurements.isError
                   ? 'No se pudo cargar tu evolución'
                   : lastWeight
-                    ? `Último: ${lastWeight.weight} ${lastWeight.unit.toLowerCase()}${weightTrend ? ` · ${weightTrend}` : ''}`
+                    ? `Último: ${lastWeight.weight.toLocaleString('es-ES')} ${lastWeight.unit.toLowerCase()}${weightTrend ? ` · ${weightTrend}` : ''}`
                     : 'Anota tu primer pesaje'
               }
               title="Registrar peso"

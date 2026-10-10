@@ -9,7 +9,6 @@ import { Card, Divider } from '@/components/layout';
 import { NavRow } from '@/components/list';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
-import { GOAL_LABEL } from '@/lib/format';
 import { accentPolicy, cardGap, colors, iconSizes, radii, shadows, spacing } from '@/theme';
 import type { ForYouState } from '@/features/routine-catalog/use-recommended-routines';
 
@@ -18,7 +17,6 @@ function heroFacts(item: RoutineRecommendation): Fact[] {
   const facts: (Fact | null)[] = [
     { key: 'dias', icon: 'calendar-outline', label: card.diasPorSemana === 1 ? '1 día/sem' : `${card.diasPorSemana} días/sem` },
     { key: 'semanas', icon: 'time-outline', label: durationLabel(card.duracionSemanas) },
-    card.objetivo ? { key: 'objetivo', icon: 'flag-outline', label: GOAL_LABEL[card.objetivo] } : null,
   ];
   return facts.filter((fact): fact is Fact => fact !== null);
 }
@@ -117,7 +115,7 @@ export function ForYouBlock({ state, onOpen }: { state: ForYouState; onOpen: (id
         <NavRow
           leading={<Ionicons color={accentPolicy.glyph} name="sparkles-outline" size={iconSizes.lg} />}
           onPress={() => router.push('/onboarding')}
-          subtitle="Cuéntanos tu objetivo y tus días para recomendarte rutinas."
+          subtitle="Cuéntanos tu objetivo y tus días"
           testID="for-you-onboarding"
           title="Rutinas para ti"
         />

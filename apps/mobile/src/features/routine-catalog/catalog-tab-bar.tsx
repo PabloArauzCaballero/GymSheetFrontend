@@ -28,6 +28,7 @@ export function CatalogTabBar({
   return (
     <View accessibilityRole="tablist">
       <SegmentedPill
+        fill
         itemStyle={{
           minHeight: minTouchTarget,
           flexGrow: 1,

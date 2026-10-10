@@ -4,9 +4,9 @@ import type { SocialStatusValue } from '@gymsheet/schemas';
 import { socialService } from '@/api/services';
 import { Card, Section } from '@/components/layout';
 import { Button } from '@/components/ui';
-import { PressableScale } from '@/components/motion';
+import { FilterChip } from '@/components/filter-chip';
 import { notify } from '@/notifications';
-import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
+import { colors, fontSizes, spacing } from '@/theme';
 
 const OPTIONS: readonly { value: SocialStatusValue; label: string }[] = [
   { value: 'OPEN_TO_MEET', label: 'Abierto/a a conocer gente' },
@@ -40,38 +40,21 @@ export function SocialStatusEditor() {
   const visible = status.data?.visible ?? false;
 
   return (
-    <Section icon="heart-outline" title="Tu estado social">
+    <Section title="Tu estado social">
       <Card>
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
           Solo lo ven tus conexiones aceptadas, y solo si lo dejas visible.
         </Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
           {OPTIONS.map((option) => {
             const active = option.value === current;
             return (
-              <PressableScale
-                accessibilityLabel={option.label}
+              <FilterChip
                 key={option.value}
+                label={option.label}
                 onPress={() => save.mutate({ socialStatus: option.value, visible })}
-                style={{
-                  paddingHorizontal: spacing.md,
-                  paddingVertical: spacing.sm,
-                  borderRadius: radii.full,
-                  borderWidth: 1,
-                  borderColor: active ? colors.volt : colors.border,
-                  backgroundColor: active ? colors.surfaceHigh : colors.surfaceLow,
-                }}
-              >
-                <Text
-                  style={{
-                    color: active ? colors.text : colors.textMuted,
-                    fontSize: fontSizes.sm,
-                    fontWeight: active ? semibold : '400',
-                  }}
-                >
-                  {option.label}
-                </Text>
-              </PressableScale>
+                selected={active}
+              />
             );
           })}
         </View>
@@ -80,7 +63,7 @@ export function SocialStatusEditor() {
           label={visible ? 'Visible para tus conexiones' : 'Oculto'}
           loading={save.isPending}
           onPress={() => save.mutate({ socialStatus: current, visible: !visible })}
-          variant={visible ? 'primary' : 'ghost'}
+          variant={visible ? 'secondary' : 'ghost'}
         />
       </Card>
     </Section>

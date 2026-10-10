@@ -118,7 +118,7 @@ export function RoutineCardView({
             />
           ) : null}
           <Text numberOfLines={1} style={{ flexShrink: 1, color: colors.textMuted, fontSize: fontSizes.sm }}>
-            {card.esOficial ? 'Recomendada por REPP' : author}
+            {card.esOficial ? 'REPP' : author}
           </Text>
         </View>
         <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontVariant: ['tabular-nums'] }}>
