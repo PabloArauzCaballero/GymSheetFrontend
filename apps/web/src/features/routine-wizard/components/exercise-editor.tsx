@@ -58,7 +58,7 @@ export function ExerciseEditor({
   onRemove: () => void;
   onChange: (cambios: Partial<DraftExercise>) => void;
 }>) {
-  const key = exercise.ejercicioId;
+  const key = exercise.uid;
   const setReps = (field: 'repsMin' | 'repsMax', raw: string) =>
     onChange({ [field]: digits(raw, 1000) });
   const invertedReps =

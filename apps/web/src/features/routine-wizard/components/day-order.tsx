@@ -58,7 +58,7 @@ export function DayOrder({ dia }: Readonly<{ dia: DayTarget }>) {
     if (!result.confirmed) return;
     if (dia === 'grupo') {
       list.forEach((e) =>
-        dispatch({ type: 'quitarEjercicio', destino: dia, ejercicioId: e.ejercicioId }),
+        dispatch({ type: 'quitarEjercicio', destino: dia, uid: e.uid }),
       );
     } else {
       dispatch({ type: 'vaciarDia', dia });
@@ -97,12 +97,12 @@ export function DayOrder({ dia }: Readonly<{ dia: DayTarget }>) {
         {list.map((exercise, index) => (
           <ExerciseEditor
             exercise={exercise}
-            key={exercise.ejercicioId}
+            key={exercise.uid}
             onChange={(cambios) =>
               dispatch({
                 type: 'editarEjercicio',
                 destino: dia,
-                ejercicioId: exercise.ejercicioId,
+                uid: exercise.uid,
                 cambios,
               })
             }
@@ -110,7 +110,7 @@ export function DayOrder({ dia }: Readonly<{ dia: DayTarget }>) {
               dispatch({ type: 'moverEjercicio', destino: dia, desde: index, hacia: index + delta })
             }
             onRemove={() =>
-              dispatch({ type: 'quitarEjercicio', destino: dia, ejercicioId: exercise.ejercicioId })
+              dispatch({ type: 'quitarEjercicio', destino: dia, uid: exercise.uid })
             }
             position={index + 1}
             total={list.length}
