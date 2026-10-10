@@ -4,32 +4,50 @@ import type {
   RoutineStructureInput,
   RoutineWeekOverrideInput,
 } from '@gymsheet/types';
+import { normalizeGroups, renumberGroups } from './groups';
 import { durationInWeeks, type RoutineDraft } from './model';
 
 /** Volumen y carga de una semana de descarga cuando la persona la marca a mano (04 · §1). */
 const DELOAD_VOLUME = 0.5;
 const DELOAD_LOAD = 0.9;
 
+/**
+ * Los días tal como los recibe el backend. Los bloques salen renumerados 1, 2…
+ * por día y por orden de aparición; la transición solo dentro de un bloque; y
+ * una serie por tiempo manda su duración sin repeticiones.
+ */
 export function toDayInputs(draft: RoutineDraft): RoutineDayInput[] {
-  return draft.dias.map((day) => ({
-    diaSemana: day.diaSemana,
-    nombre: day.nombre.trim() || null,
-    ejercicios: day.ejercicios.map((exercise) => ({
-      ejercicioId: exercise.ejercicioId,
-      seriesObjetivo: exercise.seriesObjetivo,
-      repsMin: exercise.repsMin,
-      // Un rango invertido (12–8) es un descuido, no una intención: el servidor rechazaría
-      // toda la rutina, así que el máximo nunca queda por debajo del mínimo.
-      repsMax:
-        exercise.repsMin !== null && exercise.repsMax !== null
-          ? Math.max(exercise.repsMin, exercise.repsMax)
-          : exercise.repsMax,
-      pesoObjetivoKg: exercise.pesoObjetivoKg,
-      rirObjetivo: exercise.rirObjetivo,
-      descansoSeg: exercise.descansoSeg,
-      nota: exercise.nota?.trim() || null,
-    })),
-  }));
+  return draft.dias.map((day) => {
+    const list = normalizeGroups(day.ejercicios);
+    const grupos = renumberGroups(list);
+    return {
+      diaSemana: day.diaSemana,
+      nombre: day.nombre.trim() || null,
+      ejercicios: list.map((exercise, index) => {
+        const grupo = grupos[index] ?? null;
+        const timed = exercise.duracionSeg !== null;
+        return {
+          ejercicioId: exercise.ejercicioId,
+          seriesObjetivo: exercise.seriesObjetivo,
+          repsMin: timed ? null : exercise.repsMin,
+          // Un rango invertido (12–8) es un descuido, no una intención: el servidor rechazaría
+          // toda la rutina, así que el máximo nunca queda por debajo del mínimo.
+          repsMax: timed
+            ? null
+            : exercise.repsMin !== null && exercise.repsMax !== null
+              ? Math.max(exercise.repsMin, exercise.repsMax)
+              : exercise.repsMax,
+          pesoObjetivoKg: exercise.pesoObjetivoKg,
+          rirObjetivo: exercise.rirObjetivo,
+          descansoSeg: exercise.descansoSeg,
+          nota: exercise.nota?.trim() || null,
+          grupo,
+          descansoEntreSeg: grupo === null ? null : (exercise.descansoEntreSeg ?? 0),
+          duracionSeg: exercise.duracionSeg,
+        };
+      }),
+    };
+  });
 }
 
 /** Cuerpo de `POST /routines` (rutina completa con sus días). */
