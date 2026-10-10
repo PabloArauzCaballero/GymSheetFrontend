@@ -90,8 +90,11 @@ export function ExerciseImage({
   rounded = radii.md,
 }: {
   exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular'>;
-  /** Square side in px, or `'hero'` for the capped detail frame. */
-  size: number | 'hero';
+  /**
+   * Lado en px, `'hero'` para el marco del detalle o `'fill'` para ocupar el
+   * contenedor (mosaico de portada).
+   */
+  size: number | 'hero' | 'fill';
   rounded?: number;
 }) {
   const isHero = size === 'hero';
@@ -108,7 +111,9 @@ export function ExerciseImage({
 
   const frame = isHero
     ? { width: HERO_SIZE, height: HERO_SIZE, alignSelf: 'center' as const }
-    : { width: size, height: size };
+    : size === 'fill'
+      ? { width: '100%' as const, height: '100%' as const }
+      : { width: size, height: size };
 
   const Frame = isHero ? Animated.View : View;
 
@@ -127,7 +132,7 @@ export function ExerciseImage({
         // vienen sobre blanco y, multiplicadas sobre la placa, el blanco toma su
         // tono cálido y la figura se lee como una lámina de manual.
         backgroundColor: uri ? colors.plate : colors.surfaceHighest,
-        padding: uri && typeof size === 'number' ? Math.round(size * 0.06) : 0,
+        padding: !uri ? 0 : typeof size === 'number' ? Math.round(size * 0.06) : size === 'fill' ? spacing.sm : 0,
         alignItems: 'center',
         justifyContent: 'center',
       }}
