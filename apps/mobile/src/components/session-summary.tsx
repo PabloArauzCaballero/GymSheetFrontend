@@ -5,8 +5,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import Animated, {
   cancelAnimation,
-  FadeIn,
-  FadeInDown,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -21,11 +19,12 @@ import {
   type CelebrationSubject,
 } from '@/components/celebration';
 import { Card } from '@/components/layout';
-import { CountUpText, PREMIUM_EASING } from '@/components/motion';
+import { CountUpText, DURATION, PREMIUM_EASING } from '@/components/motion';
+import { Text as UIText } from '@/components/text';
 import { Button } from '@/components/ui';
 import { useAuthStore } from '@/state/auth-store';
 import type { FinishedSession } from '@/state/session-reward-store';
-import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, spacing, textVariants } from '@/theme';
 
 /**
  * «Sesión terminada»: el momento en que la app enseña causa y efecto.
@@ -35,6 +34,7 @@ import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, spacing } 
  * sesión trajo insignias o un rango, la recompensa que se abre sola.
  */
 
+/** Escalonado del desglose: una fila cada 90 ms mientras la cifra cuenta. */
 const ROW_STEP = 90;
 const BREAKDOWN_ORDER: readonly (keyof PointsBreakdown)[] = ['session', 'sets', 'volume', 'streak', 'badges', 'modes'];
 
@@ -65,12 +65,12 @@ function RewardTrack({
       ? withDelay(
           delayMs,
           withSequence(
-            withTiming(1, { duration: 700, easing }),
+            withTiming(1, { duration: DURATION.slow + DURATION.standard, easing }),
             withTiming(0, { duration: 0 }),
-            withTiming(to, { duration: 700, easing }),
+            withTiming(to, { duration: DURATION.slow + DURATION.standard, easing }),
           ),
         )
-      : withDelay(delayMs, withTiming(to, { duration: 900, easing }));
+      : withDelay(delayMs, withTiming(to, { duration: DURATION.slow * 2, easing }));
     return () => cancelAnimation(fill);
   }, [delayMs, fill, leveledUp, reduceMotion, to]);
 
@@ -83,9 +83,13 @@ function RewardTrack({
       accessible
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: 100, now: Math.round(Math.min(1, Math.max(0, to)) * 100) }}
-      style={{ height: 8, borderRadius: radii.full, backgroundColor: colors.surfaceHigh, overflow: 'hidden' }}
+      style={{ height: spacing.sm, borderRadius: radii.full, backgroundColor: colors.surfaceHighest, overflow: 'hidden' }}
     >
-      <Animated.View style={[{ height: '100%', borderRadius: radii.full, backgroundColor: color }, style]} />
+      {/* Relleno absoluto y sin hijos: animar su ancho no recoloca nada más
+          (la excepción de animate-expo) y conserva el radio, que `scaleX` deformaría. */}
+      <Animated.View
+        style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: radii.full, backgroundColor: color }, style]}
+      />
     </View>
   );
 }
@@ -154,7 +158,8 @@ export function SessionSummary({
   }, [hasQueue]);
 
   const levelName = reward.levelAfter?.name ?? null;
-  const trackColor = colors.volt;
+  // Neutra: en el resumen el acento es del récord y de «Seguir».
+  const trackColor = colors.textSecondary;
   const distance =
     reward.leveledUp && levelName
       ? `Has subido a ${levelName}.`
@@ -162,60 +167,36 @@ export function SessionSummary({
         ? `Te faltan ${reward.pointsToNextLevel.toLocaleString('es-ES')} puntos para ${reward.nextLevel.name}.`
         : 'Has llegado al final de la senda.';
 
-  const facts = [
-    session.duration,
-    `${session.sets} ${session.sets === 1 ? 'serie' : 'series'}`,
-    `${Math.round(session.volumeKg).toLocaleString('es-ES')} kg`,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-
   return (
     <View style={{ gap: spacing.lg }}>
-      <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, fontVariant: ['tabular-nums'] }}>{facts}</Text>
-
       <Card>
-        <Text
-          style={{
-            color: colors.textMuted,
-            fontSize: fontSizes.xs,
-            fontWeight: semibold,
-            letterSpacing: fontSizes.xs * 0.14,
-            textTransform: 'uppercase',
-          }}
-        >
-          Has ganado
-        </Text>
-        <View
-          accessible
-          accessibilityLabel={`Has ganado ${reward.pointsEarned} puntos`}
-          style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs }}
-        >
-          <Text style={{ color: accentPolicy.ink, fontSize: fontSizes.display + 16, fontWeight: semibold }}>+</Text>
-          <CountUpText
-            style={{
-              color: accentPolicy.ink,
-              fontSize: fontSizes.display + 16,
-              fontWeight: semibold,
-              letterSpacing: -1.5,
-              fontVariant: ['tabular-nums'],
-            }}
-            value={reward.pointsEarned}
-          />
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.lg }}>puntos</Text>
-        </View>
+        <UIText accessibilityRole="header" variant="headline">
+          Puntos de la sesión
+        </UIText>
+        {/* Sin puntos no se pinta «+0»: una cifra que cuenta hasta cero es un
+            parpadeo, no un dato. */}
+        {reward.pointsEarned > 0 ? (
+          <View
+            accessible
+            accessibilityLabel={`Has ganado ${reward.pointsEarned} puntos`}
+            style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs }}
+          >
+            <CountUpText prefix="+" style={[textVariants.display, { color: colors.text }]} value={reward.pointsEarned} />
+            <UIText tone="muted" variant="body">
+              puntos
+            </UIText>
+          </View>
+        ) : (
+          <UIText tone="muted" variant="subhead">
+            Esta sesión no sumó puntos.
+          </UIText>
+        )}
 
         <View style={{ gap: spacing.sm }}>
-          {rows.map((key, index) => (
-            <Animated.View
-              entering={
-                reduceMotion
-                  ? FadeIn.duration(1)
-                  : FadeInDown.duration(280)
-                      .easing(PREMIUM_EASING)
-                      .withInitialValues({ transform: [{ translateY: 10 }] })
-                      .delay(rowsAt + index * ROW_STEP)
-              }
+          {rows.map((key) => (
+            // Sin entrada escalonada (C8.1: el único rebote/efecto de la pantalla
+            // es el sello de récord; la cifra ya cuenta).
+            <View
               key={key}
               style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md }}
             >
@@ -223,7 +204,7 @@ export function SessionSummary({
               <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold, fontVariant: ['tabular-nums'] }}>
                 {`+${reward.breakdown[key].toLocaleString('es-ES')}`}
               </Text>
-            </Animated.View>
+            </View>
           ))}
         </View>
       </Card>
@@ -260,9 +241,9 @@ export function SessionSummary({
       </Card>
 
       {subjects.length > 0 ? (
-        <Card accent={colors.volt}>
+        <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-            <Ionicons color={accentPolicy.ink} name="gift-outline" size={iconSizes.lg} />
+            <Ionicons color={accentPolicy.glyph} name="gift-outline" size={iconSizes.lg} />
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
                 {subjects.length === 1 ? 'Tienes una recompensa' : `Tienes ${subjects.length} recompensas`}

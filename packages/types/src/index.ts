@@ -9,3 +9,4 @@ export * from './community';
 export * from './sharing';
 export * from './programs';
 export * from './cardio';
+export * from './recommendations';

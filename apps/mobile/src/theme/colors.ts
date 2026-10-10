@@ -84,6 +84,17 @@ export function accentGradient(): readonly [string, string] {
 }
 
 /**
+ * Chip neutro: un dato (objetivo, rol, «3 días»), no un estado. Antes el
+ * `Badge` caía por defecto en `info` (azul) y pintaba hechos como avisos.
+ * `textSecondary` sobre `surfaceHighest`: 7,25:1.
+ */
+const neutralBadgeTone = {
+  text: neutral.textSecondary,
+  bg: neutral.surfaceHighest,
+  border: neutral.surfaceHighest,
+} as const;
+
+/**
  * Tonos semánticos con la confirmación tomada de la marca. Solo se reemplaza el
  * verde de éxito: aviso, error e información son señales que el usuario debe
  * reconocer igual en cualquier gimnasio. Se deriva el chip entero (fondo y
@@ -93,12 +104,12 @@ export const tones = {
   get dark() {
     const text = activeBrand().successOnDark;
     const success = { text, bg: alpha(text, 0.12), border: alpha(text, 0.35) };
-    return { ...sharedTones.dark, success };
+    return { ...sharedTones.dark, success, neutral: neutralBadgeTone };
   },
   get light() {
     const text = activeBrand().successOnLight;
     const success = { text, bg: alpha(text, 0.1), border: alpha(text, 0.3) };
-    return { ...sharedTones.light, success };
+    return { ...sharedTones.light, success, neutral: neutralBadgeTone };
   },
 };
 

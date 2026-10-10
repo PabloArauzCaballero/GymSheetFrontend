@@ -5,3 +5,4 @@ export * from './day-blocks';
 export * from './ownership';
 export * from './version-diff';
 export * from './labels';
+export * from './recommendations';
