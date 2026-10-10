@@ -74,8 +74,7 @@ export const routineDayExerciseInputSchema = z
       .optional(),
   })
   .refine(
-    (value) =>
-      value.repsMin === null || value.repsMax === null || value.repsMin <= value.repsMax,
+    (value) => value.repsMin === null || value.repsMax === null || value.repsMin <= value.repsMax,
     { path: ['repsMax'], message: 'El máximo de repeticiones no puede ser menor que el mínimo' },
   );
 
@@ -179,7 +178,11 @@ export const routineWeekOverrideSchema = z.object({
   esDescarga: z.boolean(),
   factorVolumen: z.number(),
   factorCarga: z.number(),
-  nota: z.string().nullable().optional().transform((v) => v ?? null),
+  nota: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => v ?? null),
 });
 
 export const exerciseLikeResultSchema = z.object({
