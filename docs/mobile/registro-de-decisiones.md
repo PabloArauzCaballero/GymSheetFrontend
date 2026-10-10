@@ -91,6 +91,25 @@ de la web) y copias de React bajo `@radix-ui` (sólo web).
 **Estado**: implementado; type-check, lint, `expo export` iOS+Android y arranque en Expo Go
 SDK 57 (simulador iPhone 17 Pro, iOS 26.5) verificados.
 
+## ADR-011 — Asistente de rutinas: lógica pura en `@gymsheet/hooks`, un almacén por app
+
+**Contexto**: el asistente de creación de rutinas (plan Rutinas REPP, F2) se hace a la vez en
+móvil y web y comparte reglas: pasos, validación, selección múltiple de días, avisos de
+calidad, semanas de descarga, carga útil para el backend y mapeo de errores por `code`.
+ADR-008 impide que `@gymsheet/hooks` importe React (el móvil es `nohoist` y tiene su propia
+copia).
+**Decisión**: `@gymsheet/hooks` exporta el módulo `routine-draft` **sin React**: un reductor
+(`routineDraftReducer`), funciones puras y el guardado (`saveRoutineDraft`, que recibe los
+servicios por parámetro). Cada app envuelve el reductor en su propio almacén y su propia
+persistencia: `zustand` + archivo en el documento (móvil) y `useSyncExternalStore` +
+`sessionStorage` (web; único archivo que `source-check` autoriza a tocarlo). Los servicios
+HTTP compartidos (`createRoutineServices`, `createExerciseCommunityServices`) viven en
+`@gymsheet/api-client` y reciben `request` del transporte de cada app.
+**Bandera**: `routinesV2` (`EXPO_PUBLIC_ROUTINES_V2` / `NEXT_PUBLIC_ROUTINES_V2`), encendida por
+defecto en desarrollo y apagada en producción; apagada, la creación es la de siempre.
+**Consecuencias**: la lógica se prueba con Vitest sin pantalla (`packages/hooks`); no hay
+`useRoutineDraft` único porque el hook de React no puede vivir en el paquete.
+
 ## Decisiones pendientes
 
 - Deduplicar React/react-query en Metro para poder compartir hooks acoplados a UI.

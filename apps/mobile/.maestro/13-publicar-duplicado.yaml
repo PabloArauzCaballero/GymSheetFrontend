@@ -1,0 +1,53 @@
+# Publicar y bloqueo de duplicados (plan Rutinas REPP · F4): RF-09.
+# Requiere `seed-rutinas-evidencia.mjs` y `seed-rutinas-f4.mjs`.
+appId: app.gymsheet.mobile
+name: 13 · Publicar rutina y bloqueo de duplicado
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+---
+- runFlow: login-as.subflow.yaml
+# RF-09 · p01: confirmación al publicar una rutina nueva.
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Pierna para publicar' }
+- scrollUntilVisible:
+    element: 'Publicar'
+    centerElement: true
+- tapOn: 'Publicar'
+- extendedWaitUntil:
+    visible: 'Cualquiera podrá verla y copiarla.*'
+    timeout: 10000
+- takeScreenshot: RF-09_p01_confirmacion-publicar_ios_oscuro
+- tapOn: 'Publicar'
+# RF-09 · p02: queda pública (el botón pasa a «Despublicar»); el aviso dura pocos segundos, así que
+# se captura nada más confirmar.
+- takeScreenshot: RF-09_p02a_aviso-de-rutina-publicada_ios_oscuro
+- extendedWaitUntil:
+    visible: 'Despublicar'
+    timeout: 20000
+- takeScreenshot: RF-09_p02_publicada-despublicar_ios_oscuro
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Públicas', NAME: 'Pierna para publicar' }
+- takeScreenshot: RF-09_p02b_aparece-en-publicas-con-autor_ios_oscuro
+
+# RF-09 · p03: una rutina idéntica a la de Leo se bloquea y ofrece verla.
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Torso idéntico' }
+- scrollUntilVisible:
+    element: 'Publicar'
+    centerElement: true
+- tapOn: 'Publicar'
+- tapOn: 'Publicar'
+- extendedWaitUntil:
+    visible: 'Ya existe una rutina idéntica'
+    timeout: 20000
+- takeScreenshot: RF-09_p03_ya-existe-identica_ios_oscuro
+- tapOn: 'Ver rutina'
+- extendedWaitUntil:
+    visible: 'Torso de Leo'
+    timeout: 20000
+- takeScreenshot: RF-09_p03b_ver-la-existente_ios_oscuro
+- assertNotVisible: 'Error'

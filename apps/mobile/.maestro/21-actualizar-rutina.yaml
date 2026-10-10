@@ -1,0 +1,118 @@
+# ¿Actualizar tu rutina? (plan Rutinas REPP · F5): RF-20.
+appId: app.gymsheet.mobile
+name: 21 · Actualizar la rutina desde la sesión
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+  BENCH: barbell bench press
+  CURL: dumbbell biceps curl
+  CURL_ID: bf151e73-a868-4930-9ddd-80fdfd57151b
+---
+- runFlow: login-as.subflow.yaml
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Empuje 4 días' }
+- tapOn: 'Activar programa'
+- tapOn: 'Siguiente'
+- tapOn: 'Siguiente'
+- tapOn: 'Activar'
+- extendedWaitUntil:
+    visible:
+      id: 'program-card-strength'
+    timeout: 60000
+- runFlow:
+    file: start-day.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Empuje 4 días', DIA: 'lunes' }
+# Cambia un peso (4 series a 65 kg) y añade un ejercicio que no estaba en el día.
+- runScript:
+    file: scripts-log-sets.js
+    env:
+      EMAIL: athlete.mock@gymsheet.local
+      EXERCISE: ${BENCH}
+      SETS: '[{"pesoKg":65,"repeticiones":8,"rir":2},{"pesoKg":65,"repeticiones":8,"rir":2},{"pesoKg":65,"repeticiones":8,"rir":2},{"pesoKg":65,"repeticiones":8,"rir":2}]'
+- runScript:
+    file: scripts-log-sets.js
+    env:
+      EMAIL: athlete.mock@gymsheet.local
+      EXERCISE: ${CURL}
+      EXERCISE_ID: ${CURL_ID}
+      SETS: '[{"pesoKg":15,"repeticiones":12,"rir":2},{"pesoKg":15,"repeticiones":12,"rir":2},{"pesoKg":15,"repeticiones":12,"rir":2}]'
+- swipe:
+    start: 50%,25%
+    end: 50%,70%
+- extendedWaitUntil:
+    visible: '65 kg × 8'
+    timeout: 30000
+- repeat:
+    times: 5
+    commands:
+      - scroll
+- tapOn: 'Finalizar sesión'
+- tapOn: 'Finalizar'
+# RF-20 · p01: la tarjeta del programa abre la hoja que lista los cambios respecto de la rutina.
+- scrollUntilVisible:
+    element: 'Revisar cambios en la rutina'
+    timeout: 60000
+- tapOn: 'Revisar cambios en la rutina'
+- extendedWaitUntil:
+    visible: '¿Actualizar tu rutina?'
+    timeout: 30000
+- assertVisible: '.*65 kg.*'
+- takeScreenshot: RF-20_p01_hoja-con-la-lista-de-cambios_ios_oscuro
+# RF-20 · p02: Actualizar → la rutina refleja los cambios.
+- tapOn: 'Actualizar'
+- extendedWaitUntil:
+    notVisible: '¿Actualizar tu rutina?'
+    timeout: 30000
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Empuje 4 días' }
+- tapOn: 'Vista Mes'
+- tapOn: 'Semana 1, lunes.*'
+- extendedWaitUntil:
+    visible: 'Entrenar este día'
+    timeout: 20000
+- assertVisible: '.*dumbbell biceps curl.*'
+- takeScreenshot: RF-20_p02_la-rutina-refleja-los-cambios_ios_oscuro
+
+# RF-20 · p03: «Solo esta vez» no toca la rutina: otra sesión con 70 kg, y el día sigue con 65 kg.
+- runFlow:
+    file: start-day.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Empuje 4 días', DIA: 'lunes' }
+- runScript:
+    file: scripts-log-sets.js
+    env:
+      EMAIL: athlete.mock@gymsheet.local
+      EXERCISE: ${BENCH}
+      SETS: '[{"pesoKg":70,"repeticiones":8,"rir":2},{"pesoKg":70,"repeticiones":8,"rir":2},{"pesoKg":70,"repeticiones":8,"rir":2},{"pesoKg":70,"repeticiones":8,"rir":2}]'
+- swipe:
+    start: 50%,25%
+    end: 50%,70%
+- extendedWaitUntil:
+    visible: '70 kg × 8'
+    timeout: 30000
+- repeat:
+    times: 5
+    commands:
+      - scroll
+- tapOn: 'Finalizar sesión'
+- tapOn: 'Finalizar'
+- scrollUntilVisible:
+    element: 'Revisar cambios en la rutina'
+    timeout: 60000
+- tapOn: 'Revisar cambios en la rutina'
+- extendedWaitUntil:
+    visible: '¿Actualizar tu rutina?'
+    timeout: 30000
+- assertVisible: '.*70 kg.*'
+- tapOn: 'Solo esta vez'
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Empuje 4 días' }
+- tapOn: 'Vista Mes'
+- tapOn: 'Semana 1, lunes.*'
+- extendedWaitUntil:
+    visible: 'Entrenar este día'
+    timeout: 20000
+- assertNotVisible: '.*70 kg.*'
+- takeScreenshot: RF-20_p03_solo-esta-vez-no-cambia-la-rutina_ios_oscuro

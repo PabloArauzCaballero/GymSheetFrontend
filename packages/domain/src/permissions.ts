@@ -8,12 +8,26 @@ import type { UserRole } from '@gymsheet/types';
 const STAFF_ROLES: readonly UserRole[] = ['ADMIN', 'COACH', 'FRONT_DESK'];
 const ADMIN_ROLES: readonly UserRole[] = ['ADMIN'];
 
+/**
+ * Personal de UN gimnasio.
+ *
+ * `SYSTEM_ADMIN` queda deliberadamente fuera: no pertenece a ningún gimnasio y
+ * las superficies que esto abre —clientes, equipamiento, instalaciones— asumen
+ * un gimnasio concreto detrás. Su sitio es la consola de sistema, no la del
+ * gimnasio, y colarlo aquí haría que el portal le pintara una navegación de
+ * datos que su sesión no tiene acotados.
+ */
 export function isStaff(role: UserRole | null | undefined): boolean {
   return role != null && STAFF_ROLES.includes(role);
 }
 
 export function isAdmin(role: UserRole | null | undefined): boolean {
   return role != null && ADMIN_ROLES.includes(role);
+}
+
+/** Administrador de plataforma: opera por encima de los gimnasios. */
+export function isSystemAdmin(role: UserRole | null | undefined): boolean {
+  return role === 'SYSTEM_ADMIN';
 }
 
 export function canManageAdminPanel(role: UserRole | null | undefined): boolean {

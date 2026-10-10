@@ -133,6 +133,8 @@ export function createApiClient(config: ApiClientConfig) {
       message,
       status: response.status,
       ...(parsed.success && parsed.data.requestId ? { requestId: parsed.data.requestId } : {}),
+      ...(parsed.success && parsed.data.code ? { code: parsed.data.code } : {}),
+      ...(parsed.success && parsed.data.details ? { details: parsed.data.details } : {}),
       kind: classifyStatus(response.status),
     });
   }

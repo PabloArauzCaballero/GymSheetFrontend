@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BREAKDOWN_LABEL, countUpDuration } from '@gymsheet/domain';
-import type { PointsBreakdown } from '@gymsheet/schemas';
+import type { PointsBreakdown, SessionReward } from '@gymsheet/schemas';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import Animated, {
@@ -36,7 +36,7 @@ import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, spacing } 
  */
 
 const ROW_STEP = 90;
-const BREAKDOWN_ORDER: readonly (keyof PointsBreakdown)[] = ['session', 'sets', 'volume', 'streak', 'badges'];
+const BREAKDOWN_ORDER: readonly (keyof PointsBreakdown)[] = ['session', 'sets', 'volume', 'streak', 'badges', 'modes'];
 
 /** La barra del tramo: avanza lo que movió la sesión; si hubo ascenso, se llena y vuelve a empezar. */
 function RewardTrack({
@@ -94,7 +94,7 @@ export function SessionSummary({
   session,
   onContinue,
 }: {
-  session: FinishedSession;
+  session: Omit<FinishedSession, 'reward'> & { reward: SessionReward };
   onContinue: () => void;
 }) {
   const reduceMotion = useReducedMotion();

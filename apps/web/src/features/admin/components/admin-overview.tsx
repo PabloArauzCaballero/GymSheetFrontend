@@ -1,66 +1,26 @@
-import { hasPermission } from '@gymsheet/domain';
-import { Activity, Building2, Dumbbell, KeyRound, ShieldCheck, Users } from 'lucide-react';
 import Link from 'next/link';
 import type { UserRole } from '@/shared/api/contracts';
 import { PageHeader } from '@/shared/components/layout/page-header';
+import { adminNavigation, canSee } from '@/shared/components/layout/nav-config';
 
-const modules = [
-  {
-    href: '/admin/equipment',
-    title: 'Equipamiento',
-    description: 'Inventario visible y operaciones autorizadas por rol.',
-    icon: Dumbbell,
-    roles: ['ADMIN', 'FRONT_DESK'],
-  },
-  {
-    href: '/admin/exercises',
-    title: 'Catálogo global',
-    description: 'Ejercicios globales e importación controlada de dataset.',
-    icon: Activity,
-    roles: ['ADMIN'],
-  },
-  {
-    href: '/admin/facilities',
-    title: 'Instalaciones',
-    description: 'Sedes, salas, puntos de acceso y mantenimiento.',
-    icon: Building2,
-    roles: ['ADMIN', 'FRONT_DESK'],
-  },
-  {
-    href: '/admin/membership',
-    title: 'Membresías',
-    description: 'Planes, clientes, vigencias y personal.',
-    icon: Users,
-    roles: ['ADMIN', 'FRONT_DESK'],
-  },
-  {
-    href: '/admin/access',
-    title: 'Control de acceso',
-    description: 'Dispositivos, decisiones y credenciales.',
-    icon: KeyRound,
-    roles: ['ADMIN', 'FRONT_DESK'],
-  },
-  {
-    href: '/admin/permissions',
-    title: 'Permisos de administración',
-    description: 'Otorgar y revocar permisos granulares al personal.',
-    icon: ShieldCheck,
-    roles: ['ADMIN', 'FRONT_DESK'],
-    requiredPermission: 'admin-access:manage',
-  },
-] as const;
-
+/**
+ * Los módulos de administración a los que llega esta cuenta.
+ *
+ * La rejilla se deriva de `adminNavigation` en vez de mantener su propia lista:
+ * eran dos inventarios de lo mismo y ya habían divergido —usuarios, panel del
+ * gimnasio y registrar persona estaban en la navegación lateral y no aquí, así
+ * que quien entraba por esta página no sabía que existían—. Entra lo que tenga
+ * `description`, que es lo único que una tarjeta necesita y una entrada de menú
+ * no.
+ */
 export function AdminOverview({
   role,
   permissions,
 }: Readonly<{ role: UserRole; permissions?: readonly string[] }>) {
-  const visibleModules = modules.filter(
-    (module) =>
-      new Set<UserRole>(module.roles).has(role) &&
-      ('requiredPermission' in module
-        ? hasPermission(permissions, module.requiredPermission)
-        : true),
+  const visibleModules = adminNavigation.filter(
+    (module) => module.description && canSee(module, role, permissions),
   );
+
   return (
     <div className="grid gap-8">
       <PageHeader
@@ -79,7 +39,7 @@ export function AdminOverview({
               key={module.href}
             >
               <Icon className="size-7 text-[var(--text-muted)]" />
-              <h2 className="mt-10 text-2xl font-semibold tracking-[-0.02em]">{module.title}</h2>
+              <h2 className="mt-10 text-2xl font-semibold tracking-[-0.02em]">{module.label}</h2>
               <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">
                 {module.description}
               </p>

@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { equipmentStatuses, equipmentTypes, trainingGoals, userRoles } from '@gymsheet/types';
 
 export const problemSchema = z.object({
+  /** Código estable de dominio (`ROUTINE_HAS_NO_DAYS`…). */
+  code: z.string().optional(),
+  details: z.record(z.string(), z.unknown()).optional(),
   type: z.string().optional(),
   title: z.string().optional(),
   status: z.number().optional(),
@@ -143,9 +146,25 @@ export const exerciseMediaSchema = z
   })
   .passthrough();
 
+export const ratingSummarySchema = z.object({
+  promedio: z.number().nullable(),
+  total: z.number().int(),
+});
+
+/**
+ * Identificador con forma de UUID, sin exigir versión ni variante.
+ *
+ * Zod 4 valida RFC 9562 de verdad (`z.string().uuid()` rechaza
+ * `00000000-0000-0000-0000-0000000000e2`), mientras que el backend valida con
+ * Zod 3, que sólo mira la forma. Los ejercicios de la siembra de demostración
+ * llevan ids así, y con la validación estricta una sola fila rota la página
+ * entera del catálogo con «Respuesta no válida».
+ */
+const uuidShape = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu);
+
 export const exerciseSchema = z
   .object({
-    id: z.string().uuid(),
+    id: uuidShape,
     nombre: z.string(),
     grupoMuscular: z.string(),
     descripcion: z.string().nullable(),
@@ -164,6 +183,11 @@ export const exerciseSchema = z
     metadata: z.record(z.string(), z.unknown()),
     equipment: z.array(equipmentSchema),
     media: z.array(exerciseMediaSchema),
+    meGustaTotal: z.number().int().default(0),
+    valoracion: ratingSummarySchema.default({ promedio: null, total: 0 }),
+    estadoModeracion: z.string().default('VISIBLE'),
+    meGusta: z.boolean().optional(),
+    esFavorito: z.boolean().optional(),
   })
   .passthrough();
 

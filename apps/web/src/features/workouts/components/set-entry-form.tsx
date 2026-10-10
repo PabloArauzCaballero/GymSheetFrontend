@@ -53,7 +53,7 @@ export function SetEntryForm({
   sessionExerciseId: string;
   nextSetNumber: number;
   /** Última serie registrada de este ejercicio en esta sesión, si hay alguna. */
-  lastSet?: { pesoKg: number; repeticiones: number; rir: number };
+  lastSet?: { pesoKg: number; repeticiones: number; rir: number | null };
 }>) {
   const queryClient = useQueryClient();
   const account = useQuery({ queryKey: ['user', 'me'], queryFn: profileService.getUser });
@@ -94,7 +94,7 @@ export function SetEntryForm({
             onClick={() => {
               form.setValue('pesoKg', lastSet.pesoKg);
               form.setValue('repeticiones', lastSet.repeticiones);
-              form.setValue('rir', lastSet.rir);
+              form.setValue('rir', lastSet.rir ?? 0);
             }}
           />
         ) : null}

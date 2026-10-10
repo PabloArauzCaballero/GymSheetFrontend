@@ -1,11 +1,14 @@
 'use client';
 
 import { CheckCircle2, ChevronRight, Dumbbell, Timer } from 'lucide-react';
+import { isStrengthSet, setVolumeKg } from '@gymsheet/domain';
 import { useState } from 'react';
 import type { Workout } from '@/shared/api/contracts';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { formatNumber } from '@/shared/lib/numbers';
+import { cardioSetLabel } from './cardio-set-label';
+import { SuggestedLoad } from './suggested-load';
 import { RestTimer } from './rest-timer';
 import { SetEntryForm } from './set-entry-form';
 
@@ -45,8 +48,9 @@ export function GuidedWorkout({
     );
   }
 
-  const completedSets = current.series.length;
-  const volume = current.series.reduce((sum, set) => sum + set.pesoKg * set.repeticiones, 0);
+  const strengthSets = current.series.filter(isStrengthSet);
+  const completedSets = strengthSets.length;
+  const volume = current.series.reduce((sum, set) => sum + setVolumeKg(set), 0);
 
   return (
     <div className="grid gap-6">
@@ -81,6 +85,9 @@ export function GuidedWorkout({
               <h2 className="mt-1 break-words text-2xl font-semibold tracking-[-0.03em]">
                 {current.ejercicio?.nombre ?? 'Ejercicio'}
               </h2>
+              <div className="mt-2">
+                <SuggestedLoad exerciseId={current.ejercicio?.id} />
+              </div>
               {current.nota ? (
                 <p className="mt-2 text-sm text-[var(--text-muted)]">{current.nota}</p>
               ) : null}
@@ -102,7 +109,9 @@ export function GuidedWorkout({
               <li className="flex items-center justify-between px-5 py-3 text-sm" key={set.id}>
                 <span className="font-semibold">Serie {set.numeroSerie}</span>
                 <span className="text-[var(--text-muted)]">
-                  {formatNumber(set.pesoKg)} kg × {set.repeticiones} · RIR {set.rir}
+                  {isStrengthSet(set)
+                    ? `${formatNumber(set.pesoKg)} kg × ${set.repeticiones} · RIR ${set.rir ?? '–'}`
+                    : cardioSetLabel(set)}
                 </span>
               </li>
             ))}
@@ -110,13 +119,10 @@ export function GuidedWorkout({
         ) : null}
 
         <SetEntryForm
-          lastSet={
-            current.series.length
-              ? current.series.reduce((latest, set) =>
-                  set.numeroSerie > latest.numeroSerie ? set : latest,
-                )
-              : undefined
-          }
+          lastSet={strengthSets.reduce<(typeof strengthSets)[number] | undefined>(
+            (latest, set) => (latest && latest.numeroSerie > set.numeroSerie ? latest : set),
+            undefined,
+          )}
           nextSetNumber={completedSets + 1}
           sessionExerciseId={current.id}
           workoutId={workout.id}

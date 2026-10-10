@@ -1,0 +1,69 @@
+# Valoraciones, comentarios y denuncias (plan Rutinas REPP · F4): RF-12.
+# A es la autora de «Empuje 4 días» (pública); B valora, comenta y denuncia.
+appId: app.gymsheet.mobile
+name: 15 · Comunidad y denuncia
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+---
+- runFlow: login-as.subflow.yaml
+# RF-12 · p02: la autora no puede valorar su propia rutina.
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Pierna 3 días' }
+- scroll
+- extendedWaitUntil:
+    visible: 'No puedes valorar tu rutina'
+    timeout: 30000
+- takeScreenshot: RF-12_p02_no-puedes-valorar-la-tuya_ios_oscuro
+
+# Cambia a la cuenta B.
+- runFlow:
+    file: login-as.subflow.yaml
+    env: { EMAIL: 'expiring.mock@gymsheet.local', FIRST: 'Expiring' }
+# RF-12 · p01: B valora con 4 estrellas.
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Públicas', NAME: 'Pierna 3 días' }
+- scrollUntilVisible:
+    element: 'Valorar con 4 estrellas'
+- tapOn: 'Valorar con 4 estrellas'
+- extendedWaitUntil:
+    visible: 'Tu valoración: 4 de 5'
+    timeout: 20000
+- takeScreenshot: RF-12_p01_valoracion-4-estrellas_ios_oscuro
+# RF-12 · p03: B comenta.
+- tapOn:
+    id: 'comment-input'
+- inputText: 'Gran rutina, la sigo desde hace dos semanas'
+# El teclado tapa el botón: se cierra antes de pulsar «Comentar».
+- hideKeyboard
+- tapOn: 'Comentar'
+# El comentario publicado lleva el nombre de su autor; el borrador del campo no.
+- extendedWaitUntil:
+    visible: '.*Expiring.*'
+    timeout: 20000
+- hideKeyboard
+- takeScreenshot: RF-12_p03_comentario-publicado_ios_oscuro
+- tapOn: 'Rutinas, tab.*'
+
+# RF-12 · p04: B denuncia un ejercicio privado de otra rutina («Ejercicio peligroso»).
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Públicas', NAME: 'Denuncia QA' }
+- tapOn: 'Vista Mes'
+- tapOn: 'Semana 1, .*'
+- extendedWaitUntil:
+    visible: 'Denunciar «.*'
+    timeout: 20000
+- takeScreenshot: RF-12_p04a_dia-con-ejercicio-privado_ios_oscuro
+- tapOn: 'Denunciar «.*'
+- extendedWaitUntil:
+    visible: 'Ejercicio peligroso'
+    timeout: 20000
+- tapOn:
+    id: 'reason-EJERCICIO_PELIGROSO'
+- takeScreenshot: RF-12_p04b_hoja-de-denuncia_ios_oscuro
+- tapOn: 'Enviar denuncia'
+# El aviso dura pocos segundos: se espera sin exigirlo y la captura dice si llegó a verse.
+- takeScreenshot: RF-12_p04_gracias-lo-revisaremos_ios_oscuro

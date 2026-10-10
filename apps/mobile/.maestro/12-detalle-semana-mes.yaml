@@ -1,0 +1,62 @@
+# Detalle de rutina con vista Semana / Mes (plan Rutinas REPP · F3): RF-02.
+appId: app.gymsheet.mobile
+name: 12 · Detalle de rutina, Semana y Mes
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+---
+- runFlow: login-as.subflow.yaml
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Empuje 4 días' }
+
+# RF-02 · p01: cabecera + vista Semana.
+- extendedWaitUntil:
+    visible: 'Semana 1 de 12'
+    timeout: 30000
+- assertNotVisible: 'Error'
+- takeScreenshot: RF-02_p01_cabecera-vista-semana_ios_oscuro
+
+# RF-02 · p02: Mes con 12 semanas; S4, S8 y S12 «Descarga».
+- tapOn: 'Vista Mes'
+- extendedWaitUntil:
+    visible: 'Vista Mes'
+    timeout: 10000
+- assertVisible: 'S4'
+- takeScreenshot: RF-02_p02_vista-mes-descargas_ios_oscuro
+- tapOn: 'Semana 2, martes.*'
+- extendedWaitUntil:
+    visible: 'Martes · Tirón'
+    timeout: 10000
+- assertVisible: 'Semana 2'
+- takeScreenshot: RF-02_p03_s2-martes-hoja-del-dia_ios_oscuro
+
+# RF-02 · p04: tocar un ejercicio abre su ficha.
+- tapOn: 'barbell bent over row.*'
+- extendedWaitUntil:
+    visible: 'Dar me gusta.*'
+    timeout: 30000
+- takeScreenshot: RF-02_p04_ficha-del-ejercicio_ios_oscuro
+
+# RF-02 · p05: volver conserva el modo Mes (y, desplazando, S8 y S12 son descarga).
+- tapOn: 'Volver'
+- extendedWaitUntil:
+    visible: 'Vista Mes'
+    timeout: 20000
+- assertVisible: 'S4'
+- takeScreenshot: RF-02_p05_volver-sigue-en-mes_ios_oscuro
+- scroll
+- takeScreenshot: RF-02_p02b_vista-mes-s8-s12-descarga_ios_oscuro
+- swipe:
+    direction: DOWN
+- swipe:
+    direction: DOWN
+
+# RF-02 · p06: rutina de «cualquier día».
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Borrador privado' }
+- extendedWaitUntil:
+    visible: 'Rutina de un día, cualquier día.*'
+    timeout: 30000
+- takeScreenshot: RF-02_p06_rutina-cualquier-dia_ios_oscuro
