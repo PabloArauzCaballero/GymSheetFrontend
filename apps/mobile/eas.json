@@ -46,7 +46,8 @@
         "EXPO_PUBLIC_ENVIRONMENT": "staging",
         "EXPO_PUBLIC_API_URL": "https://repp.api.test.arauzsoftware.com/api/v1",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
-        "CLEARTEXT_DOMAINS": "161.97.85.216.sslip.io"
+        "CLEARTEXT_DOMAINS": "161.97.85.216.sslip.io",
+        "EXPO_PUBLIC_ROUTINES_V2": "true"
       }
     }
   },
