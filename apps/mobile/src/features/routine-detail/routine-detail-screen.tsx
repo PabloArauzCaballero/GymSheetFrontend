@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Share, View } from 'react-native';
 import { ApiError } from '@gymsheet/api-client';
 import type { Routine } from '@gymsheet/types';
-import { isAnyDayRoutine, routineColumns } from '@gymsheet/hooks';
+import { canActivateProgram, canSaveCopy, isAnyDayRoutine, routineColumns, savedCopyLabel } from '@gymsheet/hooks';
 import { routineBuilderService, routineCatalogService, routineService } from '@/api/services';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { ScrollScreen, Section } from '@/components/layout';
@@ -18,7 +18,7 @@ import { DetailSocial } from '@/features/routine-detail/detail-social';
 import { DayCard } from '@/features/routine-detail/day-cards';
 import { MoreButton, MoreSheet, type MoreAction } from '@/features/routine-detail/more-sheet';
 import { ReportSheet, type ReportTarget } from '@/features/routine-detail/report-sheet';
-import { coverExercises, copyNumberOf, ownCopiesOf, todayWeekday } from '@/features/routine-detail/routine-plan';
+import { cardCopyNumber, coverExercises, ownCopiesOf, todayWeekday } from '@/features/routine-detail/routine-plan';
 import { useRoutineActions } from '@/features/routine-detail/use-routine-actions';
 import { useStartRoutine } from '@/features/routine-detail/use-start-routine';
 import { VersionBanner } from '@/features/routine-detail/version-banner';
@@ -55,7 +55,7 @@ export function RoutineDetailScreen() {
     enabled: Boolean(id) && routine.isSuccess,
   });
   const data = routine.data;
-  const foreign = data ? !data.esMia : false;
+  const foreign = canSaveCopy(data);
   // C2: ¿ya guardaste esta rutina? Se busca en «Mías» por la atribución que
   // congela la copia. Solo para rutinas ajenas.
   const mine = useQuery({
@@ -108,7 +108,7 @@ export function RoutineDetailScreen() {
   const todayDayId = data.dias.find((day) => day.diaSemana === todayWeekday())?.id;
   const copies = data ? ownCopiesOf(data, mine.data?.items ?? []) : [];
   const latestCopy = copies[0];
-  const copyNumber = latestCopy ? copyNumberOf(latestCopy.nombre) : null;
+  const copyNumber = latestCopy ? cardCopyNumber(latestCopy) : null;
 
   const openDay = (diaId: string, semana: number) =>
     router.push({ pathname: '/routines/[id]/dia/[diaId]', params: { id: data.id, diaId, semana: String(semana) } });
@@ -160,7 +160,7 @@ export function RoutineDetailScreen() {
         <DetailActions
           existingCopy={
             latestCopy
-              ? { id: latestCopy.id, label: copyNumber ? `Ya la guardaste como v${copyNumber}` : 'Ya la guardaste' }
+              ? { id: latestCopy.id, label: copyNumber ? savedCopyLabel(copyNumber) : 'Ya la guardaste' }
               : null
           }
           intent={intent}
@@ -168,6 +168,13 @@ export function RoutineDetailScreen() {
           onPrimary={onPrimary}
           onShare={onShare}
           onTryDay={intent === 'train' ? undefined : () => start.mutate(undefined)}
+          primaryDisabledReason={
+            intent === 'activate' && !canActivateProgram(data)
+              ? data.estado === 'ARCHIVED'
+                ? 'Está archivada: no se puede activar.'
+                : 'Añade ejercicios para poder activarla.'
+              : undefined
+          }
           primaryLoading={intent === 'save' ? actions.copying : intent === 'train' ? start.isPending : false}
           tryingDay={intent !== 'train' && start.isPending}
         />

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { ApiError } from '@gymsheet/api-client';
+import { canActivateProgram } from '@gymsheet/hooks';
 import { confirm } from '@gymsheet/notifications';
 import { programService, routineService } from '@/api/services';
 import { ErrorState, Skeleton } from '@/components/feedback';
@@ -54,7 +55,16 @@ function ActivateFlow({ routineId }: { routineId: string }) {
   // C1: solo se activa una rutina propia. Un enlace directo a una ajena vuelve
   // al detalle con el aviso, en vez de abrir un asistente que el backend
   // rechazará (403 ROUTINE_NOT_OWNED).
-  if (!routine.data.esMia) return <NotOwnedRedirect routineId={routineId} />;
+  // Misma regla que el botón del detalle (`canActivateProgram`): propia, no
+  // archivada y con algún ejercicio.
+  if (!canActivateProgram(routine.data)) {
+    return (
+      <NotOwnedRedirect
+        message={routine.data.esMia ? NOT_ACTIVATABLE_MESSAGE : NOT_OWNED_MESSAGE}
+        routineId={routineId}
+      />
+    );
+  }
   return (
     <ActivateBody
       onDone={(withCardio) => {
@@ -69,11 +79,12 @@ function ActivateFlow({ routineId }: { routineId: string }) {
 }
 
 export const NOT_OWNED_MESSAGE = 'Guárdala en tus rutinas para activarla';
+const NOT_ACTIVATABLE_MESSAGE = 'Añade ejercicios a la rutina para activarla';
 
-function NotOwnedRedirect({ routineId }: { routineId: string }) {
+function NotOwnedRedirect({ routineId, message }: { routineId: string; message: string }) {
   useEffect(() => {
-    notify.info(NOT_OWNED_MESSAGE);
-  }, []);
+    notify.info(message);
+  }, [message]);
   return <Redirect href={{ pathname: '/routines/[id]', params: { id: routineId } }} />;
 }
 

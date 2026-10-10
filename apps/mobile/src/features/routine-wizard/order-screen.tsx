@@ -265,7 +265,7 @@ export function OrderScreen({ dia }: { dia: DayTarget }) {
               dispatch({
                 type: 'quitarEjercicio',
                 destino: dia,
-                ejercicioId: e.ejercicioId,
+                uid: e.uid,
               }),
             );
           else dispatch({ type: 'vaciarDia', dia });
@@ -300,12 +300,12 @@ export function OrderScreen({ dia }: { dia: DayTarget }) {
         {list.map((exercise, index) => (
           <ExerciseEditor
             exercise={exercise}
-            key={exercise.ejercicioId}
+            key={exercise.uid}
             onChange={(cambios) =>
               dispatch({
                 type: 'editarEjercicio',
                 destino: dia,
-                ejercicioId: exercise.ejercicioId,
+                uid: exercise.uid,
                 cambios,
               })
             }
@@ -321,7 +321,7 @@ export function OrderScreen({ dia }: { dia: DayTarget }) {
               dispatch({
                 type: 'quitarEjercicio',
                 destino: dia,
-                ejercicioId: exercise.ejercicioId,
+                uid: exercise.uid,
               })
             }
             position={index + 1}

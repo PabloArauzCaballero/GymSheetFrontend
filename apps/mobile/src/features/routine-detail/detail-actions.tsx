@@ -79,6 +79,7 @@ export function DetailActions({
   intent,
   onPrimary,
   primaryLoading,
+  primaryDisabledReason,
   existingCopy,
   onOpenCopy,
   onTryDay,
@@ -88,6 +89,8 @@ export function DetailActions({
   intent: PrimaryIntent;
   onPrimary: () => void;
   primaryLoading?: boolean;
+  /** Si el CTA no se puede usar, por qué (se dice, no solo se apaga). */
+  primaryDisabledReason?: string;
   existingCopy?: { id: string; label: string } | null;
   onOpenCopy?: (id: string) => void;
   /** «Probar un día»: entrenar sin guardar (no es un programa). */
@@ -100,11 +103,17 @@ export function DetailActions({
       <Button
         icon={PRIMARY_ICON[intent]}
         label={PRIMARY_LABEL[intent]}
+        disabled={Boolean(primaryDisabledReason)}
         loading={primaryLoading}
         onPress={onPrimary}
         size="lg"
         testID="routine-primary-cta"
       />
+      {primaryDisabledReason ? (
+        <Text tone="muted" variant="footnote">
+          {primaryDisabledReason}
+        </Text>
+      ) : null}
       {existingCopy && onOpenCopy ? (
         <PressableScale
           accessibilityLabel={`${existingCopy.label}. Abrir`}

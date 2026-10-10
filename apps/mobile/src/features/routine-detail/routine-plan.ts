@@ -1,4 +1,5 @@
 import { exerciseGroupLabelEs } from '@gymsheet/domain';
+import { copyNumberFromName } from '@gymsheet/hooks';
 import type { Routine, RoutineCard, RoutineDay, RoutineExercise } from '@gymsheet/types';
 
 /** Trabajo medio de una serie, en segundos (incluye colocarse). */
@@ -83,10 +84,12 @@ export function todayWeekday(now = new Date()): number {
   return ((now.getDay() + 6) % 7) + 1;
 }
 
-/** «Torso · v2» → 2. */
-export function copyNumberOf(name: string): number | null {
-  const match = /·\s*v(\d+)\s*$/.exec(name);
-  return match ? Number(match[1]) : null;
+/**
+ * Número de copia de una tarjeta propia: `numeroCopia` del backend (C2) cuando
+ * viene, y si no, el sufijo «· vN» del nombre (tarjetas anteriores a M-C3).
+ */
+export function cardCopyNumber(card: Pick<RoutineCard, 'nombre'> & { numeroCopia?: number | null }): number | null {
+  return card.numeroCopia ?? copyNumberFromName(card.nombre);
 }
 
 /**
@@ -105,5 +108,5 @@ export function ownCopiesOf(
         card.atribucion?.routineName === source.nombre &&
         (card.atribucion.authorId === null || card.atribucion.authorId === source.creadoPorUsuarioId),
     )
-    .sort((a, b) => (copyNumberOf(b.nombre) ?? 0) - (copyNumberOf(a.nombre) ?? 0));
+    .sort((a, b) => (cardCopyNumber(b) ?? 0) - (cardCopyNumber(a) ?? 0));
 }
