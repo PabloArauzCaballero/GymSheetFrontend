@@ -15,7 +15,7 @@ import { routineService } from '@/api/services';
 import { Badge } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { Button } from '@/components/ui';
-import { MODE_BADGE } from '@/features/programs/labels';
+import { dayLabel, MODE_BADGE } from '@/features/programs/labels';
 import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
 
 /** El programa ya pasó su fecha fin: toca decidir qué sigue (RF-19). */
@@ -38,7 +38,7 @@ export function StrengthProgramCard({ program }: { program: Program }) {
   const next = routine.data ? nextSession(routine.data, isoWeekday(new Date())) : null;
   const over = isProgramOver(program);
   const nextText = next
-    ? `${next.esHoy ? 'Hoy' : WEEKDAY_NAMES[next.dia as Weekday]}: ${next.nombre ?? 'Entrenamiento'}`
+    ? dayLabel(next.esHoy ? 'Hoy' : WEEKDAY_NAMES[next.dia as Weekday], next.nombre)
     : 'Entrena cuando quieras';
 
   return (

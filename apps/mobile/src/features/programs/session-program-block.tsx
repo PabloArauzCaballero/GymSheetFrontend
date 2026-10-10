@@ -17,7 +17,13 @@ const ACTION_COPY: Record<string, string> = {
   HOLD: 'Mantén el peso',
   GOAL_REACHED: '¡Meta lograda!',
   E1RM_UP: 'Tu marca estimada subió',
+  ADD_LOAD: 'Añade lastre cuando completes todas las series',
+  DELOAD_SKIP: 'Semana de descarga: no cambia',
+  NO_DATA: 'Sin series válidas esta vez',
 };
+
+/** Solo las acciones que mueven el peso muestran «→ X kg»: con 0 kg (peso corporal) no tiene sentido. */
+const SHOWS_NEXT_WEIGHT = new Set(['RAISE', 'LOWER', 'HOLD']);
 
 /**
  * Lo que dice el programa al terminar la sesión (RF-15, RF-16, RF-20): «+X por sobrecarga
@@ -72,7 +78,9 @@ export function SessionProgramBlock({ workoutId, block }: { workoutId: string; b
           {block.sugerencias.map((hint) => (
             <Text key={hint.ejercicioId} style={{ color: colors.text, fontSize: fontSizes.sm, lineHeight: 20 }}>
               {hint.ejercicioNombre ?? 'Ejercicio'}: {ACTION_COPY[hint.accion] ?? hint.accion}
-              {hint.pesoSugeridoKg !== undefined ? ` → ${formatKg(hint.pesoSugeridoKg)} la próxima` : ''}
+              {hint.pesoSugeridoKg !== undefined && hint.pesoSugeridoKg > 0 && SHOWS_NEXT_WEIGHT.has(hint.accion)
+                ? ` → ${formatKg(hint.pesoSugeridoKg)} la próxima`
+                : ''}
               {hint.marcaActualKg !== undefined ? ` (${formatKg(hint.marcaActualKg)})` : ''}
             </Text>
           ))}
