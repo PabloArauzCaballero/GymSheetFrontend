@@ -45,5 +45,9 @@ jobs:
       - name: Instalar dependencias
         run: yarn install --frozen-lockfile || yarn install --frozen-lockfile
       - run: yarn workspace @gymsheet/mobile type-check
+      # Sistema de diseño (C8.2): sin colores, rgba ni fontSize literales fuera
+      # de src/theme, y contraste AA de los tokens en todas las marcas.
+      - run: yarn workspace @gymsheet/mobile check:theme
+      - run: yarn workspace @gymsheet/mobile test:theme
       - name: Expo Doctor
         run: yarn workspace @gymsheet/mobile dlx expo-doctor || true
