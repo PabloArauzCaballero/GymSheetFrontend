@@ -1,10 +1,23 @@
 import { Text, View } from 'react-native';
-import { CATALOG_TABS, type CatalogTab, type MineChip } from '@gymsheet/hooks';
+import { type CatalogTab, type MineChip } from '@gymsheet/hooks';
 import { SegmentLabel, SegmentedPill } from '@/components/motion';
-import { ChoiceChip } from '@/components/wizard/choice-chip';
-import { accentContrast, colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { FilterChip } from '@/components/filter-chip';
+import { colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
-/** Pestañas Públicas · REPP · Mías, como control segmentado accesible. */
+/**
+ * Orden y nombres del móvil (C8.3.4): lo propio primero, luego lo que REPP
+ * recomienda y al final lo público. Los ámbitos son los de `CATALOG_TABS`.
+ */
+const TABS: readonly { scope: CatalogTab; label: string }[] = [
+  { scope: 'mine', label: 'Mías' },
+  { scope: 'official', label: 'Recomendadas' },
+  { scope: 'public', label: 'Públicas' },
+];
+
+/**
+ * Pestañas como control segmentado accesible. La pastilla es neutra: elegir
+ * una pestaña es seleccionar, no la acción principal (el acento no va aquí).
+ */
 export function CatalogTabBar({
   value,
   onChange,
@@ -17,24 +30,24 @@ export function CatalogTabBar({
       <SegmentedPill
         itemStyle={{
           minHeight: minTouchTarget,
-          minWidth: 96,
           flexGrow: 1,
+          flexBasis: 0,
           alignItems: 'center',
           justifyContent: 'center',
-          paddingHorizontal: spacing.md,
+          paddingHorizontal: spacing.sm,
         }}
         onChange={onChange}
-        options={CATALOG_TABS.map((tab) => ({
+        options={TABS.map((tab) => ({
           value: tab.scope,
           accessibilityLabel: `Pestaña ${tab.label}`,
         }))}
-        pillColor={colors.volt}
+        pillColor={colors.surfaceHighest}
         renderItem={(option, active) => (
           <SegmentLabel
             active={active}
-            activeColor={accentContrast()}
+            activeColor={colors.text}
             inactiveColor={colors.textMuted}
-            label={CATALOG_TABS.find((tab) => tab.scope === option.value)?.label ?? ''}
+            label={TABS.find((tab) => tab.scope === option.value)?.label ?? ''}
             style={{ fontSize: fontSizes.sm, fontWeight: semibold }}
           />
         )}
@@ -42,9 +55,7 @@ export function CatalogTabBar({
           alignSelf: 'stretch',
           borderRadius: radii.full,
           backgroundColor: colors.surfaceLow,
-          borderWidth: 1,
-          borderColor: colors.borderSubtle,
-          padding: 4,
+          padding: spacing.xs,
         }}
         value={value}
       />
@@ -64,20 +75,20 @@ export function MineChips({
 }) {
   return (
     <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-      <ChoiceChip
+      <FilterChip
         label="Creadas por mí"
-        onSelect={() => onChange('created')}
+        onPress={() => onChange('created')}
         selected={value === 'created'}
         testID="chip-created"
       />
-      <ChoiceChip
+      <FilterChip
         accessibilityLabel={
           pendingInvitations > 0
             ? `Compartidas conmigo, ${pendingInvitations} invitaciones pendientes`
             : 'Compartidas conmigo'
         }
         label={pendingInvitations > 0 ? `Compartidas conmigo (${pendingInvitations})` : 'Compartidas conmigo'}
-        onSelect={() => onChange('shared')}
+        onPress={() => onChange('shared')}
         selected={value === 'shared'}
         testID="chip-shared"
       />

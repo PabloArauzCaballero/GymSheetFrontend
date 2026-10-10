@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ScrollView, Text, View } from 'react-native';
 import {
   activeFilterCount,
   emptyCatalogFilters,
   hasActiveFilters,
+  initialCatalogFilters,
   isoWeekday,
   isPendingInvitation,
   ORDER_LABELS,
@@ -14,9 +15,12 @@ import {
   type CatalogTab,
   type MineChip,
 } from '@gymsheet/hooks';
-import { routineService, routineSharingService } from '@/api/services';
+import { trainingGoals, type TrainingGoal } from '@gymsheet/types';
+import { ApiError } from '@gymsheet/api-client';
+import { profileService, routineService, routineSharingService } from '@/api/services';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
+import { FilterChip } from '@/components/filter-chip';
 import { ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { TourTarget, useScreenTour } from '@/components/tour';
@@ -29,8 +33,11 @@ import { StrengthProgramCard } from '@/features/programs/program-card';
 import { CatalogFiltersSheet } from '@/features/routine-catalog/catalog-filters';
 import { CatalogTabBar, MineChips, ResultCount } from '@/features/routine-catalog/catalog-tab-bar';
 import { InvitationCard } from '@/features/routine-catalog/invitation-card';
+import { ForYouBlock } from '@/features/routine-catalog/for-you-block';
 import { RoutineCardView } from '@/features/routine-catalog/routine-card';
+import { useRecommendedRoutines } from '@/features/routine-catalog/use-recommended-routines';
 import { useRoutineCatalog } from '@/features/routine-catalog/use-routine-catalog';
+import { GOAL_LABEL } from '@/lib/format';
 import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 const EMPTY_COPY: Record<string, { title: string; message: string }> = {
@@ -40,7 +47,7 @@ const EMPTY_COPY: Record<string, { title: string; message: string }> = {
   },
   official: {
     title: 'Aún no hay rutinas recomendadas',
-    message: 'REPP publicará aquí sus rutinas oficiales.',
+    message: 'Las rutinas de REPP aparecerán aquí en cuanto se publiquen.',
   },
   created: {
     title: 'No has creado rutinas',
@@ -58,13 +65,31 @@ export function RoutinesCatalogScreen() {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<CatalogTab>('public');
   const [chip, setChip] = useState<MineChip>('created');
-  const [filters, setFilters] = useState<CatalogFilterState>(emptyCatalogFilters);
+  const [filters, setFiltersState] = useState<CatalogFilterState>(emptyCatalogFilters);
+  // El objetivo del perfil precarga el filtro (C7) una sola vez y solo si la
+  // persona no ha tocado los filtros: nunca se pisa una elección suya.
+  const touched = useRef(false);
+  const setFilters = (next: CatalogFilterState) => {
+    touched.current = true;
+    setFiltersState(next);
+  };
   const [search, setSearch] = useState('');
   const [sheet, setSheet] = useState(false);
   const debounced = useDebouncedValue(search, 350);
   const applied = useMemo(() => ({ ...filters, q: debounced }), [filters, debounced]);
   useScreenTour('routines');
 
+  const profile = useQuery({
+    queryKey: ['profile', 'me'],
+    queryFn: () => profileService.get(),
+    retry: (failures, error) => !(error instanceof ApiError && error.kind === 'not-found') && failures < 1,
+  });
+  const profileGoal = profile.data?.objetivo ?? null;
+  useEffect(() => {
+    if (profileGoal && !touched.current) setFiltersState(initialCatalogFilters(profileGoal));
+  }, [profileGoal]);
+
+  const forYou = useRecommendedRoutines();
   const catalog = useRoutineCatalog(tab, chip, applied);
   const assignments = useQuery({
     queryKey: ['routines', 'assignments', 'me'],
@@ -97,35 +122,54 @@ export function RoutinesCatalogScreen() {
     <ScrollScreen
       onRefresh={() => {
         void catalog.refetch();
+        void forYou.refetch();
         void assignments.refetch();
         void invitations.refetch();
         void queryClient.invalidateQueries({ queryKey: ['programs'] });
       }}
       refreshing={catalog.isRefetching}
     >
-      <ScreenHeader subtitle="Descubre, crea y entrena tus planes." title="Rutinas" tourKey="routines" />
-      <ExploreExercisesButton />
-
-      <TourTarget id="routines.create">
-        <Button label="Crear rutina" onPress={() => router.push('/routines/new')} />
-      </TourTarget>
-
-      {programs.data && !programs.data.cardio ? (
-        <Button label="Añadir plan de cardio" onPress={() => router.push('/routines/cardio/new')} variant="ghost" />
-      ) : null}
+      <ScreenHeader title="Rutinas" tourKey="routines" />
+      {/* Cabecera: dos acciones secundarias compactas. La principal de la
+          pantalla es elegir una rutina (la de «Para ti»), no crearla. */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: -spacing.sm }}>
+        <ExploreExercisesButton size="sm" />
+        <TourTarget id="routines.create">
+          <Button
+            icon="add"
+            label="Crear rutina"
+            onPress={() => router.push('/routines/new')}
+            size="sm"
+            testID="create-routine"
+            variant="secondary"
+          />
+        </TourTarget>
+      </View>
 
       {programs.data?.fuerza ? <StrengthProgramCard program={programs.data.fuerza} /> : null}
       {programs.data?.cardio ? (
         <CardioProgramCard program={programs.data.cardio} strengthToday={strengthToday} />
       ) : null}
+      {programs.data && !programs.data.cardio ? (
+        <Button
+          icon="pulse-outline"
+          label="Añadir plan de cardio"
+          onPress={() => router.push('/routines/cardio/new')}
+          size="sm"
+          style={{ alignSelf: 'flex-start' }}
+          variant="ghost"
+        />
+      ) : null}
 
       {assigned.length > 0 ? (
-        <Section icon="calendar-outline" index={0} title="Tu semana">
+        <Section index={0} title="Tu semana">
           <TourTarget id="routines.week">
             <WeekPlan assignments={assigned} onPickRoutine={open} />
           </TourTarget>
         </Section>
       ) : null}
+
+      <ForYouBlock onOpen={open} state={forYou.state} />
 
       <CatalogTabBar onChange={setTab} value={tab} />
       {tab === 'mine' ? (
@@ -159,8 +203,8 @@ export function RoutinesCatalogScreen() {
               minHeight: minTouchTarget,
               borderRadius: radii.md,
               borderWidth: 1,
-              borderColor: count > 0 ? colors.volt : colors.border,
-              backgroundColor: colors.surface,
+              borderColor: count > 0 ? colors.borderControl : colors.border,
+              backgroundColor: count > 0 ? colors.surfaceHighest : colors.surface,
               paddingHorizontal: spacing.md,
             }}
             testID="open-filters"
@@ -174,9 +218,34 @@ export function RoutinesCatalogScreen() {
       </View>
 
       {tab === 'public' ? (
+        <ScrollView
+          contentContainerStyle={{ gap: spacing.sm }}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          testID="goal-chips"
+        >
+          <FilterChip
+            label="Todos"
+            onPress={() => setFilters({ ...filters, objetivo: null })}
+            selected={!filters.objetivo}
+          />
+          {trainingGoals.map((goal: TrainingGoal) => (
+            <FilterChip
+              key={goal}
+              label={GOAL_LABEL[goal]}
+              onPress={() => setFilters({ ...filters, objetivo: filters.objetivo === goal ? null : goal })}
+              selected={filters.objetivo === goal}
+              testID={`goal-chip-${goal}`}
+            />
+          ))}
+        </ScrollView>
+      ) : null}
+
+      {tab === 'public' ? (
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
           Orden: {ORDER_LABELS[filters.orden]}
           {filters.deMiGimnasio ? ' · De mi gimnasio' : ''}
+          {profileGoal && filters.objetivo === profileGoal ? ' · Tu objetivo' : ''}
         </Text>
       ) : null}
 
@@ -212,7 +281,7 @@ export function RoutinesCatalogScreen() {
             />
           ) : null}
           {tab === 'mine' && chip === 'created' ? (
-            <Button label="Crear rutina" onPress={() => router.push('/routines/new')} />
+            <Button label="Crear rutina" onPress={() => router.push('/routines/new')} variant="secondary" />
           ) : null}
         </EmptyState>
       ) : (

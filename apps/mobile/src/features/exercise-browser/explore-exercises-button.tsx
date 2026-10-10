@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Button } from '@/components/ui';
+import { Button, type ButtonSize } from '@/components/ui';
 import { routes } from '@/lib/routes';
 
 /**
@@ -10,10 +10,11 @@ import { routes } from '@/lib/routes';
  * (`ghost`) y compacto, alineado a la izquierda bajo el título: la acción
  * principal de la pantalla sigue siendo «Crear rutina», la única en acento.
  */
-export function ExploreExercisesButton() {
+export function ExploreExercisesButton({ size = 'md' }: { size?: ButtonSize } = {}) {
   const router = useRouter();
   return (
     <Button
+      size={size}
       icon="search-outline"
       label="Explorar ejercicios"
       onPress={() => router.push(routes.exercises())}

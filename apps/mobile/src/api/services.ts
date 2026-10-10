@@ -62,6 +62,7 @@ import type { UserGender } from '@gymsheet/types';
 import {
   createCardioServices,
   createCatalogServices,
+  createRecommendationServices,
   createCommunityServices,
   createExerciseCommunityServices,
   createProgramServices,
@@ -295,6 +296,9 @@ export const routineCatalogService = {
   copy: sharingApi.copy,
   syncFromSource: sharingApi.syncFromSource,
 };
+
+/** Rutinas recomendadas según el objetivo y el onboarding (C7): `[{ rutina, motivo }]`. */
+export const routineRecommendationService = createRecommendationServices(apiClient.request);
 
 export const routineSharingService = {
   invite: sharingApi.invite,

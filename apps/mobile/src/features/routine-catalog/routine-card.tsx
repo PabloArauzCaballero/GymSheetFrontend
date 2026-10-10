@@ -12,7 +12,7 @@ import type { RoutineCard } from '@gymsheet/types';
 import { Badge } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { GOAL_LABEL } from '@/lib/format';
-import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
+import { accentPolicy, cardPadding, colors, fontSizes, iconSizes, radii, semibold, shadows, spacing } from '@/theme';
 
 /**
  * Los siete días de la semana como puntos. Sin acento (C8.1: el volt es de la
@@ -24,7 +24,7 @@ function WeekDots({ card }: { card: RoutineCard }) {
     <View
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      style={{ flexDirection: 'row', gap: 4 }}
+      style={{ flexDirection: 'row', gap: spacing.xs }}
     >
       {weekDots(card).map(({ dia, entrena }) => (
         <View
@@ -85,11 +85,11 @@ export function RoutineCardView({
       scaleTo={0.985}
       style={{
         gap: spacing.sm,
-        borderRadius: radii.lg,
-        borderWidth: 1,
-        borderColor: colors.borderSubtle,
+        borderRadius: radii.xl,
+        borderCurve: 'continuous',
         backgroundColor: colors.surfaceLow,
-        padding: spacing.md,
+        boxShadow: shadows.e1,
+        padding: cardPadding,
       }}
       testID={`routine-card-${card.id}`}
     >
@@ -100,25 +100,32 @@ export function RoutineCardView({
         >
           {card.nombre}
         </Text>
-        {card.esOficial ? <Badge label="REPP" tone="success" /> : null}
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
-        {card.objetivo ? <Badge label={GOAL_LABEL[card.objetivo]} tone="info" /> : null}
+        {card.objetivo ? <Badge label={GOAL_LABEL[card.objetivo]} /> : null}
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{cardSubtitle(card)}</Text>
       </View>
       <WeekDots card={card} />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        <Text
-          numberOfLines={1}
-          style={{ flex: 1, color: colors.textMuted, fontSize: fontSizes.sm }}
-        >
-          {card.esOficial ? 'Recomendada por REPP' : author}
-        </Text>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+          {card.esOficial ? (
+            <Ionicons
+              accessibilityElementsHidden
+              color={accentPolicy.glyph}
+              importantForAccessibility="no-hide-descendants"
+              name="checkmark-circle"
+              size={iconSizes.sm}
+            />
+          ) : null}
+          <Text numberOfLines={1} style={{ flexShrink: 1, color: colors.textMuted, fontSize: fontSizes.sm }}>
+            {card.esOficial ? 'Recomendada por REPP' : author}
+          </Text>
+        </View>
         <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontVariant: ['tabular-nums'] }}>
           {rating}
         </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <Ionicons color={colors.textMuted} name="copy-outline" size={14} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+          <Ionicons color={colors.textMuted} name="copy-outline" size={iconSizes.sm} />
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{card.copias}</Text>
         </View>
       </View>
