@@ -30,6 +30,8 @@ export const routineCardSchema = z.object({
   atribucion: z
     .object({ routineName: z.string(), authorId: z.string().nullable(), authorName: z.string() })
     .nullable(),
+  basadaEnRutinaId: z.string().nullable().optional(),
+  numeroCopia: z.number().int().nullable().optional(),
   valoracion: ratingSummarySchema,
   copias: z.number().int(),
   publicadaEn: z.string().nullable(),
