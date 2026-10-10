@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { ApiError } from '@gymsheet/api-client';
 import { confirm } from '@gymsheet/notifications';
 import { programService, routineService } from '@/api/services';
@@ -50,6 +51,10 @@ function ActivateFlow({ routineId }: { routineId: string }) {
       </ScrollScreen>
     );
   }
+  // C1: solo se activa una rutina propia. Un enlace directo a una ajena vuelve
+  // al detalle con el aviso, en vez de abrir un asistente que el backend
+  // rechazará (403 ROUTINE_NOT_OWNED).
+  if (!routine.data.esMia) return <NotOwnedRedirect routineId={routineId} />;
   return (
     <ActivateBody
       onDone={(withCardio) => {
@@ -61,6 +66,15 @@ function ActivateFlow({ routineId }: { routineId: string }) {
       routine={routine.data}
     />
   );
+}
+
+export const NOT_OWNED_MESSAGE = 'Guárdala en tus rutinas para activarla';
+
+function NotOwnedRedirect({ routineId }: { routineId: string }) {
+  useEffect(() => {
+    notify.info(NOT_OWNED_MESSAGE);
+  }, []);
+  return <Redirect href={{ pathname: '/routines/[id]', params: { id: routineId } }} />;
 }
 
 function ActivateBody({
@@ -91,6 +105,11 @@ function ActivateBody({
           cancelLabel: 'Cancelar',
         });
         if (choice.confirmed) activate.mutate(true);
+        return;
+      }
+      if (error instanceof ApiError && error.code === 'ROUTINE_NOT_OWNED') {
+        notify.info(NOT_OWNED_MESSAGE);
+        router.replace({ pathname: '/routines/[id]', params: { id: routine.id } });
         return;
       }
       notify.error(error);
