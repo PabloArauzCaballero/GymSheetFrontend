@@ -19,6 +19,7 @@
     "check:api-url": "node scripts/check-api-url.mjs"
   },
   "dependencies": {
+    "@expo-google-fonts/bricolage-grotesque": "^0.4.1",
     "@expo/vector-icons": "^15.0.2",
     "@gymsheet/anatomy": "*",
     "@gymsheet/api-client": "*",
