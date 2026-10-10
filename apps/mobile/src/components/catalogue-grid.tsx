@@ -88,7 +88,7 @@ export function GridTile({
             height: 116,
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: imageUrl ? '#ffffff' : colors.surfaceHigh,
+            backgroundColor: imageUrl ? colors.plate : colors.surfaceHigh,
           }}
         >
           {imageUrl ? (

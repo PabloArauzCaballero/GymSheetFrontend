@@ -29,7 +29,7 @@ import {
   scrollDeltaFor,
 } from '@/state/tour-queue';
 import { useTourStore, type TargetRect, type TourKey } from '@/state/tour-store';
-import { colors, fontSizes, iconSizes, radii, spacing, useActiveTenant } from '@/theme';
+import { colors, fontSizes, iconSizes, overlay, radii, spacing, useActiveTenant } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -501,7 +501,7 @@ function Spotlight({
       : withTiming(1, { duration: DURATION.standard, easing: PREMIUM_EASING });
   }, [h, holeH, holeW, holeX, holeY, present, reduceMotion, w, x, y]);
 
-  const dim = 'rgba(0,0,0,0.86)';
+  const dim = overlay.scrimStrong;
   const fullStyle = useAnimatedStyle(() => ({ opacity: 1 - present.value }));
   const topStyle = useAnimatedStyle(() => ({
     height: Math.max(0, y.value),

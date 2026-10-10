@@ -39,7 +39,7 @@ function Thumb({ uri, label }: { uri: string | null; label: string }) {
         overflow: 'hidden',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: uri ? '#ffffff' : colors.surfaceHigh,
+        backgroundColor: uri ? colors.plate : colors.surfaceHigh,
         borderWidth: uri ? 0 : 1,
         borderColor: colors.border,
       }}

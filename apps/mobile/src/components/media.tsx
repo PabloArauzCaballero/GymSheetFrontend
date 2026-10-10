@@ -87,7 +87,7 @@ function fallbackIcon(exercise: Pick<Exercise, 'grupoMuscular'>): keyof typeof I
 export function ExerciseImage({
   exercise,
   size,
-  rounded = radii.lg,
+  rounded = radii.md,
 }: {
   exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular'>;
   /** Square side in px, or `'hero'` for the capped detail frame. */
@@ -121,39 +121,39 @@ export function ExerciseImage({
       style={{
         ...frame,
         borderRadius: rounded,
+        borderCurve: 'continuous',
         overflow: 'hidden',
-        // The illustrations are drawn on white; a light plate keeps them
-        // readable instead of floating on the black canvas.
-        backgroundColor: uri ? '#ffffff' : colors.surfaceHigh,
-        borderWidth: uri ? 0 : 1,
-        borderColor: colors.border,
+        // Placa «papel» (C8.1), nunca `#ffffff`: las ilustraciones del dataset
+        // vienen sobre blanco y, multiplicadas sobre la placa, el blanco toma su
+        // tono cálido y la figura se lee como una lámina de manual.
+        backgroundColor: uri ? colors.plate : colors.surfaceHighest,
+        padding: uri && typeof size === 'number' ? Math.round(size * 0.06) : 0,
         alignItems: 'center',
         justifyContent: 'center',
       }}
     >
       {uri ? (
+        <View style={{ width: '100%', height: '100%', mixBlendMode: 'multiply' }}>
         <Image
           accessibilityLabel={altText}
           accessible
           cachePolicy="memory-disk"
-          // `contain` on the detail: the illustration is a full figure and
-          // cropping it cuts off limbs. Rows crop, where recognition is enough
-          // and a consistent square matters more.
-          contentFit={isHero ? 'contain' : 'cover'}
+          // `contain` siempre: recortar la figura le corta las extremidades, y
+          // sobre la placa el encuadre ya es consistente.
+          contentFit="contain"
           source={{ uri }}
           style={{ width: '100%', height: '100%' }}
           transition={reduceMotion ? 0 : motion.enter}
         />
+        </View>
       ) : (
         <Ionicons
           accessibilityElementsHidden
-          // Volt at low opacity rather than dead grey: the placeholder belongs
-          // to the brand instead of looking like a loading failure.
-          color={colors.accentInk}
+          // Neutro: el acento no va en marcadores de posición.
+          color={colors.textMuted}
           importantForAccessibility="no-hide-descendants"
           name={fallbackIcon(exercise)}
           size={isHero ? iconSizes.xl : iconSizes.lg}
-          style={{ opacity: 0.55 }}
         />
       )}
     </Frame>

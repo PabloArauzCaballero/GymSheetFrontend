@@ -39,7 +39,7 @@ export const semibold: '600' | '700' =
   Platform.OS === 'android' && Number(Platform.Version) < 28 ? '700' : '600';
 
 /** Cifras de ancho fijo para series, reps, kg y tiempos. */
-export const tabularNums = { fontVariant: ['tabular-nums'] } as const;
+export const tabularNums: TextStyle = { fontVariant: ['tabular-nums'] };
 
 /**
  * Variantes de `Text` (`components/text.tsx`). El color por defecto lo pone la

@@ -4,16 +4,7 @@ import type { Exercise } from '@gymsheet/types';
 import { bodyPartLabelEs, exerciseGroupLabelEs, muscleLabelEs } from '@gymsheet/domain';
 import { ExerciseImage } from '@/components/media';
 import { PressableScale } from '@/components/motion';
-import {
-  accentContrast,
-  colors,
-  fontSizes,
-  iconSizes,
-  minTouchTarget,
-  radii,
-  semibold,
-  spacing,
-} from '@/theme';
+import { accentContrast, alpha, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 /** A single fact about an exercise, sized to sit two or three to a row. */
 export function Tag({ label, accent = false }: { label: string; accent?: boolean }) {
@@ -28,7 +19,7 @@ export function Tag({ label, accent = false }: { label: string; accent?: boolean
         // Se compone desde el acento vigente en vez de escribir el verde de la
         // identidad de referencia: con el valor fijo, un gimnasio de marca roja
         // veía esta etiqueta verde en medio de una pantalla roja.
-        backgroundColor: accent ? `${colors.volt}14` : colors.surfaceHigh,
+        backgroundColor: accent ? alpha(colors.volt, 0.08) : colors.surfaceHigh,
       }}
     >
       <Text
