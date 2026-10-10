@@ -226,7 +226,6 @@ export function CardStage({
     };
     // Los valores compartidos son estables; el guion se vuelve a correr
     // remontando la escena con otra `key`, no cambiando dependencias.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduceMotion]);
 
   /** Una celebración que sólo existe como luz no existe para quien no la ve. */
