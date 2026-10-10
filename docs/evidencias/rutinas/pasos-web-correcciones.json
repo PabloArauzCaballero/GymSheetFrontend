@@ -1,0 +1,95 @@
+{
+  "descripcion": "Capturas web de las correcciones del TestFlight (C1, C2, C3.d), 2026-10-10.",
+  "pasos": [
+    {
+      "rf": "RF-10",
+      "paso": "01",
+      "nombre": "guardar-en-mis-rutinas",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Rutina ajena: botón principal «Guardar en mis rutinas», «Probar un día» secundario y SIN «Activar»."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "01b",
+      "nombre": "copia-v1-abierta",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Tras guardar se abre la copia «… · v1» (aviso «Guardada en tus rutinas») con «Activar»."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "02b",
+      "nombre": "ya-la-guardaste-v1",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "De vuelta en la original: «Ya la guardaste como v1 · Abrir»."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "02c",
+      "nombre": "v1-y-v2-en-mias",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Dos copias seguidas «· v1» y «· v2» en Mías."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "02",
+      "nombre": "ajena-sin-activar",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Rutina ajena sin «Activar programa»; con «Guardar en mis rutinas»."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "02b",
+      "nombre": "enlace-directo-a-ajena-avisa",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Enlace directo a /activate de una ajena: vuelve al detalle con «Guárdala en tus rutinas para activarla» y no crea copia."
+    },
+    {
+      "rf": "RF-C3",
+      "paso": "01",
+      "nombre": "ordenar-con-unir",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Ver y ordenar con «Unir con el siguiente» entre cada par de ejercicios."
+    },
+    {
+      "rf": "RF-C3",
+      "paso": "02",
+      "nombre": "superserie-a1-a2",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Recuadro «Superserie A» con A1 y A2, «Separar» y descanso entre ejercicios."
+    },
+    {
+      "rf": "RF-C3",
+      "paso": "03",
+      "nombre": "descanso-entre-y-por-tiempo",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Descanso entre ejercicios 20 s y el tercer ejercicio por tiempo (Duración 30 s)."
+    },
+    {
+      "rf": "RF-C3",
+      "paso": "04",
+      "nombre": "detalle-con-superserie",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Detalle del día: «Superserie A · 3 vueltas», A1/A2, «Transición · 20 s», descanso tras la vuelta y «3 series · 30 s»."
+    }
+  ]
+}

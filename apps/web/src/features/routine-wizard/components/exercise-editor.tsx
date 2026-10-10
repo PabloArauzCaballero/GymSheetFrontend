@@ -1,7 +1,8 @@
 'use client';
 
 import type { DraftExercise } from '@gymsheet/hooks';
-import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
+import { routineExerciseLimits as limits } from '@gymsheet/types';
+import { ArrowDown, ArrowUp, Timer, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { Field } from '@/shared/components/ui/field';
@@ -19,7 +20,7 @@ function digits(value: string, max: number): number | null {
  * un campo obligatorio como las series se rellenaba con «1» al borrar y el
  * siguiente dígito se pegaba detrás («14»).
  */
-function NumberField({
+export function NumberField({
   id,
   label,
   value,
@@ -50,6 +51,8 @@ export function ExerciseEditor({
   onMove,
   onRemove,
   onChange,
+  onPorTiempo,
+  marca,
 }: Readonly<{
   exercise: DraftExercise;
   position: number;
@@ -57,17 +60,22 @@ export function ExerciseEditor({
   onMove: (delta: -1 | 1) => void;
   onRemove: () => void;
   onChange: (cambios: Partial<DraftExercise>) => void;
+  /** Cambia entre repeticiones (`null`) y serie por tiempo (segundos). */
+  onPorTiempo: (duracionSeg: number | null) => void;
+  /** «A1», «A2»… dentro de un bloque; sin él, el número de posición. */
+  marca?: string;
 }>) {
-  const key = exercise.ejercicioId;
+  const key = exercise.uid;
   const setReps = (field: 'repsMin' | 'repsMax', raw: string) =>
-    onChange({ [field]: digits(raw, 1000) });
+    onChange({ [field]: digits(raw, limits.repsMax) });
+  const porTiempo = exercise.duracionSeg !== null;
   const invertedReps =
-    exercise.repsMin !== null && exercise.repsMax !== null && exercise.repsMin > exercise.repsMax;
+    !porTiempo && exercise.repsMin !== null && exercise.repsMax !== null && exercise.repsMin > exercise.repsMax;
   return (
     <li className="panel grid grid-cols-[minmax(0,1fr)] gap-4 p-5">
-      <div className="flex items-center gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold">{`${position}. ${exercise.nombre}`}</p>
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1 pt-2">
+          <p className="break-words font-semibold">{`${marca ?? position}. ${exercise.nombre}`}</p>
           <p className="text-sm text-[var(--text-muted)]">{exercise.grupoMuscular}</p>
         </div>
         <Button
@@ -102,23 +110,49 @@ export function ExerciseEditor({
           id={`series-${key}`}
           label="Series"
           onChange={(raw) => {
-            const series = digits(raw, 100);
+            const series = digits(raw, limits.seriesMax);
             if (series !== null && series > 0) onChange({ seriesObjetivo: series });
           }}
           value={exercise.seriesObjetivo}
         />
-        <NumberField
-          id={`min-${key}`}
-          label="Reps mín."
-          onChange={(raw) => setReps('repsMin', raw)}
-          value={exercise.repsMin}
-        />
-        <NumberField
-          id={`max-${key}`}
-          label="Reps máx."
-          onChange={(raw) => setReps('repsMax', raw)}
-          value={exercise.repsMax}
-        />
+        {porTiempo ? (
+          <NumberField
+            id={`dur-${key}`}
+            label="Duración (s)"
+            onChange={(raw) => {
+              const seconds = digits(raw, limits.duracionMax);
+              if (seconds !== null && seconds > 0) onPorTiempo(seconds);
+            }}
+            value={exercise.duracionSeg}
+          />
+        ) : (
+          <>
+            <NumberField
+              id={`min-${key}`}
+              label="Reps mín."
+              onChange={(raw) => setReps('repsMin', raw)}
+              value={exercise.repsMin}
+            />
+            <NumberField
+              id={`max-${key}`}
+              label="Reps máx."
+              onChange={(raw) => setReps('repsMax', raw)}
+              value={exercise.repsMax}
+            />
+          </>
+        )}
+      </div>
+      <div>
+        <Button
+          aria-label={`${porTiempo ? 'Pasar a repeticiones' : 'Por tiempo'} · ${exercise.nombre}`}
+          aria-pressed={porTiempo}
+          onClick={() => onPorTiempo(porTiempo ? null : 30)}
+          size="sm"
+          variant="ghost"
+        >
+          <Timer aria-hidden className="size-4" />
+          {porTiempo ? 'Pasar a repeticiones' : 'Por tiempo'}
+        </Button>
       </div>
       {invertedReps ? (
         <p className="text-sm text-[var(--warning-text)]" role="alert">
