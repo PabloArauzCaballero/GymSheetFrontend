@@ -14,7 +14,7 @@ import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { initialsOf } from '@/lib/format';
-import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, spacing } from '@/theme';
 
 const AVATAR_SIZE = 60;
 /** Diámetro del botón «+» sobre el avatar propio. */
@@ -76,7 +76,9 @@ type RingState = 'unviewed' | 'viewed' | 'none';
  * en una constante de módulo lo congelaría en el acento de referencia.
  */
 function ringGradient(): readonly [string, string, string] {
-  return [accentPolicy.ink, colors.volt, colors.voltDim];
+  // Neutro claro (C8.3.7): «sin ver» se distingue de «visto» por luminancia
+  // y grosor, sin gastar el acento de la pantalla en cada socio.
+  return [colors.text, colors.textSecondary, colors.text];
 }
 
 function StoryRing({
@@ -412,7 +414,7 @@ export function StoriesBar() {
                 borderRadius: radii.full,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: colors.volt,
+                backgroundColor: colors.text,
                 borderWidth: 2,
                 borderColor: colors.background,
               }}

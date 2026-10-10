@@ -187,10 +187,10 @@ export function DirectoryCardFace({
               borderRadius: radii.full,
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: colors.volt,
+              backgroundColor: colors.surfaceHighest,
             }}
           >
-            <Text style={{ color: colors.background, fontSize: fontSizes.xl, fontWeight: '700' }}>
+            <Text style={{ color: colors.textSecondary, fontSize: fontSizes.xl, fontWeight: semibold }}>
               {initialsOf(entry.displayName, undefined)}
             </Text>
           </View>

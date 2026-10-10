@@ -49,7 +49,8 @@ export function RankBadge({
         borderRadius: radii.full,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: isMe ? colors.volt : colors.surfaceHigh,
+        // «Tú» se marca con relleno claro neutro, no con el acento (C8.3.7).
+        backgroundColor: isMe ? colors.text : colors.surfaceHighest,
       }}
     >
       <Text
