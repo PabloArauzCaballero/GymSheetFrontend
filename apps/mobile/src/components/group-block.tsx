@@ -1,8 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Children, Fragment, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { RestPill } from '@/components/rest-pill';
 import { Text } from '@/components/text';
-import { colors, radii, shadows, spacing } from '@/theme';
+import { colors, iconSizes, radii, shadows, spacing, thumbSizes } from '@/theme';
 
 /**
  * Superserie o circuito (C8.2). **La forma lleva la información y el color la
@@ -14,6 +15,8 @@ export function GroupBlock({
   label,
   rounds,
   restSeconds,
+  transition,
+  status,
   children,
   testID,
 }: {
@@ -21,6 +24,10 @@ export function GroupBlock({
   label: string;
   rounds: number;
   restSeconds?: number | null;
+  /** Conector entre ejercicios: «sin descanso», «15 s». */
+  transition?: string | null;
+  /** Sustituye a «3 vueltas» a la derecha de la etiqueta (p. ej. «Vuelta 2/3» al entrenar). */
+  status?: string;
   /** Filas `ExerciseRow grouped`. */
   children: ReactNode;
   testID?: string;
@@ -29,7 +36,7 @@ export function GroupBlock({
   const roundsLabel = `${rounds} ${rounds === 1 ? 'vuelta' : 'vueltas'}`;
   return (
     <View
-      accessibilityLabel={`${label}, ${roundsLabel}`}
+      accessibilityLabel={`${label}, ${status ?? roundsLabel}`}
       style={{
         flexDirection: 'row',
         borderRadius: radii.xl,
@@ -55,13 +62,37 @@ export function GroupBlock({
               {label}
             </Text>
           </View>
-          <Text strong tabular variant="subhead">
-            {roundsLabel}
+          <Text strong tabular testID={testID ? `${testID}-status` : undefined} variant="subhead">
+            {status ?? roundsLabel}
           </Text>
         </View>
         {items.map((child, index) => (
           <Fragment key={index}>
-            {index > 0 ? <View style={{ height: 1, backgroundColor: colors.border }} /> : null}
+            {index > 0 ? (
+              transition ? (
+                <View
+                  accessibilityLabel={`Después, ${transition}`}
+                  accessible
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}
+                >
+                  <View style={{ width: thumbSizes.row, alignItems: 'center' }}>
+                    <Ionicons
+                      accessibilityElementsHidden
+                      color={colors.group}
+                      importantForAccessibility="no-hide-descendants"
+                      name="arrow-down"
+                      size={iconSizes.sm}
+                    />
+                  </View>
+                  <Text tabular tone="muted" variant="footnote">
+                    {transition}
+                  </Text>
+                  <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+                </View>
+              ) : (
+                <View style={{ height: 1, backgroundColor: colors.border }} />
+              )
+            ) : null}
             {child}
           </Fragment>
         ))}

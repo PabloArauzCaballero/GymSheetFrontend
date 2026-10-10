@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
+import { setsLabel, weightLabel } from '@gymsheet/hooks';
 import type { Exercise } from '@gymsheet/types';
 import { ExerciseImage } from '@/components/media';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { cardPadding, colors, iconSizes, radii, shadows, spacing, thumbSizes } from '@/theme';
+import { cardPadding, colors, iconSizes, minTouchTarget, radii, shadows, spacing, thumbSizes } from '@/theme';
 
 export type ExercisePrescription = {
   series: number;
@@ -12,19 +13,15 @@ export type ExercisePrescription = {
   repsMax: number | null;
   pesoKg?: number | null;
   rir?: number | null;
+  /** Serie por tiempo: «3 × 30 s» en lugar de las repeticiones. */
+  duracionSeg?: number | null;
 };
 
-/** «4 × 8–10 · 80 kg · RIR 2». */
+/** «4 × 8–10 · 80 kg · RIR 2» o «3 × 30 s». */
 export function prescriptionLabel(p: ExercisePrescription): string {
-  const reps =
-    p.repsMin === null && p.repsMax === null
-      ? null
-      : p.repsMin !== null && p.repsMax !== null && p.repsMin !== p.repsMax
-        ? `${p.repsMin}–${p.repsMax}`
-        : `${p.repsMin ?? p.repsMax}`;
   return [
-    reps ? `${p.series} × ${reps}` : `${p.series} series`,
-    p.pesoKg ? `${p.pesoKg} kg` : null,
+    setsLabel({ series: p.series, repsMin: p.repsMin, repsMax: p.repsMax, duracionSeg: p.duracionSeg }),
+    p.pesoKg ? `${weightLabel(p.pesoKg)} kg` : null,
     p.rir !== null && p.rir !== undefined ? `RIR ${p.rir}` : null,
   ]
     .filter(Boolean)
@@ -46,6 +43,8 @@ export function ExerciseRow({
   grouped = false,
   flag,
   onPress,
+  onMore,
+  moreLabel = 'Más opciones',
   testID,
 }: {
   exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular'> | null;
@@ -60,6 +59,9 @@ export function ExerciseRow({
   /** Marca textual corta, p. ej. «Ajustado» en una descarga. */
   flag?: string;
   onPress?: () => void;
+  /** Menú ⋯ de la fila (p. ej. «Denunciar» en un ejercicio privado ajeno). */
+  onMore?: () => void;
+  moreLabel?: string;
   testID?: string;
 }) {
   const meta = prescriptionLabel(prescription);
@@ -127,7 +129,32 @@ export function ExerciseRow({
           </View>
         ) : null}
       </View>
-      {onPress ? (
+      {onMore ? (
+        <PressableScale
+          accessibilityLabel={moreLabel}
+          haptic="none"
+          onPress={onMore}
+          scaleTo={0.94}
+          style={{
+            width: minTouchTarget,
+            height: minTouchTarget,
+            alignSelf: 'center',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: radii.full,
+          }}
+          testID={testID ? `${testID}-more` : undefined}
+        >
+          <Ionicons
+            accessibilityElementsHidden
+            color={colors.textSecondary}
+            importantForAccessibility="no-hide-descendants"
+            name="ellipsis-horizontal"
+            size={iconSizes.md}
+          />
+        </PressableScale>
+      ) : null}
+      {onPress && !onMore ? (
         <Ionicons
           accessibilityElementsHidden
           color={colors.textMuted}

@@ -1,11 +1,6 @@
 import { exerciseGroupLabelEs } from '@gymsheet/domain';
-import { copyNumberFromName } from '@gymsheet/hooks';
+import { copyNumberFromName, estimateDayMinutes } from '@gymsheet/hooks';
 import type { Routine, RoutineCard, RoutineDay, RoutineExercise } from '@gymsheet/types';
-
-/** Trabajo medio de una serie, en segundos (incluye colocarse). */
-const WORK_PER_SET_SEC = 40;
-/** Descanso supuesto cuando el plan no lo fija. */
-const DEFAULT_REST_SEC = 90;
 
 /** Días en el orden de la semana (o en el de la rutina si son «cualquier día»). */
 export function orderedDays(routine: Pick<Routine, 'dias'>): RoutineDay[] {
@@ -20,26 +15,20 @@ export function dayNumber(routine: Pick<Routine, 'dias'>, diaId: string): number
 }
 
 /**
- * Duración estimada de un día en minutos, redondeada a 5: series × (trabajo +
- * descanso del plan), sin el último descanso. Es una estimación honesta que se
- * presenta con «≈», no una promesa.
+ * Minutos estimados de un día de la rutina base, con la misma cuenta que la
+ * pantalla del Día (`estimateDayMinutes`: bloques, transiciones y descanso tras
+ * la vuelta una sola vez), para que la tarjeta y el Día digan lo mismo.
  */
-export function estimateMinutes(
-  items: ReadonlyArray<{ series: number; descansoSeg: number | null }>,
-): number {
-  if (items.length === 0) return 0;
-  let seconds = 0;
-  for (const item of items) {
-    seconds += item.series * (WORK_PER_SET_SEC + (item.descansoSeg ?? DEFAULT_REST_SEC));
-  }
-  const last = items[items.length - 1];
-  seconds -= last?.descansoSeg ?? DEFAULT_REST_SEC;
-  return Math.max(5, Math.round(seconds / 60 / 5) * 5);
-}
-
 export function dayMinutes(day: Pick<RoutineDay, 'ejercicios'>): number {
-  return estimateMinutes(
-    day.ejercicios.map((item) => ({ series: item.seriesObjetivo, descansoSeg: item.descansoSeg })),
+  return estimateDayMinutes(
+    day.ejercicios.map((item) => ({
+      grupo: item.grupo ?? null,
+      grupoTipo: item.grupoTipo ?? null,
+      series: item.seriesObjetivo,
+      descansoSeg: item.descansoSeg,
+      descansoEntreSeg: item.descansoEntreSeg ?? null,
+      duracionSeg: item.duracionSeg ?? null,
+    })),
   );
 }
 
