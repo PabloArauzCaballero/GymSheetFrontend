@@ -105,7 +105,7 @@ export function RoutineActions({
       ) : (
         <>
           {saved ? (
-            <p className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+            <p className="flex w-0 min-w-full basis-full items-center gap-2 text-sm text-[var(--text-muted)]">
               {saved.label}
               <ButtonLink href={`/routines/${saved.id}`} size="sm" variant="ghost">
                 Abrir

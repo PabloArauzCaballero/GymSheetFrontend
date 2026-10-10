@@ -73,9 +73,9 @@ export function ExerciseEditor({
     !porTiempo && exercise.repsMin !== null && exercise.repsMax !== null && exercise.repsMin > exercise.repsMax;
   return (
     <li className="panel grid grid-cols-[minmax(0,1fr)] gap-4 p-5">
-      <div className="flex items-center gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold">{`${marca ?? position}. ${exercise.nombre}`}</p>
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1 pt-2">
+          <p className="break-words font-semibold">{`${marca ?? position}. ${exercise.nombre}`}</p>
           <p className="text-sm text-[var(--text-muted)]">{exercise.grupoMuscular}</p>
         </div>
         <Button
