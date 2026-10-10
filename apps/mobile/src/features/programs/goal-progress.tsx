@@ -1,6 +1,7 @@
 import { Text, View } from 'react-native';
 import { formatKg } from '@gymsheet/hooks';
 import type { LiftTargetView } from '@gymsheet/types';
+import { formatDateOnly } from '@/features/programs/labels';
 import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
 
 /** Fracción (0–1) del camino entre la marca inicial y la meta. */
@@ -34,7 +35,7 @@ export function GoalProgress({ lift }: { lift: LiftTargetView }) {
       </View>
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
         {lift.marcaActualKg !== null ? formatKg(lift.marcaActualKg) : 'Sin marca'} → {lift.marcaMetaKg !== null ? formatKg(lift.marcaMetaKg) : '—'}
-        {lift.fechaMeta ? ` · para el ${lift.fechaMeta}` : ''}
+        {lift.fechaMeta ? ` · para el ${formatDateOnly(lift.fechaMeta)}` : ''}
       </Text>
     </View>
   );
