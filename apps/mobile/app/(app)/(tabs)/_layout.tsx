@@ -1,9 +1,14 @@
-import { useEffect } from 'react';
+import { use, useCallback, useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, type ColorValue } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Tabs } from 'expo-router';
+import {
+  BottomTabBar,
+  BottomTabBarHeightCallbackContext,
+  type BottomTabBarProps,
+} from 'expo-router/build/react-navigation/bottom-tabs';
 import ReAnimated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -17,6 +22,7 @@ import {
   useInteractionCounts,
 } from '@/components/interactions-counts';
 import { TourTarget } from '@/components/tour';
+import { ACTIVE_BAR_SPACE, ActiveWorkoutBar, useActiveWorkout } from '@/features/workout/active-workout-bar';
 import { accentContrast, colors, fontSizes, iconSizes, semibold } from '@/theme';
 
 /** Outline when resting, filled when active — the platform convention. */
@@ -142,6 +148,31 @@ function tabIcon(screen: keyof typeof ICONS) {
 }
 
 /**
+ * La barra de pestañas con la mini-barra del entreno abierto encima (C8.3.9).
+ * Intercepta el alto que la barra comunica al navegador y le suma el de la
+ * mini-barra: así las pantallas (`ScrollScreen`, sus pies fijos) reservan los
+ * dos y nada queda debajo.
+ */
+function TabBarWithWorkout(props: BottomTabBarProps) {
+  const report = use(BottomTabBarHeightCallbackContext);
+  const [height, setHeight] = useState(0);
+  const active = useActiveWorkout();
+  const extra = active ? ACTIVE_BAR_SPACE : 0;
+  const onHeight = useCallback((next: number) => setHeight(next), []);
+  useEffect(() => {
+    if (height > 0) report?.(height + extra);
+  }, [extra, height, report]);
+  return (
+    <>
+      <BottomTabBarHeightCallbackContext.Provider value={onHeight}>
+        <BottomTabBar {...props} />
+      </BottomTabBarHeightCallbackContext.Provider>
+      {active && height > 0 ? <ActiveWorkoutBar active={active} bottom={height} /> : null}
+    </>
+  );
+}
+
+/**
  * Four destinations (Inicio · Rutinas · Comunidad · Perfil). Settings is reachable from Profile instead of taking a
  * slot of its own — it is visited rarely and belongs to the account.
  *
@@ -182,6 +213,7 @@ export default function TabsLayout() {
           if (!navigation.isFocused()) void Haptics.selectionAsync();
         },
       })}
+      tabBar={(props) => <TabBarWithWorkout {...props} />}
       screenOptions={{
         headerShown: false,
         animation: 'shift',
