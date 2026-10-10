@@ -1,0 +1,62 @@
+# Copiar con atribución y versión nueva (plan Rutinas REPP · F4): RF-10.
+# Cuenta B (expiring.mock). Requiere los seeds `seed-rutinas-evidencia.mjs` y
+# `seed-rutinas-f4-version.mjs` (copia de B + versión nueva de A).
+appId: app.gymsheet.mobile
+name: 14 · Copiar con atribución y versión nueva
+env:
+  EMAIL: expiring.mock@gymsheet.local
+  FIRST: Expiring
+---
+- runFlow: login-as.subflow.yaml
+# RF-10 · p01: B copia la pública de A → «Copiada a Mías».
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Públicas', NAME: 'Pierna para publicar' }
+- scrollUntilVisible:
+    element: 'Copiar a Mías'
+- tapOn: 'Copiar a Mías'
+# El aviso «Copiada a Mías» dura pocos segundos y el árbol de accesibilidad no siempre lo
+# expone a tiempo: se intenta esperarlo y la captura se toma de todos modos; si no llegó a
+# verse, la revisión lo anota y lo prueba el paso siguiente (la copia existe en Mías).
+- takeScreenshot: RF-10_p01_toast-copiada-a-mias_ios_oscuro
+# RF-10 · p02: la copia (en Mías) muestra «Basada en … de …».
+- tapOn: 'Rutinas, tab.*'
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Pierna para publicar' }
+- extendedWaitUntil:
+    visible: 'Basada en.*'
+    timeout: 20000
+- takeScreenshot: RF-10_p02_franja-basada-en_ios_oscuro
+- tapOn: 'Rutinas, tab.*'
+
+# RF-10 · p04: hay versión nueva en la copia preparada de «Pierna 3 días».
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Pierna 3 días' }
+- extendedWaitUntil:
+    visible: 'Hay una versión nueva de la original'
+    timeout: 20000
+- takeScreenshot: RF-10_p04_hay-version-nueva_ios_oscuro
+# RF-10 · p05: ver cambios y aplicar.
+- tapOn: 'Ver cambios'
+- extendedWaitUntil:
+    visible: 'Cambios de la versión nueva'
+    timeout: 20000
+- extendedWaitUntil:
+    visible: '.*se añade barbell bent over row.*'
+    timeout: 20000
+- takeScreenshot: RF-10_p05_ver-cambios_ios_oscuro
+- tapOn: 'Aplicar cambios'
+- extendedWaitUntil:
+    notVisible: 'Hay una versión nueva de la original'
+    timeout: 30000
+- takeScreenshot: RF-10_p05b_copia-actualizada_ios_oscuro
+- tapOn: 'Rutinas, tab.*'
+
+# RF-10 · p06: una rutina hecha desde cero no lleva franja de atribución.
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Torso de Leo' }
+- assertNotVisible: 'Basada en.*'
+- takeScreenshot: RF-10_p06_sin-franja_ios_oscuro

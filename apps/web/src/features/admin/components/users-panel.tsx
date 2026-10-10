@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -40,7 +41,7 @@ function AccessBadge({ user }: { user: PortalUser }) {
  * hacerle adivinar la pestaña correcta es la clase de fricción que termina en
  * «no aparece».
  */
-export function UsersPanel() {
+export function UsersPanel({ canViewTraining = false }: Readonly<{ canViewTraining?: boolean }>) {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
@@ -114,6 +115,7 @@ export function UsersPanel() {
                     <th className="px-5 py-3 font-semibold">Plan</th>
                     <th className="px-5 py-3 font-semibold">Acceso</th>
                     <th className="px-5 py-3 font-semibold">Último entreno</th>
+                    {canViewTraining ? <th className="px-5 py-3 font-semibold">Soporte</th> : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -146,6 +148,19 @@ export function UsersPanel() {
                       <td className="px-5 py-3 text-[var(--text-muted)]">
                         {user.ultimaSesion ?? 'Nunca'}
                       </td>
+                      {canViewTraining ? (
+                        <td className="px-5 py-3">
+                          {user.rol === 'CLIENTE' ? (
+                            <Link
+                              className="text-sm font-semibold underline-offset-4 hover:underline"
+                              href={`/admin/usuarios/${user.id}/entrenamiento?nombre=${encodeURIComponent(user.nombreCompleto)}`}
+                            >
+                              Entrenamiento
+                              <span className="sr-only"> de {user.nombreCompleto}</span>
+                            </Link>
+                          ) : null}
+                        </td>
+                      ) : null}
                     </tr>
                   ))}
                 </tbody>

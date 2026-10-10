@@ -46,6 +46,7 @@ import {
 } from '@gymsheet/schemas';
 import type {
   AddWorkoutExerciseInput,
+  CardioSetInput,
   FitnessGoal,
   TrainingGoal,
   WorkoutSetInput,
@@ -58,6 +59,15 @@ import type {
   SwipeDirection,
 } from '@gymsheet/schemas';
 import type { UserGender } from '@gymsheet/types';
+import {
+  createCardioServices,
+  createCatalogServices,
+  createCommunityServices,
+  createExerciseCommunityServices,
+  createProgramServices,
+  createRoutineServices,
+  createSharingServices,
+} from '@gymsheet/api-client';
 import { apiClient } from '@/api/client';
 
 /** Endpoints that answer with a free-form object we do not need to model. */
@@ -207,8 +217,11 @@ export const workoutService = {
       body: { observacion: observacion ?? null },
     }),
   /** Starts a session pre-filled from a routine. */
-  startFromRoutine: (routineId: string) =>
-    apiClient.request(`/routines/${routineId}/start`, workoutSchema, { method: 'POST' }),
+  startFromRoutine: (routineId: string, routineDayId?: string) =>
+    apiClient.request(`/routines/${routineId}/start`, workoutSchema, {
+      method: 'POST',
+      ...(routineDayId ? { body: { routineDayId } } : {}),
+    }),
   finish: (id: string, location?: { latitude: number; longitude: number }) =>
     apiClient.request(`/workouts/${id}/finish`, workoutFinishSchema, {
       method: 'PATCH',
@@ -227,7 +240,7 @@ export const workoutService = {
       method: 'DELETE',
     }),
 
-  addSet: (sessionExerciseId: string, input: WorkoutSetInput) =>
+  addSet: (sessionExerciseId: string, input: WorkoutSetInput | CardioSetInput) =>
     apiClient.request(`/workouts/session-exercises/${sessionExerciseId}/sets`, looseObject, {
       method: 'POST',
       body: input,
@@ -261,6 +274,63 @@ export const routineService = {
     }),
 };
 
+/** Rutinas por días: crear con `dias`, `PUT structure`, calendario y semanas. */
+export const routineBuilderService = createRoutineServices(apiClient.request);
+
+const catalogApi = createCatalogServices(apiClient.request);
+const sharingApi = createSharingServices(apiClient.request);
+const communityApi = createCommunityServices(apiClient.request);
+const programsApi = createProgramServices(apiClient.request);
+const cardioApi = createCardioServices(apiClient.request);
+
+/**
+ * Los servicios compartidos (`@gymsheet/api-client`) son los mismos que usa la web; aquí se agrupan
+ * con los nombres que las pantallas del móvil ya usan (catálogo y publicar, compartir, comunidad,
+ * programas y cardio).
+ */
+export const routineCatalogService = {
+  list: catalogApi.list,
+  publish: sharingApi.publish,
+  unpublish: sharingApi.unpublish,
+  copy: sharingApi.copy,
+  syncFromSource: sharingApi.syncFromSource,
+};
+
+export const routineSharingService = {
+  invite: sharingApi.invite,
+  listShares: sharingApi.listShares,
+  revoke: sharingApi.revokeShare,
+  myInvitations: sharingApi.myInvitations,
+  accept: sharingApi.accept,
+  decline: sharingApi.decline,
+};
+
+export const communityService = {
+  ratingSummary: communityApi.rating,
+  rate: communityApi.rate,
+  removeRating: communityApi.removeRating,
+  comments: (kind: Parameters<typeof communityApi.comments>[0], id: string, cursor?: string | null) =>
+    communityApi.comments(kind, id, cursor ?? undefined),
+  comment: (
+    kind: Parameters<typeof communityApi.comment>[0],
+    id: string,
+    texto: string,
+    respuestaA?: string | null,
+  ) => communityApi.comment(kind, id, { texto, ...(respuestaA ? { respuestaA } : {}) }),
+  deleteComment: communityApi.removeComment,
+  report: communityApi.report,
+};
+
+export const programService = {
+  ...programsApi,
+  cardioPlans: cardioApi.listPlans,
+  createCardioPlan: cardioApi.createPlan,
+  activateCardio: cardioApi.activate,
+};
+
+/** Me gusta (público) y favorito (privado) de un ejercicio. */
+export const exerciseCommunityService = createExerciseCommunityServices(apiClient.request);
+
 export interface RoutineScheduleInput {
   diasSemana: number[];
   repiteDesde?: string | null;
@@ -274,6 +344,8 @@ export interface ExerciseFilters {
   /** Server-side drill-down: the catalogue is far too large to filter locally. */
   bodyPart?: string;
   targetMuscle?: string;
+  /** Sólo los ejercicios que la persona marcó como favoritos (privado). */
+  favoritos?: boolean;
   page?: number;
   pageSize?: number;
 }

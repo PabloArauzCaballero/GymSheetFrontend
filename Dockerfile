@@ -37,6 +37,9 @@ COPY --from=pruner /app/tsconfig.base.json ./tsconfig.base.json
 # runtime: por eso llega como build arg y no como `environment:` del compose.
 ARG NEXT_PUBLIC_BACKEND_ORIGIN=http://localhost:3001
 ENV NEXT_PUBLIC_BACKEND_ORIGIN=$NEXT_PUBLIC_BACKEND_ORIGIN
+# Bandera `routinesV2` (asistente de rutinas por pasos): vacío = apagada en producción.
+ARG NEXT_PUBLIC_ROUTINES_V2=
+ENV NEXT_PUBLIC_ROUTINES_V2=$NEXT_PUBLIC_ROUTINES_V2
 RUN yarn turbo run build --filter=@gymsheet/web
 
 # ---- Runner: imagen final mínima con el standalone ----

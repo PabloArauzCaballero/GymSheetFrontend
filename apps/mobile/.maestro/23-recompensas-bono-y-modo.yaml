@@ -1,0 +1,91 @@
+# Recompensas de los modos (plan Rutinas REPP · F6): RF-18.
+# Lo que SÍ se prueba aquí: el bono del modo en el resumen de la sesión, su ausencia sin modo y las
+# insignias de modo en Trayectoria (requiere haber corrido antes el flujo 19: gana «Meta alcanzada»).
+# Lo que NO: el cierre semanal (x1,2, puntos que no bajan, racha de 4 semanas): necesita que pase el
+# tiempo y la app no tiene reloj simulado; lo cubren las pruebas e2e del backend (`mode-rewards`).
+appId: app.gymsheet.mobile
+name: 23 · Recompensas de los modos
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+  BENCH: barbell bench press
+---
+- runFlow: login-as.subflow.yaml
+# Con sobrecarga: el resumen enseña el bono del modo con su multiplicador.
+- runScript:
+    file: scripts-activate-strength.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local', ROUTINE_NAME: 'Empuje 4 días', MODE: 'PROGRESSIVE_OVERLOAD' }
+- runFlow:
+    file: start-day.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Empuje 4 días', DIA: 'lunes' }
+- runScript:
+    file: scripts-log-sets.js
+    env:
+      EMAIL: athlete.mock@gymsheet.local
+      EXERCISE: ${BENCH}
+      SETS: '[{"pesoKg":60,"repeticiones":12,"rir":2},{"pesoKg":60,"repeticiones":12,"rir":2},{"pesoKg":60,"repeticiones":12,"rir":2}]'
+- swipe:
+    start: 50%,25%
+    end: 50%,70%
+- extendedWaitUntil:
+    visible: '60 kg × 12'
+    timeout: 30000
+- repeat:
+    times: 4
+    commands:
+      - scroll
+- tapOn: 'Finalizar sesión'
+- tapOn: 'Finalizar'
+- extendedWaitUntil:
+    visible: 'Seguir'
+    timeout: 60000
+- scrollUntilVisible:
+    element: 'Tu programa'
+- assertVisible: '.*por sobrecarga.*al cumplir la semana.*'
+- takeScreenshot: RF-18_p01_bono-del-modo-en-el-resumen_ios_oscuro
+
+# Sin modo (Normal): no aparece el bono.
+- runScript:
+    file: scripts-reset-programs.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local' }
+- runScript:
+    file: scripts-activate-strength.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local', ROUTINE_NAME: 'Empuje 4 días', MODE: 'NONE' }
+- runFlow:
+    file: start-day.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Empuje 4 días', DIA: 'lunes' }
+- runScript:
+    file: scripts-log-sets.js
+    env:
+      EMAIL: athlete.mock@gymsheet.local
+      EXERCISE: ${BENCH}
+      SETS: '[{"pesoKg":60,"repeticiones":12,"rir":2},{"pesoKg":60,"repeticiones":12,"rir":2},{"pesoKg":60,"repeticiones":12,"rir":2}]'
+- swipe:
+    start: 50%,25%
+    end: 50%,70%
+- extendedWaitUntil:
+    visible: '60 kg × 12'
+    timeout: 30000
+- repeat:
+    times: 4
+    commands:
+      - scroll
+- tapOn: 'Finalizar sesión'
+- tapOn: 'Finalizar'
+- extendedWaitUntil:
+    visible: 'Seguir'
+    timeout: 60000
+- scrollUntilVisible:
+    element: 'Tu programa'
+- assertNotVisible: '.*por sobrecarga.*'
+- takeScreenshot: RF-18_p04_sin-modo-no-hay-bono_ios_oscuro
+
+# Insignias de modo en Trayectoria.
+- openLink: gymsheet:///trayectoria
+- extendedWaitUntil:
+    visible: '.*Insignias.*'
+    timeout: 60000
+- scrollUntilVisible:
+    element: 'Meta alcanzada.*'
+    timeout: 60000
+- takeScreenshot: RF-18_p03_insignia-de-modo-en-trayectoria_ios_oscuro

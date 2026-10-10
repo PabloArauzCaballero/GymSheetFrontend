@@ -51,8 +51,20 @@ export type EquipmentStatus = (typeof equipmentStatuses)[number];
 export const workoutStatuses = ['EN_PROGRESO', 'FINALIZADA', 'CANCELADA'] as const;
 export type WorkoutStatus = (typeof workoutStatuses)[number];
 
-export const routineVisibilities = ['PRIVATE', 'SHARED', 'TEMPLATE'] as const;
+/**
+ * Visibilidades que el backend puede devolver al LEER una rutina. `TEMPLATE` es
+ * el valor antiguo de «plantilla»: sólo se lee (el plan Rutinas REPP lo
+ * sustituye por `PUBLIC` + `esOficial`) y por eso no está en las que se
+ * escriben.
+ *
+ * @see routineWritableVisibilities
+ */
+export const routineVisibilities = ['PRIVATE', 'SHARED', 'PUBLIC', 'TEMPLATE'] as const;
 export type RoutineVisibility = (typeof routineVisibilities)[number];
+
+/** Visibilidades que un cliente nuevo puede enviar. `TEMPLATE` queda sólo en lectura (deprecado). */
+export const routineWritableVisibilities = ['PRIVATE', 'SHARED', 'PUBLIC'] as const;
+export type RoutineWritableVisibility = (typeof routineWritableVisibilities)[number];
 
 export const routineStatuses = ['ACTIVE', 'ARCHIVED'] as const;
 export type RoutineStatus = (typeof routineStatuses)[number];

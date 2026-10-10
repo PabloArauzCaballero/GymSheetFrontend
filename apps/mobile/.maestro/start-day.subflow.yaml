@@ -1,0 +1,16 @@
+# Inicia una sesión desde un día concreto de la vista Mes de una rutina (no depende del día de hoy).
+# Variables: TAB, NAME (como en open-routine) y DIA (minúsculas: «lunes», «martes»…).
+appId: app.gymsheet.mobile
+---
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: '${TAB}', NAME: '${NAME}' }
+- tapOn: 'Vista Mes'
+- tapOn: 'Semana 1, ${DIA}.*'
+- extendedWaitUntil:
+    visible: 'Entrenar este día'
+    timeout: 20000
+- tapOn: 'Entrenar este día'
+- extendedWaitUntil:
+    visible: 'En progreso'
+    timeout: 60000

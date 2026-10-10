@@ -14,7 +14,12 @@ const permissionKey = '[a-z-]+%3A[a-z-]+';
 // alternativa explícita en vez de un comodín, igual que el token de activación
 // más abajo — así una URL no puede colar un valor que el backend rechazaría
 // de todos modos, pero sin llegar a intentarlo.
-const moderationTargetKind = 'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER';
+const moderationTargetKind = 'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER|ROUTINE|EXERCISE|COMMENT';
+
+// Lo que se valora y se comenta (`ContentKind`, enum cerrado).
+const contentKind = 'ROUTINE|EXERCISE';
+// UUID con guiones: el segmento de un comentario no puede ser `ROUTINE` ni nada parecido.
+const uuid = '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}';
 
 const allowedPathPatterns = [
   /^\/access\/me$/u,
@@ -61,6 +66,15 @@ const allowedPathPatterns = [
     'u',
   ),
   new RegExp(`^/admin/moderation/users/${resourceId}/history$`, 'u'),
+  // Rutinas REPP (RF-B2): el listado y el alta de oficiales, marcar/desmarcar
+  // (POST/DELETE) y las métricas de una rutina. Una alternativa explícita por
+  // sufijo: `/admin/routines/:id/<otra cosa>` no pasa.
+  /^\/admin\/routines$/u,
+  new RegExp(`^/admin/routines/${resourceId}/(official|insights)$`, 'u'),
+  // Soporte de entrenamiento (RF-B3): la ficha de un socio y el recálculo de
+  // una semana cerrada. Son las dos únicas rutas de soporte que se abren.
+  new RegExp(`^/admin/support/users/${resourceId}/training$`, 'u'),
+  new RegExp(`^/admin/support/programs/${resourceId}/recompute-week$`, 'u'),
   // Permisos granulares del personal (H01): catálogo, los de un usuario,
   // otorgar y revocar. `/me` es la vista propia (qué puedo hacer yo).
   /^\/admin\/permissions\/me$/u,
@@ -77,6 +91,10 @@ const allowedPathPatterns = [
   new RegExp(`^/exercises/${resourceId}(/media)?$`, 'u'),
   // Los músculos que trabaja un ejercicio, para los chips que abren cada uno.
   new RegExp(`^/exercises/${resourceId}/muscles$`, 'u'),
+  // Me gusta público de un ejercicio (POST y DELETE, idempotentes) y el
+  // favorito privado de quien mira (PUT con `{ isFavorite }`).
+  new RegExp(`^/exercises/${resourceId}/like$`, 'u'),
+  new RegExp(`^/me/exercises/${resourceId}/preference$`, 'u'),
   /^\/export\/workout-history(\/csv)?$/u,
   /^\/memberships\/me$/u,
   /^\/membership\/plans$/u,
@@ -166,6 +184,27 @@ const allowedPathPatterns = [
   new RegExp(`^/routines/exercises/${resourceId}$`, 'u'),
   new RegExp(`^/routines/${resourceId}$`, 'u'),
   new RegExp(`^/routines/${resourceId}/(exercises|assign|schedule|start)$`, 'u'),
+  // Rutinas por días (asistente de creación): estructura completa, semanas
+  // generadas y el ajuste de una semana concreta (1 a 52, de uno o dos dígitos).
+  new RegExp(`^/routines/${resourceId}/(calendar|structure)$`, 'u'),
+  new RegExp(`^/routines/${resourceId}/weeks/[0-9]{1,2}$`, 'u'),
+  // Publicar, copiar y compartir (RF-09, RF-10, RF-13). Una alternativa
+  // explícita por sufijo: `/routines/:id/<otra cosa>` no pasa.
+  new RegExp(`^/routines/${resourceId}/(publish|unpublish|copy|sync-from-source|shares)$`, 'u'),
+  new RegExp(`^/routines/${resourceId}/shares/${resourceId}$`, 'u'),
+  /^\/me\/routine-invitations$/u,
+  new RegExp(`^/routine-shares/${resourceId}/(accept|decline)$`, 'u'),
+  // Valoraciones y comentarios (RF-12): `kind` es el enum cerrado, y el borrado
+  // de un comentario se identifica por su UUID, no por un comodín.
+  new RegExp(`^/(ratings|comments)/(?:${contentKind})/${resourceId}$`, 'u'),
+  new RegExp(`^/comments/${uuid}$`, 'u'),
+  // Programas (RF-14..16, RF-19, RF-20) y cardio (RF-17).
+  /^\/programs\/active$/u,
+  /^\/programs\/(strength|cardio)\/activate$/u,
+  new RegExp(`^/programs/${resourceId}/(stop|progress|next-loads|close)$`, 'u'),
+  new RegExp(`^/workouts/${resourceId}/apply-to-routine$`, 'u'),
+  /^\/cardio-plans$/u,
+  new RegExp(`^/cardio-plans/${resourceId}$`, 'u'),
   /^\/user-exercises$/u,
   new RegExp(`^/user-exercises/${resourceId}$`, 'u'),
   /^\/users\/me$/u,

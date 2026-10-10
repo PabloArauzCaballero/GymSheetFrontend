@@ -1,0 +1,57 @@
+# Abre el detalle de una rutina buscándola por nombre en una pestaña del catálogo.
+# Variables: TAB (Públicas|REPP|Mías), NAME (texto a buscar y nombre exacto de la tarjeta).
+appId: app.gymsheet.mobile
+---
+# Sale de donde esté (resumen, detalle de una corrida anterior…) y vuelve a la lista de Rutinas.
+- openLink: gymsheet:///routines
+- tapOn:
+    text: 'Rutinas, tab.*'
+    optional: true
+- runFlow: cerrar-tour.subflow.yaml
+# La lista conserva su posición de la visita anterior: se sube al principio.
+- repeat:
+    times: 3
+    commands:
+      - swipe:
+          direction: DOWN
+          duration: 200
+- extendedWaitUntil:
+    visible: 'Crear rutina'
+    timeout: 60000
+- tapOn: 'Pestaña ${TAB}'
+- tapOn:
+    id: 'routine-search'
+    point: 85%,50%
+- eraseText: 60
+- inputText: ${NAME}
+- pressKey: Enter
+# La búsqueda tarda un instante en traer los resultados.
+- waitForAnimationToEnd:
+    timeout: 3000
+# `scrollUntilVisible` desplaza ANTES de mirar: si la tarjeta ya está en pantalla, se la pasaría de
+# largo. Por eso solo se desplaza cuando todavía no se ve (con un programa activo queda más abajo).
+- runFlow:
+    when:
+      notVisible: '${NAME}\. .*'
+    commands:
+      - scrollUntilVisible:
+          element: '${NAME}\. .*'
+          centerElement: true
+          timeout: 30000
+# Se toca la parte alta de la tarjeta: aunque quede cerca de la barra de pestañas, no cae sobre ella.
+- tapOn:
+    text: '${NAME}\. .*'
+    point: 50%,15%
+# El primer arranque tras un rato de silencio puede agotar la espera del cliente
+# («Sin conexión»): se pulsa el propio «Reintentar» de la app, como haría una persona.
+- tapOn:
+    text: 'Reintentar'
+    optional: true
+- extendedWaitUntil:
+    visible: 'Empezar rutina'
+    timeout: 30000
+# El calendario carga después de la cabecera: se espera a que acabe para que el
+# contenido no se desplace mientras el flujo desplaza la pantalla.
+- extendedWaitUntil:
+    visible: 'Semana 1 de .*|Rutina de un día.*'
+    timeout: 30000

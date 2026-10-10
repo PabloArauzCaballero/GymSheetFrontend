@@ -26,6 +26,8 @@ export const badgeCategories = [
   'VARIEDAD',
   'HITO',
   'SECRETA',
+  /** Insignias de modo de programa: rachas de semanas cumplidas, x2,0 y metas de marca. */
+  'MODO',
 ] as const;
 export type BadgeCategory = (typeof badgeCategories)[number];
 
@@ -237,6 +239,8 @@ export const pointsBreakdownSchema = z.object({
   volume: z.number().int(),
   streak: z.number().int(),
   badges: z.number().int(),
+  /** Bonos de programa con modo (multiplicador semanal y metas). Nunca bajan. Ausente en servidores antiguos. */
+  modes: z.number().int().default(0),
 });
 
 export const sessionRewardSchema = z.object({

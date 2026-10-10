@@ -16,6 +16,7 @@ import {
   TARGET_LABEL,
   type ModerationTargetKind,
 } from '@/features/moderation/services/moderation-service';
+import { ContentPreview } from './moderation-preview';
 import { queueKey, sanctionLabel } from './moderation-labels';
 
 /**
@@ -130,6 +131,12 @@ export function CasePanel({
         </div>
       </div>
 
+      <ContentPreview
+        reportDetails={data.reports.flatMap((report) => (report.details ? [report.details] : []))}
+        targetId={data.targetId}
+        targetKind={data.targetKind}
+      />
+
       {/* El historial y la consecuencia, juntos y antes de los botones. */}
       <Card>
         <CardContent className="flex flex-col gap-2 p-4">
@@ -192,16 +199,18 @@ export function CasePanel({
           variant="ghost"
         >
           <ShieldCheck aria-hidden className="mr-1 size-4" />
-          Sin infracción
+          {data.contentHidden ? 'Restaurar contenido' : 'Sin infracción'}
         </Button>
-        <Button
-          disabled={resolve.isPending}
-          onClick={() => act({ hideContent: true, sanction: false })}
-          variant="secondary"
-        >
-          <EyeOff aria-hidden className="mr-1 size-4" />
-          Retirar contenido
-        </Button>
+        {data.contentHidden ? null : (
+          <Button
+            disabled={resolve.isPending}
+            onClick={() => act({ hideContent: true, sanction: false })}
+            variant="secondary"
+          >
+            <EyeOff aria-hidden className="mr-1 size-4" />
+            Ocultar contenido
+          </Button>
+        )}
         <Button
           disabled={resolve.isPending}
           onClick={() => act({ hideContent: true, sanction: true })}

@@ -4,3 +4,8 @@ export * from './operations';
 export * from './workouts';
 export * from './training';
 export * from './tutorials';
+export * from './catalog';
+export * from './community';
+export * from './sharing';
+export * from './programs';
+export * from './cardio';

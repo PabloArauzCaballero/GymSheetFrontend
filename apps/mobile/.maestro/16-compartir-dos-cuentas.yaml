@@ -1,0 +1,85 @@
+# Compartir con invitación entre dos cuentas (plan Rutinas REPP · F4): RF-13.
+# Antes: `node scripts/reset-share-evidencia.mjs`. A = athlete.mock, B = expiring.mock.
+appId: app.gymsheet.mobile
+name: 16 · Compartir con dos cuentas
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+  ROUTINE_ID: 1500712d-f8a2-42b1-aafa-6ba6a9477e74
+---
+- runFlow: login-as.subflow.yaml
+# RF-13 · p01: A busca a B (sin email).
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Plan para compartir' }
+- scrollUntilVisible:
+    element: 'Compartir con…'
+    centerElement: true
+- tapOn: 'Compartir con…'
+- tapOn:
+    id: 'people-search'
+- inputText: 'Expiring'
+- extendedWaitUntil:
+    visible: 'Expiring M.*'
+    timeout: 30000
+- takeScreenshot: RF-13_p01_buscar-persona-sin-email_ios_oscuro
+# RF-13 · p02: A envía y ve «Pendiente».
+- tapOn: 'Expiring M.*'
+- waitForAnimationToEnd
+- tapOn: 'Enviar'
+- extendedWaitUntil:
+    visible: 'Pendiente'
+    timeout: 20000
+- takeScreenshot: RF-13_p02_compartida-con-pendiente_ios_oscuro
+
+# Cuenta B.
+- runFlow:
+    file: login-as.subflow.yaml
+    env: { EMAIL: 'expiring.mock@gymsheet.local', FIRST: 'Expiring' }
+# RF-13 · p04: B ve la invitación sin ejercicios.
+- tapOn: 'Rutinas, tab.*'
+- extendedWaitUntil:
+    visible: 'Crear rutina'
+    timeout: 60000
+- tapOn: 'Pestaña Mías'
+- tapOn:
+    id: 'chip-shared'
+- extendedWaitUntil:
+    visible: 'Invitación'
+    timeout: 30000
+- assertVisible: '.*Verás los ejercicios cuando aceptes.*'
+- takeScreenshot: RF-13_p04_invitacion-sin-ejercicios_ios_oscuro
+# RF-13 · p05: abrir el detalle antes de aceptar está bloqueado (SHARE_PENDING).
+- openLink: gymsheet:///routines/${ROUTINE_ID}
+- extendedWaitUntil:
+    visible: 'Aún no aceptaste esta rutina'
+    timeout: 30000
+- takeScreenshot: RF-13_p05_detalle-bloqueado-antes-de-aceptar_ios_oscuro
+- tapOn: 'Ir a mis invitaciones'
+# RF-13 · p06: aceptar → ve la rutina completa.
+- tapOn: 'Pestaña Mías'
+- tapOn:
+    id: 'chip-shared'
+- tapOn: 'Aceptar'
+- extendedWaitUntil:
+    visible: 'Empezar rutina'
+    timeout: 30000
+- assertVisible: 'Plan para compartir'
+- takeScreenshot: RF-13_p06_aceptada-ve-la-rutina_ios_oscuro
+
+# Cuenta A: ve «Aceptó» y revoca.
+- runFlow:
+    file: login-as.subflow.yaml
+    env: { EMAIL: 'athlete.mock@gymsheet.local', FIRST: 'Athlete' }
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Plan para compartir' }
+- scrollUntilVisible:
+    element: 'Aceptó'
+    centerElement: true
+- takeScreenshot: RF-13_p07_autora-ve-acepto_ios_oscuro
+- tapOn: 'Revocar'
+- extendedWaitUntil:
+    visible: 'Todavía no la compartiste con nadie.'
+    timeout: 20000
+- takeScreenshot: RF-13_p09_revocada_ios_oscuro

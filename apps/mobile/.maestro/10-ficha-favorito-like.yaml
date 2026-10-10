@@ -1,0 +1,68 @@
+# Ficha de ejercicio: ☆ favorito (privado) y ♥ me gusta (público, con contador).
+# Plan Rutinas REPP · F2, RF-07. Capturas `RF-07_pNN_<paso>_ios_oscuro`.
+appId: app.gymsheet.mobile
+name: 10 · Ficha del ejercicio — favorito y me gusta
+---
+- runFlow: login.subflow.yaml
+- tapOn: 'Ejercicios, tab.*'
+- runFlow: cerrar-tour.subflow.yaml
+# La figura muscular captura el desplazamiento dentro de su lienzo: se desliza por el
+# margen izquierdo de la pantalla, fuera de ella, hasta el buscador.
+- swipe:
+    start: 3%, 75%
+    end: 3%, 30%
+- tapOn:
+    id: 'exercise-search'
+- inputText: 'barbell bench press'
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: 'barbell bench press\. .*'
+    timeout: 30000
+- tapOn:
+    text: 'barbell bench press\. .*'
+- extendedWaitUntil:
+    visible: 'Dar me gusta.*|Me gusta, activado.*'
+    timeout: 30000
+
+# Estado limpio por si una corrida anterior se interrumpió.
+- runFlow:
+    when:
+      visible: 'Me gusta, activado.*'
+    commands:
+      - tapOn: 'Me gusta, activado.*'
+- runFlow:
+    when:
+      visible: 'Favorito, activado.*'
+    commands:
+      - tapOn: 'Favorito, activado.*'
+- assertVisible: 'Dar me gusta. 0 personas'
+
+# RF-07 · p01: ☆ se marca.
+- tapOn: 'Marcar como favorito.*'
+- assertVisible: 'Favorito, activado.*'
+- takeScreenshot: RF-07_p01_ficha-favorito_ios_oscuro
+
+# RF-07 · p02: el filtro Favoritos de Ejercicios lo muestra.
+- tapOn: 'Volver'
+- tapOn: 'Favoritos'
+- extendedWaitUntil:
+    visible: 'barbell bench press\. .*'
+    timeout: 30000
+- takeScreenshot: RF-07_p02_filtro-favoritos_ios_oscuro
+- tapOn: 'Favoritos, activado'
+
+# RF-07 · p03: ♥ suma uno al contador.
+- tapOn:
+    text: 'barbell bench press\. .*'
+- tapOn: 'Dar me gusta.*'
+- assertVisible: 'Me gusta, activado. 1 persona'
+- takeScreenshot: RF-07_p03_me-gusta-mas-uno_ios_oscuro
+
+# RF-07 · p04: quitar el me gusta resta uno.
+- tapOn: 'Me gusta, activado.*'
+- assertVisible: 'Dar me gusta. 0 personas'
+- takeScreenshot: RF-07_p04_me-gusta-menos-uno_ios_oscuro
+
+# Se deja la ficha como estaba.
+- tapOn: 'Favorito, activado.*'
+- assertNotVisible: 'Error'
