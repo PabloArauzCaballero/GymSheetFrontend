@@ -129,6 +129,25 @@ export function SetInputs({
 
   return (
     <View style={{ gap: spacing.smd }}>
+      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+        <Field
+          decimal
+          label="Peso"
+          onChange={(pesoKg) => onChange({ ...value, pesoKg })}
+          suffix="kg"
+          testID="set-weight"
+          value={value.pesoKg}
+        />
+        <Field label="Reps" onChange={(repeticiones) => onChange({ ...value, repeticiones })} testID="set-reps" value={value.repeticiones} />
+        <Field label="RIR" onChange={(rir) => onChange({ ...value, rir })} testID="set-rir" value={value.rir} />
+      </View>
+
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+        <Chip label={`−${step} kg`} onPress={() => bump('pesoKg', -weightIncrementKg)} spoken={`Quitar ${step} kilos`} />
+        <Chip label={`+${step} kg`} onPress={() => bump('pesoKg', weightIncrementKg)} spoken={`Sumar ${step} kilos`} />
+        <Chip label="−1 rep" onPress={() => bump('repeticiones', -1)} spoken="Una repetición menos" />
+        <Chip label="+1 rep" onPress={() => bump('repeticiones', 1)} spoken="Una repetición más" />
+      </View>
       {lastTime ? (
         <PressableScale
           accessibilityHint="Rellena peso y repeticiones"
@@ -161,25 +180,6 @@ export function SetInputs({
         </PressableScale>
       ) : null}
 
-      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-        <Field
-          decimal
-          label="Peso"
-          onChange={(pesoKg) => onChange({ ...value, pesoKg })}
-          suffix="kg"
-          testID="set-weight"
-          value={value.pesoKg}
-        />
-        <Field label="Reps" onChange={(repeticiones) => onChange({ ...value, repeticiones })} testID="set-reps" value={value.repeticiones} />
-        <Field label="RIR" onChange={(rir) => onChange({ ...value, rir })} testID="set-rir" value={value.rir} />
-      </View>
-
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-        <Chip label={`−${step} kg`} onPress={() => bump('pesoKg', -weightIncrementKg)} spoken={`Quitar ${step} kilos`} />
-        <Chip label={`+${step} kg`} onPress={() => bump('pesoKg', weightIncrementKg)} spoken={`Sumar ${step} kilos`} />
-        <Chip label="−1 rep" onPress={() => bump('repeticiones', -1)} spoken="Una repetición menos" />
-        <Chip label="+1 rep" onPress={() => bump('repeticiones', 1)} spoken="Una repetición más" />
-      </View>
     </View>
   );
 }

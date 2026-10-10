@@ -8,7 +8,6 @@ import { numericInputProps } from '@/components/keyboard';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { Input } from '@/components/ui';
-import { ChoiceChip } from '@/components/wizard/choice-chip';
 import { colors, iconSizes, minTouchTarget, radii, shadows, spacing } from '@/theme';
 
 /** Duración con la que arranca una serie por tiempo (una plancha típica). */
@@ -97,6 +96,59 @@ export function QuietButton({
         {label}
       </Text>
     </PressableScale>
+  );
+}
+
+/**
+ * «Repeticiones / Por tiempo»: un segmentado neutro (el acento es de «Listo»,
+ * no de cada tarjeta), 44 de alto.
+ */
+function ModeToggle({
+  value,
+  onChange,
+  position,
+}: {
+  value: 'reps' | 'time';
+  onChange: (next: 'reps' | 'time') => void;
+  position: number;
+}) {
+  const options = [
+    { key: 'reps' as const, label: 'Repeticiones' },
+    { key: 'time' as const, label: 'Por tiempo' },
+  ];
+  return (
+    <View
+      accessibilityRole="radiogroup"
+      style={{ flexDirection: 'row', padding: spacing.xxs, borderRadius: radii.md, backgroundColor: colors.surface }}
+    >
+      {options.map((option) => {
+        const active = option.key === value;
+        return (
+          <PressableScale
+            accessibilityLabel={option.label}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: active }}
+            haptic="selection"
+            key={option.key}
+            onPress={() => onChange(option.key)}
+            scaleTo={0.97}
+            style={{
+              flex: 1,
+              minHeight: minTouchTarget - spacing.xs,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: radii.sm,
+              backgroundColor: active ? colors.surfaceHighest : 'transparent',
+            }}
+            testID={`mode-${option.key}-${position}`}
+          >
+            <Text strong={active} tone={active ? 'default' : 'secondary'} variant="subhead">
+              {option.label}
+            </Text>
+          </PressableScale>
+        );
+      })}
+    </View>
   );
 }
 
@@ -300,20 +352,11 @@ export function ExerciseEditor({
     <View style={frame} testID={`order-exercise-${position}`}>
       {head}
 
-      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-        <ChoiceChip
-          label="Repeticiones"
-          onSelect={() => onTimed(null)}
-          selected={!timed}
-          testID={`mode-reps-${position}`}
-        />
-        <ChoiceChip
-          label="Por tiempo"
-          onSelect={() => onTimed(exercise.duracionSeg ?? DEFAULT_DURATION_SEC)}
-          selected={timed}
-          testID={`mode-time-${position}`}
-        />
-      </View>
+      <ModeToggle
+        onChange={(next) => onTimed(next === 'time' ? (exercise.duracionSeg ?? DEFAULT_DURATION_SEC) : null)}
+        position={position}
+        value={timed ? 'time' : 'reps'}
+      />
 
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
         <NumberField
@@ -373,7 +416,7 @@ export function ExerciseEditor({
           <View style={{ flex: 1 }} />
         ) : (
           <NumberField
-            label={restRole === 'round' ? 'Descanso tras la vuelta (s)' : 'Descanso (s)'}
+            label={restRole === 'round' ? 'Tras la vuelta (s)' : 'Descanso (s)'}
             onChange={(raw) => onChange({ descansoSeg: digits(raw, limits.descansoMax) })}
             placeholder="90"
             testID="field-rest"

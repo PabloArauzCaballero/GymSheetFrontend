@@ -44,7 +44,8 @@ export function RestRing({
 
   // Los colores se leen fuera del worklet: el acento cambia con la marca.
   const track = colors.surfaceHighest;
-  const fill = finished ? colors.success : colors.volt;
+  // Neutro: el acento es del botón «Registrar serie» (una sola cosa en volt).
+  const fill = finished ? colors.success : colors.text;
 
   return (
     <Svg height={size} style={{ transform: [{ rotate: '-90deg' }] }} width={size}>

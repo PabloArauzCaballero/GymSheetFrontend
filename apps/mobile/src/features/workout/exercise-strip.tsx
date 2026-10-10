@@ -72,7 +72,7 @@ export function ExerciseStrip({
                 )}
                 {item.done ? (
                   <View style={{ position: 'absolute', right: -spacing.xs, bottom: -spacing.xs, borderRadius: radii.full, backgroundColor: colors.background }}>
-                    <Ionicons color={colors.success} name="checkmark-circle" size={iconSizes.sm} />
+                    <Ionicons color={colors.textSecondary} name="checkmark-circle" size={iconSizes.sm} />
                   </View>
                 ) : null}
               </View>

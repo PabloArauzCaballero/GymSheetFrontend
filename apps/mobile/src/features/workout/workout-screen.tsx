@@ -307,6 +307,22 @@ export function WorkoutScreen() {
         progress={progressLabel(item)}
         sets={source.series}
         target={targetOf(source)}
+        footer={
+          live && source.series.length > 0 ? (
+            <PressableScale
+              accessibilityLabel="Deshacer la última serie"
+              disabled={session.removeSet.isPending}
+              haptic="none"
+              onPress={() => undoLast(source)}
+              style={{ minHeight: minTouchTarget, alignItems: 'center', justifyContent: 'center' }}
+              testID="undo-set"
+            >
+              <Text strong tone="danger" variant="subhead">
+                Deshacer última serie
+              </Text>
+            </PressableScale>
+          ) : null
+        }
         testID={live ? 'workout-current' : `workout-exercise-${item.id}`}
       >
         {live ? (
@@ -330,20 +346,6 @@ export function WorkoutScreen() {
                 weightIncrementKg={account.data?.pesoIncrementoKg}
               />
             )}
-            {source.series.length > 0 ? (
-              <PressableScale
-                accessibilityLabel="Deshacer la última serie"
-                disabled={session.removeSet.isPending}
-                haptic="none"
-                onPress={() => undoLast(source)}
-                style={{ minHeight: minTouchTarget, alignItems: 'center', justifyContent: 'center' }}
-                testID="undo-set"
-              >
-                <Text strong tone="danger" variant="subhead">
-                  Deshacer última serie
-                </Text>
-              </PressableScale>
-            ) : null}
           </>
         ) : null}
       </CurrentExercise>

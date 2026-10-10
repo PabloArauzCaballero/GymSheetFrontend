@@ -113,7 +113,7 @@ export function CollapsedExercise({
         ) : null}
       </View>
       {done ? (
-        <Ionicons accessibilityElementsHidden color={colors.success} importantForAccessibility="no-hide-descendants" name="checkmark-circle" size={iconSizes.lg} />
+        <Ionicons accessibilityElementsHidden color={colors.textSecondary} importantForAccessibility="no-hide-descendants" name="checkmark-circle" size={iconSizes.lg} />
       ) : (
         <Text strong tabular tone="secondary" variant="subhead">
           {progress}
@@ -139,6 +139,7 @@ export function CurrentExercise({
   grouped = false,
   onOpenDetail,
   children,
+  footer,
   testID,
 }: {
   exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular'> | null;
@@ -151,6 +152,8 @@ export function CurrentExercise({
   grouped?: boolean;
   onOpenDetail?: () => void;
   children?: ReactNode;
+  /** Tras las series de hoy («Deshacer última serie»). */
+  footer?: ReactNode;
   testID?: string;
 }) {
   const ordered = [...sets].sort((a, b) => a.numeroSerie - b.numeroSerie);
@@ -208,6 +211,8 @@ export function CurrentExercise({
         </View>
       ) : null}
 
+      {children}
+
       {ordered.length > 0 ? (
         <View style={{ gap: spacing.xs }}>
           {ordered.map((set) => (
@@ -226,7 +231,7 @@ export function CurrentExercise({
         </View>
       ) : null}
 
-      {children}
+      {footer}
     </View>
   );
 }

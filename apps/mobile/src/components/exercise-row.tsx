@@ -129,31 +129,6 @@ export function ExerciseRow({
           </View>
         ) : null}
       </View>
-      {onMore ? (
-        <PressableScale
-          accessibilityLabel={moreLabel}
-          haptic="none"
-          onPress={onMore}
-          scaleTo={0.94}
-          style={{
-            width: minTouchTarget,
-            height: minTouchTarget,
-            alignSelf: 'center',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: radii.full,
-          }}
-          testID={testID ? `${testID}-more` : undefined}
-        >
-          <Ionicons
-            accessibilityElementsHidden
-            color={colors.textSecondary}
-            importantForAccessibility="no-hide-descendants"
-            name="ellipsis-horizontal"
-            size={iconSizes.md}
-          />
-        </PressableScale>
-      ) : null}
       {onPress && !onMore ? (
         <Ionicons
           accessibilityElementsHidden
@@ -167,6 +142,32 @@ export function ExerciseRow({
     </View>
   );
 
+  const moreButton = onMore ? (
+    <PressableScale
+      accessibilityLabel={moreLabel}
+      haptic="none"
+      onPress={onMore}
+      scaleTo={0.94}
+      style={{
+        width: minTouchTarget,
+        height: minTouchTarget,
+        alignSelf: 'center',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: radii.full,
+      }}
+      testID={testID ? `${testID}-more` : undefined}
+    >
+      <Ionicons
+        accessibilityElementsHidden
+        color={colors.textSecondary}
+        importantForAccessibility="no-hide-descendants"
+        name="ellipsis-horizontal"
+        size={iconSizes.md}
+      />
+    </PressableScale>
+  ) : null;
+
   const frame = grouped
     ? { paddingVertical: spacing.smd }
     : {
@@ -179,22 +180,28 @@ export function ExerciseRow({
       };
 
   const a11y = [badge, name, meta, caption, note ? `Nota: ${note}` : null].filter(Boolean).join('. ');
-  if (!onPress) {
-    return (
-      <View accessibilityLabel={a11y} accessible style={frame} testID={testID}>
-        {body}
-      </View>
-    );
-  }
-  return (
+  // El ⋯ va al lado de la fila y no dentro: un botón dentro de otro no se
+  // puede alcanzar con VoiceOver (la fila lo oculta) ni es HTML válido en web.
+  const main = !onPress ? (
+    <View accessibilityLabel={a11y} accessible style={moreButton ? { flex: 1 } : frame} testID={testID}>
+      {body}
+    </View>
+  ) : (
     <PressableScale
       accessibilityHint="Abre la ficha del ejercicio"
       accessibilityLabel={a11y}
       onPress={onPress}
-      style={frame}
+      style={moreButton ? { flex: 1 } : frame}
       testID={testID}
     >
       {body}
     </PressableScale>
+  );
+  if (!moreButton) return main;
+  return (
+    <View style={[frame, { flexDirection: 'row', alignItems: 'center', gap: spacing.xs }]}>
+      {main}
+      {moreButton}
+    </View>
   );
 }

@@ -263,7 +263,6 @@ export function DayScreen() {
           {` ${items.length === 1 ? 'ejercicio' : 'ejercicios'} · `}
           <Text strong variant="subhead">{view.totalSeries}</Text>
           {' series'}
-          {groups ? ` · ${groups} ${groups === 1 ? 'bloque' : 'bloques'}` : ''}
         </Text>
       </View>
 
