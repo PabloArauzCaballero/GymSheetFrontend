@@ -30,6 +30,10 @@ services:
       args:
         # Respaldo horneado, solo por si `BACKEND_PUBLIC_ORIGIN` no está definida.
         NEXT_PUBLIC_BACKEND_ORIGIN: 'http://localhost:3000'
+        # Rutinas REPP v2 (asistente, catálogo, comunidad, programas): ENCENDIDA en `test`.
+        # Se hornea en el build porque es una variable `NEXT_PUBLIC_*`; para apagarla,
+        # poner `NEXT_PUBLIC_ROUTINES_V2=false` (buildtime) en Coolify y reconstruir.
+        NEXT_PUBLIC_ROUTINES_V2: ${NEXT_PUBLIC_ROUTINES_V2:-true}
     environment:
       # Alias interno del recurso `api` de gymsheet-backend en la red `coolify`.
       BACKEND_API_URL: ${BACKEND_API_URL:-http://gymsheet-backend:3000/api/v1}
