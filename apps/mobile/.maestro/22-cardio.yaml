@@ -1,0 +1,123 @@
+# Cardio (plan Rutinas REPP · F6): RF-17 (y RF-14 p05/p06: pesas y cardio a la vez).
+appId: app.gymsheet.mobile
+name: 22 · Plan y registro de cardio
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+---
+- runFlow: login-as.subflow.yaml
+# Base: un programa de pesas activo (el cardio convive con él).
+- runScript:
+    file: scripts-activate-strength.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local', ROUTINE_NAME: 'Empuje 4 días' }
+- openLink: gymsheet:///routines
+- extendedWaitUntil:
+    visible: 'Añadir plan de cardio'
+    timeout: 60000
+- tapOn: 'Añadir plan de cardio'
+# RF-17 · p01: Bici, todos los días, 30 min, por zonas con FC 60/190 → zona 2 = 138–151 lpm.
+- extendedWaitUntil:
+    visible: 'Plan de cardio'
+    timeout: 30000
+- tapOn:
+    id: 'modality-BICI'
+- tapOn:
+    id: 'cardio-day-2'
+- tapOn:
+    id: 'cardio-day-4'
+- tapOn:
+    id: 'cardio-day-6'
+- tapOn:
+    id: 'cardio-day-7'
+- scrollUntilVisible:
+    element:
+      id: 'hr-rest'
+- tapOn:
+    id: 'hr-rest'
+- inputText: '60'
+- tapOn: 'Listo'
+- tapOn:
+    id: 'hr-max'
+- inputText: '190'
+- tapOn: 'Listo'
+- tapOn:
+    id: 'zone-2'
+- extendedWaitUntil:
+    visible: 'Z2 · Suave: 138–151 lpm'
+    timeout: 10000
+- takeScreenshot: RF-17_p01_zonas-calculadas-con-su-fc_ios_oscuro
+- scrollUntilVisible:
+    element: 'Activar plan de cardio'
+- tapOn: 'Activar plan de cardio'
+- extendedWaitUntil:
+    visible:
+      id: 'program-card-cardio'
+    timeout: 60000
+- scrollUntilVisible:
+    element:
+      id: 'program-card-cardio'
+    centerElement: true
+- takeScreenshot: RF-17_p01b_tarjeta-de-cardio_ios_oscuro
+# RF-14 · p05 y p06: pesas y cardio a la vez; los viernes toca «Haz primero las pesas».
+- takeScreenshot: RF-14_p05_ambas-tarjetas-pesas-y-cardio_ios_oscuro
+
+# Dos sesiones previas por API, sin pulsómetro (por esfuerzo 4): cuentan igual.
+- runScript:
+    file: scripts-cardio-sessions.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local', COUNT: '2', MINUTES: '32', RPE: '4' }
+- openLink: gymsheet:///home
+- openLink: gymsheet:///routines
+- swipe:
+    start: 50%,25%
+    end: 50%,70%
+- extendedWaitUntil:
+    visible:
+      id: 'program-card-cardio'
+    timeout: 60000
+- scrollUntilVisible:
+    element:
+      id: 'program-card-cardio'
+    centerElement: true
+- assertVisible: '64 / .* min'
+- takeScreenshot: RF-17_p04_sin-pulsometro-cuenta-igual_ios_oscuro
+
+# RF-17 · p02: registrar 32 min, Z2 (FC 142), esfuerzo 4 → sesión guardada.
+- tapOn: 'Registrar cardio'
+- extendedWaitUntil:
+    visible:
+      id: 'cardio-logger'
+    timeout: 60000
+- tapOn:
+    id: 'cardio-minutes'
+- inputText: '32'
+- tapOn: 'Listo'
+- tapOn:
+    id: 'cardio-distance'
+- inputText: '10,5'
+- tapOn: 'Listo'
+- tapOn:
+    id: 'cardio-hr'
+- inputText: '142'
+- tapOn: 'Listo'
+- tapOn:
+    id: 'effort-4'
+- takeScreenshot: RF-17_p02a_formulario-de-cardio_ios_oscuro
+- tapOn: 'Guardar sesión de cardio'
+- extendedWaitUntil:
+    visible: '32:00.*'
+    timeout: 30000
+- takeScreenshot: RF-17_p02_serie-de-cardio-guardada_ios_oscuro
+- repeat:
+    times: 5
+    commands:
+      - scroll
+- tapOn: 'Finalizar sesión'
+- tapOn: 'Finalizar'
+# RF-17 · p03: el resumen enseña los minutos que cuentan y el avance semanal.
+- extendedWaitUntil:
+    visible: 'Seguir'
+    timeout: 60000
+- scrollUntilVisible:
+    element: 'Tu cardio'
+- assertVisible: 'Semana .*: 96 / .* min'
+- takeScreenshot: RF-17_p03_progreso-semanal-96-min_ios_oscuro

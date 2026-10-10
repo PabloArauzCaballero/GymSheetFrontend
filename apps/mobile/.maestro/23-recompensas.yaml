@@ -1,0 +1,106 @@
+# Cierre semanal real y multiplicador (plan Rutinas REPP · F6): RF-18 p01–p02.
+# El cierre semanal lo ejecuta el servidor con `POST /admin/support/programs/:id/close-weeks { hasta }`
+# (la app no tiene reloj simulado). Una sesión cuenta para la semana desde los 10 minutos reales, así que
+# este flujo espera ese tiempo (≈ 11 min). Cuenta de administración: la sembrada en la base desechable.
+appId: app.gymsheet.mobile
+name: 23 · Cierre semanal y multiplicador
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+  BENCH: barbell bench press
+  ROW: barbell bent over row
+---
+- runFlow: login-as.subflow.yaml
+- runScript:
+    file: scripts-week-close-prep.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local' }
+- openLink: gymsheet:///workouts/${output.sessionId}
+- extendedWaitUntil:
+    visible: 'En progreso'
+    timeout: 60000
+# Espera de los 10 minutos reales (no hay nada que ver en pantalla: se sale por tiempo).
+- extendedWaitUntil:
+    visible: 'este-texto-no-existe-es-solo-una-espera'
+    timeout: 650000
+    optional: true
+- runScript:
+    file: scripts-log-sets.js
+    env:
+      EMAIL: athlete.mock@gymsheet.local
+      EXERCISE: ${BENCH}
+      SETS: '[{"pesoKg":60,"repeticiones":12,"rir":2},{"pesoKg":60,"repeticiones":12,"rir":2},{"pesoKg":60,"repeticiones":12,"rir":2}]'
+- runScript:
+    file: scripts-log-sets.js
+    env:
+      EMAIL: athlete.mock@gymsheet.local
+      EXERCISE: ${ROW}
+      SETS: '[{"pesoKg":50,"repeticiones":10,"rir":2},{"pesoKg":50,"repeticiones":10,"rir":2},{"pesoKg":50,"repeticiones":10,"rir":2}]'
+- swipe:
+    start: 50%,25%
+    end: 50%,70%
+- extendedWaitUntil:
+    visible: '60 kg × 12'
+    timeout: 30000
+- repeat:
+    times: 5
+    commands:
+      - scroll
+- tapOn: 'Finalizar sesión'
+- tapOn: 'Finalizar'
+- extendedWaitUntil:
+    visible: 'Seguir'
+    timeout: 60000
+- scrollUntilVisible:
+    element: 'Tu programa'
+- assertVisible: 'Esta sesión cuenta.*'
+- takeScreenshot: RF-18_p00_la-sesion-cuenta-para-la-semana_ios_oscuro
+
+# Cierre real de la semana 1 → cumplida: multiplicador x1,2.
+- runScript:
+    file: scripts-points.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local' }
+- evalScript: ${output.pointsBefore = output.points}
+- runScript:
+    file: scripts-close-weeks.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local', SEMANAS: '1' }
+- openLink: gymsheet:///routines
+- swipe:
+    start: 50%,25%
+    end: 50%,70%
+- extendedWaitUntil:
+    visible:
+      id: 'program-card-strength'
+    timeout: 60000
+- assertVisible: 'Programa de pesas\. Cierre semanal QA\. Semana 1 de .* x1,2.*'
+- takeScreenshot: RF-18_p01_x1-2-tras-semana-cumplida_ios_oscuro
+- tapOn:
+    id: 'program-card-strength'
+- extendedWaitUntil:
+    visible: '.*Cumplida.*'
+    timeout: 30000
+- takeScreenshot: RF-18_p01b_semana-1-cumplida_ios_oscuro
+
+# Semana 2 sin entrenar → incumplida: vuelve a x1 y los puntos no bajan.
+- runScript:
+    file: scripts-close-weeks.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local', SEMANAS: '2' }
+- runScript:
+    file: scripts-points.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local' }
+- assertTrue: ${output.points >= output.pointsBefore}
+- openLink: gymsheet:///routines
+- swipe:
+    start: 50%,25%
+    end: 50%,70%
+- extendedWaitUntil:
+    visible:
+      id: 'program-card-strength'
+    timeout: 60000
+- assertNotVisible: 'Programa de pesas\. .* x1,2.*'
+- takeScreenshot: RF-18_p02_semana-incumplida-vuelve-a-x1_ios_oscuro
+- tapOn:
+    id: 'program-card-strength'
+- extendedWaitUntil:
+    visible: '.*Sin cumplir.*'
+    timeout: 30000
+- takeScreenshot: RF-18_p02b_semana-2-sin-cumplir-los-puntos-no-bajan_ios_oscuro

@@ -3,6 +3,8 @@ import { useEffect } from 'react';
 import { Text } from 'react-native';
 import { ScreenHeader, ScrollScreen } from '@/components/layout';
 import { SessionSummary } from '@/components/session-summary';
+import { SessionProgramBlock } from '@/features/programs/session-program-block';
+import { SessionCardioBlock } from '@/features/cardio/session-cardio-block';
 import { Button } from '@/components/ui';
 import { useSessionRewardStore } from '@/state/session-reward-store';
 import { colors, fontSizes } from '@/theme';
@@ -29,7 +31,14 @@ export default function SessionSummaryScreen() {
     <ScrollScreen>
       <ScreenHeader subtitle="Buen trabajo. Esto es lo que te llevas." title="Sesión terminada" />
       {last ? (
-        <SessionSummary onContinue={goToList} session={last} />
+        <>
+          {last.reward ? (
+            <SessionSummary onContinue={goToList} session={{ ...last, reward: last.reward }} />
+          ) : null}
+          {last.programa ? <SessionProgramBlock block={last.programa} workoutId={last.sessionId} /> : null}
+          {last.cardio ? <SessionCardioBlock block={last.cardio} /> : null}
+          {!last.reward ? <Button label="Seguir" onPress={goToList} /> : null}
+        </>
       ) : (
         <>
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.md, lineHeight: 24 }}>

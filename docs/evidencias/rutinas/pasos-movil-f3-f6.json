@@ -1,0 +1,780 @@
+{
+  "descripcion": "Capturas de móvil (iOS Simulator, iPhone 17 Pro, tema oscuro) de F3–F6, generadas desde las que existen en disco. Los pasos sin plataforma son carencias declaradas con su motivo.",
+  "pasos": [
+    {
+      "rf": "RF-01",
+      "paso": "01",
+      "nombre": "catalogo-pestanas",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Catalogo pestanas."
+    },
+    {
+      "rf": "RF-01",
+      "paso": "02",
+      "nombre": "publicas-populares",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Publicas populares."
+    },
+    {
+      "rf": "RF-01",
+      "paso": "03",
+      "nombre": "filtros-hipertrofia-4-dias",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Filtros hipertrofia 4 dias."
+    },
+    {
+      "rf": "RF-01",
+      "paso": "03b",
+      "nombre": "resultado-filtrado",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Resultado filtrado."
+    },
+    {
+      "rf": "RF-01",
+      "paso": "04",
+      "nombre": "sin-resultados",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Sin resultados."
+    },
+    {
+      "rf": "RF-01",
+      "paso": "05",
+      "nombre": "pestana-repp",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Pestana repp."
+    },
+    {
+      "rf": "RF-01",
+      "paso": "06",
+      "nombre": "mias-creadas",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Mias creadas."
+    },
+    {
+      "rf": "RF-02",
+      "paso": "01",
+      "nombre": "cabecera-vista-semana",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Cabecera vista semana."
+    },
+    {
+      "rf": "RF-02",
+      "paso": "02",
+      "nombre": "vista-mes-descargas",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Vista mes descargas."
+    },
+    {
+      "rf": "RF-02",
+      "paso": "02b",
+      "nombre": "vista-mes-s8-s12-descarga",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Vista mes s8 s12 descarga."
+    },
+    {
+      "rf": "RF-02",
+      "paso": "03",
+      "nombre": "s2-martes-hoja-del-dia",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "S2 martes hoja del dia."
+    },
+    {
+      "rf": "RF-02",
+      "paso": "04",
+      "nombre": "ficha-del-ejercicio",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Ficha del ejercicio."
+    },
+    {
+      "rf": "RF-02",
+      "paso": "05",
+      "nombre": "volver-sigue-en-mes",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Volver sigue en mes."
+    },
+    {
+      "rf": "RF-02",
+      "paso": "06",
+      "nombre": "rutina-cualquier-dia",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Rutina cualquier dia."
+    },
+    {
+      "rf": "RF-09",
+      "paso": "01",
+      "nombre": "confirmacion-publicar",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Confirmacion publicar."
+    },
+    {
+      "rf": "RF-09",
+      "paso": "02",
+      "nombre": "publicada-despublicar",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Publicada despublicar."
+    },
+    {
+      "rf": "RF-09",
+      "paso": "02a",
+      "nombre": "aviso-de-rutina-publicada",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Aviso de rutina publicada."
+    },
+    {
+      "rf": "RF-09",
+      "paso": "02b",
+      "nombre": "aparece-en-publicas-con-autor",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Aparece en publicas con autor."
+    },
+    {
+      "rf": "RF-09",
+      "paso": "03",
+      "nombre": "ya-existe-identica",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Ya existe identica."
+    },
+    {
+      "rf": "RF-09",
+      "paso": "03b",
+      "nombre": "ver-la-existente",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Ver la existente."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "01",
+      "nombre": "toast-copiada-a-mias",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Toast copiada a mias."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "02",
+      "nombre": "franja-basada-en",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Franja basada en."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "04",
+      "nombre": "hay-version-nueva",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Hay version nueva."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "05",
+      "nombre": "ver-cambios",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Ver cambios."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "05b",
+      "nombre": "copia-actualizada",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Copia actualizada."
+    },
+    {
+      "rf": "RF-10",
+      "paso": "06",
+      "nombre": "sin-franja",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Sin franja."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "01",
+      "nombre": "valoracion-4-estrellas",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Valoracion 4 estrellas."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "02",
+      "nombre": "no-puedes-valorar-la-tuya",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "No puedes valorar la tuya."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "03",
+      "nombre": "comentario-publicado",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Comentario publicado."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "04",
+      "nombre": "gracias-lo-revisaremos",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Gracias lo revisaremos."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "04a",
+      "nombre": "dia-con-ejercicio-privado",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Dia con ejercicio privado."
+    },
+    {
+      "rf": "RF-12",
+      "paso": "04b",
+      "nombre": "hoja-de-denuncia",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Hoja de denuncia."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "01",
+      "nombre": "buscar-persona-sin-email",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Buscar persona sin email."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "02",
+      "nombre": "compartida-con-pendiente",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Compartida con pendiente."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "04",
+      "nombre": "invitacion-sin-ejercicios",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Invitacion sin ejercicios."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "05",
+      "nombre": "detalle-bloqueado-antes-de-aceptar",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Detalle bloqueado antes de aceptar."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "06",
+      "nombre": "aceptada-ve-la-rutina",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Aceptada ve la rutina."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "07",
+      "nombre": "autora-ve-acepto",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Autora ve acepto."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "09",
+      "nombre": "revocada",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Revocada."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "01a",
+      "nombre": "a2-fechas",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "A2 fechas."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "01b",
+      "nombre": "a3-modo",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "A3 modo."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "01c",
+      "nombre": "a5-resumen",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "A5 resumen."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "01d",
+      "nombre": "programcard-en-rutinas",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Programcard en rutinas."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "02",
+      "nombre": "activada-copia-de-ajena",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Activada copia de ajena."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "02b",
+      "nombre": "la-copia-lleva-atribucion",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "La copia lleva atribucion."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "03",
+      "nombre": "a1-reemplazo",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "A1 reemplazo."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "04",
+      "nombre": "la-tarjeta-cambia",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "La tarjeta cambia."
+    },
+    {
+      "rf": "RF-14",
+      "paso": "05",
+      "nombre": "ambas-tarjetas-pesas-y-cardio",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Ambas tarjetas pesas y cardio."
+    },
+    {
+      "rf": "RF-15",
+      "paso": "01",
+      "nombre": "resumen-de-activacion",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Resumen de activacion."
+    },
+    {
+      "rf": "RF-15",
+      "paso": "01a",
+      "nombre": "a4-datos-de-sobrecarga",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "A4 datos de sobrecarga."
+    },
+    {
+      "rf": "RF-15",
+      "paso": "02",
+      "nombre": "sube-a-62-5-kg",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Sube a 62 5 kg."
+    },
+    {
+      "rf": "RF-15",
+      "paso": "02a",
+      "nombre": "sugerido-60-kg",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Sugerido 60 kg."
+    },
+    {
+      "rf": "RF-15",
+      "paso": "02b",
+      "nombre": "bloque-de-programa",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Bloque de programa."
+    },
+    {
+      "rf": "RF-15",
+      "paso": "03",
+      "nombre": "sugerido-62-5-kg",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Sugerido 62 5 kg."
+    },
+    {
+      "rf": "RF-16",
+      "paso": "01",
+      "nombre": "1rm-estimado-116-7",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "1rm estimado 116 7."
+    },
+    {
+      "rf": "RF-16",
+      "paso": "02",
+      "nombre": "meta-125-kg-realista",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Meta 125 kg realista."
+    },
+    {
+      "rf": "RF-16",
+      "paso": "02b",
+      "nombre": "resumen-de-metas",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Resumen de metas."
+    },
+    {
+      "rf": "RF-16",
+      "paso": "03",
+      "nombre": "barra-hacia-la-meta",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Barra hacia la meta."
+    },
+    {
+      "rf": "RF-16",
+      "paso": "04",
+      "nombre": "meta-lograda",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Meta lograda."
+    },
+    {
+      "rf": "RF-17",
+      "paso": "01",
+      "nombre": "zonas-calculadas-con-su-fc",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Zonas calculadas con su fc."
+    },
+    {
+      "rf": "RF-17",
+      "paso": "01b",
+      "nombre": "tarjeta-de-cardio",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Tarjeta de cardio."
+    },
+    {
+      "rf": "RF-17",
+      "paso": "02",
+      "nombre": "serie-de-cardio-guardada",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Serie de cardio guardada."
+    },
+    {
+      "rf": "RF-17",
+      "paso": "02a",
+      "nombre": "formulario-de-cardio",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Formulario de cardio."
+    },
+    {
+      "rf": "RF-17",
+      "paso": "03",
+      "nombre": "progreso-semanal-96-min",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Progreso semanal 96 min."
+    },
+    {
+      "rf": "RF-17",
+      "paso": "04",
+      "nombre": "sin-pulsometro-cuenta-igual",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Sin pulsometro cuenta igual."
+    },
+    {
+      "rf": "RF-19",
+      "paso": "02",
+      "nombre": "pantalla-de-cierre",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Pantalla de cierre."
+    },
+    {
+      "rf": "RF-19",
+      "paso": "03",
+      "nombre": "repetir-programa-nuevo",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Repetir programa nuevo."
+    },
+    {
+      "rf": "RF-19",
+      "paso": "04",
+      "nombre": "apagar-sin-programa-de-pesas",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Apagar sin programa de pesas."
+    },
+    {
+      "rf": "RF-20",
+      "paso": "01",
+      "nombre": "hoja-con-la-lista-de-cambios",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Hoja con la lista de cambios."
+    },
+    {
+      "rf": "RF-20",
+      "paso": "02",
+      "nombre": "la-rutina-refleja-los-cambios",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "La rutina refleja los cambios."
+    },
+    {
+      "rf": "RF-20",
+      "paso": "03",
+      "nombre": "solo-esta-vez-no-cambia-la-rutina",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Solo esta vez no cambia la rutina."
+    },
+    {
+      "rf": "RF-01",
+      "paso": "07",
+      "nombre": "invitacion-pendiente-en-catalogo",
+      "plataformas": [],
+      "faltante": "Cubierto en RF-13 p04 (la tarjeta de invitación sale en Mías › Compartidas conmigo); no hay captura propia de RF-01.",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-01",
+      "paso": "08",
+      "nombre": "sin-conexion",
+      "plataformas": [],
+      "faltante": "No capturado: el simulador no se puso en modo avión y no se simuló `route.abort` en la app.",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-01",
+      "paso": "09",
+      "nombre": "error-500",
+      "plataformas": [],
+      "faltante": "No capturado: no se forzó un 500 en el catálogo.",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-09",
+      "paso": "04",
+      "nombre": "cambiar-una-repeticion-publica",
+      "plataformas": [],
+      "faltante": "No capturado en móvil (lo cubre el e2e del backend y la web).",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-09",
+      "paso": "05",
+      "nombre": "cambiar-solo-el-nombre-sigue-bloqueada",
+      "plataformas": [],
+      "faltante": "No capturado en móvil (lo cubre el e2e del backend y la web).",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-10",
+      "paso": "03",
+      "nombre": "editar-la-copia-no-cambia-el-original",
+      "plataformas": [],
+      "faltante": "No capturado en móvil.",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-11",
+      "paso": "01",
+      "nombre": "crear-oficial-en-sistema",
+      "plataformas": [],
+      "faltante": "Solo web (consola del sistema); en móvil la pestaña REPP está en RF-01 p05.",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-12",
+      "paso": "05",
+      "nombre": "cola-de-moderacion",
+      "plataformas": [],
+      "faltante": "Solo web/backoffice.",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-13",
+      "paso": "03",
+      "nombre": "notificacion-de-invitacion",
+      "plataformas": [],
+      "faltante": "No capturado: la notificación push no se probó en el simulador.",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-13",
+      "paso": "08",
+      "nombre": "rechazar-invitacion",
+      "plataformas": [],
+      "faltante": "No capturado en móvil (la ruta de rechazar existe en la tarjeta y la cubre el e2e del backend).",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-15",
+      "paso": "04",
+      "nombre": "dos-fallos-bajan-la-carga",
+      "plataformas": [],
+      "faltante": "No capturado: necesita varias sesiones; lo cubren las pruebas del motor.",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-15",
+      "paso": "05",
+      "nombre": "semana-de-descarga",
+      "plataformas": [],
+      "faltante": "No capturado: depende del calendario del programa.",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-18",
+      "paso": "01",
+      "nombre": "x1-2-tras-semana-cumplida",
+      "plataformas": [],
+      "faltante": "NO TERMINADO: el flujo 23 (cierre semanal real con close-weeks) está escrito pero no llegó a pasar entera; el cierre semanal lo cubre el e2e `mode-rewards` del backend.",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-18",
+      "paso": "02",
+      "nombre": "semana-incumplida-vuelve-a-x1",
+      "plataformas": [],
+      "faltante": "NO TERMINADO: ver RF-18 p01.",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-18",
+      "paso": "03",
+      "nombre": "insignia-por-racha-de-semanas",
+      "plataformas": [],
+      "faltante": "No capturado: necesita 4 semanas reales de sesiones.",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-18",
+      "paso": "04",
+      "nombre": "sin-modo-no-hay-bono",
+      "plataformas": [],
+      "faltante": "Flujo 23-recompensas-bono-y-modo escrito pero no completado en la última pasada.",
+      "debeVerse": "—"
+    },
+    {
+      "rf": "RF-19",
+      "paso": "01",
+      "nombre": "notificacion-de-fin-de-programa",
+      "plataformas": [],
+      "faltante": "No capturado: depende del fin real del programa (sin reloj simulado).",
+      "debeVerse": "—"
+    }
+  ]
+}

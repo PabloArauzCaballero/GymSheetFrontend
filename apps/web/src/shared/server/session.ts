@@ -1,6 +1,7 @@
 import 'server-only';
-import { isStaff } from '@gymsheet/domain';
+import { isStaff, isSystemAdmin } from '@gymsheet/domain';
 import { cookies } from 'next/headers';
+import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import type { SessionPrincipal, UserRole } from '@/shared/api/contracts';
@@ -33,7 +34,22 @@ export class BackendUnavailableError extends Error {
   }
 }
 
-export async function getSession(): Promise<SessionPrincipal | null> {
+/**
+ * Memoizada por petición.
+ *
+ * El layout del portal resuelve la sesión y luego casi cada página vuelve a
+ * pedirla con `requireRole`/`requireSession`: sin memoizar, una sola navegación
+ * hacía dos o tres rondas de `/auth/me` + `/users/me` + permisos contra el
+ * backend para contestar lo mismo. `cache` de React vive en el ámbito de una
+ * petición, que es exactamente la vida útil de esta respuesta — el siguiente
+ * request vuelve a preguntar, así que una sesión revocada sigue notándose de
+ * inmediato.
+ *
+ * También memoiza el lanzamiento de `BackendUnavailableError`, que es lo
+ * deseable: si el backend no contestó, no tiene sentido insistir tres veces
+ * dentro del mismo render.
+ */
+export const getSession = cache(async function getSession(): Promise<SessionPrincipal | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
@@ -49,22 +65,28 @@ export async function getSession(): Promise<SessionPrincipal | null> {
   const user = await readData(userResponse, userSchema);
   if (!principal) return null;
 
-  // Solo el personal (ADMIN/COACH/FRONT_DESK) puede tener permisos granulares
-  // de administración; evita un round-trip extra en cada carga de página para
-  // el resto de las cuentas.
-  const permissions = isStaff(principal.role)
-    ? await readData(
-        await backendRequest('/admin/permissions/me', { token }),
-        permissionsMeSchema,
-      )
-    : null;
+  // Solo el personal (ADMIN/COACH/FRONT_DESK) y el administrador de plataforma
+  // pueden tener permisos granulares de administración; evita un round-trip
+  // extra en cada carga de página para el resto de las cuentas.
+  //
+  // `SYSTEM_ADMIN` no está en `isStaff` —no pertenece a ningún gimnasio— pero sí
+  // necesita la lista: el backend se la resuelve como el catálogo completo, que
+  // es lo que `PermissionGuard` le concede de verdad. Sin esta rama la consola
+  // de sistema escondería los botones que la API sí le permite usar.
+  const permissions =
+    isStaff(principal.role) || isSystemAdmin(principal.role)
+      ? await readData(
+          await backendRequest('/admin/permissions/me', { token }),
+          permissionsMeSchema,
+        )
+      : null;
 
   return {
     ...principal,
     ...(user?.nombreCompleto ? { nombreCompleto: user.nombreCompleto } : {}),
     ...(permissions ? { permissions: permissions.permissionKeys } : {}),
   };
-}
+});
 
 /**
  * Sesión obligatoria para una vista del portal.

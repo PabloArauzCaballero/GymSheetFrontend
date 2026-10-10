@@ -7,6 +7,7 @@ import type {
   Workout,
   WorkoutSetInput,
 } from '@/shared/api/contracts';
+import type { CardioSetInput } from '@gymsheet/types';
 import { pageSchema, workoutFinishSchema, workoutSchema } from '@/shared/api/schemas';
 import type { WorkoutFinish } from '@/shared/api/schemas';
 import type { StreakLocation } from '@gymsheet/domain';
@@ -37,7 +38,8 @@ export const workoutService = {
     apiRequest(`/workouts/session-exercises/${id}`, objectSchema, { method: 'PATCH', body: input }),
   removeExercise: (id: string) =>
     apiRequest(`/workouts/session-exercises/${id}`, deleteSchema, { method: 'DELETE' }),
-  addSet: (sessionExerciseId: string, input: WorkoutSetInput) =>
+  /** Una serie de fuerza o, con `tipoSerie: 'CARDIO'`, de cardio (duración, distancia, pulso y esfuerzo). */
+  addSet: (sessionExerciseId: string, input: WorkoutSetInput | CardioSetInput) =>
     apiRequest(`/workouts/session-exercises/${sessionExerciseId}/sets`, objectSchema, {
       method: 'POST',
       body: input,

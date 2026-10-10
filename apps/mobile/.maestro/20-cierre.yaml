@@ -1,0 +1,58 @@
+# Cierre del programa (plan Rutinas REPP · F5): RF-19. No hay reloj simulado en la app: el
+# programa se activa de verdad y su pantalla de cierre se abre por enlace (el backend admite
+# cerrar antes de tiempo; el cierre al terminar la duración lo cubren sus pruebas e2e).
+appId: app.gymsheet.mobile
+name: 20 · Cierre del programa
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+---
+- runFlow: login-as.subflow.yaml
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Pierna 3 días' }
+- tapOn: 'Activar programa'
+- tapOn: 'Siguiente'
+- tapOn:
+    id: 'mode-PROGRESSIVE_OVERLOAD'
+- tapOn: 'Siguiente'
+- tapOn: 'Siguiente'
+- tapOn: 'Activar'
+- extendedWaitUntil:
+    visible:
+      id: 'program-card-strength'
+    timeout: 60000
+- runScript:
+    file: scripts-active-program.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local' }
+# RF-19 · p02: pantalla de cierre con el resumen y las tres salidas.
+- openLink: gymsheet:///routines/program/close/${output.programId}
+- extendedWaitUntil:
+    visible: '¿Qué sigue?'
+    timeout: 30000
+- assertVisible: 'Repetir con las cargas nuevas'
+- assertVisible: 'Elegir otra rutina'
+- takeScreenshot: RF-19_p02_pantalla-de-cierre_ios_oscuro
+# RF-19 · p03: repetir crea un programa nuevo con las cargas actuales.
+- tapOn: 'Repetir con las cargas nuevas'
+- extendedWaitUntil:
+    visible:
+      id: 'program-card-strength'
+    timeout: 60000
+- assertVisible: 'Programa de pesas\. Pierna 3 días.*'
+- takeScreenshot: RF-19_p03_repetir-programa-nuevo_ios_oscuro
+# RF-19 · p04: apagar deja sin programa de pesas.
+- runScript:
+    file: scripts-active-program.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local' }
+- openLink: gymsheet:///routines/program/close/${output.programId}
+- extendedWaitUntil:
+    visible: 'Apagar'
+    timeout: 30000
+- tapOn: 'Apagar'
+- extendedWaitUntil:
+    visible: 'Crear rutina'
+    timeout: 60000
+- assertNotVisible:
+    id: 'program-card-strength'
+- takeScreenshot: RF-19_p04_apagar-sin-programa-de-pesas_ios_oscuro

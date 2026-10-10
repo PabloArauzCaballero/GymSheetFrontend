@@ -12,6 +12,7 @@ import { isStaff } from '@gymsheet/domain';
 import { trainingService } from '@/features/training/services/training-service';
 import { routineVisibilities, trainingGoals, type UserRole } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
+import { publicEnv } from '@/shared/config/public-env';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import {
@@ -21,7 +22,7 @@ import {
 } from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Badge } from '@/shared/components/ui/badge';
-import { Button } from '@/shared/components/ui/button';
+import { Button, ButtonLink } from '@/shared/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from '@/shared/components/ui/dialog';
 import { Field } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
@@ -106,62 +107,69 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
         actions={
           <div className="flex flex-wrap gap-2" data-tutorial-id="routines:actions">
             <RoutineImportDialog />
-            <Dialog onOpenChange={setOpen} open={open}>
-              <DialogTrigger asChild>
-                <Button variant="primary">
-                  <Plus className="size-4" />
-                  Nueva rutina
-                </Button>
-              </DialogTrigger>
-              <DialogContent
-                description="Define un plan reutilizable. Luego agrégale ejercicios y, si eres coach, asígnalo a un cliente."
-                title="Crear rutina"
-              >
-                <form
-                  className="grid gap-5"
-                  onSubmit={form.handleSubmit((values) => create.mutate(values))}
+            {publicEnv.routinesV2 ? (
+              <ButtonLink href="/routines/new" variant="primary">
+                <Plus className="size-4" />
+                Nueva rutina
+              </ButtonLink>
+            ) : (
+              <Dialog onOpenChange={setOpen} open={open}>
+                <DialogTrigger asChild>
+                  <Button variant="primary">
+                    <Plus className="size-4" />
+                    Nueva rutina
+                  </Button>
+                </DialogTrigger>
+                <DialogContent
+                  description="Define un plan reutilizable. Luego agrégale ejercicios y, si eres coach, asígnalo a un cliente."
+                  title="Crear rutina"
                 >
-                  <Field error={form.formState.errors.nombre?.message} htmlFor="routine-name" label="Nombre">
-                    <Input id="routine-name" {...form.register('nombre')} />
-                  </Field>
-                  <Field htmlFor="routine-desc" label="Descripción">
-                    <Textarea id="routine-desc" {...form.register('descripcion')} />
-                  </Field>
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <Field htmlFor="routine-visibility" label="Visibilidad">
-                      <Select id="routine-visibility" {...form.register('visibilidad')}>
-                        <option value="PRIVATE">Privada</option>
-                        <option value="SHARED">Compartida</option>
-                        {staff ? <option value="TEMPLATE">Plantilla</option> : null}
-                      </Select>
+                  <form
+                    className="grid gap-5"
+                    onSubmit={form.handleSubmit((values) => create.mutate(values))}
+                  >
+                    <Field error={form.formState.errors.nombre?.message} htmlFor="routine-name" label="Nombre">
+                      <Input id="routine-name" {...form.register('nombre')} />
                     </Field>
-                    <Field htmlFor="routine-goal" label="Objetivo">
-                      <Select id="routine-goal" {...form.register('objetivo')}>
-                        <option value="">Sin objetivo</option>
-                        {trainingGoals.map((goal) => (
-                          <option key={goal} value={goal}>
-                            {goal}
-                          </option>
-                        ))}
-                      </Select>
+                    <Field htmlFor="routine-desc" label="Descripción">
+                      <Textarea id="routine-desc" {...form.register('descripcion')} />
                     </Field>
-                  </div>
-                  {form.formState.errors.root?.message ? (
-                    <p className="text-sm text-[var(--danger-text)]">{form.formState.errors.root.message}</p>
-                  ) : null}
-                  <div className="flex flex-wrap justify-end gap-2">
-                    <DialogClose asChild>
-                      <Button type="button" variant="ghost">
-                        Cancelar
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <Field htmlFor="routine-visibility" label="Visibilidad">
+                        <Select id="routine-visibility" {...form.register('visibilidad')}>
+                          <option value="PRIVATE">Privada</option>
+                          <option value="SHARED">Compartida</option>
+                          {staff ? <option value="TEMPLATE">Plantilla</option> : null}
+                        </Select>
+                      </Field>
+                      <Field htmlFor="routine-goal" label="Objetivo">
+                        <Select id="routine-goal" {...form.register('objetivo')}>
+                          <option value="">Sin objetivo</option>
+                          {trainingGoals.map((goal) => (
+                            <option key={goal} value={goal}>
+                              {goal}
+                            </option>
+                          ))}
+                        </Select>
+                      </Field>
+                    </div>
+                    {form.formState.errors.root?.message ? (
+                      <p className="text-sm text-[var(--danger-text)]">{form.formState.errors.root.message}</p>
+                    ) : null}
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <DialogClose asChild>
+                        <Button type="button" variant="ghost">
+                          Cancelar
+                        </Button>
+                      </DialogClose>
+                      <Button loading={create.isPending} type="submit" variant="primary">
+                        Crear
                       </Button>
-                    </DialogClose>
-                    <Button loading={create.isPending} type="submit" variant="primary">
-                      Crear
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         }
         description={

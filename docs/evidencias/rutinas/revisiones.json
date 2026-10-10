@@ -1,0 +1,11 @@
+{
+  "RF-05_p02_lunes-jueves-con-3_1440_claro.png": "Revisada (agente, 2026-10-08): Lunes y Jueves con «3 ejercicios», Miércoles y Viernes con 0; barra «4 días · 12 semanas» y Siguiente visibles. Sin defectos.",
+  "RF-07_p02_filtro-favoritos_390_claro.png": "Revisada (agente, 2026-10-08): filtro «Favoritos» activo y la lista muestra «barbell bench press». La imagen del ejercicio no carga (la siembra local no sirve medios); es un hecho del entorno.",
+  "RF-07_p05_cuenta-b-ve-contador_1440_claro.png": "Revisada (agente, 2026-10-08): cuenta B (expiring.mock) ve «Me gusta · 1» (el de la cuenta A) y ☆ Favorito sin marcar. Junto a la cabecera sigue el botón «Agregar a frecuentes», que es el favorito antiguo de la biblioteca y no el nuevo (hallazgo: dos conceptos con icono de corazón en la misma ficha).",
+  "RF-08_p04_dia-vacio-bloquea_1440_claro.png": "Revisada (agente, 2026-10-08): «Hay un día sin ejercicios: Viernes» en rojo con icono, aviso de frecuencia en ámbar, «Guardar» desactivado y «Resuelve lo marcado para guardar».",
+  "RF-08_p02_s6-descarga_390_oscuro.png": "Revisada (agente, 2026-10-08): la tabla Mes cabe en 390 px con las 7 columnas; S6 con borde de selección y panel «Descarga / Normal» sobre la tabla.",
+  "RF-05_p03_dos-dias-seleccionados_ios_oscuro.png": "Revisada (agente, 2026-10-08): Lunes y Jueves con marca ✓ y borde de acento, «2 días seleccionados» y botones «Cancelar» y «Configurar juntos» completos (sin truncar).",
+  "RF-05_p04_lunes-y-jueves-con-3_ios_oscuro.png": "Revisada (agente, 2026-10-08): tras Configurar juntos, Lunes y Jueves con «3 ejercicios».",
+  "RF-06_p07_ver-y-ordenar_ios_oscuro.png": "Revisada (agente, 2026-10-08): primer ejercicio editado a Series 4, Reps 6–8 (el valor se escribió con el teclado, borrando el anterior). Limitación: la lista se ordena con flechas, no arrastrando.",
+  "RF-08_p01_vista-mes-descargas_ios_oscuro.png": "Revisada (agente, 2026-10-08): S4, S8 y S12 atenuadas y con la etiqueta «Descarga». La captura es de la ventana, así que S1 y S2 quedan fuera de plano."
+}

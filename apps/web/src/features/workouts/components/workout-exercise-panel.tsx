@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Flame, MoreHorizontal, Trash2 } from 'lucide-react';
+import { isStrengthSet, setVolumeKg } from '@gymsheet/domain';
 import { confirmDelete, notify } from '@/shared/notifications';
 import { workoutService } from '@/features/workouts/services/workout-service';
 import type { WorkoutExercise } from '@/shared/api/contracts';
@@ -9,6 +10,7 @@ import { queryKeys } from '@/shared/api/query-keys';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/cn';
+import { SuggestedLoad } from './suggested-load';
 import { SetEntryForm } from './set-entry-form';
 import { SET_GRID_COLS } from './set-grid';
 import { WorkoutSetRow } from './workout-set-row';
@@ -37,7 +39,8 @@ export function WorkoutExercisePanel({
     onError: (error: Error) => notify.error(error),
   });
   const exercise = item.ejercicio;
-  const volume = item.series.reduce((total, set) => total + set.pesoKg * set.repeticiones, 0);
+  const strengthSets = item.series.filter(isStrengthSet);
+  const volume = item.series.reduce((total, set) => total + setVolumeKg(set), 0);
   return (
     <article className="panel overflow-hidden transition-colors duration-200 hover:border-[var(--border)]">
       <header className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--surface-lowest)] p-5 sm:flex-row sm:items-start sm:justify-between">
@@ -54,6 +57,9 @@ export function WorkoutExercisePanel({
           <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em]">
             {exercise?.nombre ?? 'Ejercicio no disponible'}
           </h2>
+          <div className="mt-2">
+            <SuggestedLoad exerciseId={exercise?.id} />
+          </div>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
             {exercise?.grupoMuscular ?? 'Sin grupo'} · Volumen{' '}
             {Math.round(volume).toLocaleString('es-BO')} KG
@@ -123,13 +129,10 @@ export function WorkoutExercisePanel({
       )}
       {editable ? (
         <SetEntryForm
-          lastSet={
-            item.series.length
-              ? item.series.reduce((latest, set) =>
-                  set.numeroSerie > latest.numeroSerie ? set : latest,
-                )
-              : undefined
-          }
+          lastSet={strengthSets.reduce<(typeof strengthSets)[number] | undefined>(
+            (latest, set) => (latest && latest.numeroSerie > set.numeroSerie ? latest : set),
+            undefined,
+          )}
           nextSetNumber={Math.max(0, ...item.series.map((set) => set.numeroSerie)) + 1}
           sessionExerciseId={item.id}
           workoutId={workoutId}

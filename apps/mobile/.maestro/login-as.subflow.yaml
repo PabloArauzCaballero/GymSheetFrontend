@@ -1,0 +1,75 @@
+# Deja la app con la sesión de la cuenta pedida (`EMAIL`, y `FIRST` = primer nombre que
+# saluda Inicio). Sirve para los flujos de Rutinas REPP, que alternan entre dos
+# cuentas (A = athlete.mock, B = expiring.mock). Si la sesión actual es otra, cierra
+# sesión desde Ajustes y entra con la pedida.
+appId: app.gymsheet.mobile
+---
+- launchApp
+- extendedWaitUntil:
+    visible: 'Vuelve al trabajo.|Bienvenido a GymSheet|Hola, .*|Rutinas, tab.*'
+    timeout: 240000
+- runFlow:
+    when:
+      visible: 'Bienvenido a GymSheet'
+    commands:
+      - tapOn: 'Saltar tutorial'
+- runFlow: cerrar-tour.subflow.yaml
+- runFlow:
+    when:
+      notVisible: 'Vuelve al trabajo.'
+    commands:
+      - tapOn: 'Inicio, tab.*'
+      - waitForAnimationToEnd
+      - runFlow: cerrar-tour.subflow.yaml
+      - runFlow:
+          when:
+            notVisible: 'Hola, ${FIRST}.*'
+          commands:
+            - openLink: gymsheet:///settings
+            - extendedWaitUntil:
+                visible: 'Ajustes'
+                timeout: 30000
+            - scrollUntilVisible:
+                element: 'Cerrar sesión'
+                timeout: 30000
+            - tapOn: 'Cerrar sesión'
+            - extendedWaitUntil:
+                visible: 'Volver'
+                timeout: 10000
+            # El diálogo y el botón de atrás se llaman igual: se pulsa el del diálogo por posición.
+            - tapOn:
+                point: 70%,55%
+            - extendedWaitUntil:
+                visible: 'Vuelve al trabajo.'
+                timeout: 60000
+- runFlow:
+    when:
+      visible: 'Vuelve al trabajo.'
+    commands:
+      - tapOn:
+          below: 'Correo electrónico'
+          index: 0
+      - inputText: ${EMAIL}
+      - pressKey: Enter
+      - tapOn:
+          below: 'Contraseña'
+          index: 0
+      - inputText: 'MockLocal2026!'
+      - pressKey: Enter
+      - tapOn: 'Iniciar sesión'
+      - tapOn:
+          text: 'Ahora no'
+          optional: true
+      - extendedWaitUntil:
+          visible: 'Bienvenido a GymSheet|Hola, .*'
+          timeout: 120000
+      - runFlow:
+          when:
+            visible: 'Bienvenido a GymSheet'
+          commands:
+            - tapOn: 'Saltar tutorial'
+      - runFlow: cerrar-tour.subflow.yaml
+      - waitForAnimationToEnd
+      - tapOn:
+          text: 'Reintentar'
+          optional: true

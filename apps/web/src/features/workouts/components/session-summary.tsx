@@ -5,6 +5,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { motion } from 'framer-motion';
 import { Gift } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { SessionReward } from '@/shared/api/schemas';
 import { progressionService } from '@/features/progression/services/progression-service';
 import { writeSeen } from '@/features/progression/components/progression-celebration';
@@ -37,7 +38,15 @@ export function SessionSummary({
   sets,
   duration,
   onClose,
-}: Readonly<{ reward: SessionReward; sets: number; duration: string; onClose: () => void }>) {
+  extras,
+}: Readonly<{
+  reward: SessionReward;
+  sets: number;
+  duration: string;
+  onClose: () => void;
+  /** Lo que dice el programa de esta sesión (bono de modo, cargas, actualizar la rutina). */
+  extras?: ReactNode;
+}>) {
   const still = useReducedMotion();
   const subjects = useMemo(() => sessionRewardSubjects(reward), [reward]);
   const [showingCards, setShowingCards] = useState(false);
@@ -51,9 +60,11 @@ export function SessionSummary({
   const acknowledged = useRef(false);
   const autoOpened = useRef(false);
 
-  const rows = BREAKDOWN_ORDER.map((key) => ({ key, value: reward.breakdown[key] })).filter(
-    (row) => row.value > 0,
-  );
+  const rows = [
+    ...BREAKDOWN_ORDER.map((key) => ({ key, label: BREAKDOWN_LABEL[key], value: reward.breakdown[key] })),
+    // El bono de los programas con modo (multiplicador semanal y metas); 0 si no hay modo.
+    { key: 'modes', label: 'Por tu programa', value: reward.breakdown.modes },
+  ].filter((row) => row.value > 0);
   const earnedMs = countUpDuration(0, reward.pointsEarned);
   const totalDelayMs = earnedMs * 0.5;
   const totalMs = countUpDuration(reward.pointsBefore, reward.pointsAfter);
@@ -129,7 +140,7 @@ export function SessionSummary({
                       key={row.key}
                       transition={still ? { duration: 0 } : { delay: 0.2 + position * 0.08, duration: 0.3, ease: EASE_OUT }}
                     >
-                      <span className="text-[var(--text-muted)]">{BREAKDOWN_LABEL[row.key]}</span>
+                      <span className="text-[var(--text-muted)]">{row.label}</span>
                       <span className="font-semibold tabular-nums text-[var(--text)]">
                         +{row.value.toLocaleString('es-ES')}
                       </span>
@@ -141,6 +152,8 @@ export function SessionSummary({
                   Esta sesión no sumó puntos. Registra al menos una serie para que cuente.
                 </p>
               )}
+
+              {extras}
 
               <section className="grid gap-3 rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-low)] p-5">
                 <div className="flex items-baseline justify-between gap-4">

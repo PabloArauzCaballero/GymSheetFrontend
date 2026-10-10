@@ -1,14 +1,21 @@
 import { z } from 'zod';
 import { workoutStatuses } from '@gymsheet/types';
 import { exerciseSchema } from './core';
+import { cardioSessionExtrasSchema } from '../cardio';
+import { programSessionExtrasSchema } from '../programs';
 import { sessionRewardSchema } from './progression';
 
 export const workoutSetSchema = z.object({
   id: z.string().uuid(),
   numeroSerie: z.number().int(),
-  repeticiones: z.number().int(),
-  pesoKg: z.number(),
-  rir: z.number().int(),
+  tipoSerie: z.enum(['FUERZA', 'CARDIO']).default('FUERZA'),
+  repeticiones: z.number().int().nullable(),
+  pesoKg: z.number().nullable(),
+  rir: z.number().int().nullable(),
+  duracionSeg: z.number().int().nullable().default(null),
+  distanciaM: z.number().int().nullable().default(null),
+  fcMedia: z.number().int().nullable().default(null),
+  rpe: z.number().int().nullable().default(null),
   descansoSegAnterior: z.number().int(),
   fechaRegistro: z.string(),
 });
@@ -39,5 +46,9 @@ export const workoutSchema = z.object({
  */
 export const workoutFinishSchema = workoutSchema.extend({
   progression: sessionRewardSchema.nullable().optional().transform((value) => value ?? null),
+  /** Presente si la sesión nació de un programa de pesas con rutina (RF-14..16, RF-20). */
+  programa: programSessionExtrasSchema.nullable().optional().transform((value) => value ?? null),
+  /** Presente si la sesión tuvo series de cardio y hay un programa de cardio activo (RF-17). */
+  cardio: cardioSessionExtrasSchema.nullable().optional().transform((value) => value ?? null),
 });
 export type WorkoutFinish = z.infer<typeof workoutFinishSchema>;

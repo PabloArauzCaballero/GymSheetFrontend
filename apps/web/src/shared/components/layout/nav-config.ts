@@ -1,5 +1,6 @@
 import {
   Activity,
+  Award,
   BarChart3,
   Bell,
   Building2,
@@ -13,6 +14,9 @@ import {
   KeyRound,
   MessageCircle,
   ScanFace,
+  ScrollText,
+  ShieldAlert,
+  Server,
   Settings,
   UserRound,
   ShieldCheck,
@@ -28,6 +32,18 @@ export type NavigationItem = {
   label: string;
   icon: typeof Gauge;
   roles?: readonly UserRole[];
+  /**
+   * Qué hace el módulo, en una frase.
+   *
+   * Sólo la llevan las entradas de administración, y es lo que las hace
+   * aparecer en la rejilla de `/admin`: la rejilla y esta lista eran dos
+   * inventarios distintos de los mismos módulos, y tres entradas (usuarios,
+   * panel del gimnasio, registrar persona) existían en la navegación y no en la
+   * rejilla. Derivar una de la otra evita que vuelvan a separarse.
+   */
+  description?: string;
+  /** Permiso granular exigido además del rol. Sin él, la entrada no se muestra. */
+  requiredPermission?: string;
 };
 
 export const primaryNavigation: NavigationItem[] = [
@@ -59,50 +75,202 @@ export const primaryNavigation: NavigationItem[] = [
 ];
 
 export const adminNavigation: NavigationItem[] = [
+  {
+    // Primero, y no una pestaña dentro de «Operaciones»: es la pantalla que se
+    // abre cada mañana para decidir a quién llamar, y es donde aterriza quien
+    // atiende el gimnasio al entrar al portal. Esconderla un nivel más abajo
+    // era la diferencia entre que se use y que no.
+    href: '/admin/operacion',
+    label: 'Panel del gimnasio',
+    icon: BarChart3,
+    roles: ['ADMIN', 'FRONT_DESK'],
+    description: 'Uso del equipamiento, flujo de personas y quién no ha renovado.',
+  },
+  // Sin `description`: es la propia rejilla, y listarse a sí misma dentro sería
+  // un enlace que devuelve a donde ya estás.
   { href: '/admin', label: 'Operaciones', icon: ShieldCheck, roles: ['ADMIN', 'FRONT_DESK'] },
   {
     href: '/admin/usuarios',
     label: 'Usuarios',
     icon: Users,
     roles: ['ADMIN', 'FRONT_DESK'],
-  },
-  {
-    // Entrada propia y no una pestaña dentro de «Operaciones»: es la pantalla
-    // que se abre cada mañana para decidir a quién llamar, y esconderla un
-    // nivel más abajo es la diferencia entre que se use y que no.
-    href: '/admin/operacion',
-    label: 'Panel del gimnasio',
-    icon: BarChart3,
-    roles: ['ADMIN', 'FRONT_DESK'],
+    description: 'Todas las cuentas, con su membresía y su última actividad.',
   },
   {
     href: '/admin/equipment',
     label: 'Equipamiento',
     icon: Dumbbell,
     roles: ['ADMIN', 'FRONT_DESK'],
+    description: 'Inventario visible y operaciones autorizadas por rol.',
   },
-  { href: '/admin/exercises', label: 'Catálogo global', icon: Activity, roles: ['ADMIN'] },
+  {
+    href: '/admin/exercises',
+    label: 'Catálogo global',
+    icon: Activity,
+    roles: ['ADMIN'],
+    description: 'Ejercicios globales e importación controlada de dataset.',
+  },
   {
     href: '/admin/facilities',
     label: 'Instalaciones',
     icon: Building2,
     roles: ['ADMIN', 'FRONT_DESK'],
+    description: 'Sedes, salas, puntos de acceso y mantenimiento.',
   },
-  { href: '/admin/membership', label: 'Clientes', icon: Users, roles: ['ADMIN', 'FRONT_DESK'] },
+  {
+    href: '/admin/membership',
+    label: 'Clientes',
+    icon: Users,
+    roles: ['ADMIN', 'FRONT_DESK'],
+    description: 'Planes, clientes, vigencias y personal.',
+  },
   {
     href: '/admin/people',
     label: 'Registrar persona',
     icon: ScanFace,
     roles: ['ADMIN', 'FRONT_DESK'],
+    description: 'Alta de personas con credencial facial capturada desde la cámara.',
   },
   {
     href: '/admin/access',
     label: 'Control de acceso',
     icon: KeyRound,
     roles: ['ADMIN', 'FRONT_DESK'],
+    description: 'Dispositivos, decisiones y credenciales.',
+  },
+  {
+    href: '/admin/moderacion',
+    label: 'Moderación',
+    icon: ShieldAlert,
+    roles: ['ADMIN', 'FRONT_DESK'],
+    description: 'Contenido reportado por la comunidad, lo urgente primero.',
+    requiredPermission: 'moderation:read',
+  },
+  {
+    href: '/admin/permissions',
+    label: 'Permisos',
+    icon: ShieldCheck,
+    roles: ['ADMIN', 'FRONT_DESK'],
+    description: 'Otorgar y revocar permisos granulares al personal.',
+    requiredPermission: 'admin-access:manage',
+  },
+  {
+    href: '/admin/auditoria',
+    label: 'Auditoría',
+    icon: ScrollText,
+    roles: ['ADMIN', 'FRONT_DESK'],
+    description: 'Quién hizo qué, cuándo y sobre qué cuenta.',
+    requiredPermission: 'admin-access:manage',
   },
 ];
 
-export function canSee(item: NavigationItem, role: UserRole) {
-  return !item.roles || item.roles.includes(role);
+/**
+ * Lo personal que conserva el personal de un gimnasio.
+ *
+ * Un `ADMIN` o un `FRONT_DESK` sigue teniendo cuenta propia —su credencial de
+ * entrada, sus avisos, sus conversaciones—, pero eso no es su trabajo: es lo
+ * que necesita de vez en cuando. Por eso viaja en un grupo aparte y detrás del
+ * gimnasio, en vez de mezclado entre los módulos de operación.
+ *
+ * Lo que NO está aquí es deliberado: entrenamientos, rutinas, ejercicios, senda,
+ * comunidad, descubrir e interacciones son la aplicación del socio. Enseñárselas
+ * al personal empuja quince pantallas ajenas por delante de las suyas, que es
+ * justo lo que hacía que «Panel del gimnasio» —donde viven uso de máquinas y
+ * flujo de personas— pareciera no existir.
+ */
+export const accountNavigation: NavigationItem[] = [
+  { href: '/membership', label: 'Mi membresía', icon: IdCard },
+  { href: '/access', label: 'Mi acceso', icon: KeyRound },
+  { href: '/notifications', label: 'Avisos', icon: Bell },
+  { href: '/chat', label: 'Mensajes', icon: MessageCircle },
+  { href: '/profile', label: 'Mi perfil', icon: UserRound },
+  { href: '/settings', label: 'Ajustes', icon: Settings },
+  { href: '/tutorials', label: 'Centro de ayuda', icon: GraduationCap },
+];
+
+/**
+ * Consola de plataforma. Vive aparte de `adminNavigation` porque no es «más
+ * administración»: son gimnasios distintos, y mezclar las dos listas pondría
+ * módulos de un gimnasio concreto delante de quien no está mirando ninguno.
+ */
+export const systemNavigation: NavigationItem[] = [
+  {
+    href: '/sistema',
+    label: 'Sistema',
+    icon: Server,
+    roles: ['SYSTEM_ADMIN'],
+  },
+  {
+    href: '/sistema/auditoria',
+    label: 'Auditoría global',
+    icon: ScrollText,
+    roles: ['SYSTEM_ADMIN'],
+    description: 'Toda la actividad administrativa de la plataforma.',
+  },
+  {
+    href: '/sistema/moderacion',
+    label: 'Moderación global',
+    icon: ShieldAlert,
+    roles: ['SYSTEM_ADMIN'],
+    description: 'Rutinas, ejercicios y comentarios públicos denunciados, lo urgente primero.',
+    requiredPermission: 'moderation:read',
+  },
+  {
+    href: '/sistema/rutinas-repp',
+    label: 'Rutinas REPP',
+    icon: Award,
+    roles: ['SYSTEM_ADMIN'],
+    description: 'Catálogo oficial: crear, marcar y desmarcar rutinas recomendadas por REPP.',
+  },
+];
+
+/**
+ * El rol es el piso y el permiso lo estrecha, igual que en el backend
+ * (`RolesGuard` y luego `PermissionGuard`). Sin `permissions` no se concede
+ * nada que exija permiso: es la misma respuesta que da una cuenta sin
+ * concesiones, y así una sesión aún sin resolver no enseña de más.
+ */
+export function canSee(
+  item: NavigationItem,
+  role: UserRole,
+  permissions?: readonly string[],
+) {
+  if (item.roles && !item.roles.includes(role)) return false;
+  if (!item.requiredPermission) return true;
+  return permissions?.includes(item.requiredPermission) ?? false;
+}
+
+/** Un bloque de navegación con su rótulo; sin rótulo cuando hay uno solo. */
+export type NavigationGroup = { label?: string; items: NavigationItem[] };
+
+/**
+ * Qué navegación le corresponde a cada audiencia.
+ *
+ * Tres respuestas distintas porque son tres trabajos distintos, y el orden
+ * dentro de cada una ya es la respuesta a «¿qué vine a hacer?»:
+ *
+ * - `SYSTEM_ADMIN`: la plataforma. No pertenece a ningún gimnasio (la razón
+ *   larga está en `isStaff`, en `@gymsheet/domain`).
+ * - `ADMIN` / `FRONT_DESK`: el gimnasio primero, su cuenta después. Quien abre
+ *   el portal a las siete de la mañana viene a ver quién entró y qué máquina se
+ *   está saturando, no a registrar su propia serie.
+ * - Todo lo demás (`CLIENTE`, `COACH`): la aplicación del socio, intacta. El
+ *   `COACH` se queda aquí a propósito: rutinas y ejercicios son su trabajo,
+ *   no un adorno.
+ */
+export function navigationFor(
+  role: UserRole,
+  permissions?: readonly string[],
+): NavigationGroup[] {
+  const visible = (items: NavigationItem[]) =>
+    items.filter((item) => canSee(item, role, permissions));
+
+  if (role === 'SYSTEM_ADMIN') return [{ items: visible(systemNavigation) }];
+  if (role === 'ADMIN' || role === 'FRONT_DESK') {
+    return [
+      { label: 'Gimnasio', items: visible(adminNavigation) },
+      { label: 'Tu cuenta', items: visible(accountNavigation) },
+    ];
+  }
+  return [{ items: visible(primaryNavigation) }];
 }

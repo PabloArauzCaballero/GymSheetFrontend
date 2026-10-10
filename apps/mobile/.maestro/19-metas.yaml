@@ -1,0 +1,97 @@
+# Metas de marca (plan Rutinas REPP · F5): RF-16.
+appId: app.gymsheet.mobile
+name: 19 · Metas de marca
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+  BENCH: barbell bench press
+  BENCH_ID: b4371c4f-e8fa-4b50-926c-48cdddb77a36
+---
+- runFlow: login-as.subflow.yaml
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Empuje 4 días' }
+- tapOn: 'Activar programa'
+- extendedWaitUntil:
+    visible: 'Paso 1 de 3.*'
+    timeout: 30000
+- tapOn: 'Siguiente'
+- tapOn:
+    id: 'mode-STRENGTH_GOALS'
+- tapOn: 'Siguiente'
+- extendedWaitUntil:
+    visible: 'Paso 3 de 4.*'
+    timeout: 10000
+# RF-16 · p01: marca actual 100 kg × 5 → «1RM estimado: 116,7 kg».
+- tapOn:
+    id: 'mark-w-${BENCH_ID}'
+- inputText: '100'
+- tapOn: 'Listo'
+- tapOn:
+    id: 'mark-r-${BENCH_ID}'
+- inputText: '5'
+- tapOn: 'Listo'
+- extendedWaitUntil:
+    visible: '1RM estimado: 116,7 kg'
+    timeout: 10000
+- takeScreenshot: RF-16_p01_1rm-estimado-116-7_ios_oscuro
+# RF-16 · p02: meta 125 kg en 12 semanas, con la sugerencia «realista».
+- tapOn:
+    id: 'goal-${BENCH_ID}'
+- inputText: '125'
+- tapOn: 'Listo'
+- extendedWaitUntil:
+    visible: 'Realista: .*'
+    timeout: 10000
+- tapOn:
+    id: 'goal-in-12-${BENCH_ID}'
+- takeScreenshot: RF-16_p02_meta-125-kg-realista_ios_oscuro
+- tapOn: 'Siguiente'
+- extendedWaitUntil:
+    visible: 'Paso 4 de 4.*'
+    timeout: 10000
+- takeScreenshot: RF-16_p02b_resumen-de-metas_ios_oscuro
+- tapOn: 'Activar'
+- extendedWaitUntil:
+    visible:
+      id: 'program-card-strength'
+    timeout: 60000
+
+# RF-16 · p03: el progreso enseña la barra hacia la meta.
+- tapOn:
+    id: 'program-card-strength'
+- extendedWaitUntil:
+    visible: 'Tus metas'
+    timeout: 30000
+- assertVisible: '.*116,7 kg → 125 kg.*'
+- takeScreenshot: RF-16_p03_barra-hacia-la-meta_ios_oscuro
+
+# RF-16 · p04: una serie con e1RM por encima de la meta la logra (125 × 3 ≈ 137,5 kg).
+- runFlow:
+    file: start-day.subflow.yaml
+    env: { TAB: 'Mías', NAME: 'Empuje 4 días', DIA: 'lunes' }
+- runScript:
+    file: scripts-log-sets.js
+    env:
+      EMAIL: athlete.mock@gymsheet.local
+      EXERCISE: ${BENCH}
+      SETS: '[{"pesoKg":125,"repeticiones":3,"rir":1}]'
+- swipe:
+    start: 50%,25%
+    end: 50%,70%
+- extendedWaitUntil:
+    visible: '125 kg × 3'
+    timeout: 30000
+- repeat:
+    times: 4
+    commands:
+      - scroll
+- tapOn: 'Finalizar sesión'
+- tapOn: 'Finalizar'
+- extendedWaitUntil:
+    visible: 'Seguir'
+    timeout: 60000
+- scrollUntilVisible:
+    element: '.*Meta lograda.*'
+    timeout: 40000
+- takeScreenshot: RF-16_p04_meta-lograda_ios_oscuro

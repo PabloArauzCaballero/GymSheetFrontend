@@ -4,9 +4,15 @@ import type { WorkoutStatus } from './enums';
 export type WorkoutSet = {
   id: string;
   numeroSerie: number;
-  repeticiones: number;
-  pesoKg: number;
-  rir: number;
+  /** `CARDIO` no lleva repeticiones, peso ni RIR (llegan `null`). Sin él se asume fuerza. */
+  tipoSerie: 'FUERZA' | 'CARDIO';
+  repeticiones: number | null;
+  pesoKg: number | null;
+  rir: number | null;
+  duracionSeg: number | null;
+  distanciaM: number | null;
+  fcMedia: number | null;
+  rpe: number | null;
   descansoSegAnterior: number;
   fechaRegistro: string;
 };

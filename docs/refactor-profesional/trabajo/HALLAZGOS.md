@@ -1,0 +1,173 @@
+# Hallazgos — Fase 01 (auditoría con evidencia real)
+
+> Entorno: backend NestJS desde fuente en `:3005` contra PostgreSQL local (`gymsheetbackend-postgres-1`,
+> puerto 5433), web Next.js desde fuente en `:3006`. Cuentas usadas: `super@qa.test` (`SYSTEM_ADMIN`),
+> `admin.a@qa.test` (`ADMIN`, tenant `topfitness`). Capturas en `trabajo/evidencia/`.
+
+## H01 — El BFF nunca aprendió las rutas de Auditoría, Permisos, Moderación y Reportar contenido — **CORREGIDO Y VERIFICADO**
+
+**Severidad: P1 (autorización/funcionalidad rota).** Cuatro pantallas dadas por "implementadas y
+verificadas" en sesiones previas del plan de admin portal están completamente desconectadas del
+backend en producción-equivalente, porque `apps/web/src/shared/server/backend-route-policy.ts`
+—el allowlist explícito que decide qué rutas reenvía el proxy `/api/backend/[...path]`— nunca se
+actualizó cuando se construyeron:
+
+| Función | Prefijo real en el backend | ¿En el allowlist del BFF? |
+|---|---|---|
+| Auditoría (`/admin/auditoria`, `/sistema/auditoria`) | `admin/audit` (`audit.controller.ts:22`) | **No** |
+| Permisos (`/admin/permissions`) | `admin/permissions` (`admin-access.controller.ts:18`) | **No** |
+| Moderación (`/admin/moderacion`) | `admin/moderation` (`moderation.controller.ts:58`) | **No** |
+| Reportar contenido (botón en `/perfil/[userId]`) | `me/reports` (`moderation.controller.ts:35`) | **No** |
+
+**Evidencia:**
+- `grep -n "permission\|moderat\|audit" backend-route-policy.ts` → cero coincidencias (el archivo
+  tiene 134 líneas de patrones para todo lo demás: acceso, equipamiento, membresía, chat,
+  descubrimiento, stories...).
+- Reproducido en vivo como `SYSTEM_ADMIN`: `GET /api/backend/admin/audit?limit=50` → **404** con
+  un toast visible "No encontrado — No encontramos el recurso solicitado" (captura
+  `evidencia/sistema-auditoria.png`).
+- Confirmado que el backend SÍ sirve la ruta: `curl http://127.0.0.1:3005/api/v1/admin/audit`
+  (sin cookie) → **401** (ruta existe, exige auth — no 404).
+- `resolveAllowedBackendPath()` es un allowlist estricto (`.some(pattern => pattern.test(path))`,
+  por defecto deniega); sin una entrada que matchee, cualquier llamada a esos cuatro prefijos se
+  corta en el BFF antes de tocar el backend real, para cualquier cuenta y cualquier rol.
+
+**Impacto real:** `/admin/auditoria`, `/sistema/auditoria`, `/admin/moderacion` y `/admin/permissions`
+renderizan su cáscara y un estado vacío que **parece** un estado vacío legítimo ("Todavía no hay
+actividad registrada") pero en realidad es un 404 silenciado — nunca mostrarán datos reales, y
+cualquier escritura (otorgar un permiso, resolver un caso de moderación) fallaría igual. El botón
+"Denunciar" en el perfil ajeno (cerrado en la fase F4 de moderación, según la memoria del proyecto)
+tampoco puede completar su llamada.
+
+**Corrección:** añadir a `allowedPathPatterns` cuatro entradas (siguiendo el estilo ya establecido
+en el archivo, con `resourceId` donde aplique):
+```
+/^\/admin\/audit$/u,
+/^\/admin\/permissions(\/me)?$/u,
+new RegExp(`^/admin/permissions/${resourceId}$`, 'u'),
+/^\/admin\/moderation\/(queue|cases)$/u,   // ajustar a las subrutas reales del controller
+new RegExp(`^/admin/moderation/cases/${resourceId}(/claim|/resolve)?$`, 'u'),
+/^\/me\/reports$/u,
+```
+(revisar `moderation.controller.ts` y `admin-access.controller.ts` para las subrutas exactas antes
+de fijar los patrones — no adivinar). Riesgo de la corrección: bajo, aditivo, no toca rutas
+existentes. Prueba: repetir la llamada `GET /api/backend/admin/audit` autenticado y confirmar 200
+con datos reales (o array vacío legítimo, no 404).
+
+**Aplicado en esta misma pasada** (`backend-route-policy.ts` + `backend-route-policy.test.ts`,
+16 rutas nuevas siguiendo las subrutas reales de `audit.controller.ts`, `admin-access.controller.ts`
+y `moderation.controller.ts`, con `targetKind` acotado al enum cerrado en vez de un comodín).
+Verificado: `vitest run backend-route-policy.test.ts` → 65/65; reproducido en vivo con
+`super@qa.test` en `/sistema/auditoria` → `GET /api/backend/admin/audit?limit=50` pasó de 404 a
+**200**, y el toast "No encontrado" desapareció (captura `evidencia/sistema-auditoria-FIX-H01.png`
+comparada con `evidencia/sistema-auditoria.png` de antes). No se probó en vivo `/admin/permissions`
+ni `/admin/moderacion` (requieren una cuenta `ADMIN` con los permisos granulares concedidos, fuera
+de esta pasada) — la corrección para esas dos rutas descansa en el mismo mecanismo ya verificado
+para auditoría más el test unitario, no en una segunda reproducción en navegador.
+
+## H02 — El tour de onboarding no puede persistir: reaparece en cada navegación dura — **ABIERTO (mitigación revertida)**
+
+**Severidad: P2 (papelón de UX real, reproducido en 6 navegaciones, 2 cuentas, escritorio y 375px).**
+
+El backend no implementa `/me/tutorial-progress` (cero coincidencias en `GymSheetBackend/src`).
+El código del frontend ya anticipa esto con un diseño deliberado
+(`tutorial-progress-gateway.ts`): si el backend no puede servir la ruta, degrada a un mapa
+**en memoria** (`local-progress-store.ts`), con un comentario explícito: *"this cache lives for the
+session only... survives reloads via the backend, not this map"*. El supuesto no se cumple: no hay
+backend que persista nada, así que cada recarga dura (F5, o en esta auditoría, cada
+`page.goto`/navegación entre rutas admin) reinicia el tour al paso 1/5, para cualquier cuenta,
+indefinidamente.
+
+**Evidencia:** capturas `evidencia/sistema-system_admin-tutorial-dialog.png`,
+`evidencia/dashboard-admin-topfitness.png`, `evidencia/admin-grid-topfitness.png`,
+`evidencia/workouts-list-mobile-375.png` — las cuatro muestran el mismo diálogo "¡Hola! 👋 1/5" tras
+haberlo cerrado explícitamente momentos antes (con `Omitir` o con la X), en dos cuentas distintas
+(`super@qa.test`, `admin.a@qa.test`).
+
+**Matiz importante (R14):** dentro de una misma pestaña, con navegación cliente (clics en la barra
+lateral, sin recarga dura), el mapa en memoria sí debería sobrevivir — no se verificó ese camino
+exacto en esta pasada porque la auditoría navegó con `page.goto` (equivalente a recarga dura) la
+mayoría de las veces. Lo que sí está probado y no admite duda es el caso de recarga dura.
+
+**Impacto real:** cualquier usuario que recargue la página, cierre y reabra la pestaña, o abra un
+enlace en pestaña nueva, ve el tour desde cero. Además, el copy ("te mostraremos cómo moverte...
+entrenamiento, progreso...") está escrito para un socio del gimnasio, no para `SYSTEM_ADMIN` ni
+`ADMIN` — vale la pena decidir en fase 02 si el tour debe mostrarse a cuentas de personal.
+
+**Corrección de fondo pendiente:** implementar `/me/tutorial-progress` (GET) y
+`/me/tutorial-progress/:id` (PUT) en el backend — fuera del alcance de un refactor de frontend
+puro, se registra como bloqueo con propietario (backend).
+
+**Mitigación intentada y REVERTIDA (error propio, corregido):** se reescribió
+`local-progress-store.ts` sobre `sessionStorage`. Funcionaba (52/52 tests, verificado en vivo:
+la navegación dura dejaba de reabrir el tour), pero **viola una regla del propio repositorio que
+está automatizada**: `apps/web/scripts/source-check.mjs` rechaza cualquier uso de
+`localStorage`/`sessionStorage` ("browser storage is prohibited for session data"). El commit
+`a4889c0` se hizo sin re-ejecutar `source-check` después del cambio — ese fue el error. El archivo
+quedó revertido a su versión en memoria y `source-check` vuelve a pasar.
+
+**Estado real: el hallazgo sigue abierto.** La corrección correcta es el backend
+(`GET /me/tutorial-progress`, `PUT /me/tutorial-progress/:id`), que es exactamente lo que el
+comentario del código ya asume ("survives reloads via the backend, not this map"). Propietario:
+backend.
+
+**Alternativa sin backend, si se quiere cerrar antes:** una cookie, que es el mecanismo que este
+proyecto sí sanciona para estado de cliente (ADR-0002 persiste el tema en `gymsheet-theme`
+precisamente porque Web Storage está prohibido). Requiere decidir qué se guarda —basta la lista
+de tutoriales cerrados/completados, no el registro entero— para no engordar cada petición. **No
+aplicado**: es un canal de persistencia nuevo que el equipo no eligió, y merece su decisión
+explícita antes que la de un refactor de UX.
+
+## H03 — El dashboard muestra el aviso de membresía vencida a cuentas de personal, sin distinguir audiencia
+
+**Severidad: P3 (arquitectura de información, no defecto funcional — revisado y corregido de
+alcance tras leer el código, ver nota de revisión abajo).**
+
+Al iniciar sesión como `admin.a@qa.test` (`ADMIN`, gimnasio `topfitness`), bajo el encabezado
+aparece una tarjeta "Aún no tienes membresía — Renueva desde la app, o avísanos si ya pagaste en
+recepción" (captura `evidencia/dashboard-admin-topfitness.png`).
+
+**Nota de revisión (R14 — la primera lectura de este hallazgo era imprecisa):** al leer
+`dashboard-client.tsx` se confirma que la acción principal ("Iniciar entrenamiento"/"Continuar
+sesión") **sí** está visible y reconocible en el encabezado, antes que cualquier otra cosa — no
+hay violación del criterio "mantén visible la acción principal". El orden (aviso de membresía
+antes que los indicadores) es además una decisión **deliberada y documentada en el propio código**
+("Antes que nada: si la membresía no está vigente, eso es lo que la persona necesita ver y
+resolver... Mismo orden que Inicio en el móvil"), pensada para el caso mayoritario: un socio cuya
+cuota venció. El hallazgo real es más angosto: **ese mismo dashboard, con ese mismo mensaje
+orientado a un socio pagante, se le muestra también a cuentas de personal** (`ADMIN`,
+`FRONT_DESK`) que además tienen acceso a `/admin` — no distingue "eres un socio sin pagar" de
+"eres personal del gimnasio y de paso tienes (o no) tu propia membresía".
+
+**Candidatas a evaluar en fase 02** (no aplicado, es una decisión de producto): condicionar la
+tarjeta a cuando el usuario no tiene además rol de personal, o suavizar su copy/tono cuando sí lo
+tiene. Baja prioridad frente a H01/H02.
+
+## Nota de entorno (no es hallazgo de producto)
+
+Un `.next` con un build de producción del 15-sep mezclado con la caché de `next dev` del día de hoy
+causaba 404 en **todo** el grupo de rutas `(auth)` (`/login`, `/register`, `/recover-password`) —
+bloqueaba el login por completo. Se resolvió con `rm -rf apps/web/.next` + reinicio. Documentado
+también en memoria de proyecto (`gymsheet-web-local-run.md`) para no perder tiempo si se repite.
+
+## Nota de entorno #2 — medios rotos por el puerto del backend, no por el producto
+
+En `/comunidad` aparecieron dos `400` de `/api/media?url=...localhost%3A3001...`: fotos de perfil
+sembradas apuntan al backend Docker viejo (puerto 3001), pero esta auditoría corre un backend
+propio en el 3005. Es un artefacto de tener dos backends contra la misma base de datos con
+puertos distintos, no un defecto de `signedMediaSrc()`/`media-proxy.ts` — no se investiga más en
+esta pasada. La lista de socios en esa pantalla es además datos de QA (`Smoke17876...`,
+`Visual17876...`, `Debug C.`, `Isolate`, decenas de variantes) — no sirve como evidencia de
+densidad de contenido real, solo de que la lista, la búsqueda y el "Podio del gimnasio" renderizan.
+
+## Pendiente de esta fase (no ejecutado, alcance para continuar)
+
+- Recorrido de "descubrir" (swipe) y "recuperar contraseña" o "editar ejercicio"
+  (recuperación/edición) — quedan para la siguiente pasada de fase 01.
+- No se probó con cuenta de miembro sin rol de personal (`CLIENTE`/similar) — todo lo anterior es
+  con cuentas de staff.
+- No se corrieron axe-core/Playwright de accesibilidad todavía (eso es fase 09, pero un barrido
+  temprano barato es razonable — pendiente).
+- Confirmar en vivo `/admin/moderacion` y `/admin/permissions` con una cuenta `ADMIN` a la que se
+  le conceda `moderation:read`/`admin-access:manage` (la corrección de H01 las cubre por el mismo
+  mecanismo que auditoría, pero solo auditoría tiene reproducción en navegador).
