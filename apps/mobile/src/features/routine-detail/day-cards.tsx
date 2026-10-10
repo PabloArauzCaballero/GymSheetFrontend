@@ -17,6 +17,10 @@ export function dayTitle(day: Pick<RoutineDay, 'nombre' | 'diaSemana'>): string 
   return day.nombre?.trim() || (day.diaSemana ? WEEKDAY_NAMES[day.diaSemana as Weekday] : 'Entreno');
 }
 
+/** Cada miniatura (40 + 2 de borde por lado) asoma 28 sobre la anterior. */
+const STACK_OVERLAP = thumbSizes.stack / 2 - spacing.xs;
+const STACK_WIDTH = (thumbSizes.stack + 4) * 3 - STACK_OVERLAP * 2;
+
 /**
  * Tarjeta de un día (C8.3.1): tres miniaturas apiladas, «Lunes · Día 1», el
  * nombre del día y «6 ejercicios · ≈55 min». Abre la pantalla del Día.
@@ -53,7 +57,7 @@ export function DayCard({
       }}
       testID={`day-card-${day.id}`}
     >
-      <View style={{ flexDirection: 'row', width: thumbSizes.stack * 2 + spacing.sm }}>
+      <View style={{ flexDirection: 'row', width: STACK_WIDTH }}>
         {thumbs.length === 0 ? (
           <View style={{ width: thumbSizes.stack, height: thumbSizes.stack, borderRadius: radii.sm, backgroundColor: colors.surfaceHighest }} />
         ) : (
@@ -62,7 +66,7 @@ export function DayCard({
               <View
                 key={item.id}
                 style={{
-                  marginLeft: index === 0 ? 0 : -thumbSizes.stack / 2 + spacing.xs,
+                  marginLeft: index === 0 ? 0 : -STACK_OVERLAP,
                   borderRadius: radii.sm + 2,
                   borderWidth: 2,
                   borderColor: colors.surfaceLow,
