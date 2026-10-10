@@ -28,7 +28,7 @@ import {
   SOCIAL_STATUS_LABEL,
   TRAINING_GOAL_LABEL,
 } from '@/lib/social-labels';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, semibold, spacing } from '@/theme';
 
 /** Arrastre a partir del cual soltar cierra en vez de devolver la hoja a su sitio. */
 const DISMISS_DISTANCE = 120;
@@ -227,7 +227,7 @@ export function ProfileDetailSheet({
       transparent
       visible={Boolean(entry)}
     >
-      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.72)' }}>
+      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: overlay.scrim }}>
         <Pressable
           accessibilityLabel="Cerrar la ficha"
           accessibilityRole="button"

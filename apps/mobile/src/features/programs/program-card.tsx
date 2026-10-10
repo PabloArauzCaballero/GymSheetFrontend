@@ -16,7 +16,7 @@ import { Badge } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { Button } from '@/components/ui';
 import { dayLabel, MODE_BADGE } from '@/features/programs/labels';
-import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+import { alpha, colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
 
 /** El programa ya pasó su fecha fin: toca decidir qué sigue (RF-19). */
 export function isProgramOver(program: Program, today = new Date()): boolean {
@@ -53,7 +53,7 @@ export function StrengthProgramCard({ program }: { program: Program }) {
         gap: spacing.sm,
         borderRadius: radii.lg,
         borderWidth: 1,
-        borderColor: `${colors.volt}66`,
+        borderColor: alpha(colors.volt, 0.4),
         backgroundColor: colors.surfaceLow,
         padding: spacing.md,
       }}

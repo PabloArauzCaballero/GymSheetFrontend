@@ -26,7 +26,7 @@ import {
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { notify } from '@/notifications';
 import { initialsOf } from '@/lib/format';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, semibold, spacing } from '@/theme';
 import { TRAINING_GOAL_LABEL } from '@/lib/social-labels';
 
 /**
@@ -307,7 +307,7 @@ function SearchPreferencesSheet({
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent transparent visible={visible}>
-      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0, 0, 0, 0.72)' }}>
+      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: overlay.scrim }}>
         <Pressable accessible={false} onPress={onClose} style={{ flex: 1 }} />
 
         <View

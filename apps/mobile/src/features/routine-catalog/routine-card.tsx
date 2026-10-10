@@ -14,7 +14,11 @@ import { PressableScale } from '@/components/motion';
 import { GOAL_LABEL } from '@/lib/format';
 import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
 
-/** Los siete días de la semana como puntos: relleno = se entrena ese día. */
+/**
+ * Los siete días de la semana como puntos. Sin acento (C8.1: el volt es de la
+ * acción principal): todos los puntos van en `surfaceHighest` y se distinguen
+ * por la tinta de la letra — secundaria si se entrena, apagada si se descansa.
+ */
 function WeekDots({ card }: { card: RoutineCard }) {
   return (
     <View
@@ -31,14 +35,14 @@ function WeekDots({ card }: { card: RoutineCard }) {
             borderRadius: radii.full,
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: entrena ? colors.volt : colors.surfaceHigh,
+            backgroundColor: colors.surfaceHighest,
           }}
         >
           <Text
             style={{
-              fontSize: 9,
+              fontSize: fontSizes.xs,
               fontWeight: semibold,
-              color: entrena ? colors.background : colors.textMuted,
+              color: entrena ? colors.textSecondary : colors.textMuted,
             }}
           >
             {WEEKDAY_INITIALS[dia]}
@@ -83,7 +87,7 @@ export function RoutineCardView({
         gap: spacing.sm,
         borderRadius: radii.lg,
         borderWidth: 1,
-        borderColor: card.esOficial ? `${colors.volt}66` : colors.borderSubtle,
+        borderColor: colors.borderSubtle,
         backgroundColor: colors.surfaceLow,
         padding: spacing.md,
       }}

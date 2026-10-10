@@ -42,7 +42,19 @@ import { confirmDelete, notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { initialsOf } from '@/lib/format';
 import { storyViewersPresentation } from '@/components/story-viewers-presentation';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import {
+  alpha,
+  colors,
+  fontSizes,
+  iconSizes,
+  minTouchTarget,
+  onMedia,
+  overlay,
+  radii,
+  semibold,
+  spacing,
+  storyChrome,
+} from '@/theme';
 
 /** Lo que dura una foto en pantalla antes de pasar sola a la siguiente. */
 const IMAGE_DURATION_MS = 5000;
@@ -224,10 +236,10 @@ function ProgressSegment({
         height: 3,
         borderRadius: radii.full,
         overflow: 'hidden',
-        backgroundColor: 'rgba(255,255,255,0.28)',
+        backgroundColor: overlay.glassStrong,
       }}
     >
-      <Animated.View style={[{ height: '100%', borderRadius: radii.full, backgroundColor: '#fff' }, fill]} />
+      <Animated.View style={[{ height: '100%', borderRadius: radii.full, backgroundColor: onMedia.text }, fill]} />
     </View>
   );
 }
@@ -339,7 +351,7 @@ function ViewersSheet({
         accessibilityLabel="Cerrar"
         accessibilityRole="button"
         onPress={onClose}
-        style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.6)' }]}
+        style={[StyleSheet.absoluteFill, { backgroundColor: overlay.scrimSoft }]}
       />
       <Animated.View
         accessibilityViewIsModal
@@ -944,7 +956,7 @@ export function StoryViewer({
       {/* Dentro de un `Modal` los gestos necesitan su propia raíz: la del
           proveedor de la app no llega a esta ventana en Android. */}
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: '#000' }, backdropStyle]} />
+        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: storyChrome.backdrop }, backdropStyle]} />
 
         <GestureDetector gesture={pan}>
           <Animated.View style={[{ flex: 1, overflow: 'hidden', borderRadius: radii.xl }, contentStyle]}>
@@ -1029,10 +1041,10 @@ export function StoryViewer({
               >
                 {playerStatus === 'error' ? (
                   <>
-                    <Ionicons color="rgba(255,255,255,0.75)" name="cloud-offline-outline" size={40} />
+                    <Ionicons color={onMedia.textMuted} name="cloud-offline-outline" size={40} />
                     <Text
                       style={{
-                        color: 'rgba(255,255,255,0.75)',
+                        color: onMedia.textMuted,
                         fontSize: fontSizes.sm,
                         textAlign: 'center',
                         lineHeight: 20,
@@ -1042,7 +1054,7 @@ export function StoryViewer({
                     </Text>
                   </>
                 ) : (
-                  <ActivityIndicator color="#fff" size="small" />
+                  <ActivityIndicator color={onMedia.text} size="small" />
                 )}
               </View>
             ) : null}
@@ -1096,10 +1108,10 @@ export function StoryViewer({
               >
                 <SmallAvatar fullName={entry.fullName} photoUrl={entry.photoUrl} size={32} />
                 <View style={{ flex: 1 }}>
-                  <Text numberOfLines={1} style={{ color: '#fff', fontSize: fontSizes.sm, fontWeight: semibold }}>
+                  <Text numberOfLines={1} style={{ color: onMedia.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
                     {entry.fullName}
                   </Text>
-                  <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: fontSizes.xs }}>
+                  <Text style={{ color: alpha(onMedia.text, 0.7), fontSize: fontSizes.xs }}>
                     {relativeTimeEs(story.createdAt)}
                   </Text>
                 </View>
@@ -1121,7 +1133,7 @@ export function StoryViewer({
                   >
                     <Animated.View entering={FadeIn.duration(DURATION.quick)} key={muted ? 'muted' : 'sound'}>
                       <Ionicons
-                        color="#fff"
+                        color={onMedia.text}
                         name={muted ? 'volume-mute-outline' : 'volume-high-outline'}
                         size={iconSizes.lg}
                       />
@@ -1143,7 +1155,7 @@ export function StoryViewer({
                       justifyContent: 'center',
                     }}
                   >
-                    <Ionicons color={busy ? colors.textDisabled : '#fff'} name="trash-outline" size={iconSizes.lg} />
+                    <Ionicons color={busy ? colors.textDisabled : onMedia.text} name="trash-outline" size={iconSizes.lg} />
                   </PressableScale>
                 ) : null}
                 <PressableScale
@@ -1158,7 +1170,7 @@ export function StoryViewer({
                     justifyContent: 'center',
                   }}
                 >
-                  <Ionicons color="#fff" name="close" size={iconSizes.lg} />
+                  <Ionicons color={onMedia.text} name="close" size={iconSizes.lg} />
                 </PressableScale>
               </View>
             </Animated.View>
@@ -1197,12 +1209,12 @@ export function StoryViewer({
                     gap: spacing.sm,
                     paddingHorizontal: spacing.md,
                     borderRadius: radii.full,
-                    backgroundColor: 'rgba(255,255,255,0.14)',
+                    backgroundColor: overlay.glass,
                     opacity: pressed ? 0.7 : 1,
                   })}
                 >
-                  <Ionicons color="#fff" name="eye-outline" size={iconSizes.md} />
-                  <Text style={{ color: '#fff', fontSize: fontSizes.sm, fontWeight: semibold }}>
+                  <Ionicons color={onMedia.text} name="eye-outline" size={iconSizes.md} />
+                  <Text style={{ color: onMedia.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
                     {viewersPresentation.controlLabel}
                   </Text>
                 </Pressable>

@@ -3,7 +3,7 @@ import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from '
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import type { NotificationSeverity, ToastItem } from '@gymsheet/notifications';
-import { colors, fontSizes, minTouchTarget, motion, radii, semibold, spacing, tones } from '@/theme';
+import { colors, fontSizes, ink, minTouchTarget, motion, radii, semibold, spacing, tones } from '@/theme';
 import { toastQueue } from './notify';
 import { useReduceMotion } from './use-reduce-motion';
 
@@ -122,7 +122,7 @@ function ToastCard({ item }: { item: ToastItem }) {
           backgroundColor: tone.bg,
           padding: spacing.md,
           // Lifts the card off the screen content behind it (iOS + Android).
-          shadowColor: '#000000',
+          shadowColor: ink.black,
           shadowOpacity: 0.45,
           shadowRadius: 18,
           shadowOffset: { width: 0, height: 10 },

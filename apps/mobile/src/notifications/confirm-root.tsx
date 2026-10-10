@@ -2,7 +2,7 @@ import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { AccessibilityInfo, Modal, Pressable, Text, View, findNodeHandle } from 'react-native';
 import { confirmStore, type ActiveConfirmation } from '@gymsheet/notifications';
 import { Button, type ButtonVariant } from '@/components/ui';
-import { colors, fontSizes, radii, spacing, tones } from '@/theme';
+import { colors, fontSizes, overlay, radii, spacing, tones } from '@/theme';
 
 const SEVERITY_TONE: Record<ActiveConfirmation['severity'], { border: string; text: string }> = {
   danger: tones.dark.danger,
@@ -69,7 +69,7 @@ export function ConfirmRoot() {
             flex: 1,
             justifyContent: 'center',
             padding: spacing.lg,
-            backgroundColor: 'rgba(0, 0, 0, 0.72)',
+            backgroundColor: overlay.scrim,
           }}
         >
           {/* Swallows taps so a press inside the card never dismisses it. */}
