@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import type { InteractionCounts } from '@gymsheet/schemas';
 import { interactionsService } from '@/api/services';
 import { BadgePop } from '@/components/motion';
-import { accentContrast, colors, fontSizes, radii, semibold } from '@/theme';
+import { colors, fontSizes, radii, semibold } from '@/theme';
 
 /**
  * La clave de los contadores, en una constante.
@@ -53,10 +53,8 @@ export function formatBadgeCount(total: number): string {
 /**
  * El número sobre el icono.
  *
- * Relleno de acento, no texto de acento: la regla de `accentPolicy` es que el
- * acento como relleno usa `colors.volt` y lleva encima la tinta de contraste
- * de la marca. Un «3» en volt sobre la superficie oscura no llegaría al
- * contraste mínimo en todas las marcas.
+ * Relleno de aviso (`danger`) con la tinta del lienzo encima: un contador de
+ * novedades no es la acción principal, así que no gasta el acento (C8.3.7).
  */
 export function InteractionsBadge({ total }: { total: number }) {
   if (total <= 0) return null;
@@ -80,14 +78,16 @@ export function InteractionsBadge({ total }: { total: number }) {
           alignItems: 'center',
           justifyContent: 'center',
           borderRadius: radii.full,
-          backgroundColor: colors.volt,
+          // Contador de novedades: rojo de aviso, no el acento (que en
+          // Comunidad es de «Descubrir»). Tinta del lienzo encima: ≥ 7:1.
+          backgroundColor: colors.danger,
           borderWidth: 2,
           borderColor: colors.background,
         }}
       >
         <Text
           style={{
-            color: accentContrast(),
+            color: colors.background,
             fontSize: fontSizes.xs,
             fontWeight: semibold,
             fontVariant: ['tabular-nums'],

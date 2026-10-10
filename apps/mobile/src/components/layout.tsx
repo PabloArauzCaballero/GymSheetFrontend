@@ -20,8 +20,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AmbientBackground } from '@/components/ambient';
 import { useTourStore, type TourKey } from '@/state/tour-store';
-import { CountUpText, EnterUp, Heartbeat, PressableScale } from '@/components/motion';
-import { accentPolicy, cardGap, cardPadding, colors, fontSizes, iconSizes, maxContentWidth, maxWideContentWidth, minTouchTarget, radii, screenGap, sectionGap, semibold, spacing, tabletBreakpoint, tones } from '@/theme';
+import { CountUpText, Heartbeat, PressableScale } from '@/components/motion';
+import { Text as AppTextPrimitive } from '@/components/text';
+import { accentPolicy, alpha, cardGap, cardPadding, colors, fontFamilies, fontSizes, gutter as screenGutter, iconSizes, maxContentWidth, maxWideContentWidth, minTouchTarget, radii, screenGap, sectionGap, semibold, shadows, spacing, tabletBreakpoint, tones } from '@/theme';
 
 /**
  * One place decides what "wide" means, so a tablet layout cannot drift between
@@ -135,7 +136,7 @@ export function ScrollScreen({
   );
   // A two-column page needs room for two columns; keeping the phone cap on a
   // tablet is what leaves a narrow strip of content framed by black.
-  const gutter = Math.max(spacing.lg, (width - (wide ? maxWideContentWidth : maxContentWidth)) / 2);
+  const gutter = Math.max(screenGutter, (width - (wide ? maxWideContentWidth : maxContentWidth)) / 2);
   // On Android the safe-area inset can come back shorter than the drawn status
   // bar, which left scrolled content half-visible under the clock.
   const topInset = Math.max(insets.top, StatusBar.currentHeight ?? 0);
@@ -219,7 +220,7 @@ export function ScrollScreen({
           dissolving into the top edge rather than as a black strip with a hard
           line under it. */}
       <LinearGradient
-        colors={[colors.background, colors.background, `${colors.background}00`]}
+        colors={[colors.background, colors.background, alpha(colors.background, 0)]}
         locations={[0, topInset / (topInset + STATUS_FADE), 1]}
         pointerEvents="none"
         style={{
@@ -299,18 +300,13 @@ export function ScreenHeader({
           // title when the step down to body text is unmistakable; at 32 against
           // a 16 body it was merely "bigger", and the page leaned on colour for
           // hierarchy instead of on type.
-          fontSize: detail ? fontSizes['2xl'] : fontSizes.display,
-          // 600, no 800. Al tamaño de display el peso ya no aporta jerarquía —
-          // la aporta el salto de tamaño— y lo que añade es densidad: la letra
-          // se cierra sobre sí misma y la página se lee pesada. Un display
-          // grande y ligero es lo que separa un titular compuesto de uno que
-          // sólo es texto grande en negrita.
-          fontWeight: semibold,
-          // Optical tracking: large type set at default spacing looks loose and
-          // amateur. Negative tracking is most of what separates a display face
-          // from body text scaled up.
-          letterSpacing: (detail ? fontSizes['2xl'] : fontSizes.display) * -0.03,
-          lineHeight: (detail ? fontSizes['2xl'] : fontSizes.display) * 1.08,
+          // Display propia (Bricolage Grotesque, C8.1): el título de pantalla
+          // es uno de los tres sitios donde se usa. Un detalle (un músculo, un
+          // ejercicio) baja a 28 para que un nombre largo no parta en tres.
+          fontFamily: fontFamilies.display,
+          fontSize: detail ? fontSizes.xl : fontSizes.display,
+          letterSpacing: (detail ? fontSizes.xl : fontSizes.display) * -0.02,
+          lineHeight: Math.round((detail ? fontSizes.xl : fontSizes.display) * 1.12),
         }}
       >
         {title}
@@ -318,9 +314,9 @@ export function ScreenHeader({
       {tourKey ? <TourHelpButton tourKey={tourKey} /> : null}
       </View>
       {subtitle ? (
-        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
+        <AppTextPrimitive tone="muted" variant="subhead">
           {subtitle}
-        </Text>
+        </AppTextPrimitive>
       ) : null}
     </View>
   );
@@ -336,7 +332,7 @@ export function Section({
   title,
   children,
   icon,
-  index = 0,
+  index: _index = 0,
 }: {
   title: string;
   children: ReactNode;
@@ -350,8 +346,10 @@ export function Section({
   index?: number;
 }) {
   return (
-    <EnterUp index={index} style={{ gap: sectionGap }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+    // Sin entrada animada por sección (anti-slop: «fade-in en todo»). `index`
+    // se acepta por compatibilidad y ya no hace nada.
+    <View style={{ gap: sectionGap }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         {icon ? (
           <Ionicons
             // Decorative: the label right next to it already says this.
@@ -362,23 +360,14 @@ export function Section({
             size={iconSizes.sm}
           />
         ) : null}
-        <Text
-          accessibilityRole="header"
-          style={{
-            color: colors.textMuted,
-            fontSize: fontSizes.xs,
-            // La versalita ya destaca por forma y color; a 700 competía con los
-            // títulos de las tarjetas que etiqueta.
-            fontWeight: semibold,
-            letterSpacing: fontSizes.xs * 0.1,
-            textTransform: 'uppercase',
-          }}
-        >
+        {/* Título de sección en minúscula tipográfica y 17/600: la versalita
+            gris con icono en cada sección era ruido (repp-diseno §9). */}
+        <AppTextPrimitive accessibilityRole="header" variant="headline">
           {title}
-        </Text>
+        </AppTextPrimitive>
       </View>
       {children}
-    </EnterUp>
+    </View>
   );
 }
 
@@ -412,28 +401,19 @@ export function Card({
   // El acento ya no es una franja de color en el borde izquierdo —ese recurso
   // de aviso de blog abarataba la tarjeta—, sino el contorno entero teñido muy
   // levemente: la tarjeta se distingue sin que ningún lado grite.
+  // Separación por tono y sombra (C8.1), no por un borde de 1,19:1. El acento
+  // opcional tiñe levemente el contorno entero, nunca una franja lateral.
   const surface = {
     gap: list ? 0 : cardGap,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: accent ? `${accent}55` : colors.borderSubtle,
+    borderRadius: radii.xl,
+    borderCurve: 'continuous',
+    borderWidth: accent ? 1 : 0,
+    borderColor: accent ? alpha(accent, 0.33) : 'transparent',
     backgroundColor: colors.surfaceLow,
+    boxShadow: shadows.e1,
     paddingHorizontal: cardPadding,
     paddingVertical: list ? spacing.sm : cardPadding,
   } as const;
-
-  // Lo que había aquí y ya no está, y por qué:
-  //
-  // - Una sombra negra sobre un fondo negro. El comentario original lo admitía
-  //   («shadows do nothing on black») y aun así declaraba cuatro propiedades
-  //   de sombra. Código que no dibuja nada, mantenido como si dibujara.
-  // - Un `borderTopColor` más claro que el resto del borde, para simular una
-  //   arista iluminada. Ese truco pertenece a las interfaces que imitan
-  //   materiales; aquí sólo desalineaba el contorno, porque un lado del marco
-  //   no coincidía con los otros tres.
-  //
-  // La separación la da la luminancia de la superficie contra el fondo, que es
-  // como se resuelve en un tema oscuro. Un borde de un solo tono, y ya.
 
   if (onPress) {
     return (
@@ -569,12 +549,12 @@ export function StatTile({
       style={{
         flex: 1,
         gap: spacing.xs,
-        borderRadius: radii.lg,
-        borderWidth: 1,
-        borderColor: colors.borderSubtle,
+        borderRadius: radii.xl,
+        borderCurve: 'continuous',
         // La misma superficie que `Card`: una cifra junto a una tarjeta no debe
         // parecer de otro material.
         backgroundColor: colors.surfaceLow,
+        boxShadow: shadows.e1,
         paddingVertical: spacing.lg,
         paddingHorizontal: spacing.md,
       }}
@@ -615,9 +595,9 @@ export function StatTile({
           style={{
             alignSelf: 'flex-start',
             paddingHorizontal: spacing.xs,
-            paddingVertical: 2,
+            paddingVertical: spacing.xxs,
             borderRadius: radii.full,
-            backgroundColor: colors.surfaceHigh,
+            backgroundColor: colors.surfaceHighest,
           }}
         >
           <Text style={{ color: accentPolicy.ink, fontSize: fontSizes.xs, fontWeight: semibold }}>
@@ -626,7 +606,7 @@ export function StatTile({
         </View>
       ) : null}
       {delta ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xxs }}>
           <Ionicons
             accessibilityElementsHidden
             color={deltaTone}
@@ -638,7 +618,7 @@ export function StatTile({
                   ? 'trending-down'
                   : 'remove'
             }
-            size={12}
+            size={iconSizes.xs}
           />
           <Text style={{ color: deltaTone, fontSize: fontSizes.xs, fontWeight: semibold }}>
             {delta.label}
@@ -666,7 +646,7 @@ export type BadgeTone = keyof typeof tones.dark;
  */
 export function Badge({
   label,
-  tone = 'info',
+  tone = 'neutral',
   latido = false,
 }: {
   label: string;

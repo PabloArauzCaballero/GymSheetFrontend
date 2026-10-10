@@ -8,22 +8,22 @@ env:
   FIRST: Expiring
 ---
 - runFlow: login-as.subflow.yaml
-# RF-10 · p01: B copia la pública de A → «Copiada a Mías».
+# RF-10 · p01: B guarda la pública de A en sus rutinas. Desde C2/C4 el botón
+# primario de una rutina ajena es «Guardar en mis rutinas» (antes «Copiar a
+# Mías», con un aviso efímero): ahora navega directamente a la copia, que se
+# llama «<nombre> · vN» y ya es propia, así que ofrece «Activar programa».
 - runFlow:
     file: open-routine.subflow.yaml
     env: { TAB: 'Públicas', NAME: 'Pierna para publicar' }
-- scrollUntilVisible:
-    element: 'Copiar a Mías'
-- tapOn: 'Copiar a Mías'
-# El aviso «Copiada a Mías» dura pocos segundos y el árbol de accesibilidad no siempre lo
-# expone a tiempo: se intenta esperarlo y la captura se toma de todos modos; si no llegó a
-# verse, la revisión lo anota y lo prueba el paso siguiente (la copia existe en Mías).
-- takeScreenshot: RF-10_p01_toast-copiada-a-mias_ios_oscuro
-# RF-10 · p02: la copia (en Mías) muestra «Basada en … de …».
-- tapOn: 'Rutinas, tab.*'
-- runFlow:
-    file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Pierna para publicar' }
+- tapOn: 'Guardar en mis rutinas'
+- extendedWaitUntil:
+    visible: 'Pierna para publicar · v.*'
+    timeout: 30000
+- assertVisible: 'Activar programa'
+- takeScreenshot: RF-10_p01_guardada-en-mis-rutinas_ios_oscuro
+# RF-10 · p02: la copia muestra «Basada en … de …». Se comprueba aquí mismo: la
+# tarjeta de la copia se llama «… · vN», así que buscarla en Mías por el nombre
+# de la original ya no la encuentra.
 - extendedWaitUntil:
     visible: 'Basada en.*'
     timeout: 20000

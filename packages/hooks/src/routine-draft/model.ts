@@ -1,4 +1,5 @@
 import type { TrainingGoal } from '@gymsheet/types';
+import { newDraftUid } from './groups';
 
 /**
  * Borrador del asistente de creación de rutinas (RF-03..08).
@@ -46,6 +47,11 @@ export const WEEKDAY_SHORT: Record<Weekday, string> = {
 };
 
 export type DraftExercise = {
+  /**
+   * Clave local de la fila (no viaja al backend). Las ediciones se identifican
+   * por ella y no por `ejercicioId`, porque un ejercicio puede repetirse en el día.
+   */
+  uid: string;
   ejercicioId: string;
   nombre: string;
   /** Sólo para los avisos de frecuencia por músculo; el backend no lo recibe. */
@@ -57,6 +63,12 @@ export type DraftExercise = {
   rirObjetivo: number | null;
   descansoSeg: number | null;
   nota: string | null;
+  /** Bloque (superserie o circuito): mismo número y contiguos = mismo bloque. Local al día. */
+  grupo: number | null;
+  /** Transición dentro del bloque (0–60 s); `null` fuera de un bloque. */
+  descansoEntreSeg: number | null;
+  /** Serie por tiempo (1–3600 s). Con duración, `repsMin`/`repsMax` son `null`. */
+  duracionSeg: number | null;
 };
 
 export type DraftDay = {
@@ -225,18 +237,23 @@ export function createDraftExercise(
   exercise: {
     id: string;
     nombre: string;
+    nombreEs?: string | null;
     grupoMuscular: string;
     bodyPart?: string | null;
   },
   goal: TrainingGoal | null,
 ): DraftExercise {
   return {
+    uid: newDraftUid(),
     ejercicioId: exercise.id,
-    nombre: exercise.nombre,
+    nombre: exercise.nombreEs?.trim() || exercise.nombre,
     grupoMuscular: muscleZone(exercise),
     ...defaultsForGoal(goal),
     pesoObjetivoKg: null,
     rirObjetivo: null,
     nota: null,
+    grupo: null,
+    descansoEntreSeg: null,
+    duracionSeg: null,
   };
 }

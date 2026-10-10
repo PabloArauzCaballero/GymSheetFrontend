@@ -183,15 +183,6 @@
     },
     {
       "rf": "RF-10",
-      "paso": "01",
-      "nombre": "copiada-a-mias",
-      "plataformas": [
-        "web"
-      ],
-      "debeVerse": "Aviso «Copiada a Mías» con la acción «Abrir»."
-    },
-    {
-      "rf": "RF-10",
       "paso": "02",
       "nombre": "franja-de-atribucion",
       "plataformas": [
@@ -486,15 +477,6 @@
         "web"
       ],
       "debeVerse": "Tras activar, la tarjeta del programa aparece en Rutinas."
-    },
-    {
-      "rf": "RF-14",
-      "paso": "02",
-      "nombre": "activar-ajena-crea-copia",
-      "plataformas": [
-        "web"
-      ],
-      "debeVerse": "Activar una rutina pública ajena activa una copia propia con la franja «Basada en»."
     },
     {
       "rf": "RF-14",

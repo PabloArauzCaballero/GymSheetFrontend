@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -12,7 +12,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Button } from '@/components/ui';
 import { resolveError } from '@/notifications';
-import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+import { Text } from '@/components/text';
+import { cardPadding, colors, iconSizes, radii, shadows, spacing } from '@/theme';
 
 /**
  * Placeholder shown while a query is in flight. Blocks of the right shape beat
@@ -48,9 +49,8 @@ export function Skeleton({ height = 72 }: { height?: number }) {
       style={[
         {
           height,
-          borderRadius: radii.lg,
-          borderWidth: 1,
-          borderColor: colors.borderSubtle,
+          borderRadius: radii.xl,
+          borderCurve: 'continuous',
           backgroundColor: colors.surfaceHigh,
         },
         animated,
@@ -89,20 +89,20 @@ export function RowsSkeleton({ rows = 4, thumb = 64 }: { rows?: number; thumb?: 
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
       style={{
-        borderRadius: radii.lg,
-        borderWidth: 1,
-        borderColor: colors.borderSubtle,
+        borderRadius: radii.xl,
+        borderCurve: 'continuous',
         backgroundColor: colors.surfaceLow,
-        paddingHorizontal: 22,
-        paddingVertical: 8,
+        boxShadow: shadows.e1,
+        paddingHorizontal: cardPadding,
+        paddingVertical: spacing.sm,
       }}
     >
       {Array.from({ length: rows }, (_, index) => (
         <View key={index}>
           {index > 0 ? <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border }} /> : null}
-          <Animated.View style={[{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 8 }, animated]}>
-            <View style={[bone, { width: thumb, height: thumb, borderRadius: radii.lg }]} />
-            <View style={{ flex: 1, gap: 8 }}>
+          <Animated.View style={[{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm }, animated]}>
+            <View style={[bone, { width: thumb, height: thumb, borderRadius: radii.md }]} />
+            <View style={{ flex: 1, gap: spacing.sm }}>
               <View style={[bone, { height: 14, width: '72%' }]} />
               <View style={[bone, { height: 10, width: '40%' }]} />
             </View>
@@ -138,9 +138,9 @@ function CenteredState({
           alignItems: 'center',
           gap: spacing.sm,
           borderRadius: radii.xl,
-          borderWidth: 1,
-          borderColor: colors.borderSubtle,
+          borderCurve: 'continuous',
           backgroundColor: colors.surfaceLow,
+          boxShadow: shadows.e1,
           paddingVertical: spacing.xl,
           paddingHorizontal: spacing.lg,
         },
@@ -156,24 +156,10 @@ function CenteredState({
         name={icon}
         size={iconSizes.xl}
       />
-      <Text
-        style={{
-          color: colors.text,
-          fontSize: fontSizes.md,
-          fontWeight: semibold,
-          textAlign: 'center',
-        }}
-      >
+      <Text style={{ textAlign: 'center' }} variant="headline">
         {title}
       </Text>
-      <Text
-        style={{
-          color: colors.textMuted,
-          fontSize: fontSizes.sm,
-          lineHeight: 20,
-          textAlign: 'center',
-        }}
-      >
+      <Text selectable style={{ textAlign: 'center' }} tone="muted" variant="subhead">
         {message}
       </Text>
       {children}
@@ -216,7 +202,8 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry: () => 
   const resolved = resolveError(error);
   return (
     <CenteredState icon="cloud-offline-outline" message={resolved.message} title={resolved.title}>
-      <Button label="Reintentar" onPress={onRetry} style={{ marginTop: spacing.xs }} />
+      {/* Secundario: reintentar no es la acción principal de la pantalla. */}
+      <Button label="Reintentar" onPress={onRetry} size="sm" style={{ marginTop: spacing.xs }} variant="secondary" />
     </CenteredState>
   );
 }

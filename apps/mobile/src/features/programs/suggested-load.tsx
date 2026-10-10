@@ -32,7 +32,7 @@ export function SuggestedLoad({
   return (
     <Text
       accessibilityLabel={`${text}${item.mensaje ? `. ${item.mensaje}` : ''}`}
-      style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}
+      style={{ color: colors.accentInk, fontSize: fontSizes.sm, fontWeight: semibold }}
       testID={`suggested-${exerciseId}`}
     >
       {text}

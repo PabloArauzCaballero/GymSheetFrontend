@@ -2,8 +2,9 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import type { ActiveProgramSummary, ProgramMode } from '@gymsheet/types';
+import { useEffect, useState } from 'react';
+import { canActivateProgram } from '@gymsheet/hooks';
+import { domainErrorMessage, type ActiveProgramSummary, type ProgramMode } from '@gymsheet/types';
 import { ApiError } from '@/shared/api/api-error';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { SkeletonList, SkeletonPageHeader, SkeletonScreen } from '@/shared/components/feedback/skeleton';
@@ -47,6 +48,7 @@ export function ActivationFlow({ routineId }: Readonly<{ routineId: string }>) {
 
   const current = draft ?? (routine.data ? createDraft(routine.data) : null);
   const existing = active.data?.fuerza ?? null;
+  const notOwned = routine.data !== undefined && !canActivateProgram(routine.data);
   const willReplace = confirmedReplace || existing !== null;
 
   const steps: ActivationStepId[] = [
@@ -74,11 +76,24 @@ export function ActivationFlow({ routineId }: Readonly<{ routineId: string }>) {
         setStepIndex(0);
         return;
       }
+      if (error instanceof ApiError && error.code === 'ROUTINE_NOT_OWNED') {
+        notify.warning(domainErrorMessage('ROUTINE_NOT_OWNED') ?? error.message);
+        router.replace(`/routines/${routineId}`);
+        return;
+      }
       notify.error(error);
     },
   });
 
-  if (routine.isLoading || active.isLoading) {
+  // C1: una rutina ajena no se activa (ni con un enlace directo): no se crea
+  // nada y se vuelve al detalle con el aviso «Guárdala en tus rutinas…».
+  useEffect(() => {
+    if (!notOwned) return;
+    notify.warning(domainErrorMessage('ROUTINE_NOT_OWNED') ?? 'Guárdala en tus rutinas para activarla');
+    router.replace(`/routines/${routineId}`);
+  }, [notOwned, router, routineId]);
+
+  if (routine.isLoading || active.isLoading || notOwned) {
     return (
       <SkeletonScreen className="gap-8" label="Preparando la activación">
         <SkeletonPageHeader />

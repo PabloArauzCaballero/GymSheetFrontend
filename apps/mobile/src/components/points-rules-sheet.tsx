@@ -14,6 +14,7 @@ import {
   fontSizes,
   iconSizes,
   minTouchTarget,
+  overlay,
   radii,
   semibold,
   spacing,
@@ -71,7 +72,7 @@ export function PointsRulesSheet({
         <Pressable
           accessibilityLabel="Cerrar"
           onPress={onClose}
-          style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)' }}
+          style={{ position: 'absolute', inset: 0, backgroundColor: overlay.scrimSoft }}
         />
         <View
           accessibilityViewIsModal

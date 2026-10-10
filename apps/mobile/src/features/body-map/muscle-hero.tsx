@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { type LayoutChangeEvent, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
-import { colors, radii, spacing } from '@/theme';
+import { alpha, colors, radii, spacing } from '@/theme';
 import {
   AGGREGATES,
   boundsArea,
@@ -129,12 +129,12 @@ export function MuscleHero({ code }: { code: string }) {
       {/* Los bordes de arriba y abajo se funden con la tarjeta: la lámina
           recortada no termina en un corte seco a media pierna. */}
       <LinearGradient
-        colors={[colors.surfaceLowest, `${colors.surfaceLowest}00`]}
+        colors={[colors.surfaceLowest, alpha(colors.surfaceLowest, 0)]}
         pointerEvents="none"
         style={{ position: 'absolute', top: 0, left: 0, right: 0, height: spacing.xl }}
       />
       <LinearGradient
-        colors={[`${colors.surfaceLowest}00`, colors.surfaceLowest]}
+        colors={[alpha(colors.surfaceLowest, 0), colors.surfaceLowest]}
         pointerEvents="none"
         style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: spacing.xl }}
       />

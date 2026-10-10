@@ -49,6 +49,10 @@ export type RoutineCard = {
   esMia: boolean;
   autor: { id: string; nombre: string };
   atribucion: { routineName: string; authorId: string | null; authorName: string } | null;
+  /** Rutina original si esta es una copia guardada (C2). */
+  basadaEnRutinaId?: string | null;
+  /** N de «· vN» en las copias guardadas (C2). */
+  numeroCopia?: number | null;
   valoracion: RatingSummary;
   copias: number;
   publicadaEn: string | null;

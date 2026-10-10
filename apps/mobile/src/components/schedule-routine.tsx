@@ -7,7 +7,7 @@ import { Card, Row } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
-import { colors, fontSizes, iconSizes, radii, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
 
 /** Display order starts on Monday; the stored value is `Date.getDay()`. */
 const DAYS = [
@@ -54,17 +54,24 @@ function Chip({
   return (
     <PressableScale
       accessibilityLabel={label}
+      accessibilityState={{ selected: active }}
+      haptic="selection"
       onPress={onPress}
       style={{
-        minWidth: round ? 40 : undefined,
-        minHeight: 40,
+        // Los siete días reparten el ancho: a 44 fijos no caben en una tarjeta
+        // de teléfono; el alto sigue siendo táctil.
+        flex: round ? 1 : undefined,
+        minHeight: minTouchTarget,
         paddingHorizontal: round ? 0 : spacing.md,
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: round ? radii.full : radii.md,
+        borderRadius: radii.md,
+        borderCurve: 'continuous',
         borderWidth: 1,
-        borderColor: active ? colors.volt : colors.border,
-        backgroundColor: active ? colors.volt : colors.surface,
+        // Selección neutra (C8.1): el acento queda para la acción principal de
+        // la pantalla, no para cada chip; el contorno de control llega a 3:1.
+        borderColor: active ? colors.text : colors.borderControl,
+        backgroundColor: active ? colors.text : 'transparent',
       }}
     >
       <Text
@@ -123,7 +130,7 @@ export function ScheduleRoutine({
   return (
     <Card>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        <Ionicons color={colors.volt} name="calendar-outline" size={iconSizes.lg} />
+        <Ionicons color={colors.textSecondary} name="calendar-outline" size={iconSizes.lg} />
         <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: '700', flex: 1 }}>
           Programar en mi semana
         </Text>
@@ -174,6 +181,7 @@ export function ScheduleRoutine({
         label={weekdays.length === 0 ? 'Elige al menos un día' : 'Guardar en mi semana'}
         loading={schedule.isPending}
         onPress={() => schedule.mutate()}
+        variant="secondary"
       />
     </Card>
   );

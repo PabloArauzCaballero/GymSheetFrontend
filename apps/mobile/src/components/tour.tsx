@@ -29,7 +29,7 @@ import {
   scrollDeltaFor,
 } from '@/state/tour-queue';
 import { useTourStore, type TargetRect, type TourKey } from '@/state/tour-store';
-import { colors, fontSizes, iconSizes, radii, spacing, useActiveTenant } from '@/theme';
+import { colors, fontSizes, iconSizes, overlay, radii, spacing, useActiveTenant } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -62,8 +62,10 @@ type TourStep = {
  *
  * Cada paso nombra una pestaña y dice para qué SIRVE, no qué contiene, y señala
  * su icono real de la barra: «aquí están tus rutinas» describe una pantalla,
- * «esto responde qué te toca hoy» describe una razón para abrirla. Son las cinco
- * pestañas que hay —Entrenos ya no es una: se alcanza desde Inicio y Perfil—.
+ * «esto responde qué te toca hoy» describe una razón para abrirla. Son las cuatro
+ * pestañas que hay —Entrenos ya no es una: se alcanza desde Inicio y Perfil; y
+ * Ejercicios tampoco desde C4: el catálogo se abre desde Rutinas y Perfil y
+ * tiene su propio tour (`exercises`) la primera vez que se entra al buscador—.
  *
  * `null` en el título significa «rellénalo con el nombre del gimnasio al
  * pintar». Es el único paso que lo menciona, así que no compensa convertir todo
@@ -86,16 +88,8 @@ const WELCOME: readonly TourStep[] = [
   {
     icon: 'albums-outline',
     title: 'Rutinas',
-    body: 'Tu semana de un vistazo: qué toca hoy y qué días entrenas. Toca un día para abrir su rutina.',
+    body: 'Tu semana de un vistazo: qué toca hoy y qué días entrenas. Desde aquí también exploras el catálogo de ejercicios.',
     target: 'tab.routines',
-    optional: true,
-    fixed: true,
-  },
-  {
-    icon: 'barbell-outline',
-    title: 'Ejercicios',
-    body: 'El catálogo por zona del cuerpo y músculo, con la lámina de cada ejercicio para reconocerlo al instante.',
-    target: 'tab.exercises',
     optional: true,
     fixed: true,
   },
@@ -507,7 +501,7 @@ function Spotlight({
       : withTiming(1, { duration: DURATION.standard, easing: PREMIUM_EASING });
   }, [h, holeH, holeW, holeX, holeY, present, reduceMotion, w, x, y]);
 
-  const dim = 'rgba(0,0,0,0.86)';
+  const dim = overlay.scrimStrong;
   const fullStyle = useAnimatedStyle(() => ({ opacity: 1 - present.value }));
   const topStyle = useAnimatedStyle(() => ({
     height: Math.max(0, y.value),

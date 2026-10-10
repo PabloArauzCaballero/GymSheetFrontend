@@ -11,9 +11,9 @@ env:
 - runFlow:
     file: open-routine.subflow.yaml
     env: { TAB: 'Mías', NAME: 'Pierna para publicar' }
-- scrollUntilVisible:
-    element: 'Publicar'
-    centerElement: true
+# Publicar vive en el menú ⋯ del detalle (C8.3.1).
+- tapOn:
+    id: 'routine-more'
 - tapOn: 'Publicar'
 - extendedWaitUntil:
     visible: 'Cualquiera podrá verla y copiarla.*'
@@ -23,10 +23,13 @@ env:
 # RF-09 · p02: queda pública (el botón pasa a «Despublicar»); el aviso dura pocos segundos, así que
 # se captura nada más confirmar.
 - takeScreenshot: RF-09_p02a_aviso-de-rutina-publicada_ios_oscuro
+- tapOn:
+    id: 'routine-more'
 - extendedWaitUntil:
     visible: 'Despublicar'
     timeout: 20000
 - takeScreenshot: RF-09_p02_publicada-despublicar_ios_oscuro
+- tapOn: 'Cerrar'
 - runFlow:
     file: open-routine.subflow.yaml
     env: { TAB: 'Públicas', NAME: 'Pierna para publicar' }
@@ -36,9 +39,8 @@ env:
 - runFlow:
     file: open-routine.subflow.yaml
     env: { TAB: 'Mías', NAME: 'Torso idéntico' }
-- scrollUntilVisible:
-    element: 'Publicar'
-    centerElement: true
+- tapOn:
+    id: 'routine-more'
 - tapOn: 'Publicar'
 - tapOn: 'Publicar'
 - extendedWaitUntil:

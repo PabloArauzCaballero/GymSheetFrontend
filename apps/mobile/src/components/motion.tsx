@@ -32,7 +32,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
-import { radii } from '@/theme';
+import { colors, glideSpring, pressSpring, radii, settleSpring } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -66,7 +66,7 @@ export const DURATION = {
  * settles, it does not bounce. High damping plus low mass keeps it responsive
  * without wobble.
  */
-export const PRESS_SPRING = { damping: 26, stiffness: 340, mass: 0.5, overshootClamping: true } as const;
+export const PRESS_SPRING = pressSpring;
 
 /**
  * Para lo que se ASIENTA en un sitio —píldoras, anillos, hojas— en vez de
@@ -74,7 +74,7 @@ export const PRESS_SPRING = { damping: 26, stiffness: 340, mass: 0.5, overshootC
  * muelle de toda transición de posición, para que dos cosas que se mueven a la
  * vez en pantalla compartan el mismo carácter.
  */
-export const SETTLE_SPRING = { damping: 24, stiffness: 220, mass: 0.7, overshootClamping: true } as const;
+export const SETTLE_SPRING = settleSpring;
 
 /** Micro-cascade delay; capped so the last row never waits on a queue. */
 const STAGGER_MS = 40;
@@ -277,11 +277,15 @@ export function SegmentedPill<T extends string>({
   itemStyle,
   renderItem,
   gap = 0,
+  fill = false,
 }: {
   options: readonly { value: T; accessibilityLabel?: string }[];
+  /** Las opciones se reparten el ancho a partes iguales (pestañas). */
+  fill?: boolean;
   value: T;
   onChange: (next: T) => void;
-  pillColor: string;
+  /** Relleno de la opción activa; por defecto el de los controles. */
+  pillColor?: string;
   /** El contenedor: fondo, borde, relleno. */
   style?: StyleProp<ViewStyle>;
   /** Cada opción: tamaño y alineación del contenido. */
@@ -311,10 +315,11 @@ export function SegmentedPill<T extends string>({
         placed.current = true;
         return;
       }
-      x.value = withSpring(layout.x, SETTLE_SPRING);
-      y.value = withSpring(layout.y, SETTLE_SPRING);
-      w.value = withSpring(layout.width, SETTLE_SPRING);
-      h.value = withSpring(layout.height, SETTLE_SPRING);
+      // «Glide» (C8.1): el indicador viaja sin rebote.
+      x.value = withSpring(layout.x, glideSpring);
+      y.value = withSpring(layout.y, glideSpring);
+      w.value = withSpring(layout.width, glideSpring);
+      h.value = withSpring(layout.height, glideSpring);
     },
     [h, reduceMotion, shown, w, x, y],
   );
@@ -336,13 +341,14 @@ export function SegmentedPill<T extends string>({
       <View style={{ flexDirection: 'row', gap }}>
         <Animated.View
           pointerEvents="none"
-          style={[{ position: 'absolute', borderRadius: radii.full, backgroundColor: pillColor }, pill]}
+          style={[{ position: 'absolute', borderRadius: radii.full, backgroundColor: pillColor ?? colors.surfaceHighest }, pill]}
         />
         {options.map((option) => {
           const active = option.value === value;
           return (
             <View
               key={option.value}
+              style={fill ? { flex: 1 } : undefined}
               onLayout={(event) => {
                 layouts.current.set(option.value, event.nativeEvent.layout);
                 if (option.value === value) moveTo(option.value);

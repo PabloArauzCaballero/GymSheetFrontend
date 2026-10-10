@@ -82,21 +82,40 @@ for (const combo of combos) {
       await evidencia(bruna.page, 'RF-09', '05', 'solo-nombre-sigue-bloqueada');
       await bruna.page.getByRole('button', { name: 'Seguir editando' }).click();
 
-      // RF-10 · p01: Bruno copia la pública de Ana y sale «Copiada a Mías».
+      // RF-10 · p01 (C2): en una rutina ajena el botón principal es «Guardar en mis rutinas»;
+      // «Activar» no aparece y «Empezar» pasa a «Probar un día».
       await bruna.page.goto(`/routines/${original.id}`);
-      await bruna.page.getByRole('button', { name: 'Copiar a mis rutinas' }).click();
-      await expect(bruna.page.getByText('Copiada a Mías')).toBeVisible();
-      await evidencia(bruna.page, 'RF-10', '01', 'copiada-a-mias');
+      await expect(bruna.page.getByRole('link', { name: 'Activar' })).toHaveCount(0);
+      await expect(bruna.page.getByRole('button', { name: 'Copiar a mis rutinas' })).toHaveCount(0);
+      await expect(bruna.page.getByRole('button', { name: 'Probar un día' })).toBeVisible();
+      await evidencia(bruna.page, 'RF-10', '01', 'guardar-en-mis-rutinas');
+
+      // RF-10 · p01b: guardar abre la copia «· v1», que ya se puede activar.
+      await bruna.page.getByRole('button', { name: 'Guardar en mis rutinas' }).click();
+      await bruna.page.waitForURL((url) => /\/routines\/[0-9a-f-]{36}$/u.test(url.pathname) && !url.pathname.includes(original.id), { timeout: 120_000 });
+      await expect(bruna.page.getByRole('heading', { name: `Empuje 4 días ${tag} · v1`, level: 1 })).toBeVisible();
+      await expect(bruna.page.getByRole('link', { name: 'Activar' })).toBeVisible();
+      await evidencia(bruna.page, 'RF-10', '01b', 'copia-v1-abierta');
 
       // RF-10 · p02: la copia lleva la franja «Basada en … de Ana Autora».
-      // El aviso dura unos segundos y la captura puede tardar: si ya se fue, se abre la copia por su id.
       const copia = await b<{ items: Array<{ id: string; nombre: string }> }>('GET', `/routines?scope=mine&q=${tag}&limit=5`);
-      const copiaApi = copia.data.items.find((item) => item.nombre === `Empuje 4 días ${tag}`);
+      const copiaApi = copia.data.items.find((item) => item.nombre === `Empuje 4 días ${tag} · v1`);
       expect(copiaApi).toBeTruthy();
-      await bruna.page.goto(`/routines/${copiaApi!.id}`);
       await expect(bruna.page.getByTestId('attribution-strip')).toContainText(`Basada en Empuje 4 días ${tag} de Ana Autora`);
       await evidencia(bruna.page, 'RF-10', '02', 'franja-de-atribucion');
-      const copiaId = bruna.page.url().split('/routines/')[1]!.split('?')[0]!;
+      const copiaId = copiaApi!.id;
+
+      // RF-10 · p02b: de vuelta en la original se ofrece abrir la que ya guardó; guardar otra da «· v2».
+      await bruna.page.goto(`/routines/${original.id}`);
+      await expect(bruna.page.getByText('Ya la guardaste como v1')).toBeVisible();
+      await evidencia(bruna.page, 'RF-10', '02b', 'ya-la-guardaste-v1');
+      await bruna.page.getByRole('button', { name: 'Guardar en mis rutinas' }).click();
+      await expect(bruna.page.getByRole('heading', { name: `Empuje 4 días ${tag} · v2`, level: 1 })).toBeVisible();
+      await bruna.page.goto('/routines?tab=mias&q=' + tag);
+      const mias = bruna.page.getByTestId('routine-list');
+      await expect(mias).toContainText(`Empuje 4 días ${tag} · v1`);
+      await expect(mias).toContainText(`Empuje 4 días ${tag} · v2`);
+      await evidencia(bruna.page, 'RF-10', '02c', 'v1-y-v2-en-mias');
 
       // RF-10 · p03: Bruno edita su copia; el original de Ana no cambia.
       await editarEstructura(b, copiaId, (dias) => {
@@ -122,7 +141,7 @@ for (const combo of combos) {
       await evidencia(bruna.page, 'RF-10', '05', 'ver-cambios');
       await banner.getByRole('button', { name: 'Aplicar' }).click();
       await expect(bruna.page.getByTestId('version-banner')).toHaveCount(0);
-      await expect(bruna.page.getByRole('heading', { name: `Empuje 4 días ${tag}`, level: 1 })).toBeVisible();
+      await expect(bruna.page.getByRole('heading', { name: `Empuje 4 días ${tag} · v1`, level: 1 })).toBeVisible();
       await evidencia(bruna.page, 'RF-10', '06', 'version-aplicada');
 
       // RF-10 · p07: una rutina creada desde cero no lleva franja de atribución.

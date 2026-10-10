@@ -17,8 +17,38 @@ export type RoutineExercise = {
   rirObjetivo: number | null;
   descansoSeg: number | null;
   nota: string | null;
+  /**
+   * Bloque (superserie o circuito) dentro del día: los ejercicios contiguos con el
+   * mismo `grupo` forman un bloque. `null` = ejercicio suelto.
+   */
+  grupo: number | null;
+  /** Lo deriva el backend: 2 ejercicios = SUPERSERIE, 3 o más = CIRCUITO. */
+  grupoTipo: RoutineGroupType | null;
+  /** Transición dentro del bloque (0–60 s). El descanso tras la vuelta es el `descansoSeg` del último. */
+  descansoEntreSeg: number | null;
+  /** Serie por tiempo (plancha 30 s). Con duración, `repsMin`/`repsMax` llegan `null`. */
+  duracionSeg: number | null;
   ejercicio: Exercise | null;
 };
+
+/** Tipo de bloque de una rutina (C3.a). */
+export const routineGroupTypes = ['SUPERSERIE', 'CIRCUITO'] as const;
+export type RoutineGroupType = (typeof routineGroupTypes)[number];
+
+/** Topes de entrada de un ejercicio de rutina (C3.a): los mismos que valida el backend. */
+export const routineExerciseLimits = {
+  seriesMin: 1,
+  seriesMax: 10,
+  repsMin: 1,
+  repsMax: 50,
+  grupoMax: 30,
+  descansoEntreMax: 60,
+  duracionMin: 1,
+  duracionMax: 3600,
+  rirMax: 10,
+  descansoMax: 7200,
+  pesoMax: 2000,
+} as const;
 
 /** Un día de la rutina. `diaSemana` 1 (lunes) a 7 (domingo), o null en una rutina de «cualquier día». */
 export type RoutineDay = {
@@ -61,6 +91,8 @@ export type Routine = {
   atribucion: RoutineAttribution | null;
   basadaEnRutinaId: string | null;
   basadaEnVersion: number | null;
+  /** N de «<nombre> · vN» en una copia propia (C2); `null` si no es una copia. */
+  numeroCopia: number | null;
   version: number;
   /** Verdadero en una copia cuyo original subió de versión (D2: nunca se aplica solo). */
   hayVersionNueva: boolean;
@@ -114,6 +146,12 @@ export type RoutineDayExerciseInput = {
   rirObjetivo: number | null;
   descansoSeg: number | null;
   nota: string | null;
+  /** 1–30; ≥2 ejercicios contiguos por bloque o `400 ROUTINE_GROUP_INVALID`. `grupoTipo` no se envía. */
+  grupo?: number | null;
+  /** 0–60; se anula fuera de un bloque. */
+  descansoEntreSeg?: number | null;
+  /** 1–3600; con duración, las reps se guardan `null`. */
+  duracionSeg?: number | null;
 };
 
 export type RoutineDayInput = {
@@ -154,6 +192,13 @@ export type RoutineWeek = {
       repsMin: number | null;
       repsMax: number | null;
       pesoObjetivoKg: number | null;
+      descansoSeg: number | null;
+      rirObjetivo: number | null;
+      nota: string | null;
+      grupo: number | null;
+      grupoTipo: RoutineGroupType | null;
+      descansoEntreSeg: number | null;
+      duracionSeg: number | null;
       /** Solo si el usuario tiene un programa activo con esta rutina (modo con cargas). */
       pesoSugeridoKg?: number | null;
     }>;
@@ -196,5 +241,32 @@ export const domainErrorCodes = [
   'OFFICIAL_FORBIDDEN',
   'ROUTINE_HAS_NO_DAYS',
   'CONTENT_HIDDEN',
+  'ROUTINE_NOT_OWNED',
+  'ROUTINE_GROUP_INVALID',
 ] as const;
 export type DomainErrorCode = (typeof domainErrorCodes)[number];
+
+/**
+ * Texto humano de cada código de dominio, el mismo en web y móvil. Las pantallas
+ * pueden afinarlo con el contexto, pero nunca enseñan el `message` del servidor.
+ */
+export const domainErrorMessages: Record<DomainErrorCode, string> = {
+  ROUTINE_DUPLICATE: 'Ya existe una rutina idéntica. Cambia algún día, ejercicio o repetición.',
+  PROGRAM_ACTIVE_CONFLICT: 'Ya tienes un programa activo.',
+  SHARE_PENDING: 'Acepta la invitación para ver esta rutina.',
+  SHARE_ALREADY_EXISTS: 'Ya compartiste esta rutina con esta persona.',
+  CANNOT_RATE_OWN: 'No puedes valorar lo que creaste tú.',
+  OFFICIAL_FORBIDDEN: 'Una rutina oficial solo la gestiona REPP.',
+  ROUTINE_HAS_NO_DAYS: 'Cada día necesita al menos un ejercicio.',
+  CONTENT_HIDDEN: 'Este contenido está oculto mientras lo revisamos.',
+  ROUTINE_NOT_OWNED: 'Guárdala en tus rutinas para activarla',
+  ROUTINE_GROUP_INVALID: 'Una superserie necesita al menos 2 ejercicios seguidos',
+};
+
+/** El texto humano de un código de error de dominio, o `null` si no es uno conocido. */
+export function domainErrorMessage(code: string | null | undefined): string | null {
+  if (!code) return null;
+  return (domainErrorCodes as readonly string[]).includes(code)
+    ? domainErrorMessages[code as DomainErrorCode]
+    : null;
+}

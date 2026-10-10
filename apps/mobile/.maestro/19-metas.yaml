@@ -80,7 +80,7 @@ env:
     start: 50%,25%
     end: 50%,70%
 - extendedWaitUntil:
-    visible: '125 kg × 3'
+    visible: '.*125 kg × 3.*'
     timeout: 30000
 - repeat:
     times: 4

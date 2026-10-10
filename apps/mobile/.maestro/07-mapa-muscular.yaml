@@ -1,4 +1,6 @@
-# La figura anatómica de la pestaña Ejercicios: tocar un músculo abre SU pantalla.
+# La figura anatómica del buscador de ejercicios: tocar un músculo abre SU pantalla.
+#
+# Desde C4 el buscador no es pestaña: se llega desde Rutinas → «Explorar ejercicios».
 #
 # ESTADO: escrito, SIN EJECUTAR. Maestro no está instalado en la máquina donde se
 # escribió, así que ningún punto de este flujo está verificado por Maestro. El
@@ -14,7 +16,9 @@ appId: app.gymsheet.mobile
 name: 07 · Mapa muscular — tocar la figura abre el músculo
 ---
 - runFlow: login.subflow.yaml
-- tapOn: 'Ejercicios, tab.*'
+- tapOn: 'Rutinas, tab.*'
+- runFlow: cerrar-tour.subflow.yaml
+- tapOn: 'Explorar ejercicios'
 - runFlow: cerrar-tour.subflow.yaml
 - extendedWaitUntil:
     visible: 'Figura anatómica interactiva'

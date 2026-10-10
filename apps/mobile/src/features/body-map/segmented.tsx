@@ -8,7 +8,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { colors, fontSizes, ink, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 export interface SegmentOption<T extends string> {
   readonly value: T;
@@ -82,7 +82,7 @@ export function Segmented<T extends string>({
               width: segment,
               borderRadius: radii.full,
               backgroundColor: colors.surfaceHighest,
-              shadowColor: '#000',
+              shadowColor: ink.black,
               shadowOpacity: 0.35,
               shadowRadius: 6,
               shadowOffset: { width: 0, height: 2 },

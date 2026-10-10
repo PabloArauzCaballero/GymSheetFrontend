@@ -6,7 +6,7 @@ import { routineSharingService } from '@/api/services';
 import { Badge } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
-import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
+import { alpha, colors, fontSizes, radii, semibold, spacing } from '@/theme';
 
 /**
  * Invitación pendiente (RF-13): «@ana te compartió "Empuje 4 días"» con
@@ -45,7 +45,7 @@ export function InvitationCard({
         gap: spacing.sm,
         borderRadius: radii.lg,
         borderWidth: 1,
-        borderColor: `${colors.volt}66`,
+        borderColor: alpha(colors.volt, 0.4),
         backgroundColor: colors.surfaceLow,
         padding: spacing.md,
       }}

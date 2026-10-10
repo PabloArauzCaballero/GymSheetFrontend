@@ -46,11 +46,33 @@ function looksTechnical(message: string): boolean {
 }
 
 /**
+ * Copy per stable backend `code`, for errors whose generic kind message would
+ * mislead («No tienes permisos…» for a routine that simply isn't yours yet).
+ * Compared by code, never by message text.
+ */
+const CODE_COPY: Readonly<Record<string, { title: string; message: string }>> = {
+  ROUTINE_NOT_OWNED: {
+    title: 'Guárdala primero',
+    message: 'Guárdala en tus rutinas para activarla como programa.',
+  },
+};
+
+/**
  * Turns any thrown value into a friendly, user-safe result. Only {@link ApiError}
  * carries a `kind`; anything else is treated as an unexpected failure.
  */
 export function resolveError(error: unknown): ResolvedError {
   if (error instanceof ApiError) {
+    const byCode = error.code ? CODE_COPY[error.code] : undefined;
+    if (byCode) {
+      return {
+        title: byCode.title,
+        message: byCode.message,
+        code: error.code ?? error.kind,
+        requestId: error.requestId,
+        retryable: false,
+      };
+    }
     const generic = GENERIC_MESSAGE[error.kind];
     const useServer =
       PREFER_SERVER_MESSAGE.has(error.kind) && !!error.message && !looksTechnical(error.message);

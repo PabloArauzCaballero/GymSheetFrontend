@@ -1,256 +1,133 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Redirect, router } from 'expo-router';
-import { useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { useMemo, useState } from 'react';
+import { Alert, View } from 'react-native';
 import {
   WEEKDAYS,
   WEEKDAY_NAMES,
+  blockLetter,
   countLabel,
   findDay,
+  newDraftUid,
+  transitionLabel,
+  validateDayExercises,
   type DayTarget,
   type DraftExercise,
   type Weekday,
 } from '@gymsheet/hooks';
-import { Card, Section } from '@/components/layout';
-import { numericInputProps } from '@/components/keyboard';
-import { PressableScale } from '@/components/motion';
+import { routineExerciseLimits as limits } from '@gymsheet/types';
+import { GroupBlock } from '@/components/group-block';
+import { Section } from '@/components/layout';
+import { Text } from '@/components/text';
 import { Button, Input } from '@/components/ui';
 import { ChoiceChip } from '@/components/wizard/choice-chip';
 import { WizardActionBar } from '@/components/wizard/wizard-action-bar';
 import { WizardShell } from '@/components/wizard/wizard-shell';
+import {
+  ExerciseEditor,
+  NumberField,
+  QuietButton,
+  digits,
+} from '@/features/routine-wizard/exercise-editor';
 import { useRoutineDraft } from '@/features/routine-wizard/use-wizard';
 import { notify } from '@/notifications';
 import { wizardStepPath } from '@/lib/wizard-routes';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { spacing } from '@/theme';
 
 const DAYS_STEP = 4;
 
-function digits(value: string, max: number): number | null {
-  const clean = value.replace(/[^0-9]/gu, '').slice(0, 4);
-  if (clean === '') return null;
-  return Math.min(Number.parseInt(clean, 10), max);
+type Run = { grupo: number | null; items: Array<{ exercise: DraftExercise; index: number }> };
+
+/** Corridas contiguas con el mismo `grupo` (≥2 = bloque), como en `buildDayBlocks`. */
+function runsOf(list: readonly DraftExercise[]): Run[] {
+  const runs: Run[] = [];
+  list.forEach((exercise, index) => {
+    const last = runs[runs.length - 1];
+    if (last && exercise.grupo !== null && last.grupo === exercise.grupo) last.items.push({ exercise, index });
+    else runs.push({ grupo: exercise.grupo, items: [{ exercise, index }] });
+  });
+  return runs;
 }
 
-function show(value: number | null): string {
-  return value === null ? '' : String(value);
-}
-
-function IconButton({
-  icon,
-  label,
-  onPress,
-  disabled = false,
-  tone = colors.text,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-  tone?: string;
-}) {
-  return (
-    <PressableScale
-      accessibilityLabel={label}
-      disabled={disabled}
-      haptic="selection"
-      hitSlop={spacing.xs}
-      onPress={onPress}
-      scaleTo={0.9}
-      style={{
-        width: minTouchTarget,
-        height: minTouchTarget,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: radii.full,
-        backgroundColor: colors.surfaceHigh,
-        opacity: disabled ? 0.35 : 1,
-      }}
-    >
-      <Ionicons
-        accessibilityElementsHidden
-        color={tone}
-        importantForAccessibility="no-hide-descendants"
-        name={icon}
-        size={iconSizes.md}
-      />
-    </PressableScale>
-  );
+/** ¿Los índices elegidos son contiguos? (unir solo funciona con filas seguidas). */
+function contiguous(indexes: readonly number[]): boolean {
+  const sorted = [...indexes].sort((a, b) => a - b);
+  return sorted.every((value, position) => position === 0 || value === (sorted[position - 1] ?? 0) + 1);
 }
 
 /**
- * Campo numérico con texto propio mientras se edita.
+ * «Ver y ordenar» el día (C3.d): reordenar, editar series, repeticiones o
+ * duración («Por tiempo»), RIR, descanso y nota; **unir en superserie** (2) o
+ * circuito (3+) filas contiguas —mantener pulsada una fila o «Seleccionar para
+ * unir»—, «Separar» y el «Descanso entre ejercicios» del bloque; repetir un
+ * ejercicio (el mismo press en dos bloques). Los bloques se dibujan con el
+ * mismo `GroupBlock` que el Día, y los avisos salen de `validateDayExercises`
+ * (lo que el backend rechazaría).
  *
- * Mientras la persona escribe se muestra lo tecleado (que puede quedar vacío un
- * instante: borrar «3» para escribir «4»), y el borrador sólo recibe valores
- * válidos; al salir del campo vuelve a mostrar el valor del borrador. Sin esto, un
- * campo obligatorio como las series se rellenaba con «1» al borrar y el siguiente
- * dígito se pegaba detrás («14»).
- */
-function NumberField({
-  label,
-  value,
-  onChange,
-  placeholder,
-  testID,
-}: {
-  label: string;
-  testID: string;
-  value: number | null;
-  onChange: (value: string) => void;
-  placeholder: string;
-}) {
-  const [typed, setTyped] = useState<string | null>(null);
-  return (
-    <View style={{ flex: 1 }}>
-      <Input
-        keyboardType="number-pad"
-        {...numericInputProps}
-        label={label}
-        onBlur={() => setTyped(null)}
-        onChangeText={(raw) => {
-          setTyped(raw.replace(/[^0-9]/gu, ''));
-          onChange(raw);
-        }}
-        placeholder={placeholder}
-        testID={testID}
-        value={typed ?? show(value)}
-      />
-    </View>
-  );
-}
-
-/** Un ejercicio del día: orden con flechas, series, repeticiones, RIR, descanso y nota. */
-function ExerciseEditor({
-  exercise,
-  position,
-  total,
-  onMove,
-  onRemove,
-  onChange,
-}: {
-  exercise: DraftExercise;
-  position: number;
-  total: number;
-  onMove: (delta: -1 | 1) => void;
-  onRemove: () => void;
-  onChange: (cambios: Partial<DraftExercise>) => void;
-}) {
-  const setReps = (field: 'repsMin' | 'repsMax', raw: string) =>
-    onChange({ [field]: digits(raw, 1000) });
-  const invertedReps =
-    exercise.repsMin !== null && exercise.repsMax !== null && exercise.repsMin > exercise.repsMax;
-  return (
-    <Card>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text
-            numberOfLines={2}
-            style={{
-              color: colors.text,
-              fontSize: fontSizes.md,
-              fontWeight: semibold,
-            }}
-          >
-            {`${position}. ${exercise.nombre}`}
-          </Text>
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-            {exercise.grupoMuscular}
-          </Text>
-        </View>
-        <IconButton
-          disabled={position === 1}
-          icon="chevron-up"
-          label={`Subir ${exercise.nombre}`}
-          onPress={() => onMove(-1)}
-        />
-        <IconButton
-          disabled={position === total}
-          icon="chevron-down"
-          label={`Bajar ${exercise.nombre}`}
-          onPress={() => onMove(1)}
-        />
-        <IconButton
-          icon="trash-outline"
-          label={`Quitar ${exercise.nombre}`}
-          onPress={onRemove}
-          tone={colors.danger}
-        />
-      </View>
-      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-        <NumberField
-          label="Series"
-          testID="field-series"
-          onChange={(raw) => {
-            const series = digits(raw, 100);
-            if (series !== null && series > 0) onChange({ seriesObjetivo: series });
-          }}
-          placeholder="3"
-          value={exercise.seriesObjetivo}
-        />
-        <NumberField
-          label="Reps mín."
-          testID="field-reps-min"
-          onChange={(raw) => setReps('repsMin', raw)}
-          placeholder="8"
-          value={exercise.repsMin}
-        />
-        <NumberField
-          label="Reps máx."
-          testID="field-reps-max"
-          onChange={(raw) => setReps('repsMax', raw)}
-          placeholder="12"
-          value={exercise.repsMax}
-        />
-      </View>
-      {invertedReps ? (
-        <Text accessibilityRole="alert" style={{ color: colors.warning, fontSize: fontSizes.xs }}>
-          El máximo es menor que el mínimo: se guardará igual al mínimo.
-        </Text>
-      ) : null}
-      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-        <NumberField
-          label="RIR"
-          testID="field-rir"
-          onChange={(raw) => onChange({ rirObjetivo: digits(raw, 10) })}
-          placeholder="2"
-          value={exercise.rirObjetivo}
-        />
-        <NumberField
-          label="Descanso (s)"
-          testID="field-rest"
-          onChange={(raw) => onChange({ descansoSeg: digits(raw, 7200) })}
-          placeholder="90"
-          value={exercise.descansoSeg}
-        />
-      </View>
-      <Input
-        label="Nota"
-        maxLength={1000}
-        onChangeText={(text) => onChange({ nota: text === '' ? null : text })}
-        placeholder="Ej. Pausa de 1 s abajo"
-        value={exercise.nota ?? ''}
-      />
-    </Card>
-  );
-}
-
-/**
- * «Ver y ordenar» el día: reordenar, editar series, repeticiones, RIR, descanso y
- * nota de cada ejercicio, renombrar el día, duplicarlo en otros y vaciarlo.
- *
- * El orden se cambia con flechas y no arrastrando: es lo que funciona con
- * lector de pantalla y con una mano, y no necesita una librería nativa más.
+ * El orden se cambia con flechas y no arrastrando: funciona con lector de
+ * pantalla y con una mano, y no necesita otra librería nativa.
  */
 export function OrderScreen({ dia }: { dia: DayTarget }) {
   const { state, draft, dispatch } = useRoutineDraft();
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const day = dia === 'grupo' ? undefined : findDay(draft, dia);
   const list = dia === 'grupo' ? state.grupo?.ejercicios : day?.ejercicios;
+  const issues = useMemo(() => (list ? validateDayExercises(list) : []), [list]);
   if (!list) return <Redirect href={wizardStepPath(DAYS_STEP)} />;
 
   const others = WEEKDAYS.filter(
-    (candidate): candidate is Weekday =>
-      candidate !== dia && findDay(draft, candidate) !== undefined,
+    (candidate): candidate is Weekday => candidate !== dia && findDay(draft, candidate) !== undefined,
   );
+  const runs = runsOf(list);
+  const rowIssues = (uid: string) => issues.filter((issue) => issue.uid === uid).map((issue) => issue.mensaje);
+  const groupIssues = (grupo: number) =>
+    issues.filter((issue) => issue.grupo === grupo && !issue.uid).map((issue) => issue.mensaje);
+
+  const selectedIndexes = list.flatMap((exercise, index) => (selected.has(exercise.uid) ? [index] : []));
+  const canJoin = selectedIndexes.length >= 2 && contiguous(selectedIndexes);
+  const joinLabel = selectedIndexes.length >= 3 ? 'Unir en circuito' : 'Unir en superserie';
+  const selectionInfo =
+    selectedIndexes.length < 2
+      ? 'Elige 2 o más ejercicios seguidos'
+      : canJoin
+        ? `${selectedIndexes.length} seleccionados`
+        : 'Tienen que ir seguidos: muévelos con las flechas';
+
+  const startSelecting = (uid?: string) => {
+    void Haptics.selectionAsync();
+    setSelecting(true);
+    setSelected(new Set(uid ? [uid] : []));
+  };
+  const stopSelecting = () => {
+    setSelecting(false);
+    setSelected(new Set());
+  };
+  const toggle = (uid: string) =>
+    setSelected((current) => {
+      const next = new Set(current);
+      if (next.has(uid)) next.delete(uid);
+      else next.add(uid);
+      return next;
+    });
+  const join = () => {
+    dispatch({ type: 'unirEnGrupo', destino: dia, uids: [...selected] });
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    stopSelecting();
+  };
+
+  const edit = (uid: string, cambios: Partial<Omit<DraftExercise, 'uid'>>) =>
+    dispatch({ type: 'editarEjercicio', destino: dia, uid, cambios });
+  const repeat = (exercise: DraftExercise, index: number) => {
+    // Una fila nueva con el mismo ejercicio, justo debajo y fuera de cualquier bloque.
+    dispatch({
+      type: 'agregarEjercicio',
+      destino: dia,
+      ejercicio: { ...exercise, uid: newDraftUid(), grupo: null, descansoEntreSeg: null },
+    });
+    dispatch({ type: 'moverEjercicio', destino: dia, desde: list.length, hacia: index + 1 });
+    notify.success(`«${exercise.nombre}» añadido otra vez.`);
+  };
 
   const clear = () =>
     Alert.alert('¿Vaciar el día?', 'Se quitarán todos sus ejercicios.', [
@@ -259,33 +136,58 @@ export function OrderScreen({ dia }: { dia: DayTarget }) {
         text: 'Vaciar',
         style: 'destructive',
         onPress: () => {
-          if (dia === 'grupo')
-            list.forEach((e) =>
-              dispatch({
-                type: 'quitarEjercicio',
-                destino: dia,
-                ejercicioId: e.ejercicioId,
-              }),
-            );
+          if (dia === 'grupo') list.forEach((e) => dispatch({ type: 'quitarEjercicio', destino: dia, uid: e.uid }));
           else dispatch({ type: 'vaciarDia', dia });
           router.back();
         },
       },
     ]);
 
+  const editorFor = (
+    exercise: DraftExercise,
+    index: number,
+    group?: { badge: string; last: boolean },
+  ) => (
+    <ExerciseEditor
+      badge={group?.badge}
+      exercise={exercise}
+      grouped={Boolean(group)}
+      issues={rowIssues(exercise.uid)}
+      key={exercise.uid}
+      onChange={(cambios) => edit(exercise.uid, cambios)}
+      onLongPress={() => startSelecting(exercise.uid)}
+      onMove={(delta) => dispatch({ type: 'moverEjercicio', destino: dia, desde: index, hacia: index + delta })}
+      onRemove={() => dispatch({ type: 'quitarEjercicio', destino: dia, uid: exercise.uid })}
+      onRepeat={() => repeat(exercise, index)}
+      onTimed={(duracionSeg) => dispatch({ type: 'setPorTiempo', destino: dia, uid: exercise.uid, duracionSeg })}
+      onToggleSelect={() => toggle(exercise.uid)}
+      position={index + 1}
+      restRole={group ? (group.last ? 'round' : 'none') : 'set'}
+      selected={selected.has(exercise.uid)}
+      selecting={selecting}
+      total={list.length}
+    />
+  );
+
+  let letter = 0;
   return (
     <WizardShell
       actions={
-        <WizardActionBar
-          info={countLabel(list.length)}
-          primary={{ label: 'Listo', onPress: () => router.back() }}
-        />
+        selecting ? (
+          <WizardActionBar
+            info={selectionInfo}
+            primary={{ label: joinLabel, onPress: join, disabled: !canJoin }}
+            secondary={{ label: 'Cancelar', onPress: stopSelecting }}
+          />
+        ) : (
+          <WizardActionBar info={countLabel(list.length)} primary={{ label: 'Listo', onPress: () => router.back() }} />
+        )
       }
       paso={DAYS_STEP}
-      subtitle="Ordena los ejercicios y ajusta series, repeticiones y descanso."
+      subtitle="Ordena, ajusta series y descansos, y une ejercicios en superseries."
       title={dia === 'grupo' ? 'Ver y ordenar' : `${WEEKDAY_NAMES[dia]} · Ver y ordenar`}
     >
-      {day && dia !== 'grupo' ? (
+      {day && dia !== 'grupo' && !selecting ? (
         <Input
           label="Nombre del día"
           maxLength={60}
@@ -295,41 +197,89 @@ export function OrderScreen({ dia }: { dia: DayTarget }) {
         />
       ) : null}
 
-      <View style={{ gap: spacing.md }}>
-        {list.map((exercise, index) => (
-          <ExerciseEditor
-            exercise={exercise}
-            key={exercise.ejercicioId}
-            onChange={(cambios) =>
-              dispatch({
-                type: 'editarEjercicio',
-                destino: dia,
-                ejercicioId: exercise.ejercicioId,
-                cambios,
-              })
-            }
-            onMove={(delta) =>
-              dispatch({
-                type: 'moverEjercicio',
-                destino: dia,
-                desde: index,
-                hacia: index + delta,
-              })
-            }
-            onRemove={() =>
-              dispatch({
-                type: 'quitarEjercicio',
-                destino: dia,
-                ejercicioId: exercise.ejercicioId,
-              })
-            }
-            position={index + 1}
-            total={list.length}
+      {list.length >= 2 && !selecting ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
+          <Text style={{ flex: 1 }} tone="muted" variant="footnote">
+            Mantén pulsado un ejercicio para unirlo con el siguiente.
+          </Text>
+          <QuietButton
+            icon="git-merge-outline"
+            label="Seleccionar para unir"
+            onPress={() => startSelecting()}
+            tone="group"
+            testID="start-group-select"
           />
-        ))}
+        </View>
+      ) : null}
+
+      <View style={{ gap: spacing.md }}>
+        {runs.map((run) => {
+          const first = run.items[0];
+          if (!first) return null;
+          if (run.grupo === null || run.items.length < 2) {
+            return run.items.map(({ exercise, index }) => editorFor(exercise, index));
+          }
+          const label = blockLetter(letter);
+          letter += 1;
+          const grupo = run.grupo;
+          const lastItem = run.items[run.items.length - 1];
+          const between = first.exercise.descansoEntreSeg ?? 0;
+          const rounds = Math.max(...run.items.map(({ exercise }) => exercise.seriesObjetivo));
+          return (
+            <GroupBlock
+              footer={
+                selecting ? null : (
+                  <View style={{ gap: spacing.xs }}>
+                    <NumberField
+                      label={`Descanso entre ejercicios (s, 0–${limits.descansoEntreMax})`}
+                      onChange={(raw) =>
+                        dispatch({
+                          type: 'setDescansoEntre',
+                          destino: dia,
+                          grupo,
+                          descansoEntreSeg: digits(raw, limits.descansoEntreMax) ?? 0,
+                        })
+                      }
+                      placeholder="0"
+                      testID={`group-rest-${label}`}
+                      value={between}
+                    />
+                    {groupIssues(grupo).map((issue) => (
+                      <Text accessibilityRole="alert" key={issue} tone="warning" variant="footnote">
+                        {issue}
+                      </Text>
+                    ))}
+                  </View>
+                )
+              }
+              headerAction={
+                selecting ? null : (
+                  <QuietButton
+                    icon="git-branch-outline"
+                    label="Separar"
+                    onPress={() => dispatch({ type: 'separarGrupo', destino: dia, grupo })}
+                    testID={`split-${label}`}
+                  />
+                )
+              }
+              key={`g-${grupo}-${first.exercise.uid}`}
+              label={`${run.items.length >= 3 ? 'Circuito' : 'Superserie'} ${label}`}
+              rounds={rounds}
+              testID={`order-block-${label}`}
+              transition={transitionLabel(between)}
+            >
+              {run.items.map(({ exercise, index }, position) =>
+                editorFor(exercise, index, {
+                  badge: `${label}${position + 1}`,
+                  last: exercise.uid === lastItem?.exercise.uid,
+                }),
+              )}
+            </GroupBlock>
+          );
+        })}
       </View>
 
-      {dia !== 'grupo' && others.length > 0 && list.length > 0 ? (
+      {!selecting && dia !== 'grupo' && others.length > 0 && list.length > 0 ? (
         <Section icon="copy-outline" index={0} title="Duplicar en…">
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
             {others.map((other) => (
@@ -348,8 +298,8 @@ export function OrderScreen({ dia }: { dia: DayTarget }) {
         </Section>
       ) : null}
 
-      {list.length > 0 ? (
-        <Button icon="trash-outline" label="Vaciar el día" onPress={clear} variant="danger" />
+      {list.length > 0 && !selecting ? (
+        <Button icon="trash-outline" label="Vaciar el día" onPress={clear} variant="ghost" />
       ) : null}
     </WizardShell>
   );

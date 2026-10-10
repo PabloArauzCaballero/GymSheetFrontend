@@ -14,6 +14,8 @@ import type { RequestFn } from './routine-services';
  *
  * `activateStrength` responde `409 PROGRAM_ACTIVE_CONFLICT` con
  * `details.activeProgram` si ya hay otro de pesas; con `replace: true` lo apaga.
+ * Con una rutina ajena responde `403 ROUTINE_NOT_OWNED` (`details.routineId`):
+ * primero hay que guardarla (`sharing.copy`, que devuelve la copia «· vN»).
  */
 export function createProgramServices(request: RequestFn) {
   return {

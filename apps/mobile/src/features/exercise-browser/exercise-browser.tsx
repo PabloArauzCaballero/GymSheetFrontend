@@ -6,7 +6,8 @@ import { Card, Divider, ScrollScreen, Section } from '@/components/layout';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { Button, Input } from '@/components/ui';
 import { TourTarget } from '@/components/tour';
-import { DrillBack, Grid, GridTile, iconFor, titleCase } from '@/components/catalogue-grid';
+import { bodyPartLabelEs, muscleLabelEs } from '@gymsheet/domain';
+import { DrillBack, Grid, GridTile, iconFor } from '@/components/catalogue-grid';
 import { ChoiceChip } from '@/components/wizard/choice-chip';
 import { BodyMap, musclesByGroup } from '@/features/body-map';
 import { ExerciseRow } from '@/features/exercise-browser/exercise-row';
@@ -15,6 +16,7 @@ import type { PickConfig } from '@/features/exercise-browser/types';
 import { exerciseService } from '@/api/services';
 import { NavRow } from '@/components/list';
 import { spacing } from '@/theme';
+import { routes } from '@/lib/routes';
 
 /** Alto reservado al final de la lista para que la barra inferior del selector no la tape. */
 const PICK_BAR_CLEARANCE = 128;
@@ -23,8 +25,8 @@ const PICK_BAR_CLEARANCE = 128;
  * El buscador de ejercicios: figura muscular, buscador, zonas y lista.
  *
  * Tiene dos modos con la misma cara:
- * - `browse`: la pestaña Ejercicios de siempre. Tocar una fila abre la ficha y
- *   tocar un músculo abre su pantalla en la pestaña.
+ * - `browse`: la pantalla `/ejercicios` (antes pestaña). Tocar una fila abre la
+ *   ficha y tocar un músculo abre su pantalla en la misma pila.
  * - `pick`: el selector del asistente de rutinas. Cada fila gana un «+» y todo
  *   queda dentro de la pila del asistente (el músculo se abre en línea, la fila
  *   abre la ficha con «Añadir a la rutina»).
@@ -35,10 +37,16 @@ const PICK_BAR_CLEARANCE = 128;
 export type ExerciseBrowserProps = {
   header: (subtitle: string) => ReactNode;
   overlay?: ReactNode;
+  /**
+   * Abre con el filtro ☆ puesto. Es lo que pide Perfil → «Mis ejercicios y
+   * favoritos» (`routes.exerciseFavorites()`); la persona puede quitarlo con el
+   * mismo chip y seguir explorando.
+   */
+  initialFavorites?: boolean;
 } & ({ mode: 'browse' } | { mode: 'pick'; pick: PickConfig });
 
 export function ExerciseBrowser(props: ExerciseBrowserProps) {
-  const { header, overlay } = props;
+  const { header, overlay, initialFavorites = false } = props;
   const router = useRouter();
   const pick = props.mode === 'pick' ? props.pick : null;
   const picking = pick !== null;
@@ -49,7 +57,7 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
   /** En modo selector, el músculo tocado en la figura se abre en línea. */
   const [muscleCode, setMuscleCode] = useState<string | null>(null);
   const [showMuscleList, setShowMuscleList] = useState(false);
-  const [onlyFavorites, setOnlyFavorites] = useState(false);
+  const [onlyFavorites, setOnlyFavorites] = useState(initialFavorites);
 
   const taxonomy = useQuery({
     queryKey: ['exercises', 'taxonomy'],
@@ -90,9 +98,9 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
       : searching
         ? 'Buscando en todo el catálogo'
         : muscle
-          ? `${titleCase(muscle)} · ${titleCase(bodyPart ?? '')}`
+          ? [muscleLabelEs(muscle), bodyPartLabelEs(bodyPart)].filter(Boolean).join(' · ')
           : bodyPart
-            ? titleCase(bodyPart)
+            ? bodyPartLabelEs(bodyPart)
             : 'Toca un músculo o elige una zona';
 
   const searchBlock = (
@@ -163,15 +171,12 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
                 onOpenList={() =>
                   picking
                     ? setShowMuscleList((current) => !current)
-                    : router.push('/exercises/muscles')
+                    : router.push(routes.muscles())
                 }
                 onSelectMuscle={(code) =>
                   picking
                     ? setMuscleCode(code)
-                    : router.push({
-                        pathname: '/exercises/muscle/[code]',
-                        params: { code },
-                      })
+                    : router.push(routes.muscle(code))
                 }
               />
             </TourTarget>
@@ -215,7 +220,7 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
           {/* Breadcrumb: one step back at a time, so the user can widen the filter
               without losing the zone they were exploring. */}
           {!searching && !onlyFavorites && muscle ? (
-            <DrillBack label={titleCase(bodyPart ?? '')} onPress={() => setMuscle(null)} />
+            <DrillBack label={bodyPartLabelEs(bodyPart)} onPress={() => setMuscle(null)} />
           ) : null}
           {!searching && !onlyFavorites && bodyPart && !muscle ? (
             <DrillBack label="Todas las zonas" onPress={() => setBodyPart(null)} />
@@ -240,7 +245,7 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
                       index={index}
                       key={group.bodyPart}
                       imageUrl={group.imageUrl}
-                      label={titleCase(group.bodyPart)}
+                      label={bodyPartLabelEs(group.bodyPart)}
                       onPress={() => setBodyPart(group.bodyPart)}
                       total={group.total}
                     />
@@ -259,7 +264,7 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
                   index={index}
                   key={entry.targetMuscle}
                   imageUrl={entry.imageUrl}
-                  label={titleCase(entry.targetMuscle)}
+                  label={muscleLabelEs(entry.targetMuscle)}
                   onPress={() => setMuscle(entry.targetMuscle)}
                   total={entry.total}
                 />
@@ -299,10 +304,7 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
                       onPress={() =>
                         picking
                           ? pick?.onOpen(exercise.id)
-                          : router.push({
-                              pathname: '/exercises/[id]',
-                              params: { id: exercise.id },
-                            })
+                          : router.push(routes.exercise(exercise.id))
                       }
                       pick={
                         picking

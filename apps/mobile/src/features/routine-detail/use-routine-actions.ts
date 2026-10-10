@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { ApiError } from '@gymsheet/api-client';
 import { confirm } from '@gymsheet/notifications';
@@ -7,7 +8,7 @@ import { routineCatalogService, routineService } from '@/api/services';
 import { notify } from '@/notifications';
 
 /**
- * Publicar, despublicar, copiar y sincronizar (RF-09, RF-10). Publicar pide
+ * Publicar, despublicar, guardar (copiar) y sincronizar (RF-09, RF-10). Publicar pide
  * confirmación y, si el backend responde `409 ROUTINE_DUPLICATE`, ofrece ver la
  * rutina idéntica que ya existe en vez de enseñar un error técnico.
  */
@@ -64,16 +65,21 @@ export function useRoutineActions(routine: Routine) {
     onError: (error: Error) => notify.error(error),
   });
 
+  // C2: «Guardar en mis rutinas» crea una copia editable «… · vN» y lleva a
+  // ella (reemplaza el detalle de la ajena: volver atrás no debe devolver a una
+  // pantalla cuyo único botón ya se pulsó).
   const copy = useMutation({
     mutationFn: () => routineCatalogService.copy(routine.id),
     onSuccess: (created) => {
       refresh();
-      notify.success({
-        message: 'Copiada a Mías',
-        action: { label: 'Abrir', onClick: () => open(created.id) },
-      });
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      notify.success(`Guardada en tus rutinas como «${created.nombre}».`);
+      router.replace({ pathname: '/routines/[id]', params: { id: created.id } });
     },
-    onError: (error: Error) => notify.error(error),
+    onError: (error: Error) => {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      notify.error(error);
+    },
   });
 
   const sync = useMutation({

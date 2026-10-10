@@ -53,8 +53,9 @@ env:
     env: { TAB: 'Públicas', NAME: 'Denuncia QA' }
 - tapOn: 'Vista Mes'
 - tapOn: 'Semana 1, .*'
-- extendedWaitUntil:
-    visible: 'Denunciar «.*'
+# El día es una pantalla completa: la denuncia del ejercicio privado va al final de la lista.
+- scrollUntilVisible:
+    element: 'Denunciar «.*'
     timeout: 20000
 - takeScreenshot: RF-12_p04a_dia-con-ejercicio-privado_ios_oscuro
 - tapOn: 'Denunciar «.*'

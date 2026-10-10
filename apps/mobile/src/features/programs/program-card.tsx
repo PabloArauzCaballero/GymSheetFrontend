@@ -16,7 +16,7 @@ import { Badge } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { Button } from '@/components/ui';
 import { dayLabel, MODE_BADGE } from '@/features/programs/labels';
-import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, shadows, spacing } from '@/theme';
 
 /** El programa ya pasó su fecha fin: toca decidir qué sigue (RF-19). */
 export function isProgramOver(program: Program, today = new Date()): boolean {
@@ -51,20 +51,20 @@ export function StrengthProgramCard({ program }: { program: Program }) {
       scaleTo={0.985}
       style={{
         gap: spacing.sm,
-        borderRadius: radii.lg,
-        borderWidth: 1,
-        borderColor: `${colors.volt}66`,
-        backgroundColor: colors.surfaceLow,
-        padding: spacing.md,
+        borderRadius: radii.xl,
+        borderCurve: 'continuous',
+        backgroundColor: colors.surfaceRaised,
+        boxShadow: shadows.e1,
+        padding: spacing.mdl,
       }}
       testID="program-card-strength"
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        <Ionicons color={colors.volt} name="barbell-outline" size={iconSizes.md} />
+        <Ionicons color={accentPolicy.glyph} name="barbell-outline" size={iconSizes.md} />
         <Text numberOfLines={1} style={{ flex: 1, color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
           {program.rutinaNombre ?? 'Programa de pesas'}
         </Text>
-        <Badge label={MODE_BADGE[program.modo] ?? program.modo} tone="info" />
+        <Badge label={MODE_BADGE[program.modo] ?? program.modo} />
       </View>
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }} testID="program-week">
         {weekLabel(program)}

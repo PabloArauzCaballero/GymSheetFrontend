@@ -36,19 +36,23 @@ import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { formatTimeOfDay, initialsOf, presenceLabel } from '@/lib/format';
 import {
+  accentContrast,
+  alpha,
+  chatColors,
   colors,
   fontSizes,
   iconSizes,
   maxContentWidth,
   maxWideContentWidth,
   minTouchTarget,
+  overlay,
   radii,
   semibold,
   spacing,
 } from '@/theme';
 
 /** Fijo — WhatsApp volvió "check azul" un color universal, ajeno a cualquier marca de gimnasio. */
-const READ_TICK_COLOR = '#34b7f1';
+const READ_TICK_COLOR = chatColors.readTick;
 
 /**
  * Mensajes por página. El backend admite hasta 100 y devuelve los más
@@ -382,8 +386,10 @@ export default function ChatThreadScreen() {
 
   /** Contenido de la burbuja según el tipo de mensaje — el marco (fondo, radios) es igual para todos. */
   function renderMessageContent(message: Message, mine: boolean) {
-    const textColor = mine ? colors.background : colors.text;
-    const mutedOnBubble = mine ? 'rgba(11,15,13,0.65)' : colors.textMuted;
+    // Encima del relleno de acento la tinta la fija la marca (`accentContrast`):
+    // con TOP Fitness el texto oscuro sobre rojo no llegaba a AA.
+    const textColor = mine ? accentContrast() : colors.text;
+    const mutedOnBubble = mine ? alpha(accentContrast(), 0.72) : colors.textMuted;
 
     if (message.type === 'location' && message.locationLat !== null && message.locationLng !== null) {
       return (
@@ -521,13 +527,13 @@ export default function ChatThreadScreen() {
       >
         {renderMessageContent(item, mine)}
         <View style={{ flexDirection: 'row', alignSelf: 'flex-end', alignItems: 'center', gap: 3, marginTop: 2 }}>
-          <Text style={{ color: mine ? 'rgba(11,15,13,0.55)' : colors.textMuted, fontSize: 10 }}>
+          <Text style={{ color: mine ? alpha(accentContrast(), 0.6) : colors.textMuted, fontSize: fontSizes.xs }}>
             {formatTimeOfDay(item.createdAt) ?? ''}
           </Text>
           {mine ? (
             <Ionicons
               color={
-                otherLastReadAt && item.createdAt <= otherLastReadAt ? READ_TICK_COLOR : 'rgba(11,15,13,0.55)'
+                otherLastReadAt && item.createdAt <= otherLastReadAt ? READ_TICK_COLOR : alpha(accentContrast(), 0.6)
               }
               name={
                 otherLastDeliveredAt && item.createdAt <= otherLastDeliveredAt ? 'checkmark-done' : 'checkmark'
@@ -595,10 +601,11 @@ export default function ChatThreadScreen() {
                     borderRadius: radii.full,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: colors.volt,
+                    // Avatar de iniciales en neutro: el acento no va en avatares.
+                    backgroundColor: colors.surfaceHighest,
                   }}
                 >
-                  <Text style={{ color: colors.background, fontSize: fontSizes.md, fontWeight: '700' }}>
+                  <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: '700' }}>
                     {initialsOf(otherName, undefined)}
                   </Text>
                 </View>
@@ -872,7 +879,7 @@ export default function ChatThreadScreen() {
           accessibilityLabel="Cerrar"
           accessibilityRole="button"
           onPress={() => setViewerUri(null)}
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', alignItems: 'center', justifyContent: 'center' }}
+          style={{ flex: 1, backgroundColor: overlay.scrimSolid, alignItems: 'center', justifyContent: 'center' }}
         >
           {viewerUri ? (
             <Image contentFit="contain" source={{ uri: viewerUri }} style={{ width: '100%', height: '80%' }} />

@@ -7,7 +7,7 @@ import { routineService } from '@/api/services';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Skeleton } from '@/components/feedback';
 import { Button } from '@/components/ui';
-import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
+import { alpha, colors, fontSizes, radii, semibold, spacing } from '@/theme';
 
 /**
  * «Hay una versión nueva de la original» (D2). Nunca se aplica sola: «Ver
@@ -40,7 +40,7 @@ export function VersionBanner({
         gap: spacing.sm,
         borderRadius: radii.lg,
         borderWidth: 1,
-        borderColor: `${colors.warning}66`,
+        borderColor: alpha(colors.warning, 0.4),
         backgroundColor: colors.surfaceLow,
         padding: spacing.md,
       }}

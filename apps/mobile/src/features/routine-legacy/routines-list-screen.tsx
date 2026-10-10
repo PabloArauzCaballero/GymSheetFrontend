@@ -7,6 +7,7 @@ import { NavRow } from '@/components/list';
 import { WeekPlan } from '@/components/week-plan';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { routineService } from '@/api/services';
+import { ExploreExercisesButton } from '@/features/exercise-browser/explore-exercises-button';
 import { Button } from '@/components/ui';
 import { GOAL_LABEL } from '@/lib/format';
 import { spacing } from '@/theme';
@@ -34,6 +35,7 @@ export function LegacyRoutinesScreen() {
       refreshing={refreshing}
     >
       <ScreenHeader subtitle="Tus planes de entrenamiento." title="Rutinas" tourKey="routines" />
+      <ExploreExercisesButton />
 
       <TourTarget id="routines.create">
         <Button label="Crear rutina" onPress={() => router.push('/routines/new')} />
