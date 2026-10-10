@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Text, View } from 'react-native';
+import { exerciseGroupLabelEs } from '@gymsheet/domain';
 import {
   WEEKDAYS,
   WEEKDAY_NAMES,
@@ -154,7 +155,7 @@ function ExerciseEditor({
             {`${position}. ${exercise.nombre}`}
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-            {exercise.grupoMuscular}
+            {exerciseGroupLabelEs(exercise.grupoMuscular)}
           </Text>
         </View>
         <IconButton

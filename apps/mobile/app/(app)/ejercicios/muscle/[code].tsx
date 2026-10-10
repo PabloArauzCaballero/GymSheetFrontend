@@ -13,6 +13,7 @@ import { titleCase } from '@/components/catalogue-grid';
 import { MuscleHero, muscleInfo } from '@/features/body-map';
 import { muscleService } from '@/api/services';
 import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { routes } from '@/lib/routes';
 
 const PAGE_SIZE = 30;
 
@@ -130,7 +131,7 @@ export default function MuscleScreen() {
   const items = exercises.data?.pages.flatMap((page) => page.ejercicios) ?? [];
   const total = exercises.data?.pages[0]?.total ?? 0;
   const related = exercises.data?.pages[0]?.aproximado ?? null;
-  const open = (id: string) => router.push({ pathname: '/exercises/[id]', params: { id } });
+  const open = (id: string) => router.push(routes.exercise(id));
 
   if (muscle.isError) {
     return (

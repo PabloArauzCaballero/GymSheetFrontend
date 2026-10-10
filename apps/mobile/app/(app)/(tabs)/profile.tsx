@@ -27,6 +27,7 @@ import {
   profileService,
   progressionService,
 } from '@/api/services';
+import { routes } from '@/lib/routes';
 import { useAuthStore } from '@/state/auth-store';
 import { useTourStore } from '@/state/tour-store';
 import { TourTarget, useScreenTour } from '@/components/tour';
@@ -391,6 +392,15 @@ export default function ProfileScreen() {
           onPress={() => router.push('/workouts')}
           subtitle="Todas tus sesiones, con sus ejercicios y series"
           title="Mis entrenos"
+        />
+        <Divider />
+        {/* El catálogo de ejercicios dejó de ser pestaña (C4). Desde aquí se
+            abre con el filtro ☆ puesto: lo que se busca en el propio perfil son
+            los ejercicios que uno ya marcó. */}
+        <NavRow
+          onPress={() => router.push(routes.exerciseFavorites())}
+          subtitle="Tus favoritos ☆ y el catálogo completo"
+          title="Mis ejercicios y favoritos"
         />
         <Divider />
         <NavRow onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />

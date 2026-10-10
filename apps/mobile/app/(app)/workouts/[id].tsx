@@ -25,6 +25,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { formatClock } from '@gymsheet/hooks';
 import { CardioLogger } from '@/features/cardio/cardio-logger';
 import { SuggestedLoad, useNextLoads } from '@/features/programs/suggested-load';
+import { routes } from '@/lib/routes';
 
 /** Standard rest between working sets; the timer can be extended in place. */
 const DEFAULT_REST_SECONDS = 90;
@@ -311,7 +312,7 @@ export default function WorkoutDetailScreen() {
           <Card key={item.id} accent={item.esEnfasis ? colors.volt : undefined}>
             <PressableScale
               disabled={!item.ejercicio}
-              onPress={() => item.ejercicio && router.push({ pathname: '/exercises/[id]', params: { id: item.ejercicio.id } })}
+              onPress={() => item.ejercicio && router.push(routes.exercise(item.ejercicio.id))}
               style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}
             >
               {item.ejercicio ? <ExerciseImage exercise={withMedia(item.ejercicio) ?? item.ejercicio} size={48} /> : null}

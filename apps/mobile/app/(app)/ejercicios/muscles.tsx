@@ -6,6 +6,7 @@ import { PressableScale } from '@/components/motion';
 import { BackLink } from '@/components/nav';
 import { type MuscleInfo, musclesByGroup } from '@/features/body-map';
 import { colors, fontSizes, iconSizes, minTouchTarget, semibold, spacing } from '@/theme';
+import { routes } from '@/lib/routes';
 
 function MuscleRow({ muscle, onPress }: { muscle: MuscleInfo; onPress: () => void }) {
   return (
@@ -56,7 +57,7 @@ export default function MusclesListScreen() {
                 {rowIndex > 0 ? <Divider /> : null}
                 <MuscleRow
                   muscle={muscle}
-                  onPress={() => router.push({ pathname: '/exercises/muscle/[code]', params: { code: muscle.code } })}
+                  onPress={() => router.push(routes.muscle(muscle.code))}
                 />
               </View>
             ))}

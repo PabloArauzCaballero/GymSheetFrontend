@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 import type { Exercise } from '@gymsheet/types';
+import { bodyPartLabelEs, exerciseGroupLabelEs, muscleLabelEs } from '@gymsheet/domain';
 import { ExerciseImage } from '@/components/media';
 import { PressableScale } from '@/components/motion';
 import {
@@ -135,8 +136,11 @@ export function ExerciseRow({
   // esa etiqueta sólo añade ruido a una lista que ya se recorre con el pulgar.
   // El dato sigue en la API porque el gimnasio sí lo usa, en su panel.
   const tags = [
-    { label: exercise.targetMuscle ?? exercise.grupoMuscular, accent: true },
-    { label: exercise.bodyPart, accent: false },
+    {
+      label: exercise.targetMuscle ? muscleLabelEs(exercise.targetMuscle) : exerciseGroupLabelEs(exercise.grupoMuscular),
+      accent: true,
+    },
+    { label: bodyPartLabelEs(exercise.bodyPart), accent: false },
   ].filter((tag): tag is { label: string; accent: boolean } => Boolean(tag.label));
 
   const content = (

@@ -34,10 +34,21 @@ env:
 - assertVisible: 'Semana 1 de .*'
 - takeScreenshot: RF-14_p01d_programcard-en-rutinas_ios_oscuro
 
-# RF-14 · p02: una rutina pública ajena se copia y se activa la copia (reemplaza la anterior).
+# RF-14 · p02: una rutina pública ajena primero se guarda (la copia «Torso de Leo
+# · vN» lleva la atribución) y luego se activa la copia, que reemplaza la anterior.
+# Desde C2 «Activar programa» sólo aparece en rutinas propias.
 - runFlow:
     file: open-routine.subflow.yaml
     env: { TAB: 'Públicas', NAME: 'Torso de Leo' }
+- assertNotVisible: 'Activar programa'
+- tapOn: 'Guardar en mis rutinas'
+- extendedWaitUntil:
+    visible: 'Torso de Leo · v.*'
+    timeout: 30000
+- extendedWaitUntil:
+    visible: 'Basada en.*'
+    timeout: 30000
+- takeScreenshot: RF-14_p02b_la-copia-lleva-atribucion_ios_oscuro
 - tapOn: 'Activar programa'
 - extendedWaitUntil:
     visible: 'Ya tienes «Pierna 3 días».*'
@@ -45,7 +56,7 @@ env:
 - takeScreenshot: RF-14_p03_a1-reemplazo_ios_oscuro
 - tapOn: 'Apagar y activar'
 - extendedWaitUntil:
-    visible: 'Paso 2 de 4.*'
+    visible: 'Paso 1 de 3.*'
     timeout: 20000
 - tapOn: 'Siguiente'
 - tapOn: 'Siguiente'
@@ -56,13 +67,6 @@ env:
     timeout: 60000
 - assertVisible: 'Programa de pesas\. Torso de Leo.*'
 - takeScreenshot: RF-14_p02_activada-copia-de-ajena_ios_oscuro
-- runFlow:
-    file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Torso de Leo' }
-- extendedWaitUntil:
-    visible: 'Basada en.*'
-    timeout: 30000
-- takeScreenshot: RF-14_p02b_la-copia-lleva-atribucion_ios_oscuro
 
 # RF-14 · p04: confirmar el reemplazo cambia la tarjeta; la anterior queda reemplazada.
 - runFlow:

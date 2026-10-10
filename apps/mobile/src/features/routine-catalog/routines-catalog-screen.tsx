@@ -20,6 +20,7 @@ import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { TourTarget, useScreenTour } from '@/components/tour';
+import { ExploreExercisesButton } from '@/features/exercise-browser/explore-exercises-button';
 import { Button, Input } from '@/components/ui';
 import { WeekPlan } from '@/components/week-plan';
 import { useActivePrograms } from '@/features/programs/use-active-programs';
@@ -103,6 +104,7 @@ export function RoutinesCatalogScreen() {
       refreshing={catalog.isRefetching}
     >
       <ScreenHeader subtitle="Descubre, crea y entrena tus planes." title="Rutinas" tourKey="routines" />
+      <ExploreExercisesButton />
 
       <TourTarget id="routines.create">
         <Button label="Crear rutina" onPress={() => router.push('/routines/new')} />
