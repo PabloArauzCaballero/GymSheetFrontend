@@ -12,6 +12,8 @@ const cardio = (duracionSeg: number): WorkoutSet => ({
 });
 const exercise = (series: WorkoutSet[]): WorkoutExercise => ({
   id: 'e', orden: 1, esEnfasis: false, nota: null, ejercicio: null, series,
+  seriesObjetivo: null, repsMin: null, repsMax: null, pesoObjetivoKg: null, rirObjetivo: null,
+  descansoSeg: null, descansoEntreSeg: null, duracionSeg: null, grupo: null, grupoTipo: null,
 });
 const workout = (...exercises: WorkoutExercise[]): Workout =>
   ({ id: 'w', usuarioId: 'u', fechaInicio: '2026-10-01', fechaFin: null, estado: 'FINALIZADA', observacion: null, ejercicios: exercises }) as Workout;

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { workoutStatuses } from '@gymsheet/types';
+import { routineGroupTypes, workoutStatuses } from '@gymsheet/types';
 import { exerciseSchema } from './core';
 import { cardioSessionExtrasSchema } from '../cardio';
 import { programSessionExtrasSchema } from '../programs';
@@ -25,6 +25,18 @@ export const workoutExerciseSchema = z.object({
   orden: z.number().int(),
   esEnfasis: z.boolean(),
   nota: z.string().nullable(),
+  // Objetivo copiado de la rutina al empezar (C3.a); `null` si se añadió a mano o en
+  // una respuesta anterior a M-C3.
+  seriesObjetivo: z.number().int().nullable().default(null),
+  repsMin: z.number().int().nullable().default(null),
+  repsMax: z.number().int().nullable().default(null),
+  pesoObjetivoKg: z.number().nullable().default(null),
+  rirObjetivo: z.number().int().nullable().default(null),
+  descansoSeg: z.number().int().nullable().default(null),
+  descansoEntreSeg: z.number().int().nullable().default(null),
+  duracionSeg: z.number().int().nullable().default(null),
+  grupo: z.number().int().nullable().default(null),
+  grupoTipo: z.enum(routineGroupTypes).nullable().default(null),
   ejercicio: exerciseSchema.nullable(),
   series: z.array(workoutSetSchema),
 });

@@ -1,5 +1,6 @@
 import type { Exercise } from './core';
 import type { WorkoutStatus } from './enums';
+import type { RoutineGroupType } from './training';
 
 export type WorkoutSet = {
   id: string;
@@ -22,6 +23,17 @@ export type WorkoutExercise = {
   orden: number;
   esEnfasis: boolean;
   nota: string | null;
+  /** Objetivo copiado de la rutina al empezar (C3.a); todo `null` si se añadió a mano. */
+  seriesObjetivo: number | null;
+  repsMin: number | null;
+  repsMax: number | null;
+  pesoObjetivoKg: number | null;
+  rirObjetivo: number | null;
+  descansoSeg: number | null;
+  descansoEntreSeg: number | null;
+  duracionSeg: number | null;
+  grupo: number | null;
+  grupoTipo: RoutineGroupType | null;
   ejercicio: Exercise | null;
   series: WorkoutSet[];
 };

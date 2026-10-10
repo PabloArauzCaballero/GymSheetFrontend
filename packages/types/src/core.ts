@@ -139,6 +139,8 @@ export type ExerciseMedia = {
 export type Exercise = {
   id: string;
   nombre: string;
+  /** Nombre revisado en español (C3.b). La interfaz muestra `nombreEs ?? nombre`. */
+  nombreEs?: string | null;
   grupoMuscular: string;
   descripcion: string | null;
   tipoEjercicio: 'GLOBAL' | 'PERSONAL';

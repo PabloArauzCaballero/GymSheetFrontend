@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import {
   routineAssignmentStatuses,
+  routineExerciseLimits as limits,
+  routineGroupTypes,
   routineStatuses,
   routineVisibilities,
   trainingGoals,
@@ -17,8 +19,64 @@ export const routineExerciseSchema = z.object({
   rirObjetivo: z.number().int().nullable(),
   descansoSeg: z.number().int().nullable(),
   nota: z.string().nullable(),
+  // Campos de C3.a. `default(null)` para leer sin romper una respuesta anterior a M-C3.
+  grupo: z.number().int().nullable().default(null),
+  grupoTipo: z.enum(routineGroupTypes).nullable().default(null),
+  descansoEntreSeg: z.number().int().nullable().default(null),
+  duracionSeg: z.number().int().nullable().default(null),
   ejercicio: exerciseSchema.nullable(),
 });
+
+/**
+ * Un ejercicio de un día tal como se envía en `POST /routines` y
+ * `PUT /routines/:id/structure`. Mismos topes que el backend (C3.a): series
+ * 1–10, reps 1–50, bloque 1–30, transición 0–60 s y duración 1–3600 s. Con
+ * duración, las repeticiones no se envían (el servidor las guarda `null`).
+ */
+export const routineDayExerciseInputSchema = z
+  .object({
+    ejercicioId: z.string().uuid(),
+    seriesObjetivo: z
+      .number()
+      .int()
+      .min(limits.seriesMin, `Mínimo ${limits.seriesMin} serie`)
+      .max(limits.seriesMax, `Máximo ${limits.seriesMax} series`),
+    repsMin: z
+      .number()
+      .int()
+      .min(limits.repsMin, `Mínimo ${limits.repsMin} repetición`)
+      .max(limits.repsMax, `Máximo ${limits.repsMax} repeticiones`)
+      .nullable(),
+    repsMax: z
+      .number()
+      .int()
+      .min(limits.repsMin, `Mínimo ${limits.repsMin} repetición`)
+      .max(limits.repsMax, `Máximo ${limits.repsMax} repeticiones`)
+      .nullable(),
+    pesoObjetivoKg: z.number().min(0).max(2000).nullable(),
+    rirObjetivo: z.number().int().min(0).max(10).nullable(),
+    descansoSeg: z.number().int().min(0).max(7200).nullable(),
+    nota: z.string().max(1000).nullable(),
+    grupo: z.number().int().min(1).max(limits.grupoMax).nullable().optional(),
+    descansoEntreSeg: z
+      .number()
+      .int()
+      .min(0)
+      .max(limits.descansoEntreMax, `La transición admite hasta ${limits.descansoEntreMax} s`)
+      .nullable()
+      .optional(),
+    duracionSeg: z
+      .number()
+      .int()
+      .min(limits.duracionMin)
+      .max(limits.duracionMax)
+      .nullable()
+      .optional(),
+  })
+  .refine(
+    (value) => value.repsMin === null || value.repsMax === null || value.repsMin <= value.repsMax,
+    { path: ['repsMax'], message: 'El máximo de repeticiones no puede ser menor que el mínimo' },
+  );
 
 export const routineDaySchema = z.object({
   id: z.string().uuid(),
@@ -60,6 +118,7 @@ export const routineSchema = z.object({
   atribucion: routineAttributionSchema.nullable(),
   basadaEnRutinaId: z.string().nullable(),
   basadaEnVersion: z.number().int().nullable(),
+  numeroCopia: z.number().int().nullable().default(null),
   version: z.number().int(),
   hayVersionNueva: z.boolean().default(false),
   huellaCorta: z.string().nullable(),
@@ -93,6 +152,13 @@ export const routineWeekSchema = z.object({
           repsMin: z.number().int().nullable(),
           repsMax: z.number().int().nullable(),
           pesoObjetivoKg: z.number().nullable(),
+          descansoSeg: z.number().int().nullable().default(null),
+          rirObjetivo: z.number().int().nullable().default(null),
+          nota: z.string().nullable().default(null),
+          grupo: z.number().int().nullable().default(null),
+          grupoTipo: z.enum(routineGroupTypes).nullable().default(null),
+          descansoEntreSeg: z.number().int().nullable().default(null),
+          duracionSeg: z.number().int().nullable().default(null),
           pesoSugeridoKg: z.number().nullable().optional(),
         }),
       ),
@@ -112,7 +178,11 @@ export const routineWeekOverrideSchema = z.object({
   esDescarga: z.boolean(),
   factorVolumen: z.number(),
   factorCarga: z.number(),
-  nota: z.string().nullable().optional().transform((v) => v ?? null),
+  nota: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => v ?? null),
 });
 
 export const exerciseLikeResultSchema = z.object({

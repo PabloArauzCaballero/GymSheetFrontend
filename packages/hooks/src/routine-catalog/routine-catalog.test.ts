@@ -117,7 +117,7 @@ describe('calendario', () => {
   it('la hoja del día toma series de la semana generada y marca el ajuste', () => {
     const week = {
       numero: 4, esDescarga: true, factorVolumen: 0.5, factorCarga: 0.9, nota: null,
-      dias: [{ diaId: 'd1', diaSemana: 2, nombre: 'Tirón', ejercicios: [{ routineExerciseId: 're1', ejercicioId: 'e1', orden: 1, series: 2, repsMin: 8, repsMax: 12, pesoObjetivoKg: 54 }] }],
+      dias: [{ diaId: 'd1', diaSemana: 2, nombre: 'Tirón', ejercicios: [{ routineExerciseId: 're1', ejercicioId: 'e1', orden: 1, series: 2, repsMin: 8, repsMax: 12, pesoObjetivoKg: 54, descansoSeg: null, rirObjetivo: null, nota: null, grupo: null, grupoTipo: null, descansoEntreSeg: null, duracionSeg: null }] }],
     };
     const view = dayView(routine, week, 'd1');
     expect(view?.titulo).toBe('Martes · Tirón');
@@ -127,9 +127,11 @@ describe('calendario', () => {
     expect(dayView(routine, week, 'd2')?.titulo).toBe('Cualquier día');
   });
   it('series y repeticiones en una línea', () => {
-    expect(setsLabel({ series: 3, repsMin: 8, repsMax: 12 })).toBe('3 × 8-12');
+    expect(setsLabel({ series: 3, repsMin: 8, repsMax: 12 })).toBe('3 × 8–12');
     expect(setsLabel({ series: 5, repsMin: 5, repsMax: 5 })).toBe('5 × 5');
     expect(setsLabel({ series: 4, repsMin: null, repsMax: null })).toBe('4 series');
+    expect(setsLabel({ series: 3, repsMin: null, repsMax: null, duracionSeg: 30 })).toBe('3 × 30 s');
+    expect(setsLabel({ series: 2, repsMin: 8, repsMax: 12, duracionSeg: 90 })).toBe('2 × 1:30 min');
   });
 });
 
@@ -147,7 +149,7 @@ describe('versión nueva', () => {
     const copy = as([day(1, [item('a', 'Press', 3, [8, 12]), item('b', 'Remo', 3, [8, 12])]), day(3, [item('c', 'Sentadilla', 4, [5, 5])])]);
     const source = as([day(1, [item('a', 'Press', 4, [6, 8]), item('d', 'Fondos', 3, [10, 12])]), day(5, [item('e', 'Curl', 3, [10, 12])])]);
     const texts = diffRoutineVersions(copy, source).map((c) => c.texto);
-    expect(texts).toContain('Lunes: Press pasa de 3 × 8-12 a 4 × 6-8');
+    expect(texts).toContain('Lunes: Press pasa de 3 × 8–12 a 4 × 6–8');
     expect(texts).toContain('Lunes: se añade Fondos');
     expect(texts).toContain('Lunes: se quita Remo');
     expect(texts).toContain('Día nuevo: Viernes (1 ejercicios)');
