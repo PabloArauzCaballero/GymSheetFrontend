@@ -5,6 +5,7 @@ import { routineCardSchema } from './catalog';
 export const routineRecommendationSchema = z.object({
   rutina: routineCardSchema,
   motivo: z.string(),
+  plantilla: z.string().nullish(),
 });
 
 /**

@@ -38,12 +38,13 @@ function backend(data: unknown, status = 200) {
 describe('recomendaciones (C7)', () => {
   it('pide GET /routines/recommended?limit=3 por defecto y valida rutina + motivo', async () => {
     const motivo = 'Porque elegiste Hipertrofia · 4 días · gimnasio';
-    const { calls, services } = backend([{ rutina: card, motivo }]);
+    const { calls, services } = backend([{ rutina: card, motivo, plantilla: 'hipertrofia-torso-pierna-4d' }]);
     const list = await services.recommended();
     expect(calls).toEqual(['GET /api/routines/recommended?limit=3']);
     expect(list).toHaveLength(1);
     expect(list[0]?.rutina.nombre).toBe('Torso-Pierna 4 días');
     expect(list[0]?.motivo).toBe(motivo);
+    expect(list[0]?.plantilla).toBe('hipertrofia-torso-pierna-4d');
   });
 
   it('respeta el límite pedido y lo normaliza a entero ≥ 1', async () => {
@@ -60,7 +61,7 @@ describe('recomendaciones (C7)', () => {
 
   it('descarta la recomendación que no cumple el contrato sin tumbar las demás', async () => {
     const { services } = backend([
-      { rutina: card, motivo: 'Para ti' },
+      { rutina: card, motivo: 'Para ti' }, // sin `plantilla`: es opcional
       { rutina: { id: 'roto' }, motivo: 'x' },
       { motivo: 'sin rutina' },
     ]);

@@ -8,4 +8,6 @@ import type { RoutineCard } from './catalog';
 export type RoutineRecommendation = {
   rutina: RoutineCard;
   motivo: string;
+  /** Slug de la plantilla de la que sale (p. ej. `hipertrofia-torso-pierna-4d`). Aditivo: puede faltar. */
+  plantilla?: string | null;
 };
