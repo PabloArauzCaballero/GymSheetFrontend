@@ -77,25 +77,27 @@ export function todayWeekday(now = new Date()): number {
  * Número de copia de una tarjeta propia: `numeroCopia` del backend (C2) cuando
  * viene, y si no, el sufijo «· vN» del nombre (tarjetas anteriores a M-C3).
  */
-export function cardCopyNumber(card: Pick<RoutineCard, 'nombre'> & { numeroCopia?: number | null }): number | null {
+export function cardCopyNumber(card: Pick<RoutineCard, 'nombre' | 'numeroCopia'>): number | null {
   return card.numeroCopia ?? copyNumberFromName(card.nombre);
 }
 
 /**
- * Copias propias de una rutina ajena, a partir de las tarjetas de «Mías»: la
- * atribución congelada al copiar nombra la rutina y su autor. Mientras el
- * backend no exponga `basadaEnRutinaId` en la tarjeta, es la mejor señal.
+ * Copias propias de una rutina ajena, a partir de las tarjetas de «Mías» (C2):
+ * la señal es `basadaEnRutinaId === routine.id`. Solo con tarjetas antiguas, sin
+ * ese campo, se cae a la atribución congelada al copiar (nombre y autor).
  */
 export function ownCopiesOf(
-  source: Pick<Routine, 'nombre' | 'creadoPorUsuarioId'>,
+  source: Pick<Routine, 'id' | 'nombre' | 'creadoPorUsuarioId'>,
   mine: readonly RoutineCard[],
 ): RoutineCard[] {
   return mine
-    .filter(
-      (card) =>
-        card.esMia &&
+    .filter((card) => {
+      if (!card.esMia) return false;
+      if (card.basadaEnRutinaId !== undefined) return card.basadaEnRutinaId === source.id;
+      return (
         card.atribucion?.routineName === source.nombre &&
-        (card.atribucion.authorId === null || card.atribucion.authorId === source.creadoPorUsuarioId),
-    )
+        (card.atribucion.authorId === null || card.atribucion.authorId === source.creadoPorUsuarioId)
+      );
+    })
     .sort((a, b) => (cardCopyNumber(b) ?? 0) - (cardCopyNumber(a) ?? 0));
 }
