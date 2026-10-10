@@ -646,7 +646,7 @@ export type BadgeTone = keyof typeof tones.dark;
  */
 export function Badge({
   label,
-  tone = 'info',
+  tone = 'neutral',
   latido = false,
 }: {
   label: string;
