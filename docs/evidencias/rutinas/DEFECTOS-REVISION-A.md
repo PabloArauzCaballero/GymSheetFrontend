@@ -41,3 +41,18 @@
 - Capturas: RF-06/web/RF-06_p08_atras-conserva_{390,1440}_{claro,oscuro}.png
 - Reproducir: web, cuenta de pruebas que aún no ha visto el tour; crear rutina hasta «Paso 5 de 6 · Días», añadir ejercicios a un día y pulsar «Volver a la semana»/recargar: aparece el modal «BIENVENIDO A GYMSHEET» sobre el asistente y oculta la comprobación de que el día conserva sus 2 ejercicios.
 - Gravedad: media para la evidencia (la captura no demuestra lo previsto) y baja para el producto (la guía se ofrece al primer acceso). Recapturar con el tour descartado.
+
+## A-09 (baja) Moderación 390: eyebrow «COMUNIDAD» recortado por la cabecera en la vista previa de comentario
+- Capturas: RF-B1/web/RF-B1_p02_vista-previa-comentario_390_{claro,oscuro}.png (en p01 con el mismo ancho sí se ve completo).
+- Reproducir: web ancho 390, admin de gimnasio > Moderación > seleccionar el caso «Comentario»; tras el scroll automático al detalle la cabecera pegajosa deja la etiqueta «COMUNIDAD» cortada. Puede ser artefacto del fullPage; verificar en dispositivo.
+- Gravedad: baja.
+
+## A-10 (baja) Moderación 390: cabecera fija y toast descolocados en capturas de página completa
+- Capturas: RF-B1/web/RF-B1_p03_rutina-ocultada_390_{claro,oscuro}.png y RF-B1_p04_rutina-restaurada_390_{claro,oscuro}.png
+- Reproducir: web 390, admin > Moderación > Retirar/Restaurar una rutina; el toast «Caso resuelto.» y la cabecera sticky aparecen sobre la lista (en p04 la cabecera cubre «Contenido reportado por la comunidad…»). Probablemente artefacto del fullPage con scroll previo; recapturar con viewport y scroll arriba. En 1440 el toast tapa el nombre de usuario del encabezado (menor).
+- Gravedad: baja.
+
+## A-11 (baja) Rol «SYSTEM_ADMIN» mostrado en código crudo
+- Capturas: RF-B1/web/RF-B1_p06_sistema-moderacion-global_1440_{claro,oscuro}.png
+- Reproducir: web, usuario system admin: bajo el nombre en el encabezado y el pie aparece «SYSTEM_ADMIN» (constante con guion bajo) en lugar de una etiqueta legible («Administrador del sistema»).
+- Gravedad: baja.
