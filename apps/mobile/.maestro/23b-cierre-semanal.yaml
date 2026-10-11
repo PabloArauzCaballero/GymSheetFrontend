@@ -3,7 +3,7 @@
 # (la app no tiene reloj simulado). Una sesión cuenta para la semana desde los 10 minutos reales, así que
 # este flujo espera ese tiempo (≈ 11 min). Cuenta de administración: la sembrada en la base desechable.
 appId: app.gymsheet.mobile
-name: 23 · Cierre semanal y multiplicador
+name: 23b · Cierre semanal y multiplicador (la sesión ya lleva 15 min por SQL)
 env:
   EMAIL: athlete.mock@gymsheet.local
   FIRST: Athlete
@@ -11,18 +11,10 @@ env:
   ROW: barbell bent over row
 ---
 - runFlow: login-as.subflow.yaml
-- runScript:
-    file: scripts-week-close-prep.js
-    env: { EMAIL: 'athlete.mock@gymsheet.local' }
-- openLink: gymsheet:///workouts/${output.sessionId}
+- openLink: gymsheet:///workouts/${SESSION}
 - extendedWaitUntil:
     visible: 'En progreso'
     timeout: 60000
-# Espera de los 10 minutos reales (no hay nada que ver en pantalla: se sale por tiempo).
-- extendedWaitUntil:
-    visible: 'este-texto-no-existe-es-solo-una-espera'
-    timeout: 650000
-    optional: true
 - runScript:
     file: scripts-log-sets.js
     env:
@@ -50,6 +42,7 @@ env:
 - extendedWaitUntil:
     visible: 'Seguir'
     timeout: 60000
+- runFlow: cerrar-celebraciones.subflow.yaml
 - scrollUntilVisible:
     element: 'Tu programa'
 - assertVisible: 'Esta sesión cuenta.*'

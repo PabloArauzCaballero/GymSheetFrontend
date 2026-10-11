@@ -15,3 +15,4 @@ var id = null;
 for (var i = 0; i < list.length; i += 1) { if (list[i].nombre === ROUTINE_NAME && list[i].esMia) { id = list[i].id; break; } }
 if (!id) throw new Error('No existe la rutina ' + ROUTINE_NAME);
 call('POST', '/programs/strength/activate', token, { routineId: id, modo: typeof MODE !== 'undefined' && MODE ? MODE : 'NONE' });
+output.routineId = id;

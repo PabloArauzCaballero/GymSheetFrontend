@@ -740,33 +740,37 @@
       "rf": "RF-18",
       "paso": "01",
       "nombre": "x1-2-tras-semana-cumplida",
-      "plataformas": [],
-      "faltante": "NO TERMINADO: el flujo 23 (cierre semanal real con close-weeks) está escrito pero no llegó a pasar entera; el cierre semanal lo cubre el e2e `mode-rewards` del backend.",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Tarjeta con x1,2 tras la semana 1 cumplida."
     },
     {
       "rf": "RF-18",
       "paso": "02",
       "nombre": "semana-incumplida-vuelve-a-x1",
-      "plataformas": [],
-      "faltante": "NO TERMINADO: ver RF-18 p01.",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Tarjeta sin multiplicador tras semana incumplida."
     },
     {
       "rf": "RF-18",
       "paso": "03",
       "nombre": "insignia-por-racha-de-semanas",
-      "plataformas": [],
-      "faltante": "No capturado: necesita 4 semanas reales de sesiones.",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Insignia «Cuatro semanas de sobrecarga» conseguida."
     },
     {
       "rf": "RF-18",
       "paso": "04",
       "nombre": "sin-modo-no-hay-bono",
-      "plataformas": [],
-      "faltante": "Flujo 23-recompensas-bono-y-modo escrito pero no completado en la última pasada.",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Sin modo no hay línea de bono."
     },
     {
       "rf": "RF-19",
@@ -775,6 +779,69 @@
       "plataformas": [],
       "faltante": "No capturado: depende del fin real del programa (sin reloj simulado).",
       "debeVerse": "—"
+    },
+    {
+      "rf": "RF-18",
+      "paso": "00",
+      "nombre": "la-sesion-cuenta-para-la-semana",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "La sesión cuenta para la semana."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "01b",
+      "nombre": "semana-1-cumplida",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Detalle con S1 cumplida y x1,2."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "02b",
+      "nombre": "semana-2-sin-cumplir-los-puntos-no-bajan",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Detalle con S2 sin cumplir."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "03a",
+      "nombre": "cuatro-semanas-x1-8",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Tarjeta con x1,8 tras cuatro semanas."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "03b",
+      "nombre": "semanas-1-a-4-cumplidas",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Detalle con S1–S4 cumplidas."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "03c",
+      "nombre": "insignia-conseguida-celebracion",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Celebración de la insignia nueva."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "01",
+      "nombre": "bono-del-modo-en-el-resumen",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Bono del modo previsto en el resumen."
     }
   ]
 }

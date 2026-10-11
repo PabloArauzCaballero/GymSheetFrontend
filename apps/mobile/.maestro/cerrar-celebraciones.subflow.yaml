@@ -1,0 +1,12 @@
+# Cierra las celebraciones de insignia («¡Insignia conseguida!») que tapan el resumen de la sesión.
+# Según el día y el historial salen cero, una o varias; se cierran con «Seguir» sin tocar el del resumen.
+appId: app.gymsheet.mobile
+---
+- repeat:
+    times: 4
+    while:
+      visible: '.*Insignia conseguida.*'
+    commands:
+      - tapOn: 'Seguir'
+      - waitForAnimationToEnd:
+          timeout: 3000

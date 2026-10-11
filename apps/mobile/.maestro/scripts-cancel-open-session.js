@@ -11,4 +11,4 @@ function call(method, path, token, body) {
 }
 var token = call('POST', '/auth/login', null, { email: EMAIL, password: 'MockLocal2026!' }).data.accessToken;
 var sessions = call('GET', '/workouts?page=1&pageSize=10', token).data.items;
-for (var i = 0; i < sessions.length; i += 1) { if (sessions[i].estado === 'EN_PROGRESO') call('PATCH', '/workouts/' + sessions[i].id + '/cancel', token); }
+for (var i = 0; i < sessions.length; i += 1) { if (sessions[i].estado === 'EN_PROGRESO') call('PATCH', '/workouts/' + sessions[i].id + '/cancel', token, {}); }

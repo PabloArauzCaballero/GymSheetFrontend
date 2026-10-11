@@ -1,0 +1,107 @@
+# Parte B del flujo «racha de cuatro semanas» (RF-18 p03 + RF-19 p01). Lo lanza `run-23-racha.sh`, que antes
+# deja el programa con las semanas 1–3 cumplidas por SQL (SIMULACIÓN: las fechas del programa se retroceden
+# 21 días y las semanas 1–3 se marcan cumplidas con x1,2 · x1,4 · x1,6 en la base local). La semana 4 sí se
+# entrena de verdad en la app y se cierra con la herramienta de soporte `close-weeks` (el mismo código que el
+# trabajo del lunes), que la lleva a x1,8 y otorga la insignia. Después se cierran las semanas que quedan
+# (`SEMANAS=6`) y el programa termina por sí solo: queda el mensaje «Terminaste tu programa» (RF-19 p01, sin captura: no hay bandeja).
+appId: app.gymsheet.mobile
+name: 23c · Racha de cuatro semanas y fin de programa
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+  BENCH: barbell bench press
+  ROW: barbell bent over row
+---
+- runFlow: login-as.subflow.yaml
+- openLink: gymsheet:///workouts/${SESSION}
+- extendedWaitUntil:
+    visible: 'En progreso'
+    timeout: 60000
+- runScript:
+    file: scripts-log-sets.js
+    env:
+      EMAIL: athlete.mock@gymsheet.local
+      EXERCISE: ${BENCH}
+      SETS: '[{"pesoKg":60,"repeticiones":12,"rir":2},{"pesoKg":60,"repeticiones":12,"rir":2},{"pesoKg":60,"repeticiones":12,"rir":2}]'
+- runScript:
+    file: scripts-log-sets.js
+    env:
+      EMAIL: athlete.mock@gymsheet.local
+      EXERCISE: ${ROW}
+      SETS: '[{"pesoKg":50,"repeticiones":10,"rir":2},{"pesoKg":50,"repeticiones":10,"rir":2},{"pesoKg":50,"repeticiones":10,"rir":2}]'
+- swipe:
+    start: 50%,25%
+    end: 50%,70%
+- extendedWaitUntil:
+    visible: '.*60 kg × 12.*'
+    timeout: 30000
+- repeat:
+    times: 5
+    commands:
+      - scroll
+- tapOn: 'Finalizar sesión'
+- tapOn: 'Finalizar'
+- extendedWaitUntil:
+    visible: 'Seguir'
+    timeout: 60000
+- runFlow: cerrar-celebraciones.subflow.yaml
+
+# Cierre real de la semana 4 → x1,8.
+- runScript:
+    file: scripts-close-weeks.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local', SEMANAS: '1' }
+- openLink: gymsheet:///routines
+- swipe:
+    start: 50%,25%
+    end: 50%,70%
+- extendedWaitUntil:
+    visible:
+      id: 'program-card-strength'
+    timeout: 60000
+- assertVisible: 'Programa de pesas\. Cierre semanal QA\. .* x1,8.*'
+- takeScreenshot: RF-18_p03a_cuatro-semanas-x1-8_ios_oscuro
+- tapOn:
+    id: 'program-card-strength'
+- extendedWaitUntil:
+    visible: '.*Cumplida.*'
+    timeout: 30000
+- takeScreenshot: RF-18_p03b_semanas-1-a-4-cumplidas_ios_oscuro
+
+# Insignia por la racha.
+- openLink: gymsheet:///trayectoria
+- extendedWaitUntil:
+    visible: '.*Tu senda.*|.*Insignia conseguida.*'
+    timeout: 60000
+# La insignia nueva sale primero en una celebración a pantalla completa.
+- runFlow:
+    when:
+      visible: '.*Insignia conseguida.*'
+    commands:
+      - takeScreenshot: RF-18_p03c_insignia-conseguida-celebracion_ios_oscuro
+      - tapOn: 'Seguir'
+- extendedWaitUntil:
+    visible: '.*Tu senda.*'
+    timeout: 30000
+# Tour de la primera visita a Trayectoria (se salta).
+- tapOn:
+    text: 'Saltar.*'
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+- repeat:
+    times: 14
+    while:
+      notVisible: '.*sobrecarga.*'
+    commands:
+      - swipe:
+          start: 50%,80%
+          end: 50%,30%
+- assertVisible: '.*sobrecarga.*'
+- takeScreenshot: RF-18_p03_insignia-por-racha-de-semanas_ios_oscuro
+
+# Fin del programa: se cierran las semanas que quedan y el servidor lo da por terminado.
+- runScript:
+    file: scripts-close-weeks.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local', SEMANAS: '6' }
+# El aviso PROGRAM_FINISHED queda como mensaje IN_APP en `notifications.messages` (la app no tiene bandeja para él);
+# `run-23-racha.sh` lo imprime con SQL al terminar.

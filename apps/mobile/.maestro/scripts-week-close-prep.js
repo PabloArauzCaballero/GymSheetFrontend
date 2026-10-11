@@ -1,7 +1,7 @@
 // Prepara el cierre semanal real (RF-18): crea la rutina «Cierre semanal QA» con UN día en el día de la
 // semana de hoy y dos ejercicios, activa un programa de sobrecarga sobre ella e inicia la sesión de hoy.
 // Una sesión solo cuenta para la semana si dura 10 minutos o más (hora del servidor): el flujo espera ese
-// tiempo antes de terminarla. Variables: EMAIL. Deja `output.sessionId`.
+// tiempo antes de terminarla. Variables: EMAIL y, opcional, MODE (PROGRESSIVE_OVERLOAD por defecto, NONE = sin modo). Deja `output.sessionId`.
 var base = 'http://localhost:3011/api/v1';
 function call(method, path, token, body) {
   var response = http.request(base + path, {
@@ -25,7 +25,8 @@ var created = call('POST', '/routines', token, {
   progresion: { activa: true, descargaCada: 4 },
   dias: [{ diaSemana: iso, nombre: 'Hoy', ejercicios: [item(exerciseId('barbell bench press'), 3, 8, 12), item(exerciseId('barbell bent over row'), 3, 8, 12)] }],
 }).data;
-call('POST', '/programs/strength/activate', token, { routineId: created.id, modo: 'PROGRESSIVE_OVERLOAD', replace: true });
+if (!created.dias) created = call('GET', '/routines/' + created.id, token).data;
+call('POST', '/programs/strength/activate', token, { routineId: created.id, modo: typeof MODE !== 'undefined' && MODE ? MODE : 'PROGRESSIVE_OVERLOAD', replace: true });
 var session = call('POST', '/routines/' + created.id + '/start', token, { routineDayId: created.dias[0].id }).data;
 output.sessionId = session.id;
 output.routineId = created.id;
