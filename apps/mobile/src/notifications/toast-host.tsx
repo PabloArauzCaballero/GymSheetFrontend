@@ -1,5 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
-import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import type { NotificationSeverity, ToastItem } from '@gymsheet/notifications';
@@ -94,12 +94,21 @@ function ToastCard({ item }: { item: ToastItem }) {
     }).start();
   }, [item.pending, item.severity, progress, reduceMotion]);
 
+  // VoiceOver no siempre lee una región viva que aparece sola: se anuncia el texto además de la etiqueta.
+  const spoken = [item.title, item.message, item.description].filter(Boolean).join('. ');
+  useEffect(() => {
+    if (!item.pending && spoken) AccessibilityInfo.announceForAccessibility(spoken);
+  }, [item.pending, spoken]);
+
+  // Un aviso sin acción no captura toques: tapaba «‹ Volver» y el resto de la cabecera mientras duraba.
+  const passThrough = !item.action;
+
   const translateY = reduceMotion
     ? 0
     : progress.interpolate({ inputRange: [0, 1], outputRange: [-16, 0] });
 
   return (
-    <Animated.View style={{ opacity: progress, transform: [{ translateY }] }}>
+    <Animated.View pointerEvents={passThrough ? 'none' : 'auto'} style={{ opacity: progress, transform: [{ translateY }] }}>
       <Pressable
         accessible
         accessibilityRole="alert"
