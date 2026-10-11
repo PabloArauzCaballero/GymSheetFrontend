@@ -319,11 +319,11 @@
     {
       "rf": "RF-12",
       "paso": "06",
-      "nombre": "ocultar-ejercicio-falla-500-backend",
+      "nombre": "caso-resuelto-oculto",
       "plataformas": [
         "web"
       ],
-      "debeVerse": "DEFECTO DEL BACKEND: ocultar el caso de un ejercicio responde 500 (restricción ck_ejercicio_moderacion); no se pudo capturar el caso resuelto."
+      "debeVerse": "El administrador oculta el caso de un ejercicio y ve «Caso resuelto.» con la etiqueta «Retirado» (corregido el 500 de ck_ejercicio_moderacion)."
     },
     {
       "rf": "RF-12",
@@ -833,13 +833,6 @@
       "nombre": "cierre-real-del-trabajo-semanal",
       "plataformas": [],
       "faltante": "NO cubierto: el cierre semanal real (trabajo del lunes) no se ejecutó; las semanas se cerraron con la herramienta de soporte recompute-week y, para el multiplicador del programa y la semana incumplida, con SQL que replica lo que haría el trabajo."
-    },
-    {
-      "rf": "RF-12",
-      "paso": "06",
-      "nombre": "caso-resuelto-oculto-ejercicio",
-      "plataformas": [],
-      "faltante": "NO capturado: ocultar un ejercicio desde la cola de moderación responde 500 en el backend (la restricción ck_ejercicio_moderacion solo admite OCULTO_*, pero el código escribe OCULTA_MODERACION). Se dejó la captura del fallo y se aplicó el estado por SQL para comprobar la pantalla."
     }
   ]
 }
