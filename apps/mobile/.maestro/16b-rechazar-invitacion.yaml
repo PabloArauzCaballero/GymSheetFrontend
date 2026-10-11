@@ -1,0 +1,41 @@
+# RF-13 p08: B rechaza la invitación. A comparte «Plan para compartir» con B; B la ve en Mías › Compartidas conmigo
+# y pulsa «Rechazar»; la tarjeta desaparece. (p03, la notificación push, no se puede capturar en el simulador:
+# ver DEFECTOS-PENDIENTES / el motivo declarado en pasos.)
+appId: app.gymsheet.mobile
+name: 16b · Rechazar invitación
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+  ROUTINE_ID: 1500712d-f8a2-42b1-aafa-6ba6a9477e74
+---
+- runFlow: login-as.subflow.yaml
+# A comparte por API (el recorrido por pantalla de «Compartir con…» ya lo cubre el flujo 16).
+- runScript:
+    file: scripts-share-invite.js
+    env: { OWNER_EMAIL: 'athlete.mock@gymsheet.local', GUEST_EMAIL: 'expiring.mock@gymsheet.local', ROUTINE_ID: '${ROUTINE_ID}' }
+- evalScript: ${console.log(output.shared)}
+
+- runFlow:
+    file: login-as.subflow.yaml
+    env: { EMAIL: 'expiring.mock@gymsheet.local', FIRST: 'Expiring' }
+- openLink: gymsheet:///routines
+- runFlow: cerrar-tour.subflow.yaml
+- extendedWaitUntil:
+    visible: 'Crear rutina'
+    timeout: 60000
+- tapOn: 'Pestaña Mías'
+- tapOn:
+    id: 'chip-shared'
+- extendedWaitUntil:
+    visible: 'Invitación'
+    timeout: 30000
+- swipe:
+    start: 50%,80%
+    end: 50%,45%
+- waitForAnimationToEnd
+- takeScreenshot: RF-13_p08a_invitacion-antes-de-rechazar_ios_oscuro
+- tapOn: 'Rechazar'
+- waitForAnimationToEnd:
+    timeout: 4000
+- assertNotVisible: 'Athlete Mock te compartió.*'
+- takeScreenshot: RF-13_p08_rechazar-invitacion_ios_oscuro

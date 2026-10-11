@@ -1,0 +1,44 @@
+# RF-07 p05: con la cuenta B, la misma ficha. A deja el me gusta y el favorito puestos; B ve el contador público
+# (1 persona) pero NO el favorito de A (el suyo sigue sin marcar). Se abre la ficha por enlace profundo.
+appId: app.gymsheet.mobile
+name: 10b · Ficha del ejercicio con otra cuenta
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+  BENCH_ID: b4371c4f-e8fa-4b50-926c-48cdddb77a36
+---
+- runFlow: login-as.subflow.yaml
+- openLink: gymsheet:///ejercicios/${BENCH_ID}
+- extendedWaitUntil:
+    visible: 'Dar me gusta.*|Me gusta, activado.*'
+    timeout: 60000
+- runFlow:
+    when:
+      visible: 'Dar me gusta.*'
+    commands:
+      - tapOn: 'Dar me gusta.*'
+- extendedWaitUntil:
+    visible: 'Me gusta, activado.*'
+    timeout: 20000
+- runFlow:
+    when:
+      notVisible: 'Favorito, activado.*'
+    commands:
+      - tapOn: 'Marcar como favorito.*'
+- assertVisible: 'Favorito, activado.*'
+- takeScreenshot: RF-07_p05a_cuenta-a-con-favorito-y-me-gusta_ios_oscuro
+
+# Cuenta B.
+- runFlow:
+    file: login-as.subflow.yaml
+    env: { EMAIL: 'expiring.mock@gymsheet.local', FIRST: 'Expiring' }
+- openLink: gymsheet:///ejercicios/${BENCH_ID}
+- extendedWaitUntil:
+    visible: 'Dar me gusta.*'
+    timeout: 60000
+- assertVisible: 'Dar me gusta. 1 persona.*'
+- assertVisible: 'Marcar como favorito.*'
+- assertNotVisible: 'Favorito, activado.*'
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: RF-07_p05_cuenta-b-ve-contador_ios_oscuro

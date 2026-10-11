@@ -716,9 +716,10 @@
       "rf": "RF-13",
       "paso": "08",
       "nombre": "rechazar-invitacion",
-      "plataformas": [],
-      "faltante": "No capturado en móvil (la ruta de rechazar existe en la tarjeta y la cubre el e2e del backend).",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Invitación rechazada desaparece."
     },
     {
       "rf": "RF-15",
@@ -862,6 +863,42 @@
         "movil"
       ],
       "debeVerse": "Oferta de retomar el borrador tras reabrir."
+    },
+    {
+      "rf": "RF-06",
+      "paso": "04",
+      "nombre": "mapa-pectoral",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Lista de pecho con +."
+    },
+    {
+      "rf": "RF-07",
+      "paso": "05a",
+      "nombre": "cuenta-a-con-favorito-y-me-gusta",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Cuenta A con me gusta y favorito."
+    },
+    {
+      "rf": "RF-07",
+      "paso": "05",
+      "nombre": "cuenta-b-ve-contador",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "B ve el contador, no el favorito de A."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "08a",
+      "nombre": "invitacion-antes-de-rechazar",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Invitación con Rechazar/Aceptar."
     }
   ]
 }
