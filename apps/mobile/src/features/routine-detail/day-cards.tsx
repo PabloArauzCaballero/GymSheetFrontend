@@ -5,7 +5,7 @@ import type { RoutineDay } from '@gymsheet/types';
 import { ExerciseImage, hasArtwork } from '@/components/media';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { colors, iconSizes, radii, shadows, spacing } from '@/theme';
+import { cardPadding, colors, iconSizes, radii, shadows, spacing } from '@/theme';
 import { dayMinutes, dayMuscles } from '@/features/routine-detail/routine-plan';
 
 export function dayKicker(day: Pick<RoutineDay, 'diaSemana'>, number: number): string {
@@ -17,7 +17,19 @@ export function dayTitle(day: Pick<RoutineDay, 'nombre' | 'diaSemana'>): string 
   return day.nombre?.trim() || (day.diaSemana ? WEEKDAY_NAMES[day.diaSemana as Weekday] : 'Entreno');
 }
 
-const THUMB = 56;
+const THUMB = 60;
+
+/** «🏋 5 ejercicios», «🕑 ≈43 min»: el dato con su icono, sin otra tarjeta. */
+function MetaItem({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+      <Ionicons color={colors.textMuted} name={icon} size={iconSizes.sm} />
+      <Text tabular tone="secondary" variant="footnote">
+        {label}
+      </Text>
+    </View>
+  );
+}
 const MAX_THUMBS = 4;
 
 /**
@@ -35,9 +47,8 @@ export function DayCard({ day, number, onPress }: { day: RoutineDay; number: num
   const count = day.ejercicios.length;
   const minutes = dayMinutes(day);
   const muscles = dayMuscles(day, 3);
-  const meta = [`${count} ${count === 1 ? 'ejercicio' : 'ejercicios'}`, minutes ? `≈${minutes} min` : null]
-    .filter(Boolean)
-    .join(' · ');
+  const countLabel = `${count} ${count === 1 ? 'ejercicio' : 'ejercicios'}`;
+  const meta = [countLabel, minutes ? `≈${minutes} min` : null].filter(Boolean).join(' · ');
   return (
     <PressableScale
       accessibilityHint="Abre el día"
@@ -45,8 +56,8 @@ export function DayCard({ day, number, onPress }: { day: RoutineDay; number: num
       onPress={onPress}
       scaleTo={0.985}
       style={{
-        gap: spacing.smd,
-        padding: spacing.md,
+        gap: spacing.md,
+        padding: cardPadding,
         borderRadius: radii.xl,
         borderCurve: 'continuous',
         backgroundColor: colors.surfaceLow,
@@ -55,7 +66,7 @@ export function DayCard({ day, number, onPress }: { day: RoutineDay; number: num
       testID={`day-card-${day.id}`}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
-        <View style={{ flex: 1, gap: spacing.xxs }}>
+        <View style={{ flex: 1, gap: spacing.xs }}>
           <Text style={{ letterSpacing: 0.6 }} tone="muted" variant="caption">
             {dayKicker(day, number).toUpperCase()}
           </Text>
@@ -77,7 +88,9 @@ export function DayCard({ day, number, onPress }: { day: RoutineDay; number: num
         />
       </View>
 
-      {thumbs.length > 0 && thumbs.length + (rest > 0 ? 1 : 0) > 1 ? (
+      {/* Dos imágenes como mínimo: una sola junto a «+3» se leía como una
+          tira a medio cargar. */}
+      {thumbs.length >= 2 ? (
         <View
           style={{
             flexDirection: 'row',
@@ -108,9 +121,10 @@ export function DayCard({ day, number, onPress }: { day: RoutineDay; number: num
         </View>
       ) : null}
 
-      <Text tabular tone="muted" variant="footnote">
-        {meta}
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+        <MetaItem icon="barbell-outline" label={countLabel} />
+        {minutes ? <MetaItem icon="time-outline" label={`≈${minutes} min`} /> : null}
+      </View>
     </PressableScale>
   );
 }

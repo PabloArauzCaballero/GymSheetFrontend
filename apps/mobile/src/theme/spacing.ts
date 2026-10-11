@@ -18,8 +18,12 @@ export const spacing = {
   '2xl': 48,
 } as const;
 
-/** Margen lateral de pantalla. */
-export const gutter = 20;
+/**
+ * Margen lateral de pantalla: 24, el mismo que ya usaban las pantallas de
+ * acceso, de formulario y de interacciones. Con 20 las tarjetas de Rutinas
+ * quedaban pegadas al borde (revisión de TestFlight del 2026-10-11).
+ */
+export const gutter = 24;
 
 /** Ritmo vertical dentro de una tarjeta. */
 export const cardGap = 12;

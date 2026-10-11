@@ -1,16 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { ApiError } from '@gymsheet/api-client';
 import { ratingLabel } from '@gymsheet/hooks';
 import type { Routine, RoutineComment } from '@gymsheet/types';
 import { communityService } from '@/api/services';
 import { PressableScale } from '@/components/motion';
+import { PersonAvatar } from '@/components/person-avatar';
+import { RatingStars } from '@/features/routine-detail/detail-header';
+import { Text as AppText } from '@/components/text';
 import { Button, Input } from '@/components/ui';
 import { notify } from '@/notifications';
 import type { ReportTarget } from '@/features/routine-detail/report-sheet';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { cardPadding, colors, fontSizes, iconSizes, minTouchTarget, radii, ratingStar, shadows, spacing } from '@/theme';
+
+const AVATAR = 32;
 
 function Stars({
   value,
@@ -35,7 +40,8 @@ function Stars({
           testID={`star-${star}`}
         >
           <Ionicons
-            color={(value ?? 0) >= star ? colors.volt : colors.textMuted}
+            // Ámbar, como las estrellas de la tarjeta y de la franja de cifras.
+            color={(value ?? 0) >= star ? ratingStar : colors.textMuted}
             name={(value ?? 0) >= star ? 'star' : 'star-outline'}
             size={iconSizes.lg}
           />
@@ -59,45 +65,64 @@ function CommentRow({
   onDelete: (id: string) => void;
 }) {
   return (
-    <View style={{ gap: spacing.xs, marginLeft: nested ? spacing.lg : 0 }} testID={`comment-${comment.id}`}>
+    <View style={{ gap: spacing.smd, marginLeft: nested ? spacing.xl : 0 }} testID={`comment-${comment.id}`}>
       <View
-        style={{ gap: 4, borderRadius: radii.md, backgroundColor: colors.surfaceLow, padding: spacing.md }}
+        style={{
+          flexDirection: 'row',
+          gap: spacing.smd,
+          borderRadius: radii.xl,
+          borderCurve: 'continuous',
+          backgroundColor: colors.surfaceLow,
+          boxShadow: shadows.e1,
+          paddingTop: spacing.md,
+          paddingHorizontal: spacing.md,
+          paddingBottom: spacing.xs,
+        }}
       >
-        <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
-          {comment.autor.nombre}
-        </Text>
-        <Text style={{ color: colors.text, fontSize: fontSizes.sm, lineHeight: 20 }}>{comment.texto}</Text>
-        <View style={{ flexDirection: 'row', gap: spacing.md }}>
-          {!nested ? (
-            <PressableScale
-              accessibilityLabel={`Responder a ${comment.autor.nombre}`}
-              hitSlop={8}
-              onPress={() => onReply(comment)}
-              style={{ minHeight: minTouchTarget, justifyContent: 'center' }}
-            >
-              <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Responder</Text>
-            </PressableScale>
-          ) : null}
-          {comment.esMio ? (
-            <PressableScale
-              accessibilityLabel="Borrar mi comentario"
-              hitSlop={8}
-              onPress={() => onDelete(comment.id)}
-              style={{ minHeight: minTouchTarget, justifyContent: 'center' }}
-            >
-              <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Borrar</Text>
-            </PressableScale>
-          ) : (
-            <PressableScale
-              accessibilityLabel={`Denunciar comentario de ${comment.autor.nombre}`}
-              hitSlop={8}
-              onPress={() => onReport({ kind: 'COMMENT', id: comment.id, label: 'Comentario' })}
-              style={{ minHeight: minTouchTarget, justifyContent: 'center' }}
-              testID={`report-comment-${comment.id}`}
-            >
-              <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Denunciar</Text>
-            </PressableScale>
-          )}
+        <PersonAvatar id={comment.autor.id} name={comment.autor.nombre} size={AVATAR} />
+        <View style={{ flex: 1, gap: spacing.xs }}>
+          <AppText numberOfLines={1} strong variant="subhead">
+            {comment.autor.nombre}
+          </AppText>
+          <AppText variant="subhead">{comment.texto}</AppText>
+          <View style={{ flexDirection: 'row', gap: spacing.lg }}>
+            {!nested ? (
+              <PressableScale
+                accessibilityLabel={`Responder a ${comment.autor.nombre}`}
+                hitSlop={8}
+                onPress={() => onReply(comment)}
+                style={{ minHeight: minTouchTarget, justifyContent: 'center' }}
+              >
+                <AppText strong tone="muted" variant="footnote">
+                  Responder
+                </AppText>
+              </PressableScale>
+            ) : null}
+            {comment.esMio ? (
+              <PressableScale
+                accessibilityLabel="Borrar mi comentario"
+                hitSlop={8}
+                onPress={() => onDelete(comment.id)}
+                style={{ minHeight: minTouchTarget, justifyContent: 'center' }}
+              >
+                <AppText strong tone="muted" variant="footnote">
+                  Borrar
+                </AppText>
+              </PressableScale>
+            ) : (
+              <PressableScale
+                accessibilityLabel={`Denunciar comentario de ${comment.autor.nombre}`}
+                hitSlop={8}
+                onPress={() => onReport({ kind: 'COMMENT', id: comment.id, label: 'Comentario' })}
+                style={{ minHeight: minTouchTarget, justifyContent: 'center' }}
+                testID={`report-comment-${comment.id}`}
+              >
+                <AppText strong tone="muted" variant="footnote">
+                  Denunciar
+                </AppText>
+              </PressableScale>
+            )}
+          </View>
         </View>
       </View>
       {comment.respuestas.map((reply) => (
@@ -162,32 +187,58 @@ export function CommunitySection({
   const summary = rating.data ?? { ...routine.valoracion, miValoracion: null };
 
   return (
-    <View style={{ gap: spacing.md }} testID="community">
-      <View style={{ gap: spacing.xs }}>
-        <Text
-          accessibilityLiveRegion="polite"
-          style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}
-          testID="rating-summary"
-        >
-          {ratingLabel(summary)}
-        </Text>
-        <Stars disabled={routine.esMia} onRate={(stars) => rate.mutate(stars)} value={summary.miValoracion} />
-        {routine.esMia ? (
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>No puedes valorar tu rutina</Text>
-        ) : summary.miValoracion ? (
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-            Tu valoración: {summary.miValoracion} de 5
-          </Text>
-        ) : null}
+    <View style={{ gap: spacing.lg }} testID="community">
+      {/* La nota de la comunidad y la tuya en una sola tarjeta: arriba la
+          media grande con sus estrellas, debajo «Tu valoración» para tocar. */}
+      <View
+        style={{
+          gap: spacing.md,
+          padding: cardPadding,
+          borderRadius: radii.xl,
+          borderCurve: 'continuous',
+          backgroundColor: colors.surfaceLow,
+          boxShadow: shadows.e1,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <AppText style={{ fontSize: fontSizes.xl, lineHeight: fontSizes.xl * 1.15 }} variant="numeric">
+            {summary.promedio ? summary.promedio.toFixed(1).replace('.', ',') : '—'}
+          </AppText>
+          <View
+            accessibilityLabel={ratingLabel(summary).replace('★', 'Valoración')}
+            accessibilityLiveRegion="polite"
+            accessible
+            style={{ flex: 1, gap: spacing.xs }}
+            testID="rating-summary"
+          >
+            {summary.promedio ? <RatingStars size={iconSizes.sm} value={summary.promedio} /> : null}
+            <AppText tone="muted" variant="footnote">
+              {summary.total === 0 ? 'Sin valoraciones' : summary.total === 1 ? '1 reseña' : `${summary.total} reseñas`}
+            </AppText>
+          </View>
+        </View>
+        <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border }} />
+        <View style={{ gap: spacing.xs }}>
+          <AppText tone="secondary" variant="footnote">
+            {routine.esMia
+              ? 'No puedes valorar tu rutina'
+              : summary.miValoracion
+                ? `Tu valoración: ${summary.miValoracion} de 5`
+                : 'Toca para valorarla'}
+          </AppText>
+          <View style={{ marginLeft: -spacing.smd }}>
+            <Stars disabled={routine.esMia} onRate={(stars) => rate.mutate(stars)} value={summary.miValoracion} />
+          </View>
+        </View>
       </View>
 
-      <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
+      <AppText accessibilityRole="header" variant="headline">
         Comentarios{items.length > 0 ? ` (${items.length})` : ''}
-      </Text>
+      </AppText>
       {items.length === 0 && !comments.isPending ? (
-        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+        <AppText tone="muted" variant="subhead">
           Todavía no hay comentarios. Sé la primera persona en comentar.
-        </Text>
+        </AppText>
       ) : null}
       {items.map((comment) => (
         <CommentRow
@@ -204,9 +255,9 @@ export function CommunitySection({
       ) : null}
 
       {replyTo ? (
-        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+        <AppText tone="muted" variant="footnote">
           Respondiendo a {replyTo.autor.nombre}
-        </Text>
+        </AppText>
       ) : null}
       <Input
         label="Escribe un comentario"

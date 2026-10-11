@@ -145,8 +145,9 @@ export function ExerciseImage({
         // vienen sobre blanco y, multiplicadas sobre la placa, el blanco toma su
         // tono cálido y la figura se lee como una lámina de manual.
         backgroundColor: uri && !photo ? colors.plate : colors.surfaceHighest,
-        padding:
-          !uri || photo ? 0 : typeof size === 'number' ? Math.round(size * 0.06) : size === 'fill' ? spacing.sm : 0,
+        // Sin margen en las miniaturas: el margen sobre la placa se leía como
+        // un marco claro alrededor de la figura (TestFlight, 2026-10-11).
+        padding: !uri || photo ? 0 : size === 'fill' ? spacing.sm : 0,
         alignItems: 'center',
         justifyContent: 'center',
       }}

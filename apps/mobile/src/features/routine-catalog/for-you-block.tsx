@@ -17,14 +17,14 @@ import { PressableScale } from '@/components/motion';
 import { PersonAvatar } from '@/components/person-avatar';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
-import { accentPolicy, colors, iconSizes, ink, radii, ratingStar, shadows, spacing } from '@/theme';
+import { accentPolicy, colors, gutter, iconSizes, ink, radii, ratingStar, shadows, spacing } from '@/theme';
 import { MediaChip } from '@/features/routine-catalog/media-chip';
 import { RoutineCover } from '@/features/routine-catalog/routine-cover';
 import type { ForYouState } from '@/features/routine-catalog/use-recommended-routines';
 
 const HERO_COVER = 208;
-const ALT_WIDTH = 232;
-const ALT_COVER = 112;
+const ALT_WIDTH = 248;
+const ALT_COVER = 128;
 
 /** «★ 4,6 · ⬇ 12 · 4 días/sem»: las mismas cifras que la tarjeta del catálogo. */
 function Numbers({ item }: { item: RoutineRecommendation }) {
@@ -75,7 +75,7 @@ function HeroCard({ item, onOpen }: { item: RoutineRecommendation; onOpen: () =>
       testID="for-you-hero"
     >
       <RoutineCover goal={card.objetivo} style={{ height: HERO_COVER }} uri={card.portadaUrl}>
-        <View style={{ position: 'absolute', top: spacing.smd, left: spacing.smd }}>
+        <View style={{ position: 'absolute', top: spacing.md, left: spacing.md }}>
           <MediaChip icon="sparkles" label="Para ti" />
         </View>
         <View
@@ -148,7 +148,7 @@ function AltCard({ item, onOpen }: { item: RoutineRecommendation; onOpen: () => 
       testID={`for-you-alt-${card.id}`}
     >
       <RoutineCover goal={card.objetivo} scrim="soft" style={{ height: ALT_COVER }} uri={card.portadaUrl} />
-      <View style={{ padding: spacing.smd, gap: spacing.xs }}>
+      <View style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.smd + spacing.xxs, gap: spacing.xs }}>
         <Text numberOfLines={1} variant="headline">
           {card.nombre}
         </Text>
@@ -217,17 +217,19 @@ export function ForYouBlock({ state, onOpen }: { state: ForYouState; onOpen: (id
 
   const { hero, alternatives } = state.block;
   return (
-    <View style={{ gap: spacing.smd }} testID="for-you">
+    <View style={{ gap: spacing.md }} testID="for-you">
       <Text accessibilityRole="header" variant="title">
         Para ti
       </Text>
       <HeroCard item={hero} onOpen={() => onOpen(hero.rutina.id)} />
       {alternatives.length > 0 ? (
         <ScrollView
-          contentContainerStyle={{ gap: spacing.smd, paddingRight: spacing.md }}
+          // A sangre, como los chips de objetivo: el carrusel llega al borde y
+          // la última tarjeta no se corta contra el margen.
+          contentContainerStyle={{ gap: spacing.smd, paddingHorizontal: gutter, paddingBottom: spacing.xs }}
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={{ overflow: 'visible' }}
+          style={{ marginHorizontal: -gutter, overflow: 'visible' }}
         >
           {alternatives.map((item) => (
             <AltCard item={item} key={item.rutina.id} onOpen={() => onOpen(item.rutina.id)} />

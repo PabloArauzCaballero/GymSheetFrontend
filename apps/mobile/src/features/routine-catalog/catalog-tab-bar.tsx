@@ -1,8 +1,8 @@
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { type CatalogTab, type MineChip } from '@gymsheet/hooks';
 import { SegmentLabel, SegmentedPill } from '@/components/motion';
 import { FilterChip } from '@/components/filter-chip';
-import { colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { colors, fontSizes, gutter, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 /**
  * Orden y nombres del móvil (C8.3.4): lo propio primero, luego lo que REPP
@@ -75,7 +75,14 @@ export function MineChips({
   pendingInvitations: number;
 }) {
   return (
-    <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+    // Desplazable y a sangre, como los chips de objetivo: con el margen de 24
+    // «Compartidas conmigo (n)» ya no cabe a lo ancho en un iPhone.
+    <ScrollView
+      contentContainerStyle={{ gap: spacing.sm, paddingHorizontal: gutter }}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={{ marginHorizontal: -gutter }}
+    >
       <FilterChip
         label="Creadas por mí"
         onPress={() => onChange('created')}
@@ -93,7 +100,7 @@ export function MineChips({
         selected={value === 'shared'}
         testID="chip-shared"
       />
-    </View>
+    </ScrollView>
   );
 }
 

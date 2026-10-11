@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
-import { authorLabel, cardSubtitle, downloadsLabel, ratingLabel, ratingValue } from '@gymsheet/hooks';
+import { authorLabel, cardSubtitle, compactCount, downloadsLabel, ratingLabel, ratingValue } from '@gymsheet/hooks';
 import type { RoutineCard } from '@gymsheet/types';
 import { Skeleton } from '@/components/feedback';
 import { PressableScale } from '@/components/motion';
@@ -9,9 +9,10 @@ import { Text } from '@/components/text';
 import { GOAL_LABEL } from '@/lib/format';
 import { RoutineCover } from '@/features/routine-catalog/routine-cover';
 import { MediaChip } from '@/features/routine-catalog/media-chip';
-import { colors, iconSizes, radii, ratingStar, shadows, spacing } from '@/theme';
+import { cardPadding, colors, iconSizes, ink, radii, ratingStar, shadows, spacing } from '@/theme';
 
-const COVER_HEIGHT = 156;
+const COVER_HEIGHT = 208;
+const AVATAR = 28;
 
 /** Una cifra con su icono: «★ 4,6», «⬇ 12». */
 function Stat({ icon, value, color }: { icon: keyof typeof Ionicons.glyphMap; value: string; color?: string }) {
@@ -26,10 +27,11 @@ function Stat({ icon, value, color }: { icon: keyof typeof Ionicons.glyphMap; va
 }
 
 /**
- * Tarjeta del catálogo (rediseño 2026-10-11): portada con la imagen de un
- * ejercicio, objetivo y días encima en vidrio; debajo el nombre, quién la hizo
- * (foto o iniciales) y tres cifras que se entienden sin leer: estrellas,
- * descargas y semanas. Es un solo elemento accesible que lo lee de corrido.
+ * Tarjeta del catálogo (rediseño 2026-10-11, segunda pasada): portada con la
+ * imagen de un ejercicio; encima, en vidrio, el objetivo y «días · semanas», y
+ * el nombre en blanco sobre el velo. Debajo, una sola fila: quién la hizo (foto
+ * o iniciales) y dos cifras que se entienden sin leer, estrellas y descargas.
+ * Es un solo elemento accesible que lo lee de corrido.
  */
 export function RoutineCardView({
   card,
@@ -67,68 +69,72 @@ export function RoutineCardView({
       }}
       testID={`routine-card-${card.id}`}
     >
-      <RoutineCover goal={card.objetivo} scrim="soft" style={{ height: COVER_HEIGHT }} uri={card.portadaUrl}>
+      {/* Portada con el título encima (decisión del 2026-10-11): el nombre se
+          lee sobre la foto con el velo fuerte, como en Apple Fitness; debajo
+          solo queda quién la hizo y sus cifras. */}
+      <RoutineCover goal={card.objetivo} style={{ height: COVER_HEIGHT }} uri={card.portadaUrl}>
         <View
           style={{
             position: 'absolute',
-            top: spacing.smd,
-            left: spacing.smd,
-            right: spacing.smd,
+            top: spacing.md,
+            left: spacing.md,
+            right: spacing.md,
             flexDirection: 'row',
             justifyContent: 'space-between',
             gap: spacing.sm,
           }}
         >
           {card.objetivo ? <MediaChip label={GOAL_LABEL[card.objetivo]} /> : <View />}
-          <MediaChip icon="calendar-outline" label={`${card.diasPorSemana} días/sem`} />
+          <MediaChip
+            icon="calendar-outline"
+            label={[`${card.diasPorSemana} días/sem`, card.duracionSemanas ? `${card.duracionSemanas} sem` : null]
+              .filter(Boolean)
+              .join(' · ')}
+          />
         </View>
+        <Text
+          numberOfLines={2}
+          style={{
+            position: 'absolute',
+            left: cardPadding,
+            right: cardPadding,
+            bottom: spacing.md,
+            color: ink.white,
+          }}
+          variant="title"
+        >
+          {card.nombre}
+        </Text>
       </RoutineCover>
 
       <View
         style={{
-          padding: spacing.md,
-          paddingTop: spacing.smd,
+          flexDirection: 'row',
+          alignItems: 'center',
           gap: spacing.smd,
+          paddingHorizontal: cardPadding,
+          paddingVertical: spacing.md,
         }}
       >
-        <Text numberOfLines={2} variant="title">
-          {card.nombre}
+        <PersonAvatar
+          id={card.autor.id}
+          name={card.autor.nombre}
+          official={card.esOficial}
+          photoUrl={card.autor.fotoUrl}
+          size={AVATAR}
+        />
+        <Text numberOfLines={1} style={{ flex: 1 }} tone="secondary" variant="subhead">
+          {card.esOficial ? 'REPP · Oficial' : card.esMia ? 'Creada por ti' : author}
         </Text>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.sm,
-          }}
-        >
-          <PersonAvatar
-            id={card.autor.id}
-            name={card.autor.nombre}
-            official={card.esOficial}
-            photoUrl={card.autor.fotoUrl}
-            size={24}
-          />
-          <Text numberOfLines={1} style={{ flex: 1 }} tone="secondary" variant="subhead">
-            {card.esOficial ? 'REPP · Oficial' : card.esMia ? 'Creada por ti' : author}
-          </Text>
-        </View>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.md,
-          }}
-        >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
           {showsCommunity ? (
             <>
               <Stat
                 color={rating ? ratingStar : undefined}
                 icon={rating ? 'star' : 'star-outline'}
-                value={rating ? `${rating} (${card.valoracion.total})` : 'Nueva'}
+                value={rating ? rating : 'Nueva'}
               />
-              <Stat icon="arrow-down-circle-outline" value={downloadsLabel(card.copias)} />
+              <Stat icon="arrow-down-circle-outline" value={compactCount(card.copias)} />
             </>
           ) : (
             <Stat
@@ -136,7 +142,6 @@ export function RoutineCardView({
               value={card.visibilidad === 'PUBLIC' ? 'Pública' : 'Privada'}
             />
           )}
-          {card.duracionSemanas ? <Stat icon="layers-outline" value={`${card.duracionSemanas} semanas`} /> : null}
         </View>
       </View>
     </PressableScale>
@@ -157,19 +162,19 @@ export function RoutineCardSkeleton() {
       }}
     >
       <Skeleton height={COVER_HEIGHT} radius={0} />
-      <View style={{ padding: spacing.md, gap: spacing.smd }}>
-        <Skeleton height={20} radius={radii.xs} width="70%" />
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.sm,
-          }}
-        >
-          <Skeleton height={24} radius={radii.full} width={24} />
-          <Skeleton height={14} radius={radii.xs} width="35%" />
-        </View>
-        <Skeleton height={14} radius={radii.xs} width="55%" />
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.smd,
+          paddingHorizontal: cardPadding,
+          paddingVertical: spacing.md,
+        }}
+      >
+        <Skeleton height={AVATAR} radius={radii.full} width={AVATAR} />
+        <Skeleton height={14} radius={radii.xs} width="35%" />
+        <View style={{ flex: 1 }} />
+        <Skeleton height={14} radius={radii.xs} width="25%" />
       </View>
     </View>
   );

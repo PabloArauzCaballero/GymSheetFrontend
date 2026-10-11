@@ -23,6 +23,7 @@ import { EmptyState, ErrorState } from '@/components/feedback';
 import { FilterChip } from '@/components/filter-chip';
 import { ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
+import { Text as AppText } from '@/components/text';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { QuickActions } from '@/features/routine-catalog/quick-actions';
 import { routes } from '@/lib/routes';
@@ -39,7 +40,7 @@ import { RoutineCardSkeleton, RoutineCardView } from '@/features/routine-catalog
 import { useRecommendedRoutines } from '@/features/routine-catalog/use-recommended-routines';
 import { useRoutineCatalog } from '@/features/routine-catalog/use-routine-catalog';
 import { GOAL_LABEL } from '@/lib/format';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { colors, fontSizes, gutter, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 const EMPTY_COPY: Record<string, { title: string; message: string }> = {
   public: {
@@ -178,93 +179,102 @@ export function RoutinesCatalogScreen() {
 
       <ForYouBlock onOpen={open} state={forYou.state} />
 
-      <CatalogTabBar onChange={setTab} value={tab} />
-      {tab === 'mine' ? (
-        <MineChips onChange={setChip} pendingInvitations={pending} value={chip} />
-      ) : null}
+      {/* Explorar: pestañas, búsqueda y objetivo juntos, a 16 entre sí; antes
+          iban a 32 como si fueran secciones distintas y la pantalla se partía. */}
+      <View style={{ gap: spacing.md }}>
+        <AppText accessibilityRole="header" variant="title">
+          Explorar
+        </AppText>
+        <CatalogTabBar onChange={setTab} value={tab} />
+        {tab === 'mine' ? (
+          <MineChips onChange={setChip} pendingInvitations={pending} value={chip} />
+        ) : null}
 
-      <View
-        style={{
-          flexDirection: 'row',
-          gap: spacing.sm,
-          alignItems: 'flex-end',
-        }}
-      >
-        <View style={{ flex: 1 }}>
-          <Input
-            autoCapitalize="none"
-            autoCorrect={false}
-            clearButtonMode="while-editing"
-            icon="search"
-            label="Buscar rutinas"
-            labelHidden
-            onChangeText={setSearch}
-            placeholder="Buscar rutina…"
-            returnKeyType="search"
-            testID="routine-search"
-            value={search}
-          />
-        </View>
-        {tab === 'public' ? (
-          <PressableScale
-            accessibilityLabel={count > 0 ? `Filtros, ${count} aplicados` : 'Filtros'}
-            onPress={() => setSheet(true)}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: spacing.xs,
-              minHeight: minTouchTarget,
-              borderRadius: radii.md,
-              borderWidth: 1,
-              borderColor: count > 0 ? colors.borderControl : colors.border,
-              backgroundColor: count > 0 ? colors.surfaceHighest : colors.surface,
-              paddingHorizontal: spacing.md,
-            }}
-            testID="open-filters"
-          >
-            <Ionicons color={colors.text} name="options-outline" size={iconSizes.md} />
-            <Text
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: spacing.sm,
+            alignItems: 'flex-end',
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <Input
+              autoCapitalize="none"
+              autoCorrect={false}
+              clearButtonMode="while-editing"
+              icon="search"
+              label="Buscar rutinas"
+              labelHidden
+              onChangeText={setSearch}
+              placeholder="Buscar rutina…"
+              returnKeyType="search"
+              testID="routine-search"
+              value={search}
+            />
+          </View>
+          {tab === 'public' ? (
+            <PressableScale
+              accessibilityLabel={count > 0 ? `Filtros, ${count} aplicados` : 'Filtros'}
+              onPress={() => setSheet(true)}
               style={{
-                color: colors.text,
-                fontSize: fontSizes.sm,
-                fontWeight: semibold,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.xs,
+                minHeight: minTouchTarget,
+                borderRadius: radii.md,
+                borderWidth: 1,
+                borderColor: count > 0 ? colors.borderControl : colors.border,
+                backgroundColor: count > 0 ? colors.surfaceHighest : colors.surface,
+                paddingHorizontal: spacing.md,
               }}
+              testID="open-filters"
             >
-              {count > 0 ? `Filtros (${count})` : 'Filtros'}
-            </Text>
-          </PressableScale>
+              <Ionicons color={colors.text} name="options-outline" size={iconSizes.md} />
+              <Text
+                style={{
+                  color: colors.text,
+                  fontSize: fontSizes.sm,
+                  fontWeight: semibold,
+                }}
+              >
+                {count > 0 ? `Filtros (${count})` : 'Filtros'}
+              </Text>
+            </PressableScale>
+          ) : null}
+        </View>
+
+        {tab === 'public' ? (
+          <ScrollView
+            // A sangre: los chips corren hasta el borde de la pantalla y el
+            // primero arranca alineado con el margen.
+            contentContainerStyle={{ gap: spacing.sm, paddingHorizontal: gutter }}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginHorizontal: -gutter }}
+            testID="goal-chips"
+          >
+            <FilterChip
+              label="Todos"
+              onPress={() => setFilters({ ...filters, objetivo: null })}
+              selected={!filters.objetivo}
+            />
+            {trainingGoals.map((goal: TrainingGoal) => (
+              <FilterChip
+                key={goal}
+                label={GOAL_LABEL[goal]}
+                onPress={() =>
+                  setFilters({
+                    ...filters,
+                    objetivo: filters.objetivo === goal ? null : goal,
+                  })
+                }
+                selected={filters.objetivo === goal}
+                testID={`goal-chip-${goal}`}
+              />
+            ))}
+          </ScrollView>
         ) : null}
       </View>
-
-      {tab === 'public' ? (
-        <ScrollView
-          contentContainerStyle={{ gap: spacing.sm }}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          testID="goal-chips"
-        >
-          <FilterChip
-            label="Todos"
-            onPress={() => setFilters({ ...filters, objetivo: null })}
-            selected={!filters.objetivo}
-          />
-          {trainingGoals.map((goal: TrainingGoal) => (
-            <FilterChip
-              key={goal}
-              label={GOAL_LABEL[goal]}
-              onPress={() =>
-                setFilters({
-                  ...filters,
-                  objetivo: filters.objetivo === goal ? null : goal,
-                })
-              }
-              selected={filters.objetivo === goal}
-              testID={`goal-chip-${goal}`}
-            />
-          ))}
-        </ScrollView>
-      ) : null}
-
 
       <CatalogFiltersSheet
         onChange={setFilters}
@@ -274,7 +284,7 @@ export function RoutinesCatalogScreen() {
       />
 
       {catalog.isPending ? (
-        <View style={{ gap: spacing.md }}>
+        <View style={{ gap: spacing.lg }}>
           <RoutineCardSkeleton />
           <RoutineCardSkeleton />
         </View>
@@ -301,7 +311,7 @@ export function RoutinesCatalogScreen() {
           ) : null}
         </EmptyState>
       ) : (
-        <View style={{ gap: spacing.md }}>
+        <View style={{ gap: spacing.lg }}>
           {catalog.isError ? (
             <Text
               accessibilityRole="alert"
