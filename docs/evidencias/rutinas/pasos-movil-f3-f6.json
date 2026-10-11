@@ -184,11 +184,11 @@
     {
       "rf": "RF-10",
       "paso": "01",
-      "nombre": "toast-copiada-a-mias",
+      "nombre": "toast-guardada-en-mis-rutinas",
       "plataformas": [
         "movil"
       ],
-      "debeVerse": "Toast copiada a mias."
+      "debeVerse": "Aviso «Guardada en tus rutinas.» en una línea, sin tapar «Volver», sobre la copia v1+ con «Activar programa»."
     },
     {
       "rf": "RF-10",

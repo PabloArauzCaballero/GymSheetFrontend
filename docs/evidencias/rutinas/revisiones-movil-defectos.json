@@ -1,0 +1,8 @@
+{
+  "RF-09_p02a_aviso-de-rutina-publicada_ios_oscuro.png": "Revisada (agente, 2026-10-11, D2-1): fotograma de simctl justo tras confirmar; el aviso «Rutina publicada. Ya aparece en Públicas.» está en una línea sobre el detalle de «Pierna para publicar» (chip «Pública», «1 copia»). Ya no es idéntica a p02.",
+  "RF-09_p02b_aparece-en-publicas-con-autor_ios_oscuro.png": "Revisada (agente, 2026-10-11, D2-2): detalle de la rutina recién publicada con base limpia: «Sin valoraciones · 0 copias» (las «13 copias» eran el contador acumulado de corridas repetidas del flujo 14 sobre la misma base, no un cálculo erróneo). Sigue siendo el detalle, no el listado: el autor se ve en la tarjeta de Públicas (RF-10).",
+  "RF-09_p01_confirmacion-publicar_ios_oscuro.png": "Revisada (agente, 2026-10-11): hoja «Cualquiera podrá verla y copiarla» con Publicar/Cancelar. Sin defectos.",
+  "RF-09_p02_publicada-despublicar_ios_oscuro.png": "Revisada (agente, 2026-10-11): menú ⋯ con «Despublicar» tras publicar. Sin defectos.",
+  "RF-09_p03_ya-existe-identica_ios_oscuro.png": "Revisada (agente, 2026-10-11): aviso «Ya existe una rutina idéntica» con «Ver rutina». Sin defectos.",
+  "RF-10_p01_toast-guardada-en-mis-rutinas_ios_oscuro.png": "Revisada (agente, 2026-10-11, D2-3 y D6): fotograma de simctl con el aviso «Guardada en tus rutinas.» en una línea (antes saltaba a dos con el nombre de la copia y tapaba «‹ Volver»), copia «Pierna para publicar · v3», «Basada en … de Athlete Mock» y «Activar programa»."
+}
