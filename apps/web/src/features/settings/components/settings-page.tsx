@@ -1,5 +1,6 @@
 'use client';
 
+import { roleLabel } from '@/shared/lib/roles';
 import { Info, Moon, Palette, ShieldCheck, Sun, UserRound } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { AnatomyCredit } from '@/features/anatomy/components/anatomy-credit';
@@ -7,15 +8,6 @@ import { LogoutButton } from '@/shared/components/layout/logout-button';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Segmented } from '@/shared/components/ui/segmented';
 import { useTheme } from '@/shared/theme/theme-provider';
-
-const ROLE_LABEL: Record<string, string> = {
-  ADMIN: 'Administración',
-  CLIENTE: 'Socio',
-  COACH: 'Entrenador',
-  ENTRENADOR_EXTERNO: 'Entrenador externo',
-  FRONT_DESK: 'Recepción',
-  SYSTEM_ADMIN: 'Plataforma',
-};
 
 const THEME_OPTIONS = [
   { value: 'dark', label: 'Oscuro' },
@@ -66,7 +58,7 @@ export function SettingsPage({
           <Row label="Correo">
             <span className="break-all">{email}</span>
           </Row>
-          <Row label="Tipo de cuenta">{ROLE_LABEL[role] ?? role}</Row>
+          <Row label="Tipo de cuenta">{roleLabel(role)}</Row>
           <Row label="Sesión">
             <span className="inline-flex items-center gap-1.5">
               <ShieldCheck aria-hidden className="size-4 text-[var(--success)]" />

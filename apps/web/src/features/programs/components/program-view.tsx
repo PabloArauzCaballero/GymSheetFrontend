@@ -1,5 +1,6 @@
 'use client';
 
+import { formatNumber } from '@/shared/lib/numbers';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, CircleDashed, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -36,7 +37,7 @@ function GoalBars({ program }: Readonly<{ program: Program }>) {
                 <span className="text-sm text-[var(--text-muted)]">
                   {goal.alcanzadaEn
                     ? 'Meta lograda'
-                    : `${goal.marcaActualKg ?? goal.marcaInicialKg ?? '–'} → ${goal.marcaMetaKg ?? '–'} kg`}
+                    : `${formatNumber(goal.marcaActualKg ?? goal.marcaInicialKg)} → ${formatNumber(goal.marcaMetaKg)} kg`}
                 </span>
               </div>
               <div

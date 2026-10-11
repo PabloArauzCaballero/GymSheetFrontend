@@ -173,7 +173,14 @@ export const routineCalendarSchema = z.object({
   semanas: z.array(routineWeekSchema),
 });
 
-export const routineWeekOverrideSchema = z.object({
+/**
+ * `PUT /routines/:id/weeks/:n` responde hoy con las claves en inglés
+ * (`isDeload`, `volumeFactor`, `loadFactor`, `note`) y el contrato del cliente
+ * usa las españolas. Se aceptan ambas y se normaliza a la española: antes un
+ * ajuste de semana que SÍ se guardaba se contaba como fallido y el asistente
+ * avisaba de que la semana no se había ajustado.
+ */
+const weekOverrideBody = z.object({
   semana: z.number().int(),
   esDescarga: z.boolean(),
   factorVolumen: z.number(),
@@ -184,6 +191,18 @@ export const routineWeekOverrideSchema = z.object({
     .optional()
     .transform((v) => v ?? null),
 });
+
+export const routineWeekOverrideSchema = z.preprocess((raw) => {
+  if (typeof raw !== 'object' || raw === null || 'esDescarga' in raw) return raw;
+  const english = raw as Record<string, unknown>;
+  return {
+    semana: english.semana,
+    esDescarga: english.isDeload,
+    factorVolumen: english.volumeFactor,
+    factorCarga: english.loadFactor,
+    nota: english.note,
+  };
+}, weekOverrideBody);
 
 export const exerciseLikeResultSchema = z.object({
   meGusta: z.boolean(),

@@ -1,5 +1,6 @@
 'use client';
 
+import { exerciseOriginLabel, exerciseStatusLabel, exerciseTypeLabel } from '@/features/exercises/origin-labels';
 import { bodyPartLabelEs, exerciseGroupLabelEs, muscleLabelEs, selectExerciseVideo } from '@gymsheet/domain';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Dumbbell, Heart, Pencil, Play, Target, Trash2 } from 'lucide-react';
@@ -90,6 +91,7 @@ export function ExerciseDetail({
     item.tipoEjercicio === 'PERSONAL' && item.createdByUsuarioId === currentUserId;
   const canManageMedia =
     ownsPersonalExercise || (item.tipoEjercicio === 'GLOBAL' && role === 'ADMIN');
+  const originLabel = exerciseOriginLabel(item.dataSource);
   const media = item.media.find((entry) => entry.isPrimary) ?? item.media[0];
   const video = selectExerciseVideo(item.media, account.data?.genero ?? null);
   const instructions =
@@ -183,11 +185,10 @@ export function ExerciseDetail({
           </div>
           <div className="p-6 sm:p-8">
             <div className="flex flex-wrap gap-2">
-              <Badge tone="success">{item.estado}</Badge>
+              <Badge tone="success">{exerciseStatusLabel(item.estado)}</Badge>
               <Badge tone={item.tipoEjercicio === 'PERSONAL' ? 'info' : 'neutral'}>
-                {item.tipoEjercicio}
+                {exerciseTypeLabel(item.tipoEjercicio)}
               </Badge>
-              <Badge>{item.dataSource}</Badge>
             </div>
             <p className="data-label mt-7 text-[var(--text-muted)]">{exerciseGroupLabelEs(item.grupoMuscular)}</p>
             <h1 className="mt-3 break-words text-3xl font-semibold tracking-[-0.02em] sm:text-5xl">
@@ -199,6 +200,9 @@ export function ExerciseDetail({
             <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--text-muted)]">
               {item.descripcion ?? 'Sin descripción adicional.'}
             </p>
+            {originLabel ? (
+              <p className="mt-4 text-xs text-[var(--text-muted)]">Origen: {originLabel}</p>
+            ) : null}
           </div>
         </div>
         <div className="grid content-start gap-5">

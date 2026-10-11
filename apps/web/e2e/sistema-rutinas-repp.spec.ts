@@ -102,9 +102,9 @@ test('RF-B2 · la plataforma crea, marca y desmarca rutinas oficiales', async ({
     await openPage(page, '/sistema/auditoria');
     await waitForPageSettled(page);
     await page.getByLabel('Dominio').selectOption('routines');
-    await expect(page.getByText('Creó una rutina oficial').first()).toBeVisible();
-    await expect(page.getByText('Quitó una rutina de oficiales').first()).toBeVisible();
-    await expect(page.getByText('Marcó una rutina como oficial').first()).toBeVisible();
+    await expect(page.getByText('Creó una rutina oficial').filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText('Quitó una rutina de oficiales').filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText('Marcó una rutina como oficial').filter({ visible: true }).first()).toBeVisible();
     await evidencia(page, 'RF-B2', '06', 'auditoria-acciones');
   });
 });

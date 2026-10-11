@@ -11,3 +11,4 @@ export * from './training-metrics';
 export * from './week-plan';
 export * from './streak-location';
 export * from './session-insights';
+export * from './role-labels';

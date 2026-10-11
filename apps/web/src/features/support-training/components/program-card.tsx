@@ -1,5 +1,6 @@
 'use client';
 
+import { formatMultiplier } from '@/shared/lib/numbers';
 import { useState } from 'react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -49,7 +50,7 @@ export function ProgramCard({
           <p className="mt-1 text-xs text-[var(--text-muted)]">
             {label(LANE_LABEL, program.carril)} · {label(MODE_LABEL, program.modo)} ·{' '}
             {isoDayLabel(program.fechaInicio)} → {isoDayLabel(program.fechaFinPrevista)} ·
-            multiplicador ×{program.multiplicador.toFixed(2)}
+            multiplicador {formatMultiplier(program.multiplicador)}
           </p>
         </div>
 
@@ -85,7 +86,7 @@ export function ProgramCard({
                   {week.sesionesHechas} de {week.sesionesPlan}{' '}
                   {week.sesionesPlan === 1 ? 'sesión' : 'sesiones'}
                   {week.cardioMinutos > 0 ? ` · ${week.cardioMinutos} min de cardio` : ''}
-                  {week.multiplicador === null ? '' : ` · ×${week.multiplicador.toFixed(2)}`} · desde el{' '}
+                  {week.multiplicador === null ? '' : ` · ${formatMultiplier(week.multiplicador)}`} · desde el{' '}
                   {isoDayLabel(week.inicio)}
                 </p>
                 {result ? (
@@ -110,7 +111,7 @@ export function ProgramCard({
               {program.bonos.map((bono) => (
                 <li key={`${bono.semana}-${bono.motivo}-${bono.creadoEn}`}>
                   Semana {bono.semana} · {label(REWARD_REASON_LABEL, bono.motivo)} · +
-                  {bono.puntosBonus} puntos sobre {bono.puntosBase} (×{bono.multiplicador.toFixed(2)})
+                  {bono.puntosBonus} puntos sobre {bono.puntosBase} ({formatMultiplier(bono.multiplicador)})
                 </li>
               ))}
             </ul>

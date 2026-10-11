@@ -86,7 +86,7 @@ describe('soporte de entrenamiento: contrato', () => {
 
   it('explica cada resultado sin prometer que se restan puntos', () => {
     expect(recomputeMessage({ recalculada: true, motivo: 'CUMPLIDA', multiplicador: 1.4, bono: 30 })).toMatch(
-      /cumplida.*×1\.40.*30 puntos/u,
+      /cumplida.*×1,40.*30 puntos/u,
     );
     for (const motivo of recomputeReasons) {
       expect(recomputeMessage({ recalculada: false, motivo }).length).toBeGreaterThan(10);

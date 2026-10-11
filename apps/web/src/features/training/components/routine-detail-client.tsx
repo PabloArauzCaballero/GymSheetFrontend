@@ -1,5 +1,6 @@
 'use client';
 
+import { goalLabel, visibilityLabel } from '@/features/routines-v2/labels';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Play, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -70,7 +71,6 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
 
   const routine = query.data;
   const nextOrder = Math.max(0, ...routine.ejercicios.map((item) => item.orden)) + 1;
-  const owner = routine.creadoPorUsuarioId;
 
   return (
     <div className="grid gap-8">
@@ -90,7 +90,7 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
           </div>
         }
         description={routine.descripcion ?? 'Sin descripción.'}
-        eyebrow={`${routine.visibilidad} · ${routine.objetivo ?? 'objetivo libre'}`}
+        eyebrow={`${visibilityLabel(routine.visibilidad)} · ${goalLabel(routine.objetivo ?? null)}`}
         title={routine.nombre}
       />
 
@@ -160,7 +160,6 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
         </form>
       </section>
 
-      <p className="break-all text-xs text-[var(--text-disabled)]">Rutina de {owner}</p>
     </div>
   );
 }
