@@ -10,22 +10,22 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 |---|---|---|---|
 | RF-01 | 36 / 36 | 7 / 7 | 3 |
 | RF-02 | 24 / 24 | 7 / 7 | 0 |
-| RF-03 | 20 / 20 | 5 / 5 | 2 |
+| RF-03 | 20 / 20 | 7 / 7 | 2 |
 | RF-04 | 12 / 12 | 3 / 3 | 0 |
 | RF-05 | 12 / 12 | 6 / 6 | 0 |
-| RF-06 | 32 / 32 | 7 / 7 | 1 |
-| RF-07 | 20 / 20 | 4 / 4 | 1 |
+| RF-06 | 32 / 32 | 8 / 8 | 1 |
+| RF-07 | 20 / 20 | 6 / 6 | 1 |
 | RF-08 | 16 / 16 | 4 / 4 | 0 |
 | RF-09 | 20 / 20 | 6 / 6 | 2 |
 | RF-10 | 40 / 40 | 6 / 6 | 1 |
 | RF-11 | 12 / 12 | 0 / 0 | 1 |
 | RF-12 | 36 / 36 | 6 / 6 | 1 |
-| RF-13 | 44 / 44 | 7 / 7 | 2 |
+| RF-13 | 44 / 44 | 9 / 9 | 1 |
 | RF-14 | 36 / 36 | 9 / 9 | 0 |
-| RF-15 | 28 / 28 | 6 / 6 | 2 |
+| RF-15 | 28 / 28 | 8 / 8 | 0 |
 | RF-16 | 24 / 24 | 5 / 5 | 0 |
 | RF-17 | 28 / 28 | 6 / 6 | 0 |
-| RF-18 | 28 / 28 | 0 / 0 | 5 |
+| RF-18 | 28 / 28 | 12 / 12 | 1 |
 | RF-19 | 12 / 12 | 3 / 3 | 2 |
 | RF-20 | 20 / 20 | 3 / 3 | 0 |
 | RF-C3 | 16 / 16 | 0 / 0 | 0 |
@@ -113,15 +113,29 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | RF-10 | 03 | — | — | editar-la-copia-no-cambia-el-original | ❌ No capturado en móvil. |
 | RF-11 | 01 | — | — | crear-oficial-en-sistema | ❌ Solo web (consola del sistema); en móvil la pestaña REPP está en RF-01 p05. |
 | RF-12 | 05 | — | — | cola-de-moderacion | ❌ Solo web/backoffice. |
-| RF-13 | 03 | — | — | notificacion-de-invitacion | ❌ No capturado: la notificación push no se probó en el simulador. |
-| RF-13 | 08 | — | — | rechazar-invitacion | ❌ No capturado en móvil (la ruta de rechazar existe en la tarjeta y la cubre el e2e del backend). |
-| RF-15 | 04 | — | — | dos-fallos-bajan-la-carga | ❌ No capturado: necesita varias sesiones; lo cubren las pruebas del motor. |
-| RF-15 | 05 | — | — | semana-de-descarga | ❌ No capturado: depende del calendario del programa. |
-| RF-18 | 01 | — | — | x1-2-tras-semana-cumplida | ❌ NO TERMINADO: el flujo 23 (cierre semanal real con close-weeks) está escrito pero no llegó a pasar entera; el cierre semanal lo cubre el e2e `mode-rewards` del backend. |
-| RF-18 | 02 | — | — | semana-incumplida-vuelve-a-x1 | ❌ NO TERMINADO: ver RF-18 p01. |
-| RF-18 | 03 | — | — | insignia-por-racha-de-semanas | ❌ No capturado: necesita 4 semanas reales de sesiones. |
-| RF-18 | 04 | — | — | sin-modo-no-hay-bono | ❌ Flujo 23-recompensas-bono-y-modo escrito pero no completado en la última pasada. |
-| RF-19 | 01 | — | — | notificacion-de-fin-de-programa | ❌ No capturado: depende del fin real del programa (sin reloj simulado). |
+| RF-13 | 03 | — | — | notificacion-de-invitacion | ❌ NO capturable en el simulador. Verificado en datos: al invitar se crea el mensaje IN_APP «Te compartieron una rutina» (ROUTINE_SHARE_INVITE, PENDING en notifications.messages). La app móvil no tiene bandeja y el permiso de notificaciones de iOS no se concede por simctl (`Operation not permitted`), así que un `simctl push` no pinta el aviso. Alternativa: iPhone real por TestFlight (DoD-8). |
+| RF-13 | 08 | Móvil | `RF-13/movil/RF-13_p08_rechazar-invitacion_*` | Invitación rechazada desaparece. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-15 | 04 | Móvil | `RF-15/movil/RF-15_p04_dos-fallos-bajan-la-carga_*` | Baja el peso tras dos fallos seguidos. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-15 | 05 | Móvil | `RF-15/movil/RF-15_p05_semana-de-descarga_*` | Sugerencia de descarga: no cambia el peso. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 01 | Móvil | `RF-18/movil/RF-18_p01_x1-2-tras-semana-cumplida_*` | Tarjeta con x1,2 tras la semana 1 cumplida. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 02 | Móvil | `RF-18/movil/RF-18_p02_semana-incumplida-vuelve-a-x1_*` | Tarjeta sin multiplicador tras semana incumplida. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 03 | Móvil | `RF-18/movil/RF-18_p03_insignia-por-racha-de-semanas_*` | Insignia «Cuatro semanas de sobrecarga» conseguida. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 04 | Móvil | `RF-18/movil/RF-18_p04_sin-modo-no-hay-bono_*` | Sin modo no hay línea de bono. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-19 | 01 | — | — | notificacion-de-fin-de-programa | ❌ NO capturable en el simulador. Verificado en datos: al cerrar las semanas con close-weeks (flujo 23c) el servidor crea el mensaje IN_APP «Terminaste tu programa» (tipo PROGRAM_FINISHED, estado PENDING en notifications.messages; el flujo imprime la fila). La app móvil no tiene bandeja para ese mensaje y el permiso de notificaciones de iOS no se puede conceder por simctl privacy (`Operation not permitted`), así que `simctl push` no mostró ningún aviso. Alternativa: captura en un iPhone real con push registrado (TestFlight), DoD-8. |
+| RF-18 | 00 | Móvil | `RF-18/movil/RF-18_p00_la-sesion-cuenta-para-la-semana_*` | La sesión cuenta para la semana. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 01b | Móvil | `RF-18/movil/RF-18_p01b_semana-1-cumplida_*` | Detalle con S1 cumplida y x1,2. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 02b | Móvil | `RF-18/movil/RF-18_p02b_semana-2-sin-cumplir-los-puntos-no-bajan_*` | Detalle con S2 sin cumplir. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 03a | Móvil | `RF-18/movil/RF-18_p03a_cuatro-semanas-x1-8_*` | Tarjeta con x1,8 tras cuatro semanas. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 03b | Móvil | `RF-18/movil/RF-18_p03b_semanas-1-a-4-cumplidas_*` | Detalle con S1–S4 cumplidas. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 03c | Móvil | `RF-18/movil/RF-18_p03c_insignia-conseguida-celebracion_*` | Celebración de la insignia nueva. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 01 | Móvil | `RF-18/movil/RF-18_p01_bono-del-modo-en-el-resumen_*` | Bono del modo previsto en el resumen. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-03 | 06 | Móvil | `RF-03/movil/RF-03_p06_salir-sin-guardar_*` | Alerta ¿Salir sin guardar? | ✅ 1/1 capturadas · 1 revisadas |
+| RF-03 | 05 | Móvil | `RF-03/movil/RF-03_p05_retomar-borrador_*` | Oferta de retomar el borrador tras reabrir. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-06 | 04 | Móvil | `RF-06/movil/RF-06_p04_mapa-pectoral_*` | Lista de pecho con +. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-07 | 05a | Móvil | `RF-07/movil/RF-07_p05a_cuenta-a-con-favorito-y-me-gusta_*` | Cuenta A con me gusta y favorito. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-07 | 05 | Móvil | `RF-07/movil/RF-07_p05_cuenta-b-ve-contador_*` | B ve el contador, no el favorito de A. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-13 | 08a | Móvil | `RF-13/movil/RF-13_p08a_invitacion-antes-de-rechazar_*` | Invitación con Rechazar/Aceptar. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-18 | 00b | Móvil | `RF-18/movil/RF-18_p00b_sesion-cuenta-sin-plan-semanal_*` | Resumen sin «1 de 0». | ✅ 1/1 capturadas · 1 revisadas |
 | RF-10 | 01 | Web | `RF-10/web/RF-10_p01_guardar-en-mis-rutinas_*` | Rutina ajena: botón principal «Guardar en mis rutinas», «Probar un día» secundario y SIN «Activar». | ✅ 4/4 capturadas · 1 revisadas |
 | RF-10 | 01b | Web | `RF-10/web/RF-10_p01b_copia-v1-abierta_*` | Tras guardar se abre la copia «… · v1» (aviso «Guardada en tus rutinas») con «Activar». | ✅ 4/4 capturadas · 1 revisadas |
 | RF-10 | 02b | Web | `RF-10/web/RF-10_p02b_ya-la-guardaste-v1_*` | De vuelta en la original: «Ya la guardaste como v1 · Abrir». | ✅ 4/4 capturadas · 1 revisadas |
@@ -223,8 +237,8 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | RF-20 | 02 | Web | `RF-20/web/RF-20_p02_rutina-refleja-los-cambios_*` | El detalle de la rutina muestra el peso nuevo y el ejercicio añadido. | ✅ 4/4 capturadas · sin revisar |
 | RF-20 | 03a | Web | `RF-20/web/RF-20_p03a_solo-esta-vez-aviso_*` | Tras «Solo esta vez»: «Listo: la rutina no cambia.» | ✅ 4/4 capturadas · sin revisar |
 | RF-20 | 03 | Web | `RF-20/web/RF-20_p03_rutina-no-cambia_*` | La rutina sigue con los valores anteriores. | ✅ 4/4 capturadas · sin revisar |
-| RF-19 | 01 | — | — | notificacion-programa-terminado | ❌ NO cubierto con captura: el aviso PROGRAM_FINISHED lo emite un trabajo del último día del programa y la app no tiene reloj; solo se verificó la pantalla de cierre moviendo las fechas por SQL. |
-| RF-18 | 06 | — | — | cierre-real-del-trabajo-semanal | ❌ NO cubierto: el cierre semanal real (trabajo del lunes) no se ejecutó; las semanas se cerraron con la herramienta de soporte recompute-week y, para el multiplicador del programa y la semana incumplida, con SQL que replica lo que haría el trabajo. |
+| RF-19 | 01 | — | — | notificacion-programa-terminado | ❌ NO cubierto con captura. El aviso PROGRAM_FINISHED se crea al terminar el programa (comprobado: close-weeks del flujo móvil 23c lo genera como mensaje IN_APP/PENDING) pero ninguna pantalla lo muestra todavía: ni la web ni el móvil tienen bandeja de mensajes. Ver el motivo móvil en pasos-movil-f3-f6.json. |
+| RF-18 | 06 | — | — | cierre-real-del-trabajo-semanal | ❌ NO cubierto del todo. El cierre semanal se ejecutó con la herramienta de soporte `close-weeks` (POST /admin/support/programs/:id/close-weeks), que llama a `closeProgram`, el mismo código que usa el trabajo del lunes (`closeDueWeeks`); lo que no se ejecutó es el disparo programado del trabajo (cron). Móvil: flujos 23b y 23c, con capturas RF-18 p01–p03 (SIMULACIÓN documentada: fechas y semanas 1–3 por SQL; la sesión se retrocede 15 min). |
 | RF-03 | 01 | Web | `RF-03/web/RF-03_p01_paso1-vacio_*` | «Paso 1 de 6 · Nombre», campo vacío, barra de progreso con el primer segmento activo. | ✅ 4/4 capturadas · sin revisar |
 | RF-03 | 01 | Móvil | `RF-03/movil/RF-03_p01_paso1-vacio_*` | «Paso 1 de 6 · Nombre», campo vacío, barra de progreso con el primer segmento activo. | ✅ 1/1 capturadas · sin revisar |
 | RF-03 | 02 | Web | `RF-03/web/RF-03_p02_paso1-error-nombre_*` | Siguiente sin nombre: «Escribe un nombre» bajo el campo y sigue en el paso 1. | ✅ 4/4 capturadas · sin revisar |
@@ -291,8 +305,29 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 
 | Captura | Observación |
 |---|---|
-| `RF-12_p03_comentario-publicado_ios_oscuro.png` | DEFECTO conocido: muestra el borrador en el campo con el teclado abierto, no el comentario ya publicado (el flujo esperaba un texto que también está en el campo). El flujo se corrigió después (cierra el teclado y espera el nombre del autor) pero no se volvió a grabar. |
-| `RF-12_p04_gracias-lo-revisaremos_ios_oscuro.png` | LIMITACIÓN: muestra el detalle de «Denuncia QA» tras enviar; el aviso «Gracias. Lo revisaremos.» dura pocos segundos y no salió en la captura. |
+| `RF-18_p00_la-sesion-cuenta-para-la-semana_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): resumen «Sesión terminada»: titular «+99 puntos» (ya coincide con +50 +12 +37) y total 10.028 pts; «Tu programa» empieza a verse abajo. SIMULACIÓN: sesión retrocedida 15 min por SQL; cierre con close-weeks. |
+| `RF-18_p01_x1-2-tras-semana-cumplida_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): tarjeta «Cierre semanal QA · Sobrecarga», «Semana 1 de 5 · x1,2» y «Hoy · bono x1,2» tras cerrar la semana 1 cumplida (close-weeks). La franja «No pudimos cargar tus recomendaciones» es del backend local viejo sin /routines/recommended, no de la app (D5). |
+| `RF-18_p01b_semana-1-cumplida_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): detalle: chips «Sobrecarga» y «Multiplicador x1,2»; S1 «1/1 sesiones ✓ Cumplida», S2–S5 sin cerrar. |
+| `RF-18_p02_semana-incumplida-vuelve-a-x1_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): tras cerrar la semana 2 sin entrenar la tarjeta ya no lleva «x1,2» ni «bono»: «Semana 1 de 5». Los puntos no bajaron (aserción del flujo). |
+| `RF-18_p02b_semana-2-sin-cumplir-los-puntos-no-bajan_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): detalle: S1 ✓ Cumplida, S2 ✕ «Sin cumplir» en rojo; sin chip de multiplicador. |
+| `RF-18_p03a_cuatro-semanas-x1-8_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): tarjeta «Semana 4 de 5 · x1,8 · Descarga» y «Hoy · bono x1,8». Misma SIMULACIÓN de la racha. |
+| `RF-18_p03b_semanas-1-a-4-cumplidas_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): detalle: chips Sobrecarga, Semana de descarga y Multiplicador x1,8; S1–S4 ✓ Cumplida, S5 0/0. Misma SIMULACIÓN. |
+| `RF-18_p03_insignia-por-racha-de-semanas_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): lista de Insignias: ahora cada una enseña su premio («+120 pts» en «Cuatro semanas de sobrecarga», +100, +130, +300…; D2 corregido), con «NUEVA» en la ganada. SIMULACIÓN: semanas 1–3 cumplidas por SQL (fechas -21 días, insignia borrada para ganarla de nuevo); semana 4 entrenada en la app y cerrada con close-weeks. |
+| `RF-18_p03c_insignia-conseguida-celebracion_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): celebración «Cuatro semanas de sobrecarga» (Común, ¡NUEVA!); la captura cae al inicio de la cuenta y enseña «+ 0 pts» (animación); el valor final («+120 pts») se ve en la lista p03. El flujo ahora espera 3 s antes de capturar (sin volver a grabar). |
+| `RF-18_p01_bono-del-modo-en-el-resumen_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): «Puntos de la sesión +78 puntos» (D1 corregido); «Tu programa»: «Esta sesión cuenta: 1 de 1 de la semana 1.» y en verde «+15 por sobrecarga (x1,2 al cumplir la semana)» porque la sesión sí cuenta. SIMULACIÓN: sesión retrocedida 15 min por SQL. |
+| `RF-18_p04_sin-modo-no-hay-bono_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): «+77 puntos» y «Tu programa» sin ninguna línea de bono con el modo en Normal. SIMULACIÓN: sesión retrocedida 15 min. |
+| `RF-12_p03_comentario-publicado_ios_oscuro.png` | Revisada (agente, 2026-10-11): regrabada: «Comentarios (1)» con la tarjeta publicada «Expiring Membership Mock · Gran rutina, la sigo desde hace dos semanas» (con Responder/Borrar) y el campo «Escribe un comentario» ya vacío; el defecto anterior (borrador con teclado) queda corregido en la captura. SIMULACIÓN: se borró por SQL el comentario previo de esa cuenta para no duplicarlo. |
+| `RF-12_p04_gracias-lo-revisaremos_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): tarjeta «Gracias. Lo revisaremos.» sobre el día «Empuje», ahora más baja y delgada: queda por encima de «‹ Volver» sin taparlo y no captura toques (D6). Fotograma simctl durante «Enviar denuncia». Maestro sigue sin ver el aviso en el árbol de accesibilidad; se añadió announceForAccessibility. SIMULACIÓN: denuncias pendientes previas borradas por SQL. |
+| `RF-15_p04_dos-fallos-bajan-la-carga_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): «Tu programa»: «Para contar necesitas al menos 10 minutos y 3 series.» y «barbell bench press: Baja el peso → 57,5 kg la próxima», ya SIN la promesa de bono (D3 corregido); titular «+65 puntos». El fallo nº 1 se registró por API. |
+| `RF-15_p05_semana-de-descarga_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): «barbell bench press: Semana de descarga: no cambia», sin bono previsto (D3) y «+65 puntos» (D1). SIMULACIÓN: fechas del programa -21 días por SQL para que hoy sea la semana 4, de descarga. |
+| `RF-03_p06_salir-sin-guardar_ios_oscuro.png` | Revisada (agente, 2026-10-11): alerta nativa de iOS «¿Salir sin guardar?» · «Tu borrador se guarda en este dispositivo.» con «Salir» (rojo) y «Seguir editando», sobre el paso 1 atenuado. Maestro sí captura la alerta. |
+| `RF-03_p05_retomar-borrador_ios_oscuro.png` | Revisada (agente, 2026-10-11): tras stopApp + launchApp: «Tienes un borrador sin terminar · «Borrador QA retomable»» con «Retomar» y «Empezar de nuevo» a ancho completo. DEFECTO corregido: los dos botones iban en fila y «Empezar de nuevo» se cortaba como «Empezar de…»; ahora van en columna (steps-basic.tsx). |
+| `RF-06_p04_mapa-pectoral_ios_oscuro.png` | Revisada (agente, 2026-10-11): selector de ejercicios del asistente (día «Lunes») tras tocar el pecho en la figura por porcentaje de pantalla (56%,23%): «Pectoral mayor · 367 ejercicios» con «‹ Todos los músculos», filas con «+» y la barra «0 ejercicios · Ver y ordenar · Listo». La cabecera «Lunes» queda cortada arriba porque la pantalla estaba desplazada para ver la figura. |
+| `RF-07_p05a_cuenta-a-con-favorito-y-me-gusta_ios_oscuro.png` | Revisada (agente, 2026-10-11): cuenta A en la ficha «barbell bench press»: «Me gusta · 1» y «Favorito» activados (resaltados en verde). |
+| `RF-07_p05_cuenta-b-ve-contador_ios_oscuro.png` | Revisada (agente, 2026-10-11): cuenta B (Expiring) en la misma ficha: ve «Me gusta · 1» (contador público) pero su corazón y su estrella salen sin marcar; el favorito de A no se le muestra. Se cambió de cuenta cerrando sesión desde Ajustes y entrando con la otra (login-as). |
+| `RF-13_p08a_invitacion-antes-de-rechazar_ios_oscuro.png` | Revisada (agente, 2026-10-11): cuenta B, Mías › «Compartidas conmigo (1)»: tarjeta «Invitación · Athlete Mock te compartió «Plan para compartir»» con «Verás los ejercicios cuando aceptes» y los botones «Rechazar» y «Aceptar». La invitación se creó por API (scripts-share-invite.js); el recorrido por pantalla de «Compartir con…» es el del flujo 16. |
+| `RF-13_p08_rechazar-invitacion_ios_oscuro.png` | Revisada (agente, 2026-10-11): tras pulsar «Rechazar» el chip vuelve a «Compartidas conmigo» sin contador y el vacío dice «Nadie te ha compartido una rutina». |
+| `RF-18_p00b_sesion-cuenta-sin-plan-semanal_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): D4 corregido: con una semana sin sesiones planeadas el bloque dice «Esta sesión cuenta para tu programa (semana 1).» en vez de «1 de 0»; titular «+77 puntos». SIMULACIÓN: programa sobre el lunes, que ya pasó; sesión retrocedida 15 min. |
 | `RF-12_p04a_dia-con-ejercicio-privado_ios_oscuro.png` | Revisada (agente, 2026-10-09): hoja «Lunes · Empuje» con el ejercicio personal «Press raro de Ana» y el botón «Denunciar «…»». |
 | `RF-12_p04b_hoja-de-denuncia_ios_oscuro.png` | Revisada (agente, 2026-10-09): hoja «Denunciar» con motivos (Ejercicio peligroso seleccionado, Información engañosa, Copia de otra rutina…), detalle opcional y «Enviar denuncia». |
 | `RF-13_p01_buscar-persona-sin-email_ios_oscuro.png` | Revisada (agente, 2026-10-09): «Compartir con…» con «Expiring M.» (nombre corto, sin email) y Enviar desactivado hasta elegir. |

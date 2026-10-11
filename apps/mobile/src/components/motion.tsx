@@ -1,5 +1,5 @@
 import { countUpDuration } from '@gymsheet/domain';
-import { useCallback, useEffect, useRef, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -558,6 +558,9 @@ export function CountUpText({
 }) {
   const reduceMotion = useReduceMotion();
   const current = useSharedValue(reduceMotion ? value : from);
+  // Cuando la cuenta termina, la cifra final se pinta con un `Text` normal. La cuenta del hilo de UI no siempre
+  // llega a la pantalla (resumen bajo una celebración, filas fuera de la vista al montarse): se quedaba en «+0».
+  const [settled, setSettled] = useState(reduceMotion);
 
   useEffect(() => {
     const start = current.value;
@@ -565,8 +568,11 @@ export function CountUpText({
     if (reduceMotion || duration === 0) {
       cancelAnimation(current);
       current.value = value;
+      setSettled(true);
       return;
     }
+    setSettled(false);
+    const settle = setTimeout(() => setSettled(true), delayMs + duration + SETTLE_MARGIN_MS);
     current.value = withDelay(
       delayMs,
       withTiming(value, { duration, easing: Easing.out(Easing.cubic) }),
@@ -574,6 +580,7 @@ export function CountUpText({
     return () => {
       // Al desmontar o al cambiar de destino: la cuenta en curso se detiene
       // donde está y la siguiente arranca desde ahí.
+      clearTimeout(settle);
       cancelAnimation(current);
     };
   }, [current, delayMs, durationMs, reduceMotion, value]);
@@ -590,7 +597,7 @@ export function CountUpText({
       <Text
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
-        style={[textStyle, { opacity: 0 }]}
+        style={[textStyle, { opacity: settled ? 1 : 0 }]}
       >
         {finalText}
       </Text>
@@ -603,7 +610,7 @@ export function CountUpText({
         importantForAccessibility="no-hide-descendants"
         pointerEvents="none"
         scrollEnabled={false}
-        style={[textStyle, StyleSheet.absoluteFill, COUNTER_INPUT]}
+        style={[textStyle, StyleSheet.absoluteFill, COUNTER_INPUT, settled ? { opacity: 0 } : null]}
         underlineColorAndroid="transparent"
       />
     </View>
@@ -613,6 +620,9 @@ export function CountUpText({
 // Reanimated 4 ya anima `text` en un TextInput sin registrarlo antes: el
 // antiguo `addWhitelistedNativeProps` es un no-op desde esa versión.
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+
+/** Holgura tras la duración de la cuenta antes de fijar la cifra final. */
+const SETTLE_MARGIN_MS = 150;
 
 /** Dígitos de ancho fijo: la cifra no baila mientras cuenta. */
 const COUNTER_BASE: TextStyle = { fontVariant: ['tabular-nums'] };

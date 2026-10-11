@@ -825,14 +825,14 @@
       "paso": "01",
       "nombre": "notificacion-programa-terminado",
       "plataformas": [],
-      "faltante": "NO cubierto con captura: el aviso PROGRAM_FINISHED lo emite un trabajo del último día del programa y la app no tiene reloj; solo se verificó la pantalla de cierre moviendo las fechas por SQL."
+      "faltante": "NO cubierto con captura. El aviso PROGRAM_FINISHED se crea al terminar el programa (comprobado: close-weeks del flujo móvil 23c lo genera como mensaje IN_APP/PENDING) pero ninguna pantalla lo muestra todavía: ni la web ni el móvil tienen bandeja de mensajes. Ver el motivo móvil en pasos-movil-f3-f6.json."
     },
     {
       "rf": "RF-18",
       "paso": "06",
       "nombre": "cierre-real-del-trabajo-semanal",
       "plataformas": [],
-      "faltante": "NO cubierto: el cierre semanal real (trabajo del lunes) no se ejecutó; las semanas se cerraron con la herramienta de soporte recompute-week y, para el multiplicador del programa y la semana incumplida, con SQL que replica lo que haría el trabajo."
+      "faltante": "NO cubierto del todo. El cierre semanal se ejecutó con la herramienta de soporte `close-weeks` (POST /admin/support/programs/:id/close-weeks), que llama a `closeProgram`, el mismo código que usa el trabajo del lunes (`closeDueWeeks`); lo que no se ejecutó es el disparo programado del trabajo (cron). Móvil: flujos 23b y 23c, con capturas RF-18 p01–p03 (SIMULACIÓN documentada: fechas y semanas 1–3 por SQL; la sesión se retrocede 15 min)."
     }
   ]
 }

@@ -1,0 +1,20 @@
+# Parte A del flujo 23 (cierre semanal real, RF-18): deja la sesión de hoy EN_PROGRESO sobre la rutina
+# «Cierre semanal QA». La parte B la termina. Entre las dos, `run-23-cierre-semanal.sh` retrocede 15 min
+# el `fecha_inicio` de la sesión por SQL en la base local (SIMULACIÓN: una sesión solo cuenta para la
+# semana desde los 10 minutos, y esperarlos en tiempo real no aporta nada a la captura).
+appId: app.gymsheet.mobile
+name: 23a · Preparar cierre semanal
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+---
+- runFlow: login-as.subflow.yaml
+- runScript:
+    file: scripts-cancel-open-session.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local' }
+- runScript:
+    file: scripts-reset-programs.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local' }
+- runScript:
+    file: scripts-week-close-prep.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local' }

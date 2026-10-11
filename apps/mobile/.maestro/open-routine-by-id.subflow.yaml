@@ -1,0 +1,18 @@
+# Abre el detalle de una rutina por enlace profundo. Variables: EMAIL (cuenta que la ve), ROUTINE_NAME y SCOPE
+# (`mine` | `public`). Equivale a open-routine.subflow.yaml sin depender del buscador del catálogo.
+appId: app.gymsheet.mobile
+---
+- runScript:
+    file: scripts-routine-id.js
+    env: { EMAIL: '${EMAIL}', ROUTINE_NAME: '${ROUTINE_NAME}', SCOPE: '${SCOPE}' }
+- openLink: gymsheet:///routines/${output.routineId}
+- runFlow: cerrar-tour.subflow.yaml
+- tapOn:
+    text: 'Reintentar'
+    optional: true
+- extendedWaitUntil:
+    visible: 'Probar un día|Guardar en mis rutinas|Activar programa|Empezar rutina|Entrenar hoy'
+    timeout: 30000
+- extendedWaitUntil:
+    visible: 'Semana 1 de .*|Rutina de un día.*'
+    timeout: 30000

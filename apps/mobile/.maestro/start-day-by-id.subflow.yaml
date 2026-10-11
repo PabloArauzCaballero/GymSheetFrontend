@@ -1,0 +1,21 @@
+# Como start-day.subflow.yaml, pero abre la rutina por enlace profundo (`gymsheet:///routines/<id>`) en vez de
+# buscarla en el catálogo: con muchas rutinas en la cuenta, la tarjeta queda bajo la barra de pestañas y el
+# buscador no siempre filtra. Variables: ROUTINE_ID y DIA (con mayúscula: «Lunes», «Martes»…; se toca el día de la semana en curso).
+appId: app.gymsheet.mobile
+---
+- openLink: gymsheet:///routines/${ROUTINE_ID}
+- runFlow: cerrar-tour.subflow.yaml
+- extendedWaitUntil:
+    visible: 'Semana 1 de .*|Rutina de un día.*'
+    timeout: 60000
+- scrollUntilVisible:
+    element: '${DIA}.*'
+    timeout: 20000
+- tapOn: '${DIA}.*'
+- extendedWaitUntil:
+    visible: 'Entrenar este día'
+    timeout: 20000
+- tapOn: 'Entrenar este día'
+- extendedWaitUntil:
+    visible: 'En progreso'
+    timeout: 60000
