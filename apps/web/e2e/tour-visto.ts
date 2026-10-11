@@ -17,7 +17,8 @@ export async function marcarTourVisto(page: Page): Promise<void> {
   const omitir = page.getByRole('button', { name: /^Omitir$|Cerrar tutorial/u }).first();
   await omitir.waitFor({ state: 'visible', timeout: 2_500 }).catch(() => undefined);
   if (await omitir.isVisible().catch(() => false)) {
-    await omitir.click();
+    // Si un manejador de la prueba (`cerrarTour`) se adelanta y lo cierra, este clic ya no tiene objetivo.
+    await omitir.click({ timeout: 5_000 }).catch(() => undefined);
     await expect(omitir).toBeHidden({ timeout: 15_000 });
   }
 }
