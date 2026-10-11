@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 import { multiplierLabel, weekLabel } from '@gymsheet/hooks';
+import { describeWeekSessions } from '@/features/programs/week-progress-copy';
 import { confirm } from '@gymsheet/notifications';
 import { programService } from '@/api/services';
 import { ErrorState, Skeleton } from '@/components/feedback';
@@ -90,14 +91,14 @@ export function ProgramDetailScreen() {
         <Card list>
           {semanas.map((week) => (
             <View
-              accessibilityLabel={`Semana ${week.numero}${week.esDescarga ? ', descarga' : ''}. ${week.sesionesHechas} de ${week.sesionesPlan} sesiones. ${week.cumplida === true ? 'Cumplida' : week.cumplida === false ? 'No cumplida' : 'Pendiente'}`}
+              accessibilityLabel={`Semana ${week.numero}${week.esDescarga ? ', descarga' : ''}. ${describeWeekSessions(week.sesionesHechas, week.sesionesPlan)}. ${week.cumplida === true ? 'Cumplida' : week.cumplida === false ? 'No cumplida' : 'Pendiente'}`}
               key={week.numero}
               style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm }}
               testID={`program-week-${week.numero}`}
             >
               <Text style={{ width: 36, color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>{`S${week.numero}`}</Text>
               <Text style={{ flex: 1, color: colors.textMuted, fontSize: fontSizes.sm }}>
-                {week.sesionesHechas} / {week.sesionesPlan} sesiones{week.esDescarga ? ' · Descarga' : ''}
+                {describeWeekSessions(week.sesionesHechas, week.sesionesPlan)}{week.esDescarga ? ' · Descarga' : ''}
               </Text>
               <Text style={{ color: week.cumplida === true ? colors.success : week.cumplida === false ? colors.danger : colors.textMuted, fontSize: fontSizes.sm, fontWeight: semibold }}>
                 {week.cumplida === true ? '✓ Cumplida' : week.cumplida === false ? '✗ Sin cumplir' : '—'}
