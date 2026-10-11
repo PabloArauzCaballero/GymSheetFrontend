@@ -844,6 +844,24 @@
         "movil"
       ],
       "debeVerse": "Bono del modo previsto en el resumen."
+    },
+    {
+      "rf": "RF-03",
+      "paso": "06",
+      "nombre": "salir-sin-guardar",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Alerta ¿Salir sin guardar?"
+    },
+    {
+      "rf": "RF-03",
+      "paso": "05",
+      "nombre": "retomar-borrador",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Oferta de retomar el borrador tras reabrir."
     }
   ]
 }

@@ -39,16 +39,16 @@ function PendingDraftCard() {
         </Text>
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{`«${name}»`}</Text>
       </View>
-      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-        <Button label="Empezar de nuevo" onPress={descartar} style={{ flex: 1 }} variant="ghost" />
+      {/* En columna: en fila, «Empezar de nuevo» se cortaba con puntos suspensivos en un teléfono de 390 pt. */}
+      <View style={{ gap: spacing.sm }}>
         <Button
           label="Retomar"
           onPress={() => {
             const resumed = retomar();
             if (resumed && resumed.paso > 0) router.push(wizardStepPath(resumed.paso));
           }}
-          style={{ flex: 1 }}
         />
+        <Button label="Empezar de nuevo" onPress={descartar} variant="ghost" />
       </View>
     </Card>
   );
