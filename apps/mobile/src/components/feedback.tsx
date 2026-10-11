@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Button } from '@/components/ui';
 import { resolveError } from '@/notifications';
+import { Shimmer } from '@/components/shimmer';
 import { Text } from '@/components/text';
 import { cardPadding, colors, iconSizes, radii, shadows, spacing } from '@/theme';
 
@@ -22,7 +23,15 @@ import { cardPadding, colors, iconSizes, radii, shadows, spacing } from '@/theme
  * The slow pulse is the difference between "loading" and "broken" — a static
  * grey box reads as a dead layout, a breathing one reads as work in progress.
  */
-export function Skeleton({ height = 72 }: { height?: number }) {
+export function Skeleton({
+  height = 72,
+  width,
+  radius = radii.xl,
+}: {
+  height?: number;
+  width?: number | `${number}%`;
+  radius?: number;
+}) {
   const progress = useSharedValue(0);
   const reduceMotion = useReducedMotion();
 
@@ -49,13 +58,17 @@ export function Skeleton({ height = 72 }: { height?: number }) {
       style={[
         {
           height,
-          borderRadius: radii.xl,
+          width,
+          borderRadius: radius,
           borderCurve: 'continuous',
+          overflow: 'hidden',
           backgroundColor: colors.surfaceHigh,
         },
         animated,
       ]}
-    />
+    >
+      <Shimmer />
+    </Animated.View>
   );
 }
 
@@ -95,8 +108,10 @@ export function RowsSkeleton({ rows = 4, thumb = 64 }: { rows?: number; thumb?: 
         boxShadow: shadows.e1,
         paddingHorizontal: cardPadding,
         paddingVertical: spacing.sm,
+        overflow: 'hidden',
       }}
     >
+      <Shimmer />
       {Array.from({ length: rows }, (_, index) => (
         <View key={index}>
           {index > 0 ? <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border }} /> : null}

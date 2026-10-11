@@ -35,7 +35,7 @@ export function CatalogTabBar({
           flexBasis: 0,
           alignItems: 'center',
           justifyContent: 'center',
-          paddingHorizontal: spacing.sm,
+          paddingHorizontal: spacing.xs,
         }}
         onChange={onChange}
         options={TABS.map((tab) => ({

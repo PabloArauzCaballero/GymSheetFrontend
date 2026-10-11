@@ -111,3 +111,69 @@ export const bodyMapColors = {
   /** Fondo del chip activo sobre el vidrio. */
   chipActive: alpha(ink.white, 0.16),
 } as const;
+
+/* ─── Rutinas: portadas, avatares y estadísticas ─────────────────────────── */
+
+/**
+ * Velo de una portada a sangre: transparente arriba, el lienzo abajo. El texto
+ * blanco que va encima del último tramo mide ≥ 12:1 sobre `#0c0c0b`; el tramo
+ * medio (0,72) mantiene ≥ 4,5:1 aunque la foto sea blanca debajo.
+ */
+export const heroScrim = {
+  colors: [alpha('#0c0c0b', 0), alpha('#0c0c0b', 0.18), alpha('#0c0c0b', 0.72), '#0c0c0b'] as const,
+  locations: [0, 0.35, 0.72, 1] as const,
+};
+
+/** Velo superior: que los botones flotantes se lean sobre una foto clara. */
+export const heroTopScrim = [alpha(ink.black, 0.45), alpha(ink.black, 0)] as const;
+
+/** Botón redondo de vidrio sobre una imagen (volver, ⋯). */
+export const glassButton = {
+  bg: alpha(ink.black, 0.38),
+  border: alpha(ink.white, 0.14),
+  ink: ink.white,
+} as const;
+
+/** Chip sobre una imagen: vidrio oscuro con texto blanco (≥ 7:1 sobre el peor fondo con el velo). */
+export const mediaChip = {
+  bg: alpha(ink.black, 0.5),
+  border: alpha(ink.white, 0.16),
+  text: ink.white,
+} as const;
+
+/**
+ * Portada de respaldo cuando ningún ejercicio trae imagen: un degradado por
+ * objetivo en vez de un hueco gris con una mancuerna. Tonos profundos para que
+ * el título blanco mida ≥ 7:1 sobre cualquiera de los dos extremos.
+ */
+export const goalGradients = {
+  HIPERTROFIA: ['#3a1f5c', '#14101f'],
+  FUERZA: ['#5c1f1f', '#1a0f0f'],
+  RESISTENCIA: ['#123d4f', '#0c161c'],
+  PERDIDA_GRASA: ['#5a3412', '#1c120a'],
+  SALUD_GENERAL: ['#1d4a2b', '#0d1810'],
+  REHABILITACION: ['#1f3a5c', '#0e1520'],
+  DEFAULT: ['#2b2a26', '#11110f'],
+} as const satisfies Record<string, readonly [string, string]>;
+
+/**
+ * Fondos de las iniciales de un autor sin foto. Cada uno da ≥ 4,5:1 con texto
+ * blanco (de 5,0:1 a 6,9:1); el color sale del id para que la misma persona
+ * tenga siempre el mismo.
+ */
+export const avatarHues = [
+  '#6d28d9', // violeta 7,1
+  '#1d4ed8', // azul 6,7
+  '#0f766e', // verde azulado 5,5
+  '#b45309', // ámbar 5,0
+  '#be185d', // frambuesa 6,0
+  '#c2410c', // naranja 5,2
+  '#0e7490', // cian 5,4
+  '#4d7c0f', // oliva 5,0
+] as const;
+
+/** Estrella de la valoración: ámbar cálido, 10,3:1 sobre `surfaceLow`. */
+export const ratingStar = '#f5b94a';
+
+/** Franja de luz del esqueleto: blanco casi transparente. */
+export const shimmerBand = [alpha(ink.white, 0), alpha(ink.white, 0.09), alpha(ink.white, 0)] as const;

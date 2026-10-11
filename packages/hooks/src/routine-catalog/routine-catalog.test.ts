@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import type { Routine, RoutineCard } from '@gymsheet/types';
 import {
   activeFilterCount,
+  compactCount,
+  downloadsLabel,
+  personInitials,
+  ratingValue,
   authorLabel,
   cardSubtitle,
   dayView,
@@ -158,5 +162,24 @@ describe('versión nueva', () => {
   it('sin diferencias no devuelve nada', () => {
     const r = as([day(1, [item('a', 'Press', 3, [8, 12])])]);
     expect(diffRoutineVersions(r, r)).toEqual([]);
+  });
+});
+
+describe('estadísticas e iniciales de la tarjeta', () => {
+  it('descargas en singular, plural y cifra corta', () => {
+    expect(downloadsLabel(1)).toBe('1 descarga');
+    expect(downloadsLabel(0)).toBe('0 descargas');
+    expect(downloadsLabel(1240)).toBe('1,2 mil descargas');
+    expect(compactCount(1000)).toBe('1 mil');
+    expect(compactCount(15300)).toBe('15 mil');
+  });
+  it('valoración: null sin reseñas, con coma decimal si las hay', () => {
+    expect(ratingValue({ promedio: null, total: 0 })).toBeNull();
+    expect(ratingValue({ promedio: 4.56, total: 5 })).toBe('4,6');
+  });
+  it('iniciales: primera y última palabra', () => {
+    expect(personInitials('Diego Ramírez Soto')).toBe('DS');
+    expect(personInitials('  ana ')).toBe('A');
+    expect(personInitials('')).toBe('?');
   });
 });

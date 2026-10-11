@@ -1,4 +1,4 @@
-import { exerciseGroupLabelEs } from '@gymsheet/domain';
+import { exerciseGroupLabelEs, selectExercisePoster } from '@gymsheet/domain';
 import { copyNumberFromName, estimateDayMinutes } from '@gymsheet/hooks';
 import type { Routine, RoutineCard, RoutineDay, RoutineExercise } from '@gymsheet/types';
 
@@ -100,4 +100,24 @@ export function ownCopiesOf(
       );
     })
     .sort((a, b) => (cardCopyNumber(b) ?? 0) - (cardCopyNumber(a) ?? 0));
+}
+
+/**
+ * Imagen de la portada del detalle, con el mismo criterio que la tarjeta del
+ * catálogo (`portadaUrl` del backend): la primera lámina de un ejercicio (foto
+ * o render, que aguantan el ancho completo) y, si ninguno tiene, el primer
+ * póster de vídeo. Así la tarjeta y el detalle enseñan la misma imagen.
+ */
+export function coverImageUri(routine: Pick<Routine, 'dias'>): string | null {
+  const exercises = coverExercises(routine, 50);
+  for (const exercise of exercises) {
+    const images = exercise.media.filter((item) => item.mediaType === 'IMAGE');
+    const image = images.find((item) => item.isPrimary) ?? images[0];
+    if (image?.url) return image.url;
+  }
+  for (const exercise of exercises) {
+    const poster = selectExercisePoster(exercise.media, null);
+    if (poster?.url) return poster.url;
+  }
+  return null;
 }

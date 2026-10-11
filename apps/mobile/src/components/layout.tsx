@@ -70,8 +70,15 @@ export function ScrollScreen({
   onRefresh,
   overlay,
   refreshing = false,
+  hero,
 }: {
   children: ReactNode;
+  /**
+   * Portada a sangre arriba del todo: ocupa el ancho completo (sin el margen
+   * lateral) y se mete bajo la barra de estado. Se encarga ella de su área
+   * segura superior.
+   */
+  hero?: ReactNode;
   /**
    * Centres content vertically when it is shorter than the viewport. For pages
    * that are a single short form — on a tablet those otherwise sit in the top
@@ -164,7 +171,7 @@ export function ScrollScreen({
         }}
         ref={scrollRef}
         contentContainerStyle={{
-          paddingTop: topInset + spacing.xl,
+          paddingTop: hero ? 0 : topInset + spacing.xl,
           paddingBottom: bottomInset + spacing['2xl'],
           paddingLeft: gutter + insets.left,
           paddingRight: gutter + insets.right,
@@ -198,6 +205,11 @@ export function ScrollScreen({
         }
         showsVerticalScrollIndicator={false}
       >
+        {hero ? (
+          <View style={{ marginLeft: -(gutter + insets.left), marginRight: -(gutter + insets.right), marginBottom: -spacing.md }}>
+            {hero}
+          </View>
+        ) : null}
         {children}
       </ScrollView>
 

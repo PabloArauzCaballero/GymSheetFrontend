@@ -394,7 +394,13 @@ export function SegmentLabel({
       easing: PREMIUM_EASING,
     }),
   }));
-  return <Animated.Text style={[style, animated]}>{label}</Animated.Text>;
+  // Una línea siempre: en una pastilla de tres segmentos una etiqueta larga
+  // («Recomendadas») se partía en dos; se encoge un poco antes que romperse.
+  return (
+    <Animated.Text adjustsFontSizeToFit minimumFontScale={0.85} numberOfLines={1} style={[style, animated]}>
+      {label}
+    </Animated.Text>
+  );
 }
 
 /**

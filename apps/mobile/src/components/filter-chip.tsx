@@ -1,12 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { colors, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { StyleSheet } from 'react-native';
+import { colors, iconSizes, minTouchTarget, radii, shadows, spacing } from '@/theme';
 
 /**
- * Chip de filtro (C8.1: nunca en acento). Lo elegido se distingue por relleno,
- * contorno de control (≥ 3:1) y un ✓ —la forma, no solo el color— y se anuncia
- * con `selected`. Alto táctil de 44 también en web, donde `hitSlop` no existe.
+ * Chip de filtro (C8.1: nunca en acento). Lo elegido se invierte —relleno
+ * claro con texto oscuro, 17:1— y lleva un ✓, así que se distingue por la forma
+ * y no solo por el color; se anuncia con `selected`. Lo demás va en una
+ * superficie suave con realce. 40 de alto con 2 de `hitSlop` arriba y abajo.
  */
 export function FilterChip({
   label,
@@ -30,31 +32,34 @@ export function FilterChip({
       accessibilityRole="button"
       accessibilityState={{ selected }}
       haptic="selection"
+      hitSlop={{ top: 2, bottom: 2 }}
       onPress={onPress}
       scaleTo={0.96}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.xs,
-        minHeight: minTouchTarget,
-        paddingHorizontal: spacing.smd,
+        gap: spacing.xs + 2,
+        minHeight: minTouchTarget - 4,
+        paddingHorizontal: spacing.md,
         borderRadius: radii.full,
-        borderWidth: 1,
-        borderColor: selected ? colors.borderControl : colors.border,
-        backgroundColor: selected ? colors.surfaceHighest : 'transparent',
+        borderCurve: 'continuous',
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: selected ? colors.text : colors.border,
+        backgroundColor: selected ? colors.text : colors.surfaceLow,
+        boxShadow: selected ? undefined : shadows.e1,
       }}
       testID={testID}
     >
       {glyph ? (
         <Ionicons
           accessibilityElementsHidden
-          color={selected ? colors.text : colors.textMuted}
+          color={selected ? colors.background : colors.textMuted}
           importantForAccessibility="no-hide-descendants"
           name={glyph}
           size={iconSizes.sm}
         />
       ) : null}
-      <Text strong={selected} tone={selected ? 'default' : 'secondary'} variant="subhead">
+      <Text strong style={selected ? { color: colors.background } : undefined} tone="secondary" variant="subhead">
         {label}
       </Text>
     </PressableScale>
