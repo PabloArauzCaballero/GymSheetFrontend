@@ -20,3 +20,24 @@
 - Capturas: RF-02/web/RF-02_p04_ficha-del-ejercicio_{390,1440}_{claro,oscuro}.png (y las hojas del día RF-02_p01/p03 con nombres «barbell …»).
 - Reproducir: web > Rutinas > rutina > pulsar un ejercicio de la hoja del día. Se ve «barbell deadlift», «HAMSTRINGS», «Músculo objetivo glutes», «Parte corporal upper legs», «Sinergista hamstrings» (inglés) y los chips «GLOBAL» y «EXERCISES_DATASET» (código interno) a la vez que «Isquiotibiales/Glúteo mayor» en español.
 - Gravedad: media (mezcla de idiomas y texto técnico crudo; mismo origen que A-03: catálogo sin traducir).
+
+## A-05 (baja) Barra de progreso del asistente casi invisible en tema claro (web)
+- Capturas: RF-03/web/RF-03_p01_paso1-vacio_1440_claro.png (comprobar en el resto de pasos del asistente en claro).
+- Reproducir: web, tema claro, Rutinas > Nueva rutina; en «Paso 1 de 6 · Nombre» solo se distingue el segmento activo; los 5 restantes (pista) casi no se ven. En oscuro se ven los 6.
+- Gravedad: baja (contraste de elemento no textual).
+- Nota: el nombre de usuario de la cuenta de pruebas se muestra como «Active Membership Mock» (dato de la cuenta de QA, no del producto).
+
+## A-06 (media) Detalle de rutina recién creada (web): inglés, UUID crudo y aviso confuso
+- Capturas: RF-03/web/RF-03_p07_rutina-guardada_1440_{claro,oscuro}.png (revisar también las de 390).
+- Reproducir: web > Rutinas > Nueva rutina > completar los 6 pasos > Guardar. En el detalle: sobrelínea «PRIVATE · HIPERTROFIA» (visibilidad en inglés), toast «Rutina guardada, pero no pudimos ajustar las semanas 6.» (aviso de éxito parcial críptico, tapa el usuario del encabezado), nombres de ejercicio en inglés y pie «Rutina de <uuid>» visible al usuario.
+- Gravedad: media (mezcla de idiomas, identificador interno expuesto, mensaje poco claro).
+
+## A-07 (baja) Ficha web: sobrelínea de músculo incoherente con «Músculo objetivo»
+- Capturas: RF-06/web/RF-06_p05_ficha-anadir-a-la-rutina_*.png
+- Reproducir: web, «barbell bench press»: la sobrelínea dice «TRICEPS» pero «Músculo objetivo» dice «pectorals» y triceps es sinergista. Posible dato de catálogo (campo de músculo principal distinto).
+- Gravedad: baja.
+
+## A-08 (media) Tour de bienvenida «¡Hola! 1/5» se abre dentro del asistente de rutina
+- Capturas: RF-06/web/RF-06_p08_atras-conserva_{390,1440}_{claro,oscuro}.png
+- Reproducir: web, cuenta de pruebas que aún no ha visto el tour; crear rutina hasta «Paso 5 de 6 · Días», añadir ejercicios a un día y pulsar «Volver a la semana»/recargar: aparece el modal «BIENVENIDO A GYMSHEET» sobre el asistente y oculta la comprobación de que el día conserva sus 2 ejercicios.
+- Gravedad: media para la evidencia (la captura no demuestra lo previsto) y baja para el producto (la guía se ofrece al primer acceso). Recapturar con el tour descartado.
