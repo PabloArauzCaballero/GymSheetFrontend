@@ -63,7 +63,7 @@ export function useChatSend({
 
   function sendLocation() {
     if (!navigator.geolocation) {
-      notify.error(new Error('Este navegador no puede compartir tu ubicación.'));
+      notify.error('Este navegador no puede compartir tu ubicación.');
       return;
     }
     setSendingMedia(true);
@@ -88,7 +88,7 @@ export function useChatSend({
       // persona acaba de decir que no, y ya sabe por qué no hay ubicación.
       () => {
         setSendingMedia(false);
-        notify.error(new Error('No se pudo obtener tu ubicación.'));
+        notify.error('No se pudo obtener tu ubicación.');
       },
     );
   }

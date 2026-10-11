@@ -1,5 +1,6 @@
 'use client';
 
+import { visibilityLabel } from '@/features/routines-v2/labels';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClipboardList, Plus, Users } from 'lucide-react';
@@ -196,7 +197,7 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
               <div className="flex items-start justify-between gap-3">
                 <ClipboardList className="size-5 text-[var(--accent-ink)]" />
                 <Badge tone={routine.visibilidad === 'TEMPLATE' ? 'info' : 'neutral'}>
-                  {routine.visibilidad}
+                  {visibilityLabel(routine.visibilidad)}
                 </Badge>
               </div>
               <h2 className="text-lg font-semibold tracking-[-0.02em]">

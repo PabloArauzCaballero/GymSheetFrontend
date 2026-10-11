@@ -16,6 +16,7 @@ import { AmbientBackground } from '@/components/ambient';
 import {
   accentContrast,
   accentGradient,
+  alpha,
   colors,
   fontSizes,
   iconSizes,
@@ -254,7 +255,7 @@ export function AuthAlert({ message }: { message: string }) {
         borderRadius: radii.md,
         borderWidth: 1,
         borderColor: colors.danger,
-        backgroundColor: `${colors.danger}1f`,
+        backgroundColor: alpha(colors.danger, 0.12),
         padding: spacing.md,
       }}
     >

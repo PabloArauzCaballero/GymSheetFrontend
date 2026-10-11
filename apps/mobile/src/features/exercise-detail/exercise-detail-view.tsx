@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
+import { bodyPartLabelEs, exerciseGroupLabelEs, muscleLabelEs } from '@gymsheet/domain';
 import {
   Badge,
   Card,
@@ -19,6 +20,7 @@ import { Description, MuscleChip, stepsOf } from '@/features/exercise-detail/det
 import { ExerciseSocial } from '@/features/exercise-detail/exercise-social';
 import { accountService, exerciseService, muscleService } from '@/api/services';
 import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
+import { routes } from '@/lib/routes';
 
 /** Alto reservado al final de la ficha para que el botón fijo no tape el contenido. */
 const PICK_BAR_CLEARANCE = 112;
@@ -120,27 +122,27 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
 
       <ExerciseDemo exercise={data} gender={account.data?.genero ?? null} />
 
-      <ScreenHeader subtitle={data.grupoMuscular} title={data.nombre} />
+      <ScreenHeader subtitle={exerciseGroupLabelEs(data.grupoMuscular)} title={data.nombre} />
 
       <ExerciseSocial exercise={data} />
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-        {data.bodyPart ? <Badge label={data.bodyPart} tone="success" /> : null}
+        {data.bodyPart ? <Badge label={bodyPartLabelEs(data.bodyPart)} tone="success" /> : null}
         {data.tipoEjercicio === 'PERSONAL' ? <Badge label="Personal" tone="warning" /> : null}
       </View>
 
       {/* Facts as rows, not prose: scannable in a second between sets. */}
       <Section index={0} title="Objetivo técnico">
         <Card>
-          <Row label="Músculo objetivo" value={data.targetMuscle ?? '—'} />
+          <Row label="Músculo objetivo" value={muscleLabelEs(data.targetMuscle) || '—'} />
           <Divider />
-          <Row label="Parte corporal" value={data.bodyPart ?? '—'} />
+          <Row label="Parte corporal" value={bodyPartLabelEs(data.bodyPart) || '—'} />
           <Divider />
-          <Row label="Sinergista" value={data.synergistMuscleGroup ?? '—'} />
+          <Row label="Sinergista" value={exerciseGroupLabelEs(data.synergistMuscleGroup) || '—'} />
           {data.secondaryMuscles.length > 0 ? (
             <>
               <Divider />
-              <Row label="Secundarios" value={data.secondaryMuscles.join(', ')} />
+              <Row label="Secundarios" value={data.secondaryMuscles.map(muscleLabelEs).filter(Boolean).join(', ')} />
             </>
           ) : null}
         </Card>
@@ -187,10 +189,7 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
                           key={muscle.code}
                           name={muscle.nombre}
                           onPress={() =>
-                            router.push({
-                              pathname: '/exercises/muscle/[code]',
-                              params: { code: muscle.code },
-                            })
+                            router.push(routes.muscle(muscle.code))
                           }
                           primary={primary}
                         />
@@ -274,10 +273,7 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
                 accessibilityLabel={item.nombre}
                 key={item.id}
                 onPress={() =>
-                  router.push({
-                    pathname: '/exercises/[id]',
-                    params: { id: item.id },
-                  })
+                  router.push(routes.exercise(item.id))
                 }
                 style={{ width: 132, gap: spacing.xs }}
               >

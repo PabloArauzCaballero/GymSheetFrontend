@@ -183,15 +183,6 @@
     },
     {
       "rf": "RF-10",
-      "paso": "01",
-      "nombre": "copiada-a-mias",
-      "plataformas": [
-        "web"
-      ],
-      "debeVerse": "Aviso «Copiada a Mías» con la acción «Abrir»."
-    },
-    {
-      "rf": "RF-10",
       "paso": "02",
       "nombre": "franja-de-atribucion",
       "plataformas": [
@@ -328,11 +319,11 @@
     {
       "rf": "RF-12",
       "paso": "06",
-      "nombre": "ocultar-ejercicio-falla-500-backend",
+      "nombre": "caso-resuelto-oculto",
       "plataformas": [
         "web"
       ],
-      "debeVerse": "DEFECTO DEL BACKEND: ocultar el caso de un ejercicio responde 500 (restricción ck_ejercicio_moderacion); no se pudo capturar el caso resuelto."
+      "debeVerse": "El administrador oculta el caso de un ejercicio y ve «Caso resuelto.» con la etiqueta «Retirado» (corregido el 500 de ck_ejercicio_moderacion)."
     },
     {
       "rf": "RF-12",
@@ -486,15 +477,6 @@
         "web"
       ],
       "debeVerse": "Tras activar, la tarjeta del programa aparece en Rutinas."
-    },
-    {
-      "rf": "RF-14",
-      "paso": "02",
-      "nombre": "activar-ajena-crea-copia",
-      "plataformas": [
-        "web"
-      ],
-      "debeVerse": "Activar una rutina pública ajena activa una copia propia con la franja «Basada en»."
     },
     {
       "rf": "RF-14",
@@ -843,21 +825,14 @@
       "paso": "01",
       "nombre": "notificacion-programa-terminado",
       "plataformas": [],
-      "faltante": "NO cubierto con captura: el aviso PROGRAM_FINISHED lo emite un trabajo del último día del programa y la app no tiene reloj; solo se verificó la pantalla de cierre moviendo las fechas por SQL."
+      "faltante": "NO cubierto con captura. El aviso PROGRAM_FINISHED se crea al terminar el programa (comprobado: close-weeks del flujo móvil 23c lo genera como mensaje IN_APP/PENDING) pero ninguna pantalla lo muestra todavía: ni la web ni el móvil tienen bandeja de mensajes. Ver el motivo móvil en pasos-movil-f3-f6.json."
     },
     {
       "rf": "RF-18",
       "paso": "06",
       "nombre": "cierre-real-del-trabajo-semanal",
       "plataformas": [],
-      "faltante": "NO cubierto: el cierre semanal real (trabajo del lunes) no se ejecutó; las semanas se cerraron con la herramienta de soporte recompute-week y, para el multiplicador del programa y la semana incumplida, con SQL que replica lo que haría el trabajo."
-    },
-    {
-      "rf": "RF-12",
-      "paso": "06",
-      "nombre": "caso-resuelto-oculto-ejercicio",
-      "plataformas": [],
-      "faltante": "NO capturado: ocultar un ejercicio desde la cola de moderación responde 500 en el backend (la restricción ck_ejercicio_moderacion solo admite OCULTO_*, pero el código escribe OCULTA_MODERACION). Se dejó la captura del fallo y se aplicó el estado por SQL para comprobar la pantalla."
+      "faltante": "NO cubierto del todo. El cierre semanal se ejecutó con la herramienta de soporte `close-weeks` (POST /admin/support/programs/:id/close-weeks), que llama a `closeProgram`, el mismo código que usa el trabajo del lunes (`closeDueWeeks`); lo que no se ejecutó es el disparo programado del trabajo (cron). Móvil: flujos 23b y 23c, con capturas RF-18 p01–p03 (SIMULACIÓN documentada: fechas y semanas 1–3 por SQL; la sesión se retrocede 15 min)."
     }
   ]
 }

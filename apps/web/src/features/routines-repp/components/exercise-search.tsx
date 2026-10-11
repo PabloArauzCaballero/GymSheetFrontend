@@ -1,5 +1,6 @@
 'use client';
 
+import { exerciseGroupLabelEs } from '@gymsheet/domain';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
@@ -70,7 +71,7 @@ export function ExerciseSearch({
               <li className="flex items-center justify-between gap-2" key={exercise.id}>
                 <span className="min-w-0 truncate text-sm">
                   {exercise.nombre}
-                  <span className="text-[var(--text-muted)]"> · {exercise.grupoMuscular}</span>
+                  <span className="text-[var(--text-muted)]"> · {exerciseGroupLabelEs(exercise.grupoMuscular)}</span>
                 </span>
                 <Button
                   aria-label={`Añadir ${exercise.nombre}`}

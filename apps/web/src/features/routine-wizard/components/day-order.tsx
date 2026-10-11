@@ -18,7 +18,7 @@ import { Input } from '@/shared/components/ui/input';
 import { ChoiceChip } from '@/shared/components/ui/choice-chip';
 import { getRoutineDraft, useRoutineDraft } from '../draft-store';
 import { dayPath, wizardStepPath } from '../paths';
-import { ExerciseEditor } from './exercise-editor';
+import { DayOrderList } from './day-order-list';
 import { WizardFrame } from './wizard-frame';
 
 const DAYS_STEP = 4;
@@ -58,7 +58,7 @@ export function DayOrder({ dia }: Readonly<{ dia: DayTarget }>) {
     if (!result.confirmed) return;
     if (dia === 'grupo') {
       list.forEach((e) =>
-        dispatch({ type: 'quitarEjercicio', destino: dia, ejercicioId: e.ejercicioId }),
+        dispatch({ type: 'quitarEjercicio', destino: dia, uid: e.uid }),
       );
     } else {
       dispatch({ type: 'vaciarDia', dia });
@@ -93,30 +93,7 @@ export function DayOrder({ dia }: Readonly<{ dia: DayTarget }>) {
         </Field>
       ) : null}
 
-      <ol aria-label="Ejercicios del día" className="grid grid-cols-[minmax(0,1fr)] gap-4">
-        {list.map((exercise, index) => (
-          <ExerciseEditor
-            exercise={exercise}
-            key={exercise.ejercicioId}
-            onChange={(cambios) =>
-              dispatch({
-                type: 'editarEjercicio',
-                destino: dia,
-                ejercicioId: exercise.ejercicioId,
-                cambios,
-              })
-            }
-            onMove={(delta) =>
-              dispatch({ type: 'moverEjercicio', destino: dia, desde: index, hacia: index + delta })
-            }
-            onRemove={() =>
-              dispatch({ type: 'quitarEjercicio', destino: dia, ejercicioId: exercise.ejercicioId })
-            }
-            position={index + 1}
-            total={list.length}
-          />
-        ))}
-      </ol>
+      <DayOrderList destino={dia} dispatch={dispatch} list={list} />
 
       {dia !== 'grupo' && others.length > 0 && list.length > 0 ? (
         <fieldset className="grid gap-3">

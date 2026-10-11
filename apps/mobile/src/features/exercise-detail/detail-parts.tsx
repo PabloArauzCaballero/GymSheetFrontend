@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, Text } from 'react-native';
 import { PressableScale } from '@/components/motion';
 import { Card } from '@/components/layout';
-import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
+import { alpha, colors, fontSizes, radii, semibold, spacing } from '@/theme';
 
 /**
  * Instruction steps arrive keyed by locale. `es-BO` first — the same order the
@@ -33,7 +33,7 @@ export function MuscleChip({
         borderRadius: radii.full,
         borderWidth: 1,
         borderColor: primary ? colors.accentInk : colors.border,
-        backgroundColor: primary ? `${colors.volt}14` : colors.surfaceHigh,
+        backgroundColor: primary ? alpha(colors.volt, 0.08) : colors.surfaceHigh,
         justifyContent: 'center',
       }}
     >

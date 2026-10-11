@@ -33,7 +33,7 @@ const calendar: RoutineCalendar = {
       factorVolumen: 1,
       factorCarga: 1,
       nota: null,
-      dias: [{ diaId: 'd1', diaSemana: 1, nombre: 'Empuje', ejercicios: [{ routineExerciseId: 're1', ejercicioId: 'ex-re1', orden: 1, series: 4, repsMin: 8, repsMax: 12, pesoObjetivoKg: 60 }] }],
+      dias: [{ diaId: 'd1', diaSemana: 1, nombre: 'Empuje', ejercicios: [{ routineExerciseId: 're1', ejercicioId: 'ex-re1', orden: 1, series: 4, repsMin: 8, repsMax: 12, pesoObjetivoKg: 60, descansoSeg: null, rirObjetivo: null, nota: null, grupo: null, grupoTipo: null, descansoEntreSeg: null, duracionSeg: null }] }],
     },
     {
       numero: 2,
@@ -41,7 +41,7 @@ const calendar: RoutineCalendar = {
       factorVolumen: 0.5,
       factorCarga: 0.9,
       nota: null,
-      dias: [{ diaId: 'd1', diaSemana: 1, nombre: 'Empuje', ejercicios: [{ routineExerciseId: 're1', ejercicioId: 'ex-re1', orden: 1, series: 2, repsMin: 8, repsMax: 12, pesoObjetivoKg: 54 }] }],
+      dias: [{ diaId: 'd1', diaSemana: 1, nombre: 'Empuje', ejercicios: [{ routineExerciseId: 're1', ejercicioId: 'ex-re1', orden: 1, series: 2, repsMin: 8, repsMax: 12, pesoObjetivoKg: 54, descansoSeg: null, rirObjetivo: null, nota: null, grupo: null, grupoTipo: null, descansoEntreSeg: null, duracionSeg: null }] }],
     },
   ],
 };

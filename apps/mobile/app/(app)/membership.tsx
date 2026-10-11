@@ -28,7 +28,17 @@ import { TourTarget, useScreenTour } from '@/components/tour';
 import { Button } from '@/components/ui';
 import { MEMBERSHIP_LABEL, MEMBERSHIP_TONE, formatDate } from '@/lib/format';
 import { notify } from '@/notifications';
-import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import {
+  accentPolicy,
+  colors,
+  fontSizes,
+  iconSizes,
+  ink,
+  minTouchTarget,
+  radii,
+  semibold,
+  spacing,
+} from '@/theme';
 
 /**
  * Reads this screen owns. `getMine` already lives in the shared service; the
@@ -418,7 +428,7 @@ export default function MembershipScreen() {
                 // White plate behind the code: a QR on a dark surface is not
                 // reliably readable — scanners expect dark modules on light.
                 <View style={{ alignItems: 'center' }}>
-                  <View style={{ padding: spacing.md, borderRadius: radii.lg, backgroundColor: '#ffffff' }}>
+                  <View style={{ padding: spacing.md, borderRadius: radii.lg, backgroundColor: ink.white }}>
                     <Image
                       accessibilityLabel={paymentQr.altText}
                       contentFit="contain"

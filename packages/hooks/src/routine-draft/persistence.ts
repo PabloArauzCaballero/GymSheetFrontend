@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { newDraftUid, normalizeGroups } from './groups';
 import { createEmptyDraft, type RoutineDraft } from './model';
 
 /**
@@ -7,9 +8,14 @@ import { createEmptyDraft, type RoutineDraft } from './model';
  * descartar lo que ya no encaje, para que un borrador viejo o corrupto nunca
  * rompa el asistente.
  */
-const DRAFT_VERSION = 1;
+const DRAFT_VERSION = 2;
 
+/**
+ * v1 (antes de C3.d) no tenía `uid`, bloques ni series por tiempo: se lee igual
+ * y se migra dando a cada fila su clave local y dejándola suelta y por reps.
+ */
 const exerciseSchema = z.object({
+  uid: z.string().min(1).optional(),
   ejercicioId: z.string().min(1),
   nombre: z.string(),
   grupoMuscular: z.string(),
@@ -20,6 +26,9 @@ const exerciseSchema = z.object({
   rirObjetivo: z.number().int().nullable(),
   descansoSeg: z.number().int().nullable(),
   nota: z.string().nullable(),
+  grupo: z.number().int().min(1).nullable().optional(),
+  descansoEntreSeg: z.number().int().nullable().optional(),
+  duracionSeg: z.number().int().nullable().optional(),
 });
 
 const weekday = z.union([
@@ -66,7 +75,7 @@ const draftSchema = z.object({
 });
 
 const envelopeSchema = z.object({
-  v: z.literal(DRAFT_VERSION),
+  v: z.union([z.literal(1), z.literal(DRAFT_VERSION)]),
   paso: z.number().int().min(0),
   draft: draftSchema,
 });
@@ -82,7 +91,35 @@ export function parseDraft(raw: string | null | undefined): PersistedDraft | nul
   if (!raw) return null;
   try {
     const parsed = envelopeSchema.safeParse(JSON.parse(raw));
-    return parsed.success ? { draft: parsed.data.draft, paso: parsed.data.paso } : null;
+    if (!parsed.success) return null;
+    const { draft, paso } = parsed.data;
+    const seen = new Set<string>();
+    return {
+      paso,
+      draft: {
+        ...draft,
+        dias: draft.dias.map((day) => ({
+          ...day,
+          ejercicios: normalizeGroups(
+            day.ejercicios.map((exercise) => {
+              // Sin uid (v1) o repetido (borrador manipulado): clave nueva.
+              const uid = exercise.uid && !seen.has(exercise.uid) ? exercise.uid : newDraftUid();
+              seen.add(uid);
+              const duracionSeg = exercise.duracionSeg ?? null;
+              return {
+                ...exercise,
+                uid,
+                grupo: exercise.grupo ?? null,
+                descansoEntreSeg: exercise.descansoEntreSeg ?? null,
+                duracionSeg,
+                repsMin: duracionSeg === null ? exercise.repsMin : null,
+                repsMax: duracionSeg === null ? exercise.repsMax : null,
+              };
+            }),
+          ),
+        })),
+      },
+    };
   } catch {
     return null;
   }

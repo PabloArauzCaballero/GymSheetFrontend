@@ -1,3 +1,4 @@
+import { validateDayExercises } from './groups';
 import {
   WEEKDAYS,
   WEEKDAY_NAMES,
@@ -13,14 +14,21 @@ import {
 export const MAX_SETS_PER_DAY = 30;
 
 export type QualityIssue = {
-  codigo: 'DIA_VACIO' | 'MUCHAS_SERIES' | 'FRECUENCIA_BAJA';
+  codigo: 'DIA_VACIO' | 'MUCHAS_SERIES' | 'FRECUENCIA_BAJA' | 'GRUPO_INVALIDO' | 'FUERA_DE_RANGO';
   mensaje: string;
   /** Día afectado, si el aviso es de un día. */
   dia?: Weekday;
+  /** Fila afectada (`DraftExercise.uid`), si el problema es de un ejercicio. */
+  uid?: string;
+  /** Bloque afectado, si el problema es de una superserie o circuito. */
+  grupo?: number;
 };
 
 export type QualityReport = {
-  /** Impiden guardar (`ROUTINE_HAS_NO_DAYS` en el servidor). */
+  /**
+   * Impiden guardar: día vacío (`ROUTINE_HAS_NO_DAYS`), bloque de 1 o partido
+   * (`ROUTINE_GROUP_INVALID`) y topes de series, reps, transición y duración.
+   */
   bloqueos: QualityIssue[];
   /** Orientan, no bloquean. */
   avisos: QualityIssue[];
@@ -30,6 +38,7 @@ export type QualityReport = {
  * Avisos de calidad del borrador. Se calculan en el cliente porque el backend
  * todavía no expone `quality-check`; las reglas son las de 03 · RF-08:
  * - un día sin ejercicios bloquea;
+ * - un bloque de 1 ejercicio o partido, o un valor fuera de los topes, bloquea;
  * - más de 30 series en un día avisa;
  * - un grupo muscular que sólo aparece en un día de la semana avisa (ACSM: cada
  *   grupo, al menos dos veces por semana), siempre que haya dos o más días.
@@ -48,7 +57,11 @@ export function evaluateQuality(draft: RoutineDraft): QualityReport {
         mensaje: `Hay un día sin ejercicios: ${name}`,
         dia: day.diaSemana,
       });
-    } else if (totalSets(day.ejercicios) > MAX_SETS_PER_DAY) {
+    }
+    for (const issue of validateDayExercises(day.ejercicios)) {
+      bloqueos.push({ ...issue, mensaje: `${name} · ${issue.mensaje}`, dia: day.diaSemana });
+    }
+    if (day.ejercicios.length > 0 && totalSets(day.ejercicios) > MAX_SETS_PER_DAY) {
       avisos.push({
         codigo: 'MUCHAS_SERIES',
         mensaje: `${name} tiene más de ${MAX_SETS_PER_DAY} series`,

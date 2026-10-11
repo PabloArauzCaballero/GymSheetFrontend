@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
-import { colors, fontSizes, radii, semibold } from '@/theme';
+import { colors, fontSizes, medalColors, radii, semibold } from '@/theme';
 
 /**
  * Oro/plata/bronce, no un número más — un podio que solo diferencia el primer
@@ -9,11 +9,11 @@ import { colors, fontSizes, radii, semibold } from '@/theme';
  * marca, y se repetirían igual sea cual sea el tenant activo.
  */
 const MEDAL_COLOR: Record<number, string> = {
-  1: '#F4C430',
-  2: '#C7CDD6',
-  3: '#CE8946',
+  1: medalColors.gold,
+  2: medalColors.silver,
+  3: medalColors.bronze,
 };
-const MEDAL_ICON_COLOR = '#241A05';
+const MEDAL_ICON_COLOR = medalColors.icon;
 
 export function RankBadge({
   position,
@@ -49,7 +49,8 @@ export function RankBadge({
         borderRadius: radii.full,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: isMe ? colors.volt : colors.surfaceHigh,
+        // «Tú» se marca con relleno claro neutro, no con el acento (C8.3.7).
+        backgroundColor: isMe ? colors.text : colors.surfaceHighest,
       }}
     >
       <Text

@@ -52,9 +52,19 @@ export function formatClock(totalSeconds: number): string {
   return h > 0 ? `${h}:${two(m)}:${two(sec)}` : `${two(m)}:${two(sec)}`;
 }
 
-/** «96 / 90 min»: minutos que cuentan frente al objetivo de la semana. */
+/**
+ * «45 / 90 min»: minutos que cuentan frente al objetivo de la semana. Si se supera (semana de entrada
+ * parcial con varias sesiones) no se escribe «96 / 30 min», que parece un error: «96 min · meta de 30 min superada».
+ */
+export function weekMinutesLabel(done: number, target: number): string {
+  const minutes = Math.round(done);
+  const goal = Math.round(target);
+  if (goal <= 0) return `${minutes} min`;
+  return minutes <= goal ? `${minutes} / ${goal} min` : `${minutes} min · meta de ${goal} min superada`;
+}
+
 export function cardioProgressLabel(block: Pick<CardioSessionExtras, 'minutosSemana' | 'objetivoMinutosSemana'>): string {
-  return `${Math.round(block.minutosSemana)} / ${Math.round(block.objetivoMinutosSemana)} min`;
+  return weekMinutesLabel(block.minutosSemana, block.objetivoMinutosSemana);
 }
 
 export type CardioForm = {

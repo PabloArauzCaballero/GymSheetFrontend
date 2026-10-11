@@ -65,7 +65,7 @@ export function WizardProgress({
                 style={{
                   height: 6,
                   borderRadius: radii.full,
-                  backgroundColor: reached ? colors.volt : colors.surfaceHigh,
+                  backgroundColor: reached ? colors.volt : colors.borderControl,
                   opacity: index === actual || !reached ? 1 : 0.55,
                 }}
               />

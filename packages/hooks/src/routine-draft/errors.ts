@@ -35,6 +35,19 @@ export function describeSaveError(error: ApiErrorLike): SaveErrorView {
         paso: STEP_DAYS,
         reintentable: false,
       };
+    case 'ROUTINE_GROUP_INVALID':
+      return {
+        titulo: 'Revisa las superseries',
+        mensaje: 'Una superserie necesita al menos 2 ejercicios seguidos',
+        paso: STEP_DAYS,
+        reintentable: false,
+      };
+    case 'ROUTINE_NOT_OWNED':
+      return {
+        titulo: 'Esta rutina no es tuya',
+        mensaje: 'Guárdala en tus rutinas para activarla',
+        reintentable: false,
+      };
     case 'ROUTINE_DUPLICATE':
       return {
         titulo: 'Ya existe una rutina idéntica',

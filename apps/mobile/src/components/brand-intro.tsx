@@ -16,7 +16,15 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { DURATION, PREMIUM_EASING } from '@/components/motion';
-import { accentContrast, accentGradient, colors, fontSizes, useActiveTenant } from '@/theme';
+import {
+  accentContrast,
+  accentGradient,
+  brandIntroSweep,
+  colors,
+  fontSizes,
+  stageBackground,
+  useActiveTenant,
+} from '@/theme';
 
 /**
  * La cortinilla de marca del arranque.
@@ -188,7 +196,7 @@ const REDUCED_HOLD_CAP = 400;
  * la diferencia con el `colors.background` de la aplicación es invisible, así
  * que la disolución final no tiene escalón.
  */
-const STAGE_BACKGROUND = '#050505';
+const STAGE_BACKGROUND = stageBackground.brandIntro;
 
 /** Lado del emblema. */
 const EMBLEM = 112;
@@ -312,11 +320,7 @@ const HALO_RINGS: readonly number[] = Array.from({ length: HALO_RING_COUNT }, (_
 });
 
 /** Barrido: blanco puro, transparente en los extremos. */
-const SWEEP_GRADIENT: readonly [string, string, string] = [
-  'rgba(255,255,255,0)',
-  'rgba(255,255,255,0.8)',
-  'rgba(255,255,255,0)',
-];
+const SWEEP_GRADIENT: readonly [string, string, string] = brandIntroSweep;
 
 /** Tracking del wordmark, como fracción del tamaño de letra. */
 const WORDMARK_TRACKING = 0.3;

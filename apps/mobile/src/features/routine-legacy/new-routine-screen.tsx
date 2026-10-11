@@ -7,6 +7,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { Pressable, Text, View } from 'react-native';
 import { z } from 'zod';
 import { routineSchema } from '@gymsheet/schemas';
+import { exerciseGroupLabelEs } from '@gymsheet/domain';
 import {
   trainingGoals,
   type Exercise,
@@ -225,7 +226,7 @@ function DraftRow({
             {draft.exercise.nombre}
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-            {`${position}. ${draft.exercise.grupoMuscular ?? 'Sin grupo muscular'}`}
+            {`${position}. ${exerciseGroupLabelEs(draft.exercise.grupoMuscular) || 'Sin grupo muscular'}`}
           </Text>
         </View>
         <Pressable

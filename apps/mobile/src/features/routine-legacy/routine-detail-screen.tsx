@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 import type { RoutineExercise } from '@gymsheet/types';
+import { exerciseGroupLabelEs } from '@gymsheet/domain';
 import { Badge, Card, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { MetricChip } from '@/components/list';
@@ -16,6 +17,7 @@ import { ScheduleRoutine } from '@/components/schedule-routine';
 import { notify } from '@/notifications';
 import { GOAL_LABEL } from '@/lib/format';
 import { colors, fontSizes, semibold, spacing } from '@/theme';
+import { routes } from '@/lib/routes';
 
 /** «3 × 8-12» — the shorthand a lifter actually reads off a plan. */
 function repRange(item: RoutineExercise): string {
@@ -122,7 +124,7 @@ export function LegacyRoutineDetailScreen() {
             <PressableScale
               disabled={!item.ejercicio}
               onPress={() =>
-                item.ejercicio && router.push({ pathname: '/exercises/[id]', params: { id: item.ejercicio.id } })
+                item.ejercicio && router.push(routes.exercise(item.ejercicio.id))
               }
               style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}
             >
@@ -135,7 +137,7 @@ export function LegacyRoutineDetailScreen() {
                   {item.ejercicio?.nombre ?? 'Ejercicio no disponible'}
                 </Text>
                 <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-                  {item.ejercicio?.grupoMuscular ?? '—'}
+                  {exerciseGroupLabelEs(item.ejercicio?.grupoMuscular) || '—'}
                 </Text>
               </View>
             </PressableScale>

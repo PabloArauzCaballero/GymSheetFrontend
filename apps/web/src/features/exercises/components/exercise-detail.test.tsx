@@ -135,6 +135,16 @@ describe('ExerciseDetail', () => {
     expect(container.querySelector('video')).toBeNull();
   });
 
+  it('no muestra códigos internos: GLOBAL ni EXERCISES_DATASET', async () => {
+    getExercise.mockResolvedValue(exercise([]));
+    renderDetail();
+
+    await screen.findByText('Sentadilla con barra');
+    expect(screen.queryByText('GLOBAL')).toBeNull();
+    expect(screen.queryByText('EXERCISES_DATASET')).toBeNull();
+    expect(screen.getByText('Origen: Base de datos pública de ejercicios')).toBeTruthy();
+  });
+
   it('sin ningún medio tampoco monta reproductor', async () => {
     getExercise.mockResolvedValue(exercise([]));
     const { container } = renderDetail();

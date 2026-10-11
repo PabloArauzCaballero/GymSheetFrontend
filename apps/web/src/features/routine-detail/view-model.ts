@@ -1,5 +1,5 @@
-import { WEEKDAYS, type Weekday } from '@gymsheet/hooks';
-import type { Routine, RoutineCalendar } from '@gymsheet/types';
+import { WEEKDAYS, exerciseDisplayName, type Weekday } from '@gymsheet/hooks';
+import type { Routine, RoutineCalendar, RoutineGroupType } from '@gymsheet/types';
 
 /** Un ejercicio dentro de un día de una semana concreta, con las series ya ajustadas por la descarga. */
 export type ExerciseLine = {
@@ -14,6 +14,15 @@ export type ExerciseLine = {
   repsMin: number | null;
   repsMax: number | null;
   pesoKg: number | null;
+  /** Serie por tiempo (C3): con ella las repeticiones son `null`. */
+  duracionSeg: number | null;
+  rirObjetivo: number | null;
+  /** Descanso tras cada serie (en un bloque, tras la vuelta si es el último). */
+  descansoSeg: number | null;
+  /** Superserie o circuito (C3): el número de bloque y la transición entre ejercicios. */
+  grupo: number | null;
+  grupoTipo: RoutineGroupType | null;
+  descansoEntreSeg: number | null;
 };
 
 export type DayModel = {
@@ -42,7 +51,7 @@ export function buildWeeks(routine: Routine, calendar: RoutineCalendar | null): 
   for (const day of routine.dias) {
     for (const exercise of day.ejercicios) {
       info.set(exercise.id, {
-        nombre: exercise.ejercicio?.nombre ?? 'Ejercicio',
+        nombre: exercise.ejercicio ? exerciseDisplayName(exercise.ejercicio) : 'Ejercicio',
         privado: exercise.ejercicio?.tipoEjercicio === 'PERSONAL',
         oculto: (exercise.ejercicio?.estadoModeracion ?? 'VISIBLE') !== 'VISIBLE',
       });
@@ -71,6 +80,12 @@ export function buildWeeks(routine: Routine, calendar: RoutineCalendar | null): 
             repsMin: exercise.repsMin,
             repsMax: exercise.repsMax,
             pesoKg: exercise.pesoSugeridoKg ?? exercise.pesoObjetivoKg,
+            duracionSeg: exercise.duracionSeg,
+            rirObjetivo: exercise.rirObjetivo,
+            descansoSeg: exercise.descansoSeg,
+            grupo: exercise.grupo,
+            grupoTipo: exercise.grupoTipo,
+            descansoEntreSeg: exercise.descansoEntreSeg,
           })),
       })),
     }));
@@ -94,6 +109,12 @@ export function buildWeeks(routine: Routine, calendar: RoutineCalendar | null): 
           repsMin: exercise.repsMin,
           repsMax: exercise.repsMax,
           pesoKg: exercise.pesoObjetivoKg,
+          duracionSeg: exercise.duracionSeg ?? null,
+          rirObjetivo: exercise.rirObjetivo,
+          descansoSeg: exercise.descansoSeg,
+          grupo: exercise.grupo ?? null,
+          grupoTipo: exercise.grupoTipo ?? null,
+          descansoEntreSeg: exercise.descansoEntreSeg ?? null,
         })),
       })),
     },

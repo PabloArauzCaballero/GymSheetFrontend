@@ -18,12 +18,12 @@ describe('ExerciseZoneFilter', () => {
     const onMuscle = vi.fn();
     const props = { taxonomy, onBodyPart, onMuscle };
     const { rerender } = render(<ExerciseZoneFilter {...props} bodyPart={null} muscle={null} />);
-    fireEvent.click(screen.getByRole('button', { name: /Upper legs/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Piernas/ }));
     expect(onBodyPart).toHaveBeenCalledWith('upper legs');
     rerender(<ExerciseZoneFilter {...props} bodyPart="upper legs" muscle={null} />);
-    fireEvent.click(screen.getByRole('button', { name: /Quadriceps/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Cuádriceps/ }));
     expect(onMuscle).toHaveBeenCalledWith('quadriceps');
     rerender(<ExerciseZoneFilter {...props} bodyPart="upper legs" muscle="quadriceps" />);
-    expect(screen.getByRole('button', { name: /Quadriceps/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /Cuádriceps/ })).toHaveAttribute('aria-pressed', 'true');
   });
 });

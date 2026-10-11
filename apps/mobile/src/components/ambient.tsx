@@ -10,7 +10,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { getActiveTenant } from '@/theme';
+import { ambientColors, getActiveTenant } from '@/theme';
 import { useAmbientStore } from '@/state/ambient-store';
 
 /**
@@ -113,7 +113,7 @@ const BANDS: readonly BandSpec[] = [
     // Near-white rather than saturated volt. Luxury palettes spend their one
     // saturated colour on the action, not on the wallpaper; a neon backdrop
     // competes with the button it sits behind and cheapens both.
-    color: '#e8f0d8',
+    color: ambientColors.waveTop,
     opacity: 0.1,
     // Roughly double the previous cycle. Premium motion is slow enough that
     // you notice it only if you look for it.
@@ -127,7 +127,7 @@ const BANDS: readonly BandSpec[] = [
     height: 160,
     pitch: 30,
     barWidth: 2,
-    color: '#9fb6bf',
+    color: ambientColors.waveBottom,
     opacity: 0.07,
     period: 19000,
     periodAlt: 11500,
@@ -222,15 +222,6 @@ function Band({ spec, width, height, moving, energy }: {
   );
 }
 
-/** `#rrggbb` → `rgba(r, g, b, a)`, para poder atenuar un color de marca. */
-function rgba(hex: string, alpha: number): string {
-  const value = Number.parseInt(hex.replace('#', '').slice(0, 6), 16);
-  const red = (value >> 16) & 255;
-  const green = (value >> 8) & 255;
-  const blue = value & 255;
-  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-}
-
 /**
  * Dos luces tenues para que el negro tenga profundidad bajo la onda.
  *
@@ -250,7 +241,7 @@ const GLOW_COUNT = 2;
 function glowSpecs(accent: string) {
   return [
     { color: accent, alpha: 0.11, size: 1.5, x: -0.4, y: -0.3, px: 41000, py: 52000 },
-    { color: '#786eff', alpha: 0.08, size: 1.4, x: 0.25, y: 0.5, px: 58000, py: 44000 },
+    { color: ambientColors.glowCounter, alpha: 0.08, size: 1.4, x: 0.25, y: 0.5, px: 58000, py: 44000 },
   ];
 }
 

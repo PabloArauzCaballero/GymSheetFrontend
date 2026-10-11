@@ -48,8 +48,10 @@ import type {
   AddWorkoutExerciseInput,
   CardioSetInput,
   FitnessGoal,
+  TimedWorkoutSetInput,
   TrainingGoal,
   WorkoutSetInput,
+  WorkoutSetUpdateInput,
 } from '@gymsheet/types';
 import type {
   ConnectionStatus,
@@ -62,6 +64,7 @@ import type { UserGender } from '@gymsheet/types';
 import {
   createCardioServices,
   createCatalogServices,
+  createRecommendationServices,
   createCommunityServices,
   createExerciseCommunityServices,
   createProgramServices,
@@ -240,12 +243,12 @@ export const workoutService = {
       method: 'DELETE',
     }),
 
-  addSet: (sessionExerciseId: string, input: WorkoutSetInput | CardioSetInput) =>
+  addSet: (sessionExerciseId: string, input: WorkoutSetInput | TimedWorkoutSetInput | CardioSetInput) =>
     apiClient.request(`/workouts/session-exercises/${sessionExerciseId}/sets`, looseObject, {
       method: 'POST',
       body: input,
     }),
-  updateSet: (setId: string, input: Partial<WorkoutSetInput>) =>
+  updateSet: (setId: string, input: WorkoutSetUpdateInput) =>
     apiClient.request(`/workouts/sets/${setId}`, looseObject, { method: 'PATCH', body: input }),
   removeSet: (setId: string) =>
     apiClient.request(`/workouts/sets/${setId}`, deletedSchema, { method: 'DELETE' }),
@@ -295,6 +298,9 @@ export const routineCatalogService = {
   copy: sharingApi.copy,
   syncFromSource: sharingApi.syncFromSource,
 };
+
+/** Rutinas recomendadas según el objetivo y el onboarding (C7): `[{ rutina, motivo }]`. */
+export const routineRecommendationService = createRecommendationServices(apiClient.request);
 
 export const routineSharingService = {
   invite: sharingApi.invite,

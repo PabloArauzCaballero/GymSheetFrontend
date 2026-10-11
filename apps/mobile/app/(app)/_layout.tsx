@@ -54,6 +54,10 @@ export default function AppLayout() {
             cambia —los grupos no aparecen en la ruta—, así que `/workouts` y
             `/workouts/[id]` siguen siendo las mismas. */}
         <Stack.Screen name="workouts" />
+        {/* El catálogo de ejercicios. Era pestaña hasta C4; ahora es una pila
+            propia (buscador → ficha, músculos → músculo) que se abre desde
+            Rutinas y desde Perfil. Las rutas salen de `@/lib/routes`. */}
+        <Stack.Screen name="ejercicios" />
         <Stack.Screen name="ejercicio-nuevo" />
         <Stack.Screen name="settings" />
         <Stack.Screen name="profile-edit" />

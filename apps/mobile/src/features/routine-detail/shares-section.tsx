@@ -63,7 +63,7 @@ export function SharesSection({ routineId, onShare }: { routineId: string; onSha
           ) : null}
         </View>
       ))}
-      <Button label="Compartir con…" onPress={onShare} />
+      <Button icon="person-add-outline" label="Compartir con…" onPress={onShare} variant="secondary" />
     </View>
   );
 }

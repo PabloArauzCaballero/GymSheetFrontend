@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { PressableScale } from '@/components/motion';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { Text } from '@/components/text';
+import { colors, comfortableTouchTarget, iconSizes, radii, spacing } from '@/theme';
 
 /**
- * A row that opens something: artwork on the left, two lines of copy, a
- * chevron to signal it leads somewhere. Pressing dims the whole row — feedback
- * that never changes the layout bounds.
+ * Fila que abre algo: arte a la izquierda, dos líneas de texto y un chevrón
+ * que dice que lleva a otra parte. Al pulsar se hunde la fila entera (háptico
+ * `light`: fila que navega, según el mapa de C8.1).
  */
 export function NavRow({
   leading,
@@ -15,13 +16,15 @@ export function NavRow({
   subtitle,
   meta,
   onPress,
+  testID,
 }: {
   leading?: ReactNode;
   title: string;
   subtitle?: string;
-  /** Small trailing element, e.g. a Badge. */
+  /** Elemento pequeño al final, p. ej. un Badge. */
   meta?: ReactNode;
   onPress: () => void;
+  testID?: string;
 }) {
   return (
     <PressableScale
@@ -30,25 +33,21 @@ export function NavRow({
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.md,
-        minHeight: minTouchTarget,
+        gap: spacing.smd,
+        minHeight: comfortableTouchTarget,
         paddingVertical: spacing.sm,
       }}
+      testID={testID}
     >
       {leading}
-      <View style={{ flex: 1, gap: 2 }}>
-        <Text
-          // Two lines, not one. At phone width a title sharing a row with a
-          // badge and a chevron loses its tail — and these titles are often
-          // prefixed ("Plan del coach — Hipertrofia PPL"), so the part that
-          // gets cut is precisely the part that tells one row from another.
-          numberOfLines={2}
-          style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}
-        >
+      <View style={{ flex: 1, gap: spacing.xxs }}>
+        {/* Dos líneas: los títulos suelen llevar prefijo («Plan del coach —
+            Hipertrofia PPL») y lo que se corta es lo que los distingue. */}
+        <Text numberOfLines={2} variant="headline">
           {title}
         </Text>
         {subtitle ? (
-          <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+          <Text numberOfLines={1} tone="muted" variant="subhead">
             {subtitle}
           </Text>
         ) : null}
@@ -56,7 +55,7 @@ export function NavRow({
       {meta}
       <Ionicons
         accessibilityElementsHidden
-        color={colors.textDisabled}
+        color={colors.textMuted}
         importantForAccessibility="no-hide-descendants"
         name="chevron-forward"
         size={iconSizes.md}
@@ -65,30 +64,26 @@ export function NavRow({
   );
 }
 
-/** Compact key/value block used to describe a set target or a measurement. */
+/** Bloque compacto clave/valor: objetivo de una serie o una medida. */
 export function MetricChip({ value, label }: { value: string; label: string }) {
   return (
     <View
       style={{
         flex: 1,
-        gap: 2,
+        gap: spacing.xxs,
         borderRadius: radii.md,
-        backgroundColor: colors.surfaceHigh,
+        borderCurve: 'continuous',
+        backgroundColor: colors.surfaceHighest,
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.sm,
       }}
     >
-      <Text
-        style={{
-          color: colors.text,
-          fontSize: fontSizes.md,
-          fontWeight: '700',
-          fontVariant: ['tabular-nums'],
-        }}
-      >
+      <Text strong tabular>
         {value}
       </Text>
-      <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>{label}</Text>
+      <Text tone="muted" variant="caption">
+        {label}
+      </Text>
     </View>
   );
 }

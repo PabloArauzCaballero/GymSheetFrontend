@@ -29,7 +29,18 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import { colors, fontSizes, iconSizes, motion, radii, semibold, spacing } from '@/theme';
+import {
+  alpha,
+  bodyMapColors,
+  colors,
+  fontSizes,
+  iconSizes,
+  motion,
+  overlay,
+  radii,
+  semibold,
+  spacing,
+} from '@/theme';
 import {
   clampTransform,
   containFrame,
@@ -79,7 +90,7 @@ function Glass({ children, round = false }: { children: React.ReactNode; round?:
         borderRadius: radii.full,
         overflow: 'hidden',
         borderWidth: StyleSheet.hairlineWidth,
-        borderColor: 'rgba(255,255,255,0.14)',
+        borderColor: overlay.glass,
         ...(round ? { width: 40, height: 40 } : null),
       }}
     >
@@ -117,7 +128,7 @@ function Chip({
           gap: spacing.xs + 2,
           height: 36,
           paddingHorizontal: spacing.md - 2,
-          backgroundColor: active ? 'rgba(255,255,255,0.16)' : 'transparent',
+          backgroundColor: active ? bodyMapColors.chipActive : 'transparent',
           opacity: pressed ? 0.6 : 1,
         })}
       >
@@ -463,7 +474,7 @@ export function BodyMap({
                       fill="none"
                       fillRule="evenodd"
                       key={`${region.code}-${index}`}
-                      stroke="#ffffff"
+                      stroke={bodyMapColors.highlightStroke}
                       strokeOpacity={0.5}
                       strokeWidth={1.5}
                     />
@@ -538,7 +549,7 @@ export function BodyMap({
         {/* Abajo, el resultado: el músculo tocado o, sin selección, la pista
             de uso. Sobre un degradado para que se lea encima de las piernas. */}
         <LinearGradient
-          colors={['rgba(13,13,13,0)', 'rgba(13,13,13,0.86)']}
+          colors={[alpha(colors.background, 0), alpha(colors.background, 0.86)]}
           pointerEvents="none"
           style={{
             position: 'absolute',

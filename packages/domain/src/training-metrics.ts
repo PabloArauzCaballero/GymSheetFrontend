@@ -5,6 +5,11 @@ import type { Workout, WorkoutExercise, WorkoutSet } from '@gymsheet/types';
 // para la misma persona según dónde abra el panel. Sólo importa tipos, para
 // que `node --test` lo cargue sin resolver el resto del paquete.
 
+// Vive en el dominio compartido desde que la web también compara esta semana
+// con la anterior: dos copias del cálculo acabarían dando dos cifras distintas
+// para la misma persona según dónde abra el panel. Sólo importa tipos, para
+// que `node --test` lo cargue sin resolver el resto del paquete.
+
 /**
  * What a training log actually says, derived on the client.
  *
@@ -42,6 +47,20 @@ export function isStrengthSet(
   set: WorkoutSet,
 ): set is WorkoutSet & { pesoKg: number; repeticiones: number } {
   return set.tipoSerie !== 'CARDIO' && set.pesoKg != null && set.repeticiones != null;
+}
+
+/**
+ * A strength set logged by time (a 45 s plank): seconds, no reps. It never
+ * counts as volume, reps or a record, even with added weight.
+ */
+export function isTimedSet(set: WorkoutSet): set is WorkoutSet & { duracionSeg: number } {
+  return set.tipoSerie !== 'CARDIO' && set.repeticiones == null && set.duracionSeg != null;
+}
+
+/** Longest hold of a timed exercise (seconds), or `null` without timed sets. */
+export function longestTimedSet(exercise: WorkoutExercise): number | null {
+  const seconds = exercise.series.filter(isTimedSet).map((set) => set.duracionSeg);
+  return seconds.length > 0 ? Math.max(...seconds) : null;
 }
 
 /** Kilograms moved in one set. Zero for cardio, which never has weight or reps. */
@@ -216,13 +235,15 @@ export function previousPerformance(
   workouts: readonly Workout[],
   exerciseId: string,
   excludeWorkoutId: string,
+  /** Which sets make a session comparable; pass `isTimedSet` for a timed exercise. */
+  qualifies: (set: WorkoutSet) => boolean = isStrengthSet,
 ): { readonly workout: Workout; readonly exercise: WorkoutExercise } | null {
   const candidates = workouts
     .filter((workout) => workout.id !== excludeWorkoutId && workout.estado === 'FINALIZADA')
     .sort((a, b) => new Date(b.fechaInicio).getTime() - new Date(a.fechaInicio).getTime());
   for (const workout of candidates) {
     const exercise = workout.ejercicios.find(
-      (item) => item.ejercicio?.id === exerciseId && item.series.some(isStrengthSet),
+      (item) => item.ejercicio?.id === exerciseId && item.series.some(qualifies),
     );
     if (exercise) return { workout, exercise };
   }

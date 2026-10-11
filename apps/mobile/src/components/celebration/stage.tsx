@@ -35,7 +35,16 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PREMIUM_EASING } from '@/components/motion';
 import { Button } from '@/components/ui';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import {
+  colors,
+  fontSizes,
+  iconSizes,
+  minTouchTarget,
+  radii,
+  semibold,
+  spacing,
+  stageBackground,
+} from '@/theme';
 import { CardBack, CardFront, Flash, Halo, Particles, Rays, Stamp } from './card-parts';
 import { sceneOf, type CelebrationSubject } from './scene';
 
@@ -58,7 +67,7 @@ import { sceneOf, type CelebrationSubject } from './scene';
  * Fondo casi negro, no negro: un haz sobre `#000` puro no tiene aire que
  * iluminar y en OLED el degradado se corta con borde visible.
  */
-const STAGE_BACKGROUND = '#050507';
+const STAGE_BACKGROUND = stageBackground.celebration;
 
 /** Entrada desde abajo con un micro rebote al aterrizar. */
 const ENTER_SPRING = { damping: 13, stiffness: 120, mass: 0.9 } as const;
@@ -217,7 +226,6 @@ export function CardStage({
     };
     // Los valores compartidos son estables; el guion se vuelve a correr
     // remontando la escena con otra `key`, no cambiando dependencias.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduceMotion]);
 
   /** Una celebración que sólo existe como luz no existe para quien no la ve. */

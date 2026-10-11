@@ -8,7 +8,7 @@ import {
   type PlannedWeek,
 } from '@gymsheet/hooks';
 import { PressableScale } from '@/components/motion';
-import { colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { alpha, colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 const WEEK_LABEL_WIDTH = 44;
 
@@ -105,7 +105,7 @@ export function RoutineMonthGrid({
                 <Text
                   style={{
                     color: colors.warning,
-                    fontSize: 9,
+                    fontSize: fontSizes.xs,
                     fontWeight: semibold,
                   }}
                 >
@@ -124,7 +124,7 @@ export function RoutineMonthGrid({
                   alignItems: 'center',
                   justifyContent: 'center',
                   borderRadius: radii.sm,
-                  backgroundColor: column.entrena ? `${colors.volt}22` : 'transparent',
+                  backgroundColor: column.entrena ? alpha(colors.volt, 0.13) : 'transparent',
                 }}
               >
                 <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSizes.xs }}>

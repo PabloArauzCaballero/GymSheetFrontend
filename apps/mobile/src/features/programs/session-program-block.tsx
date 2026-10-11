@@ -6,6 +6,7 @@ import type { ProgramSessionExtras } from '@gymsheet/types';
 import { programService, routineService } from '@/api/services';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Card } from '@/components/layout';
+import { describeSessionCount, showsModeBonus } from '@/features/programs/session-block-copy';
 import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
 import { colors, fontSizes, semibold, spacing } from '@/theme';
@@ -17,7 +18,13 @@ const ACTION_COPY: Record<string, string> = {
   HOLD: 'Mantén el peso',
   GOAL_REACHED: '¡Meta lograda!',
   E1RM_UP: 'Tu marca estimada subió',
+  ADD_LOAD: 'Añade lastre cuando completes todas las series',
+  DELOAD_SKIP: 'Semana de descarga: no cambia',
+  NO_DATA: 'Sin series válidas esta vez',
 };
+
+/** Solo las acciones que mueven el peso muestran «→ X kg»: con 0 kg (peso corporal) no tiene sentido. */
+const SHOWS_NEXT_WEIGHT = new Set(['RAISE', 'LOWER', 'HOLD']);
 
 /**
  * Lo que dice el programa al terminar la sesión (RF-15, RF-16, RF-20): «+X por sobrecarga
@@ -60,11 +67,9 @@ export function SessionProgramBlock({ workoutId, block }: { workoutId: string; b
         <View style={{ gap: spacing.sm }} testID="session-program">
           <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>Tu programa</Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-            {block.sesionCuenta
-              ? `Esta sesión cuenta: ${block.sesionesHechasSemana} de ${block.sesionesPlanSemana} de la semana${block.semana ? ` ${block.semana}` : ''}.`
-              : (block.motivoNoCuenta ?? 'Esta sesión no cuenta para la semana.')}
+            {describeSessionCount(block)}
           </Text>
-          {block.bonusModo ? (
+          {showsModeBonus(block) && block.bonusModo ? (
             <Text style={{ color: colors.volt, fontSize: fontSizes.md, fontWeight: semibold }} testID="mode-bonus">
               +{block.bonusModo.puntosPrevistos} por {block.modo === 'STRENGTH_GOALS' ? 'metas' : 'sobrecarga'} ({multiplierLabel(block.bonusModo.proximoMultiplicador)} al cumplir la semana)
             </Text>
@@ -72,7 +77,9 @@ export function SessionProgramBlock({ workoutId, block }: { workoutId: string; b
           {block.sugerencias.map((hint) => (
             <Text key={hint.ejercicioId} style={{ color: colors.text, fontSize: fontSizes.sm, lineHeight: 20 }}>
               {hint.ejercicioNombre ?? 'Ejercicio'}: {ACTION_COPY[hint.accion] ?? hint.accion}
-              {hint.pesoSugeridoKg !== undefined ? ` → ${formatKg(hint.pesoSugeridoKg)} la próxima` : ''}
+              {hint.pesoSugeridoKg !== undefined && hint.pesoSugeridoKg > 0 && SHOWS_NEXT_WEIGHT.has(hint.accion)
+                ? ` → ${formatKg(hint.pesoSugeridoKg)} la próxima`
+                : ''}
               {hint.marcaActualKg !== undefined ? ` (${formatKg(hint.marcaActualKg)})` : ''}
             </Text>
           ))}

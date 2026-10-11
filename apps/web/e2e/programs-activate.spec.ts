@@ -1,7 +1,7 @@
 /**
  * Activar una rutina como programa (plan Rutinas REPP · F5 · RF-14) en las cuatro
- * combinaciones de 06 (390 y 1440 px, claro y oscuro): pasos A2 a A5, copia de una
- * rutina ajena, reemplazo con confirmación y convivencia con el cardio.
+ * combinaciones de 06 (390 y 1440 px, claro y oscuro): pasos A2 a A5, guardia de una
+ * rutina ajena (C1: no se activa; se guarda y se activa la copia, C2), reemplazo con confirmación y convivencia con el cardio.
  */
 import { test } from '@playwright/test';
 import { evidencia } from './evidencia';
@@ -13,7 +13,7 @@ for (const combo of combos) {
     test.use({ viewport: { width: combo.width, height: combo.height } });
     test.setTimeout(420_000);
 
-    test('RF-14: activar, copia de una ajena, reemplazo y cardio en paralelo', async ({ page, context, baseURL }) => {
+    test('RF-14: activar, la ajena no se activa (se guarda y se activa la copia), reemplazo y cardio', async ({ page, context, baseURL }) => {
       const tag = etiquetaUnica();
       const [ana, bruno] = await Promise.all([crearCuenta('ana', `Ana ${tag}`), crearCuenta('bruno', `Bruno ${tag}`)]);
       const a = apiDe(ana);
@@ -47,12 +47,29 @@ for (const combo of combos) {
       await expect(page.getByTestId('program-card-fuerza')).toContainText('Normal');
       await evidencia(page, 'RF-14', '01d', 'tarjeta-del-programa');
 
-      // RF-14 · p02: activar una rutina pública ajena crea una copia «Basada en» y activa la copia.
+      // RF-14 · p02 (C1): en una rutina ajena no hay «Activar»; un enlace directo no crea nada.
+      await page.goto(`/routines/${ajena.id}`);
+      await expect(page.getByRole('button', { name: 'Guardar en mis rutinas' })).toBeVisible();
+      await expect(page.getByRole('link', { name: 'Activar' })).toHaveCount(0);
+      await evidencia(page, 'RF-14', '02', 'ajena-sin-activar');
+      const antes = await a<{ items: unknown[] }>('GET', `/routines?scope=mine&q=${tag}&limit=50`);
       await page.goto(`/routines/${ajena.id}/activate`);
+      await expect(page).toHaveURL(new RegExp(`/routines/${ajena.id}$`, 'u'));
+      await expect(page.getByText('Guárdala en tus rutinas para activarla')).toBeVisible();
+      await evidencia(page, 'RF-14', '02b', 'enlace-directo-a-ajena-avisa');
+      const despues = await a<{ items: unknown[] }>('GET', `/routines?scope=mine&q=${tag}&limit=50`);
+      expect(despues.data.items.length).toBe(antes.data.items.length);
+
+      // RF-14 · p02c: guardarla da una copia propia «· v1» y esa sí se activa.
+      await page.getByRole('button', { name: 'Guardar en mis rutinas' }).click();
+      await expect(page.getByRole('heading', { name: `Rutina de Bruno ${tag} · v1`, level: 1 })).toBeVisible();
+      await expect(page.getByTestId('attribution-strip')).toContainText(`Basada en Rutina de Bruno ${tag}`);
+      const copiaId = page.url().split('/routines/')[1]!.split('?')[0]!;
+      await page.getByRole('link', { name: 'Activar' }).click();
       await expect(page.getByText('Paso 1 de 4 · Programa actual')).toBeVisible();
       await evidencia(page, 'RF-14', '03', 'a1-reemplazo');
       await expect(page.getByTestId('step-replace')).toContainText(`Empuje propio ${tag}`);
-      await expect(page.getByTestId('step-replace')).toContainText(`Rutina de Bruno ${tag}`);
+      await expect(page.getByTestId('step-replace')).toContainText(`Rutina de Bruno ${tag} · v1`);
 
       // RF-14 · p03: confirmar el reemplazo y activar.
       await page.getByRole('button', { name: 'Apagar y continuar' }).click();
@@ -61,15 +78,12 @@ for (const combo of combos) {
       await expect(page.getByTestId('step-summary')).toContainText('Se apagará tu programa de pesas actual');
       await page.getByRole('button', { name: 'Apagar y activar' }).click();
       await expect(page).toHaveURL(/\/routines(\?|$)/u);
-      await expect(page.getByTestId('program-card-fuerza')).toContainText(`Rutina de Bruno ${tag}`);
+      await expect(page.getByTestId('program-card-fuerza')).toContainText(`Rutina de Bruno ${tag} · v1`);
       await evidencia(page, 'RF-14', '04', 'tarjeta-cambia-tras-reemplazo');
 
-      // RF-14 · p02b: la rutina activa es una copia propia con la franja «Basada en».
+      // El programa activo es la copia propia, no la original de Bruno.
       const activo = await a<{ fuerza: { rutinaId: string } }>('GET', '/programs/active');
-      expect(activo.data.fuerza.rutinaId).not.toBe(ajena.id);
-      await page.goto(`/routines/${activo.data.fuerza.rutinaId}`);
-      await expect(page.getByTestId('attribution-strip')).toContainText(`Basada en Rutina de Bruno ${tag}`);
-      await evidencia(page, 'RF-14', '02', 'activar-ajena-crea-copia');
+      expect(activo.data.fuerza.rutinaId).toBe(copiaId);
 
       // RF-14 · p05: con cardio en paralelo se ven las dos tarjetas.
       const cardio = await a('POST', '/programs/cardio/activate', {

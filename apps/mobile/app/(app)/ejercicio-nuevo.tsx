@@ -14,6 +14,7 @@ import { PressableScale } from '@/components/motion';
 import { notify } from '@/notifications';
 import { Button, Input } from '@/components/ui';
 import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+import { routes } from '@/lib/routes';
 
 const muscleCatalogService = {
   list: () => apiClient.request('/muscles', muscleCatalogSchema, { method: 'GET' }),
@@ -67,7 +68,7 @@ export default function NuevoEjercicioScreen() {
     onSuccess: async (created) => {
       await queryClient.invalidateQueries({ queryKey: ['exercises'] });
       notify.success('Ejercicio creado.');
-      router.replace({ pathname: '/exercises/[id]', params: { id: created.id } });
+      router.replace(routes.exercise(created.id));
     },
     onError: (error: Error) => notify.error(error.message),
   });

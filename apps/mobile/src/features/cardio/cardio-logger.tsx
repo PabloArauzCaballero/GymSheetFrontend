@@ -5,7 +5,7 @@ import { numericInputProps } from '@/components/keyboard';
 import { Input, Button } from '@/components/ui';
 import { ChoiceChip } from '@/components/wizard/choice-chip';
 import { useStopwatch } from '@/features/cardio/use-stopwatch';
-import { colors, fontSizes, semibold, spacing } from '@/theme';
+import { colors, fontSizes, heroNumberFontSize, semibold, spacing } from '@/theme';
 
 type CardioSetPayload = ReturnType<typeof buildCardioSet>;
 
@@ -37,7 +37,7 @@ export function CardioLogger({
       <Text
         accessibilityLabel={`Tiempo ${formatClock(seconds)}`}
         accessibilityLiveRegion="polite"
-        style={{ color: colors.text, fontSize: 44, fontWeight: semibold, fontVariant: ['tabular-nums'], textAlign: 'center' }}
+        style={{ color: colors.text, fontSize: heroNumberFontSize, fontWeight: semibold, fontVariant: ['tabular-nums'], textAlign: 'center' }}
         testID="cardio-clock"
       >
         {formatClock(seconds)}

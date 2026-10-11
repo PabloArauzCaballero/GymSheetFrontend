@@ -177,7 +177,6 @@ export default function TrayectoriaScreen() {
     setCelebrationQueue((current) => [...current, ...fresh]);
     // Lo que debe dispararlo es que aparezcan novedades, no cada objeto nuevo
     // que devuelve react-query.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [freshSignature]);
 
   const closeCelebration = () => {

@@ -184,11 +184,11 @@
     {
       "rf": "RF-10",
       "paso": "01",
-      "nombre": "toast-copiada-a-mias",
+      "nombre": "toast-guardada-en-mis-rutinas",
       "plataformas": [
         "movil"
       ],
-      "debeVerse": "Toast copiada a mias."
+      "debeVerse": "Aviso «Guardada en tus rutinas.» en una línea, sin tapar «Volver», sobre la copia v1+ con «Activar programa»."
     },
     {
       "rf": "RF-10",
@@ -709,72 +709,205 @@
       "paso": "03",
       "nombre": "notificacion-de-invitacion",
       "plataformas": [],
-      "faltante": "No capturado: la notificación push no se probó en el simulador.",
+      "faltante": "NO capturable en el simulador. Verificado en datos: al invitar se crea el mensaje IN_APP «Te compartieron una rutina» (ROUTINE_SHARE_INVITE, PENDING en notifications.messages). La app móvil no tiene bandeja y el permiso de notificaciones de iOS no se concede por simctl (`Operation not permitted`), así que un `simctl push` no pinta el aviso. Alternativa: iPhone real por TestFlight (DoD-8).",
       "debeVerse": "—"
     },
     {
       "rf": "RF-13",
       "paso": "08",
       "nombre": "rechazar-invitacion",
-      "plataformas": [],
-      "faltante": "No capturado en móvil (la ruta de rechazar existe en la tarjeta y la cubre el e2e del backend).",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Invitación rechazada desaparece."
     },
     {
       "rf": "RF-15",
       "paso": "04",
       "nombre": "dos-fallos-bajan-la-carga",
-      "plataformas": [],
-      "faltante": "No capturado: necesita varias sesiones; lo cubren las pruebas del motor.",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Baja el peso tras dos fallos seguidos."
     },
     {
       "rf": "RF-15",
       "paso": "05",
       "nombre": "semana-de-descarga",
-      "plataformas": [],
-      "faltante": "No capturado: depende del calendario del programa.",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Sugerencia de descarga: no cambia el peso."
     },
     {
       "rf": "RF-18",
       "paso": "01",
       "nombre": "x1-2-tras-semana-cumplida",
-      "plataformas": [],
-      "faltante": "NO TERMINADO: el flujo 23 (cierre semanal real con close-weeks) está escrito pero no llegó a pasar entera; el cierre semanal lo cubre el e2e `mode-rewards` del backend.",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Tarjeta con x1,2 tras la semana 1 cumplida."
     },
     {
       "rf": "RF-18",
       "paso": "02",
       "nombre": "semana-incumplida-vuelve-a-x1",
-      "plataformas": [],
-      "faltante": "NO TERMINADO: ver RF-18 p01.",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Tarjeta sin multiplicador tras semana incumplida."
     },
     {
       "rf": "RF-18",
       "paso": "03",
       "nombre": "insignia-por-racha-de-semanas",
-      "plataformas": [],
-      "faltante": "No capturado: necesita 4 semanas reales de sesiones.",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Insignia «Cuatro semanas de sobrecarga» conseguida."
     },
     {
       "rf": "RF-18",
       "paso": "04",
       "nombre": "sin-modo-no-hay-bono",
-      "plataformas": [],
-      "faltante": "Flujo 23-recompensas-bono-y-modo escrito pero no completado en la última pasada.",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Sin modo no hay línea de bono."
     },
     {
       "rf": "RF-19",
       "paso": "01",
       "nombre": "notificacion-de-fin-de-programa",
       "plataformas": [],
-      "faltante": "No capturado: depende del fin real del programa (sin reloj simulado).",
+      "faltante": "NO capturable en el simulador. Verificado en datos: al cerrar las semanas con close-weeks (flujo 23c) el servidor crea el mensaje IN_APP «Terminaste tu programa» (tipo PROGRAM_FINISHED, estado PENDING en notifications.messages; el flujo imprime la fila). La app móvil no tiene bandeja para ese mensaje y el permiso de notificaciones de iOS no se puede conceder por simctl privacy (`Operation not permitted`), así que `simctl push` no mostró ningún aviso. Alternativa: captura en un iPhone real con push registrado (TestFlight), DoD-8.",
       "debeVerse": "—"
+    },
+    {
+      "rf": "RF-18",
+      "paso": "00",
+      "nombre": "la-sesion-cuenta-para-la-semana",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "La sesión cuenta para la semana."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "01b",
+      "nombre": "semana-1-cumplida",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Detalle con S1 cumplida y x1,2."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "02b",
+      "nombre": "semana-2-sin-cumplir-los-puntos-no-bajan",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Detalle con S2 sin cumplir."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "03a",
+      "nombre": "cuatro-semanas-x1-8",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Tarjeta con x1,8 tras cuatro semanas."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "03b",
+      "nombre": "semanas-1-a-4-cumplidas",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Detalle con S1–S4 cumplidas."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "03c",
+      "nombre": "insignia-conseguida-celebracion",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Celebración de la insignia nueva."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "01",
+      "nombre": "bono-del-modo-en-el-resumen",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Bono del modo previsto en el resumen."
+    },
+    {
+      "rf": "RF-03",
+      "paso": "06",
+      "nombre": "salir-sin-guardar",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Alerta ¿Salir sin guardar?"
+    },
+    {
+      "rf": "RF-03",
+      "paso": "05",
+      "nombre": "retomar-borrador",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Oferta de retomar el borrador tras reabrir."
+    },
+    {
+      "rf": "RF-06",
+      "paso": "04",
+      "nombre": "mapa-pectoral",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Lista de pecho con +."
+    },
+    {
+      "rf": "RF-07",
+      "paso": "05a",
+      "nombre": "cuenta-a-con-favorito-y-me-gusta",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Cuenta A con me gusta y favorito."
+    },
+    {
+      "rf": "RF-07",
+      "paso": "05",
+      "nombre": "cuenta-b-ve-contador",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "B ve el contador, no el favorito de A."
+    },
+    {
+      "rf": "RF-13",
+      "paso": "08a",
+      "nombre": "invitacion-antes-de-rechazar",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Invitación con Rechazar/Aceptar."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "00b",
+      "nombre": "sesion-cuenta-sin-plan-semanal",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Resumen sin «1 de 0»."
     }
   ]
 }

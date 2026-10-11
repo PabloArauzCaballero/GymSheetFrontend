@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { ApiError } from './api-error';
 import { createApiClient } from './client';
 import { createExerciseCommunityServices, createRoutineServices } from './routine-services';
+import { createSharingServices } from './sharing-services';
+import { createProgramServices } from './programs-services';
+import { domainErrorMessage } from '@gymsheet/types';
 
 type Call = { url: string; method: string; body: unknown };
 
@@ -205,5 +208,113 @@ describe('errores con código estable', () => {
       message: 'Rutina no encontrada.',
     });
     expect((error as ApiError).code).toBeUndefined();
+  });
+});
+
+describe('contrato C1–C3 (correcciones del TestFlight)', () => {
+  const exercise = {
+    id: UUID,
+    nombre: 'Barbell Bench Press',
+    nombreEs: 'Press de banca',
+    grupoMuscular: 'chest',
+    descripcion: null,
+    tipoEjercicio: 'GLOBAL',
+    createdByUsuarioId: null,
+    estado: 'ACTIVO',
+    dataSource: 'EXERCISES_DATASET',
+    category: null,
+    bodyPart: 'chest',
+    requiredEquipment: null,
+    targetMuscle: 'pectorals',
+    synergistMuscleGroup: null,
+    secondaryMuscles: [],
+    instructions: {},
+    instructionSteps: {},
+    metadata: {},
+    equipment: [],
+    media: [],
+  };
+  const row = {
+    id: UUID,
+    orden: 1,
+    seriesObjetivo: 3,
+    repsMin: 8,
+    repsMax: 12,
+    pesoObjetivoKg: 60,
+    rirObjetivo: 2,
+    descansoSeg: 15,
+    nota: 'Codos a 45°',
+    grupo: 1,
+    grupoTipo: 'SUPERSERIE',
+    descansoEntreSeg: 0,
+    duracionSeg: null,
+    ejercicio: exercise,
+  };
+
+  it('la copia devuelve «· vN» y numeroCopia, y los ejercicios traen bloque y nombreEs', async () => {
+    const copy = {
+      ...routine,
+      nombre: 'QA · v2',
+      numeroCopia: 2,
+      dias: [{ ...routine.dias[0], ejercicios: [row] }],
+    };
+    const { fetchImpl, calls } = fakeBackend(() => ok(copy));
+    const services = createSharingServices(createApiClient({ baseUrl: '/api', fetchImpl }).request);
+    const result = await services.copy(UUID);
+    expect(calls[0]).toMatchObject({ method: 'POST', url: `/api/routines/${UUID}/copy` });
+    expect(result.numeroCopia).toBe(2);
+    expect(result.dias[0]?.ejercicios[0]).toMatchObject({
+      grupo: 1,
+      grupoTipo: 'SUPERSERIE',
+      descansoEntreSeg: 0,
+      duracionSeg: null,
+      ejercicio: { nombreEs: 'Press de banca' },
+    });
+  });
+
+  it('una respuesta anterior a M-C3 se sigue leyendo, con los campos nuevos a null', async () => {
+    const legacyRow = Object.fromEntries(
+      Object.entries(row).filter(
+        ([key]) => !['grupo', 'grupoTipo', 'descansoEntreSeg', 'duracionSeg'].includes(key),
+      ),
+    );
+    const { fetchImpl } = fakeBackend(() =>
+      ok({ ...routine, dias: [{ ...routine.dias[0], ejercicios: [legacyRow] }] }),
+    );
+    const services = createRoutineServices(createApiClient({ baseUrl: '/api', fetchImpl }).request);
+    const result = await services.get(UUID);
+    expect(result.numeroCopia).toBeNull();
+    expect(result.dias[0]?.ejercicios[0]).toMatchObject({
+      grupo: null,
+      grupoTipo: null,
+      descansoEntreSeg: null,
+      duracionSeg: null,
+    });
+  });
+
+  it('activar una rutina ajena llega como ApiError con code ROUTINE_NOT_OWNED', async () => {
+    const { fetchImpl } = fakeBackend(() => ({
+      status: 403,
+      body: {
+        status: 403,
+        detail: 'La rutina no es tuya.',
+        code: 'ROUTINE_NOT_OWNED',
+        details: { routineId: UUID },
+      },
+    }));
+    const services = createProgramServices(createApiClient({ baseUrl: '/api', fetchImpl }).request);
+    const error = await services
+      .activateStrength({ routineId: UUID } as Parameters<typeof services.activateStrength>[0])
+      .catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({
+      status: 403,
+      kind: 'forbidden',
+      code: 'ROUTINE_NOT_OWNED',
+      details: { routineId: UUID },
+    });
+    expect(domainErrorMessage((error as ApiError).code)).toBe(
+      'Guárdala en tus rutinas para activarla',
+    );
   });
 });

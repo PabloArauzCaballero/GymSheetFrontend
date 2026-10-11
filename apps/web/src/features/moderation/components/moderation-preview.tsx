@@ -1,5 +1,6 @@
 'use client';
 
+import { exerciseGroupLabelEs } from '@gymsheet/domain';
 import { useQuery } from '@tanstack/react-query';
 import { Dumbbell, MessageSquareQuote, Users } from 'lucide-react';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -120,7 +121,7 @@ function ExerciseBody({ exercise }: Readonly<{ exercise: ExercisePreview }>) {
         {exercise.nombre}
       </p>
       <p className="text-xs text-[var(--text-muted)]">
-        {exercise.grupoMuscular ?? 'Sin grupo muscular'} ·{' '}
+        {exerciseGroupLabelEs(exercise.grupoMuscular) || 'Sin grupo muscular'} ·{' '}
         {exercise.media.length === 1 ? '1 archivo' : `${exercise.media.length} archivos`} de
         medios
       </p>

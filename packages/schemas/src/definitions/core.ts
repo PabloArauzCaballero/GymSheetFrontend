@@ -166,6 +166,8 @@ export const exerciseSchema = z
   .object({
     id: uuidShape,
     nombre: z.string(),
+    /** Nombre revisado en español (C3.b); la interfaz muestra `nombreEs ?? nombre`. */
+    nombreEs: z.string().nullable().optional(),
     grupoMuscular: z.string(),
     descripcion: z.string().nullable(),
     tipoEjercicio: z.enum(['GLOBAL', 'PERSONAL']),

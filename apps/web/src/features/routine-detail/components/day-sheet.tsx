@@ -1,12 +1,11 @@
 'use client';
 
-import { ChevronRight, Play } from 'lucide-react';
-import Link from 'next/link';
+import { Play } from 'lucide-react';
 import { WEEKDAY_NAMES } from '@gymsheet/hooks';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
-import { dayTitle, lineSummary, type DayModel, type WeekModel } from '../view-model';
-import { ExerciseCommunityDialog } from './exercise-community-dialog';
+import { dayTitle, type DayModel, type WeekModel } from '../view-model';
+import { DayBlocksList } from './day-blocks-list';
 
 /**
  * La hoja del día (RF-02): los ejercicios de ese día en esa semana con sus series
@@ -63,46 +62,7 @@ export function DaySheet({
       {day.ejercicios.length === 0 ? (
         <p className="p-5 text-sm text-[var(--text-muted)]">Este día todavía no tiene ejercicios.</p>
       ) : (
-        <ol className="list-none divide-y divide-[var(--border-subtle)]">
-          {day.ejercicios.map((line, index) => (
-            <li className="flex items-center" key={line.routineExerciseId}>
-              {line.oculto ? (
-                <div className="flex min-w-0 flex-1 items-center gap-4 p-4" data-testid="exercise-hidden">
-                  <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-sm)] border border-[var(--border-subtle)] text-sm font-semibold text-[var(--text-muted)]">
-                    {index + 1}
-                  </span>
-                  <span className="grid min-w-0 gap-0.5">
-                    <span className="font-semibold text-[var(--text-muted)]">Oculto por moderación</span>
-                    <span className="text-xs text-[var(--text-muted)]">{lineSummary({ ...line, nombre: '' })}</span>
-                  </span>
-                </div>
-              ) : (
-                <Link
-                  className="flex min-w-0 flex-1 items-center gap-4 p-4 transition-colors duration-[var(--dur-1)] hover:bg-[var(--surface-low)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--volt)]"
-                  href={`/exercises/${line.ejercicioId}`}
-                >
-                  <span
-                    aria-hidden
-                    className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-sm)] border border-[var(--border-subtle)] text-sm font-semibold text-[var(--accent-ink)]"
-                  >
-                    {index + 1}
-                  </span>
-                  <span className="grid min-w-0 flex-1 gap-0.5">
-                    <span className="truncate font-semibold">{line.nombre}</span>
-                    <span className="text-xs text-[var(--text-muted)]">{lineSummary(line)}</span>
-                  </span>
-                  <ChevronRight aria-hidden className="size-4 shrink-0 text-[var(--text-muted)]" />
-                  <span className="sr-only">Ver la ficha del ejercicio</span>
-                </Link>
-              )}
-              {line.privado && !line.oculto && showCommunity ? (
-                <div className="shrink-0 pr-3">
-                  <ExerciseCommunityDialog isOwner={isOwner} line={line} />
-                </div>
-              ) : null}
-            </li>
-          ))}
-        </ol>
+        <DayBlocksList isOwner={isOwner} lines={day.ejercicios} showCommunity={showCommunity} />
       )}
     </section>
   );

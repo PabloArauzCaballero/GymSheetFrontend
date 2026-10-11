@@ -1,0 +1,25 @@
+# D4 / RF-18: el resumen no dice «1 de 0» cuando la semana del programa no tiene sesiones planeadas. Se activa un
+# programa sobre un día que ya pasó esta semana (DIA_SEMANA=1, lunes; hoy es otro día): la semana 1 queda con 0
+# planeadas. Lo lanza `run-23e.sh` (sesión retrocedida 15 min por SQL para que cuente).
+appId: app.gymsheet.mobile
+name: 23e · Sesión que cuenta sin plan semanal
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+---
+- runFlow: login-as.subflow.yaml
+- runScript:
+    file: scripts-cancel-open-session.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local' }
+- runScript:
+    file: scripts-reset-programs.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local' }
+- runScript:
+    file: scripts-week-close-prep.js
+    env: { EMAIL: 'athlete.mock@gymsheet.local', MODE: 'PROGRESSIVE_OVERLOAD', DIA_SEMANA: '1' }
+- runScript:
+    file: scripts-log-sets.js
+    env:
+      EMAIL: athlete.mock@gymsheet.local
+      EXERCISE: barbell bench press
+      SETS: '[{"pesoKg":60,"repeticiones":12,"rir":2},{"pesoKg":60,"repeticiones":12,"rir":2},{"pesoKg":60,"repeticiones":12,"rir":2}]'

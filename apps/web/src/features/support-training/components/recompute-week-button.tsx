@@ -35,10 +35,12 @@ export function RecomputeWeekButton({
   const queryClient = useQueryClient();
   const recompute = useMutation({
     mutationFn: () => supportTrainingService.recomputeWeek(programId, week),
-    onSuccess: async (result) => {
+    onSuccess: (result) => {
       onResult(week, result);
       notify.success(recomputeMessage(result));
-      await queryClient.invalidateQueries({ queryKey: supportKey(userId) });
+      // Sin `await`: la mutación termina con la respuesta del servidor. Esperar el
+      // refresco de la ficha mantenía el botón en «cargando» tras avisar del resultado.
+      void queryClient.invalidateQueries({ queryKey: supportKey(userId) });
     },
     onError: (error: Error) => notify.error(error),
   });
@@ -66,7 +68,8 @@ export function RecomputeWeekButton({
       title={canRespond ? undefined : 'Necesitas el permiso de responder en soporte (support:respond).'}
       variant="secondary"
     >
-      <RefreshCw aria-hidden className="size-4" />
+      {/* Con la mutación en marcha el botón ya muestra su propio indicador. */}
+      {recompute.isPending ? null : <RefreshCw aria-hidden className="size-4" />}
       Recalcular
     </Button>
   );

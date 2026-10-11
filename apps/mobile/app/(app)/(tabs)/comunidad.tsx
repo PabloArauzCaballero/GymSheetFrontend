@@ -1,22 +1,23 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, Text, View } from 'react-native';
+import { memo, useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, Text, View, type ListRenderItemInfo } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { trainingGoals } from '@gymsheet/types';
 import type { GymDirectoryEntry, PublicBranchSummary } from '@gymsheet/schemas';
 import { chatService, facilitiesService, progressionService, socialService } from '@/api/services';
-import { Card, ScrollScreen, Section, TourHelpButton } from '@/components/layout';
+import { Card, ListScreen, Section, TourHelpButton } from '@/components/layout';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { DirectoryCardFace, levelTitle } from '@/components/directory-card';
 import { NavRow } from '@/components/list';
 import { RankBadge } from '@/components/rank-badge';
 import { StoriesBar } from '@/components/stories-bar';
 import { Button, Input } from '@/components/ui';
+import { FilterChip } from '@/components/filter-chip';
 import { CountUpText, PressableScale, SegmentedPill } from '@/components/motion';
+import { Text as UIText } from '@/components/text';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import {
   InteractionsBadge,
@@ -26,7 +27,7 @@ import {
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { notify } from '@/notifications';
 import { initialsOf } from '@/lib/format';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { accentContrast, accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, semibold, shadows, spacing } from '@/theme';
 import { TRAINING_GOAL_LABEL } from '@/lib/social-labels';
 
 /**
@@ -128,12 +129,14 @@ function CommunityHeader({ onOpenPreferences }: { onOpenPreferences: () => void 
             <View
               style={{
                 position: 'absolute',
-                top: 6,
-                right: 6,
-                width: 10,
-                height: 10,
+                top: spacing.xs + spacing.xxs,
+                right: spacing.xs + spacing.xxs,
+                width: spacing.smd - spacing.xxs,
+                height: spacing.smd - spacing.xxs,
                 borderRadius: radii.full,
-                backgroundColor: colors.volt,
+                // Aviso de «hay algo nuevo», no la acción principal: rojo de
+                // aviso, no el acento (C8.3.7).
+                backgroundColor: colors.danger,
                 borderWidth: 2,
                 borderColor: colors.background,
               }}
@@ -143,21 +146,12 @@ function CommunityHeader({ onOpenPreferences }: { onOpenPreferences: () => void 
       </View>
 
       <View style={{ gap: spacing.xs }}>
-        <Text
-          accessibilityRole="header"
-          style={{
-            color: colors.text,
-            fontSize: fontSizes.display,
-            fontWeight: semibold,
-            letterSpacing: fontSizes.display * -0.03,
-            lineHeight: fontSizes.display * 1.05,
-          }}
-        >
+        <UIText accessibilityRole="header" variant="display">
           Comunidad
-        </Text>
-        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
+        </UIText>
+        <UIText tone="muted" variant="subhead">
           Socios de tu gimnasio, filtrados por lo que buscas.
-        </Text>
+        </UIText>
       </View>
     </View>
   );
@@ -177,16 +171,19 @@ function PodiumPreview() {
   });
 
   if (leaderboard.isPending) return <Skeleton height={132} />;
-  if (leaderboard.isError || !leaderboard.data?.length) return null;
+  // Un fallo se dice y se puede reintentar (antes la sección desaparecía sin
+  // aviso). Un podio vacío —nadie ha sumado puntos aún— sí puede no pintarse.
+  if (leaderboard.isError) {
+    return <ErrorState error={leaderboard.error} onRetry={() => void leaderboard.refetch()} />;
+  }
+  if (!leaderboard.data?.length) return null;
 
   return (
     <Card accessibilityLabel="Ver el podio completo" onPress={() => router.push('/trayectoria')}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-          <Ionicons color={colors.volt} name="podium-outline" size={iconSizes.md} />
-          <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold, letterSpacing: fontSizes.md * -0.01 }}>
-            Podio del gimnasio
-          </Text>
+          <Ionicons color={accentPolicy.glyph} name="podium-outline" size={iconSizes.md} />
+          <UIText variant="headline">Podio del gimnasio</UIText>
         </View>
         <Ionicons color={colors.textMuted} name="chevron-forward" size={iconSizes.sm} />
       </View>
@@ -229,47 +226,6 @@ const GOAL_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   REHABILITACION: 'medkit-outline',
 };
 
-function FilterChip({
-  label,
-  icon,
-  active,
-  onPress,
-}: {
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <PressableScale
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.sm,
-        borderRadius: radii.full,
-        borderWidth: 1,
-        borderColor: active ? colors.volt : colors.border,
-        backgroundColor: active ? colors.surfaceHigh : colors.surfaceLow,
-      }}
-    >
-      <Ionicons color={active ? colors.text : colors.textMuted} name={icon} size={iconSizes.sm} />
-      <Text
-        style={{
-          color: active ? colors.text : colors.textMuted,
-          fontSize: fontSizes.sm,
-          fontWeight: active ? semibold : '400',
-        }}
-      >
-        {label}
-      </Text>
-    </PressableScale>
-  );
-}
-
 type DirectoryFilters = {
   objetivo: string | null;
   setObjetivo: (value: string | null) => void;
@@ -307,7 +263,7 @@ function SearchPreferencesSheet({
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent transparent visible={visible}>
-      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0, 0, 0, 0.72)' }}>
+      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: overlay.scrim }}>
         <Pressable accessible={false} onPress={onClose} style={{ flex: 1 }} />
 
         <View
@@ -326,12 +282,9 @@ function SearchPreferencesSheet({
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-            <Text
-              accessibilityRole="header"
-              style={{ flex: 1, color: colors.text, fontSize: fontSizes.lg, fontWeight: '700', letterSpacing: -0.5 }}
-            >
+            <UIText accessibilityRole="header" style={{ flex: 1 }} variant="title">
               Preferencias de búsqueda
-            </Text>
+            </UIText>
             <Pressable
               accessibilityLabel="Cerrar"
               accessibilityRole="button"
@@ -352,10 +305,9 @@ function SearchPreferencesSheet({
 
           <Section icon="options-outline" title="Objetivo">
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-              <FilterChip active={!objetivo} icon="apps-outline" label="Todos" onPress={() => setObjetivo(null)} />
+              <FilterChip selected={!objetivo} icon="apps-outline" label="Todos" onPress={() => setObjetivo(null)} />
               {trainingGoals.map((goal) => (
-                <FilterChip
-                  active={objetivo === goal}
+                <FilterChip selected={objetivo === goal}
                   icon={GOAL_ICON[goal] ?? 'flag-outline'}
                   key={goal}
                   label={TRAINING_GOAL_LABEL[goal] ?? goal}
@@ -372,15 +324,13 @@ function SearchPreferencesSheet({
               <ErrorState error={branches.error} onRetry={() => void branches.refetch()} />
             ) : branchList.length > 1 ? (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-                <FilterChip
-                  active={!sucursalId}
+                <FilterChip selected={!sucursalId}
                   icon="apps-outline"
                   label="Todos"
                   onPress={() => setSucursalId(null)}
                 />
                 {branchList.map((branch) => (
-                  <FilterChip
-                    active={sucursalId === branch.id}
+                  <FilterChip selected={sucursalId === branch.id}
                     icon="business-outline"
                     key={branch.id}
                     label={branch.nombre}
@@ -399,15 +349,13 @@ function SearchPreferencesSheet({
 
           <Section icon="male-female-outline" title="Género">
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-              <FilterChip active={!genero} icon="apps-outline" label="Todos" onPress={() => setGenero(null)} />
-              <FilterChip
-                active={genero === 'MALE'}
+              <FilterChip selected={!genero} icon="apps-outline" label="Todos" onPress={() => setGenero(null)} />
+              <FilterChip selected={genero === 'MALE'}
                 icon="male-outline"
                 label="Hombre"
                 onPress={() => setGenero('MALE')}
               />
-              <FilterChip
-                active={genero === 'FEMALE'}
+              <FilterChip selected={genero === 'FEMALE'}
                 icon="female-outline"
                 label="Mujer"
                 onPress={() => setGenero('FEMALE')}
@@ -432,7 +380,7 @@ function SearchPreferencesSheet({
  */
 function DirectoryPersonCard({
   entry,
-  index,
+  index: _index,
   onConnect,
   onMessage,
   onWithdraw,
@@ -452,16 +400,13 @@ function DirectoryPersonCard({
   withdrawing: boolean;
 }) {
   return (
-    <Animated.View
-      entering={FadeInDown.duration(320)
-        .delay(Math.min(index, 6) * 60)
-        .easing(Easing.out(Easing.cubic))}
+    <View
       style={{
         borderRadius: radii.xl,
+        borderCurve: 'continuous',
         overflow: 'hidden',
         backgroundColor: colors.surfaceLow,
-        borderWidth: 1,
-        borderColor: colors.border,
+        boxShadow: shadows.e1,
       }}
     >
       {/* La misma cara que reparte la baraja de Descubrir; aquí la decisión no
@@ -477,7 +422,7 @@ function DirectoryPersonCard({
             label="Conectar"
             loading={connecting}
             onPress={onConnect}
-            variant="primary"
+            variant="secondary"
           />
         ) : entry.connectionStatus === 'ACCEPTED' ? (
           <Button
@@ -485,7 +430,7 @@ function DirectoryPersonCard({
             label="Enviar mensaje"
             loading={messaging}
             onPress={onMessage}
-            variant="primary"
+            variant="secondary"
           />
         ) : entry.connectionStatus === 'PENDING_SENT' ? (
           <Button
@@ -497,14 +442,14 @@ function DirectoryPersonCard({
           />
         ) : (
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.sm }}>
-            <Ionicons color={colors.volt} name="mail-unread-outline" size={iconSizes.sm} />
-            <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}>
+            <Ionicons color={colors.textSecondary} name="mail-unread-outline" size={iconSizes.sm} />
+            <UIText strong tone="secondary" variant="subhead">
               Te escribió — revisa Solicitudes
-            </Text>
+            </UIText>
           </View>
         )}
       </View>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -537,15 +482,18 @@ function DirectoryRowAction({
         borderRadius: radii.full,
         alignItems: 'center',
         justifyContent: 'center',
+        // Secundario (C8.3.7): con un socio por fila, un relleno de acento en
+        // cada una era un primario por persona. `primary` solo sube el relleno
+        // neutro un nivel; el contorno de control separa la acción de cancelar.
         borderWidth: 1,
-        borderColor: primary ? colors.volt : colors.border,
-        backgroundColor: primary ? colors.volt : colors.surfaceHigh,
+        borderColor: primary ? colors.surfaceHighest : colors.borderControl,
+        backgroundColor: primary ? colors.surfaceHighest : 'transparent',
       }}
     >
       {loading ? (
-        <ActivityIndicator color={primary ? colors.background : colors.text} size="small" />
+        <ActivityIndicator color={colors.text} size="small" />
       ) : (
-        <Ionicons color={primary ? colors.background : colors.text} name={icon} size={iconSizes.md} />
+        <Ionicons color={colors.text} name={icon} size={iconSizes.md} />
       )}
     </PressableScale>
   );
@@ -559,7 +507,7 @@ function DirectoryRowAction({
  */
 function DirectoryPersonRow({
   entry,
-  index,
+  index: _index,
   onConnect,
   onMessage,
   onWithdraw,
@@ -578,20 +526,18 @@ function DirectoryPersonRow({
   messaging: boolean;
   withdrawing: boolean;
 }) {
+  // Objetivo y rango en la línea de debajo del nombre; la columna derecha queda
+  // solo para la acción, y el texto deja de cortarse en «Hipertrofia · …».
   const subtitle =
     [
       entry.objetivo ? (TRAINING_GOAL_LABEL[entry.objetivo] ?? entry.objetivo) : null,
-      entry.branchName,
+      typeof entry.points === 'number' ? `${entry.points.toLocaleString('es-ES')} pts` : entry.levelCode ? levelTitle(entry.levelCode) : null,
     ]
       .filter(Boolean)
       .join(' · ') || undefined;
 
   return (
-    <Animated.View
-      entering={FadeInDown.duration(280)
-        .delay(Math.min(index, 8) * 40)
-        .easing(Easing.out(Easing.cubic))}
-    >
+    <View>
       <NavRow
         leading={
           entry.photoUrl ? (
@@ -614,36 +560,17 @@ function DirectoryPersonRow({
                 borderRadius: radii.full,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: colors.volt,
+                backgroundColor: colors.surfaceHighest,
               }}
             >
-              <Text style={{ color: colors.background, fontSize: fontSizes.md, fontWeight: '700' }}>
+              <UIText strong tone="secondary" variant="headline">
                 {initialsOf(entry.displayName, undefined)}
-              </Text>
+              </UIText>
             </View>
           )
         }
         meta={
-          <View style={{ alignItems: 'flex-end', gap: spacing.xs }}>
-            {entry.levelCode ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Ionicons color={colors.volt} name="trophy-outline" size={iconSizes.sm} />
-                <Text
-                  numberOfLines={1}
-                  style={{ color: colors.volt, fontSize: fontSizes.xs, fontWeight: semibold }}
-                >
-                  {levelTitle(entry.levelCode)}
-                  {typeof entry.points === 'number' ? ' · ' : ''}
-                </Text>
-                {typeof entry.points === 'number' ? (
-                  <CountUpText
-                    style={{ color: colors.volt, fontSize: fontSizes.xs, fontWeight: semibold }}
-                    suffix=" pts"
-                    value={entry.points}
-                  />
-                ) : null}
-              </View>
-            ) : null}
+          <View style={{ alignItems: 'flex-end' }}>
             {entry.connectionStatus === 'NONE' ? (
               <DirectoryRowAction
                 icon="person-add-outline"
@@ -681,7 +608,7 @@ function DirectoryPersonRow({
                   backgroundColor: colors.surfaceHigh,
                 }}
               >
-                <Ionicons color={colors.volt} name="mail-unread-outline" size={iconSizes.md} />
+                <Ionicons color={colors.textSecondary} name="mail-unread-outline" size={iconSizes.md} />
               </View>
             )}
           </View>
@@ -690,7 +617,7 @@ function DirectoryPersonRow({
         subtitle={subtitle}
         title={entry.displayName}
       />
-    </Animated.View>
+    </View>
   );
 }
 
@@ -714,7 +641,7 @@ function DirectoryViewToggle({
       gap={spacing.xs}
       itemStyle={{
         width: minTouchTarget,
-        height: 34,
+        height: minTouchTarget,
         borderRadius: radii.full,
         alignItems: 'center',
         justifyContent: 'center',
@@ -724,7 +651,7 @@ function DirectoryViewToggle({
         value: option.value,
         accessibilityLabel: mode === option.value ? `${option.label} (activo)` : option.label,
       }))}
-      pillColor={colors.surfaceHigh}
+      pillColor={colors.surfaceHighest}
       renderItem={(option, active) => {
         const entry = options.find((candidate) => candidate.value === option.value);
         return (
@@ -736,16 +663,62 @@ function DirectoryViewToggle({
         );
       }}
       style={{
-        padding: 2,
+        padding: spacing.xxs,
         borderRadius: radii.full,
-        borderWidth: 1,
-        borderColor: colors.border,
         backgroundColor: colors.surfaceLow,
       }}
       value={mode}
     />
   );
 }
+
+type DirectoryItemProps = {
+  entry: GymDirectoryEntry;
+  index: number;
+  mode: DirectoryViewMode;
+  connecting: boolean;
+  messaging: boolean;
+  withdrawing: boolean;
+  onConnect: (userId: string) => void;
+  onMessage: (userId: string) => void;
+  onWithdraw: (connectionId: string) => void;
+  onViewProfile: (entry: GymDirectoryEntry) => void;
+};
+
+/**
+ * Una fila del directorio, memorizada: con la lista virtualizada, conectar con
+ * una persona repinta su fila y no las cincuenta. Por eso recibe manejadores
+ * estables que toman el id, y los ata aquí a su socio.
+ */
+const DirectoryItem = memo(function DirectoryItem({
+  entry,
+  index,
+  mode,
+  connecting,
+  messaging,
+  withdrawing,
+  onConnect,
+  onMessage,
+  onWithdraw,
+  onViewProfile,
+}: DirectoryItemProps) {
+  const shared = {
+    connecting,
+    entry,
+    index,
+    messaging,
+    onConnect: () => onConnect(entry.userId),
+    onMessage: () => onMessage(entry.userId),
+    onViewProfile: () => onViewProfile(entry),
+    onWithdraw: () => {
+      if (entry.connectionId) onWithdraw(entry.connectionId);
+    },
+    withdrawing,
+  };
+  return mode === 'cards' ? <DirectoryPersonCard {...shared} /> : <DirectoryPersonRow {...shared} />;
+});
+
+const directoryKey = (entry: GymDirectoryEntry) => entry.userId;
 
 export default function ComunidadScreen() {
   const router = useRouter();
@@ -822,141 +795,151 @@ export default function ComunidadScreen() {
     onError: (error: Error) => notify.error(error.message),
   });
 
+  const { mutate: connectTo } = connect;
+  const { mutate: messageTo } = message;
+  const { mutate: withdrawFrom } = withdraw;
+  const openProfile = useCallback(
+    (entry: GymDirectoryEntry) =>
+      router.push({
+        pathname: '/perfil/[userId]' as const,
+        params: {
+          userId: entry.userId,
+          displayName: entry.displayName,
+          photoUrl: entry.photoUrl ?? undefined,
+          objetivo: entry.objetivo ?? undefined,
+          branchName: entry.branchName ?? undefined,
+        },
+      }),
+    [router],
+  );
+  const connectingId = connect.isPending ? connect.variables : undefined;
+  const messagingId = message.isPending ? message.variables : undefined;
+  const withdrawingId = withdraw.isPending ? withdraw.variables : undefined;
+
+  const renderEntry = useCallback(
+    ({ item, index }: ListRenderItemInfo<GymDirectoryEntry>) => (
+      <DirectoryItem
+        connecting={connectingId === item.userId}
+        entry={item}
+        index={index}
+        messaging={messagingId === item.userId}
+        mode={viewMode}
+        onConnect={connectTo}
+        onMessage={messageTo}
+        onViewProfile={openProfile}
+        onWithdraw={withdrawFrom}
+        withdrawing={withdrawingId !== undefined && withdrawingId === item.connectionId}
+      />
+    ),
+    [connectTo, connectingId, messageTo, messagingId, openProfile, viewMode, withdrawFrom, withdrawingId],
+  );
+
   return (
-    <ScrollScreen onRefresh={() => void directory.refetch()} refreshing={directory.isFetching}>
-      <TourTarget id="comunidad.actions">
-        <CommunityHeader onOpenPreferences={() => setPrefsVisible(true)} />
-      </TourTarget>
+    <ListScreen
+      data={directory.data ?? []}
+      empty={
+        directory.isPending ? (
+          <Skeleton height={viewMode === 'cards' ? 420 : 220} />
+        ) : directory.isError ? (
+          <ErrorState error={directory.error} onRetry={() => void directory.refetch()} />
+        ) : (
+          <EmptyState
+            icon="people-outline"
+            message="Ajusta los filtros o vuelve más tarde."
+            title="Sin resultados"
+          />
+        )
+      }
+      // Sin cursor: `/me/gym-directory` devuelve una sola página (hasta 50
+      // socios), así que la lista no pide más al llegar al final.
+      header={
+        <>
+          <TourTarget id="comunidad.actions">
+            <CommunityHeader onOpenPreferences={() => setPrefsVisible(true)} />
+          </TourTarget>
 
-      <StoriesBar />
+          <StoriesBar />
 
-      <TourTarget id="comunidad.podium">
-        <PodiumPreview />
-      </TourTarget>
+          <TourTarget id="comunidad.podium">
+            <PodiumPreview />
+          </TourTarget>
 
-      <Input
-        autoCapitalize="none"
-        autoCorrect={false}
-        label="Buscar"
-        onChangeText={setQ}
-        placeholder="Nombre de un socio…"
-        returnKeyType="search"
-        value={q}
-      />
+          <Input
+            autoCapitalize="none"
+            autoCorrect={false}
+            icon="search"
+            label="Buscar socios"
+            labelHidden
+            onChangeText={setQ}
+            placeholder="Nombre de un socio…"
+            returnKeyType="search"
+            value={q}
+          />
 
-      <SearchPreferencesSheet
-        branches={branches}
-        filters={{ objetivo, setObjetivo, sucursalId, setSucursalId, genero, setGenero }}
-        onClose={() => setPrefsVisible(false)}
-        visible={prefsVisible}
-      />
+          <SearchPreferencesSheet
+            branches={branches}
+            filters={{ objetivo, setObjetivo, sucursalId, setSucursalId, genero, setGenero }}
+            onClose={() => setPrefsVisible(false)}
+            visible={prefsVisible}
+          />
 
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: spacing.md,
-        }}
-      >
-        <Text
-          accessibilityRole="header"
-          style={{
-            color: colors.textMuted,
-            fontSize: fontSizes.xs,
-            fontWeight: semibold,
-            letterSpacing: fontSizes.xs * 0.1,
-            textTransform: 'uppercase',
-          }}
-        >
-          Socios
-        </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-          {/* Tercera forma de mirar el mismo catálogo, pero no un modo de esta
-              pantalla: la baraja se decide arrastrando y ocupa la pantalla
-              entera, así que es un destino, no un ajuste del listado. Va junto
-              al conmutador porque es donde se elige cómo mirar, y se lleva los
-              filtros puestos para no reabrir un gimnasio recién acotado. */}
-          <TourTarget id="comunidad.discover">
-          <PressableScale
-            accessibilityLabel="Descubrir socios uno a uno"
-            onPress={() =>
-              router.push({
-                pathname: '/descubrir',
-                params: {
-                  objetivo: objetivo ?? undefined,
-                  sucursalId: sucursalId ?? undefined,
-                  genero: genero ?? undefined,
-                },
-              })
-            }
+          <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              gap: spacing.xs,
-              height: 38,
-              paddingHorizontal: spacing.md,
-              borderRadius: radii.full,
-              borderWidth: 1,
-              borderColor: colors.volt,
-              backgroundColor: colors.surfaceLow,
+              justifyContent: 'space-between',
+              gap: spacing.md,
             }}
           >
-            <Ionicons color={colors.volt} name="flame-outline" size={iconSizes.md} />
-            <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}>
-              Descubrir
-            </Text>
-          </PressableScale>
-          </TourTarget>
-          <DirectoryViewToggle mode={viewMode} onChange={setViewMode} />
-        </View>
-      </View>
-
-      {directory.isPending ? (
-        <Skeleton height={viewMode === 'cards' ? 420 : 220} />
-      ) : directory.isError ? (
-        <ErrorState error={directory.error} onRetry={() => void directory.refetch()} />
-      ) : directory.data?.length ? (
-        <View style={{ gap: viewMode === 'cards' ? spacing.md : 0 }}>
-          {directory.data.map((entry, index) => {
-            const shared = {
-              connecting: connect.isPending && connect.variables === entry.userId,
-              entry,
-              index,
-              messaging: message.isPending && message.variables === entry.userId,
-              onConnect: () => connect.mutate(entry.userId),
-              onMessage: () => message.mutate(entry.userId),
-              onViewProfile: () =>
-                router.push({
-                  pathname: '/perfil/[userId]' as const,
-                  params: {
-                    userId: entry.userId,
-                    displayName: entry.displayName,
-                    photoUrl: entry.photoUrl ?? undefined,
-                    objetivo: entry.objetivo ?? undefined,
-                    branchName: entry.branchName ?? undefined,
-                  },
-                }),
-              onWithdraw: () => {
-                if (entry.connectionId) withdraw.mutate(entry.connectionId);
-              },
-              withdrawing: withdraw.isPending && withdraw.variables === entry.connectionId,
-            };
-
-            return viewMode === 'cards' ? (
-              <DirectoryPersonCard key={entry.userId} {...shared} />
-            ) : (
-              <DirectoryPersonRow key={entry.userId} {...shared} />
-            );
-          })}
-        </View>
-      ) : (
-        <EmptyState
-          icon="people-outline"
-          message="Ajusta los filtros o vuelve más tarde."
-          title="Sin resultados"
-        />
-      )}
-    </ScrollScreen>
+            <UIText accessibilityRole="header" variant="title">
+              Socios
+            </UIText>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+              {/* Tercera forma de mirar el mismo catálogo, pero no un modo de esta
+                  pantalla: la baraja se decide arrastrando y ocupa la pantalla
+                  entera, así que es un destino, no un ajuste del listado. Va junto
+                  al conmutador porque es donde se elige cómo mirar, y se lleva los
+                  filtros puestos para no reabrir un gimnasio recién acotado. */}
+              <TourTarget id="comunidad.discover">
+              <PressableScale
+                accessibilityLabel="Descubrir socios uno a uno"
+                onPress={() =>
+                  router.push({
+                    pathname: '/descubrir',
+                    params: {
+                      objetivo: objetivo ?? undefined,
+                      sucursalId: sucursalId ?? undefined,
+                      genero: genero ?? undefined,
+                    },
+                  })
+                }
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing.xs,
+                  // La acción principal de Comunidad y el único acento (C8.3.7).
+                  minHeight: minTouchTarget,
+                  paddingHorizontal: spacing.md,
+                  borderRadius: radii.full,
+                  backgroundColor: colors.volt,
+                }}
+              >
+                <Ionicons color={accentContrast()} name="flame" size={iconSizes.md} />
+                <UIText strong tone="onAccent" variant="subhead">
+                  Descubrir
+                </UIText>
+              </PressableScale>
+              </TourTarget>
+              <DirectoryViewToggle mode={viewMode} onChange={setViewMode} />
+            </View>
+          </View>
+        </>
+      }
+      itemGap={viewMode === 'cards' ? spacing.md : 0}
+      keyExtractor={directoryKey}
+      onRefresh={() => void directory.refetch()}
+      refreshing={directory.isFetching}
+      renderItem={renderEntry}
+    />
   );
 }

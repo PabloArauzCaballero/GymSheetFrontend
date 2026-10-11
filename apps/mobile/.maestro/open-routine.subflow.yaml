@@ -47,8 +47,11 @@ appId: app.gymsheet.mobile
 - tapOn:
     text: 'Reintentar'
     optional: true
+# La acción visible depende de la rutina (propia: «Activar programa»; ajena:
+# «Guardar en mis rutinas»; siempre «Probar un día»). Se acepta cualquiera,
+# incluido el «Empezar rutina» anterior a C2.
 - extendedWaitUntil:
-    visible: 'Empezar rutina'
+    visible: 'Probar un día|Guardar en mis rutinas|Activar programa|Empezar rutina'
     timeout: 30000
 # El calendario carga después de la cabecera: se espera a que acabe para que el
 # contenido no se desplace mientras el flujo desplaza la pantalla.

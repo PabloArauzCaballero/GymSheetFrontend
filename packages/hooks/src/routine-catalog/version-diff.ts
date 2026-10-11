@@ -1,6 +1,6 @@
 import type { Routine } from '@gymsheet/types';
 import { WEEKDAY_NAMES, type Weekday } from '../routine-draft/model';
-import { setsLabel } from './calendar-view';
+import { setsLabel } from './day-blocks';
 
 export type VersionChange = {
   tipo: 'DIA_NUEVO' | 'DIA_QUITADO' | 'EJERCICIO_NUEVO' | 'EJERCICIO_QUITADO' | 'EJERCICIO_CAMBIADO';
@@ -16,7 +16,12 @@ const dayKey = (day: Day, index: number): string =>
   day.diaSemana === null ? `idx-${index}` : `d-${day.diaSemana}`;
 
 const planned = (item: Day['ejercicios'][number]) =>
-  setsLabel({ series: item.seriesObjetivo, repsMin: item.repsMin, repsMax: item.repsMax });
+  setsLabel({
+    series: item.seriesObjetivo,
+    repsMin: item.repsMin,
+    repsMax: item.repsMax,
+    duracionSeg: item.duracionSeg,
+  });
 
 /**
  * «Ver cambios» de una copia con versión nueva (D2): qué días y ejercicios

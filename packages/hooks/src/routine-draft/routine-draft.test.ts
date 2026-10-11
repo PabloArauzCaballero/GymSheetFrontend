@@ -122,32 +122,68 @@ describe('días y ejercicios', () => {
     expect(without.draft.dias.map((d) => d.diaSemana)).toEqual([1, 5]);
   });
 
-  it('añade sin duplicar, quita, reordena y edita', () => {
+  it('añade (también repetido), quita, reordena y edita por uid', () => {
     let state = withDays([1]);
+    const a = exercise('a');
+    const b = exercise('b');
+    const c = exercise('c');
     state = run(
       [
+        { type: 'agregarEjercicio', destino: 1, ejercicio: a },
         { type: 'agregarEjercicio', destino: 1, ejercicio: exercise('a') },
-        { type: 'agregarEjercicio', destino: 1, ejercicio: exercise('a') },
-        { type: 'agregarEjercicio', destino: 1, ejercicio: exercise('b') },
-        { type: 'agregarEjercicio', destino: 1, ejercicio: exercise('c') },
-        { type: 'moverEjercicio', destino: 1, desde: 2, hacia: 0 },
-        { type: 'quitarEjercicio', destino: 1, ejercicioId: 'b' },
+        { type: 'agregarEjercicio', destino: 1, ejercicio: b },
+        { type: 'agregarEjercicio', destino: 1, ejercicio: c },
+        { type: 'moverEjercicio', destino: 1, desde: 3, hacia: 0 },
+        { type: 'quitarEjercicio', destino: 1, uid: b.uid },
         {
           type: 'editarEjercicio',
           destino: 1,
-          ejercicioId: 'a',
+          uid: a.uid,
           cambios: { seriesObjetivo: 4, repsMin: 6, repsMax: 8 },
         },
       ],
       state,
     );
     const day = state.draft.dias[0];
-    expect(day?.ejercicios.map((e) => e.ejercicioId)).toEqual(['c', 'a']);
-    expect(day?.ejercicios[1]).toMatchObject({
-      seriesObjetivo: 4,
-      repsMin: 6,
-      repsMax: 8,
-    });
+    expect(day?.ejercicios.map((e) => e.ejercicioId)).toEqual(['c', 'a', 'a']);
+    // Solo cambia la fila editada, no la otra «a».
+    expect(day?.ejercicios[1]).toMatchObject({ seriesObjetivo: 4, repsMin: 6, repsMax: 8 });
+    expect(day?.ejercicios[2]).toMatchObject({ seriesObjetivo: 3, repsMin: 8, repsMax: 12 });
+    expect(new Set(day?.ejercicios.map((e) => e.uid)).size).toBe(3);
+  });
+
+  it('añadir el mismo objeto dos veces le da otra clave; el buscador quita por ejercicio', () => {
+    const a = exercise('a');
+    let state = run(
+      [
+        { type: 'agregarEjercicio', destino: 1, ejercicio: a },
+        { type: 'agregarEjercicio', destino: 1, ejercicio: a },
+      ],
+      withDays([1]),
+    );
+    const uids = state.draft.dias[0]?.ejercicios.map((e) => e.uid) ?? [];
+    expect(uids).toHaveLength(2);
+    expect(uids[0]).toBe(a.uid);
+    expect(uids[1]).not.toBe(a.uid);
+    state = routineDraftReducer(state, { type: 'quitarEjercicio', destino: 1, ejercicioId: 'a' });
+    expect(state.draft.dias[0]?.ejercicios).toEqual([]);
+  });
+
+  it('editar no puede cambiar el uid', () => {
+    const a = exercise('a');
+    const state = run(
+      [
+        { type: 'agregarEjercicio', destino: 1, ejercicio: a },
+        {
+          type: 'editarEjercicio',
+          destino: 1,
+          uid: a.uid,
+          cambios: { uid: 'otro', nota: 'x' } as Partial<DraftExercise>,
+        },
+      ],
+      withDays([1]),
+    );
+    expect(state.draft.dias[0]?.ejercicios[0]).toMatchObject({ uid: a.uid, nota: 'x' });
   });
 
   it('ignora movimientos fuera de rango', () => {
@@ -457,6 +493,9 @@ describe('carga útil para el backend', () => {
             rirObjetivo: null,
             descansoSeg: 90,
             nota: null,
+            grupo: null,
+            descansoEntreSeg: null,
+            duracionSeg: null,
           },
         ],
       },

@@ -1,9 +1,14 @@
-import { useEffect } from 'react';
+import { use, useCallback, useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, type ColorValue } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Tabs } from 'expo-router';
+import {
+  BottomTabBar,
+  BottomTabBarHeightCallbackContext,
+  type BottomTabBarProps,
+} from 'expo-router/build/react-navigation/bottom-tabs';
 import ReAnimated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -17,13 +22,13 @@ import {
   useInteractionCounts,
 } from '@/components/interactions-counts';
 import { TourTarget } from '@/components/tour';
+import { ACTIVE_BAR_SPACE, ActiveWorkoutBar, useActiveWorkout } from '@/features/workout/active-workout-bar';
 import { accentContrast, colors, fontSizes, iconSizes, semibold } from '@/theme';
 
 /** Outline when resting, filled when active — the platform convention. */
 const ICONS = {
   home: ['home-outline', 'home'],
   routines: ['albums-outline', 'albums'],
-  exercises: ['barbell-outline', 'barbell'],
   comunidad: ['people-outline', 'people'],
   profile: ['person-outline', 'person'],
 } as const satisfies Record<
@@ -50,7 +55,7 @@ const SCENE_TRAVEL = 28;
  *
  * Fade and a slight scale ride along so the change still registers when two
  * sections look alike; travel alone would be nearly invisible between, say,
- * Rutinas and Ejercicios.
+ * Rutinas and Comunidad.
  */
 const sceneStyleInterpolator = ({ current }: { current: { progress: Animated.Value } }) => ({
   sceneStyle: {
@@ -143,7 +148,32 @@ function tabIcon(screen: keyof typeof ICONS) {
 }
 
 /**
- * Six destinations. Settings is reachable from Profile instead of taking a
+ * La barra de pestañas con la mini-barra del entreno abierto encima (C8.3.9).
+ * Intercepta el alto que la barra comunica al navegador y le suma el de la
+ * mini-barra: así las pantallas (`ScrollScreen`, sus pies fijos) reservan los
+ * dos y nada queda debajo.
+ */
+function TabBarWithWorkout(props: BottomTabBarProps) {
+  const report = use(BottomTabBarHeightCallbackContext);
+  const [height, setHeight] = useState(0);
+  const active = useActiveWorkout();
+  const extra = active ? ACTIVE_BAR_SPACE : 0;
+  const onHeight = useCallback((next: number) => setHeight(next), []);
+  useEffect(() => {
+    if (height > 0) report?.(height + extra);
+  }, [extra, height, report]);
+  return (
+    <>
+      <BottomTabBarHeightCallbackContext.Provider value={onHeight}>
+        <BottomTabBar {...props} />
+      </BottomTabBarHeightCallbackContext.Provider>
+      {active && height > 0 ? <ActiveWorkoutBar active={active} bottom={height} /> : null}
+    </>
+  );
+}
+
+/**
+ * Four destinations (Inicio · Rutinas · Comunidad · Perfil). Settings is reachable from Profile instead of taking a
  * slot of its own — it is visited rarely and belongs to the account.
  *
  * Comunidad used to be a stack sibling reached only through a NavRow buried
@@ -183,6 +213,7 @@ export default function TabsLayout() {
           if (!navigation.isFocused()) void Haptics.selectionAsync();
         },
       })}
+      tabBar={(props) => <TabBarWithWorkout {...props} />}
       screenOptions={{
         headerShown: false,
         animation: 'shift',
@@ -202,7 +233,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.accentInk,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontSize: fontSizes.xs, fontWeight: semibold },
-        // Cinco pestañas, no seis. Es el techo que este proyecto ya se había
+        // Cuatro pestañas desde C4 (antes cinco, no seis). Cinco es el techo que este proyecto ya se había
         // fijado —«cinco es el techo de una barra inferior antes de que las
         // etiquetas empiecen a truncarse», en `(app)/_layout.tsx`— y la regla
         // por la que Trayectoria y Descubrir viven en el stack y no aquí.
@@ -245,10 +276,10 @@ export default function TabsLayout() {
         name="routines"
         options={{ title: 'Rutinas', tabBarIcon: tabIcon('routines') }}
       />
-      <Tabs.Screen
-        name="exercises"
-        options={{ title: 'Ejercicios', tabBarIcon: tabIcon('exercises') }}
-      />
+      {/* Ejercicios dejó de ser pestaña (C4): el catálogo es una herramienta
+          para armar rutinas, no un destino diario. Vive en la pila hermana
+          `../ejercicios/` y se abre desde Rutinas («Explorar ejercicios») y
+          desde Perfil («Mis ejercicios y favoritos»). Cuatro pestañas. */}
       <Tabs.Screen
         name="comunidad"
         options={{

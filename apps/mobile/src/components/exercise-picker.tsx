@@ -4,13 +4,14 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, FlatList, Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { exerciseGroupLabelEs } from '@gymsheet/domain';
 import { exerciseService } from '@/api/services';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { Divider } from '@/components/layout';
 import { NavRow } from '@/components/list';
 import { ExerciseImage } from '@/components/media';
 import { Button, Input } from '@/components/ui';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, spacing } from '@/theme';
 
 /** How much of the screen the sheet claims: enough rows to scan, still clearly a sheet. */
 const SHEET_HEIGHT = '85%';
@@ -64,7 +65,7 @@ export function ExercisePicker({
       transparent
       visible={visible}
     >
-      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0, 0, 0, 0.72)' }}>
+      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: overlay.scrim }}>
         {/* The strip above the sheet dismisses it, the way a native sheet does.
             Hidden from the accessibility tree: the close button is the labelled
             way out, and a full-screen target would swallow every swipe. */}
@@ -189,7 +190,7 @@ export function ExercisePicker({
                   <NavRow
                     leading={<ExerciseImage exercise={item} size={56} />}
                     onPress={() => onSelect(item.id)}
-                    subtitle={item.grupoMuscular}
+                    subtitle={exerciseGroupLabelEs(item.grupoMuscular)}
                     title={item.nombre}
                   />
                 )}

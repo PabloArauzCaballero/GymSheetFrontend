@@ -22,13 +22,14 @@ env:
 - extendedWaitUntil:
     visible: 'Vista Mes'
     timeout: 10000
-- assertVisible: 'S4'
+- assertVisible: 'Sem. 4'
 - takeScreenshot: RF-02_p02_vista-mes-descargas_ios_oscuro
 - tapOn: 'Semana 2, martes.*'
+# El día se abre en pantalla completa (C8.3.2): «Semana 2 de 12 · Martes · Día N» y el título.
 - extendedWaitUntil:
-    visible: 'Martes · Tirón'
+    visible: 'Semana 2 de .* · Martes · .*'
     timeout: 10000
-- assertVisible: 'Semana 2'
+- assertVisible: 'Tirón'
 - takeScreenshot: RF-02_p03_s2-martes-hoja-del-dia_ios_oscuro
 
 # RF-02 · p04: tocar un ejercicio abre su ficha.
@@ -41,9 +42,13 @@ env:
 # RF-02 · p05: volver conserva el modo Mes (y, desplazando, S8 y S12 son descarga).
 - tapOn: 'Volver'
 - extendedWaitUntil:
+    visible: 'Entrenar este día'
+    timeout: 20000
+- tapOn: 'Volver'
+- extendedWaitUntil:
     visible: 'Vista Mes'
     timeout: 20000
-- assertVisible: 'S4'
+- assertVisible: 'Sem. 4'
 - takeScreenshot: RF-02_p05_volver-sigue-en-mes_ios_oscuro
 - scroll
 - takeScreenshot: RF-02_p02b_vista-mes-s8-s12-descarga_ios_oscuro
@@ -57,6 +62,6 @@ env:
     file: open-routine.subflow.yaml
     env: { TAB: 'Mías', NAME: 'Borrador privado' }
 - extendedWaitUntil:
-    visible: 'Rutina de un día, cualquier día.*'
+    visible: 'Cualquier día · Día 1.*'
     timeout: 30000
 - takeScreenshot: RF-02_p06_rutina-cualquier-dia_ios_oscuro

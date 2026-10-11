@@ -1,0 +1,85 @@
+# RF-06 p04: el mapa muscular dentro del selector de ejercicios del asistente. Toca el pecho en la figura (por
+# porcentaje de pantalla: la figura es un lienzo sin un nodo de accesibilidad por músculo) y se abre la lista de
+# ejercicios del músculo, con «+» para añadir.
+appId: app.gymsheet.mobile
+name: 08c · Selector de ejercicios - mapa muscular
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+---
+- runFlow: login-as.subflow.yaml
+- tapOn: 'Rutinas, tab.*'
+- runFlow: cerrar-tour.subflow.yaml
+- tapOn: 'Crear rutina'
+- extendedWaitUntil:
+    visible: 'Paso 1 de 6.*'
+    timeout: 30000
+# Si quedó un borrador de una corrida anterior, se descarta para empezar limpio.
+- tapOn:
+    text: 'Empezar de nuevo'
+    optional: true
+- assertNotVisible: 'Error'
+
+# RF-03 · p02: sin nombre no avanza y el error sale en el campo.
+- tapOn: 'Siguiente'
+- assertVisible: 'Escribe un nombre'
+- assertVisible: 'Paso 1 de 6.*'
+
+# RF-03 · p03: con nombre avanza.
+- tapOn:
+    id: 'routine-name'
+- inputText: 'QA Empuje 4 días'
+- tapOn: '¿Cómo se llama tu rutina?'
+- tapOn: 'Siguiente'
+- assertVisible: 'Paso 2 de 6.*'
+
+# RF-03 · p04: volver conserva lo escrito.
+- tapOn: 'Volver'
+- assertVisible: 'QA Empuje 4 días'
+- tapOn: 'Siguiente'
+- tapOn: 'Siguiente'
+- assertVisible: 'Paso 3 de 6.*'
+- tapOn:
+    id: 'goal-HIPERTROFIA'
+- tapOn: 'Siguiente'
+- assertVisible: 'Paso 4 de 6.*'
+
+# RF-04 · p01: 3 meses y descarga cada 4 (valores por defecto en Hipertrofia).
+- tapOn:
+    id: 'duration-3m'
+- tapOn: 'Siguiente'
+- assertVisible: 'Paso 5 de 6.*'
+
+# RF-04 · p02: sin días no se puede avanzar.
+- assertVisible: 'Elige al menos un día'
+- tapOn: 'Lunes'
+- tapOn: 'Miércoles'
+- tapOn: 'Jueves'
+- tapOn: 'Viernes'
+- assertVisible: '4 días · 12 semanas'
+
+- tapOn:
+    id: 'day-row-1'
+- assertVisible: 'Lunes'
+- extendedWaitUntil:
+    visible: 'Figura anatómica interactiva'
+    timeout: 30000
+# La figura queda bajo la cabecera y la barra de «0 ejercicios»: se desplaza hasta verla entera.
+- swipe:
+    start: 50%,70%
+    end: 50%,30%
+- waitForAnimationToEnd
+- swipe:
+    start: 50%,40%
+    end: 50%,52%
+- waitForAnimationToEnd
+# Pectoral: pecho izquierdo del cuerpo, vista frontal, capa externa (coordenadas medidas sobre esta pantalla).
+- tapOn:
+    point: '56%,23%'
+- extendedWaitUntil:
+    visible: 'Pectoral mayor'
+    timeout: 30000
+- assertVisible: '.*367 ejercicios.*|.* ejercicios'
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: RF-06_p04_mapa-pectoral_ios_oscuro

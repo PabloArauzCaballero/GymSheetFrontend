@@ -5,7 +5,7 @@ import type { Exercise } from '@gymsheet/types';
 import { exerciseCommunityService } from '@/api/services';
 import { PressableScale } from '@/components/motion';
 import { notify } from '@/notifications';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { alpha, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 type Patch = Partial<Pick<Exercise, 'meGusta' | 'meGustaTotal' | 'esFavorito'>>;
 
@@ -47,7 +47,7 @@ function ToggleButton({
         borderRadius: radii.md,
         borderWidth: 1,
         borderColor: active ? colors.volt : colors.border,
-        backgroundColor: active ? `${colors.volt}14` : colors.surface,
+        backgroundColor: active ? alpha(colors.volt, 0.08) : colors.surface,
       }}
       testID={testID}
     >

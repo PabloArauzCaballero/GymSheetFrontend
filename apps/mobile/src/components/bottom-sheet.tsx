@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableScale } from '@/components/motion';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, semibold, spacing } from '@/theme';
 
 /**
  * Hoja inferior para el detalle que no merece una pantalla: la lista de un día,
@@ -37,7 +37,7 @@ export function BottomSheet({
         <Pressable
           accessibilityLabel="Cerrar"
           onPress={onClose}
-          style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)' }}
+          style={{ position: 'absolute', inset: 0, backgroundColor: overlay.scrimSoft }}
         />
         <View
           accessibilityViewIsModal

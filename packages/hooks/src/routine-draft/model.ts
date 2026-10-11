@@ -1,4 +1,6 @@
 import type { TrainingGoal } from '@gymsheet/types';
+import { muscleZone } from '@gymsheet/domain';
+import { newDraftUid } from './groups';
 
 /**
  * Borrador del asistente de creación de rutinas (RF-03..08).
@@ -46,6 +48,11 @@ export const WEEKDAY_SHORT: Record<Weekday, string> = {
 };
 
 export type DraftExercise = {
+  /**
+   * Clave local de la fila (no viaja al backend). Las ediciones se identifican
+   * por ella y no por `ejercicioId`, porque un ejercicio puede repetirse en el día.
+   */
+  uid: string;
   ejercicioId: string;
   nombre: string;
   /** Sólo para los avisos de frecuencia por músculo; el backend no lo recibe. */
@@ -57,6 +64,12 @@ export type DraftExercise = {
   rirObjetivo: number | null;
   descansoSeg: number | null;
   nota: string | null;
+  /** Bloque (superserie o circuito): mismo número y contiguos = mismo bloque. Local al día. */
+  grupo: number | null;
+  /** Transición dentro del bloque (0–60 s); `null` fuera de un bloque. */
+  descansoEntreSeg: number | null;
+  /** Serie por tiempo (1–3600 s). Con duración, `repsMin`/`repsMax` son `null`. */
+  duracionSeg: number | null;
 };
 
 export type DraftDay = {
@@ -190,53 +203,36 @@ export function defaultsForGoal(
   }
 }
 
-/** Zonas del dataset (`bodyPart`) a la etiqueta que se muestra y se cuenta en los avisos. */
-const ZONE_LABELS: Record<string, string> = {
-  chest: 'Pecho',
-  back: 'Espalda',
-  shoulders: 'Hombros',
-  'upper arms': 'Brazos',
-  'lower arms': 'Antebrazos',
-  'upper legs': 'Piernas',
-  'lower legs': 'Gemelos',
-  waist: 'Abdomen',
-  cardio: 'Cardio',
-  neck: 'Cuello',
-  pecho: 'Pecho',
-  pierna: 'Piernas',
-};
-
 /** Zonas que no cuentan para el aviso de frecuencia por músculo. */
 export const ZONES_WITHOUT_FREQUENCY_WARNING: readonly string[] = ['Cardio', 'Cuello'];
 
 /**
- * Zona muscular de un ejercicio, unificada: el catálogo trae `bodyPart` en
- * inglés (dataset) o `grupoMuscular` en mayúsculas (ejercicios propios), y los
- * avisos de frecuencia tienen que contar «Pecho» una sola vez.
+ * Zona muscular de un ejercicio: vive en `@gymsheet/domain`, junto al resto de
+ * etiquetas del catálogo, para que la rutina y las pantallas hablen igual.
  */
-export function muscleZone(exercise: { grupoMuscular: string; bodyPart?: string | null }): string {
-  const raw = (exercise.bodyPart ?? exercise.grupoMuscular).trim().toLowerCase();
-  const known = ZONE_LABELS[raw];
-  if (known) return known;
-  return raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : '';
-}
+export { muscleZone };
 
 export function createDraftExercise(
   exercise: {
     id: string;
     nombre: string;
+    nombreEs?: string | null;
     grupoMuscular: string;
     bodyPart?: string | null;
   },
   goal: TrainingGoal | null,
 ): DraftExercise {
   return {
+    uid: newDraftUid(),
     ejercicioId: exercise.id,
-    nombre: exercise.nombre,
+    nombre: exercise.nombreEs?.trim() || exercise.nombre,
     grupoMuscular: muscleZone(exercise),
     ...defaultsForGoal(goal),
     pesoObjetivoKg: null,
     rirObjetivo: null,
     nota: null,
+    grupo: null,
+    descansoEntreSeg: null,
+    duracionSeg: null,
   };
 }

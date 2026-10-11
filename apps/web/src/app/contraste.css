@@ -1,0 +1,13 @@
+/* Pista de las barras de progreso por pasos: visible también sobre fondo claro
+ * (la superficie alta casi se confundía con el lienzo; contraste de elemento
+ * no textual). */
+.step-track {
+  background: color-mix(in srgb, var(--text-muted) 40%, transparent);
+}
+
+/* Cuerpo de los toasts: Sonner lo pinta con un gris fijo (#3f3f3f) que en
+ * tema oscuro queda casi igual que la superficie. Usa el texto atenuado del
+ * tema, que ya cumple AA sobre la superficie del toast en ambos temas. */
+[data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-description] {
+  color: var(--text-muted);
+}

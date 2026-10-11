@@ -6,7 +6,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import { CountUpText } from '@/components/motion';
 import { withAlpha } from '@/components/progression';
-import { fontSizes, radii, semibold, spacing } from '@/theme';
+import { celebrationPalette, fontSizes, radii, semibold, spacing } from '@/theme';
 import type { CardScene } from './scene';
 
 /**
@@ -21,7 +21,7 @@ import type { CardScene } from './scene';
 type Gradient = readonly [string, string, ...string[]];
 
 /** Superficie interior de las dos caras: casi negra, con un punto de azul frío. */
-const FACE_INK = '#0C0D12';
+const FACE_INK = celebrationPalette.faceInk;
 
 /* ─── Rayos ──────────────────────────────────────────────────────────────── */
 
@@ -130,8 +130,8 @@ export function Flash({ size, progress }: { size: number; progress: SharedValue<
           width: size,
           height: size,
           borderRadius: size / 2,
-          backgroundColor: '#FFFFFF',
-          shadowColor: '#FFFFFF',
+          backgroundColor: celebrationPalette.light,
+          shadowColor: celebrationPalette.light,
           shadowOpacity: 1,
           shadowRadius: size / 3,
           shadowOffset: { width: 0, height: 0 },
@@ -144,7 +144,7 @@ export function Flash({ size, progress }: { size: number; progress: SharedValue<
 
 /* ─── Partículas ─────────────────────────────────────────────────────────── */
 
-const RAINBOW = ['#FF7AB6', '#FFD84D', '#6BFFB8', '#5CC8FF', '#B98CFF'] as const;
+const RAINBOW = celebrationPalette.rainbow;
 
 function Spark({
   particle,
@@ -207,7 +207,7 @@ export function Particles({
   tier: CardTier;
 }) {
   const palette: readonly string[] =
-    tier.holo === 'rainbow' ? RAINBOW : [tier.glow, '#FFFFFF', tier.frame[0]];
+    tier.holo === 'rainbow' ? RAINBOW : [tier.glow, celebrationPalette.light, tier.frame[0]];
   return (
     <View pointerEvents="none" style={{ position: 'absolute', width: 0, height: 0 }}>
       {particles.map((particle, index) => (
@@ -227,21 +227,14 @@ export function Particles({
 
 function sheenColors(mode: CardTier['holo'], tint: string): Gradient {
   if (mode === 'rainbow') {
-    return [
-      'rgba(255,255,255,0)',
-      'rgba(255,122,182,0.28)',
-      'rgba(255,216,77,0.34)',
-      'rgba(255,255,255,0.5)',
-      'rgba(107,255,184,0.32)',
-      'rgba(92,200,255,0.3)',
-      'rgba(185,140,255,0.26)',
-      'rgba(255,255,255,0)',
-    ];
+    return celebrationPalette.sheen.rainbow;
   }
   if (mode === 'soft') {
-    return ['rgba(255,255,255,0)', withAlpha(tint, 0.3), 'rgba(255,255,255,0.45)', withAlpha(tint, 0.3), 'rgba(255,255,255,0)'];
+    const { clear, softPeak } = celebrationPalette.sheen;
+    return [clear, withAlpha(tint, 0.3), softPeak, withAlpha(tint, 0.3), clear];
   }
-  return ['rgba(255,255,255,0)', 'rgba(255,255,255,0.3)', 'rgba(255,255,255,0)'];
+  const { clear, plainPeak } = celebrationPalette.sheen;
+  return [clear, plainPeak, clear];
 }
 
 function HoloSheen({
@@ -431,16 +424,16 @@ export function CardFront({
           paddingBottom: spacing.sm + 2,
           borderTopWidth: 1,
           borderTopColor: withAlpha(tier.frame[1], 0.6),
-          backgroundColor: 'rgba(0,0,0,0.55)',
+          backgroundColor: celebrationPalette.footerScrim,
         }}
       >
         {scene.rarityLabel ? (
           <Text
             style={{
               color: tier.frame[0],
-              fontSize: 11,
+              fontSize: fontSizes.xs,
               fontWeight: semibold,
-              letterSpacing: 11 * 0.18,
+              letterSpacing: fontSizes.xs * 0.18,
               textTransform: 'uppercase',
             }}
           >
@@ -449,7 +442,7 @@ export function CardFront({
         ) : null}
         <Text
           numberOfLines={2}
-          style={{ color: '#FFFFFF', fontSize: fontSizes.md, fontWeight: semibold, textAlign: 'center' }}
+          style={{ color: celebrationPalette.light, fontSize: fontSizes.md, fontWeight: semibold, textAlign: 'center' }}
         >
           {scene.title}
         </Text>
@@ -490,10 +483,10 @@ export function Stamp({ label, tier, progress }: { label: string; tier: CardTier
           paddingHorizontal: spacing.md,
           paddingVertical: 6,
           borderWidth: 2,
-          borderColor: '#FFFFFF',
+          borderColor: celebrationPalette.light,
         }}
       >
-        <Text style={{ color: '#111216', fontSize: fontSizes.sm, fontWeight: '800', letterSpacing: 0.8 }}>
+        <Text style={{ color: celebrationPalette.stampInk, fontSize: fontSizes.sm, fontWeight: '800', letterSpacing: 0.8 }}>
           {label}
         </Text>
       </LinearGradient>

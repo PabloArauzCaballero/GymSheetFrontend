@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- Metro resuelve los recursos estáticos con require(). */
 /**
  * Las cuatro láminas, renderizadas con la misma cámara que las zonas de
  * `regions.generated.ts`: por eso una zona cae exactamente sobre el músculo que

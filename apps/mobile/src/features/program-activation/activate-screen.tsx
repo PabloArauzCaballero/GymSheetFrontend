@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { ApiError } from '@gymsheet/api-client';
+import { canActivateProgram } from '@gymsheet/hooks';
 import { confirm } from '@gymsheet/notifications';
 import { programService, routineService } from '@/api/services';
 import { ErrorState, Skeleton } from '@/components/feedback';
@@ -50,6 +52,19 @@ function ActivateFlow({ routineId }: { routineId: string }) {
       </ScrollScreen>
     );
   }
+  // C1: solo se activa una rutina propia. Un enlace directo a una ajena vuelve
+  // al detalle con el aviso, en vez de abrir un asistente que el backend
+  // rechazará (403 ROUTINE_NOT_OWNED).
+  // Misma regla que el botón del detalle (`canActivateProgram`): propia, no
+  // archivada y con algún ejercicio.
+  if (!canActivateProgram(routine.data)) {
+    return (
+      <NotOwnedRedirect
+        message={routine.data.esMia ? NOT_ACTIVATABLE_MESSAGE : NOT_OWNED_MESSAGE}
+        routineId={routineId}
+      />
+    );
+  }
   return (
     <ActivateBody
       onDone={(withCardio) => {
@@ -61,6 +76,16 @@ function ActivateFlow({ routineId }: { routineId: string }) {
       routine={routine.data}
     />
   );
+}
+
+export const NOT_OWNED_MESSAGE = 'Guárdala en tus rutinas para activarla';
+const NOT_ACTIVATABLE_MESSAGE = 'Añade ejercicios a la rutina para activarla';
+
+function NotOwnedRedirect({ routineId, message }: { routineId: string; message: string }) {
+  useEffect(() => {
+    notify.info(message);
+  }, [message]);
+  return <Redirect href={{ pathname: '/routines/[id]', params: { id: routineId } }} />;
 }
 
 function ActivateBody({
@@ -91,6 +116,11 @@ function ActivateBody({
           cancelLabel: 'Cancelar',
         });
         if (choice.confirmed) activate.mutate(true);
+        return;
+      }
+      if (error instanceof ApiError && error.code === 'ROUTINE_NOT_OWNED') {
+        notify.info(NOT_OWNED_MESSAGE);
+        router.replace({ pathname: '/routines/[id]', params: { id: routine.id } });
         return;
       }
       notify.error(error);

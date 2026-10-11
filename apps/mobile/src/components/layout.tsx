@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
+  FlatList,
   RefreshControl,
   ScrollView,
   StatusBar,
@@ -14,14 +15,16 @@ import {
   Text,
   useWindowDimensions,
   View,
+  type ListRenderItem,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AmbientBackground } from '@/components/ambient';
 import { useTourStore, type TourKey } from '@/state/tour-store';
-import { CountUpText, EnterUp, Heartbeat, PressableScale } from '@/components/motion';
-import { accentPolicy, cardGap, cardPadding, colors, fontSizes, iconSizes, maxContentWidth, maxWideContentWidth, minTouchTarget, radii, screenGap, sectionGap, semibold, spacing, tabletBreakpoint, tones } from '@/theme';
+import { CountUpText, Heartbeat, PressableScale } from '@/components/motion';
+import { Text as AppTextPrimitive } from '@/components/text';
+import { accentPolicy, alpha, cardGap, cardPadding, colors, fontFamilies, fontSizes, gutter as screenGutter, iconSizes, maxContentWidth, maxWideContentWidth, minTouchTarget, radii, screenGap, sectionGap, semibold, shadows, spacing, tabletBreakpoint, tones } from '@/theme';
 
 /**
  * One place decides what "wide" means, so a tablet layout cannot drift between
@@ -69,8 +72,15 @@ export function ScrollScreen({
   onRefresh,
   overlay,
   refreshing = false,
+  hero,
 }: {
   children: ReactNode;
+  /**
+   * Portada a sangre arriba del todo: ocupa el ancho completo (sin el margen
+   * lateral) y se mete bajo la barra de estado. Se encarga ella de su área
+   * segura superior.
+   */
+  hero?: ReactNode;
   /**
    * Centres content vertically when it is shorter than the viewport. For pages
    * that are a single short form — on a tablet those otherwise sit in the top
@@ -86,68 +96,12 @@ export function ScrollScreen({
   overlay?: ReactNode;
   refreshing?: boolean;
 }) {
-  const insets = useSafeAreaInsets();
-  const { wide, width } = useResponsive();
+  const frame = useScreenFrame();
   const scrollRef = useRef<ScrollView | null>(null);
-  const offsetRef = useRef(0);
-  const registerScroller = useTourStore((state) => state.registerScroller);
-
-  // Lets the guided tour bring an anchor into view.
-  const scroller = useMemo(
-    () => ({
-      scrollBy: (deltaY: number) => {
-        const next = Math.max(0, offsetRef.current + deltaY);
-        offsetRef.current = next;
-        scrollRef.current?.scrollTo({ y: next, animated: true });
-      },
-      scrollTo: (y: number) => {
-        offsetRef.current = Math.max(0, y);
-        scrollRef.current?.scrollTo({ y: offsetRef.current, animated: true });
-      },
-      getOffset: () => offsetRef.current,
-    }),
-    [],
-  );
-  /**
-   * Se registra al RECIBIR EL FOCO, no al montar.
-   *
-   * Montar y estar a la vista no son lo mismo aquí. Las pestañas se quedan
-   * montadas para siempre tras la primera visita, asi que registrar en el
-   * montaje dejaba al tour moviendo la lista de la ultima pestaña *estrenada*
-   * en vez de la que la persona tiene delante; y al cerrar una pantalla de la
-   * pila, su desmontaje ponia el registro a `null` y la pestaña de debajo
-   * —visible y montada, pero sin volver a montarse— se quedaba sin forma de
-   * desplazarse. En ambos casos el foco del tutorial acababa señalando a un
-   * sitio donde no habia nada.
-   *
-   * La limpieza solo borra lo que es suyo: al navegar, el foco de la pantalla
-   * nueva y el desenfoque de la vieja no llegan en un orden garantizado, y sin
-   * esta comprobacion la que se va puede borrar el registro que la que llega
-   * acaba de dejar.
-   */
-  useFocusEffect(
-    useCallback(() => {
-      registerScroller(scroller);
-      return () => {
-        if (useTourStore.getState().scroller === scroller) registerScroller(null);
-      };
-    }, [registerScroller, scroller]),
-  );
-  // A two-column page needs room for two columns; keeping the phone cap on a
-  // tablet is what leaves a narrow strip of content framed by black.
-  const gutter = Math.max(spacing.lg, (width - (wide ? maxWideContentWidth : maxContentWidth)) / 2);
-  // On Android the safe-area inset can come back shorter than the drawn status
-  // bar, which left scrolled content half-visible under the clock.
-  const topInset = Math.max(insets.top, StatusBar.currentHeight ?? 0);
-  // La barra de pestañas flota sobre el contenido (vidrio). Dentro de una
-  // pestaña su altura ya incluye el área segura de abajo; fuera de ellas el
-  // contexto no existe y se usa el área segura sin más.
-  const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
-  const bottomInset = Math.max(insets.bottom, tabBarHeight);
+  const offsetRef = useTourScroller((y) => scrollRef.current?.scrollTo({ y, animated: true }));
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <AmbientBackground waveform={false} />
+    <ScreenChrome frame={frame} overlay={overlay}>
       <ScrollView
         // El desplazamiento se anota al terminar el gesto, no en cada
         // fotograma. `onScroll` con `scrollEventThrottle` instala un evento
@@ -163,42 +117,249 @@ export function ScrollScreen({
         }}
         ref={scrollRef}
         contentContainerStyle={{
-          paddingTop: topInset + spacing.xl,
-          paddingBottom: bottomInset + spacing['2xl'],
-          paddingLeft: gutter + insets.left,
-          paddingRight: gutter + insets.right,
+          ...frame.contentPadding,
+          ...(hero ? { paddingTop: 0 } : null),
           gap: screenGap,
           // flexGrow lets a short page fill the viewport so it can centre; a
           // tall one still scrolls normally because the content wins over it.
           ...(center ? { flexGrow: 1, justifyContent: 'center' as const } : null),
         }}
-        // iOS does not resize the window when the keyboard opens the way
-        // Android's `adjustResize` does, so a field in the lower half of a
-        // scrolling form ends up behind the keyboard with no way to reach it.
-        // This adds the keyboard's height as a content inset, which is the
-        // native behaviour Android already had for free.
-        automaticallyAdjustKeyboardInsets
-        // Dragging the list down closes the keyboard, following the finger.
-        keyboardDismissMode="interactive"
-        // A tap on a button while the keyboard is open must hit the button,
-        // not merely dismiss the keyboard and be swallowed.
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          onRefresh
-            ? // Volt spinner on black: the default is invisible on this theme.
-              <RefreshControl
-                colors={[colors.volt]}
-                onRefresh={onRefresh}
-                progressBackgroundColor={colors.surface}
-                refreshing={refreshing}
-                tintColor={colors.volt}
-              />
-            : undefined
-        }
-        showsVerticalScrollIndicator={false}
+        {...SCREEN_SCROLL_BEHAVIOUR}
+        refreshControl={screenRefreshControl(onRefresh, refreshing)}
       >
+        {hero ? (
+          <View
+            style={{
+              marginLeft: -(frame.gutter + frame.insets.left),
+              marginRight: -(frame.gutter + frame.insets.right),
+              marginBottom: -spacing.md,
+            }}
+          >
+            {hero}
+          </View>
+        ) : null}
         {children}
       </ScrollView>
+    </ScreenChrome>
+  );
+}
+
+/**
+ * {@link ScrollScreen} para una pantalla que ES una lista larga.
+ *
+ * Un `.map()` dentro de un `ScrollView` monta todas las filas de golpe, y meter
+ * una `FlatList` dentro del `ScrollView` anula la virtualización (React Native
+ * lo advierte en consola). Aquí la lista es el desplazamiento: lo que en
+ * `ScrollScreen` serían los hijos de arriba viaja como `header`, con el mismo
+ * hueco entre bloques, y el resto —márgenes, área segura, fondo, franja de la
+ * barra de estado, teclado, tour y «tirar para actualizar»— es idéntico.
+ */
+export function ListScreen<T>({
+  data,
+  extraData,
+  header,
+  empty,
+  footer,
+  itemGap = 0,
+  keyExtractor,
+  onEndReached,
+  onRefresh,
+  refreshing = false,
+  renderItem,
+}: {
+  data: readonly T[];
+  /** Lo que, además de `data`, obliga a repintar filas (p. ej. una acción en curso). */
+  extraData?: unknown;
+  /** Lo que va encima de la lista, separado como los hijos de `ScrollScreen`. */
+  header: ReactNode;
+  /** Cargando, error o vacío: se pinta cuando `data` no trae filas. */
+  empty: ReactNode;
+  footer?: ReactNode;
+  /** Hueco entre filas; 0 para filas que ya traen su propio separador. */
+  itemGap?: number;
+  keyExtractor: (item: T, index: number) => string;
+  onEndReached?: () => void;
+  onRefresh?: () => void;
+  refreshing?: boolean;
+  renderItem: ListRenderItem<T>;
+}) {
+  const frame = useScreenFrame();
+  const listRef = useRef<FlatList<T> | null>(null);
+  const offsetRef = useTourScroller((offset) => listRef.current?.scrollToOffset({ offset, animated: true }));
+  const Separator = useMemo(
+    () => (itemGap > 0 ? () => <View style={{ height: itemGap }} /> : undefined),
+    [itemGap],
+  );
+
+  return (
+    <ScreenChrome frame={frame}>
+      <FlatList<T>
+        contentContainerStyle={frame.contentPadding}
+        data={data as T[]}
+        extraData={extraData}
+        ItemSeparatorComponent={Separator}
+        keyExtractor={keyExtractor}
+        ListEmptyComponent={<>{empty}</>}
+        ListFooterComponent={footer ? <View style={{ paddingTop: screenGap }}>{footer}</View> : null}
+        ListHeaderComponent={<View style={{ gap: screenGap, paddingBottom: screenGap }}>{header}</View>}
+        onEndReached={onEndReached}
+        // Igual que en Interacciones: con filas cortas el final llega antes de
+        // que vuelva la petición si se espera al último 10 %.
+        onEndReachedThreshold={0.4}
+        onMomentumScrollEnd={(event) => {
+          offsetRef.current = event.nativeEvent.contentOffset.y;
+        }}
+        onScrollEndDrag={(event) => {
+          offsetRef.current = event.nativeEvent.contentOffset.y;
+        }}
+        ref={listRef}
+        refreshControl={screenRefreshControl(onRefresh, refreshing)}
+        renderItem={renderItem}
+        {...SCREEN_SCROLL_BEHAVIOUR}
+      />
+    </ScreenChrome>
+  );
+}
+
+/** Teclado y barra de desplazamiento: lo mismo en la pantalla y en la lista. */
+const SCREEN_SCROLL_BEHAVIOUR = {
+  // iOS does not resize the window when the keyboard opens the way
+  // Android's `adjustResize` does, so a field in the lower half of a
+  // scrolling form ends up behind the keyboard with no way to reach it.
+  // This adds the keyboard's height as a content inset, which is the
+  // native behaviour Android already had for free.
+  automaticallyAdjustKeyboardInsets: true,
+  // Dragging the list down closes the keyboard, following the finger.
+  keyboardDismissMode: 'interactive',
+  // A tap on a button while the keyboard is open must hit the button,
+  // not merely dismiss the keyboard and be swallowed.
+  keyboardShouldPersistTaps: 'handled',
+  showsVerticalScrollIndicator: false,
+} as const;
+
+function screenRefreshControl(onRefresh: (() => void) | undefined, refreshing: boolean) {
+  if (!onRefresh) return undefined;
+  // Volt spinner on black: the default is invisible on this theme.
+  return (
+    <RefreshControl
+      colors={[colors.volt]}
+      onRefresh={onRefresh}
+      progressBackgroundColor={colors.surface}
+      refreshing={refreshing}
+      tintColor={colors.volt}
+    />
+  );
+}
+
+type ScreenFrame = {
+  gutter: number;
+  topInset: number;
+  bottomInset: number;
+  insets: { left: number; right: number };
+  contentPadding: Pick<ViewStyle, 'paddingTop' | 'paddingBottom' | 'paddingLeft' | 'paddingRight'>;
+};
+
+/**
+ * Márgenes de pantalla. Horizontal insets follow the safe area too: in
+ * landscape on a notched device the cutout eats into the side, and a fixed
+ * gutter would run content under it. Past {@link maxContentWidth} the extra
+ * width becomes gutter instead of longer lines, so text stays readable on a
+ * tablet.
+ */
+function useScreenFrame(): ScreenFrame {
+  const insets = useSafeAreaInsets();
+  const { wide, width } = useResponsive();
+  // A two-column page needs room for two columns; keeping the phone cap on a
+  // tablet is what leaves a narrow strip of content framed by black.
+  const gutter = Math.max(screenGutter, (width - (wide ? maxWideContentWidth : maxContentWidth)) / 2);
+  // On Android the safe-area inset can come back shorter than the drawn status
+  // bar, which left scrolled content half-visible under the clock.
+  const topInset = Math.max(insets.top, StatusBar.currentHeight ?? 0);
+  // La barra de pestañas flota sobre el contenido (vidrio). Dentro de una
+  // pestaña su altura ya incluye el área segura de abajo; fuera de ellas el
+  // contexto no existe y se usa el área segura sin más.
+  const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
+  const bottomInset = Math.max(insets.bottom, tabBarHeight);
+  return {
+    gutter,
+    topInset,
+    bottomInset,
+    insets,
+    contentPadding: {
+      paddingTop: topInset + spacing.xl,
+      paddingBottom: bottomInset + spacing['2xl'],
+      paddingLeft: gutter + insets.left,
+      paddingRight: gutter + insets.right,
+    },
+  };
+}
+
+/**
+ * Lets the guided tour bring an anchor into view. Devuelve la referencia donde
+ * la pantalla anota su desplazamiento al terminar cada gesto.
+ *
+ * Se registra al RECIBIR EL FOCO, no al montar.
+ *
+ * Montar y estar a la vista no son lo mismo aquí. Las pestañas se quedan
+ * montadas para siempre tras la primera visita, asi que registrar en el
+ * montaje dejaba al tour moviendo la lista de la ultima pestaña *estrenada*
+ * en vez de la que la persona tiene delante; y al cerrar una pantalla de la
+ * pila, su desmontaje ponia el registro a `null` y la pestaña de debajo
+ * —visible y montada, pero sin volver a montarse— se quedaba sin forma de
+ * desplazarse. En ambos casos el foco del tutorial acababa señalando a un
+ * sitio donde no habia nada.
+ *
+ * La limpieza solo borra lo que es suyo: al navegar, el foco de la pantalla
+ * nueva y el desenfoque de la vieja no llegan en un orden garantizado, y sin
+ * esta comprobacion la que se va puede borrar el registro que la que llega
+ * acaba de dejar.
+ */
+function useTourScroller(scrollToY: (y: number) => void) {
+  const offsetRef = useRef(0);
+  const scrollRef = useRef(scrollToY);
+  scrollRef.current = scrollToY;
+  const registerScroller = useTourStore((state) => state.registerScroller);
+  const scroller = useMemo(
+    () => ({
+      scrollBy: (deltaY: number) => {
+        const next = Math.max(0, offsetRef.current + deltaY);
+        offsetRef.current = next;
+        scrollRef.current(next);
+      },
+      scrollTo: (y: number) => {
+        offsetRef.current = Math.max(0, y);
+        scrollRef.current(offsetRef.current);
+      },
+      getOffset: () => offsetRef.current,
+    }),
+    [],
+  );
+  useFocusEffect(
+    useCallback(() => {
+      registerScroller(scroller);
+      return () => {
+        if (useTourStore.getState().scroller === scroller) registerScroller(null);
+      };
+    }, [registerScroller, scroller]),
+  );
+  return offsetRef;
+}
+
+/** Fondo, capa fija sobre la barra de pestañas y franja de la barra de estado. */
+function ScreenChrome({
+  children,
+  frame,
+  overlay,
+}: {
+  children: ReactNode;
+  frame: ScreenFrame;
+  overlay?: ReactNode;
+}) {
+  const { gutter, insets, topInset, bottomInset } = frame;
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <AmbientBackground waveform={false} />
+      {children}
 
       {overlay ? (
         <View
@@ -219,7 +380,7 @@ export function ScrollScreen({
           dissolving into the top edge rather than as a black strip with a hard
           line under it. */}
       <LinearGradient
-        colors={[colors.background, colors.background, `${colors.background}00`]}
+        colors={[colors.background, colors.background, alpha(colors.background, 0)]}
         locations={[0, topInset / (topInset + STATUS_FADE), 1]}
         pointerEvents="none"
         style={{
@@ -299,18 +460,13 @@ export function ScreenHeader({
           // title when the step down to body text is unmistakable; at 32 against
           // a 16 body it was merely "bigger", and the page leaned on colour for
           // hierarchy instead of on type.
-          fontSize: detail ? fontSizes['2xl'] : fontSizes.display,
-          // 600, no 800. Al tamaño de display el peso ya no aporta jerarquía —
-          // la aporta el salto de tamaño— y lo que añade es densidad: la letra
-          // se cierra sobre sí misma y la página se lee pesada. Un display
-          // grande y ligero es lo que separa un titular compuesto de uno que
-          // sólo es texto grande en negrita.
-          fontWeight: semibold,
-          // Optical tracking: large type set at default spacing looks loose and
-          // amateur. Negative tracking is most of what separates a display face
-          // from body text scaled up.
-          letterSpacing: (detail ? fontSizes['2xl'] : fontSizes.display) * -0.03,
-          lineHeight: (detail ? fontSizes['2xl'] : fontSizes.display) * 1.08,
+          // Display propia (Bricolage Grotesque, C8.1): el título de pantalla
+          // es uno de los tres sitios donde se usa. Un detalle (un músculo, un
+          // ejercicio) baja a 28 para que un nombre largo no parta en tres.
+          fontFamily: fontFamilies.display,
+          fontSize: detail ? fontSizes.xl : fontSizes.display,
+          letterSpacing: (detail ? fontSizes.xl : fontSizes.display) * -0.02,
+          lineHeight: Math.round((detail ? fontSizes.xl : fontSizes.display) * 1.12),
         }}
       >
         {title}
@@ -318,9 +474,9 @@ export function ScreenHeader({
       {tourKey ? <TourHelpButton tourKey={tourKey} /> : null}
       </View>
       {subtitle ? (
-        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
+        <AppTextPrimitive tone="muted" variant="subhead">
           {subtitle}
-        </Text>
+        </AppTextPrimitive>
       ) : null}
     </View>
   );
@@ -336,7 +492,7 @@ export function Section({
   title,
   children,
   icon,
-  index = 0,
+  index: _index = 0,
 }: {
   title: string;
   children: ReactNode;
@@ -350,8 +506,10 @@ export function Section({
   index?: number;
 }) {
   return (
-    <EnterUp index={index} style={{ gap: sectionGap }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+    // Sin entrada animada por sección (anti-slop: «fade-in en todo»). `index`
+    // se acepta por compatibilidad y ya no hace nada.
+    <View style={{ gap: sectionGap }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         {icon ? (
           <Ionicons
             // Decorative: the label right next to it already says this.
@@ -362,23 +520,14 @@ export function Section({
             size={iconSizes.sm}
           />
         ) : null}
-        <Text
-          accessibilityRole="header"
-          style={{
-            color: colors.textMuted,
-            fontSize: fontSizes.xs,
-            // La versalita ya destaca por forma y color; a 700 competía con los
-            // títulos de las tarjetas que etiqueta.
-            fontWeight: semibold,
-            letterSpacing: fontSizes.xs * 0.1,
-            textTransform: 'uppercase',
-          }}
-        >
+        {/* Título de sección en minúscula tipográfica y 17/600: la versalita
+            gris con icono en cada sección era ruido (repp-diseno §9). */}
+        <AppTextPrimitive accessibilityRole="header" variant="headline">
           {title}
-        </Text>
+        </AppTextPrimitive>
       </View>
       {children}
-    </EnterUp>
+    </View>
   );
 }
 
@@ -412,28 +561,19 @@ export function Card({
   // El acento ya no es una franja de color en el borde izquierdo —ese recurso
   // de aviso de blog abarataba la tarjeta—, sino el contorno entero teñido muy
   // levemente: la tarjeta se distingue sin que ningún lado grite.
+  // Separación por tono y sombra (C8.1), no por un borde de 1,19:1. El acento
+  // opcional tiñe levemente el contorno entero, nunca una franja lateral.
   const surface = {
     gap: list ? 0 : cardGap,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: accent ? `${accent}55` : colors.borderSubtle,
+    borderRadius: radii.xl,
+    borderCurve: 'continuous',
+    borderWidth: accent ? 1 : 0,
+    borderColor: accent ? alpha(accent, 0.33) : 'transparent',
     backgroundColor: colors.surfaceLow,
+    boxShadow: shadows.e1,
     paddingHorizontal: cardPadding,
     paddingVertical: list ? spacing.sm : cardPadding,
   } as const;
-
-  // Lo que había aquí y ya no está, y por qué:
-  //
-  // - Una sombra negra sobre un fondo negro. El comentario original lo admitía
-  //   («shadows do nothing on black») y aun así declaraba cuatro propiedades
-  //   de sombra. Código que no dibuja nada, mantenido como si dibujara.
-  // - Un `borderTopColor` más claro que el resto del borde, para simular una
-  //   arista iluminada. Ese truco pertenece a las interfaces que imitan
-  //   materiales; aquí sólo desalineaba el contorno, porque un lado del marco
-  //   no coincidía con los otros tres.
-  //
-  // La separación la da la luminancia de la superficie contra el fondo, que es
-  // como se resuelve en un tema oscuro. Un borde de un solo tono, y ya.
 
   if (onPress) {
     return (
@@ -569,12 +709,12 @@ export function StatTile({
       style={{
         flex: 1,
         gap: spacing.xs,
-        borderRadius: radii.lg,
-        borderWidth: 1,
-        borderColor: colors.borderSubtle,
+        borderRadius: radii.xl,
+        borderCurve: 'continuous',
         // La misma superficie que `Card`: una cifra junto a una tarjeta no debe
         // parecer de otro material.
         backgroundColor: colors.surfaceLow,
+        boxShadow: shadows.e1,
         paddingVertical: spacing.lg,
         paddingHorizontal: spacing.md,
       }}
@@ -615,9 +755,9 @@ export function StatTile({
           style={{
             alignSelf: 'flex-start',
             paddingHorizontal: spacing.xs,
-            paddingVertical: 2,
+            paddingVertical: spacing.xxs,
             borderRadius: radii.full,
-            backgroundColor: colors.surfaceHigh,
+            backgroundColor: colors.surfaceHighest,
           }}
         >
           <Text style={{ color: accentPolicy.ink, fontSize: fontSizes.xs, fontWeight: semibold }}>
@@ -626,7 +766,7 @@ export function StatTile({
         </View>
       ) : null}
       {delta ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xxs }}>
           <Ionicons
             accessibilityElementsHidden
             color={deltaTone}
@@ -638,7 +778,7 @@ export function StatTile({
                   ? 'trending-down'
                   : 'remove'
             }
-            size={12}
+            size={iconSizes.xs}
           />
           <Text style={{ color: deltaTone, fontSize: fontSizes.xs, fontWeight: semibold }}>
             {delta.label}
@@ -666,7 +806,7 @@ export type BadgeTone = keyof typeof tones.dark;
  */
 export function Badge({
   label,
-  tone = 'info',
+  tone = 'neutral',
   latido = false,
 }: {
   label: string;

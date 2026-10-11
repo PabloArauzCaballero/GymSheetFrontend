@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { Text, View } from 'react-native';
 import { WEEKDAY_NAMES, countLabel, type DraftDay, type Weekday } from '@gymsheet/hooks';
 import { PressableScale } from '@/components/motion';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { alpha, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 /**
  * Los días de entrenamiento de la semana como filas grandes (una tira vertical:
@@ -67,7 +67,7 @@ export function WeekStrip({
               borderRadius: radii.lg,
               borderWidth: 1,
               borderColor: checked ? colors.volt : colors.borderSubtle,
-              backgroundColor: checked ? `${colors.volt}14` : colors.surfaceLow,
+              backgroundColor: checked ? alpha(colors.volt, 0.08) : colors.surfaceLow,
             }}
             testID={`day-row-${day.diaSemana}`}
           >

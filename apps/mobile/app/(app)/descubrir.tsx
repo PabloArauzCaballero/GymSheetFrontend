@@ -42,9 +42,12 @@ import {
   colors,
   fontSizes,
   iconSizes,
+  ink,
   maxContentWidth,
   maxWideContentWidth,
   minTouchTarget,
+  onMedia,
+  overlay,
   radii,
   semibold,
   spacing,
@@ -89,7 +92,7 @@ const STAMP_TOP = spacing.xl;
 const DECIDE_SIZE = minTouchTarget + 24;
 
 /** Oscurecido del fondo del match: la foto tiene que quedar como ambiente, no como sujeto. */
-const MATCH_SCRIM = ['rgba(0,0,0,0.62)', 'rgba(0,0,0,0.88)'] as const;
+const MATCH_SCRIM = [overlay.scrimSoft, overlay.scrimStrong] as const;
 
 type Decision = { entry: GymDirectoryEntry; direction: SwipeDirection };
 
@@ -313,7 +316,7 @@ function MatchModal({
               </Text>
               <Text
                 style={{
-                  color: '#fff',
+                  color: onMedia.text,
                   fontSize: fontSizes.md,
                   lineHeight: 22,
                   textAlign: 'center',
@@ -868,7 +871,7 @@ export default function DescubrirScreen() {
                         // vista se anulan en iOS —la máscara que recorta a los
                         // hijos recorta también la sombra— y lo que queda es
                         // una carta pegada al fondo.
-                        shadowColor: '#000',
+                        shadowColor: ink.black,
                         shadowOffset: { width: 0, height: 12 },
                         shadowOpacity: 0.45,
                         shadowRadius: 24,
