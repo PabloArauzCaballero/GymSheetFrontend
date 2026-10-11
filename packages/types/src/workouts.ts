@@ -7,9 +7,11 @@ export type WorkoutSet = {
   numeroSerie: number;
   /** `CARDIO` no lleva repeticiones, peso ni RIR (llegan `null`). Sin él se asume fuerza. */
   tipoSerie: 'FUERZA' | 'CARDIO';
+  /** `null` también en una serie de fuerza por tiempo (plancha 45 s): lleva `duracionSeg`. */
   repeticiones: number | null;
   pesoKg: number | null;
   rir: number | null;
+  /** Segundos: en cardio, o en una serie de fuerza por tiempo (sin repeticiones). */
   duracionSeg: number | null;
   distanciaM: number | null;
   fcMedia: number | null;
@@ -59,10 +61,38 @@ export type AddWorkoutExerciseInput = {
   nota?: string | null;
 };
 
+/** Serie de fuerza por repeticiones de `POST /workouts/session-exercises/:id/sets`. */
 export type WorkoutSetInput = {
   numeroSerie: number;
   repeticiones: number;
   pesoKg: number;
   rir: number;
+  /** Nunca junto a las repeticiones: una serie por tiempo es `TimedWorkoutSetInput`. */
+  duracionSeg?: null;
   descansoSegAnterior: number;
+};
+
+/** Tope del backend para una serie de fuerza por tiempo. */
+export const MAX_TIMED_SET_SEC = 3600;
+
+/**
+ * Serie de fuerza por tiempo (plancha 45 s): `duracionSeg` 1–3600 y sin
+ * repeticiones. Solo vale en un ejercicio de la sesión con `duracionSeg`
+ * (si no, `400 SET_DURATION_NOT_ALLOWED`). Peso (lastre) y RIR opcionales.
+ */
+export type TimedWorkoutSetInput = {
+  numeroSerie: number;
+  duracionSeg: number;
+  pesoKg?: number;
+  rir?: number;
+  descansoSegAnterior: number;
+};
+
+/**
+ * `PATCH /workouts/sets/:id`. No cambia la forma de la serie: `duracionSeg`
+ * solo en una por tiempo y `repeticiones` solo en una por repeticiones
+ * (si no, `400 SET_KIND_MISMATCH`).
+ */
+export type WorkoutSetUpdateInput = Partial<Omit<WorkoutSetInput, 'duracionSeg'>> & {
+  duracionSeg?: number;
 };

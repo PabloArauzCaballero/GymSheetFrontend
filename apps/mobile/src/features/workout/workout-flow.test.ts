@@ -2,9 +2,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  bumpSeconds,
   buildFlowBlocks,
   currentStep,
   lastTimeLabel,
+  parseSeconds,
   previousRestSeconds,
   progressLabel,
   restAfterLogging,
@@ -104,4 +106,22 @@ test('tras registrar en un bloque elegido a mano, se sigue en ese bloque', async
   const after = withLoggedSet(blocks, 'a1');
   assert.deepEqual(stepFrom(after, 1), { blockIndex: 1, itemId: 'a2', round: 1 });
   assert.deepEqual(stepOf(blocks, 'plank'), { blockIndex: 2, itemId: 'plank', round: 1 });
+});
+
+test('parseSeconds: «45», «1:30» y fuera de rango', () => {
+  assert.equal(parseSeconds('45'), 45);
+  assert.equal(parseSeconds(' 1:30 '), 90);
+  assert.equal(parseSeconds('60:00'), 3600);
+  assert.equal(parseSeconds('0'), null);
+  assert.equal(parseSeconds('3601'), null);
+  assert.equal(parseSeconds('1:75'), null);
+  assert.equal(parseSeconds('4,5'), null);
+  assert.equal(parseSeconds(''), null);
+});
+
+test('bumpSeconds: suma y resta sin salir de 1–3600', () => {
+  assert.equal(bumpSeconds('45', 5), '50');
+  assert.equal(bumpSeconds('3', -5), '1');
+  assert.equal(bumpSeconds('', 5), '5');
+  assert.equal(bumpSeconds('3599', 5), '3600');
 });

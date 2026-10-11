@@ -4,12 +4,23 @@ import { numericInputProps } from '@/components/keyboard';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { colors, comfortableTouchTarget, fontSizes, iconSizes, minTouchTarget, radii, spacing, tabularNums } from '@/theme';
-import { kgLabel } from '@/features/workout/workout-flow';
+import { kgLabel, parseSeconds } from '@/features/workout/workout-flow';
 
-/** Lo que se está tecleando de la serie: texto, para no pelear con el teclado. */
-export type SetDraft = { pesoKg: string; repeticiones: string; rir: string };
+/**
+ * Lo que se está tecleando de la serie: texto, para no pelear con el teclado.
+ * `duracionSeg` solo se usa en un ejercicio por tiempo (plancha 45 s).
+ */
+export type SetDraft = { pesoKg: string; repeticiones: string; rir: string; duracionSeg: string };
 
-export const EMPTY_DRAFT: SetDraft = { pesoKg: '', repeticiones: '', rir: '' };
+export const EMPTY_DRAFT: SetDraft = { pesoKg: '', repeticiones: '', rir: '', duracionSeg: '' };
+
+/** Serie por tiempo: los segundos (1–3600) y, si lo hay, el lastre. */
+export function parseTimedDraft(draft: SetDraft): { duracionSeg: number; pesoKg?: number } | null {
+  const duracionSeg = parseSeconds(draft.duracionSeg);
+  const pesoKg = draft.pesoKg.trim() === '' ? 0 : Number(draft.pesoKg.replace(',', '.'));
+  if (duracionSeg === null || !Number.isFinite(pesoKg) || pesoKg < 0) return null;
+  return pesoKg > 0 ? { duracionSeg, pesoKg } : { duracionSeg };
+}
 
 export function parseDraft(draft: SetDraft): { pesoKg: number; repeticiones: number; rir: number } | null {
   const pesoKg = draft.pesoKg.trim() === '' ? 0 : Number(draft.pesoKg.replace(',', '.'));
@@ -20,7 +31,7 @@ export function parseDraft(draft: SetDraft): { pesoKg: number; repeticiones: num
   return { pesoKg, repeticiones, rir: Number.isFinite(rir) ? Math.max(0, Math.min(10, Math.round(rir))) : 0 };
 }
 
-function Field({
+export function Field({
   label,
   value,
   onChange,
@@ -77,7 +88,7 @@ function Field({
 }
 
 /** Ajuste de un toque (44 de alto): modifica, no compite con «Registrar serie». */
-function Chip({ label, spoken, onPress, testID }: { label: string; spoken?: string; onPress: () => void; testID?: string }) {
+export function Chip({ label, spoken, onPress, testID }: { label: string; spoken?: string; onPress: () => void; testID?: string }) {
   return (
     <PressableScale
       accessibilityLabel={spoken ?? label}

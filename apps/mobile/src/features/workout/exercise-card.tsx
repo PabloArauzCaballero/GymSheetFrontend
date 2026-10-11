@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { formatClock } from '@gymsheet/hooks';
+import { formatClock, secondsLabel } from '@gymsheet/hooks';
 import type { Exercise, WorkoutSet } from '@gymsheet/types';
 import { ExerciseImage } from '@/components/media';
 import { PressableScale } from '@/components/motion';
@@ -9,7 +9,10 @@ import { Text } from '@/components/text';
 import { colors, iconSizes, minTouchTarget, radii, shadows, spacing, thumbSizes } from '@/theme';
 import { kgLabel } from '@/features/workout/workout-flow';
 
-/** «60 kg × 12», como lo apunta la gente (y lo buscan los flujos de Maestro). */
+/**
+ * «60 kg × 12», como lo apunta la gente (y lo buscan los flujos de Maestro).
+ * Una serie por tiempo: «45 s», con el lastre si lo hubo («45 s · 10 kg»).
+ */
 export function setLabel(set: Pick<WorkoutSet, 'tipoSerie' | 'pesoKg' | 'repeticiones' | 'duracionSeg' | 'distanciaM'>): string {
   if (set.tipoSerie === 'CARDIO') {
     return [
@@ -18,6 +21,9 @@ export function setLabel(set: Pick<WorkoutSet, 'tipoSerie' | 'pesoKg' | 'repetic
     ]
       .filter(Boolean)
       .join(' · ');
+  }
+  if (set.repeticiones == null && set.duracionSeg != null) {
+    return set.pesoKg ? `${secondsLabel(set.duracionSeg)} · ${kgLabel(set.pesoKg)} kg` : secondsLabel(set.duracionSeg);
   }
   return `${kgLabel(set.pesoKg ?? 0)} kg × ${set.repeticiones ?? 0}`;
 }
@@ -224,7 +230,7 @@ export function CurrentExercise({
                 {setLabel(set)}
               </Text>
               <Text tabular tone="muted" variant="footnote">
-                {set.tipoSerie === 'CARDIO' ? (set.rpe ? `Esf. ${set.rpe}` : '') : `RIR ${set.rir ?? 0}`}
+                {set.tipoSerie === 'CARDIO' ? (set.rpe ? `Esf. ${set.rpe}` : '') : set.rir != null || set.repeticiones != null ? `RIR ${set.rir ?? 0}` : ''}
               </Text>
             </View>
           ))}
