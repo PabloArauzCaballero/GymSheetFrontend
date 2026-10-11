@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import type { Workout, WorkoutSetInput } from '@gymsheet/types';
+import type { TimedWorkoutSetInput, Workout, WorkoutSetInput } from '@gymsheet/types';
 import { accountService, workoutService } from '@/api/services';
 import { notify } from '@/notifications';
 import { formatDuration } from '@/lib/format';
@@ -37,7 +37,7 @@ export function useWorkoutSession(id: string) {
   };
 
   const addSet = useMutation({
-    mutationFn: (input: { sessionExerciseId: string; set: WorkoutSetInput }) =>
+    mutationFn: (input: { sessionExerciseId: string; set: WorkoutSetInput | TimedWorkoutSetInput }) =>
       workoutService.addSet(input.sessionExerciseId, input.set),
     onSuccess: refreshAll,
     onError: (error: Error) => notify.error(error),

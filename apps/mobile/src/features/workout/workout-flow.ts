@@ -260,3 +260,23 @@ export function kgLabel(kg: number): string {
 export function lastTimeLabel(set: { pesoKg: number; repeticiones: number }): string {
   return `${set.repeticiones} × ${kgLabel(set.pesoKg)} kg`;
 }
+
+/** Tope del backend para una serie de fuerza por tiempo. */
+export const MAX_TIMED_SET_SEC = 3600;
+
+/**
+ * Los segundos que se escribieron para una serie por tiempo: «45» o «1:30».
+ * `null` si no es un número entero de 1 a 3600 s.
+ */
+export function parseSeconds(text: string): number | null {
+  const value = text.trim();
+  const clock = /^(\d{1,2}):([0-5]\d)$/u.exec(value);
+  const seconds = clock ? Number(clock[1]) * 60 + Number(clock[2]) : /^\d+$/u.test(value) ? Number(value) : Number.NaN;
+  return Number.isInteger(seconds) && seconds >= 1 && seconds <= MAX_TIMED_SET_SEC ? seconds : null;
+}
+
+/** ±`delta` segundos sobre lo escrito, dentro de 1–3600 (vacío o inválido parte de 0). */
+export function bumpSeconds(text: string, delta: number): string {
+  const current = parseSeconds(text) ?? 0;
+  return String(Math.max(1, Math.min(MAX_TIMED_SET_SEC, current + delta)));
+}

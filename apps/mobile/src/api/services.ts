@@ -48,8 +48,10 @@ import type {
   AddWorkoutExerciseInput,
   CardioSetInput,
   FitnessGoal,
+  TimedWorkoutSetInput,
   TrainingGoal,
   WorkoutSetInput,
+  WorkoutSetUpdateInput,
 } from '@gymsheet/types';
 import type {
   ConnectionStatus,
@@ -241,12 +243,12 @@ export const workoutService = {
       method: 'DELETE',
     }),
 
-  addSet: (sessionExerciseId: string, input: WorkoutSetInput | CardioSetInput) =>
+  addSet: (sessionExerciseId: string, input: WorkoutSetInput | TimedWorkoutSetInput | CardioSetInput) =>
     apiClient.request(`/workouts/session-exercises/${sessionExerciseId}/sets`, looseObject, {
       method: 'POST',
       body: input,
     }),
-  updateSet: (setId: string, input: Partial<WorkoutSetInput>) =>
+  updateSet: (setId: string, input: WorkoutSetUpdateInput) =>
     apiClient.request(`/workouts/sets/${setId}`, looseObject, { method: 'PATCH', body: input }),
   removeSet: (setId: string) =>
     apiClient.request(`/workouts/sets/${setId}`, deletedSchema, { method: 'DELETE' }),
