@@ -19,11 +19,6 @@ appId: app.gymsheet.mobile
     visible: 'Crear rutina'
     timeout: 60000
 - tapOn: 'Pestaña ${TAB}'
-# En Públicas la lista llega filtrada por «Tu objetivo» (Hipertrofia, Fuerza…): se pide «Todos» para que
-# la búsqueda no dependa del objetivo de la cuenta.
-- tapOn:
-    text: 'Todos'
-    optional: true
 - tapOn:
     id: 'routine-search'
     point: 85%,50%
