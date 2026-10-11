@@ -899,6 +899,15 @@
         "movil"
       ],
       "debeVerse": "Invitación con Rechazar/Aceptar."
+    },
+    {
+      "rf": "RF-18",
+      "paso": "00b",
+      "nombre": "sesion-cuenta-sin-plan-semanal",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Resumen sin «1 de 0»."
     }
   ]
 }

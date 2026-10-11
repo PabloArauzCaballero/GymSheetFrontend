@@ -1,7 +1,7 @@
 // Prepara el cierre semanal real (RF-18): crea la rutina «Cierre semanal QA» con UN día en el día de la
 // semana de hoy y dos ejercicios, activa un programa de sobrecarga sobre ella e inicia la sesión de hoy.
 // Una sesión solo cuenta para la semana si dura 10 minutos o más (hora del servidor): el flujo espera ese
-// tiempo antes de terminarla. Variables: EMAIL y, opcional, MODE (PROGRESSIVE_OVERLOAD por defecto, NONE = sin modo). Deja `output.sessionId`.
+// tiempo antes de terminarla. Variables: EMAIL y, opcional, MODE (PROGRESSIVE_OVERLOAD por defecto, NONE = sin modo) y DIA_SEMANA (1-7; por defecto el de hoy). Deja `output.sessionId`.
 var base = 'http://localhost:3011/api/v1';
 function call(method, path, token, body) {
   var response = http.request(base + path, {
@@ -16,7 +16,7 @@ function exerciseId(name) { return call('GET', '/exercises?search=' + encodeURIC
 var mine = call('GET', '/routines?scope=mine&q=Cierre&limit=20', token).data.items;
 for (var i = 0; i < mine.length; i += 1) { if (mine[i].nombre === 'Cierre semanal QA') call('DELETE', '/routines/' + mine[i].id, token); }
 var now = new Date();
-var iso = now.getDay() || 7;
+var iso = typeof DIA_SEMANA !== 'undefined' && DIA_SEMANA ? Number(DIA_SEMANA) : now.getDay() || 7;
 function item(id, series, min, max) {
   return { ejercicioId: id, seriesObjetivo: series, repsMin: min, repsMax: max, pesoObjetivoKg: null, rirObjetivo: 2, descansoSeg: 90, nota: null };
 }

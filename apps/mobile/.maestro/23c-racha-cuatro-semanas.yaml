@@ -42,7 +42,7 @@ env:
 - tapOn: 'Finalizar sesión'
 - tapOn: 'Finalizar'
 - extendedWaitUntil:
-    visible: 'Seguir'
+    visible: 'Seguir|.*Insignia conseguida.*|.*subido de rango.*'
     timeout: 60000
 - runFlow: cerrar-celebraciones.subflow.yaml
 
@@ -77,6 +77,10 @@ env:
     when:
       visible: '.*Insignia conseguida.*'
     commands:
+      - extendedWaitUntil:
+          visible: 'texto-que-no-existe-solo-espera'
+          timeout: 3000
+          optional: true
       - takeScreenshot: RF-18_p03c_insignia-conseguida-celebracion_ios_oscuro
       - tapOn: 'Seguir'
 - extendedWaitUntil:

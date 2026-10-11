@@ -5,8 +5,8 @@ appId: app.gymsheet.mobile
 - repeat:
     times: 4
     while:
-      visible: '.*Insignia conseguida.*'
+      visible: '.*Insignia conseguida.*|.*subido de rango.*'
     commands:
-      - tapOn: 'Seguir'
+      - tapOn: 'Siguiente|Seguir'
       - waitForAnimationToEnd:
           timeout: 3000

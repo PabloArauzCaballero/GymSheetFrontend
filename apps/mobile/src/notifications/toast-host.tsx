@@ -58,7 +58,7 @@ export function ToastHost() {
       pointerEvents="box-none"
       style={[
         StyleSheet.absoluteFill,
-        { paddingTop: insets.top + spacing.sm, paddingHorizontal: spacing.md, gap: spacing.sm },
+        { paddingTop: insets.top + spacing.xs, paddingHorizontal: spacing.md, gap: spacing.sm },
       ]}
     >
       {items.map((item) => (
@@ -129,7 +129,9 @@ function ToastCard({ item }: { item: ToastItem }) {
           borderWidth: 1,
           borderColor: tone.border,
           backgroundColor: tone.bg,
-          padding: spacing.md,
+          // Más bajo que antes: con `spacing.md` arriba y abajo el aviso rozaba el «‹ Volver» de la cabecera.
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.sm,
           // Lifts the card off the screen content behind it (iOS + Android).
           shadowColor: ink.black,
           shadowOpacity: 0.45,

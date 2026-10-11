@@ -1,7 +1,19 @@
-# Defectos pendientes hallados al capturar el móvil (2026-10-11)
+# Defectos hallados al capturar el móvil (2026-10-11)
 
-Hallados con Maestro en el simulador iPhone 17 Pro contra el backend local (:3011, base `gym_sheet`). Los que se
-corrigieron en esta rama no están aquí (botones del borrador pendiente: `steps-basic.tsx`).
+Hallados con Maestro en el simulador iPhone 17 Pro contra el backend local (:3011, base `gym_sheet`).
+
+| # | Estado | Cierre |
+|---|---|---|
+| D1 «+0 puntos» | CERRADO | `CountUpText` fija la cifra final con un `Text` al terminar la cuenta (`motion.tsx`). Evidencia: «+78/+77/+99/+65 puntos» en RF-18 p00, p00b, p01, p04 y RF-15 p04, p05. |
+| D2 insignias «+0 pts» | CERRADO | misma causa y mismo arreglo. Evidencia: RF-18 p03 (+120, +100, +130, +300 pts). |
+| D3 bono sin que la sesión cuente | CERRADO | `showsModeBonus` (`session-block-copy.ts`, con prueba `session-block-copy.test.ts`). Evidencia: RF-15 p04/p05 sin «+13 por sobrecarga»; RF-18 p01 lo conserva porque la sesión cuenta. |
+| D4 «1 de 0» | CERRADO | `describeSessionCount` (misma prueba). Evidencia: RF-18 p00b «Esta sesión cuenta para tu programa (semana 1).». |
+| D5 «No pudimos cargar tus recomendaciones» | NO ES DEFECTO | el backend :3011 (`GymSheetBackend` e2244fd, `dist` anterior a 10a) no tiene `GET /routines/recommended`: la ruta cae en `/routines/:id` y responde 400 «El identificador debe ser un UUID válido». Con un backend con 10a desaparece. |
+| D6 aviso tapa «Volver» / accesible | CERRADO (parcial en la verificación) | tarjeta más baja y delgada, sin captura de toques si no tiene acción, y `announceForAccessibility`. Evidencia visual: RF-12 p04. Maestro/XCUITest sigue sin listar el aviso en el árbol, así que la lectura por VoiceOver no se pudo comprobar en el simulador. |
+| D7 sin bandeja de avisos | ABIERTO (propuesta) | ver abajo |
+| D8 fragilidad de open-routine | ABIERTO (propuesta) | ver abajo |
+
+Detalle histórico de los cerrados (pasos para reproducirlos antes del arreglo) más abajo.
 
 ## D1 · El titular «+0 puntos» del resumen de la sesión no llega al total
 - **Dónde:** pantalla «Sesión terminada» (`apps/mobile/src/components/session-summary.tsx`, `CountUpText` de `motion.tsx`).
@@ -41,6 +53,7 @@ corrigieron en esta rama no están aquí (botones del borrador pendiente: `steps
   anuncia (`toast-host.tsx`: la tarjeta no es `accessible` / `accessibilityLiveRegion`).
 
 ## D7 · Los avisos del servidor no tienen dónde verse
+- **Propuesta:** bandeja «Avisos» (campana en Inicio) que lea `GET /notifications/me`, con badge de no leídos y marca de leído; es trabajo de producto, no de esta pasada.
 - `PROGRAM_FINISHED` (RF-19 p01), `PROGRAM_WEEK_CLOSED` y `ROUTINE_SHARE_INVITE` (RF-13 p03) se guardan como mensajes
   `IN_APP` en `notifications.messages` (estado PENDING) pero ni el móvil ni la web tienen una bandeja que los muestre,
   y el permiso de notificaciones de iOS no se concede por `simctl privacy` (`Operation not permitted`), por eso no hay
@@ -48,6 +61,7 @@ corrigieron en esta rama no están aquí (botones del borrador pendiente: `steps
   `select subject, body, status from notifications.messages order by created_at desc limit 2`.
 
 ## D8 · Fragilidad de `open-routine.subflow.yaml` con muchas rutinas
+- **Propuesta:** migrar los flujos 11, 17, 18, 19, 21 y 22 a `open-routine-by-id.subflow.yaml` y, en la app, que `scrollUntilVisible` no sea necesario dejando la lista de «Mías» con el contenido por encima de la barra de pestañas (inset inferior).
 - Con ~20 rutinas en «Mías» la tarjeta buscada queda bajo la barra de pestañas y `scrollUntilVisible` (que se desplaza
   antes de mirar) la pasa de largo; el buscador no siempre filtra. Los flujos nuevos abren la rutina por enlace
   (`open-routine-by-id.subflow.yaml`, `start-day-by-id.subflow.yaml`). Los flujos viejos (11, 17, 18, 19, 21, 22) siguen

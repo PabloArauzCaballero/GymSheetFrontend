@@ -5,5 +5,11 @@ appId: app.gymsheet.mobile
 name: 15c · Enviar denuncia
 ---
 - tapOn: 'Enviar denuncia'
+# Maestro (XCUITest) sigue sin ver el aviso en el árbol de accesibilidad pese a `accessibilityRole="alert"`: el
+# intento es opcional y la prueba real es el fotograma.
+- extendedWaitUntil:
+    visible: 'Gracias.*'
+    timeout: 3000
+    optional: true
 - waitForAnimationToEnd:
     timeout: 6000
