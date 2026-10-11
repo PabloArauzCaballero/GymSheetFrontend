@@ -1,3 +1,4 @@
+import { formatNumber } from '@/shared/lib/numbers';
 import { WEEKDAY_NAMES, type Weekday } from '@gymsheet/hooks';
 import { modeLabel } from '../../labels';
 import { startDateOf, type ActivationDraft } from '../../activation-model';
@@ -26,7 +27,7 @@ export function StepSummary({
       draft.modo === 'STRENGTH_GOALS' ? 'Metas' : 'Levantamientos',
       lifts
         .map((lift) =>
-          draft.modo === 'STRENGTH_GOALS' ? `${lift.nombre} → ${lift.metaKg} kg` : `${lift.nombre}${lift.pesoKg ? ` · ${lift.pesoKg} kg` : ''}`,
+          draft.modo === 'STRENGTH_GOALS' ? `${lift.nombre} → ${formatNumber(lift.metaKg)} kg` : `${lift.nombre}${lift.pesoKg ? ` · ${formatNumber(lift.pesoKg)} kg` : ''}`,
         )
         .join('; '),
     ]);
