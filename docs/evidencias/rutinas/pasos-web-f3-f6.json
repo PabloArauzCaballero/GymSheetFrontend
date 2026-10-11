@@ -341,10 +341,7 @@
       "plataformas": [
         "web"
       ],
-      "debeVerse": "Tras tres denunciantes distintos el comentario se oculta solo (solo 1440 claro, por el límite de 20 denuncias/hora).",
-      "combinacionesWeb": [
-        "1440_claro"
-      ]
+      "debeVerse": "Tras tres denunciantes distintos el comentario se oculta solo (solo 1440 claro, por el límite de 20 denuncias/hora)."
     },
     {
       "rf": "RF-13",
