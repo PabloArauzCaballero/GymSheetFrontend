@@ -65,7 +65,7 @@ export function ActivationFrame({
                     aria-hidden
                     className={cn(
                       'block h-1.5 w-full rounded-full',
-                      index <= current ? 'bg-[var(--volt)]' : 'bg-[var(--surface-high)]',
+                      index <= current ? 'bg-[var(--volt)]' : 'step-track',
                       index < current && 'opacity-55',
                     )}
                   />

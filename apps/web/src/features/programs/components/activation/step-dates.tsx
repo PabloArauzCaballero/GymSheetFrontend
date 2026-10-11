@@ -45,7 +45,7 @@ export function StepDates({
               />
               <span className="grid">
                 <span className="font-semibold">{label}</span>
-                <span className="text-xs capitalize text-[var(--text-muted)]">{detail}</span>
+                <span className="text-xs first-letter:uppercase text-[var(--text-muted)]">{detail}</span>
               </span>
             </label>
           ))}

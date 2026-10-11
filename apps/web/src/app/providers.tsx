@@ -68,6 +68,11 @@ export function Providers({
         <ConfirmRoot />
         <Toaster
           position="top-right"
+          // Por debajo de la cabecera fija: el aviso no tapa el nombre del usuario
+          // ni el título de la página (en móvil la cabecera lleva además la
+          // navegación compacta).
+          offset={{ top: 'calc(4.5rem + env(safe-area-inset-top))', right: 16 }}
+          mobileOffset={{ top: 'calc(7.5rem + env(safe-area-inset-top))', right: 16, left: 16 }}
           toastOptions={{
             style: {
               background: 'var(--surface-low)',

@@ -1,5 +1,6 @@
 'use client';
 
+import { roleLabel } from '@/shared/lib/roles';
 import { useQuery } from '@tanstack/react-query';
 import Link, { useLinkStatus } from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -204,7 +205,7 @@ export function PortalShell({
           <p className="truncate text-sm font-semibold">
             {session.nombreCompleto ?? session.email}
           </p>
-          <p className="mt-1 text-xs text-[var(--text-muted)]">{session.role}</p>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">{roleLabel(session.role)}</p>
         </div>
       </aside>
       <div className="min-w-0 pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
@@ -217,7 +218,7 @@ export function PortalShell({
               <div className="hidden text-right sm:block">
                 <p className="text-sm font-semibold">{session.nombreCompleto ?? session.email}</p>
                 <p className="text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                  {session.role}
+                  {roleLabel(session.role)}
                 </p>
               </div>
               <TutorialLauncher />

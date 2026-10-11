@@ -1,5 +1,6 @@
 'use client';
 
+import { roleLabel } from '@/shared/lib/roles';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Search, ShieldX } from 'lucide-react';
 import { useState } from 'react';
@@ -19,13 +20,6 @@ import {
   type PortalUser,
 } from '@/features/admin/services/insights-service';
 import { permissionsAdminService } from '@/features/admin/services/permissions-admin-service';
-
-const ROLE_LABEL: Record<string, string> = {
-  ADMIN: 'Administración',
-  COACH: 'Entrenador',
-  FRONT_DESK: 'Recepción',
-  ENTRENADOR_EXTERNO: 'Entrenador externo',
-};
 
 export function PermissionsPanel() {
   const [search, setSearch] = useState('');
@@ -124,7 +118,7 @@ export function PermissionsPanel() {
                   >
                     <p className="font-semibold text-[var(--text)]">{user.nombreCompleto}</p>
                     <p className="text-xs text-[var(--text-muted)]">
-                      {user.email} · {ROLE_LABEL[user.rol] ?? user.rol}
+                      {user.email} · {roleLabel(user.rol)}
                     </p>
                   </button>
                 ))}
