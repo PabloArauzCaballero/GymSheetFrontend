@@ -19,7 +19,7 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | RF-09 | 20 / 20 | 6 / 6 | 2 |
 | RF-10 | 40 / 40 | 6 / 6 | 1 |
 | RF-11 | 12 / 12 | 0 / 0 | 1 |
-| RF-12 | 33 / 33 | 6 / 6 | 2 |
+| RF-12 | 36 / 36 | 6 / 6 | 1 |
 | RF-13 | 44 / 44 | 9 / 9 | 1 |
 | RF-14 | 36 / 36 | 9 / 9 | 0 |
 | RF-15 | 28 / 28 | 8 / 8 | 0 |
@@ -180,9 +180,9 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | RF-12 | 04 | Web | `RF-12/web/RF-12_p04_denunciar-ejercicio-privado_*` | Hoja «Reportar» con «Ejercicio peligroso» preseleccionado para el ejercicio privado. | ✅ 4/4 capturadas · sin revisar |
 | RF-12 | 04b | Web | `RF-12/web/RF-12_p04b_denuncia-enviada_*` | «Gracias. Lo revisaremos.» tras enviar. | ✅ 4/4 capturadas · sin revisar |
 | RF-12 | 05 | Web | `RF-12/web/RF-12_p05_cola-caso-ejercicio_*` | El administrador del gimnasio ve el caso de ejercicio con «Ejercicio peligroso» en la cola. | ✅ 4/4 capturadas · sin revisar |
-| RF-12 | 06 | Web | `RF-12/web/RF-12_p06_ocultar-ejercicio-falla-500-backend_*` | DEFECTO DEL BACKEND: ocultar el caso de un ejercicio responde 500 (restricción ck_ejercicio_moderacion); no se pudo capturar el caso resuelto. | ✅ 4/4 capturadas · sin revisar |
+| RF-12 | 06 | Web | `RF-12/web/RF-12_p06_caso-resuelto-oculto_*` | El administrador oculta el caso de un ejercicio y ve «Caso resuelto.» con la etiqueta «Retirado» (corregido el 500 de ck_ejercicio_moderacion). | ✅ 4/4 capturadas · sin revisar |
 | RF-12 | 07 | Web | `RF-12/web/RF-12_p07_ejercicio-oculto-por-moderacion_*` | El ejercicio aparece como «Oculto por moderación» (estado aplicado por SQL por el defecto anterior). | ✅ 4/4 capturadas · 1 revisadas |
-| RF-12 | 08 | Web | `RF-12/web/RF-12_p08_comentario-oculto-por-tres-denuncias_*` | Tras tres denunciantes distintos el comentario se oculta solo (solo 1440 claro, por el límite de 20 denuncias/hora). | ✅ 1/1 capturadas · sin revisar |
+| RF-12 | 08 | Web | `RF-12/web/RF-12_p08_comentario-oculto-por-tres-denuncias_*` | Tras tres denunciantes distintos el comentario se oculta solo (solo 1440 claro, por el límite de 20 denuncias/hora). | ✅ 4/4 capturadas · sin revisar |
 | RF-13 | 01 | Web | `RF-13/web/RF-13_p01_buscar-persona_*` | «Compartir rutina»: buscador de personas, resultado sin email y persona elegida. | ✅ 4/4 capturadas · 1 revisadas |
 | RF-13 | 02 | Web | `RF-13/web/RF-13_p02_compartida-con-pendiente_*` | «Compartida con» muestra a la persona como Pendiente. | ✅ 4/4 capturadas · sin revisar |
 | RF-13 | 03 | Web | `RF-13/web/RF-13_p03_aviso-de-invitacion_*` | El invitado ve en Avisos «Ana Autora te compartió la rutina …». | ✅ 4/4 capturadas · sin revisar |
@@ -238,7 +238,6 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | RF-20 | 03 | Web | `RF-20/web/RF-20_p03_rutina-no-cambia_*` | La rutina sigue con los valores anteriores. | ✅ 4/4 capturadas · sin revisar |
 | RF-19 | 01 | — | — | notificacion-programa-terminado | ❌ NO cubierto con captura. El aviso PROGRAM_FINISHED se crea al terminar el programa (comprobado: close-weeks del flujo móvil 23c lo genera como mensaje IN_APP/PENDING) pero ninguna pantalla lo muestra todavía: ni la web ni el móvil tienen bandeja de mensajes. Ver el motivo móvil en pasos-movil-f3-f6.json. |
 | RF-18 | 06 | — | — | cierre-real-del-trabajo-semanal | ❌ NO cubierto del todo. El cierre semanal se ejecutó con la herramienta de soporte `close-weeks` (POST /admin/support/programs/:id/close-weeks), que llama a `closeProgram`, el mismo código que usa el trabajo del lunes (`closeDueWeeks`); lo que no se ejecutó es el disparo programado del trabajo (cron). Móvil: flujos 23b y 23c, con capturas RF-18 p01–p03 (SIMULACIÓN documentada: fechas y semanas 1–3 por SQL; la sesión se retrocede 15 min). |
-| RF-12 | 06 | — | — | caso-resuelto-oculto-ejercicio | ❌ NO capturado: ocultar un ejercicio desde la cola de moderación responde 500 en el backend (la restricción ck_ejercicio_moderacion solo admite OCULTO_*, pero el código escribe OCULTA_MODERACION). Se dejó la captura del fallo y se aplicó el estado por SQL para comprobar la pantalla. |
 | RF-03 | 01 | Web | `RF-03/web/RF-03_p01_paso1-vacio_*` | «Paso 1 de 6 · Nombre», campo vacío, barra de progreso con el primer segmento activo. | ✅ 4/4 capturadas · sin revisar |
 | RF-03 | 01 | Móvil | `RF-03/movil/RF-03_p01_paso1-vacio_*` | «Paso 1 de 6 · Nombre», campo vacío, barra de progreso con el primer segmento activo. | ✅ 1/1 capturadas · sin revisar |
 | RF-03 | 02 | Web | `RF-03/web/RF-03_p02_paso1-error-nombre_*` | Siguiente sin nombre: «Escribe un nombre» bajo el campo y sigue en el paso 1. | ✅ 4/4 capturadas · sin revisar |

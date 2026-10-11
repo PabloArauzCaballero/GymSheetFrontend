@@ -138,8 +138,8 @@ for (const combo of combos) {
       await page.goto(url);
       await expect(page.getByTestId('exercise-hidden')).toContainText('Oculto por moderación');
 
-      // RF-12 · p08: tres cuentas distintas denuncian un comentario y se oculta solo (una sola combinación).
-      if (combo.width === 1440 && combo.theme === 'light') {
+      // RF-12 · p08: tres cuentas distintas denuncian un comentario y se oculta solo (en las cuatro combinaciones: cada una usa cuentas nuevas).
+      {
         const b = apiDe(bruno);
         const comentarioDeBruno = await b<{ id: string }>('POST', `/comments/ROUTINE/${rutina.id}`, { texto: `Compra suplementos en mi tienda ${tag}` });
         for (const cuenta of [ana, carla, dario]) {

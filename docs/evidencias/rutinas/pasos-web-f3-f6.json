@@ -319,11 +319,11 @@
     {
       "rf": "RF-12",
       "paso": "06",
-      "nombre": "ocultar-ejercicio-falla-500-backend",
+      "nombre": "caso-resuelto-oculto",
       "plataformas": [
         "web"
       ],
-      "debeVerse": "DEFECTO DEL BACKEND: ocultar el caso de un ejercicio responde 500 (restricción ck_ejercicio_moderacion); no se pudo capturar el caso resuelto."
+      "debeVerse": "El administrador oculta el caso de un ejercicio y ve «Caso resuelto.» con la etiqueta «Retirado» (corregido el 500 de ck_ejercicio_moderacion)."
     },
     {
       "rf": "RF-12",
@@ -833,13 +833,6 @@
       "nombre": "cierre-real-del-trabajo-semanal",
       "plataformas": [],
       "faltante": "NO cubierto del todo. El cierre semanal se ejecutó con la herramienta de soporte `close-weeks` (POST /admin/support/programs/:id/close-weeks), que llama a `closeProgram`, el mismo código que usa el trabajo del lunes (`closeDueWeeks`); lo que no se ejecutó es el disparo programado del trabajo (cron). Móvil: flujos 23b y 23c, con capturas RF-18 p01–p03 (SIMULACIÓN documentada: fechas y semanas 1–3 por SQL; la sesión se retrocede 15 min)."
-    },
-    {
-      "rf": "RF-12",
-      "paso": "06",
-      "nombre": "caso-resuelto-oculto-ejercicio",
-      "plataformas": [],
-      "faltante": "NO capturado: ocultar un ejercicio desde la cola de moderación responde 500 en el backend (la restricción ck_ejercicio_moderacion solo admite OCULTO_*, pero el código escribe OCULTA_MODERACION). Se dejó la captura del fallo y se aplicó el estado por SQL para comprobar la pantalla."
     }
   ]
 }
