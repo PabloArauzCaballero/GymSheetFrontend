@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { colors, iconSizes, radii, shadows, spacing } from '@/theme';
+import { colors, iconSizes, minTouchTarget, radii, shadows, spacing } from '@/theme';
 
 export type QuickAction = {
   key: string;
@@ -21,7 +21,7 @@ export type QuickAction = {
  */
 export function QuickActions({ actions }: { actions: readonly QuickAction[] }) {
   return (
-    <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+    <View style={{ flexDirection: 'row', gap: spacing.smd }}>
       {actions.map((action) => (
         <PressableScale
           accessibilityLabel={action.label}
@@ -31,9 +31,10 @@ export function QuickActions({ actions }: { actions: readonly QuickAction[] }) {
           style={{
             flex: 1,
             alignItems: 'center',
-            gap: spacing.sm,
-            paddingVertical: spacing.md,
-            paddingHorizontal: spacing.xs,
+            gap: spacing.smd,
+            paddingTop: spacing.mdl,
+            paddingBottom: spacing.md,
+            paddingHorizontal: spacing.sm,
             borderRadius: radii.xl,
             borderCurve: 'continuous',
             backgroundColor: colors.surfaceLow,
@@ -43,8 +44,8 @@ export function QuickActions({ actions }: { actions: readonly QuickAction[] }) {
         >
           <View
             style={{
-              width: 40,
-              height: 40,
+              width: minTouchTarget,
+              height: minTouchTarget,
               borderRadius: radii.full,
               alignItems: 'center',
               justifyContent: 'center',

@@ -7,14 +7,14 @@ import type { Routine } from '@gymsheet/types';
 import { canActivateProgram, canSaveCopy, isAnyDayRoutine, routineColumns, savedCopyLabel } from '@gymsheet/hooks';
 import { routineBuilderService, routineCatalogService, routineService } from '@/api/services';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
-import { ScrollScreen, Section } from '@/components/layout';
+import { ScrollScreen } from '@/components/layout';
 import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { ScheduleRoutine } from '@/components/schedule-routine';
 import { DetailActions, type PrimaryIntent } from '@/features/routine-detail/detail-actions';
 import { DetailHeader } from '@/features/routine-detail/detail-header';
 import { DetailHero } from '@/features/routine-detail/detail-hero';
-import { DetailSocial } from '@/features/routine-detail/detail-social';
+import { DetailSection, DetailSocial } from '@/features/routine-detail/detail-social';
 import { DayCard } from '@/features/routine-detail/day-cards';
 import { MoreSheet, type MoreAction } from '@/features/routine-detail/more-sheet';
 import { ReportSheet, type ReportTarget } from '@/features/routine-detail/report-sheet';
@@ -256,9 +256,9 @@ export function RoutineDetailScreen() {
       />
 
       {data.esMia ? (
-        <Section title="Programar">
+        <DetailSection title="Programar">
           <ScheduleRoutine routineId={data.id} />
-        </Section>
+        </DetailSection>
       ) : null}
 
       <MoreSheet actions={more} onClose={() => setMoreOpen(false)} title={data.nombre} visible={moreOpen} />

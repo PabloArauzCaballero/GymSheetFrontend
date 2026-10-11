@@ -152,7 +152,8 @@ export function DayScreen() {
   const items = view.ejercicios;
   const topInset = insets.top;
   const minutes = estimateDayMinutes(items);
-  const muscles = musclesOf(items);
+  // Tres como mucho: un cuarto chip partía la fila en dos sobre la portada.
+  const muscles = musclesOf(items, 3);
   const groups = view.bloques.filter((block) => block.kind !== 'single').length;
   const kicker = [
     `Semana ${weekNumber}${total ? ` de ${total}` : ''}`,
@@ -300,7 +301,7 @@ export function DayScreen() {
         accessible
         style={{
           flexDirection: 'row',
-          paddingVertical: spacing.md,
+          paddingVertical: spacing.mdl,
           borderRadius: radii.xl,
           borderCurve: 'continuous',
           backgroundColor: colors.surfaceLow,
@@ -336,7 +337,7 @@ export function DayScreen() {
             style={{
               flex: 1,
               alignItems: 'center',
-              gap: spacing.xxs,
+              gap: spacing.xs,
               borderLeftWidth: index === 0 ? 0 : StyleSheet.hairlineWidth,
               borderLeftColor: colors.border,
             }}
@@ -356,7 +357,7 @@ export function DayScreen() {
         ))}
       </View>
 
-      <View style={{ gap: spacing.sm }}>
+      <View style={{ gap: spacing.smd }}>
         {view.bloques.map((block, index) => {
           const key = block.items.map((item) => item.routineExerciseId).join('+');
           const last = index === view.bloques.length - 1;

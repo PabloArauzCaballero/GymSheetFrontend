@@ -1,9 +1,28 @@
+import type { ReactNode } from 'react';
+import { View } from 'react-native';
 import type { Routine } from '@gymsheet/types';
-import { Section } from '@/components/layout';
+import { Text } from '@/components/text';
+import { spacing } from '@/theme';
 import { CommunitySection } from '@/features/routine-detail/community-section';
 import type { ReportTarget } from '@/features/routine-detail/report-sheet';
 import { ShareSheet } from '@/features/routine-detail/share-sheet';
 import { SharesSection } from '@/features/routine-detail/shares-section';
+
+/**
+ * Sección del detalle con el título al mismo nivel que «Los días» (22, display):
+ * con el `Section` genérico (17) «Comunidad» quedaba por debajo de los días
+ * aunque pesa lo mismo en la página.
+ */
+export function DetailSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <View style={{ gap: spacing.mdl }}>
+      <Text accessibilityRole="header" variant="title">
+        {title}
+      </Text>
+      {children}
+    </View>
+  );
+}
 
 /**
  * Lo social de una rutina: «Compartida con» para las privadas propias y la
@@ -33,7 +52,7 @@ export function DetailSocial({
   return (
     <>
       {own && !isPublic ? (
-        <Section title="Compartida con">
+        <DetailSection title="Compartida con">
           <SharesSection onShare={onShareOpen} routineId={routine.id} />
           <ShareSheet
             onClose={onShareClose}
@@ -41,13 +60,13 @@ export function DetailSocial({
             routineName={routine.nombre}
             visible={sharing}
           />
-        </Section>
+        </DetailSection>
       ) : null}
 
       {isPublic ? (
-        <Section title="Comunidad">
+        <DetailSection title="Comunidad">
           <CommunitySection onReport={onReport} routine={routine} />
-        </Section>
+        </DetailSection>
       ) : null}
     </>
   );

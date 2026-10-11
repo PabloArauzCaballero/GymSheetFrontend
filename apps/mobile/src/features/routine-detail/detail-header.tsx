@@ -17,7 +17,7 @@ type Cell = {
 };
 
 /** Cinco estrellas pequeñas con medias: lo que la gente reconoce sin leer. */
-function Stars({ value }: { value: number }) {
+export function RatingStars({ value, size = iconSizes.xs }: { value: number; size?: number }) {
   return (
     <View style={{ flexDirection: 'row', gap: 1 }}>
       {[1, 2, 3, 4, 5].map((n) => (
@@ -25,7 +25,7 @@ function Stars({ value }: { value: number }) {
           color={ratingStar}
           key={n}
           name={value >= n - 0.25 ? 'star' : value >= n - 0.75 ? 'star-half' : 'star-outline'}
-          size={iconSizes.xs}
+          size={size}
         />
       ))}
     </View>
@@ -44,7 +44,7 @@ function StatsStrip({ cells }: { cells: Cell[] }) {
       accessibilityLabel={cells.map((cell) => cell.accessibility).join('. ')}
       style={{
         flexDirection: 'row',
-        paddingVertical: spacing.md,
+        paddingVertical: spacing.mdl,
         borderRadius: radii.xl,
         borderCurve: 'continuous',
         backgroundColor: colors.surfaceLow,
@@ -58,7 +58,7 @@ function StatsStrip({ cells }: { cells: Cell[] }) {
           style={{
             flex: 1,
             alignItems: 'center',
-            gap: spacing.xxs,
+            gap: spacing.xs,
             paddingHorizontal: spacing.xs,
             borderLeftWidth: index === 0 ? 0 : StyleSheet.hairlineWidth,
             borderLeftColor: colors.border,
@@ -67,7 +67,7 @@ function StatsStrip({ cells }: { cells: Cell[] }) {
           <Text numberOfLines={1} style={{ color: colors.text }} variant="numeric">
             {cell.value}
           </Text>
-          {cell.stars != null ? <Stars value={cell.stars} /> : null}
+          {cell.stars != null ? <RatingStars value={cell.stars} /> : null}
           <Text numberOfLines={1} tone="muted" variant="caption">
             {cell.caption}
           </Text>
