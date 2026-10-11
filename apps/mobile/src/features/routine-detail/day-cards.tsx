@@ -2,11 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
 import { WEEKDAY_NAMES, type Weekday } from '@gymsheet/hooks';
 import type { RoutineDay } from '@gymsheet/types';
-import { ExerciseImage } from '@/components/media';
+import { ExerciseImage, hasArtwork } from '@/components/media';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { colors, iconSizes, radii, shadows, spacing, thumbSizes } from '@/theme';
-import { dayMinutes } from '@/features/routine-detail/routine-plan';
+import { colors, iconSizes, radii, shadows, spacing } from '@/theme';
+import { dayMinutes, dayMuscles } from '@/features/routine-detail/routine-plan';
 
 export function dayKicker(day: Pick<RoutineDay, 'diaSemana'>, number: number): string {
   const weekday = day.diaSemana ? WEEKDAY_NAMES[day.diaSemana as Weekday] : 'Cualquier día';
@@ -17,39 +17,36 @@ export function dayTitle(day: Pick<RoutineDay, 'nombre' | 'diaSemana'>): string 
   return day.nombre?.trim() || (day.diaSemana ? WEEKDAY_NAMES[day.diaSemana as Weekday] : 'Entreno');
 }
 
-/** Cada miniatura (40 + 2 de borde por lado) asoma 28 sobre la anterior. */
-const STACK_OVERLAP = thumbSizes.stack / 2 - spacing.xs;
-const STACK_WIDTH = (thumbSizes.stack + 4) * 3 - STACK_OVERLAP * 2;
+const THUMB = 56;
+const MAX_THUMBS = 4;
 
 /**
- * Tarjeta de un día (C8.3.1): tres miniaturas apiladas, «Lunes · Día 1», el
- * nombre del día y «6 ejercicios · ≈55 min». Abre la pantalla del Día.
+ * Tarjeta de un día (rediseño 2026-10-11): «LUNES · DÍA 1», el nombre del día,
+ * los músculos que trabaja y «6 ejercicios · ≈55 min», con una tira de
+ * miniaturas de los ejercicios (y «+N» si hay más). Abre la pantalla del Día.
  */
-export function DayCard({
-  day,
-  number,
-  onPress,
-}: {
-  day: RoutineDay;
-  number: number;
-  onPress: () => void;
-}) {
-  const thumbs = day.ejercicios.filter((item) => item.ejercicio).slice(0, 3);
+export function DayCard({ day, number, onPress }: { day: RoutineDay; number: number; onPress: () => void }) {
+  // Solo los ejercicios con imagen: una casilla con un glifo de relleno se lee
+  // como «falta la foto». Los demás se cuentan en «+N». Cuatro casillas como
+  // mucho (caben en un iPhone SE).
+  const withArtwork = day.ejercicios.filter((item) => item.ejercicio && hasArtwork(item.ejercicio));
+  const thumbs = withArtwork.slice(0, day.ejercicios.length > MAX_THUMBS ? MAX_THUMBS - 1 : MAX_THUMBS);
+  const rest = day.ejercicios.length - thumbs.length;
   const count = day.ejercicios.length;
   const minutes = dayMinutes(day);
+  const muscles = dayMuscles(day, 3);
   const meta = [`${count} ${count === 1 ? 'ejercicio' : 'ejercicios'}`, minutes ? `≈${minutes} min` : null]
     .filter(Boolean)
     .join(' · ');
   return (
     <PressableScale
       accessibilityHint="Abre el día"
-      accessibilityLabel={`${dayKicker(day, number)}. ${dayTitle(day)}. ${meta}`}
+      accessibilityLabel={`${dayKicker(day, number)}. ${dayTitle(day)}. ${muscles.join(', ')}. ${meta}`}
       onPress={onPress}
+      scaleTo={0.985}
       style={{
-        flexDirection: 'row',
-        alignItems: 'center',
         gap: spacing.smd,
-        padding: spacing.smd,
+        padding: spacing.md,
         borderRadius: radii.xl,
         borderCurve: 'continuous',
         backgroundColor: colors.surfaceLow,
@@ -57,45 +54,63 @@ export function DayCard({
       }}
       testID={`day-card-${day.id}`}
     >
-      <View style={{ flexDirection: 'row', width: STACK_WIDTH }}>
-        {thumbs.length === 0 ? (
-          <View style={{ width: thumbSizes.stack, height: thumbSizes.stack, borderRadius: radii.sm, backgroundColor: colors.surfaceHighest }} />
-        ) : (
-          thumbs.map((item, index) =>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
+        <View style={{ flex: 1, gap: spacing.xxs }}>
+          <Text style={{ letterSpacing: 0.6 }} tone="muted" variant="caption">
+            {dayKicker(day, number).toUpperCase()}
+          </Text>
+          <Text numberOfLines={2} variant="headline">
+            {dayTitle(day)}
+          </Text>
+          {muscles.length > 0 ? (
+            <Text numberOfLines={1} tone="secondary" variant="subhead">
+              {muscles.join(' · ')}
+            </Text>
+          ) : null}
+        </View>
+        <Ionicons
+          accessibilityElementsHidden
+          color={colors.textMuted}
+          importantForAccessibility="no-hide-descendants"
+          name="chevron-forward"
+          size={iconSizes.md}
+        />
+      </View>
+
+      {thumbs.length > 0 && thumbs.length + (rest > 0 ? 1 : 0) > 1 ? (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.sm,
+          }}
+        >
+          {thumbs.map((item) =>
             item.ejercicio ? (
-              <View
-                key={item.id}
-                style={{
-                  marginLeft: index === 0 ? 0 : -STACK_OVERLAP,
-                  borderRadius: radii.sm + 2,
-                  borderWidth: 2,
-                  borderColor: colors.surfaceLow,
-                }}
-              >
-                <ExerciseImage exercise={item.ejercicio} rounded={radii.sm} size={thumbSizes.stack} />
-              </View>
+              <ExerciseImage exercise={item.ejercicio} key={item.id} rounded={radii.md} size={THUMB} />
             ) : null,
-          )
-        )}
-      </View>
-      <View style={{ flex: 1, gap: spacing.xxs }}>
-        <Text tone="muted" variant="footnote">
-          {dayKicker(day, number)}
-        </Text>
-        <Text numberOfLines={2} variant="headline">
-          {dayTitle(day)}
-        </Text>
-        <Text tabular tone="secondary" variant="subhead">
-          {meta}
-        </Text>
-      </View>
-      <Ionicons
-        accessibilityElementsHidden
-        color={colors.textMuted}
-        importantForAccessibility="no-hide-descendants"
-        name="chevron-forward"
-        size={iconSizes.md}
-      />
+          )}
+          {rest > 0 ? (
+            <View
+              style={{
+                width: THUMB,
+                height: THUMB,
+                borderRadius: radii.md,
+                borderCurve: 'continuous',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: colors.surfaceHighest,
+              }}
+            >
+              <Text strong tabular tone="secondary" variant="subhead">{`+${rest}`}</Text>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+
+      <Text tabular tone="muted" variant="footnote">
+        {meta}
+      </Text>
     </PressableScale>
   );
 }

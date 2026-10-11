@@ -1,56 +1,193 @@
-import { View } from 'react-native';
-import { cardSubtitle, copiesLabel, ratingLabel } from '@gymsheet/hooks';
+import { Ionicons } from '@expo/vector-icons';
+import type { ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { compactCount, ratingLabel, ratingValue } from '@gymsheet/hooks';
 import type { Routine } from '@gymsheet/types';
-import { FactChips, type Fact } from '@/components/fact-chips';
-import { Badge } from '@/components/layout';
+import { PersonAvatar } from '@/components/person-avatar';
 import { Text } from '@/components/text';
-import { GOAL_LABEL } from '@/lib/format';
-import { spacing } from '@/theme';
+import { colors, iconSizes, radii, ratingStar, shadows, spacing } from '@/theme';
 import { routineMinutes } from '@/features/routine-detail/routine-plan';
 
+type Cell = {
+  key: string;
+  value: string;
+  caption: string;
+  accessibility: string;
+  stars?: number | null;
+};
+
+/** Cinco estrellas pequeñas con medias: lo que la gente reconoce sin leer. */
+function Stars({ value }: { value: number }) {
+  return (
+    <View style={{ flexDirection: 'row', gap: 1 }}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Ionicons
+          color={ratingStar}
+          key={n}
+          name={value >= n - 0.25 ? 'star' : value >= n - 0.75 ? 'star-half' : 'star-outline'}
+          size={iconSizes.xs}
+        />
+      ))}
+    </View>
+  );
+}
+
 /**
- * Cabecera del detalle: insignias (REPP, objetivo), título display, hechos
- * (días/sem, semanas, ≈min), autoría y valoración. Cada dato se dice una vez.
+ * Franja de cifras como la de una tienda de apps: cada celda es un número
+ * grande y una palabra. Se entiende de un vistazo y sin chips: «4,6 ★★★★½ ·
+ * 12 descargas · 4 días/sem · 8 semanas».
  */
-export function DetailHeader({ routine, authorName }: { routine: Routine; authorName?: string | null }) {
+function StatsStrip({ cells }: { cells: Cell[] }) {
+  return (
+    <View
+      accessible
+      accessibilityLabel={cells.map((cell) => cell.accessibility).join('. ')}
+      style={{
+        flexDirection: 'row',
+        paddingVertical: spacing.md,
+        borderRadius: radii.xl,
+        borderCurve: 'continuous',
+        backgroundColor: colors.surfaceLow,
+        boxShadow: shadows.e1,
+      }}
+      testID="routine-stats"
+    >
+      {cells.map((cell, index) => (
+        <View
+          key={cell.key}
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            gap: spacing.xxs,
+            paddingHorizontal: spacing.xs,
+            borderLeftWidth: index === 0 ? 0 : StyleSheet.hairlineWidth,
+            borderLeftColor: colors.border,
+          }}
+        >
+          <Text numberOfLines={1} style={{ color: colors.text }} variant="numeric">
+            {cell.value}
+          </Text>
+          {cell.stars != null ? <Stars value={cell.stars} /> : null}
+          <Text numberOfLines={1} tone="muted" variant="caption">
+            {cell.caption}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** Quién hizo la rutina: su foto (o iniciales) y su nombre. */
+function AuthorRow({ routine }: { routine: Routine }) {
+  if (routine.esOficial) {
+    return (
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
+        <PersonAvatar id="repp" name="REPP" official size={44} />
+        <View style={{ flex: 1 }}>
+          <Text tone="muted" variant="footnote">
+            Rutina oficial
+          </Text>
+          <Text variant="headline">Equipo REPP</Text>
+        </View>
+      </View>
+    );
+  }
+  if (routine.atribucion) {
+    return (
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
+        <PersonAvatar
+          id={routine.atribucion.authorId ?? routine.atribucion.authorName}
+          name={routine.atribucion.authorName}
+          size={44}
+        />
+        <Text style={{ flex: 1 }} testID="attribution" tone="secondary" variant="subhead">
+          Basada en{' '}
+          <Text strong variant="subhead">
+            {routine.atribucion.routineName}
+          </Text>{' '}
+          de {routine.atribucion.authorName}
+        </Text>
+      </View>
+    );
+  }
+  if (routine.esMia || !routine.autor) return null;
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }} testID="routine-author">
+      <PersonAvatar id={routine.autor.id} name={routine.autor.nombre} photoUrl={routine.autor.fotoUrl} size={44} />
+      <View style={{ flex: 1 }}>
+        <Text tone="muted" variant="footnote">
+          Creada por
+        </Text>
+        <Text numberOfLines={1} variant="headline">
+          {routine.autor.nombre}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Lo que va bajo la portada: autor, cifras y descripción. El título y el
+ * objetivo ya van sobre la imagen; aquí no se repiten.
+ */
+export function DetailHeader({ routine, actions }: { routine: Routine; actions?: ReactNode }) {
   const days = routine.dias.length;
   const minutes = routineMinutes(routine);
-  const facts: Fact[] = [
-    { key: 'days', icon: 'calendar-outline', label: `${days} ${days === 1 ? 'día' : 'días'}/sem` },
-    ...(routine.duracionSemanas
-      ? [{ key: 'weeks', icon: 'layers-outline' as const, label: `${routine.duracionSemanas} semanas` }]
+  const community = routine.visibilidad === 'PUBLIC' || routine.esOficial || routine.copias > 0;
+  const rating = ratingValue(routine.valoracion);
+  const cells: Cell[] = [
+    ...(community
+      ? [
+          {
+            key: 'rating',
+            value: rating ?? 'Nueva',
+            caption: rating
+              ? `${routine.valoracion.total} ${routine.valoracion.total === 1 ? 'reseña' : 'reseñas'}`
+              : 'Sin reseñas',
+            accessibility: ratingLabel(routine.valoracion).replace('★', 'Valoración'),
+            stars: routine.valoracion.promedio,
+          },
+          {
+            key: 'downloads',
+            value: compactCount(routine.copias),
+            caption: routine.copias === 1 ? 'descarga' : 'descargas',
+            accessibility: `${routine.copias} ${routine.copias === 1 ? 'descarga' : 'descargas'}`,
+          },
+        ]
       : []),
-    ...(minutes > 0 ? [{ key: 'min', icon: 'time-outline' as const, label: `≈${minutes} min` }] : []),
+    {
+      key: 'days',
+      value: String(days),
+      caption: 'días/sem',
+      accessibility: `${days} días por semana`,
+    },
+    ...(routine.duracionSemanas
+      ? [
+          {
+            key: 'weeks',
+            value: String(routine.duracionSemanas),
+            caption: 'semanas',
+            accessibility: `${routine.duracionSemanas} semanas`,
+          },
+        ]
+      : []),
+    ...(minutes > 0 && (!community || !routine.duracionSemanas)
+      ? [
+          {
+            key: 'min',
+            value: `${minutes}`,
+            caption: 'min/sesión',
+            accessibility: `unos ${minutes} minutos por sesión`,
+          },
+        ]
+      : []),
   ];
-  const showRating = routine.visibilidad === 'PUBLIC' || routine.copias > 0;
+
   return (
-    <View style={{ gap: spacing.smd }}>
-      {routine.esOficial || routine.objetivo || routine.visibilidad === 'PUBLIC' ? (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-          {routine.esOficial ? <Badge label="Recomendada por REPP" tone="success" /> : null}
-          {routine.objetivo ? <Badge label={GOAL_LABEL[routine.objetivo]} tone="info" /> : null}
-          {routine.visibilidad === 'PUBLIC' && !routine.esOficial ? <Badge label="Pública" /> : null}
-        </View>
-      ) : null}
-      <Text accessibilityLabel={`${routine.nombre}. ${cardSubtitle({ diasPorSemana: days, duracionSemanas: routine.duracionSemanas })}`} accessibilityRole="header" numberOfLines={3} testID="routine-title" variant="display">
-        {routine.nombre}
-      </Text>
-      <FactChips facts={facts} />
-      {routine.atribucion ? (
-        <Text testID="attribution" tone="secondary" variant="subhead">
-          Basada en <Text strong variant="subhead">{routine.atribucion.routineName}</Text> de{' '}
-          {routine.atribucion.authorName}
-        </Text>
-      ) : authorName && !routine.esMia ? (
-        <Text tone="secondary" variant="subhead">
-          Creada por <Text strong variant="subhead">{authorName}</Text>
-        </Text>
-      ) : null}
-      {showRating ? (
-        <Text tabular tone="muted" variant="footnote">
-          {`${ratingLabel(routine.valoracion)} · ${copiesLabel(routine.copias)}`}
-        </Text>
-      ) : null}
+    <View style={{ gap: spacing.lg }}>
+      <AuthorRow routine={routine} />
+      <StatsStrip cells={cells.slice(0, 4)} />
+      {actions}
       {routine.descripcion ? (
         <Text selectable tone="secondary" variant="body">
           {routine.descripcion}

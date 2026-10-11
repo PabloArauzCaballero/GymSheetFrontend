@@ -3,7 +3,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
-import { colors, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { colors, iconSizes, minTouchTarget, radii, shadows, spacing } from '@/theme';
 
 /** Qué hace el único CTA principal del detalle (C1/C2, C8.3.1). */
 export type PrimaryIntent = 'save' | 'activate' | 'train';
@@ -43,11 +43,17 @@ export function QuietAction({
       onPress={onPress}
       scaleTo={0.96}
       style={{
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.xs,
+        justifyContent: 'center',
+        gap: spacing.sm,
         minHeight: minTouchTarget,
-        paddingHorizontal: spacing.xs,
+        paddingHorizontal: spacing.md,
+        borderRadius: radii.full,
+        borderCurve: 'continuous',
+        backgroundColor: colors.surfaceLow,
+        boxShadow: shadows.e1,
       }}
       testID={testID}
     >
@@ -140,7 +146,7 @@ export function DetailActions({
         </PressableScale>
       ) : null}
       {onTryDay || onShare ? (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           {onTryDay ? (
             <QuietAction icon="play-circle-outline" label="Probar un día" loading={tryingDay} onPress={onTryDay} testID="try-day" />
           ) : null}

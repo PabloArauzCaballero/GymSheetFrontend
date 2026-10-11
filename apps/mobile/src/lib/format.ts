@@ -1,3 +1,4 @@
+import type { Ionicons } from '@expo/vector-icons';
 import type { MembershipStatus, TrainingGoal, WorkoutStatus } from '@gymsheet/types';
 import type { BadgeTone } from '@/components/layout';
 
@@ -163,3 +164,13 @@ export function initialsOf(name: string | undefined, email: string | undefined):
   }
   return email?.[0]?.toUpperCase() ?? '?';
 }
+
+/** Glifo de cada objetivo para la portada de respaldo (sin imagen). */
+export const GOAL_ICON: Record<TrainingGoal, keyof typeof Ionicons.glyphMap> = {
+  HIPERTROFIA: 'barbell',
+  FUERZA: 'flash',
+  RESISTENCIA: 'pulse',
+  PERDIDA_GRASA: 'flame',
+  SALUD_GENERAL: 'leaf',
+  REHABILITACION: 'medkit',
+};

@@ -1,62 +1,35 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Text, View } from 'react-native';
-import {
-  WEEKDAY_INITIALS,
-  authorLabel,
-  cardSubtitle,
-  copiesLabel,
-  ratingLabel,
-  weekDots,
-} from '@gymsheet/hooks';
+import { View } from 'react-native';
+import { authorLabel, cardSubtitle, downloadsLabel, ratingLabel, ratingValue } from '@gymsheet/hooks';
 import type { RoutineCard } from '@gymsheet/types';
-import { Badge } from '@/components/layout';
+import { Skeleton } from '@/components/feedback';
 import { PressableScale } from '@/components/motion';
+import { PersonAvatar } from '@/components/person-avatar';
+import { Text } from '@/components/text';
 import { GOAL_LABEL } from '@/lib/format';
-import { accentPolicy, cardPadding, colors, fontSizes, iconSizes, radii, semibold, shadows, spacing } from '@/theme';
+import { RoutineCover } from '@/features/routine-catalog/routine-cover';
+import { MediaChip } from '@/features/routine-catalog/media-chip';
+import { colors, iconSizes, radii, ratingStar, shadows, spacing } from '@/theme';
 
-/**
- * Los siete días de la semana como puntos. Sin acento (C8.1: el volt es de la
- * acción principal): todos los puntos van en `surfaceHighest` y se distinguen
- * por la tinta de la letra — secundaria si se entrena, apagada si se descansa.
- */
-function WeekDots({ card }: { card: RoutineCard }) {
+const COVER_HEIGHT = 156;
+
+/** Una cifra con su icono: «★ 4,6», «⬇ 12». */
+function Stat({ icon, value, color }: { icon: keyof typeof Ionicons.glyphMap; value: string; color?: string }) {
   return (
-    <View
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      style={{ flexDirection: 'row', gap: spacing.xs }}
-    >
-      {weekDots(card).map(({ dia, entrena }) => (
-        <View
-          key={dia}
-          style={{
-            width: 18,
-            height: 18,
-            borderRadius: radii.full,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: colors.surfaceHighest,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: fontSizes.xs,
-              fontWeight: semibold,
-              color: entrena ? colors.textSecondary : colors.textMuted,
-            }}
-          >
-            {WEEKDAY_INITIALS[dia]}
-          </Text>
-        </View>
-      ))}
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+      <Ionicons color={color ?? colors.textMuted} name={icon} size={iconSizes.sm} />
+      <Text tabular tone="secondary" variant="subhead">
+        {value}
+      </Text>
     </View>
   );
 }
 
 /**
- * Tarjeta del catálogo (RF-01): nombre, objetivo, días y duración, autor o sello
- * REPP, valoración, copias y la miniatura de la semana. Es un solo elemento
- * accesible que lee todo eso de corrido.
+ * Tarjeta del catálogo (rediseño 2026-10-11): portada con la imagen de un
+ * ejercicio, objetivo y días encima en vidrio; debajo el nombre, quién la hizo
+ * (foto o iniciales) y tres cifras que se entienden sin leer: estrellas,
+ * descargas y semanas. Es un solo elemento accesible que lo lee de corrido.
  */
 export function RoutineCardView({
   card,
@@ -66,17 +39,19 @@ export function RoutineCardView({
   onPress: () => void;
 }) {
   const author = authorLabel(card);
-  const rating = ratingLabel(card.valoracion);
+  const rating = ratingValue(card.valoracion);
+  const showsCommunity = card.visibilidad === 'PUBLIC' || card.esOficial;
   const label = [
     card.nombre,
-    card.esOficial ? 'Recomendada por REPP' : `de ${author}`,
+    card.esOficial ? 'Recomendada por REPP' : card.esMia ? 'Creada por ti' : `de ${author}`,
     cardSubtitle(card),
     card.objetivo ? GOAL_LABEL[card.objetivo] : null,
-    rating,
-    copiesLabel(card.copias),
+    showsCommunity ? ratingLabel(card.valoracion) : null,
+    showsCommunity ? downloadsLabel(card.copias) : null,
   ]
     .filter(Boolean)
     .join('. ');
+
   return (
     <PressableScale
       accessibilityLabel={label}
@@ -84,51 +59,118 @@ export function RoutineCardView({
       onPress={onPress}
       scaleTo={0.985}
       style={{
-        gap: spacing.sm,
-        borderRadius: radii.xl,
+        borderRadius: radii.xxl,
         borderCurve: 'continuous',
         backgroundColor: colors.surfaceLow,
-        boxShadow: shadows.e1,
-        padding: cardPadding,
+        boxShadow: shadows.e2,
+        overflow: 'hidden',
       }}
       testID={`routine-card-${card.id}`}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }}>
-        <Text
-          numberOfLines={2}
-          style={{ flex: 1, color: colors.text, fontSize: fontSizes.lg, fontWeight: semibold }}
+      <RoutineCover goal={card.objetivo} scrim="soft" style={{ height: COVER_HEIGHT }} uri={card.portadaUrl}>
+        <View
+          style={{
+            position: 'absolute',
+            top: spacing.smd,
+            left: spacing.smd,
+            right: spacing.smd,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            gap: spacing.sm,
+          }}
         >
+          {card.objetivo ? <MediaChip label={GOAL_LABEL[card.objetivo]} /> : <View />}
+          <MediaChip icon="calendar-outline" label={`${card.diasPorSemana} días/sem`} />
+        </View>
+      </RoutineCover>
+
+      <View
+        style={{
+          padding: spacing.md,
+          paddingTop: spacing.smd,
+          gap: spacing.smd,
+        }}
+      >
+        <Text numberOfLines={2} variant="title">
           {card.nombre}
         </Text>
-      </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
-        {card.objetivo ? <Badge label={GOAL_LABEL[card.objetivo]} /> : null}
-        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{cardSubtitle(card)}</Text>
-      </View>
-      <WeekDots card={card} />
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-          {card.esOficial ? (
-            <Ionicons
-              accessibilityElementsHidden
-              color={accentPolicy.glyph}
-              importantForAccessibility="no-hide-descendants"
-              name="checkmark-circle"
-              size={iconSizes.sm}
-            />
-          ) : null}
-          <Text numberOfLines={1} style={{ flexShrink: 1, color: colors.textMuted, fontSize: fontSizes.sm }}>
-            {card.esOficial ? 'REPP' : author}
+
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.sm,
+          }}
+        >
+          <PersonAvatar
+            id={card.autor.id}
+            name={card.autor.nombre}
+            official={card.esOficial}
+            photoUrl={card.autor.fotoUrl}
+            size={24}
+          />
+          <Text numberOfLines={1} style={{ flex: 1 }} tone="secondary" variant="subhead">
+            {card.esOficial ? 'REPP · Oficial' : card.esMia ? 'Creada por ti' : author}
           </Text>
         </View>
-        <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontVariant: ['tabular-nums'] }}>
-          {rating}
-        </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-          <Ionicons color={colors.textMuted} name="copy-outline" size={iconSizes.sm} />
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{card.copias}</Text>
+
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.md,
+          }}
+        >
+          {showsCommunity ? (
+            <>
+              <Stat
+                color={rating ? ratingStar : undefined}
+                icon={rating ? 'star' : 'star-outline'}
+                value={rating ? `${rating} (${card.valoracion.total})` : 'Nueva'}
+              />
+              <Stat icon="arrow-down-circle-outline" value={downloadsLabel(card.copias)} />
+            </>
+          ) : (
+            <Stat
+              icon={card.visibilidad === 'PUBLIC' ? 'globe-outline' : 'lock-closed-outline'}
+              value={card.visibilidad === 'PUBLIC' ? 'Pública' : 'Privada'}
+            />
+          )}
+          {card.duracionSemanas ? <Stat icon="layers-outline" value={`${card.duracionSemanas} semanas`} /> : null}
         </View>
       </View>
     </PressableScale>
+  );
+}
+
+/** Esqueleto con la forma de la tarjeta: portada, título, autor y cifras. */
+export function RoutineCardSkeleton() {
+  return (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{
+        borderRadius: radii.xxl,
+        borderCurve: 'continuous',
+        backgroundColor: colors.surfaceLow,
+        overflow: 'hidden',
+      }}
+    >
+      <Skeleton height={COVER_HEIGHT} radius={0} />
+      <View style={{ padding: spacing.md, gap: spacing.smd }}>
+        <Skeleton height={20} radius={radii.xs} width="70%" />
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.sm,
+          }}
+        >
+          <Skeleton height={24} radius={radii.full} width={24} />
+          <Skeleton height={14} radius={radii.xs} width="35%" />
+        </View>
+        <Skeleton height={14} radius={radii.xs} width="55%" />
+      </View>
+    </View>
   );
 }

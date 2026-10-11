@@ -1,19 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Fragment, useState } from 'react';
-import { View } from 'react-native';
-import { exerciseGroupLabelEs, muscleLabelEs } from '@gymsheet/domain';
-import {
-  dayView,
-  estimateDayMinutes,
-  transitionLabel,
-  type DayBlock,
-  type DayExerciseView,
-} from '@gymsheet/hooks';
+import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { exerciseGroupLabelEs, muscleLabelEs, selectExercisePoster } from '@gymsheet/domain';
+import { dayView, estimateDayMinutes, transitionLabel, type DayBlock, type DayExerciseView } from '@gymsheet/hooks';
 import type { Routine, RoutineDay } from '@gymsheet/types';
 import { routineBuilderService, routineService } from '@/api/services';
 import { ExerciseRow } from '@/components/exercise-row';
-import { FactChips } from '@/components/fact-chips';
 import { EmptyState, ErrorState, RowsSkeleton, Skeleton } from '@/components/feedback';
 import { GroupBlock } from '@/components/group-block';
 import { ScrollScreen } from '@/components/layout';
@@ -22,8 +16,11 @@ import { RestPill } from '@/components/rest-pill';
 import { StickyFooter, StickyFooterSpacer } from '@/components/sticky-footer';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
-import { colors, radii, shadows, spacing } from '@/theme';
+import { colors, gutter, ink, radii, shadows, spacing } from '@/theme';
+import { MediaChip } from '@/features/routine-catalog/media-chip';
+import { RoutineCover } from '@/features/routine-catalog/routine-cover';
 import { dayKicker, dayTitle } from '@/features/routine-detail/day-cards';
+import { GlassButton } from '@/features/routine-detail/detail-hero';
 import { MoreSheet } from '@/features/routine-detail/more-sheet';
 import { ReportSheet, type ReportTarget } from '@/features/routine-detail/report-sheet';
 import { dayNumber, orderedDays } from '@/features/routine-detail/routine-plan';
@@ -48,6 +45,20 @@ function musclesOf(items: readonly DayExerciseView[], limit = 4): string[] {
 }
 
 /** El siguiente día con ejercicios después de `day` (dando la vuelta a la semana). */
+/** Portada del Día: la primera lámina de sus ejercicios, o el primer póster. */
+function dayCoverUri(items: readonly DayExerciseView[]): string | null {
+  for (const item of items) {
+    const image =
+      item.media.find((m) => m.mediaType === 'IMAGE' && m.isPrimary) ?? item.media.find((m) => m.mediaType === 'IMAGE');
+    if (image?.url) return image.url;
+  }
+  for (const item of items) {
+    const poster = selectExercisePoster(item.media, null);
+    if (poster?.url) return poster.url;
+  }
+  return null;
+}
+
 function nextTrainingDay(routine: Pick<Routine, 'dias'>, day: RoutineDay): RoutineDay | null {
   const days = orderedDays(routine);
   const index = days.findIndex((candidate) => candidate.id === day.id);
@@ -75,8 +86,13 @@ function blockName(block: DayBlock<DayExerciseView>): string {
  * áreas seguras, el pie fijo y el gesto de recargar) no ahorra nada.
  */
 export function DayScreen() {
-  const { id, diaId, semana } = useLocalSearchParams<{ id: string; diaId: string; semana?: string }>();
+  const { id, diaId, semana } = useLocalSearchParams<{
+    id: string;
+    diaId: string;
+    semana?: string;
+  }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const weekNumber = Math.max(1, Number(semana) || 1);
   const start = useStartRoutine(id);
   const [report, setReport] = useState<ReportTarget | null>(null);
@@ -134,6 +150,7 @@ export function DayScreen() {
   }
 
   const items = view.ejercicios;
+  const topInset = insets.top;
   const minutes = estimateDayMinutes(items);
   const muscles = musclesOf(items);
   const groups = view.bloques.filter((block) => block.kind !== 'single').length;
@@ -144,6 +161,7 @@ export function DayScreen() {
   const openDay = (day: RoutineDay) =>
     router.replace({ pathname: '/routines/[id]/dia/[diaId]', params: { id: data.id, diaId: day.id, semana: String(weekNumber) } });
 
+  const coverUri = dayCoverUri(items);
   const header = (
     <View style={{ gap: spacing.smd }}>
       <Text tabular testID="day-kicker" tone="muted" variant="footnote">
@@ -152,15 +170,50 @@ export function DayScreen() {
       <Text accessibilityRole="header" numberOfLines={3} testID="day-title" variant="display">
         {dayTitle(base)}
       </Text>
-      {muscles.length > 0 || week?.esDescarga ? (
-        <FactChips
-          facts={[
-            ...(week?.esDescarga ? [{ key: 'descarga', label: 'Descarga', icon: 'leaf-outline' as const }] : []),
-            ...muscles.map((label) => ({ key: label, label })),
-          ]}
-        />
-      ) : null}
     </View>
+  );
+  const hero = (
+    <RoutineCover goal={data.objetivo} style={{ height: 300 }} uri={coverUri}>
+      <View
+        style={{
+          position: 'absolute',
+          left: gutter,
+          right: gutter,
+          bottom: spacing.lg,
+          gap: spacing.sm,
+        }}
+      >
+        <Text style={{ color: ink.white, letterSpacing: 0.6 }} tabular testID="day-kicker" variant="caption">
+          {kicker.toUpperCase()}
+        </Text>
+        <Text
+          accessibilityRole="header"
+          numberOfLines={3}
+          style={{ color: ink.white }}
+          testID="day-title"
+          variant="display"
+        >
+          {dayTitle(base)}
+        </Text>
+        {muscles.length > 0 || week?.esDescarga ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+            {week?.esDescarga ? <MediaChip icon="leaf-outline" label="Descarga" /> : null}
+            {muscles.map((label) => (
+              <MediaChip key={label} label={label} />
+            ))}
+          </View>
+        ) : null}
+      </View>
+      <View
+        style={{
+          position: 'absolute',
+          top: topInset + spacing.sm,
+          left: gutter,
+        }}
+      >
+        <GlassButton icon="chevron-back" label="Volver" onPress={() => router.back()} testID="day-back" />
+      </View>
+    </RoutineCover>
   );
 
   // Día de descanso: un día de la rutina sin ejercicios.
@@ -190,7 +243,11 @@ export function DayScreen() {
     <ExerciseRow
       badge={grouped ? (item.posicion ?? undefined) : undefined}
       caption={muscleOf(item) || null}
-      exercise={{ media: item.media, nombre: item.nombre, grupoMuscular: item.grupoMuscular ?? '' }}
+      exercise={{
+        media: item.media,
+        nombre: item.nombre,
+        grupoMuscular: item.grupoMuscular ?? '',
+      }}
       flag={item.ajustado ? 'Ajustado por la descarga' : undefined}
       grouped={grouped}
       key={item.routineExerciseId}
@@ -200,7 +257,11 @@ export function DayScreen() {
       onMore={canReport && item.esPrivado ? () => setMenuFor(item) : undefined}
       onPress={
         item.ejercicioId
-          ? () => router.push({ pathname: '/routines/ejercicio/[id]', params: { id: item.ejercicioId } })
+          ? () =>
+              router.push({
+                pathname: '/routines/ejercicio/[id]',
+                params: { id: item.ejercicioId },
+              })
           : undefined
       }
       prescription={{
@@ -231,19 +292,14 @@ export function DayScreen() {
           />
         </StickyFooter>
       }
+      hero={hero}
       refreshing={routine.isRefetching}
     >
-      <BackLink />
-      {header}
-
       <View
         accessibilityLabel={`Unos ${minutes} minutos, ${items.length} ejercicios, ${view.totalSeries} series${groups ? `, ${groups} ${groups === 1 ? 'bloque' : 'bloques'}` : ''}`}
         accessible
         style={{
           flexDirection: 'row',
-          alignItems: 'baseline',
-          gap: spacing.smd,
-          paddingHorizontal: spacing.mdl,
           paddingVertical: spacing.md,
           borderRadius: radii.xl,
           borderCurve: 'continuous',
@@ -252,18 +308,52 @@ export function DayScreen() {
         }}
         testID="day-summary"
       >
-        <Text style={{ color: colors.accentInk }} variant="numeric">
-          {`≈${minutes}`}
-          <Text tone="secondary" variant="subhead">
-            {' min'}
-          </Text>
-        </Text>
-        <Text style={{ flex: 1 }} tabular tone="secondary" variant="subhead">
-          <Text strong variant="subhead">{items.length}</Text>
-          {` ${items.length === 1 ? 'ejercicio' : 'ejercicios'} · `}
-          <Text strong variant="subhead">{view.totalSeries}</Text>
-          {' series'}
-        </Text>
+        {[
+          {
+            key: 'min',
+            value: `≈${minutes}`,
+            caption: 'minutos',
+            accent: true,
+          },
+          {
+            key: 'ex',
+            value: String(items.length),
+            caption: items.length === 1 ? 'ejercicio' : 'ejercicios',
+          },
+          { key: 'series', value: String(view.totalSeries), caption: 'series' },
+          ...(groups
+            ? [
+                {
+                  key: 'groups',
+                  value: String(groups),
+                  caption: groups === 1 ? 'bloque' : 'bloques',
+                },
+              ]
+            : []),
+        ].map((cell, index) => (
+          <View
+            key={cell.key}
+            style={{
+              flex: 1,
+              alignItems: 'center',
+              gap: spacing.xxs,
+              borderLeftWidth: index === 0 ? 0 : StyleSheet.hairlineWidth,
+              borderLeftColor: colors.border,
+            }}
+          >
+            <Text
+              style={{
+                color: 'accent' in cell && cell.accent ? colors.accentInk : colors.text,
+              }}
+              variant="numeric"
+            >
+              {cell.value}
+            </Text>
+            <Text tone="muted" variant="caption">
+              {cell.caption}
+            </Text>
+          </View>
+        ))}
       </View>
 
       <View style={{ gap: spacing.sm }}>
@@ -305,7 +395,12 @@ export function DayScreen() {
                   label: 'Denunciar ejercicio',
                   icon: 'flag-outline',
                   destructive: true,
-                  onPress: () => setReport({ kind: 'EXERCISE', id: menuFor.ejercicioId, label: menuFor.nombre }),
+                  onPress: () =>
+                    setReport({
+                      kind: 'EXERCISE',
+                      id: menuFor.ejercicioId,
+                      label: menuFor.nombre,
+                    }),
                 },
               ]
             : []

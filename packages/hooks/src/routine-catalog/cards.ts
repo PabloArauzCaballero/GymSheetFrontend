@@ -44,3 +44,32 @@ export function invitationHeadline(card: Pick<RoutineCard, 'invitacion' | 'nombr
   const from = card.invitacion?.deParte.nombre || 'Alguien';
   return `${from} te compartió «${card.nombre}»`;
 }
+
+/** «12 descargas», «1 descarga». Descargas = veces que alguien la guardó en sus rutinas. */
+export function downloadsLabel(copias: number): string {
+  return copias === 1 ? '1 descarga' : `${compactCount(copias)} descargas`;
+}
+
+/** Cifra corta para una estadística: 950 → «950», 1240 → «1,2 mil», 15300 → «15 mil». */
+export function compactCount(value: number): string {
+  if (value < 1000) return String(value);
+  const thousands = value / 1000;
+  const shown =
+    thousands < 10 ? thousands.toFixed(1).replace('.', ',').replace(/,0$/, '') : String(Math.floor(thousands));
+  return `${shown} mil`;
+}
+
+/** «4,6» o null si aún no hay valoraciones. */
+export function ratingValue(rating: { promedio: number | null; total: number }): string | null {
+  if (rating.promedio === null || rating.total === 0) return null;
+  return rating.promedio.toFixed(1).replace('.', ',');
+}
+
+/** Iniciales de un avatar sin foto: «Diego Ramírez» → «DR», «ana» → «A». */
+export function personInitials(name: string): string {
+  const parts = name.trim().split(/\s+/u).filter(Boolean);
+  const letters = (parts.length > 1 ? [parts[0], parts[parts.length - 1]] : parts.slice(0, 1)).map((part) =>
+    (part ?? '').charAt(0).toUpperCase(),
+  );
+  return letters.join('') || '?';
+}

@@ -72,8 +72,15 @@ export function ScrollScreen({
   onRefresh,
   overlay,
   refreshing = false,
+  hero,
 }: {
   children: ReactNode;
+  /**
+   * Portada a sangre arriba del todo: ocupa el ancho completo (sin el margen
+   * lateral) y se mete bajo la barra de estado. Se encarga ella de su área
+   * segura superior.
+   */
+  hero?: ReactNode;
   /**
    * Centres content vertically when it is shorter than the viewport. For pages
    * that are a single short form — on a tablet those otherwise sit in the top
@@ -111,6 +118,7 @@ export function ScrollScreen({
         ref={scrollRef}
         contentContainerStyle={{
           ...frame.contentPadding,
+          ...(hero ? { paddingTop: 0 } : null),
           gap: screenGap,
           // flexGrow lets a short page fill the viewport so it can centre; a
           // tall one still scrolls normally because the content wins over it.
@@ -119,6 +127,17 @@ export function ScrollScreen({
         {...SCREEN_SCROLL_BEHAVIOUR}
         refreshControl={screenRefreshControl(onRefresh, refreshing)}
       >
+        {hero ? (
+          <View
+            style={{
+              marginLeft: -(frame.gutter + frame.insets.left),
+              marginRight: -(frame.gutter + frame.insets.right),
+              marginBottom: -spacing.md,
+            }}
+          >
+            {hero}
+          </View>
+        ) : null}
         {children}
       </ScrollView>
     </ScreenChrome>

@@ -47,7 +47,10 @@ export type RoutineCard = {
   visibilidad: string;
   esOficial: boolean;
   esMia: boolean;
-  autor: { id: string; nombre: string };
+  /** `fotoUrl`: primera foto de perfil visible; ausente con un backend anterior. */
+  autor: { id: string; nombre: string; fotoUrl?: string | null };
+  /** Imagen de un ejercicio de la rutina para la portada de la tarjeta. */
+  portadaUrl?: string | null;
   atribucion: { routineName: string; authorId: string | null; authorName: string } | null;
   /** Rutina original si esta es una copia guardada (C2). */
   basadaEnRutinaId?: string | null;

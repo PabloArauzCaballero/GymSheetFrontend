@@ -26,7 +26,8 @@ export const routineCardSchema = z.object({
   visibilidad: z.string(),
   esOficial: z.boolean(),
   esMia: z.boolean(),
-  autor: z.object({ id: z.string(), nombre: z.string() }),
+  autor: z.object({ id: z.string(), nombre: z.string(), fotoUrl: z.string().nullable().optional() }),
+  portadaUrl: z.string().nullable().optional(),
   atribucion: z
     .object({ routineName: z.string(), authorId: z.string().nullable(), authorName: z.string() })
     .nullable(),

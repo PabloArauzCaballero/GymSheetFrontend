@@ -128,6 +128,8 @@ export const routineSchema = z.object({
   estadoModeracion: z.string(),
   esMia: z.boolean(),
   puedoEditar: z.boolean(),
+  autor: z.object({ id: z.string(), nombre: z.string(), fotoUrl: z.string().nullable() }).nullable().optional(),
+  portadaUrl: z.string().nullable().optional(),
   fechaCreacion: z.string(),
   fechaActualizacion: z.string(),
 });

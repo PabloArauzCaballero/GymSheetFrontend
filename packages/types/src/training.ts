@@ -104,6 +104,10 @@ export type Routine = {
   /** Lo calcula el backend para quien mira. */
   esMia: boolean;
   puedoEditar: boolean;
+  /** Quién la creó (solo en el detalle). Ausente con un backend anterior. */
+  autor?: { id: string; nombre: string; fotoUrl: string | null } | null;
+  /** La misma portada que la tarjeta del catálogo (solo en el detalle). */
+  portadaUrl?: string | null;
   fechaCreacion: string;
   fechaActualizacion: string;
 };

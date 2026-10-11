@@ -11,6 +11,7 @@ import {
   type ProfileGender,
 } from '@gymsheet/domain';
 import type { Exercise, ExerciseMedia } from '@gymsheet/types';
+import { Shimmer } from '@/components/shimmer';
 import { colors, fontSizes, iconSizes, motion, radii, semibold, spacing } from '@/theme';
 
 /**
@@ -31,6 +32,11 @@ export function primaryMedia(exercise: Pick<Exercise, 'media'>): ExerciseMedia |
 function posterOf(exercise: Pick<Exercise, 'media'>): { uri: string; altText: string } | null {
   const poster = selectExercisePoster(exercise.media, null);
   return poster ? { uri: poster.url, altText: poster.altText } : null;
+}
+
+/** ¿Tiene el ejercicio alguna imagen que enseñar (lámina o póster)? */
+export function hasArtwork(exercise: Pick<Exercise, 'media'>): boolean {
+  return primaryMedia(exercise) !== null || posterOf(exercise) !== null;
 }
 
 /**
@@ -108,6 +114,13 @@ export function ExerciseImage({
   // antes dejaba la tarjeta con el icono genérico.
   const uri = media?.url ?? media?.thumbnailUrl ?? poster?.uri ?? null;
   const altText = media?.altText || poster?.altText || exercise.nombre;
+  const [loaded, setLoaded] = useState(false);
+
+  // Una lámina del catálogo (foto o render a 2000 px) llena su marco; la
+  // ilustración sobre blanco (póster del vídeo, GIF) va sobre la placa
+  // «papel». Antes todo iba sobre la placa con margen, y una foto oscura
+  // quedaba enmarcada en crema (captura de TestFlight del 2026-10-11).
+  const photo = media?.mediaType === 'IMAGE' && media.url === uri;
 
   const frame = isHero
     ? { width: HERO_SIZE, height: HERO_SIZE, alignSelf: 'center' as const }
@@ -131,25 +144,33 @@ export function ExerciseImage({
         // Placa «papel» (C8.1), nunca `#ffffff`: las ilustraciones del dataset
         // vienen sobre blanco y, multiplicadas sobre la placa, el blanco toma su
         // tono cálido y la figura se lee como una lámina de manual.
-        backgroundColor: uri ? colors.plate : colors.surfaceHighest,
-        padding: !uri ? 0 : typeof size === 'number' ? Math.round(size * 0.06) : size === 'fill' ? spacing.sm : 0,
+        backgroundColor: uri && !photo ? colors.plate : colors.surfaceHighest,
+        padding:
+          !uri || photo ? 0 : typeof size === 'number' ? Math.round(size * 0.06) : size === 'fill' ? spacing.sm : 0,
         alignItems: 'center',
         justifyContent: 'center',
       }}
     >
       {uri ? (
-        <View style={{ width: '100%', height: '100%', mixBlendMode: 'multiply' }}>
-        <Image
-          accessibilityLabel={altText}
-          accessible
-          cachePolicy="memory-disk"
-          // `contain` siempre: recortar la figura le corta las extremidades, y
-          // sobre la placa el encuadre ya es consistente.
-          contentFit="contain"
-          source={{ uri }}
-          style={{ width: '100%', height: '100%' }}
-          transition={reduceMotion ? 0 : motion.enter}
-        />
+        <View
+          style={{
+            width: '100%',
+            height: '100%',
+            mixBlendMode: photo ? 'normal' : 'multiply',
+          }}
+        >
+          <Image
+            accessibilityLabel={altText}
+            accessible
+            cachePolicy="memory-disk"
+            // Ilustración: `contain`, recortarla le corta las extremidades.
+            // Foto: `cover`, que llene el cuadro sin bandas.
+            contentFit={photo ? 'cover' : 'contain'}
+            onLoad={() => setLoaded(true)}
+            source={{ uri }}
+            style={{ width: '100%', height: '100%' }}
+            transition={reduceMotion ? 0 : motion.enter}
+          />
         </View>
       ) : (
         <Ionicons
@@ -161,6 +182,7 @@ export function ExerciseImage({
           size={isHero ? iconSizes.xl : iconSizes.lg}
         />
       )}
+      {uri && !loaded ? <Shimmer /> : null}
     </Frame>
   );
 }
@@ -283,7 +305,13 @@ function ExerciseVideo({
         >
           <Ionicons color={colors.background} name="play" size={iconSizes.lg} />
         </View>
-        <Text style={{ color: colors.text, fontSize: fontSizes.xs, fontWeight: semibold }}>
+        <Text
+          style={{
+            color: colors.text,
+            fontSize: fontSizes.xs,
+            fontWeight: semibold,
+          }}
+        >
           Ver la técnica
         </Text>
       </View>

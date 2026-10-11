@@ -19,12 +19,13 @@ import { trainingGoals, type TrainingGoal } from '@gymsheet/types';
 import { ApiError } from '@gymsheet/api-client';
 import { profileService, routineService, routineSharingService } from '@/api/services';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
+import { EmptyState, ErrorState } from '@/components/feedback';
 import { FilterChip } from '@/components/filter-chip';
 import { ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { TourTarget, useScreenTour } from '@/components/tour';
-import { ExploreExercisesButton } from '@/features/exercise-browser/explore-exercises-button';
+import { QuickActions } from '@/features/routine-catalog/quick-actions';
+import { routes } from '@/lib/routes';
 import { Button, Input } from '@/components/ui';
 import { WeekPlan } from '@/components/week-plan';
 import { useActivePrograms } from '@/features/programs/use-active-programs';
@@ -34,7 +35,7 @@ import { CatalogFiltersSheet } from '@/features/routine-catalog/catalog-filters'
 import { CatalogTabBar, MineChips, ResultCount } from '@/features/routine-catalog/catalog-tab-bar';
 import { InvitationCard } from '@/features/routine-catalog/invitation-card';
 import { ForYouBlock } from '@/features/routine-catalog/for-you-block';
-import { RoutineCardView } from '@/features/routine-catalog/routine-card';
+import { RoutineCardSkeleton, RoutineCardView } from '@/features/routine-catalog/routine-card';
 import { useRecommendedRoutines } from '@/features/routine-catalog/use-recommended-routines';
 import { useRoutineCatalog } from '@/features/routine-catalog/use-routine-catalog';
 import { GOAL_LABEL } from '@/lib/format';
@@ -130,35 +131,41 @@ export function RoutinesCatalogScreen() {
       refreshing={catalog.isRefetching}
     >
       <ScreenHeader title="Rutinas" tourKey="routines" />
-      {/* Cabecera: dos acciones secundarias compactas. La principal de la
+      {/* Cabecera: accesos en casillas iguales. La acción principal de la
           pantalla es elegir una rutina (la de «Para ti»), no crearla. */}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: -spacing.sm }}>
-        <ExploreExercisesButton size="sm" />
-        <TourTarget id="routines.create">
-          <Button
-            icon="add"
-            label="Crear rutina"
-            onPress={() => router.push('/routines/new')}
-            size="sm"
-            testID="create-routine"
-            variant="secondary"
-          />
-        </TourTarget>
-      </View>
+      <TourTarget id="routines.create">
+        <QuickActions
+          actions={[
+            {
+              key: 'create',
+              label: 'Crear rutina',
+              icon: 'add',
+              onPress: () => router.push('/routines/new'),
+              testID: 'create-routine',
+            },
+            {
+              key: 'exercises',
+              label: 'Explorar ejercicios',
+              icon: 'search-outline',
+              onPress: () => router.push(routes.exercises()),
+            },
+            ...(programs.data && !programs.data.cardio
+              ? [
+                  {
+                    key: 'cardio',
+                    label: 'Plan de cardio',
+                    icon: 'pulse-outline' as const,
+                    onPress: () => router.push('/routines/cardio/new'),
+                  },
+                ]
+              : []),
+          ]}
+        />
+      </TourTarget>
 
       {programs.data?.fuerza ? <StrengthProgramCard program={programs.data.fuerza} /> : null}
       {programs.data?.cardio ? (
         <CardioProgramCard program={programs.data.cardio} strengthToday={strengthToday} />
-      ) : null}
-      {programs.data && !programs.data.cardio ? (
-        <Button
-          icon="pulse-outline"
-          label="Añadir plan de cardio"
-          onPress={() => router.push('/routines/cardio/new')}
-          size="sm"
-          style={{ alignSelf: 'flex-start' }}
-          variant="ghost"
-        />
       ) : null}
 
       {assigned.length > 0 ? (
@@ -176,7 +183,13 @@ export function RoutinesCatalogScreen() {
         <MineChips onChange={setChip} pendingInvitations={pending} value={chip} />
       ) : null}
 
-      <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-end' }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          gap: spacing.sm,
+          alignItems: 'flex-end',
+        }}
+      >
         <View style={{ flex: 1 }}>
           <Input
             autoCapitalize="none"
@@ -210,7 +223,13 @@ export function RoutinesCatalogScreen() {
             testID="open-filters"
           >
             <Ionicons color={colors.text} name="options-outline" size={iconSizes.md} />
-            <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
+            <Text
+              style={{
+                color: colors.text,
+                fontSize: fontSizes.sm,
+                fontWeight: semibold,
+              }}
+            >
               {count > 0 ? `Filtros (${count})` : 'Filtros'}
             </Text>
           </PressableScale>
@@ -233,7 +252,12 @@ export function RoutinesCatalogScreen() {
             <FilterChip
               key={goal}
               label={GOAL_LABEL[goal]}
-              onPress={() => setFilters({ ...filters, objetivo: filters.objetivo === goal ? null : goal })}
+              onPress={() =>
+                setFilters({
+                  ...filters,
+                  objetivo: filters.objetivo === goal ? null : goal,
+                })
+              }
               selected={filters.objetivo === goal}
               testID={`goal-chip-${goal}`}
             />
@@ -241,13 +265,6 @@ export function RoutinesCatalogScreen() {
         </ScrollView>
       ) : null}
 
-      {tab === 'public' ? (
-        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-          Orden: {ORDER_LABELS[filters.orden]}
-          {filters.deMiGimnasio ? ' · De mi gimnasio' : ''}
-          {profileGoal && filters.objetivo === profileGoal ? ' · Tu objetivo' : ''}
-        </Text>
-      ) : null}
 
       <CatalogFiltersSheet
         onChange={setFilters}
@@ -257,10 +274,9 @@ export function RoutinesCatalogScreen() {
       />
 
       {catalog.isPending ? (
-        <View style={{ gap: spacing.sm }}>
-          <Skeleton height={132} />
-          <Skeleton height={132} />
-          <Skeleton height={132} />
+        <View style={{ gap: spacing.md }}>
+          <RoutineCardSkeleton />
+          <RoutineCardSkeleton />
         </View>
       ) : catalog.isError && !catalog.data ? (
         <ErrorState error={catalog.error} onRetry={() => void catalog.refetch()} />
@@ -285,7 +301,7 @@ export function RoutinesCatalogScreen() {
           ) : null}
         </EmptyState>
       ) : (
-        <View style={{ gap: spacing.sm }}>
+        <View style={{ gap: spacing.md }}>
           {catalog.isError ? (
             <Text
               accessibilityRole="alert"
@@ -295,7 +311,16 @@ export function RoutinesCatalogScreen() {
               Sin conexión. Mostramos lo último que cargó.
             </Text>
           ) : null}
-          <ResultCount hasMore={catalog.hasNextPage} shown={cards.length} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
+            <ResultCount hasMore={catalog.hasNextPage} shown={cards.length} />
+            {tab === 'public' ? (
+              <Text numberOfLines={1} style={{ flexShrink: 1, color: colors.textMuted, fontSize: fontSizes.sm }}>
+                Orden: {ORDER_LABELS[filters.orden]}
+                {filters.deMiGimnasio ? ' · De mi gimnasio' : ''}
+                {profileGoal && filters.objetivo === profileGoal ? ' · Tu objetivo' : ''}
+              </Text>
+            ) : null}
+          </View>
           {pendingCards.map((card) => (
             <InvitationCard card={card} key={card.id} onAccepted={open} />
           ))}

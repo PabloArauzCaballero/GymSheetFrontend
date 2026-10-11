@@ -12,19 +12,19 @@ import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { ScheduleRoutine } from '@/components/schedule-routine';
 import { DetailActions, type PrimaryIntent } from '@/features/routine-detail/detail-actions';
-import { DetailCover } from '@/features/routine-detail/detail-cover';
 import { DetailHeader } from '@/features/routine-detail/detail-header';
+import { DetailHero } from '@/features/routine-detail/detail-hero';
 import { DetailSocial } from '@/features/routine-detail/detail-social';
 import { DayCard } from '@/features/routine-detail/day-cards';
-import { MoreButton, MoreSheet, type MoreAction } from '@/features/routine-detail/more-sheet';
+import { MoreSheet, type MoreAction } from '@/features/routine-detail/more-sheet';
 import { ReportSheet, type ReportTarget } from '@/features/routine-detail/report-sheet';
-import { cardCopyNumber, coverExercises, ownCopiesOf, todayWeekday } from '@/features/routine-detail/routine-plan';
+import { cardCopyNumber, ownCopiesOf, todayWeekday } from '@/features/routine-detail/routine-plan';
 import { useRoutineActions } from '@/features/routine-detail/use-routine-actions';
 import { useStartRoutine } from '@/features/routine-detail/use-start-routine';
 import { VersionBanner } from '@/features/routine-detail/version-banner';
 import { WeekSection, type ViewMode } from '@/features/routine-detail/week-section';
 import { useActivePrograms } from '@/features/programs/use-active-programs';
-import { spacing } from '@/theme';
+import { radii, spacing } from '@/theme';
 
 /**
  * Detalle de rutina (C8.3.1, C1, C2): portada en mosaico, hechos, **un solo CTA
@@ -36,7 +36,6 @@ export function RoutineDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [mode, setMode] = useState<ViewMode>('week');
-  const [weekNumber, setWeekNumber] = useState(1);
   const [ignored, setIgnored] = useState(false);
   const [report, setReport] = useState<ReportTarget | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -69,15 +68,27 @@ export function RoutineDetailScreen() {
   const columns = useMemo(() => (data ? routineColumns(data) : []), [data]);
   const weeks = calendar.data?.semanas ?? [];
   const total = calendar.data?.duracionSemanas ?? weeks.length;
-  const week = weeks.find((candidate) => candidate.numero === weekNumber) ?? weeks[0];
 
   if (routine.isPending) {
     return (
-      <ScrollScreen>
-        <BackLink />
-        <Skeleton height={196} />
-        <Skeleton height={120} />
-        <Skeleton height={180} />
+      <ScrollScreen hero={<Skeleton height={360} radius={0} />}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.smd,
+          }}
+        >
+          <Skeleton height={44} radius={radii.full} width={44} />
+          <View style={{ flex: 1, gap: spacing.xs }}>
+            <Skeleton height={12} radius={radii.xs} width="30%" />
+            <Skeleton height={18} radius={radii.xs} width="55%" />
+          </View>
+        </View>
+        <Skeleton height={92} />
+        <Skeleton height={56} radius={radii.lg} />
+        <Skeleton height={104} />
+        <Skeleton height={104} />
       </ScrollScreen>
     );
   }
@@ -111,11 +122,18 @@ export function RoutineDetailScreen() {
   const copyNumber = latestCopy ? cardCopyNumber(latestCopy) : null;
 
   const openDay = (diaId: string, semana: number) =>
-    router.push({ pathname: '/routines/[id]/dia/[diaId]', params: { id: data.id, diaId, semana: String(semana) } });
+    router.push({
+      pathname: '/routines/[id]/dia/[diaId]',
+      params: { id: data.id, diaId, semana: String(semana) },
+    });
 
   const onPrimary = () => {
     if (intent === 'save') actions.copy();
-    else if (intent === 'activate') router.push({ pathname: '/routines/activate/[id]', params: { id: data.id } });
+    else if (intent === 'activate')
+      router.push({
+        pathname: '/routines/activate/[id]',
+        params: { id: data.id },
+      });
     else start.mutate(todayDayId);
   };
 
@@ -124,12 +142,21 @@ export function RoutineDetailScreen() {
       setSharing(true);
       return;
     }
-    void Share.share({ message: `«${data.nombre}» en REPP · gymsheet://routines/${data.id}` });
+    void Share.share({
+      message: `«${data.nombre}» en REPP · gymsheet://routines/${data.id}`,
+    });
   };
 
   const more: MoreAction[] = [
     ...(data.esMia && !isPublic
-      ? [{ key: 'publish', label: 'Publicar', icon: 'globe-outline' as const, onPress: () => void actions.publish() }]
+      ? [
+          {
+            key: 'publish',
+            label: 'Publicar',
+            icon: 'globe-outline' as const,
+            onPress: () => void actions.publish(),
+          },
+        ]
       : []),
     ...(data.esMia && isPublic
       ? [{ key: 'unpublish', label: 'Despublicar', icon: 'eye-off-outline' as const, onPress: () => void actions.unpublish() }]
@@ -148,35 +175,45 @@ export function RoutineDetailScreen() {
   ];
 
   return (
-    <ScrollScreen onRefresh={() => void routine.refetch()} refreshing={routine.isRefetching}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <BackLink />
-        {more.length > 0 ? <MoreButton onPress={() => setMoreOpen(true)} /> : null}
-      </View>
-
+    <ScrollScreen
+      hero={<DetailHero onMore={more.length > 0 ? () => setMoreOpen(true) : undefined} routine={data} />}
+      onRefresh={() => void routine.refetch()}
+      refreshing={routine.isRefetching}
+    >
       <View style={{ gap: spacing.lg }}>
-        <DetailCover exercises={coverExercises(data)} />
-        <DetailHeader routine={data} />
-        <DetailActions
-          existingCopy={
-            latestCopy
-              ? { id: latestCopy.id, label: copyNumber ? savedCopyLabel(copyNumber) : 'Ya la guardaste' }
-              : null
+        <DetailHeader
+          actions={
+            <DetailActions
+              existingCopy={
+                latestCopy
+                  ? {
+                      id: latestCopy.id,
+                      label: copyNumber ? savedCopyLabel(copyNumber) : 'Ya la guardaste',
+                    }
+                  : null
+              }
+              intent={intent}
+              onOpenCopy={(copyId) =>
+                router.push({
+                  pathname: '/routines/[id]',
+                  params: { id: copyId },
+                })
+              }
+              onPrimary={onPrimary}
+              onShare={onShare}
+              onTryDay={intent === 'train' ? undefined : () => start.mutate(undefined)}
+              primaryDisabledReason={
+                intent === 'activate' && !canActivateProgram(data)
+                  ? data.estado === 'ARCHIVED'
+                    ? 'Está archivada: no se puede activar.'
+                    : 'Añade ejercicios para poder activarla.'
+                  : undefined
+              }
+              primaryLoading={intent === 'save' ? actions.copying : intent === 'train' ? start.isPending : false}
+              tryingDay={intent !== 'train' && start.isPending}
+            />
           }
-          intent={intent}
-          onOpenCopy={(copyId) => router.push({ pathname: '/routines/[id]', params: { id: copyId } })}
-          onPrimary={onPrimary}
-          onShare={onShare}
-          onTryDay={intent === 'train' ? undefined : () => start.mutate(undefined)}
-          primaryDisabledReason={
-            intent === 'activate' && !canActivateProgram(data)
-              ? data.estado === 'ARCHIVED'
-                ? 'Está archivada: no se puede activar.'
-                : 'Añade ejercicios para poder activarla.'
-              : undefined
-          }
-          primaryLoading={intent === 'save' ? actions.copying : intent === 'train' ? start.isPending : false}
-          tryingDay={intent !== 'train' && start.isPending}
+          routine={data}
         />
       </View>
 
@@ -202,13 +239,10 @@ export function RoutineDetailScreen() {
           loading={calendar.isPending}
           mode={mode}
           onMode={setMode}
-          onNext={() => setWeekNumber((n) => Math.min(total, n + 1))}
           onOpenDay={openDay}
-          onPrev={() => setWeekNumber((n) => Math.max(1, n - 1))}
           onRetry={() => void calendar.refetch()}
           routine={data}
           total={total}
-          week={week}
           weeks={weeks}
         />
       )}
