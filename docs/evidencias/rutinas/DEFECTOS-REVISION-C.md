@@ -1,0 +1,21 @@
+# Defectos hallados en la revisión humana RF-14..20, B3 y C3
+
+Fuente: `revisiones-cierre-C.json` (225 capturas abiertas una a una). Las claves `DEFECTO D-Cn` de cada frase remiten a esta lista. No se ha tocado código.
+
+| ID | Gravedad | Dónde | Qué se ve | Pasos para reproducir |
+|---|---|---|---|---|
+| D-C1 | Baja | RF-14 p01 (a2-fechas, 4 variantes web) | Fechas con «De» en mayúscula: «Sábado, 10 De Octubre». | Rutinas > rutina propia > Activar > Paso 1 de 3 (Fechas). |
+| D-C2 | Media | RF-14 p01 y p03 en tema claro (1440 y 390) | Segmentos 2..n de la barra de progreso casi invisibles sobre fondo claro. | Mismo flujo en tema claro; mirar la barra de progreso. |
+| D-C3 | Media | RF-14 p03 oscuro (1440 y 390) | Cuerpo del aviso «Guardada en tus rutinas / Es tuya…» en gris casi ilegible sobre negro. | Guardar una rutina ajena, activarla teniendo otro programa activo, tema oscuro. |
+| D-C4 | Baja | RF-15 p02 (1440, 390) | «¡Sube a 62.5 kg! Próxima: 62,5 kg.» mezcla punto y coma decimal. | Terminar sesión de sobrecarga progresiva con 3x12 a 60 kg. |
+| D-C5 | Media | Transversal: RF-15 p02/p03b, RF-16 p04, RF-17 p04/p05, RF-18 p02/p04, RF-20 p01/p02a/p03a, RF-B3 p02/p04, RF-C3 p02/p03 | Defectos de captura/maquetación: costura en la imagen de página completa (tarjeta cortada, «0» suelto, botón «Abrir recompensa» a medias, falta el primer ejercicio), barra lateral desplazada a media página (1440), barra flotante «Descanso / Terminar entreno» superpuesta a mitad de página (390), velo del modal cortado. | Abrir la pantalla indicada en viewport 390 o 1440 y capturar página completa con scroll; ver los archivos citados en el JSON. A confirmar si es solo artefacto de captura o un `position: sticky/fixed` real. |
+| D-C6 | Media (a confirmar) | RF-15 p05 (4 variantes) | «Semana de descarga: carga al 90 %» y «Sugerido: 53,75 kg» (no múltiplo de disco), mientras el paso esperaba «no cambia el peso». | Programa de sobrecarga con 60 kg en semana de descarga; abrir la página del programa. |
+| D-C7 | Baja | RF-16 p03, RF-B3 p01/p02/p03 | Decimales con punto («122.5 → 125 kg», «×1.20», «×1.00») frente al resto de la app con coma; en B3 la cabecera sigue «multiplicador ×1.00» tras recalcular. | Programa de metas (web) y ficha de soporte `/admin/users/<id>/training`. |
+| D-C8 | Baja | RF-16 p04 (4 variantes) | «¡Nueva marca! barbell bench press» con el nombre del ejercicio duplicado en el trofeo. | Terminar sesión con marca nueva en un programa de metas. |
+| D-C9 | Alta | RF-16 p04c (4 variantes) | Aviso «¡Meta alcanzada!» con fecha acabada en «· IN_APP» (código crudo de canal) y texto con ejercicio en inglés. | Alcanzar la meta y abrir Avisos. |
+| D-C10 | Media | RF-17 p02a (4 variantes) | Desplegable Actividad muestra «stationary bike walk» (inglés del catálogo) aunque la modalidad es Bici. | Cardio > Registrar una sesión. |
+| D-C11 | Media | RF-17 p03 (4 variantes) | Semana 1 «96 / 30 min · 3 de 1 sesiones» (contador por encima del objetivo, redacción incoherente). | Programa de cardio con semana de entrada parcial y 3 sesiones registradas. |
+| D-C12 | Alta | RF-18 p02 (4 variantes), RF-B3 p04 (4 variantes) | Modal de tour «BIENVENIDO A GYMSHEET ¡Hola! 1/5» cubre la pantalla bajo evidencia; en B3 p04 además error genérico «Algo salió mal» en vez de mensaje claro de falta de permiso y el rol crudo «FRONT_DESK» en el subtítulo de Administración. | Cuenta nueva sin tour descartado; abrir la pantalla (trayectoria/ programa o admin de otro gimnasio). |
+| D-C13 | Media | RF-18 p03 (4 variantes) | Insignia «Cuatro semanas de sob…» truncada (390 y 1440 en rejilla de 3 col.), todas las insignias muestran «+0 pts», bloqueadas casi invisibles en oscuro. | Tu senda > Insignias con la insignia del modo ganada. |
+| D-C14 | Media | RF-20 p03 (4 variantes) | La captura «rutina no cambia» es idéntica a la de «rutina actualizada» (65 kg y lunge añadido): no demuestra que no cambió. | Repetir RF-20: terminar sesión con cambios, elegir «Solo esta vez», abrir el detalle y comparar con la rutina original. |
+| D-C15 | Media | RF-B3 p02 idempotente 390 oscuro y semana-sigue-sin-cumplir 390 oscuro | Botón Recalcular atenuado con doble icono (spinner + refrescar) tras finalizar la acción; estado de carga no se limpia. | Soporte > Recalcular en 390 oscuro, esperar el aviso. |

@@ -6,6 +6,7 @@ import type { ProgramSessionExtras } from '@gymsheet/types';
 import { programService, routineService } from '@/api/services';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Card } from '@/components/layout';
+import { describeSessionCount, showsModeBonus } from '@/features/programs/session-block-copy';
 import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
 import { colors, fontSizes, semibold, spacing } from '@/theme';
@@ -66,11 +67,9 @@ export function SessionProgramBlock({ workoutId, block }: { workoutId: string; b
         <View style={{ gap: spacing.sm }} testID="session-program">
           <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>Tu programa</Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-            {block.sesionCuenta
-              ? `Esta sesión cuenta: ${block.sesionesHechasSemana} de ${block.sesionesPlanSemana} de la semana${block.semana ? ` ${block.semana}` : ''}.`
-              : (block.motivoNoCuenta ?? 'Esta sesión no cuenta para la semana.')}
+            {describeSessionCount(block)}
           </Text>
-          {block.bonusModo ? (
+          {showsModeBonus(block) && block.bonusModo ? (
             <Text style={{ color: colors.volt, fontSize: fontSizes.md, fontWeight: semibold }} testID="mode-bonus">
               +{block.bonusModo.puntosPrevistos} por {block.modo === 'STRENGTH_GOALS' ? 'metas' : 'sobrecarga'} ({multiplierLabel(block.bonusModo.proximoMultiplicador)} al cumplir la semana)
             </Text>

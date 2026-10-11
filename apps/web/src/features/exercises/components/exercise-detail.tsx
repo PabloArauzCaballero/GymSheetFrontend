@@ -1,6 +1,7 @@
 'use client';
 
-import { selectExerciseVideo } from '@gymsheet/domain';
+import { exerciseOriginLabel, exerciseStatusLabel, exerciseTypeLabel } from '@/features/exercises/origin-labels';
+import { bodyPartLabelEs, exerciseGroupLabelEs, muscleLabelEs, selectExerciseVideo } from '@gymsheet/domain';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Dumbbell, Heart, Pencil, Play, Target, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -90,6 +91,7 @@ export function ExerciseDetail({
     item.tipoEjercicio === 'PERSONAL' && item.createdByUsuarioId === currentUserId;
   const canManageMedia =
     ownsPersonalExercise || (item.tipoEjercicio === 'GLOBAL' && role === 'ADMIN');
+  const originLabel = exerciseOriginLabel(item.dataSource);
   const media = item.media.find((entry) => entry.isPrimary) ?? item.media[0];
   const video = selectExerciseVideo(item.media, account.data?.genero ?? null);
   const instructions =
@@ -183,13 +185,12 @@ export function ExerciseDetail({
           </div>
           <div className="p-6 sm:p-8">
             <div className="flex flex-wrap gap-2">
-              <Badge tone="success">{item.estado}</Badge>
+              <Badge tone="success">{exerciseStatusLabel(item.estado)}</Badge>
               <Badge tone={item.tipoEjercicio === 'PERSONAL' ? 'info' : 'neutral'}>
-                {item.tipoEjercicio}
+                {exerciseTypeLabel(item.tipoEjercicio)}
               </Badge>
-              <Badge>{item.dataSource}</Badge>
             </div>
-            <p className="data-label mt-7 text-[var(--text-muted)]">{item.grupoMuscular}</p>
+            <p className="data-label mt-7 text-[var(--text-muted)]">{exerciseGroupLabelEs(item.grupoMuscular)}</p>
             <h1 className="mt-3 break-words text-3xl font-semibold tracking-[-0.02em] sm:text-5xl">
               {item.nombre}
             </h1>
@@ -199,6 +200,9 @@ export function ExerciseDetail({
             <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--text-muted)]">
               {item.descripcion ?? 'Sin descripción adicional.'}
             </p>
+            {originLabel ? (
+              <p className="mt-4 text-xs text-[var(--text-muted)]">Origen: {originLabel}</p>
+            ) : null}
           </div>
         </div>
         <div className="grid content-start gap-5">
@@ -208,16 +212,16 @@ export function ExerciseDetail({
               <div className="flex items-center gap-3">
                 <Target className="size-5 text-[var(--accent-ink)]" />
                 <div>
-                  <p className="text-sm font-semibold">{item.targetMuscle ?? 'No especificado'}</p>
+                  <p className="text-sm font-semibold">{muscleLabelEs(item.targetMuscle) || 'No especificado'}</p>
                   <p className="text-xs text-[var(--text-muted)]">Músculo objetivo</p>
                 </div>
               </div>
               <div className="border-t border-[var(--border-subtle)] pt-4 text-sm text-[var(--text-muted)]">
                 <p>
-                  Parte corporal: <span className="text-[var(--text)]">{item.bodyPart ?? '—'}</span>
+                  Parte corporal: <span className="text-[var(--text)]">{bodyPartLabelEs(item.bodyPart) || '—'}</span>
                 </p>
                 <p className="mt-2">
-                  Sinergista: <span className="text-[var(--text)]">{item.synergistMuscleGroup ?? '—'}</span>
+                  Sinergista: <span className="text-[var(--text)]">{exerciseGroupLabelEs(item.synergistMuscleGroup) || '—'}</span>
                 </p>
               </div>
             </CardContent>

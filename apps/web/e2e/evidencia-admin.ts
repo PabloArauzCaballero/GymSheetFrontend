@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test as base, type Page } from '@playwright/test';
+import { marcarTourVisto } from './tour-visto';
 
 /**
  * Evidencia visual del plan de rutinas REPP (`06_PRUEBAS_Y_EVIDENCIA.md`, DoD-3).
@@ -116,19 +117,11 @@ export const test = base.extend<Fixtures>({
  */
 const ROTULOS_DEL_MENU = 'nav[aria-label="Navegación principal"] p';
 
-/**
- * El aviso emergente de «No tienes permiso…» es de una librería de avisos y su
- * descripción no llega a 4,5:1 en el tema oscuro (1,84:1). Es transitorio y
- * ajeno a estas pantallas; también queda en el informe como hallazgo.
- */
-const AVISOS_EMERGENTES = '[data-sonner-toaster]';
-
 /** Sin violaciones graves o críticas de WCAG A/AA en lo que hay a la vista. */
 async function sinViolacionesGraves(page: Page, etiqueta: string): Promise<void> {
   const resultado = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa'])
     .exclude(ROTULOS_DEL_MENU)
-    .exclude(AVISOS_EMERGENTES)
     .analyze();
   const graves = resultado.violations
     .filter((violation) => violation.impact === 'serious' || violation.impact === 'critical')
@@ -151,6 +144,8 @@ export async function evidencia(
   nombre: string,
   opciones: { sinAxe?: string } = {},
 ): Promise<string> {
+  // El tour de bienvenida de una cuenta nueva taparía lo que la captura debe probar.
+  await marcarTourVisto(page);
   await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
   const viewport = page.viewportSize()?.width ?? 0;
   const tema = await page.evaluate(() => (document.documentElement.dataset.theme === 'light' ? 'claro' : 'oscuro'));

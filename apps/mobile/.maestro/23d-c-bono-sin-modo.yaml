@@ -1,0 +1,36 @@
+# Parte C. # Lo lanza `run-23-bono.sh` (SQL de simulación entre partes: la sesión se retrocede 15 min porque un bono solo
+# se muestra si la sesión cuenta, y eso exige 10 min reales).
+
+# Recompensas de los modos (plan Rutinas REPP · F6): RF-18 p01 (bono en el resumen), p04 (sin modo, sin bono).
+# El cierre semanal y la racha están en los flujos 23a/23b/23c.
+appId: app.gymsheet.mobile
+name: 23d-c · Bono del modo - resumen sin modo
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+  BENCH: barbell bench press
+---
+- runFlow: login-as.subflow.yaml
+- openLink: gymsheet:///workouts/${SESSION}
+- extendedWaitUntil:
+    visible: 'En progreso'
+    timeout: 60000
+- repeat:
+    times: 4
+    commands:
+      - scroll
+- tapOn: 'Finalizar sesión'
+- tapOn: 'Finalizar'
+- extendedWaitUntil:
+    visible: 'Seguir|.*Insignia conseguida.*|.*subido de rango.*'
+    timeout: 60000
+- runFlow: cerrar-celebraciones.subflow.yaml
+- scrollUntilVisible:
+    element: 'Tu programa'
+- swipe:
+    start: 50%,75%
+    end: 50%,45%
+- assertNotVisible: '.*por sobrecarga.*'
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: RF-18_p04_sin-modo-no-hay-bono_ios_oscuro

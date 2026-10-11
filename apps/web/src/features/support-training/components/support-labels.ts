@@ -1,3 +1,4 @@
+import { formatMultiplier } from '@/shared/lib/numbers';
 import type { RecomputeResult } from '@/features/support-training/services/support-training-service';
 
 export const LANE_LABEL: Record<string, string> = {
@@ -35,7 +36,7 @@ export const label = (map: Record<string, string>, key: string) => map[key] ?? k
 export function recomputeMessage(result: RecomputeResult): string {
   switch (result.motivo) {
     case 'CUMPLIDA':
-      return `Semana recalculada: ahora cuenta como cumplida (multiplicador ×${result.multiplicador?.toFixed(2) ?? '—'}, bono de ${result.bono ?? 0} puntos).`;
+      return `Semana recalculada: ahora cuenta como cumplida (multiplicador ${formatMultiplier(result.multiplicador)}, bono de ${result.bono ?? 0} puntos).`;
     case 'YA_CUMPLIDA':
       return 'No hubo cambios: la semana ya estaba cumplida. Recalcular no resta ni duplica puntos.';
     case 'SIGUE_SIN_CUMPLIR':

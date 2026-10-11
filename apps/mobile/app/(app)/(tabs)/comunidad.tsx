@@ -1,14 +1,14 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, Text, View } from 'react-native';
+import { memo, useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, Text, View, type ListRenderItemInfo } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { trainingGoals } from '@gymsheet/types';
 import type { GymDirectoryEntry, PublicBranchSummary } from '@gymsheet/schemas';
 import { chatService, facilitiesService, progressionService, socialService } from '@/api/services';
-import { Card, ScrollScreen, Section, TourHelpButton } from '@/components/layout';
+import { Card, ListScreen, Section, TourHelpButton } from '@/components/layout';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { DirectoryCardFace, levelTitle } from '@/components/directory-card';
 import { NavRow } from '@/components/list';
@@ -672,6 +672,54 @@ function DirectoryViewToggle({
   );
 }
 
+type DirectoryItemProps = {
+  entry: GymDirectoryEntry;
+  index: number;
+  mode: DirectoryViewMode;
+  connecting: boolean;
+  messaging: boolean;
+  withdrawing: boolean;
+  onConnect: (userId: string) => void;
+  onMessage: (userId: string) => void;
+  onWithdraw: (connectionId: string) => void;
+  onViewProfile: (entry: GymDirectoryEntry) => void;
+};
+
+/**
+ * Una fila del directorio, memorizada: con la lista virtualizada, conectar con
+ * una persona repinta su fila y no las cincuenta. Por eso recibe manejadores
+ * estables que toman el id, y los ata aquí a su socio.
+ */
+const DirectoryItem = memo(function DirectoryItem({
+  entry,
+  index,
+  mode,
+  connecting,
+  messaging,
+  withdrawing,
+  onConnect,
+  onMessage,
+  onWithdraw,
+  onViewProfile,
+}: DirectoryItemProps) {
+  const shared = {
+    connecting,
+    entry,
+    index,
+    messaging,
+    onConnect: () => onConnect(entry.userId),
+    onMessage: () => onMessage(entry.userId),
+    onViewProfile: () => onViewProfile(entry),
+    onWithdraw: () => {
+      if (entry.connectionId) onWithdraw(entry.connectionId);
+    },
+    withdrawing,
+  };
+  return mode === 'cards' ? <DirectoryPersonCard {...shared} /> : <DirectoryPersonRow {...shared} />;
+});
+
+const directoryKey = (entry: GymDirectoryEntry) => entry.userId;
+
 export default function ComunidadScreen() {
   const router = useRouter();
   useScreenTour('comunidad');
@@ -747,133 +795,151 @@ export default function ComunidadScreen() {
     onError: (error: Error) => notify.error(error.message),
   });
 
+  const { mutate: connectTo } = connect;
+  const { mutate: messageTo } = message;
+  const { mutate: withdrawFrom } = withdraw;
+  const openProfile = useCallback(
+    (entry: GymDirectoryEntry) =>
+      router.push({
+        pathname: '/perfil/[userId]' as const,
+        params: {
+          userId: entry.userId,
+          displayName: entry.displayName,
+          photoUrl: entry.photoUrl ?? undefined,
+          objetivo: entry.objetivo ?? undefined,
+          branchName: entry.branchName ?? undefined,
+        },
+      }),
+    [router],
+  );
+  const connectingId = connect.isPending ? connect.variables : undefined;
+  const messagingId = message.isPending ? message.variables : undefined;
+  const withdrawingId = withdraw.isPending ? withdraw.variables : undefined;
+
+  const renderEntry = useCallback(
+    ({ item, index }: ListRenderItemInfo<GymDirectoryEntry>) => (
+      <DirectoryItem
+        connecting={connectingId === item.userId}
+        entry={item}
+        index={index}
+        messaging={messagingId === item.userId}
+        mode={viewMode}
+        onConnect={connectTo}
+        onMessage={messageTo}
+        onViewProfile={openProfile}
+        onWithdraw={withdrawFrom}
+        withdrawing={withdrawingId !== undefined && withdrawingId === item.connectionId}
+      />
+    ),
+    [connectTo, connectingId, messageTo, messagingId, openProfile, viewMode, withdrawFrom, withdrawingId],
+  );
+
   return (
-    <ScrollScreen onRefresh={() => void directory.refetch()} refreshing={directory.isFetching}>
-      <TourTarget id="comunidad.actions">
-        <CommunityHeader onOpenPreferences={() => setPrefsVisible(true)} />
-      </TourTarget>
+    <ListScreen
+      data={directory.data ?? []}
+      empty={
+        directory.isPending ? (
+          <Skeleton height={viewMode === 'cards' ? 420 : 220} />
+        ) : directory.isError ? (
+          <ErrorState error={directory.error} onRetry={() => void directory.refetch()} />
+        ) : (
+          <EmptyState
+            icon="people-outline"
+            message="Ajusta los filtros o vuelve más tarde."
+            title="Sin resultados"
+          />
+        )
+      }
+      // Sin cursor: `/me/gym-directory` devuelve una sola página (hasta 50
+      // socios), así que la lista no pide más al llegar al final.
+      header={
+        <>
+          <TourTarget id="comunidad.actions">
+            <CommunityHeader onOpenPreferences={() => setPrefsVisible(true)} />
+          </TourTarget>
 
-      <StoriesBar />
+          <StoriesBar />
 
-      <TourTarget id="comunidad.podium">
-        <PodiumPreview />
-      </TourTarget>
+          <TourTarget id="comunidad.podium">
+            <PodiumPreview />
+          </TourTarget>
 
-      <Input
-        autoCapitalize="none"
-        autoCorrect={false}
-        icon="search"
-        label="Buscar socios"
-        labelHidden
-        onChangeText={setQ}
-        placeholder="Nombre de un socio…"
-        returnKeyType="search"
-        value={q}
-      />
+          <Input
+            autoCapitalize="none"
+            autoCorrect={false}
+            icon="search"
+            label="Buscar socios"
+            labelHidden
+            onChangeText={setQ}
+            placeholder="Nombre de un socio…"
+            returnKeyType="search"
+            value={q}
+          />
 
-      <SearchPreferencesSheet
-        branches={branches}
-        filters={{ objetivo, setObjetivo, sucursalId, setSucursalId, genero, setGenero }}
-        onClose={() => setPrefsVisible(false)}
-        visible={prefsVisible}
-      />
+          <SearchPreferencesSheet
+            branches={branches}
+            filters={{ objetivo, setObjetivo, sucursalId, setSucursalId, genero, setGenero }}
+            onClose={() => setPrefsVisible(false)}
+            visible={prefsVisible}
+          />
 
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: spacing.md,
-        }}
-      >
-        <UIText accessibilityRole="header" variant="title">
-          Socios
-        </UIText>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-          {/* Tercera forma de mirar el mismo catálogo, pero no un modo de esta
-              pantalla: la baraja se decide arrastrando y ocupa la pantalla
-              entera, así que es un destino, no un ajuste del listado. Va junto
-              al conmutador porque es donde se elige cómo mirar, y se lleva los
-              filtros puestos para no reabrir un gimnasio recién acotado. */}
-          <TourTarget id="comunidad.discover">
-          <PressableScale
-            accessibilityLabel="Descubrir socios uno a uno"
-            onPress={() =>
-              router.push({
-                pathname: '/descubrir',
-                params: {
-                  objetivo: objetivo ?? undefined,
-                  sucursalId: sucursalId ?? undefined,
-                  genero: genero ?? undefined,
-                },
-              })
-            }
+          <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              gap: spacing.xs,
-              // La acción principal de Comunidad y el único acento (C8.3.7).
-              minHeight: minTouchTarget,
-              paddingHorizontal: spacing.md,
-              borderRadius: radii.full,
-              backgroundColor: colors.volt,
+              justifyContent: 'space-between',
+              gap: spacing.md,
             }}
           >
-            <Ionicons color={accentContrast()} name="flame" size={iconSizes.md} />
-            <UIText strong tone="onAccent" variant="subhead">
-              Descubrir
+            <UIText accessibilityRole="header" variant="title">
+              Socios
             </UIText>
-          </PressableScale>
-          </TourTarget>
-          <DirectoryViewToggle mode={viewMode} onChange={setViewMode} />
-        </View>
-      </View>
-
-      {directory.isPending ? (
-        <Skeleton height={viewMode === 'cards' ? 420 : 220} />
-      ) : directory.isError ? (
-        <ErrorState error={directory.error} onRetry={() => void directory.refetch()} />
-      ) : directory.data?.length ? (
-        <View style={{ gap: viewMode === 'cards' ? spacing.md : 0 }}>
-          {directory.data.map((entry, index) => {
-            const shared = {
-              connecting: connect.isPending && connect.variables === entry.userId,
-              entry,
-              index,
-              messaging: message.isPending && message.variables === entry.userId,
-              onConnect: () => connect.mutate(entry.userId),
-              onMessage: () => message.mutate(entry.userId),
-              onViewProfile: () =>
-                router.push({
-                  pathname: '/perfil/[userId]' as const,
-                  params: {
-                    userId: entry.userId,
-                    displayName: entry.displayName,
-                    photoUrl: entry.photoUrl ?? undefined,
-                    objetivo: entry.objetivo ?? undefined,
-                    branchName: entry.branchName ?? undefined,
-                  },
-                }),
-              onWithdraw: () => {
-                if (entry.connectionId) withdraw.mutate(entry.connectionId);
-              },
-              withdrawing: withdraw.isPending && withdraw.variables === entry.connectionId,
-            };
-
-            return viewMode === 'cards' ? (
-              <DirectoryPersonCard key={entry.userId} {...shared} />
-            ) : (
-              <DirectoryPersonRow key={entry.userId} {...shared} />
-            );
-          })}
-        </View>
-      ) : (
-        <EmptyState
-          icon="people-outline"
-          message="Ajusta los filtros o vuelve más tarde."
-          title="Sin resultados"
-        />
-      )}
-    </ScrollScreen>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+              {/* Tercera forma de mirar el mismo catálogo, pero no un modo de esta
+                  pantalla: la baraja se decide arrastrando y ocupa la pantalla
+                  entera, así que es un destino, no un ajuste del listado. Va junto
+                  al conmutador porque es donde se elige cómo mirar, y se lleva los
+                  filtros puestos para no reabrir un gimnasio recién acotado. */}
+              <TourTarget id="comunidad.discover">
+              <PressableScale
+                accessibilityLabel="Descubrir socios uno a uno"
+                onPress={() =>
+                  router.push({
+                    pathname: '/descubrir',
+                    params: {
+                      objetivo: objetivo ?? undefined,
+                      sucursalId: sucursalId ?? undefined,
+                      genero: genero ?? undefined,
+                    },
+                  })
+                }
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing.xs,
+                  // La acción principal de Comunidad y el único acento (C8.3.7).
+                  minHeight: minTouchTarget,
+                  paddingHorizontal: spacing.md,
+                  borderRadius: radii.full,
+                  backgroundColor: colors.volt,
+                }}
+              >
+                <Ionicons color={accentContrast()} name="flame" size={iconSizes.md} />
+                <UIText strong tone="onAccent" variant="subhead">
+                  Descubrir
+                </UIText>
+              </PressableScale>
+              </TourTarget>
+              <DirectoryViewToggle mode={viewMode} onChange={setViewMode} />
+            </View>
+          </View>
+        </>
+      }
+      itemGap={viewMode === 'cards' ? spacing.md : 0}
+      keyExtractor={directoryKey}
+      onRefresh={() => void directory.refetch()}
+      refreshing={directory.isFetching}
+      renderItem={renderEntry}
+    />
   );
 }

@@ -2,9 +2,9 @@ import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { AccessibilityInfo, View } from 'react-native';
-import { previousPerformance, topSet } from '@gymsheet/domain';
-import { transitionLabel } from '@gymsheet/hooks';
-import type { WorkoutExercise, WorkoutSetInput } from '@gymsheet/types';
+import { isTimedSet, longestTimedSet, previousPerformance, topSet } from '@gymsheet/domain';
+import { secondsLabel, transitionLabel } from '@gymsheet/hooks';
+import type { TimedWorkoutSetInput, WorkoutExercise, WorkoutSetInput } from '@gymsheet/types';
 import { useExerciseMedia } from '@/api/use-exercise-media';
 import { ExercisePicker } from '@/components/exercise-picker';
 import { prescriptionLabel } from '@/components/exercise-row';
@@ -21,7 +21,8 @@ import { SuggestedLoad, useNextLoads } from '@/features/programs/suggested-load'
 import { CollapsedExercise, CurrentExercise, setLabel } from '@/features/workout/exercise-card';
 import { ExerciseStrip } from '@/features/workout/exercise-strip';
 import { REST_BAR_HEIGHT, RestBar } from '@/features/workout/rest-bar';
-import { EMPTY_DRAFT, SetInputs, parseDraft, type SetDraft } from '@/features/workout/set-inputs';
+import { EMPTY_DRAFT, SetInputs, parseDraft, parseTimedDraft, type SetDraft } from '@/features/workout/set-inputs';
+import { TimedSetInputs } from '@/features/workout/timed-set-inputs';
 import { countSets, useWorkoutSession, volumeOf } from '@/features/workout/use-workout-session';
 import {
   buildFlowBlocks,
@@ -55,6 +56,21 @@ function nameOf(item: WorkoutExercise): string {
 
 function strengthSets(item: WorkoutExercise) {
   return item.series.filter((set) => set.tipoSerie !== 'CARDIO');
+}
+
+/** Ejercicio por tiempo (plancha 45 s): la rutina le puso `duracionSeg`; sus series se miden en segundos. */
+function isTimed(item: WorkoutExercise): boolean {
+  return item.duracionSeg !== null && item.ejercicio?.category !== 'cardio';
+}
+
+/** «Mejor: …» de un ejercicio contraído: la serie más pesada o, si es por tiempo, el aguante más largo. */
+function bestOf(item: WorkoutExercise): string | null {
+  if (isTimed(item)) {
+    const seconds = longestTimedSet(item);
+    return seconds !== null ? secondsLabel(seconds) : null;
+  }
+  const best = topSet(item);
+  return best ? setLabel({ tipoSerie: 'FUERZA', pesoKg: best.pesoKg, repeticiones: best.repeticiones, duracionSeg: null, distanciaM: null }) : null;
 }
 
 /** «3 × 8–12 · 60 kg · RIR 2» del objetivo copiado de la rutina; `null` si se añadió a mano. */
@@ -146,10 +162,12 @@ export function WorkoutScreen() {
   const upcomingStep = upcoming ? stepOf(blocks, upcoming.id) : null;
   const live = data?.estado === 'EN_PROGRESO';
 
+  const currentTimed = current ? isTimed(current) : false;
   const reference = current?.ejercicio
-    ? previousPerformance(history.data?.items ?? [], current.ejercicio.id, id)
+    ? previousPerformance(history.data?.items ?? [], current.ejercicio.id, id, currentTimed ? isTimedSet : undefined)
     : null;
-  const previousTop = reference ? topSet(reference.exercise) : null;
+  const previousTop = reference && !currentTimed ? topSet(reference.exercise) : null;
+  const previousHold = reference && currentTimed ? longestTimedSet(reference.exercise) : null;
   const suggested = loads?.items.find((entry) => entry.ejercicioId === current?.ejercicio?.id);
 
   // El borrador de la serie se rellena al cambiar de ejercicio: la última serie
@@ -160,13 +178,16 @@ export function WorkoutScreen() {
     const weight = last?.pesoKg ?? (suggested?.pesoSugeridoKg || null) ?? previousTop?.pesoKg ?? current.pesoObjetivoKg;
     const reps = last?.repeticiones ?? previousTop?.repeticiones ?? current.repsMax ?? current.repsMin;
     const rir = last?.rir ?? current.rirObjetivo;
+    // Por tiempo: lo de la última serie de hoy, si no lo de la última vez, si no el objetivo.
+    const seconds = last?.duracionSeg ?? previousHold ?? current.duracionSeg;
     setDraft({
       pesoKg: weight != null ? String(weight) : '',
       repeticiones: reps != null ? String(reps) : '',
       rir: rir != null ? String(rir) : '',
+      duracionSeg: seconds != null ? String(seconds) : '',
     });
     setDraftFor(current.id);
-  }, [current, draftFor, previousTop, suggested]);
+  }, [current, draftFor, previousTop, previousHold, suggested]);
 
   // El fondo se anima mientras hay sesión abierta y se calma al cerrarla.
   const setAmbient = useAmbientStore((state) => state.setIntensity);
@@ -210,14 +231,14 @@ export function WorkoutScreen() {
 
   const logSet = () => {
     if (!current || !step) return;
-    const parsed = parseDraft(draft);
+    const parsed = currentTimed ? parseTimedDraft(draft) : parseDraft(draft);
     if (!parsed) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      notify.info('Escribe cuántas repeticiones hiciste.');
+      notify.info(currentTimed ? 'Escribe cuántos segundos aguantaste (de 1 a 3600).' : 'Escribe cuántas repeticiones hiciste.');
       return;
     }
     const numeroSerie = Math.max(0, ...current.series.map((set) => set.numeroSerie)) + 1;
-    const set: WorkoutSetInput = {
+    const set: WorkoutSetInput | TimedWorkoutSetInput = {
       numeroSerie,
       ...parsed,
       // El descanso real: desde la última serie registrada en la sesión.
@@ -277,13 +298,12 @@ export function WorkoutScreen() {
     const exercise = withMedia(source.ejercicio);
     const grouped = block.kind !== 'single';
     const badge = badgeOf(block, item);
-    const best = topSet(source);
     const expanded = !live || item.id === current?.id;
     if (!expanded) {
       return (
         <CollapsedExercise
           badge={badge}
-          best={best ? setLabel({ tipoSerie: 'FUERZA', pesoKg: best.pesoKg, repeticiones: best.repeticiones, duracionSeg: null, distanciaM: null }) : null}
+          best={bestOf(source)}
           done={isItemDone(item)}
           exercise={exercise}
           grouped={grouped}
@@ -333,6 +353,18 @@ export function WorkoutScreen() {
                 onSubmit={(set) => session.addCardioSet.mutate({ sessionExerciseId: source.id, set })}
                 pending={session.addCardioSet.isPending}
                 setNumber={source.series.length + 1}
+              />
+            ) : isTimed(source) ? (
+              <TimedSetInputs
+                lastTime={
+                  previousHold !== null && reference
+                    ? { seconds: previousHold, when: relativeDay(reference.workout.fechaInicio).toLowerCase() }
+                    : null
+                }
+                onChange={setDraft}
+                resetKey={source.series.length}
+                targetSeconds={source.duracionSeg}
+                value={draft}
               />
             ) : (
               <SetInputs

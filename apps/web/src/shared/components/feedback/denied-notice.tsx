@@ -23,7 +23,10 @@ export function DeniedNotice() {
   useEffect(() => {
     if (!denied || announced.current === denied) return;
     announced.current = denied;
-    notify.error(new Error('No tienes permiso para acceder a esa sección.'));
+    notify.error({
+      title: 'Acceso denegado',
+      message: 'No tienes permiso para acceder a esa sección.',
+    });
   }, [denied]);
 
   return null;

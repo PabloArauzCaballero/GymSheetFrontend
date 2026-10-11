@@ -1,5 +1,6 @@
 'use client';
 
+import { roleLabel } from '@/shared/lib/roles';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
 import Link from 'next/link';
@@ -11,14 +12,6 @@ import { Input } from '@/shared/components/ui/input';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { insightsService, type PortalUser } from '@/features/admin/services/insights-service';
 
-const ROLE_LABEL: Record<string, string> = {
-  ADMIN: 'Administración',
-  CLIENTE: 'Cliente',
-  COACH: 'Entrenador',
-  ENTRENADOR_EXTERNO: 'Entrenador externo',
-  FRONT_DESK: 'Recepción',
-};
-
 /**
  * Estado de acceso, resuelto a una sola frase.
  *
@@ -27,7 +20,7 @@ const ROLE_LABEL: Record<string, string> = {
  * resta mentalmente, con el cliente delante.
  */
 function AccessBadge({ user }: { user: PortalUser }) {
-  if (user.rol !== 'CLIENTE') return <Badge tone="neutral">{ROLE_LABEL[user.rol] ?? user.rol}</Badge>;
+  if (user.rol !== 'CLIENTE') return <Badge tone="neutral">{roleLabel(user.rol)}</Badge>;
   if (user.vigente) return <Badge tone="success">Al día</Badge>;
   if (user.venceEl) return <Badge tone="warning">Vencida</Badge>;
   return <Badge tone="neutral">Sin membresía</Badge>;
@@ -131,7 +124,7 @@ export function UsersPanel({ canViewTraining = false }: Readonly<{ canViewTraini
                         </p>
                       </td>
                       <td className="px-5 py-3 text-[var(--text-muted)]">
-                        {ROLE_LABEL[user.rol] ?? user.rol}
+                        {roleLabel(user.rol)}
                         {user.tenantId ? (
                           <span className="ml-2 text-xs">{user.tenantId}</span>
                         ) : null}

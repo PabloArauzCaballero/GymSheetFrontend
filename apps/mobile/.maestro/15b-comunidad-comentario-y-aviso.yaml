@@ -1,0 +1,56 @@
+# RF-12 p03 (el comentario ya publicado) y p04 (el aviso «Gracias. Lo revisaremos.») regrabados (p04 con 15c).
+# La cuenta B (expiring.mock) comenta una rutina pública de A y denuncia un ejercicio privado de «Denuncia QA».
+# `run-15b.sh` borra antes por SQL (base local) las denuncias pendientes de B sobre ese ejercicio y su comentario
+# anterior, para que el aviso de «enviada» salga y no el de «ya la denunciaste» (SIMULACIÓN de estado limpio).
+appId: app.gymsheet.mobile
+name: 15b · Comentario publicado y aviso de denuncia
+env:
+  EMAIL: expiring.mock@gymsheet.local
+  FIRST: Expiring
+---
+- runFlow: login-as.subflow.yaml
+- runFlow:
+    file: open-routine-by-id.subflow.yaml
+    env: { EMAIL: 'expiring.mock@gymsheet.local', ROUTINE_NAME: 'Pierna 3 días', SCOPE: 'public' }
+- repeat:
+    times: 8
+    while:
+      notVisible: 'Escribe un comentario'
+    commands:
+      - swipe:
+          start: 50%,80%
+          end: 50%,30%
+- tapOn:
+    id: 'comment-input'
+- inputText: 'Gran rutina, la sigo desde hace dos semanas'
+- hideKeyboard
+- tapOn: 'Comentar'
+# Publicado: el campo vuelve a estar vacío y el comentario sale en la lista con su autor.
+- extendedWaitUntil:
+    visible: 'Gran rutina, la sigo desde hace dos semanas'
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: RF-12_p03_comentario-publicado_ios_oscuro
+
+- runFlow:
+    file: open-routine-by-id.subflow.yaml
+    env: { EMAIL: 'expiring.mock@gymsheet.local', ROUTINE_NAME: 'Denuncia QA', SCOPE: 'public' }
+- swipe:
+    start: 50%,80%
+    end: 50%,45%
+- tapOn: 'Vista Mes'
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn: 'Semana 1, .*'
+- tapOn: 'Más opciones de Press raro.*'
+- extendedWaitUntil:
+    visible: 'Denunciar.*'
+    timeout: 20000
+- tapOn: 'Denunciar.*'
+- extendedWaitUntil:
+    visible: 'Ejercicio peligroso'
+    timeout: 20000
+- tapOn:
+    id: 'reason-EJERCICIO_PELIGROSO'
+# Termina con la hoja de denuncia lista (motivo elegido). El envío lo hace 15c, mientras `run-15b.sh` graba fotogramas.

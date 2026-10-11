@@ -1,5 +1,6 @@
 'use client';
 
+import { weekAdjustmentWarning } from '@/features/routine-wizard/week-warning';
 import { ApiError } from '@gymsheet/api-client';
 import {
   GOAL_LABELS,
@@ -66,9 +67,7 @@ export function ReviewStep() {
     onSuccess: async ({ routine, semanasFallidas }) => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.routines('mine') });
       if (semanasFallidas.length > 0) {
-        notify.warning(
-          `Rutina guardada, pero no pudimos ajustar las semanas ${semanasFallidas.join(', ')}.`,
-        );
+        notify.warning(weekAdjustmentWarning(semanasFallidas));
       } else {
         notify.success('Rutina creada.');
       }

@@ -24,7 +24,7 @@ export function AdminOverview({
   return (
     <div className="grid gap-8">
       <PageHeader
-        description="Superficie operativa limitada por roles del backend. FRONT_DESK puede consultar y ejecutar solo las operaciones autorizadas."
+        description="Superficie operativa limitada por el rol de cada cuenta. Recepción puede consultar y ejecutar solo las operaciones autorizadas."
         eyebrow="Operaciones"
         title="Administración"
         tutorialId="page:admin"

@@ -1,0 +1,52 @@
+# RF-03 p06 (alerta «¿Salir sin guardar?») y p05 (retomar el borrador al reabrir la app).
+# La alerta es nativa de iOS (UIAlertController): `takeScreenshot` de Maestro la incluye porque captura la pantalla
+# completa del simulador. El borrador se guarda en el dispositivo; `stopApp` + `launchApp` lo reabren en frío.
+appId: app.gymsheet.mobile
+name: 08b · Salir sin guardar y retomar borrador
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+---
+- runFlow: login-as.subflow.yaml
+- tapOn: 'Rutinas, tab.*'
+- runFlow: cerrar-tour.subflow.yaml
+- tapOn: 'Crear rutina'
+- extendedWaitUntil:
+    visible: 'Paso 1 de 6.*'
+    timeout: 30000
+# Estado limpio: si había un borrador viejo se descarta.
+- tapOn:
+    text: 'Empezar de nuevo'
+    optional: true
+- tapOn:
+    id: 'routine-name'
+- inputText: 'Borrador QA retomable'
+- hideKeyboard
+# RF-03 · p06: Volver con cambios pide confirmación.
+- tapOn: 'Volver'
+- extendedWaitUntil:
+    visible: '¿Salir sin guardar?'
+    timeout: 10000
+- takeScreenshot: RF-03_p06_salir-sin-guardar_ios_oscuro
+- tapOn: 'Salir'
+- waitForAnimationToEnd:
+    timeout: 3000
+# RF-03 · p05: cerrar la app del todo y volver a abrirla.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: 'Hola, .*|Rutinas, tab.*|Bienvenido a GymSheet'
+    timeout: 240000
+- runFlow: cerrar-tour.subflow.yaml
+- tapOn: 'Rutinas, tab.*'
+- runFlow: cerrar-tour.subflow.yaml
+- tapOn: 'Crear rutina'
+- extendedWaitUntil:
+    visible: 'Tienes un borrador sin terminar'
+    timeout: 30000
+- assertVisible: '.*Borrador QA retomable.*'
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: RF-03_p05_retomar-borrador_ios_oscuro
+# Se deja limpio para los demás flujos.
+- tapOn: 'Empezar de nuevo'

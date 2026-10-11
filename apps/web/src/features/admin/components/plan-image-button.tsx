@@ -171,7 +171,7 @@ export function PlanImageButton({ plan }: Readonly<{ plan: MembershipPlan }>) {
                     event.target.value = '';
                     if (!file) return;
                     if (file.size > MAX_BYTES) {
-                      notify.error(new Error('La imagen supera el máximo de 5 MB.'));
+                      notify.error('La imagen supera el máximo de 5 MB.');
                       return;
                     }
                     clearPending();

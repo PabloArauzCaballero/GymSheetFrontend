@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
+  FlatList,
   RefreshControl,
   ScrollView,
   StatusBar,
@@ -14,6 +15,7 @@ import {
   Text,
   useWindowDimensions,
   View,
+  type ListRenderItem,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
@@ -94,68 +96,12 @@ export function ScrollScreen({
   overlay?: ReactNode;
   refreshing?: boolean;
 }) {
-  const insets = useSafeAreaInsets();
-  const { wide, width } = useResponsive();
+  const frame = useScreenFrame();
   const scrollRef = useRef<ScrollView | null>(null);
-  const offsetRef = useRef(0);
-  const registerScroller = useTourStore((state) => state.registerScroller);
-
-  // Lets the guided tour bring an anchor into view.
-  const scroller = useMemo(
-    () => ({
-      scrollBy: (deltaY: number) => {
-        const next = Math.max(0, offsetRef.current + deltaY);
-        offsetRef.current = next;
-        scrollRef.current?.scrollTo({ y: next, animated: true });
-      },
-      scrollTo: (y: number) => {
-        offsetRef.current = Math.max(0, y);
-        scrollRef.current?.scrollTo({ y: offsetRef.current, animated: true });
-      },
-      getOffset: () => offsetRef.current,
-    }),
-    [],
-  );
-  /**
-   * Se registra al RECIBIR EL FOCO, no al montar.
-   *
-   * Montar y estar a la vista no son lo mismo aquí. Las pestañas se quedan
-   * montadas para siempre tras la primera visita, asi que registrar en el
-   * montaje dejaba al tour moviendo la lista de la ultima pestaña *estrenada*
-   * en vez de la que la persona tiene delante; y al cerrar una pantalla de la
-   * pila, su desmontaje ponia el registro a `null` y la pestaña de debajo
-   * —visible y montada, pero sin volver a montarse— se quedaba sin forma de
-   * desplazarse. En ambos casos el foco del tutorial acababa señalando a un
-   * sitio donde no habia nada.
-   *
-   * La limpieza solo borra lo que es suyo: al navegar, el foco de la pantalla
-   * nueva y el desenfoque de la vieja no llegan en un orden garantizado, y sin
-   * esta comprobacion la que se va puede borrar el registro que la que llega
-   * acaba de dejar.
-   */
-  useFocusEffect(
-    useCallback(() => {
-      registerScroller(scroller);
-      return () => {
-        if (useTourStore.getState().scroller === scroller) registerScroller(null);
-      };
-    }, [registerScroller, scroller]),
-  );
-  // A two-column page needs room for two columns; keeping the phone cap on a
-  // tablet is what leaves a narrow strip of content framed by black.
-  const gutter = Math.max(screenGutter, (width - (wide ? maxWideContentWidth : maxContentWidth)) / 2);
-  // On Android the safe-area inset can come back shorter than the drawn status
-  // bar, which left scrolled content half-visible under the clock.
-  const topInset = Math.max(insets.top, StatusBar.currentHeight ?? 0);
-  // La barra de pestañas flota sobre el contenido (vidrio). Dentro de una
-  // pestaña su altura ya incluye el área segura de abajo; fuera de ellas el
-  // contexto no existe y se usa el área segura sin más.
-  const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
-  const bottomInset = Math.max(insets.bottom, tabBarHeight);
+  const offsetRef = useTourScroller((y) => scrollRef.current?.scrollTo({ y, animated: true }));
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <AmbientBackground waveform={false} />
+    <ScreenChrome frame={frame} overlay={overlay}>
       <ScrollView
         // El desplazamiento se anota al terminar el gesto, no en cada
         // fotograma. `onScroll` con `scrollEventThrottle` instala un evento
@@ -171,47 +117,249 @@ export function ScrollScreen({
         }}
         ref={scrollRef}
         contentContainerStyle={{
-          paddingTop: hero ? 0 : topInset + spacing.xl,
-          paddingBottom: bottomInset + spacing['2xl'],
-          paddingLeft: gutter + insets.left,
-          paddingRight: gutter + insets.right,
+          ...frame.contentPadding,
+          ...(hero ? { paddingTop: 0 } : null),
           gap: screenGap,
           // flexGrow lets a short page fill the viewport so it can centre; a
           // tall one still scrolls normally because the content wins over it.
           ...(center ? { flexGrow: 1, justifyContent: 'center' as const } : null),
         }}
-        // iOS does not resize the window when the keyboard opens the way
-        // Android's `adjustResize` does, so a field in the lower half of a
-        // scrolling form ends up behind the keyboard with no way to reach it.
-        // This adds the keyboard's height as a content inset, which is the
-        // native behaviour Android already had for free.
-        automaticallyAdjustKeyboardInsets
-        // Dragging the list down closes the keyboard, following the finger.
-        keyboardDismissMode="interactive"
-        // A tap on a button while the keyboard is open must hit the button,
-        // not merely dismiss the keyboard and be swallowed.
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          onRefresh
-            ? // Volt spinner on black: the default is invisible on this theme.
-              <RefreshControl
-                colors={[colors.volt]}
-                onRefresh={onRefresh}
-                progressBackgroundColor={colors.surface}
-                refreshing={refreshing}
-                tintColor={colors.volt}
-              />
-            : undefined
-        }
-        showsVerticalScrollIndicator={false}
+        {...SCREEN_SCROLL_BEHAVIOUR}
+        refreshControl={screenRefreshControl(onRefresh, refreshing)}
       >
         {hero ? (
-          <View style={{ marginLeft: -(gutter + insets.left), marginRight: -(gutter + insets.right), marginBottom: -spacing.md }}>
+          <View
+            style={{
+              marginLeft: -(frame.gutter + frame.insets.left),
+              marginRight: -(frame.gutter + frame.insets.right),
+              marginBottom: -spacing.md,
+            }}
+          >
             {hero}
           </View>
         ) : null}
         {children}
       </ScrollView>
+    </ScreenChrome>
+  );
+}
+
+/**
+ * {@link ScrollScreen} para una pantalla que ES una lista larga.
+ *
+ * Un `.map()` dentro de un `ScrollView` monta todas las filas de golpe, y meter
+ * una `FlatList` dentro del `ScrollView` anula la virtualización (React Native
+ * lo advierte en consola). Aquí la lista es el desplazamiento: lo que en
+ * `ScrollScreen` serían los hijos de arriba viaja como `header`, con el mismo
+ * hueco entre bloques, y el resto —márgenes, área segura, fondo, franja de la
+ * barra de estado, teclado, tour y «tirar para actualizar»— es idéntico.
+ */
+export function ListScreen<T>({
+  data,
+  extraData,
+  header,
+  empty,
+  footer,
+  itemGap = 0,
+  keyExtractor,
+  onEndReached,
+  onRefresh,
+  refreshing = false,
+  renderItem,
+}: {
+  data: readonly T[];
+  /** Lo que, además de `data`, obliga a repintar filas (p. ej. una acción en curso). */
+  extraData?: unknown;
+  /** Lo que va encima de la lista, separado como los hijos de `ScrollScreen`. */
+  header: ReactNode;
+  /** Cargando, error o vacío: se pinta cuando `data` no trae filas. */
+  empty: ReactNode;
+  footer?: ReactNode;
+  /** Hueco entre filas; 0 para filas que ya traen su propio separador. */
+  itemGap?: number;
+  keyExtractor: (item: T, index: number) => string;
+  onEndReached?: () => void;
+  onRefresh?: () => void;
+  refreshing?: boolean;
+  renderItem: ListRenderItem<T>;
+}) {
+  const frame = useScreenFrame();
+  const listRef = useRef<FlatList<T> | null>(null);
+  const offsetRef = useTourScroller((offset) => listRef.current?.scrollToOffset({ offset, animated: true }));
+  const Separator = useMemo(
+    () => (itemGap > 0 ? () => <View style={{ height: itemGap }} /> : undefined),
+    [itemGap],
+  );
+
+  return (
+    <ScreenChrome frame={frame}>
+      <FlatList<T>
+        contentContainerStyle={frame.contentPadding}
+        data={data as T[]}
+        extraData={extraData}
+        ItemSeparatorComponent={Separator}
+        keyExtractor={keyExtractor}
+        ListEmptyComponent={<>{empty}</>}
+        ListFooterComponent={footer ? <View style={{ paddingTop: screenGap }}>{footer}</View> : null}
+        ListHeaderComponent={<View style={{ gap: screenGap, paddingBottom: screenGap }}>{header}</View>}
+        onEndReached={onEndReached}
+        // Igual que en Interacciones: con filas cortas el final llega antes de
+        // que vuelva la petición si se espera al último 10 %.
+        onEndReachedThreshold={0.4}
+        onMomentumScrollEnd={(event) => {
+          offsetRef.current = event.nativeEvent.contentOffset.y;
+        }}
+        onScrollEndDrag={(event) => {
+          offsetRef.current = event.nativeEvent.contentOffset.y;
+        }}
+        ref={listRef}
+        refreshControl={screenRefreshControl(onRefresh, refreshing)}
+        renderItem={renderItem}
+        {...SCREEN_SCROLL_BEHAVIOUR}
+      />
+    </ScreenChrome>
+  );
+}
+
+/** Teclado y barra de desplazamiento: lo mismo en la pantalla y en la lista. */
+const SCREEN_SCROLL_BEHAVIOUR = {
+  // iOS does not resize the window when the keyboard opens the way
+  // Android's `adjustResize` does, so a field in the lower half of a
+  // scrolling form ends up behind the keyboard with no way to reach it.
+  // This adds the keyboard's height as a content inset, which is the
+  // native behaviour Android already had for free.
+  automaticallyAdjustKeyboardInsets: true,
+  // Dragging the list down closes the keyboard, following the finger.
+  keyboardDismissMode: 'interactive',
+  // A tap on a button while the keyboard is open must hit the button,
+  // not merely dismiss the keyboard and be swallowed.
+  keyboardShouldPersistTaps: 'handled',
+  showsVerticalScrollIndicator: false,
+} as const;
+
+function screenRefreshControl(onRefresh: (() => void) | undefined, refreshing: boolean) {
+  if (!onRefresh) return undefined;
+  // Volt spinner on black: the default is invisible on this theme.
+  return (
+    <RefreshControl
+      colors={[colors.volt]}
+      onRefresh={onRefresh}
+      progressBackgroundColor={colors.surface}
+      refreshing={refreshing}
+      tintColor={colors.volt}
+    />
+  );
+}
+
+type ScreenFrame = {
+  gutter: number;
+  topInset: number;
+  bottomInset: number;
+  insets: { left: number; right: number };
+  contentPadding: Pick<ViewStyle, 'paddingTop' | 'paddingBottom' | 'paddingLeft' | 'paddingRight'>;
+};
+
+/**
+ * Márgenes de pantalla. Horizontal insets follow the safe area too: in
+ * landscape on a notched device the cutout eats into the side, and a fixed
+ * gutter would run content under it. Past {@link maxContentWidth} the extra
+ * width becomes gutter instead of longer lines, so text stays readable on a
+ * tablet.
+ */
+function useScreenFrame(): ScreenFrame {
+  const insets = useSafeAreaInsets();
+  const { wide, width } = useResponsive();
+  // A two-column page needs room for two columns; keeping the phone cap on a
+  // tablet is what leaves a narrow strip of content framed by black.
+  const gutter = Math.max(screenGutter, (width - (wide ? maxWideContentWidth : maxContentWidth)) / 2);
+  // On Android the safe-area inset can come back shorter than the drawn status
+  // bar, which left scrolled content half-visible under the clock.
+  const topInset = Math.max(insets.top, StatusBar.currentHeight ?? 0);
+  // La barra de pestañas flota sobre el contenido (vidrio). Dentro de una
+  // pestaña su altura ya incluye el área segura de abajo; fuera de ellas el
+  // contexto no existe y se usa el área segura sin más.
+  const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
+  const bottomInset = Math.max(insets.bottom, tabBarHeight);
+  return {
+    gutter,
+    topInset,
+    bottomInset,
+    insets,
+    contentPadding: {
+      paddingTop: topInset + spacing.xl,
+      paddingBottom: bottomInset + spacing['2xl'],
+      paddingLeft: gutter + insets.left,
+      paddingRight: gutter + insets.right,
+    },
+  };
+}
+
+/**
+ * Lets the guided tour bring an anchor into view. Devuelve la referencia donde
+ * la pantalla anota su desplazamiento al terminar cada gesto.
+ *
+ * Se registra al RECIBIR EL FOCO, no al montar.
+ *
+ * Montar y estar a la vista no son lo mismo aquí. Las pestañas se quedan
+ * montadas para siempre tras la primera visita, asi que registrar en el
+ * montaje dejaba al tour moviendo la lista de la ultima pestaña *estrenada*
+ * en vez de la que la persona tiene delante; y al cerrar una pantalla de la
+ * pila, su desmontaje ponia el registro a `null` y la pestaña de debajo
+ * —visible y montada, pero sin volver a montarse— se quedaba sin forma de
+ * desplazarse. En ambos casos el foco del tutorial acababa señalando a un
+ * sitio donde no habia nada.
+ *
+ * La limpieza solo borra lo que es suyo: al navegar, el foco de la pantalla
+ * nueva y el desenfoque de la vieja no llegan en un orden garantizado, y sin
+ * esta comprobacion la que se va puede borrar el registro que la que llega
+ * acaba de dejar.
+ */
+function useTourScroller(scrollToY: (y: number) => void) {
+  const offsetRef = useRef(0);
+  const scrollRef = useRef(scrollToY);
+  scrollRef.current = scrollToY;
+  const registerScroller = useTourStore((state) => state.registerScroller);
+  const scroller = useMemo(
+    () => ({
+      scrollBy: (deltaY: number) => {
+        const next = Math.max(0, offsetRef.current + deltaY);
+        offsetRef.current = next;
+        scrollRef.current(next);
+      },
+      scrollTo: (y: number) => {
+        offsetRef.current = Math.max(0, y);
+        scrollRef.current(offsetRef.current);
+      },
+      getOffset: () => offsetRef.current,
+    }),
+    [],
+  );
+  useFocusEffect(
+    useCallback(() => {
+      registerScroller(scroller);
+      return () => {
+        if (useTourStore.getState().scroller === scroller) registerScroller(null);
+      };
+    }, [registerScroller, scroller]),
+  );
+  return offsetRef;
+}
+
+/** Fondo, capa fija sobre la barra de pestañas y franja de la barra de estado. */
+function ScreenChrome({
+  children,
+  frame,
+  overlay,
+}: {
+  children: ReactNode;
+  frame: ScreenFrame;
+  overlay?: ReactNode;
+}) {
+  const { gutter, insets, topInset, bottomInset } = frame;
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <AmbientBackground waveform={false} />
+      {children}
 
       {overlay ? (
         <View

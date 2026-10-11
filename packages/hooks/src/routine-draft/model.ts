@@ -1,4 +1,5 @@
 import type { TrainingGoal } from '@gymsheet/types';
+import { muscleZone } from '@gymsheet/domain';
 import { newDraftUid } from './groups';
 
 /**
@@ -202,36 +203,14 @@ export function defaultsForGoal(
   }
 }
 
-/** Zonas del dataset (`bodyPart`) a la etiqueta que se muestra y se cuenta en los avisos. */
-const ZONE_LABELS: Record<string, string> = {
-  chest: 'Pecho',
-  back: 'Espalda',
-  shoulders: 'Hombros',
-  'upper arms': 'Brazos',
-  'lower arms': 'Antebrazos',
-  'upper legs': 'Piernas',
-  'lower legs': 'Gemelos',
-  waist: 'Abdomen',
-  cardio: 'Cardio',
-  neck: 'Cuello',
-  pecho: 'Pecho',
-  pierna: 'Piernas',
-};
-
 /** Zonas que no cuentan para el aviso de frecuencia por músculo. */
 export const ZONES_WITHOUT_FREQUENCY_WARNING: readonly string[] = ['Cardio', 'Cuello'];
 
 /**
- * Zona muscular de un ejercicio, unificada: el catálogo trae `bodyPart` en
- * inglés (dataset) o `grupoMuscular` en mayúsculas (ejercicios propios), y los
- * avisos de frecuencia tienen que contar «Pecho» una sola vez.
+ * Zona muscular de un ejercicio: vive en `@gymsheet/domain`, junto al resto de
+ * etiquetas del catálogo, para que la rutina y las pantallas hablen igual.
  */
-export function muscleZone(exercise: { grupoMuscular: string; bodyPart?: string | null }): string {
-  const raw = (exercise.bodyPart ?? exercise.grupoMuscular).trim().toLowerCase();
-  const known = ZONE_LABELS[raw];
-  if (known) return known;
-  return raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : '';
-}
+export { muscleZone };
 
 export function createDraftExercise(
   exercise: {

@@ -1,5 +1,6 @@
 'use client';
 
+import { muscleLabelEs } from '@gymsheet/domain';
 import {
   HIGHLIGHT,
   IMAGE_ASPECT,
@@ -249,7 +250,7 @@ export function BodyMap({
                   al enfocarlos con teclado se resaltan igual que al pasar. */}
               {muscles.map((muscle) => (
                 <g
-                  aria-label={`${muscleInfo(muscle.code)?.name ?? muscle.code}: ver ejercicios`}
+                  aria-label={`${muscleLabelEs(muscle.code)}: ver ejercicios`}
                   className="outline-none"
                   key={muscle.code}
                   onBlur={() => setHovered((current) => (current === muscle.code ? null : current))}
