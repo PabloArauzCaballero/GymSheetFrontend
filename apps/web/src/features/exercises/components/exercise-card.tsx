@@ -1,4 +1,4 @@
-import { selectExercisePoster } from '@gymsheet/domain';
+import { bodyPartLabelEs, equipmentLabelEs, exerciseGroupLabelEs, muscleLabelEs, selectExercisePoster } from '@gymsheet/domain';
 import { Dumbbell, Heart, Target } from 'lucide-react';
 import Link from 'next/link';
 import type { Exercise } from '@/shared/api/contracts';
@@ -52,7 +52,7 @@ export function ExerciseCard({
       <div className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="data-label">{exercise.grupoMuscular}</p>
+            <p className="data-label">{exerciseGroupLabelEs(exercise.grupoMuscular)}</p>
             <h2 className="mt-2 break-words text-xl font-semibold tracking-[-0.02em]">
               <Link href={`/exercises/${exercise.id}`}>{exercise.nombre}</Link>
             </h2>
@@ -81,11 +81,11 @@ export function ExerciseCard({
         <div className="mt-5 grid gap-2 text-xs text-[var(--text-muted)]">
           <span className="flex items-center gap-2">
             <Target className="size-4" />
-            {exercise.targetMuscle ?? exercise.bodyPart ?? 'Objetivo no especificado'}
+            {muscleLabelEs(exercise.targetMuscle) || bodyPartLabelEs(exercise.bodyPart) || 'Objetivo no especificado'}
           </span>
           <span className="break-words">
             {exercise.category ?? 'Sin categoría'} ·{' '}
-            {exercise.requiredEquipment ?? exercise.equipment[0]?.nombre ?? 'Sin equipo'}
+            {equipmentLabelEs(exercise.requiredEquipment) || exercise.equipment[0]?.nombre || 'Sin equipo'}
           </span>
         </div>
       </div>

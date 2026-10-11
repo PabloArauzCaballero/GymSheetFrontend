@@ -1,13 +1,9 @@
 'use client';
 
+import { bodyPartLabelEs, muscleLabelEs } from '@gymsheet/domain';
 import type { ExerciseTaxonomy } from '@gymsheet/schemas';
 import { X } from 'lucide-react';
 import { cn } from '@/shared/lib/cn';
-
-/** `upper arms` → `Upper arms`: el dataset guarda las zonas en minúscula. */
-function sentenceCase(value: string) {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
 
 function Chip({
   label,
@@ -65,14 +61,14 @@ export function ExerciseZoneFilter({
             active={entry.bodyPart === bodyPart}
             count={entry.total}
             key={entry.bodyPart}
-            label={sentenceCase(entry.bodyPart)}
+            label={bodyPartLabelEs(entry.bodyPart)}
             onClick={() => onBodyPart(entry.bodyPart === bodyPart ? null : entry.bodyPart)}
           />
         ))}
       </div>
       {zone && zone.muscles.length > 1 ? (
         <div
-          aria-label={`Músculos de ${sentenceCase(zone.bodyPart).toLowerCase()}`}
+          aria-label={`Músculos de ${bodyPartLabelEs(zone.bodyPart).toLowerCase()}`}
           className="reveal flex flex-wrap items-center gap-2 border-t border-[var(--border-subtle)] pt-3"
           role="group"
         >
@@ -81,7 +77,7 @@ export function ExerciseZoneFilter({
               active={entry.targetMuscle === muscle}
               count={entry.total}
               key={entry.targetMuscle}
-              label={sentenceCase(entry.targetMuscle)}
+              label={muscleLabelEs(entry.targetMuscle)}
               onClick={() => onMuscle(entry.targetMuscle === muscle ? null : entry.targetMuscle)}
             />
           ))}

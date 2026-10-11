@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Flame, MoreHorizontal, Trash2 } from 'lucide-react';
-import { isStrengthSet, setVolumeKg } from '@gymsheet/domain';
+import { exerciseGroupLabelEs, isStrengthSet, setVolumeKg } from '@gymsheet/domain';
 import { confirmDelete, notify } from '@/shared/notifications';
 import { workoutService } from '@/features/workouts/services/workout-service';
 import type { WorkoutExercise } from '@/shared/api/contracts';
@@ -61,7 +61,7 @@ export function WorkoutExercisePanel({
             <SuggestedLoad exerciseId={exercise?.id} />
           </div>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
-            {exercise?.grupoMuscular ?? 'Sin grupo'} · Volumen{' '}
+            {exerciseGroupLabelEs(exercise?.grupoMuscular) || 'Sin grupo'} · Volumen{' '}
             {Math.round(volume).toLocaleString('es-BO')} KG
           </p>
           {item.nota ? (

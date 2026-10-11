@@ -1,5 +1,6 @@
 'use client';
 
+import { bodyPartLabelEs, exerciseGroupLabelEs, muscleLabelEs } from '@gymsheet/domain';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Database, Plus, Trash2 } from 'lucide-react';
@@ -183,10 +184,10 @@ export function ExerciseAdmin() {
                       <TableCell>
                         <p className="font-semibold">{item.nombre}</p>
                         <p className="mt-1 text-xs text-[var(--text-muted)]">
-                          {item.targetMuscle ?? item.bodyPart ?? '—'}
+                          {muscleLabelEs(item.targetMuscle) || bodyPartLabelEs(item.bodyPart) || '—'}
                         </p>
                       </TableCell>
-                      <TableCell>{item.grupoMuscular}</TableCell>
+                      <TableCell>{exerciseGroupLabelEs(item.grupoMuscular)}</TableCell>
                       <TableCell>
                         <Badge>{item.dataSource}</Badge>
                       </TableCell>
