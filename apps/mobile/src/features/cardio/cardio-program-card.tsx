@@ -2,13 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
-import { WEEKDAY_NAMES, multiplierLabel, targetMinutesForWeek, type Weekday } from '@gymsheet/hooks';
+import { WEEKDAY_NAMES, multiplierLabel, targetMinutesForWeek, weekMinutesLabel, type Weekday } from '@gymsheet/hooks';
 import { cardioModalityLabels } from '@gymsheet/hooks';
 import type { Program } from '@gymsheet/types';
 import { programService } from '@/api/services';
 import { Badge } from '@/components/layout';
 import { Button } from '@/components/ui';
-import { describeWeekMinutes } from '@/features/programs/week-progress-copy';
 import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
 
 /**
@@ -29,7 +28,7 @@ export function CardioProgramCard({ program, strengthToday }: { program: Program
 
   return (
     <View
-      accessibilityLabel={`Plan de cardio. ${plan ? cardioModalityLabels[plan.modalidad] : ''}. ${target !== null ? `${describeWeekMinutes(minutes, target)} esta semana` : ''}`}
+      accessibilityLabel={`Plan de cardio. ${plan ? cardioModalityLabels[plan.modalidad] : ''}. ${target !== null ? `${weekMinutesLabel(minutes, target)} esta semana` : ''}`}
       style={{ gap: spacing.sm, borderRadius: radii.lg, borderWidth: 1, borderColor: colors.borderSubtle, backgroundColor: colors.surfaceLow, padding: spacing.md }}
       testID="program-card-cardio"
     >
@@ -46,7 +45,7 @@ export function CardioProgramCard({ program, strengthToday }: { program: Program
       </Text>
       {target !== null ? (
         <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }} testID="cardio-week-minutes">
-          {describeWeekMinutes(minutes, target)}
+          {weekMinutesLabel(minutes, target)}
         </Text>
       ) : null}
       {strengthToday ? (
