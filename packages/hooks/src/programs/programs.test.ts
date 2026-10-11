@@ -111,7 +111,9 @@ describe('cardio (RF-17)', () => {
   it('cronómetro y progreso semanal', () => {
     expect(formatClock(65)).toBe('01:05');
     expect(formatClock(3725)).toBe('1:02:05');
-    expect(cardioProgressLabel({ minutosSemana: 96, objetivoMinutosSemana: 90 })).toBe('96 / 90 min');
+    expect(cardioProgressLabel({ minutosSemana: 96, objetivoMinutosSemana: 90 })).toBe('96 min · meta de 90 min superada');
+    expect(cardioProgressLabel({ minutosSemana: 45, objetivoMinutosSemana: 90 })).toBe('45 / 90 min');
+    expect(cardioProgressLabel({ minutosSemana: 96, objetivoMinutosSemana: 30 })).not.toMatch(/96 \/ 30/);
   });
   it('valida y arma el plan', () => {
     expect(validateCardio({ ...defaultCardioForm, dias: [] }).dias).toBeDefined();

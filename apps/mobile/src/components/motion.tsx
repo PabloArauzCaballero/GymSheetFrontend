@@ -394,7 +394,12 @@ export function SegmentLabel({
       easing: PREMIUM_EASING,
     }),
   }));
-  return <Animated.Text style={[style, animated]}>{label}</Animated.Text>;
+  // Una línea que se encoge antes que partir la palabra: «Recomendad/as» no se lee.
+  return (
+    <Animated.Text adjustsFontSizeToFit minimumFontScale={0.8} numberOfLines={1} style={[style, animated]}>
+      {label}
+    </Animated.Text>
+  );
 }
 
 /**

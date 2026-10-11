@@ -322,7 +322,7 @@ export function BadgeTile({
    */
   onPress?: () => void;
 }) {
-  const tint = badge.earned ? badge.color : colors.textDisabled;
+  const tint = badge.earned ? badge.color : colors.textMuted;
   /**
    * Que se pueda tocar **tiene que verse**.
    *
@@ -356,9 +356,11 @@ export function BadgeTile({
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <Text
-            numberOfLines={1}
+            // Dos líneas: «Cuatro semanas de sobrecarga» no cabe en una columna de tres y cortarla
+            // en «sob…» esconde justo lo que distingue a la insignia.
+            numberOfLines={2}
             style={{
-              color: badge.earned ? colors.text : colors.textMuted,
+              color: badge.earned ? colors.text : colors.textSecondary,
               fontSize: fontSizes.sm,
               fontWeight: semibold,
             }}
@@ -366,14 +368,14 @@ export function BadgeTile({
             {badge.name}
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text numberOfLines={1} style={{ color: colors.textDisabled, fontSize: fontSizes.xs }}>
+            <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
               {RARITY_LABEL[badge.rarity] ?? badge.rarity}
               {badge.pointsReward > 0 ? ' · ' : ''}
             </Text>
             {badge.pointsReward > 0 ? (
               <CountUpText
                 prefix="+"
-                style={{ color: colors.textDisabled, fontSize: fontSizes.xs }}
+                style={{ color: colors.textMuted, fontSize: fontSizes.xs }}
                 suffix=" pts"
                 value={badge.pointsReward}
               />
@@ -423,8 +425,8 @@ export function BadgeTile({
 
       {!badge.earned && badge.progress !== null ? (
         <View style={{ gap: spacing.xs }}>
-          <ProgressTrack color={colors.textDisabled} height={4} ratio={badge.progress} />
-          <Text style={{ color: colors.textDisabled, fontSize: fontSizes.xs }}>
+          <ProgressTrack color={colors.textMuted} height={4} ratio={badge.progress} />
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
             {badge.progressLabel}
           </Text>
         </View>

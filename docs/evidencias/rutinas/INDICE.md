@@ -48,13 +48,13 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | RF-02 | 04 | Móvil | `RF-02/movil/RF-02_p04_ficha-del-ejercicio_*` | Ficha del ejercicio. | ✅ 1/1 capturadas · sin revisar |
 | RF-02 | 05 | Móvil | `RF-02/movil/RF-02_p05_volver-sigue-en-mes_*` | Volver sigue en mes. | ✅ 1/1 capturadas · sin revisar |
 | RF-02 | 06 | Móvil | `RF-02/movil/RF-02_p06_rutina-cualquier-dia_*` | Rutina cualquier dia. | ✅ 1/1 capturadas · sin revisar |
-| RF-09 | 01 | Móvil | `RF-09/movil/RF-09_p01_confirmacion-publicar_*` | Confirmacion publicar. | ✅ 1/1 capturadas · sin revisar |
-| RF-09 | 02 | Móvil | `RF-09/movil/RF-09_p02_publicada-despublicar_*` | Publicada despublicar. | ✅ 1/1 capturadas · sin revisar |
-| RF-09 | 02a | Móvil | `RF-09/movil/RF-09_p02a_aviso-de-rutina-publicada_*` | Aviso de rutina publicada. | ✅ 1/1 capturadas · sin revisar |
-| RF-09 | 02b | Móvil | `RF-09/movil/RF-09_p02b_aparece-en-publicas-con-autor_*` | Aparece en publicas con autor. | ✅ 1/1 capturadas · sin revisar |
-| RF-09 | 03 | Móvil | `RF-09/movil/RF-09_p03_ya-existe-identica_*` | Ya existe identica. | ✅ 1/1 capturadas · sin revisar |
+| RF-09 | 01 | Móvil | `RF-09/movil/RF-09_p01_confirmacion-publicar_*` | Confirmacion publicar. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-09 | 02 | Móvil | `RF-09/movil/RF-09_p02_publicada-despublicar_*` | Publicada despublicar. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-09 | 02a | Móvil | `RF-09/movil/RF-09_p02a_aviso-de-rutina-publicada_*` | Aviso de rutina publicada. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-09 | 02b | Móvil | `RF-09/movil/RF-09_p02b_aparece-en-publicas-con-autor_*` | Aparece en publicas con autor. | ✅ 1/1 capturadas · 1 revisadas |
+| RF-09 | 03 | Móvil | `RF-09/movil/RF-09_p03_ya-existe-identica_*` | Ya existe identica. | ✅ 1/1 capturadas · 1 revisadas |
 | RF-09 | 03b | Móvil | `RF-09/movil/RF-09_p03b_ver-la-existente_*` | Ver la existente. | ✅ 1/1 capturadas · sin revisar |
-| RF-10 | 01 | Móvil | `RF-10/movil/RF-10_p01_toast-copiada-a-mias_*` | Toast copiada a mias. | ✅ 1/1 capturadas · sin revisar |
+| RF-10 | 01 | Móvil | `RF-10/movil/RF-10_p01_toast-guardada-en-mis-rutinas_*` | Aviso «Guardada en tus rutinas.» en una línea, sin tapar «Volver», sobre la copia v1+ con «Activar programa». | ✅ 1/1 capturadas · 1 revisadas |
 | RF-10 | 02 | Móvil | `RF-10/movil/RF-10_p02_franja-basada-en_*` | Franja basada en. | ✅ 1/1 capturadas · sin revisar |
 | RF-10 | 04 | Móvil | `RF-10/movil/RF-10_p04_hay-version-nueva_*` | Hay version nueva. | ✅ 1/1 capturadas · sin revisar |
 | RF-10 | 05 | Móvil | `RF-10/movil/RF-10_p05_ver-cambios_*` | Ver cambios. | ✅ 1/1 capturadas · sin revisar |
@@ -328,6 +328,12 @@ Web: 390 y 1440 px × tema claro y oscuro (4 capturas por paso). Móvil: iOS Sim
 | `RF-13_p08a_invitacion-antes-de-rechazar_ios_oscuro.png` | Revisada (agente, 2026-10-11): cuenta B, Mías › «Compartidas conmigo (1)»: tarjeta «Invitación · Athlete Mock te compartió «Plan para compartir»» con «Verás los ejercicios cuando aceptes» y los botones «Rechazar» y «Aceptar». La invitación se creó por API (scripts-share-invite.js); el recorrido por pantalla de «Compartir con…» es el del flujo 16. |
 | `RF-13_p08_rechazar-invitacion_ios_oscuro.png` | Revisada (agente, 2026-10-11): tras pulsar «Rechazar» el chip vuelve a «Compartidas conmigo» sin contador y el vacío dice «Nadie te ha compartido una rutina». |
 | `RF-18_p00b_sesion-cuenta-sin-plan-semanal_ios_oscuro.png` | Revisada (agente, 2026-10-11, tras corregir D1–D4/D6): D4 corregido: con una semana sin sesiones planeadas el bloque dice «Esta sesión cuenta para tu programa (semana 1).» en vez de «1 de 0»; titular «+77 puntos». SIMULACIÓN: programa sobre el lunes, que ya pasó; sesión retrocedida 15 min. |
+| `RF-09_p02a_aviso-de-rutina-publicada_ios_oscuro.png` | Revisada (agente, 2026-10-11, D2-1): fotograma de simctl justo tras confirmar; el aviso «Rutina publicada. Ya aparece en Públicas.» está en una línea sobre el detalle de «Pierna para publicar» (chip «Pública», «1 copia»). Ya no es idéntica a p02. |
+| `RF-09_p02b_aparece-en-publicas-con-autor_ios_oscuro.png` | Revisada (agente, 2026-10-11, D2-2): detalle de la rutina recién publicada con base limpia: «Sin valoraciones · 0 copias» (las «13 copias» eran el contador acumulado de corridas repetidas del flujo 14 sobre la misma base, no un cálculo erróneo). Sigue siendo el detalle, no el listado: el autor se ve en la tarjeta de Públicas (RF-10). |
+| `RF-09_p01_confirmacion-publicar_ios_oscuro.png` | Revisada (agente, 2026-10-11): hoja «Cualquiera podrá verla y copiarla» con Publicar/Cancelar. Sin defectos. |
+| `RF-09_p02_publicada-despublicar_ios_oscuro.png` | Revisada (agente, 2026-10-11): menú ⋯ con «Despublicar» tras publicar. Sin defectos. |
+| `RF-09_p03_ya-existe-identica_ios_oscuro.png` | Revisada (agente, 2026-10-11): aviso «Ya existe una rutina idéntica» con «Ver rutina». Sin defectos. |
+| `RF-10_p01_toast-guardada-en-mis-rutinas_ios_oscuro.png` | Revisada (agente, 2026-10-11, D2-3 y D6): fotograma de simctl con el aviso «Guardada en tus rutinas.» en una línea (antes saltaba a dos con el nombre de la copia y tapaba «‹ Volver»), copia «Pierna para publicar · v3», «Basada en … de Athlete Mock» y «Activar programa». |
 | `RF-12_p04a_dia-con-ejercicio-privado_ios_oscuro.png` | Revisada (agente, 2026-10-09): hoja «Lunes · Empuje» con el ejercicio personal «Press raro de Ana» y el botón «Denunciar «…»». |
 | `RF-12_p04b_hoja-de-denuncia_ios_oscuro.png` | Revisada (agente, 2026-10-09): hoja «Denunciar» con motivos (Ejercicio peligroso seleccionado, Información engañosa, Copia de otra rutina…), detalle opcional y «Enviar denuncia». |
 | `RF-13_p01_buscar-persona-sin-email_ios_oscuro.png` | Revisada (agente, 2026-10-09): «Compartir con…» con «Expiring M.» (nombre corto, sin email) y Enviar desactivado hasta elegir. |

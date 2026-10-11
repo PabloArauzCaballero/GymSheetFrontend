@@ -73,7 +73,9 @@ export function useRoutineActions(routine: Routine) {
     onSuccess: (created) => {
       refresh();
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      notify.success(`Guardada en tus rutinas como «${created.nombre}».`);
+      // Una línea: con el nombre de la copia (ya es el título de la pantalla) el aviso saltaba a dos y
+      // tapaba «‹ Volver».
+      notify.success('Guardada en tus rutinas.');
       router.replace({ pathname: '/routines/[id]', params: { id: created.id } });
     },
     onError: (error: Error) => {
