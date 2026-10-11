@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
+import { marcarTourVisto } from './tour-visto';
 
 /**
  * Evidencia visual de un requisito (06 · Pruebas y evidencia).
@@ -23,6 +24,8 @@ export async function evidencia(
   const theme = await page.evaluate(() => document.documentElement.dataset.theme ?? 'dark');
   const tema = theme === 'light' ? 'claro' : 'oscuro';
 
+  // El tour de bienvenida de una cuenta nueva taparía lo que la captura debe probar.
+  await marcarTourVisto(page);
   await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
   await page.waitForLoadState('networkidle');
 

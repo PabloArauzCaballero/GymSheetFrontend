@@ -5,6 +5,7 @@ import { ApiError } from '@/shared/api/api-error';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Toaster } from 'sonner';
+import { shouldToastQueryError } from '@/shared/api/query-error-policy';
 import { ConfirmRoot, notify } from '@/shared/notifications';
 import type { TenantBrand } from '@/shared/theme/brand-contract';
 import { BrandProvider } from '@/shared/theme/brand-provider';
@@ -35,12 +36,12 @@ export function Providers({
          */
         queryCache: new QueryCache({
           onError: (error, query) => {
-            if (error instanceof ApiError && error.kind === 'unauthorized') return;
+            if (!shouldToastQueryError(error)) return;
             if (query.state.data !== undefined) {
-              notify.error(new Error('No pudimos actualizar la información.'));
+              notify.error('No pudimos actualizar la información.');
               return;
             }
-            notify.error(error instanceof Error ? error : new Error('No pudimos cargar la información.'));
+            notify.error(error instanceof Error ? error : 'No pudimos cargar la información.');
           },
         }),
         defaultOptions: {
