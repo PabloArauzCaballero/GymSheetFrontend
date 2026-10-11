@@ -126,9 +126,12 @@ export function AuditPanel({
                     {formatDateTime(entry.occurredAt)}
                   </p>
                   <p className="text-sm font-semibold text-[var(--text)]">{describe(entry)}</p>
-                  <p className="break-all text-xs text-[var(--text-muted)]">
-                    {entry.actorEmail} · {roleLabel(entry.actorRole)}
-                    {entry.metadata.impersonating ? ' · Suplantando' : ''}
+                  <p className="text-xs text-[var(--text-muted)]">
+                    <span className="break-all">{entry.actorEmail}</span>
+                    <span className="block">
+                      {roleLabel(entry.actorRole)}
+                      {entry.metadata.impersonating ? ' · Suplantando' : ''}
+                    </span>
                   </p>
                   {entry.targetId ? (
                     <p className="break-all text-xs text-[var(--text-muted)]">
