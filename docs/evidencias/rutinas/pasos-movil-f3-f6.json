@@ -724,17 +724,19 @@
       "rf": "RF-15",
       "paso": "04",
       "nombre": "dos-fallos-bajan-la-carga",
-      "plataformas": [],
-      "faltante": "No capturado: necesita varias sesiones; lo cubren las pruebas del motor.",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Baja el peso tras dos fallos seguidos."
     },
     {
       "rf": "RF-15",
       "paso": "05",
       "nombre": "semana-de-descarga",
-      "plataformas": [],
-      "faltante": "No capturado: depende del calendario del programa.",
-      "debeVerse": "—"
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Sugerencia de descarga: no cambia el peso."
     },
     {
       "rf": "RF-18",
