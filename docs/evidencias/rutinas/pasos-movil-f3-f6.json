@@ -709,7 +709,7 @@
       "paso": "03",
       "nombre": "notificacion-de-invitacion",
       "plataformas": [],
-      "faltante": "No capturado: la notificación push no se probó en el simulador.",
+      "faltante": "NO capturable en el simulador. Verificado en datos: al invitar se crea el mensaje IN_APP «Te compartieron una rutina» (ROUTINE_SHARE_INVITE, PENDING en notifications.messages). La app móvil no tiene bandeja y el permiso de notificaciones de iOS no se concede por simctl (`Operation not permitted`), así que un `simctl push` no pinta el aviso. Alternativa: iPhone real por TestFlight (DoD-8).",
       "debeVerse": "—"
     },
     {
@@ -780,7 +780,7 @@
       "paso": "01",
       "nombre": "notificacion-de-fin-de-programa",
       "plataformas": [],
-      "faltante": "No capturado: depende del fin real del programa (sin reloj simulado).",
+      "faltante": "NO capturable en el simulador. Verificado en datos: al cerrar las semanas con close-weeks (flujo 23c) el servidor crea el mensaje IN_APP «Terminaste tu programa» (tipo PROGRAM_FINISHED, estado PENDING en notifications.messages; el flujo imprime la fila). La app móvil no tiene bandeja para ese mensaje y el permiso de notificaciones de iOS no se puede conceder por simctl privacy (`Operation not permitted`), así que `simctl push` no mostró ningún aviso. Alternativa: captura en un iPhone real con push registrado (TestFlight), DoD-8.",
       "debeVerse": "—"
     },
     {

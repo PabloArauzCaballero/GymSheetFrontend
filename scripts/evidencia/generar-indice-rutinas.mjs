@@ -39,7 +39,9 @@ const WEB_COMBOS = [
 function expectedFiles(step, platform) {
   const stem = `${step.rf}_p${step.paso}_${step.nombre}`;
   return platform === 'web'
-    ? WEB_COMBOS.map(([width, theme]) => `${stem}_${width}_${theme}.png`)
+    ? WEB_COMBOS.filter(([width, theme]) => !step.combinacionesWeb || step.combinacionesWeb.includes(`${width}_${theme}`)).map(
+        ([width, theme]) => `${stem}_${width}_${theme}.png`,
+      )
     : [`${stem}_ios_oscuro.png`];
 }
 

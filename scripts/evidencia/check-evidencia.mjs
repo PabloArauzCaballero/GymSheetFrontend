@@ -27,7 +27,10 @@ const revisiones = Object.assign({}, ...filesOf('revisiones').map((n) => JSON.pa
 const WEB = [[390, 'claro'], [390, 'oscuro'], [1440, 'claro'], [1440, 'oscuro']];
 const esperadas = (p, plataforma) => {
   const stem = `${p.rf}_p${p.paso}_${p.nombre}`;
-  return plataforma === 'web' ? WEB.map(([w, t]) => `${stem}_${w}_${t}.png`) : [`${stem}_ios_oscuro.png`];
+  // `combinacionesWeb` (p. ej. ["1440_claro"]) limita un paso a las combinaciones que de verdad se capturan.
+  return plataforma === 'web'
+    ? WEB.filter(([w, t]) => !p.combinacionesWeb || p.combinacionesWeb.includes(`${w}_${t}`)).map(([w, t]) => `${stem}_${w}_${t}.png`)
+    : [`${stem}_ios_oscuro.png`];
 };
 
 const faltan = [];
