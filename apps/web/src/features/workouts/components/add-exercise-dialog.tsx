@@ -1,5 +1,6 @@
 'use client';
 
+import { exerciseGroupLabelEs } from '@gymsheet/domain';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dumbbell, Plus, Search } from 'lucide-react';
 import { useState, type CSSProperties } from 'react';
@@ -103,7 +104,7 @@ export function AddExerciseDialog({
                     <span className="min-w-0">
                       <span className="block truncate font-semibold">{item.nombre}</span>
                       <span className="mt-0.5 block text-xs text-[var(--text-muted)]">
-                        {item.grupoMuscular}
+                        {exerciseGroupLabelEs(item.grupoMuscular)}
                       </span>
                     </span>
                   </span>

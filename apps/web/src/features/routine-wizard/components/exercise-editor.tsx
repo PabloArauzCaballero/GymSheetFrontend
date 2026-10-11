@@ -1,5 +1,6 @@
 'use client';
 
+import { exerciseGroupLabelEs } from '@gymsheet/domain';
 import type { DraftExercise } from '@gymsheet/hooks';
 import { routineExerciseLimits as limits } from '@gymsheet/types';
 import { ArrowDown, ArrowUp, Timer, Trash2 } from 'lucide-react';
@@ -76,7 +77,7 @@ export function ExerciseEditor({
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1 pt-2">
           <p className="break-words font-semibold">{`${marca ?? position}. ${exercise.nombre}`}</p>
-          <p className="text-sm text-[var(--text-muted)]">{exercise.grupoMuscular}</p>
+          <p className="text-sm text-[var(--text-muted)]">{exerciseGroupLabelEs(exercise.grupoMuscular)}</p>
         </div>
         <Button
           aria-label={`Subir ${exercise.nombre}`}

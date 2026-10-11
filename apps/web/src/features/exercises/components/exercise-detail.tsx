@@ -1,6 +1,6 @@
 'use client';
 
-import { selectExerciseVideo } from '@gymsheet/domain';
+import { bodyPartLabelEs, exerciseGroupLabelEs, muscleLabelEs, selectExerciseVideo } from '@gymsheet/domain';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Dumbbell, Heart, Pencil, Play, Target, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -189,7 +189,7 @@ export function ExerciseDetail({
               </Badge>
               <Badge>{item.dataSource}</Badge>
             </div>
-            <p className="data-label mt-7 text-[var(--text-muted)]">{item.grupoMuscular}</p>
+            <p className="data-label mt-7 text-[var(--text-muted)]">{exerciseGroupLabelEs(item.grupoMuscular)}</p>
             <h1 className="mt-3 break-words text-3xl font-semibold tracking-[-0.02em] sm:text-5xl">
               {item.nombre}
             </h1>
@@ -208,16 +208,16 @@ export function ExerciseDetail({
               <div className="flex items-center gap-3">
                 <Target className="size-5 text-[var(--accent-ink)]" />
                 <div>
-                  <p className="text-sm font-semibold">{item.targetMuscle ?? 'No especificado'}</p>
+                  <p className="text-sm font-semibold">{muscleLabelEs(item.targetMuscle) || 'No especificado'}</p>
                   <p className="text-xs text-[var(--text-muted)]">Músculo objetivo</p>
                 </div>
               </div>
               <div className="border-t border-[var(--border-subtle)] pt-4 text-sm text-[var(--text-muted)]">
                 <p>
-                  Parte corporal: <span className="text-[var(--text)]">{item.bodyPart ?? '—'}</span>
+                  Parte corporal: <span className="text-[var(--text)]">{bodyPartLabelEs(item.bodyPart) || '—'}</span>
                 </p>
                 <p className="mt-2">
-                  Sinergista: <span className="text-[var(--text)]">{item.synergistMuscleGroup ?? '—'}</span>
+                  Sinergista: <span className="text-[var(--text)]">{exerciseGroupLabelEs(item.synergistMuscleGroup) || '—'}</span>
                 </p>
               </div>
             </CardContent>
