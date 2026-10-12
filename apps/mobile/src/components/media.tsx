@@ -48,8 +48,8 @@ function posterOf(exercise: Pick<Exercise, 'media'>): { uri: string; altText: st
 }
 
 /** ¿Tiene el ejercicio alguna imagen que enseñar (lámina o póster)? */
-export function hasArtwork(exercise: Pick<Exercise, 'media'>): boolean {
-  return primaryMedia(exercise) !== null || posterOf(exercise) !== null;
+export function hasArtwork(exercise: Pick<Exercise, 'media' | 'imagenUrl'>): boolean {
+  return Boolean(exercise.imagenUrl) || primaryMedia(exercise) !== null || posterOf(exercise) !== null;
 }
 
 /**
@@ -177,7 +177,7 @@ export function ExerciseImage({
   size,
   rounded = radii.md,
 }: {
-  exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular'>;
+  exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular' | 'imagenUrl'>;
   /**
    * Lado en px, `'hero'` para el marco del detalle o `'fill'` para ocupar el
    * contenedor (mosaico de portada).
@@ -194,7 +194,10 @@ export function ExerciseImage({
   const poster = posterOf(exercise);
   // El GIF manda en el detalle; si no hay lámina, cae al póster del vídeo, que
   // antes dejaba la tarjeta con el icono genérico.
-  const uri = media?.url ?? media?.thumbnailUrl ?? poster?.uri ?? null;
+  // `imagenUrl` es lo que el servidor ya resolvió (lámina o póster): manda en
+  // filas y miniaturas; el GIF del detalle sigue teniendo preferencia. Si no
+  // viene (servidor anterior), se calcula aquí como antes.
+  const uri = animated?.url ?? exercise.imagenUrl ?? media?.url ?? media?.thumbnailUrl ?? poster?.uri ?? null;
   const altText = media?.altText || poster?.altText || exercise.nombre;
   const [loaded, setLoaded] = useState(false);
 
@@ -202,7 +205,12 @@ export function ExerciseImage({
   // ilustración sobre blanco (póster del vídeo, GIF) va sobre la placa
   // «papel». Antes todo iba sobre la placa con margen, y una foto oscura
   // quedaba enmarcada en crema (captura de TestFlight del 2026-10-11).
-  const photo = media?.mediaType === 'IMAGE' && media.url === uri;
+  // Con `imagenUrl`: es foto salvo que el ejercicio solo tenga el póster de un
+  // vídeo (una ilustración sobre blanco, que va sobre la placa).
+  const posterOnly = primaryMedia(exercise) === null && poster !== null;
+  const photo =
+    !animated &&
+    (uri !== null && uri === exercise.imagenUrl ? !posterOnly : media?.mediaType === 'IMAGE' && media.url === uri);
 
   const frame = isHero
     ? { width: HERO_SIZE, height: HERO_SIZE, alignSelf: 'center' as const }

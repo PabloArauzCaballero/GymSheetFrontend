@@ -167,7 +167,8 @@ export function DayScreen() {
   const openDay = (day: RoutineDay) =>
     router.replace({ pathname: '/routines/[id]/dia/[diaId]', params: { id: data.id, diaId: day.id, semana: String(weekNumber) } });
 
-  const coverUri = dayCoverUri(items);
+  // La portada que el servidor ya eligió para el día; si no viene, se busca aquí.
+  const coverUri = base.portadaUrl ?? dayCoverUri(items);
   const header = (
     <View style={{ gap: spacing.smd }}>
       <Text tabular testID="day-kicker" tone="muted" variant="footnote">
@@ -249,6 +250,7 @@ export function DayScreen() {
         media: item.media,
         nombre: item.nombre,
         grupoMuscular: item.grupoMuscular ?? '',
+        imagenUrl: base.ejercicios.find((entry) => entry.id === item.routineExerciseId)?.ejercicio?.imagenUrl,
       }}
       flag={item.ajustado ? 'Ajustado por la descarga' : undefined}
       grouped={grouped}

@@ -83,6 +83,8 @@ export const routineDaySchema = z.object({
   diaSemana: z.number().int().min(1).max(7).nullable(),
   nombre: z.string().nullable(),
   orden: z.number().int(),
+  /** Portada del día: la lámina del primer ejercicio que tiene imagen. Aditivo. */
+  portadaUrl: z.string().nullable().optional(),
   ejercicios: z.array(routineExerciseSchema),
 });
 
