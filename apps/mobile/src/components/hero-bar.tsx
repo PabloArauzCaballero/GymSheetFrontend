@@ -156,9 +156,8 @@ export function HeroBar({
 }
 
 /**
- * La portada con el dedo: al tirar hacia abajo se estira desde arriba (no deja
- * un hueco de lienzo sobre la imagen); al subir se queda un poco atrás y se
- * apaga, así el contenido pasa por encima en vez de empujarla. Solo
+ * La portada con el dedo: al subir se queda un poco atrás y se apaga, así el
+ * contenido pasa por encima en vez de empujarla. Solo
  * `transform` y `opacity`. Con «Reducir movimiento» se desplaza sin más.
  */
 export function HeroParallax({ children, height }: { children: ReactNode; height: number }) {
@@ -167,10 +166,10 @@ export function HeroParallax({ children, height }: { children: ReactNode; height
   const animated = useAnimatedStyle(() => {
     if (reduceMotion || height === 0) return {};
     const y = scrollY.value;
-    if (y < 0) {
-      const scale = 1 + -y / height;
-      return { opacity: 1, transform: [{ translateY: y / 2 }, { scale }] };
-    }
+    // Al tirar hacia abajo la portada baja con el contenido (rebote del sistema) y
+    // deja sitio al indicador de recarga. Estirarla ampliaba también el título y
+    // lo sacaba por el margen izquierdo.
+    if (y <= 0) return { opacity: 1, transform: [{ translateY: 0 }, { scale: 1 }] };
     return {
       opacity: interpolate(y, [0, height * 0.85], [1, 0.25], Extrapolation.CLAMP),
       transform: [{ translateY: y * 0.28 }, { scale: 1 }],
