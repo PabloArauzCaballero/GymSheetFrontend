@@ -141,6 +141,8 @@ export type Exercise = {
   nombre: string;
   /** Nombre revisado en español (C3.b). La interfaz muestra `nombreEs ?? nombre`. */
   nombreEs?: string | null;
+  /** Su lámina (o el póster de su vídeo), ya resuelta por el servidor. Puede no venir. */
+  imagenUrl?: string | null;
   grupoMuscular: string;
   descripcion: string | null;
   tipoEjercicio: 'GLOBAL' | 'PERSONAL';

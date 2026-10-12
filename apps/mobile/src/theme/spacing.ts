@@ -71,3 +71,10 @@ export const tabletBreakpoint = 700;
 
 /** Tope con dos columnas. */
 export const maxWideContentWidth = 1040;
+
+/**
+ * Proporción de una portada: 3:2, la de las láminas del catálogo (850×567).
+ * Con una portada más alta la imagen se recorta por los lados y se amplía
+ * (a 3× se veía blanda); a 3:2 llena el ancho sin recorte.
+ */
+export const coverAspect = 3 / 2;

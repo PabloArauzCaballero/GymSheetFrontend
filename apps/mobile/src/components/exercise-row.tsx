@@ -47,7 +47,7 @@ export function ExerciseRow({
   moreLabel = 'Más opciones',
   testID,
 }: {
-  exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular'> | null;
+  exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular' | 'imagenUrl'> | null;
   name: string;
   prescription: ExercisePrescription;
   /** Línea de apoyo: músculo en español. */

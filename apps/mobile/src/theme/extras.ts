@@ -177,3 +177,39 @@ export const ratingStar = '#f5b94a';
 
 /** Franja de luz del esqueleto: blanco casi transparente. */
 export const shimmerBand = [alpha(ink.white, 0), alpha(ink.white, 0.09), alpha(ink.white, 0)] as const;
+
+/* ─── Comunidad: comentarios y «me gusta» ────────────────────────────────── */
+
+/** Corazón del «me gusta»: cálido y ajeno a la marca, se reconoce en cualquier gimnasio. */
+export const likeHeart = '#ff5d73';
+
+/** Línea de hilo que une un comentario con sus respuestas. */
+export const threadLine = alpha(ink.white, 0.12);
+
+/** Velo inferior del pie fijo: el contenido se disuelve en el lienzo bajo el botón. */
+export const footerFade = [alpha('#0c0c0b', 0), alpha('#0c0c0b', 0.92), '#0c0c0b'] as const;
+
+/* ─── Ejercicio sin lámina ───────────────────────────────────────────────── */
+
+/**
+ * Marcador de un ejercicio que no trae imagen: un degradado profundo por zona
+ * del cuerpo (mismo orden que `GROUP_ICON` de `components/media.tsx`) con su
+ * icono en marca de agua y las iniciales del ejercicio. Tonos oscuros para que
+ * las iniciales blancas midan ≥ 7:1 sobre cualquiera de los dos extremos.
+ */
+export const muscleGradients = [
+  ['#5c1f2b', '#1c0e12'],
+  ['#1d4a3a', '#0d1814'],
+  ['#1f3a5c', '#0e1520'],
+  ['#5a3412', '#1c120a'],
+  ['#3a1f5c', '#14101f'],
+  ['#123d4f', '#0c161c'],
+  ['#4a4416', '#18160b'],
+  ['#3d2a4f', '#15101b'],
+] as const;
+
+/** Sin zona reconocida. */
+export const muscleGradientDefault = ['#2f2e29', '#161614'] as const;
+
+/** Iniciales y marca de agua sobre el marcador. */
+export const placeholderInk = { initials: alpha(ink.white, 0.92), watermark: alpha(ink.white, 0.12) } as const;

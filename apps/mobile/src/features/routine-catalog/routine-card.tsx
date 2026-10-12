@@ -1,7 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { View } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
+import { Link } from 'expo-router';
+import type { ReactNode } from 'react';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 import { authorLabel, cardSubtitle, compactCount, downloadsLabel, ratingLabel, ratingValue } from '@gymsheet/hooks';
 import type { RoutineCard } from '@gymsheet/types';
+import { routineService } from '@/api/services';
 import { Skeleton } from '@/components/feedback';
 import { PressableScale } from '@/components/motion';
 import { PersonAvatar } from '@/components/person-avatar';
@@ -9,40 +13,92 @@ import { Text } from '@/components/text';
 import { GOAL_LABEL } from '@/lib/format';
 import { RoutineCover } from '@/features/routine-catalog/routine-cover';
 import { MediaChip } from '@/features/routine-catalog/media-chip';
-import { cardPadding, colors, iconSizes, ink, radii, ratingStar, shadows, spacing } from '@/theme';
+import { alpha, cardPadding, colors, coverAspect, iconSizes, ink, radii, ratingStar, shadows, spacing } from '@/theme';
 
-const COVER_HEIGHT = 208;
-const AVATAR = 28;
+const AVATAR = 36;
 
-/** Una cifra con su icono: «★ 4,6», «⬇ 12». */
-function Stat({ icon, value, color }: { icon: keyof typeof Ionicons.glyphMap; value: string; color?: string }) {
+/** «3 días · 8 semanas»: lo que dura, en una línea sobre la portada. */
+export function planLine(card: Pick<RoutineCard, 'diasPorSemana' | 'duracionSemanas'>): string {
+  return [
+    `${card.diasPorSemana} ${card.diasPorSemana === 1 ? 'día' : 'días'} por semana`,
+    card.duracionSemanas ? `${card.duracionSemanas} semanas` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+/** Lo que la comunidad ha hecho con ella: «12 descargas · 4 reseñas». */
+function socialLine(card: RoutineCard): string {
+  const reviews = card.valoracion.total;
+  return [
+    card.copias > 0 ? downloadsLabel(card.copias) : 'Estrénala tú',
+    reviews > 0 ? `${compactCount(reviews)} ${reviews === 1 ? 'reseña' : 'reseñas'}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+/**
+ * Enlace al detalle de una rutina con la precarga al contacto. Dentro, quien
+ * lo usa envuelve su portada en `Link.AppleZoom` para que crezca hasta el
+ * detalle. Lo comparten la tarjeta del catálogo y las de «Para ti».
+ */
+export function RoutineLink({
+  id,
+  label,
+  scaleTo = 0.975,
+  style,
+  testID,
+  children,
+}: {
+  id: string;
+  label: string;
+  scaleTo?: number;
+  style?: StyleProp<ViewStyle>;
+  testID?: string;
+  children: ReactNode;
+}) {
+  const queryClient = useQueryClient();
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-      <Ionicons color={color ?? colors.textMuted} name={icon} size={iconSizes.sm} />
-      <Text tabular tone="secondary" variant="subhead">
-        {value}
-      </Text>
-    </View>
+    <Link asChild href={{ pathname: '/routines/[id]', params: { id } }}>
+      <PressableScale
+        accessibilityHint="Abre la rutina"
+        accessibilityLabel={label}
+        haptic="selection"
+        // Al contacto ya se pide la rutina: cuando la portada termina de crecer, el resto suele estar.
+        onTouchStart={() =>
+          void queryClient.prefetchQuery({
+            queryKey: ['routine', id],
+            queryFn: () => routineService.get(id),
+            staleTime: 30_000,
+          })
+        }
+        scaleTo={scaleTo}
+        style={style}
+        testID={testID}
+      >
+        {children}
+      </PressableScale>
+    </Link>
   );
 }
 
 /**
- * Tarjeta del catálogo (rediseño 2026-10-11, segunda pasada): portada con la
- * imagen de un ejercicio; encima, en vidrio, el objetivo y «días · semanas», y
- * el nombre en blanco sobre el velo. Debajo, una sola fila: quién la hizo (foto
- * o iniciales) y dos cifras que se entienden sin leer, estrellas y descargas.
- * Es un solo elemento accesible que lo lee de corrido.
+ * Tarjeta del catálogo (tercera pasada, 2026-10-12). Una foto, un nombre y una
+ * persona: la portada a 3:2 (la proporción real de las láminas, así no se
+ * amplían), con un único chip —el objetivo— y el nombre sobre el velo; debajo,
+ * quién la hizo con su cara en grande y qué ha hecho la gente con ella, y a la
+ * derecha la nota. Nada más: los días y las semanas van en una línea sobre la
+ * foto, no en otro chip.
+ *
+ * Al tocarla, la portada CRECE hasta ser la del detalle (transición de zoom de
+ * iOS 18, interrumpible y con gesto de vuelta); en el resto es el empuje normal.
  */
-export function RoutineCardView({
-  card,
-  onPress,
-}: {
-  card: RoutineCard;
-  onPress: () => void;
-}) {
+export function RoutineCardView({ card }: { card: RoutineCard }) {
   const author = authorLabel(card);
   const rating = ratingValue(card.valoracion);
   const showsCommunity = card.visibilidad === 'PUBLIC' || card.esOficial;
+  const who = card.esOficial ? 'Equipo REPP' : card.esMia ? 'Tú' : author;
   const label = [
     card.nombre,
     card.esOficial ? 'Recomendada por REPP' : card.esMia ? 'Creada por ti' : `de ${author}`,
@@ -55,100 +111,96 @@ export function RoutineCardView({
     .join('. ');
 
   return (
-    <PressableScale
-      accessibilityLabel={label}
-      haptic="selection"
-      onPress={onPress}
-      scaleTo={0.985}
+    <RoutineLink
+      id={card.id}
+      label={label}
       style={{
         borderRadius: radii.xxl,
         borderCurve: 'continuous',
         backgroundColor: colors.surfaceLow,
-        boxShadow: shadows.e2,
-        overflow: 'hidden',
+        boxShadow: shadows.card,
       }}
       testID={`routine-card-${card.id}`}
     >
-      {/* Portada con el título encima (decisión del 2026-10-11): el nombre se
-          lee sobre la foto con el velo fuerte, como en Apple Fitness; debajo
-          solo queda quién la hizo y sus cifras. */}
-      <RoutineCover goal={card.objetivo} style={{ height: COVER_HEIGHT }} uri={card.portadaUrl}>
+        <Link.AppleZoom>
+          <View
+            style={{
+              borderTopLeftRadius: radii.xxl,
+              borderTopRightRadius: radii.xxl,
+              borderCurve: 'continuous',
+              overflow: 'hidden',
+            }}
+          >
+            <RoutineCover goal={card.objetivo} style={{ aspectRatio: coverAspect }} uri={card.portadaUrl}>
+              {card.objetivo ? (
+                <View style={{ position: 'absolute', top: spacing.md, left: spacing.md }}>
+                  <MediaChip label={GOAL_LABEL[card.objetivo]} />
+                </View>
+              ) : null}
+              <View
+                style={{
+                  position: 'absolute',
+                  left: cardPadding,
+                  right: cardPadding,
+                  bottom: spacing.md,
+                  gap: spacing.xs,
+                }}
+              >
+                <Text numberOfLines={2} style={{ color: ink.white }} variant="title">
+                  {card.nombre}
+                </Text>
+                <Text numberOfLines={1} style={{ color: alpha(ink.white, 0.82) }} tabular variant="footnote">
+                  {planLine(card)}
+                </Text>
+              </View>
+            </RoutineCover>
+          </View>
+        </Link.AppleZoom>
+
         <View
           style={{
-            position: 'absolute',
-            top: spacing.md,
-            left: spacing.md,
-            right: spacing.md,
             flexDirection: 'row',
-            justifyContent: 'space-between',
-            gap: spacing.sm,
+            alignItems: 'center',
+            gap: spacing.smd,
+            paddingHorizontal: cardPadding,
+            paddingVertical: spacing.md,
           }}
         >
-          {card.objetivo ? <MediaChip label={GOAL_LABEL[card.objetivo]} /> : <View />}
-          <MediaChip
-            icon="calendar-outline"
-            label={[`${card.diasPorSemana} días/sem`, card.duracionSemanas ? `${card.duracionSemanas} sem` : null]
-              .filter(Boolean)
-              .join(' · ')}
+          <PersonAvatar
+            id={card.autor.id}
+            name={card.autor.nombre}
+            official={card.esOficial}
+            photoUrl={card.autor.fotoUrl}
+            size={AVATAR}
           />
-        </View>
-        <Text
-          numberOfLines={2}
-          style={{
-            position: 'absolute',
-            left: cardPadding,
-            right: cardPadding,
-            bottom: spacing.md,
-            color: ink.white,
-          }}
-          variant="title"
-        >
-          {card.nombre}
-        </Text>
-      </RoutineCover>
-
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.smd,
-          paddingHorizontal: cardPadding,
-          paddingVertical: spacing.md,
-        }}
-      >
-        <PersonAvatar
-          id={card.autor.id}
-          name={card.autor.nombre}
-          official={card.esOficial}
-          photoUrl={card.autor.fotoUrl}
-          size={AVATAR}
-        />
-        <Text numberOfLines={1} style={{ flex: 1 }} tone="secondary" variant="subhead">
-          {card.esOficial ? 'REPP · Oficial' : card.esMia ? 'Creada por ti' : author}
-        </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <View style={{ flex: 1, gap: spacing.xxs }}>
+            <Text numberOfLines={1} strong variant="subhead">
+              {who}
+            </Text>
+            <Text numberOfLines={1} tabular tone="muted" variant="footnote">
+              {showsCommunity ? socialLine(card) : card.visibilidad === 'PUBLIC' ? 'Pública' : 'Solo tú la ves'}
+            </Text>
+          </View>
           {showsCommunity ? (
-            <>
-              <Stat
-                color={rating ? ratingStar : undefined}
-                icon={rating ? 'star' : 'star-outline'}
-                value={rating ? rating : 'Nueva'}
-              />
-              <Stat icon="arrow-down-circle-outline" value={compactCount(card.copias)} />
-            </>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+              <Ionicons color={rating ? ratingStar : colors.textMuted} name={rating ? 'star' : 'star-outline'} size={iconSizes.sm} />
+              <Text strong tabular tone={rating ? 'default' : 'muted'} variant="subhead">
+                {rating ?? 'Nueva'}
+              </Text>
+            </View>
           ) : (
-            <Stat
-              icon={card.visibilidad === 'PUBLIC' ? 'globe-outline' : 'lock-closed-outline'}
-              value={card.visibilidad === 'PUBLIC' ? 'Pública' : 'Privada'}
+            <Ionicons
+              color={colors.textMuted}
+              name={card.visibilidad === 'PUBLIC' ? 'globe-outline' : 'lock-closed-outline'}
+              size={iconSizes.sm}
             />
           )}
         </View>
-      </View>
-    </PressableScale>
+    </RoutineLink>
   );
 }
 
-/** Esqueleto con la forma de la tarjeta: portada, título, autor y cifras. */
+/** Esqueleto con la forma de la tarjeta: portada, autor y nota. */
 export function RoutineCardSkeleton() {
   return (
     <View
@@ -161,7 +213,9 @@ export function RoutineCardSkeleton() {
         overflow: 'hidden',
       }}
     >
-      <Skeleton height={COVER_HEIGHT} radius={0} />
+      <View style={{ aspectRatio: coverAspect }}>
+        <Skeleton height="100%" radius={0} />
+      </View>
       <View
         style={{
           flexDirection: 'row',
@@ -172,9 +226,11 @@ export function RoutineCardSkeleton() {
         }}
       >
         <Skeleton height={AVATAR} radius={radii.full} width={AVATAR} />
-        <Skeleton height={14} radius={radii.xs} width="35%" />
-        <View style={{ flex: 1 }} />
-        <Skeleton height={14} radius={radii.xs} width="25%" />
+        <View style={{ flex: 1, gap: spacing.xs }}>
+          <Skeleton height={14} radius={radii.xs} width="45%" />
+          <Skeleton height={12} radius={radii.xs} width="60%" />
+        </View>
+        <Skeleton height={14} radius={radii.xs} width={40} />
       </View>
     </View>
   );

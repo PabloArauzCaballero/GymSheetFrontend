@@ -168,6 +168,8 @@ export const exerciseSchema = z
     nombre: z.string(),
     /** Nombre revisado en español (C3.b); la interfaz muestra `nombreEs ?? nombre`. */
     nombreEs: z.string().nullable().optional(),
+    /** Su lámina (o el póster de su vídeo), ya resuelta por el servidor. Aditivo. */
+    imagenUrl: z.string().nullable().optional(),
     grupoMuscular: z.string(),
     descripcion: z.string().nullable(),
     tipoEjercicio: z.enum(['GLOBAL', 'PERSONAL']),

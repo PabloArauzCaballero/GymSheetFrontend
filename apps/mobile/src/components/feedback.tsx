@@ -28,7 +28,7 @@ export function Skeleton({
   width,
   radius = radii.xl,
 }: {
-  height?: number;
+  height?: number | `${number}%`;
   width?: number | `${number}%`;
   radius?: number;
 }) {

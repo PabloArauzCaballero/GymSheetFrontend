@@ -399,8 +399,15 @@ export function useScreenTour(key: Exclude<TourKey, 'welcome'>, enabled = true):
   useFocusEffect(
     useCallback(() => {
       setFocusedAt(Date.now());
-      return () => setFocusedAt(null);
-    }, []),
+      return () => {
+        setFocusedAt(null);
+        // La pantalla deja de estar delante (un enlace o un aviso abrieron
+        // otra) con su guía todavía abierta: se cierra sin darla por vista.
+        // Antes se quedaba encima de la pantalla nueva señalando al vacío, y
+        // «Siguiente» esperaba a un elemento que ya no existía.
+        if (useTourStore.getState().active === key) useTourStore.getState().dismiss();
+      };
+    }, [key]),
   );
 
   useEffect(() => {
