@@ -48,14 +48,9 @@ export function WeekSection({
   const weeksTotal = total || routine.duracionSemanas || 0;
   return (
     <View style={{ gap: spacing.mdl }}>
-      <View style={{ gap: spacing.xs }}>
-        <Text accessibilityRole="header" variant="title">
-          Los días
-        </Text>
-        <Text tone="muted" variant="subhead">
-          Toca un día para ver sus ejercicios.
-        </Text>
-      </View>
+      <Text accessibilityRole="header" variant="title">
+        Los días
+      </Text>
 
       <View style={{ gap: spacing.md }}>
         {days.map((day, index) => (

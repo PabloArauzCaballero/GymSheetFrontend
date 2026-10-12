@@ -28,7 +28,8 @@ import { Text as AppText } from '@/components/text';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { QuickActions } from '@/features/routine-catalog/quick-actions';
 import { routes } from '@/lib/routes';
-import { Button, Input } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { SEARCH_HEIGHT, SearchField } from '@/features/routine-catalog/search-field';
 import { WeekPlan } from '@/components/week-plan';
 import { useActivePrograms } from '@/features/programs/use-active-programs';
 import { CardioProgramCard } from '@/features/cardio/cardio-program-card';
@@ -41,7 +42,7 @@ import { RoutineCardSkeleton, RoutineCardView } from '@/features/routine-catalog
 import { useRecommendedRoutines } from '@/features/routine-catalog/use-recommended-routines';
 import { useRoutineCatalog } from '@/features/routine-catalog/use-routine-catalog';
 import { GOAL_LABEL } from '@/lib/format';
-import { colors, comfortableTouchTarget, fontSizes, gutter, iconSizes, radii, spacing } from '@/theme';
+import { colors, fontSizes, gutter, iconSizes, radii, spacing } from '@/theme';
 
 const EMPTY_COPY: Record<string, { title: string; message: string }> = {
   public: {
@@ -201,21 +202,7 @@ export function RoutinesCatalogScreen() {
             alignItems: 'center',
           }}
         >
-          <View style={{ flex: 1 }}>
-            <Input
-              autoCapitalize="none"
-              autoCorrect={false}
-              clearButtonMode="while-editing"
-              icon="search"
-              label="Buscar rutinas"
-              labelHidden
-              onChangeText={setSearch}
-              placeholder="Buscar rutina…"
-              returnKeyType="search"
-              testID="routine-search"
-              value={search}
-            />
-          </View>
+          <SearchField onChangeText={setSearch} value={search} />
           {tab === 'public' ? (
             <PressableScale
               accessibilityLabel={count > 0 ? `Filtros, ${count} aplicados` : 'Filtros'}
@@ -223,8 +210,8 @@ export function RoutinesCatalogScreen() {
               onPress={() => setSheet(true)}
               scaleTo={0.94}
               style={{
-                width: comfortableTouchTarget + spacing.xs,
-                height: comfortableTouchTarget + spacing.xs,
+                width: SEARCH_HEIGHT,
+                height: SEARCH_HEIGHT,
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderRadius: radii.lg,

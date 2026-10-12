@@ -10,6 +10,8 @@ export const unstable_settings = { initialRouteName: 'index' };
 export default function RoutinesLayout() {
   return (
     <Stack screenOptions={detailStackOptions}>
+      {/* El catálogo se declara primero: es la raíz de la pila. */}
+      <Stack.Screen name="index" />
       {/* El detalle tiene una fila de estrellas que se elige ARRASTRANDO el
           dedo en horizontal. En iOS 26 «volver» se puede iniciar desde
           cualquier punto de la pantalla y se llevaba ese arrastre (la pantalla

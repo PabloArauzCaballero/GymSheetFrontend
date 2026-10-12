@@ -75,6 +75,11 @@ export function DayCard({ day, number, onPress }: { day: RoutineDay; number: num
               {muscles.join(' · ')}
             </Text>
           ) : null}
+          {thumbs.length < 2 ? (
+            <Text numberOfLines={1} style={{ marginTop: spacing.xs }} tabular tone="muted" variant="footnote">
+              {meta}
+            </Text>
+          ) : null}
         </View>
         <Ionicons
           accessibilityElementsHidden
@@ -85,8 +90,10 @@ export function DayCard({ day, number, onPress }: { day: RoutineDay; number: num
         />
       </View>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
-        {thumbs.length >= 2 ? (
+      {/* Con láminas: una fila propia, montadas como caras. Sin ellas, el dato
+          va pegado al texto (una fila suelta abajo dejaba un hueco). */}
+      {thumbs.length >= 2 ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
           <View style={{ flexDirection: 'row' }}>
             {thumbs.map((item, index) =>
               item.ejercicio ? (
@@ -104,11 +111,11 @@ export function DayCard({ day, number, onPress }: { day: RoutineDay; number: num
               ) : null,
             )}
           </View>
-        ) : null}
-        <Text numberOfLines={1} style={{ flex: 1 }} tabular tone="muted" variant="footnote">
-          {meta}
-        </Text>
-      </View>
+          <Text numberOfLines={1} style={{ flex: 1 }} tabular tone="muted" variant="footnote">
+            {meta}
+          </Text>
+        </View>
+      ) : null}
     </PressableScale>
   );
 }
