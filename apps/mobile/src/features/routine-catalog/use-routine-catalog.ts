@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
-import type { RoutineCard } from '@gymsheet/types';
+import type { RoutineCard, RoutineRecommendation } from '@gymsheet/types';
 import { toCatalogQuery, type CatalogFilterState, type CatalogTab, type MineChip } from '@gymsheet/hooks';
 import { routineCatalogService } from '@/api/services';
 
@@ -36,6 +36,14 @@ export function useCatalogCard(id: string | undefined): RoutineCard | null {
       const found = page.items.find((item) => item.id === id);
       if (found) return found;
     }
+  }
+  // «Para ti»: una lista plana de `{ rutina, motivo }`.
+  const recommended = queryClient.getQueriesData<readonly RoutineRecommendation[]>({
+    queryKey: ['routines', 'recommended'],
+  });
+  for (const [, data] of recommended) {
+    const found = data?.find((item) => item.rutina.id === id);
+    if (found) return found.rutina;
   }
   return null;
 }

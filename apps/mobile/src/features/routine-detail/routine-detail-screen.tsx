@@ -9,6 +9,7 @@ import { canActivateProgram, canSaveCopy, isAnyDayRoutine, routineColumns, saved
 import { routineBuilderService, routineCatalogService, routineService } from '@/api/services';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { ScrollScreen } from '@/components/layout';
+import { usePullRefresh } from '@/hooks/use-pull-refresh';
 import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { ScheduleRoutine } from '@/components/schedule-routine';
@@ -57,6 +58,7 @@ export function RoutineDetailScreen() {
     queryFn: () => routineBuilderService.calendar(id),
     enabled: Boolean(id) && routine.isSuccess,
   });
+  const pull = usePullRefresh(routine.refetch);
   const data = routine.data;
   // Lo que ya sabía la tarjeta del catálogo: la portada se pinta con eso
   // mientras llega la rutina entera, así el zoom aterriza sobre la misma foto.
@@ -209,8 +211,8 @@ export function RoutineDetailScreen() {
         backTestID: 'routine-back',
         moreTestID: 'routine-more',
       }}
-      onRefresh={() => void routine.refetch()}
-      refreshing={routine.isRefetching}
+      onRefresh={pull.onRefresh}
+      refreshing={pull.refreshing}
     >
       <View style={{ gap: spacing.lg }}>
         <DetailHeader

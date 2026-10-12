@@ -18,9 +18,12 @@ export function RoutineCover({
   goal,
   scrim = 'strong',
   instant = false,
+  glyph,
   style,
   children,
 }: {
+  /** Icono de la marca de agua cuando no hay imagen; por defecto, el del objetivo. */
+  glyph?: keyof typeof Ionicons.glyphMap;
   /** La imagen ya se veía en la pantalla anterior: entra sin fundido. */
   instant?: boolean;
   uri: string | null | undefined;
@@ -33,16 +36,13 @@ export function RoutineCover({
   const [from, to] = goalGradients[goal ?? 'DEFAULT'];
   const fallback = (
     <LinearGradient colors={[from, to]} end={{ x: 1, y: 1 }} start={{ x: 0, y: 0 }} style={StyleSheet.absoluteFill}>
+      {/* Marca de agua grande y quieta, abajo a la derecha: deja libre la
+          esquina de los botones y no compite con el título, que va a la izquierda. */}
       <Ionicons
-        color={alpha(ink.white, 0.09)}
-        name={goal ? GOAL_ICON[goal] : 'barbell'}
-        size={168}
-        style={{
-          position: 'absolute',
-          right: -24,
-          top: -12,
-          transform: [{ rotate: '-18deg' }],
-        }}
+        color={alpha(ink.white, 0.08)}
+        name={glyph ?? (goal ? GOAL_ICON[goal] : 'barbell')}
+        size={220}
+        style={{ position: 'absolute', right: -36, bottom: -28 }}
       />
     </LinearGradient>
   );

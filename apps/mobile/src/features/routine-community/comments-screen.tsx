@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { BottomTabBarHeightContext } from 'expo-router/build/react-navigation/bottom-tabs';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useContext, useEffect, useRef, useState } from 'react';
-import { FlatList, StyleSheet, View, type TextInput } from 'react-native';
+import { FlatList, Keyboard, StyleSheet, View, type TextInput } from 'react-native';
 import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RoutineComment } from '@gymsheet/types';
@@ -100,6 +100,13 @@ export function CommentsScreen() {
     setReplyTo(parent);
     setOpen((current) => new Set(current).add(parent.id));
     input.current?.focus();
+  };
+  // El campo suelta el foco ANTES de abrir el menú: si lo conserva, iOS se lo
+  // devuelve al cerrarse la hoja y el teclado vuelve a subir sin que nadie lo pida.
+  const openMenu = (comment: RoutineComment) => {
+    input.current?.blur();
+    Keyboard.dismiss();
+    setMenu(comment);
   };
   const submit = () => {
     const texto = draft.trim();
@@ -213,7 +220,7 @@ export function CommentsScreen() {
             <CommentThread
               comment={item}
               expanded={open.has(item.id)}
-              handlers={{ onLike: (comment) => like.mutate(comment), onReply: startReply, onMenu: setMenu }}
+              handlers={{ onLike: (comment) => like.mutate(comment), onReply: startReply, onMenu: openMenu }}
               onToggle={() =>
                 setOpen((current) => {
                   const next = new Set(current);

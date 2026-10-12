@@ -19,6 +19,7 @@ import { trainingGoals, type TrainingGoal } from '@gymsheet/types';
 import { ApiError } from '@gymsheet/api-client';
 import { profileService, routineService, routineSharingService } from '@/api/services';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import { usePullRefresh } from '@/hooks/use-pull-refresh';
 import { EmptyState, ErrorState } from '@/components/feedback';
 import { FilterChip } from '@/components/filter-chip';
 import { ScrollScreen, ScreenHeader, Section } from '@/components/layout';
@@ -103,6 +104,15 @@ export function RoutinesCatalogScreen() {
   });
 
   const programs = useActivePrograms();
+  const pull = usePullRefresh(() =>
+    Promise.all([
+      catalog.refetch(),
+      forYou.refetch(),
+      assignments.refetch(),
+      invitations.refetch(),
+      queryClient.invalidateQueries({ queryKey: ['programs'] }),
+    ]),
+  );
   // ¿Hoy toca pesas? Con el plan de cardio el mismo día se avisa «Haz primero las pesas».
   const strengthRoutine = useQuery({
     queryKey: ['routine', programs.data?.fuerza?.rutinaId],
@@ -122,14 +132,8 @@ export function RoutinesCatalogScreen() {
 
   return (
     <ScrollScreen
-      onRefresh={() => {
-        void catalog.refetch();
-        void forYou.refetch();
-        void assignments.refetch();
-        void invitations.refetch();
-        void queryClient.invalidateQueries({ queryKey: ['programs'] });
-      }}
-      refreshing={catalog.isRefetching}
+      onRefresh={pull.onRefresh}
+      refreshing={pull.refreshing}
     >
       <ScreenHeader title="Rutinas" tourKey="routines" />
       {/* Cabecera: accesos en casillas iguales. La acción principal de la
@@ -177,7 +181,7 @@ export function RoutinesCatalogScreen() {
         </Section>
       ) : null}
 
-      <ForYouBlock onOpen={open} state={forYou.state} />
+      <ForYouBlock state={forYou.state} />
 
       {/* Explorar: pestañas, búsqueda y objetivo juntos, a 16 entre sí; antes
           iban a 32 como si fueran secciones distintas y la pantalla se partía. */}

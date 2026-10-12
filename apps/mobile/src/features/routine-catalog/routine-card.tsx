@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'expo-router';
-import { View } from 'react-native';
+import type { ReactNode } from 'react';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 import { authorLabel, cardSubtitle, compactCount, downloadsLabel, ratingLabel, ratingValue } from '@gymsheet/hooks';
 import type { RoutineCard } from '@gymsheet/types';
 import { routineService } from '@/api/services';
@@ -38,6 +39,51 @@ function socialLine(card: RoutineCard): string {
 }
 
 /**
+ * Enlace al detalle de una rutina con la precarga al contacto. Dentro, quien
+ * lo usa envuelve su portada en `Link.AppleZoom` para que crezca hasta el
+ * detalle. Lo comparten la tarjeta del catálogo y las de «Para ti».
+ */
+export function RoutineLink({
+  id,
+  label,
+  scaleTo = 0.975,
+  style,
+  testID,
+  children,
+}: {
+  id: string;
+  label: string;
+  scaleTo?: number;
+  style?: StyleProp<ViewStyle>;
+  testID?: string;
+  children: ReactNode;
+}) {
+  const queryClient = useQueryClient();
+  return (
+    <Link asChild href={{ pathname: '/routines/[id]', params: { id } }}>
+      <PressableScale
+        accessibilityHint="Abre la rutina"
+        accessibilityLabel={label}
+        haptic="selection"
+        // Al contacto ya se pide la rutina: cuando la portada termina de crecer, el resto suele estar.
+        onTouchStart={() =>
+          void queryClient.prefetchQuery({
+            queryKey: ['routine', id],
+            queryFn: () => routineService.get(id),
+            staleTime: 30_000,
+          })
+        }
+        scaleTo={scaleTo}
+        style={style}
+        testID={testID}
+      >
+        {children}
+      </PressableScale>
+    </Link>
+  );
+}
+
+/**
  * Tarjeta del catálogo (tercera pasada, 2026-10-12). Una foto, un nombre y una
  * persona: la portada a 3:2 (la proporción real de las láminas, así no se
  * amplían), con un único chip —el objetivo— y el nombre sobre el velo; debajo,
@@ -49,7 +95,6 @@ function socialLine(card: RoutineCard): string {
  * iOS 18, interrumpible y con gesto de vuelta); en el resto es el empuje normal.
  */
 export function RoutineCardView({ card }: { card: RoutineCard }) {
-  const queryClient = useQueryClient();
   const author = authorLabel(card);
   const rating = ratingValue(card.valoracion);
   const showsCommunity = card.visibilidad === 'PUBLIC' || card.esOficial;
@@ -66,28 +111,17 @@ export function RoutineCardView({ card }: { card: RoutineCard }) {
     .join('. ');
 
   return (
-    <Link asChild href={{ pathname: '/routines/[id]', params: { id: card.id } }}>
-      <PressableScale
-        accessibilityHint="Abre la rutina"
-        accessibilityLabel={label}
-        haptic="selection"
-        // Al contacto ya se pide la rutina: cuando la portada termina de crecer, el resto suele estar.
-        onTouchStart={() =>
-          void queryClient.prefetchQuery({
-            queryKey: ['routine', card.id],
-            queryFn: () => routineService.get(card.id),
-            staleTime: 30_000,
-          })
-        }
-        scaleTo={0.975}
-        style={{
-          borderRadius: radii.xxl,
-          borderCurve: 'continuous',
-          backgroundColor: colors.surfaceLow,
-          boxShadow: shadows.card,
-        }}
-        testID={`routine-card-${card.id}`}
-      >
+    <RoutineLink
+      id={card.id}
+      label={label}
+      style={{
+        borderRadius: radii.xxl,
+        borderCurve: 'continuous',
+        backgroundColor: colors.surfaceLow,
+        boxShadow: shadows.card,
+      }}
+      testID={`routine-card-${card.id}`}
+    >
         <Link.AppleZoom>
           <View
             style={{
@@ -162,8 +196,7 @@ export function RoutineCardView({ card }: { card: RoutineCard }) {
             />
           )}
         </View>
-      </PressableScale>
-    </Link>
+    </RoutineLink>
   );
 }
 

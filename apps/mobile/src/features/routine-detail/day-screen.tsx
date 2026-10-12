@@ -8,9 +8,11 @@ import { dayView, estimateDayMinutes, transitionLabel, type DayBlock, type DayEx
 import type { Routine, RoutineDay } from '@gymsheet/types';
 import { routineBuilderService, routineService } from '@/api/services';
 import { ExerciseRow } from '@/components/exercise-row';
+import { muscleGroupIcon } from '@/components/media';
 import { EmptyState, ErrorState, RowsSkeleton, Skeleton } from '@/components/feedback';
 import { GroupBlock } from '@/components/group-block';
 import { ScrollScreen } from '@/components/layout';
+import { usePullRefresh } from '@/hooks/use-pull-refresh';
 import { BackLink } from '@/components/nav';
 import { RestPill } from '@/components/rest-pill';
 import { StickyFooter, StickyFooterSpacer } from '@/components/sticky-footer';
@@ -110,6 +112,8 @@ export function DayScreen() {
     enabled: Boolean(id) && routine.isSuccess,
   });
 
+  const pull = usePullRefresh(routine.refetch);
+
   if (routine.isPending) {
     return (
       <ScrollScreen>
@@ -175,7 +179,12 @@ export function DayScreen() {
     </View>
   );
   const hero = (
-    <RoutineCover goal={data.objetivo} style={{ height: heroHeightFor(width, topInset) - 24 }} uri={coverUri}>
+    <RoutineCover
+      glyph={coverUri ? undefined : muscleGroupIcon(items[0]?.grupoMuscular ?? items[0]?.bodyPart)}
+      goal={data.objetivo}
+      style={{ height: heroHeightFor(width, topInset) - 24 }}
+      uri={coverUri}
+    >
       <View
         style={{
           position: 'absolute',
@@ -271,7 +280,7 @@ export function DayScreen() {
 
   return (
     <ScrollScreen
-      onRefresh={() => void routine.refetch()}
+      onRefresh={pull.onRefresh}
       overlay={
         <StickyFooter>
           <Button
@@ -287,7 +296,7 @@ export function DayScreen() {
       }
       hero={hero}
       heroBar={{ title: dayTitle(base), onBack: () => router.back(), backTestID: 'day-back' }}
-      refreshing={routine.isRefetching}
+      refreshing={pull.refreshing}
     >
       <View
         accessibilityLabel={`Unos ${minutes} minutos, ${items.length} ejercicios, ${view.totalSeries} series${groups ? `, ${groups} ${groups === 1 ? 'bloque' : 'bloques'}` : ''}`}
