@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Share, View } from 'react-native';
+import { Share, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '@gymsheet/api-client';
 import type { Routine } from '@gymsheet/types';
 import { canActivateProgram, canSaveCopy, isAnyDayRoutine, routineColumns, savedCopyLabel } from '@gymsheet/hooks';
@@ -13,7 +14,8 @@ import { Button } from '@/components/ui';
 import { ScheduleRoutine } from '@/components/schedule-routine';
 import { DetailActions, type PrimaryIntent } from '@/features/routine-detail/detail-actions';
 import { DetailHeader } from '@/features/routine-detail/detail-header';
-import { DetailHero } from '@/features/routine-detail/detail-hero';
+import { DetailHero, heroContentOf, heroHeightFor } from '@/features/routine-detail/detail-hero';
+import { useCatalogCard } from '@/features/routine-catalog/use-routine-catalog';
 import { DetailSection, DetailSocial } from '@/features/routine-detail/detail-social';
 import { DayCard } from '@/features/routine-detail/day-cards';
 import { MoreSheet, type MoreAction } from '@/features/routine-detail/more-sheet';
@@ -35,6 +37,8 @@ import { radii, spacing } from '@/theme';
 export function RoutineDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<ViewMode>('week');
   const [ignored, setIgnored] = useState(false);
   const [report, setReport] = useState<ReportTarget | null>(null);
@@ -54,6 +58,9 @@ export function RoutineDetailScreen() {
     enabled: Boolean(id) && routine.isSuccess,
   });
   const data = routine.data;
+  // Lo que ya sabía la tarjeta del catálogo: la portada se pinta con eso
+  // mientras llega la rutina entera, así el zoom aterriza sobre la misma foto.
+  const preview = useCatalogCard(id);
   const foreign = canSaveCopy(data);
   // C2: ¿ya guardaste esta rutina? Se busca en «Mías» por la atribución que
   // congela la copia. Solo para rutinas ajenas.
@@ -71,7 +78,25 @@ export function RoutineDetailScreen() {
 
   if (routine.isPending) {
     return (
-      <ScrollScreen hero={<Skeleton height={360} radius={0} />}>
+      <ScrollScreen
+        hero={
+          preview ? (
+            <DetailHero
+              content={{
+                nombre: preview.nombre,
+                objetivo: preview.objetivo,
+                portadaUrl: preview.portadaUrl,
+                diasPorSemana: preview.diasPorSemana,
+                duracionSemanas: preview.duracionSemanas,
+                esOficial: preview.esOficial,
+              }}
+            />
+          ) : (
+            <Skeleton height={heroHeightFor(width, insets.top)} radius={0} />
+          )
+        }
+        heroBar={{ title: '', onBack: () => router.back(), backTestID: 'routine-back' }}
+      >
         <View
           style={{
             flexDirection: 'row',
@@ -176,7 +201,14 @@ export function RoutineDetailScreen() {
 
   return (
     <ScrollScreen
-      hero={<DetailHero onMore={more.length > 0 ? () => setMoreOpen(true) : undefined} routine={data} />}
+      hero={<DetailHero content={heroContentOf(data)} />}
+      heroBar={{
+        title: data.nombre,
+        onBack: () => router.back(),
+        onMore: more.length > 0 ? () => setMoreOpen(true) : undefined,
+        backTestID: 'routine-back',
+        moreTestID: 'routine-more',
+      }}
       onRefresh={() => void routine.refetch()}
       refreshing={routine.isRefetching}
     >
@@ -209,6 +241,7 @@ export function RoutineDetailScreen() {
                     : 'Añade ejercicios para poder activarla.'
                   : undefined
               }
+              primaryDone={intent === 'save' && actions.copied}
               primaryLoading={intent === 'save' ? actions.copying : intent === 'train' ? start.isPending : false}
               tryingDay={intent !== 'train' && start.isPending}
             />

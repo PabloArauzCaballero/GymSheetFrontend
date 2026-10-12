@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, View } from 'react-native';
-import { PressableScale } from '@/components/motion';
+import { Pop, PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
-import { colors, iconSizes, minTouchTarget, radii, shadows, spacing } from '@/theme';
+import { colors, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
 
 /** Qué hace el único CTA principal del detalle (C1/C2, C8.3.1). */
 export type PrimaryIntent = 'save' | 'activate' | 'train';
@@ -39,7 +39,7 @@ export function QuietAction({
       accessibilityLabel={label}
       accessibilityState={{ busy: loading }}
       disabled={loading}
-      haptic="none"
+      haptic="selection"
       onPress={onPress}
       scaleTo={0.96}
       style={{
@@ -50,10 +50,9 @@ export function QuietAction({
         gap: spacing.sm,
         minHeight: minTouchTarget,
         paddingHorizontal: spacing.md,
-        borderRadius: radii.full,
+        borderRadius: radii.lg,
         borderCurve: 'continuous',
-        backgroundColor: colors.surfaceLow,
-        boxShadow: shadows.e1,
+        backgroundColor: colors.surfaceHigh,
       }}
       testID={testID}
     >
@@ -85,6 +84,7 @@ export function DetailActions({
   intent,
   onPrimary,
   primaryLoading,
+  primaryDone = false,
   primaryDisabledReason,
   existingCopy,
   onOpenCopy,
@@ -95,6 +95,8 @@ export function DetailActions({
   intent: PrimaryIntent;
   onPrimary: () => void;
   primaryLoading?: boolean;
+  /** La acción acaba de salir bien: el botón lo dice («Guardada») con un golpe. */
+  primaryDone?: boolean;
   /** Si el CTA no se puede usar, por qué (se dice, no solo se apaga). */
   primaryDisabledReason?: string;
   existingCopy?: { id: string; label: string } | null;
@@ -106,15 +108,17 @@ export function DetailActions({
 }) {
   return (
     <View style={{ gap: spacing.sm }}>
-      <Button
-        icon={PRIMARY_ICON[intent]}
-        label={PRIMARY_LABEL[intent]}
-        disabled={Boolean(primaryDisabledReason)}
-        loading={primaryLoading}
-        onPress={onPrimary}
-        size="lg"
-        testID="routine-primary-cta"
-      />
+      <Pop trigger={primaryDone}>
+        <Button
+          icon={primaryDone ? 'checkmark-circle' : PRIMARY_ICON[intent]}
+          label={primaryDone ? 'Guardada' : PRIMARY_LABEL[intent]}
+          disabled={Boolean(primaryDisabledReason)}
+          loading={primaryLoading && !primaryDone}
+          onPress={primaryDone ? () => undefined : onPrimary}
+          size="lg"
+          testID="routine-primary-cta"
+        />
+      </Pop>
       {primaryDisabledReason ? (
         <Text tone="muted" variant="footnote">
           {primaryDisabledReason}

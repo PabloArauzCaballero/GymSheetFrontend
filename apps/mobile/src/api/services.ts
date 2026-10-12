@@ -324,6 +324,8 @@ export const communityService = {
     respuestaA?: string | null,
   ) => communityApi.comment(kind, id, { texto, ...(respuestaA ? { respuestaA } : {}) }),
   deleteComment: communityApi.removeComment,
+  likeComment: communityApi.likeComment,
+  unlikeComment: communityApi.unlikeComment,
   report: communityApi.report,
 };
 

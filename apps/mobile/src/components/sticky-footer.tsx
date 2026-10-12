@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { alpha, colors, radii, shadows, spacing } from '@/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { footerFade, gutter, spacing } from '@/theme';
 
 /** Alto que ocupa el pie (botón de 56 + relleno): el final del scroll lo reserva. */
-export const STICKY_FOOTER_SPACE = 56 + spacing.sm * 2 + spacing.md;
+export const STICKY_FOOTER_SPACE = 56 + spacing.lg;
 
 /**
  * Pie fijo con la acción principal de la pantalla (C8.2). Se pasa como
@@ -13,19 +14,22 @@ export const STICKY_FOOTER_SPACE = 56 + spacing.sm * 2 + spacing.md;
  */
 export function StickyFooter({ children }: { children: ReactNode }) {
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
-        padding: spacing.sm,
-        borderRadius: radii.xxl,
-        borderCurve: 'continuous',
-        backgroundColor: alpha(colors.surfaceHigh, 0.96),
-        boxShadow: shadows.e3,
-      }}
-    >
-      {children}
+    <View>
+      {/* Sin caja alrededor del botón: el contenido se disuelve en el lienzo
+          por debajo de él (velo), y el botón flota con su propio halo. */}
+      <LinearGradient
+        colors={footerFade}
+        locations={[0, 0.45, 1]}
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          left: -gutter,
+          right: -gutter,
+          top: -spacing.xl,
+          bottom: -spacing.xl,
+        }}
+      />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>{children}</View>
     </View>
   );
 }

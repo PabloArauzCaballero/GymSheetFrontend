@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Fragment, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { exerciseGroupLabelEs, muscleLabelEs, selectExercisePoster } from '@gymsheet/domain';
 import { dayView, estimateDayMinutes, transitionLabel, type DayBlock, type DayExerciseView } from '@gymsheet/hooks';
@@ -16,11 +16,11 @@ import { RestPill } from '@/components/rest-pill';
 import { StickyFooter, StickyFooterSpacer } from '@/components/sticky-footer';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
-import { colors, gutter, ink, radii, shadows, spacing } from '@/theme';
+import { colors, gutter, ink, spacing } from '@/theme';
 import { MediaChip } from '@/features/routine-catalog/media-chip';
 import { RoutineCover } from '@/features/routine-catalog/routine-cover';
 import { dayKicker, dayTitle } from '@/features/routine-detail/day-cards';
-import { GlassButton } from '@/features/routine-detail/detail-hero';
+import { heroHeightFor } from '@/features/routine-detail/detail-hero';
 import { MoreSheet } from '@/features/routine-detail/more-sheet';
 import { ReportSheet, type ReportTarget } from '@/features/routine-detail/report-sheet';
 import { dayNumber, orderedDays } from '@/features/routine-detail/routine-plan';
@@ -93,6 +93,7 @@ export function DayScreen() {
   }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const weekNumber = Math.max(1, Number(semana) || 1);
   const start = useStartRoutine(id);
   const [report, setReport] = useState<ReportTarget | null>(null);
@@ -174,7 +175,7 @@ export function DayScreen() {
     </View>
   );
   const hero = (
-    <RoutineCover goal={data.objetivo} style={{ height: 300 }} uri={coverUri}>
+    <RoutineCover goal={data.objetivo} style={{ height: heroHeightFor(width, topInset) - 24 }} uri={coverUri}>
       <View
         style={{
           position: 'absolute',
@@ -204,15 +205,6 @@ export function DayScreen() {
             ))}
           </View>
         ) : null}
-      </View>
-      <View
-        style={{
-          position: 'absolute',
-          top: topInset + spacing.sm,
-          left: gutter,
-        }}
-      >
-        <GlassButton icon="chevron-back" label="Volver" onPress={() => router.back()} testID="day-back" />
       </View>
     </RoutineCover>
   );
@@ -294,6 +286,7 @@ export function DayScreen() {
         </StickyFooter>
       }
       hero={hero}
+      heroBar={{ title: dayTitle(base), onBack: () => router.back(), backTestID: 'day-back' }}
       refreshing={routine.isRefetching}
     >
       <View
@@ -301,11 +294,10 @@ export function DayScreen() {
         accessible
         style={{
           flexDirection: 'row',
-          paddingVertical: spacing.mdl,
-          borderRadius: radii.xl,
-          borderCurve: 'continuous',
-          backgroundColor: colors.surfaceLow,
-          boxShadow: shadows.e1,
+          paddingVertical: spacing.md,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderColor: colors.border,
         }}
         testID="day-summary"
       >

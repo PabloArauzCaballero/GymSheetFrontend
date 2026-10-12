@@ -5,7 +5,7 @@ import { compactCount, ratingLabel, ratingValue } from '@gymsheet/hooks';
 import type { Routine } from '@gymsheet/types';
 import { PersonAvatar } from '@/components/person-avatar';
 import { Text } from '@/components/text';
-import { colors, iconSizes, radii, ratingStar, shadows, spacing } from '@/theme';
+import { colors, iconSizes, ratingStar, spacing } from '@/theme';
 import { routineMinutes } from '@/features/routine-detail/routine-plan';
 
 type Cell = {
@@ -34,8 +34,8 @@ export function RatingStars({ value, size = iconSizes.xs }: { value: number; siz
 
 /**
  * Franja de cifras como la de una tienda de apps: cada celda es un número
- * grande y una palabra. Se entiende de un vistazo y sin chips: «4,6 ★★★★½ ·
- * 12 descargas · 4 días/sem · 8 semanas».
+ * grande y una palabra, separadas por un filo. Sin tarjeta: va directa sobre el
+ * lienzo, entre dos filos (una caja más aquí competía con el botón de abajo).
  */
 function StatsStrip({ cells }: { cells: Cell[] }) {
   return (
@@ -44,11 +44,10 @@ function StatsStrip({ cells }: { cells: Cell[] }) {
       accessibilityLabel={cells.map((cell) => cell.accessibility).join('. ')}
       style={{
         flexDirection: 'row',
-        paddingVertical: spacing.mdl,
-        borderRadius: radii.xl,
-        borderCurve: 'continuous',
-        backgroundColor: colors.surfaceLow,
-        boxShadow: shadows.e1,
+        paddingVertical: spacing.md,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderColor: colors.border,
       }}
       testID="routine-stats"
     >
@@ -58,16 +57,18 @@ function StatsStrip({ cells }: { cells: Cell[] }) {
           style={{
             flex: 1,
             alignItems: 'center',
-            gap: spacing.xs,
+            gap: spacing.xxs,
             paddingHorizontal: spacing.xs,
             borderLeftWidth: index === 0 ? 0 : StyleSheet.hairlineWidth,
             borderLeftColor: colors.border,
           }}
         >
-          <Text numberOfLines={1} style={{ color: colors.text }} variant="numeric">
-            {cell.value}
-          </Text>
-          {cell.stars != null ? <RatingStars value={cell.stars} /> : null}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            {cell.stars != null ? <Ionicons color={ratingStar} name="star" size={iconSizes.sm} /> : null}
+            <Text numberOfLines={1} style={{ color: colors.text }} variant="numeric">
+              {cell.value}
+            </Text>
+          </View>
           <Text numberOfLines={1} tone="muted" variant="caption">
             {cell.caption}
           </Text>
@@ -113,13 +114,15 @@ function AuthorRow({ routine }: { routine: Routine }) {
   if (routine.esMia || !routine.autor) return null;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }} testID="routine-author">
-      <PersonAvatar id={routine.autor.id} name={routine.autor.nombre} photoUrl={routine.autor.fotoUrl} size={44} />
-      <View style={{ flex: 1 }}>
-        <Text tone="muted" variant="footnote">
-          Creada por
-        </Text>
+      <PersonAvatar id={routine.autor.id} name={routine.autor.nombre} photoUrl={routine.autor.fotoUrl} size={48} />
+      <View style={{ flex: 1, gap: spacing.xxs }}>
         <Text numberOfLines={1} variant="headline">
           {routine.autor.nombre}
+        </Text>
+        <Text numberOfLines={1} tabular tone="muted" variant="footnote">
+          {routine.copias > 0
+            ? `Creó esta rutina · ${compactCount(routine.copias)} ${routine.copias === 1 ? 'persona la guardó' : 'personas la guardaron'}`
+            : 'Creó esta rutina'}
         </Text>
       </View>
     </View>

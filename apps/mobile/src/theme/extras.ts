@@ -177,3 +177,14 @@ export const ratingStar = '#f5b94a';
 
 /** Franja de luz del esqueleto: blanco casi transparente. */
 export const shimmerBand = [alpha(ink.white, 0), alpha(ink.white, 0.09), alpha(ink.white, 0)] as const;
+
+/* ─── Comunidad: comentarios y «me gusta» ────────────────────────────────── */
+
+/** Corazón del «me gusta»: cálido y ajeno a la marca, se reconoce en cualquier gimnasio. */
+export const likeHeart = '#ff5d73';
+
+/** Línea de hilo que une un comentario con sus respuestas. */
+export const threadLine = alpha(ink.white, 0.12);
+
+/** Velo inferior del pie fijo: el contenido se disuelve en el lienzo bajo el botón. */
+export const footerFade = [alpha('#0c0c0b', 0), alpha('#0c0c0b', 0.92), '#0c0c0b'] as const;

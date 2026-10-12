@@ -1,3 +1,4 @@
+import { exerciseDisplayName } from '@gymsheet/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
@@ -122,7 +123,7 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
 
       <ExerciseDemo exercise={data} gender={account.data?.genero ?? null} />
 
-      <ScreenHeader subtitle={exerciseGroupLabelEs(data.grupoMuscular)} title={data.nombre} />
+      <ScreenHeader subtitle={exerciseGroupLabelEs(data.grupoMuscular)} title={exerciseDisplayName(data)} />
 
       <ExerciseSocial exercise={data} />
 

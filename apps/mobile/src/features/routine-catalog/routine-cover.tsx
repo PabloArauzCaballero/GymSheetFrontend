@@ -17,9 +17,12 @@ export function RoutineCover({
   uri,
   goal,
   scrim = 'strong',
+  instant = false,
   style,
   children,
 }: {
+  /** La imagen ya se veía en la pantalla anterior: entra sin fundido. */
+  instant?: boolean;
   uri: string | null | undefined;
   goal: TrainingGoal | null;
   /** `strong`: el título va encima (detalle). `soft`: solo un realce abajo (tarjeta). */
@@ -44,7 +47,7 @@ export function RoutineCover({
     </LinearGradient>
   );
   return (
-    <MediaImage fallback={fallback} style={style} uri={uri}>
+    <MediaImage fallback={fallback} instant={instant} style={style} uri={uri}>
       <LinearGradient
         colors={scrim === 'strong' ? heroScrim.colors : [alpha(ink.black, 0), alpha(ink.black, 0.35)]}
         locations={scrim === 'strong' ? heroScrim.locations : [0.55, 1]}

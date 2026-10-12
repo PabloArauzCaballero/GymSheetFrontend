@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import type { MonthColumn, Weekday } from '@gymsheet/hooks';
 import type { Routine, RoutineWeek } from '@gymsheet/types';
 import { ErrorState, Skeleton } from '@/components/feedback';
-import { PressableScale } from '@/components/motion';
+import { EnterUp, PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { cardPadding, colors, comfortableTouchTarget, iconSizes, radii, spacing } from '@/theme';
 import { MonthView } from '@/features/routine-detail/calendar-views';
@@ -59,7 +59,9 @@ export function WeekSection({
 
       <View style={{ gap: spacing.md }}>
         {days.map((day, index) => (
-          <DayCard day={day} key={day.id} number={index + 1} onPress={() => onOpenDay(day.id, 1)} />
+          <EnterUp index={index} key={day.id}>
+            <DayCard day={day} number={index + 1} onPress={() => onOpenDay(day.id, 1)} />
+          </EnterUp>
         ))}
       </View>
 

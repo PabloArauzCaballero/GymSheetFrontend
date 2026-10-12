@@ -32,7 +32,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
-import { colors, glideSpring, pressSpring, radii, settleSpring } from '@/theme';
+import { colors, glideSpring, popSpring, pressSpring, radii, settleSpring } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -76,6 +76,8 @@ export const PRESS_SPRING = pressSpring;
  */
 export const SETTLE_SPRING = settleSpring;
 
+const PRESS_RETENTION = { top: 16, bottom: 16, left: 16, right: 16 } as const;
+
 /** Micro-cascade delay; capped so the last row never waits on a queue. */
 const STAGGER_MS = 40;
 const MAX_STAGGERED = 6;
@@ -108,6 +110,7 @@ export function PressableScale({
   children,
   onPress,
   onLongPress,
+  onTouchStart,
   disabled = false,
   accessibilityLabel,
   accessibilityHint,
@@ -120,8 +123,11 @@ export function PressableScale({
   testID,
 }: {
   children: ReactNode;
-  onPress: () => void;
+  /** Opcional: dentro de un `Link asChild` el toque lo pone el enlace. */
+  onPress?: () => void;
   onLongPress?: () => void;
+  /** Al contacto, antes de saber si es un toque: para adelantar trabajo (precargar el destino). */
+  onTouchStart?: () => void;
   disabled?: boolean;
   accessibilityLabel?: string;
   accessibilityHint?: string;
@@ -151,8 +157,11 @@ export function PressableScale({
       hitSlop={hitSlop}
       onLongPress={onLongPress}
       onPress={onPress}
+      // El dedo que deriva unos puntos no cancela un toque que la persona quiso dar.
+      pressRetentionOffset={PRESS_RETENTION}
       onPressIn={() => {
         pressed.value = withSpring(1, PRESS_SPRING);
+        onTouchStart?.();
         // A tick on contact. Fired on press-in, not on press-out, so the phone
         // answers the finger at the moment of touch rather than after the
         // action resolves — that delay is what reads as an unresponsive app.
@@ -661,4 +670,144 @@ export function formatThousandsEs(input: number): string {
     }
   }
   return rounded < 0 ? `-${out}` : out;
+}
+
+/**
+ * Un decimal que CUENTA hasta su valor («4,3» → «4,6»): la nota media cuando
+ * alguien valora. Misma técnica que `CountUpText` (texto escrito en el hilo de
+ * UI), con una cifra decimal y coma española. No cuenta al montarse: una nota
+ * que ya estaba ahí no es una novedad.
+ */
+export function AnimatedDecimal({ value, style }: { value: number; style?: StyleProp<TextStyle> }) {
+  const reduceMotion = useReduceMotion();
+  const current = useSharedValue(value);
+  const [settled, setSettled] = useState(true);
+  const previous = useRef(value);
+
+  useEffect(() => {
+    if (previous.current === value) return;
+    previous.current = value;
+    if (reduceMotion) {
+      current.value = value;
+      return;
+    }
+    setSettled(false);
+    const timer = setTimeout(() => setSettled(true), 700 + SETTLE_MARGIN_MS);
+    current.value = withTiming(value, { duration: 700, easing: Easing.out(Easing.cubic) });
+    return () => clearTimeout(timer);
+  }, [current, reduceMotion, value]);
+
+  const animatedProps = useAnimatedProps(() => ({ text: formatDecimalEs(current.value) }) as TextInputProps);
+  const finalText = formatDecimalEs(value);
+  const textStyle = [COUNTER_BASE, style];
+  return (
+    <View accessibilityLabel={finalText} accessibilityRole="text" accessible>
+      <Text style={[textStyle, { opacity: settled ? 1 : 0 }]}>{finalText}</Text>
+      <AnimatedTextInput
+        accessibilityElementsHidden
+        animatedProps={animatedProps}
+        caretHidden
+        defaultValue={finalText}
+        editable={false}
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        scrollEnabled={false}
+        style={[textStyle, StyleSheet.absoluteFill, COUNTER_INPUT, { textAlign: 'left' }, settled ? { opacity: 0 } : null]}
+        underlineColorAndroid="transparent"
+      />
+    </View>
+  );
+}
+
+/** «4,3»: una cifra decimal con coma, apto para worklets. */
+export function formatDecimalEs(input: number): string {
+  'worklet';
+  const tenths = Math.round(input * 10);
+  return `${Math.floor(tenths / 10)},${tenths % 10}`;
+}
+
+/**
+ * El golpe de un icono que acaba de cambiar por un toque (estrella, corazón):
+ * salta cuando `trigger` cambia, con un retardo opcional para encadenar una
+ * cascada. No salta al montarse. Con «Reducir movimiento», nada.
+ */
+export function Pop({
+  trigger,
+  delay = 0,
+  children,
+  style,
+}: {
+  trigger: string | number | boolean;
+  delay?: number;
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const reduceMotion = useReduceMotion();
+  const scale = useSharedValue(1);
+  const previous = useRef(trigger);
+  useEffect(() => {
+    if (previous.current === trigger) return;
+    previous.current = trigger;
+    if (reduceMotion) return;
+    scale.value = withDelay(
+      delay,
+      withSequence(withTiming(0.72, { duration: 70, easing: PREMIUM_EASING }), withSpring(1, popSpring)),
+    );
+  }, [delay, reduceMotion, scale, trigger]);
+  const animated = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return <Animated.View style={[style, animated]}>{children}</Animated.View>;
+}
+
+const BURST_RAYS = [0, 60, 120, 180, 240, 300] as const;
+
+/**
+ * Pequeño estallido alrededor de un «me gusta» recién dado: seis motas que
+ * salen del centro y se apagan. Se monta solo mientras dura (`active`) y no
+ * recibe toques. Con «Reducir movimiento» no se pinta.
+ */
+export function Burst({ active, color, radius = 16 }: { active: boolean; color: string; radius?: number }) {
+  const reduceMotion = useReduceMotion();
+  const progress = useSharedValue(0);
+  useEffect(() => {
+    if (!active || reduceMotion) return;
+    progress.value = 0;
+    progress.value = withTiming(1, { duration: 420, easing: Easing.out(Easing.cubic) });
+  }, [active, progress, reduceMotion]);
+  if (!active || reduceMotion) return null;
+  return (
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
+      {BURST_RAYS.map((angle) => (
+        <BurstDot angle={angle} color={color} key={angle} progress={progress} radius={radius} />
+      ))}
+    </View>
+  );
+}
+
+function BurstDot({
+  angle,
+  color,
+  progress,
+  radius,
+}: {
+  angle: number;
+  color: string;
+  progress: { value: number };
+  radius: number;
+}) {
+  const rad = (angle * Math.PI) / 180;
+  const dx = Math.cos(rad) * radius;
+  const dy = Math.sin(rad) * radius;
+  const animated = useAnimatedStyle(() => ({
+    opacity: 1 - progress.value,
+    transform: [
+      { translateX: dx * progress.value },
+      { translateY: dy * progress.value },
+      { scale: 1 - progress.value * 0.5 },
+    ],
+  }));
+  return (
+    <Animated.View
+      style={[{ position: 'absolute', width: 4, height: 4, borderRadius: radii.full, backgroundColor: color }, animated]}
+    />
+  );
 }
