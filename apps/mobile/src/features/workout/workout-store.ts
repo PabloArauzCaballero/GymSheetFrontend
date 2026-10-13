@@ -19,6 +19,8 @@ export type ActiveWorkout = {
   progress: string | null;
 };
 
+export type RestKind = 'set' | 'between' | 'round' | 'none';
+
 type WorkoutState = {
   active: ActiveWorkout | null;
   /** Fin del descanso en curso (marca de tiempo) o `null`. */
@@ -29,8 +31,10 @@ type WorkoutState = {
   /** Instante en que terminó el último descanso (para el «¡Listo!» de unos segundos). */
   restFinishedAt: number | null;
   restSessionId: string | null;
+  /** Qué clase de pausa es: entre series, transición de una superserie o tras la vuelta. */
+  restKind: RestKind;
   setActive: (active: ActiveWorkout | null) => void;
-  startRest: (sessionId: string, seconds: number, next: string | null) => void;
+  startRest: (sessionId: string, seconds: number, next: string | null, kind?: RestKind) => void;
   adjustRest: (deltaSec: number) => void;
   setRestPreset: (seconds: number) => void;
   skipRest: () => void;
@@ -84,15 +88,23 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => {
     restNext: null,
     restFinishedAt: null,
     restSessionId: null,
+    restKind: 'set',
     setActive: (active) => set({ active }),
-    startRest: (sessionId, seconds, next) => {
+    startRest: (sessionId, seconds, next, kind = 'set') => {
       if (seconds <= 0) {
         clearTimers();
-        set({ restEndsAt: null, restFinishedAt: null, restNext: next, restSessionId: sessionId });
+        set({ restEndsAt: null, restFinishedAt: null, restNext: next, restSessionId: sessionId, restKind: 'none' });
         return;
       }
       const endsAt = Date.now() + seconds * 1000;
-      set({ restEndsAt: endsAt, restTotalMs: seconds * 1000, restNext: next, restFinishedAt: null, restSessionId: sessionId });
+      set({
+        restEndsAt: endsAt,
+        restTotalMs: seconds * 1000,
+        restNext: next,
+        restFinishedAt: null,
+        restSessionId: sessionId,
+        restKind: kind,
+      });
       arm(endsAt);
     },
     adjustRest: (deltaSec) => {

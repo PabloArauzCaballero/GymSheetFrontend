@@ -280,3 +280,97 @@ export function bumpSeconds(text: string, delta: number): string {
   const current = parseSeconds(text) ?? 0;
   return String(Math.max(1, Math.min(MAX_TIMED_SET_SEC, current + delta)));
 }
+
+/* ─── Modo enfoque: una página por bloque ────────────────────────────────── */
+
+/** Cuánto de un bloque está hecho, de 0 a 1 (para su segmento de la barra de progreso). */
+export function blockFill(block: FlowBlock<FlowItem>): number {
+  let done = 0;
+  let total = 0;
+  for (const item of block.items) {
+    // Sin objetivo (añadido a mano): una serie ya lo da por empezado y hecho.
+    const target = item.target ?? Math.max(1, item.logged);
+    total += target;
+    done += Math.min(item.logged, target);
+  }
+  return total > 0 ? done / total : 0;
+}
+
+/**
+ * El ejercicio activo de una página: el que la persona eligió dentro del
+ * bloque (A2 en vez de A1), si no el que toca, y con el bloque terminado el
+ * último (para una serie extra).
+ */
+export function activeItemOf<T extends FlowItem>(
+  blocks: ReadonlyArray<FlowBlock<T>>,
+  blockIndex: number,
+  chosenId: string | null = null,
+): { item: T; step: FlowStep; done: boolean } | null {
+  const block = blocks[blockIndex];
+  if (!block) return null;
+  const chosen = chosenId ? block.items.find((item) => item.id === chosenId) : undefined;
+  const natural = stepFrom([block], 0);
+  const item = chosen ?? block.items.find((candidate) => candidate.id === natural?.itemId) ?? block.items[block.items.length - 1];
+  if (!item) return null;
+  const step = stepOf(blocks, item.id);
+  return step ? { item, step, done: isItemDone(item) } : null;
+}
+
+/**
+ * La página a la que ir tras registrar: la del paso siguiente o, con la sesión
+ * completa, la del resumen (una más que los bloques).
+ */
+export function pageAfterLogging(blocks: ReadonlyArray<FlowBlock<FlowItem>>, next: FlowStep | null): number {
+  return next ? next.blockIndex : blocks.length;
+}
+
+/** Horas a partir de las cuales una sesión abierta ya no es «la de ahora». */
+export const STALE_SESSION_HOURS = 6;
+
+/** ¿La sesión lleva abierta tanto que lo honesto es preguntar si se reanuda? */
+export function isStaleSession(startIso: string, now: number = Date.now(), hours = STALE_SESSION_HOURS): boolean {
+  const start = new Date(startIso).getTime();
+  return Number.isFinite(start) && now - start > hours * 3_600_000;
+}
+
+/** Cronómetro de la sesión: «4:07», «1:02:33». Nunca negativo. */
+export function sessionClock(startIso: string, now: number = Date.now()): string {
+  const start = new Date(startIso).getTime();
+  const total = Number.isFinite(start) ? Math.max(0, Math.floor((now - start) / 1000)) : 0;
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = String(total % 60).padStart(2, '0');
+  return hours > 0 ? `${hours}:${String(minutes).padStart(2, '0')}:${seconds}` : `${minutes}:${seconds}`;
+}
+
+/**
+ * Título de la sesión a partir de su nota. Al empezar desde una rutina la nota
+ * es «Plan: <rutina> · <día>»: el día es el título y la rutina, el apoyo.
+ * Una nota escrita a mano o vacía no da título (se usa «Entrenamiento»).
+ */
+export function sessionTitle(observacion: string | null | undefined): { title: string; subtitle: string | null } {
+  const note = observacion?.trim() ?? '';
+  const plan = /^Plan:\s*(.+)$/u.exec(note);
+  if (!plan?.[1]) return { title: 'Entrenamiento', subtitle: null };
+  const parts = plan[1].split(' · ').map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 2) return { title: parts[0] ?? 'Entrenamiento', subtitle: null };
+  return { title: parts[parts.length - 1] ?? 'Entrenamiento', subtitle: parts.slice(0, -1).join(' · ') };
+}
+
+/**
+ * El peso con el que abre una serie: el de la última serie de hoy, si no la
+ * carga sugerida por el programa, si no el de la última vez, si no el objetivo
+ * de la rutina. `null` = no se sabe (no se inventa un 0: el campo sale vacío).
+ */
+export function openingWeight(sources: {
+  today?: number | null;
+  suggested?: number | null;
+  lastTime?: number | null;
+  target?: number | null;
+}): number | null {
+  for (const value of [sources.today, sources.suggested, sources.lastTime, sources.target]) {
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0) return value;
+  }
+  // Un 0 explícito de hoy (peso corporal) sí se respeta.
+  return sources.today === 0 ? 0 : null;
+}
