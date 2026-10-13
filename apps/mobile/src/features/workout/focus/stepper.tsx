@@ -155,6 +155,7 @@ export function Stepper({
           <TextInput
             accessibilityLabel={unit ? `${label}, ${unit}` : label}
             keyboardType={decimal ? 'decimal-pad' : 'number-pad'}
+            maxFontSizeMultiplier={1.2}
             {...numericInputProps}
             maxLength={6}
             onChangeText={onChangeText}

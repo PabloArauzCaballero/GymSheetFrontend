@@ -108,7 +108,12 @@ function ToastCard({ item }: { item: ToastItem }) {
     : progress.interpolate({ inputRange: [0, 1], outputRange: [-16, 0] });
 
   return (
-    <Animated.View pointerEvents={passThrough ? 'none' : 'auto'} style={{ opacity: progress, transform: [{ translateY }] }}>
+    <Animated.View
+      pointerEvents={passThrough ? 'none' : 'auto'}
+      // Base opaca: el fondo del tono de éxito es un tinte al 12 % y, sin ella, el título de la
+      // cabecera se leía a través del aviso.
+      style={{ opacity: progress, transform: [{ translateY }], borderRadius: radii.lg, backgroundColor: colors.surfaceHigh }}
+    >
       <Pressable
         accessible
         accessibilityRole="alert"

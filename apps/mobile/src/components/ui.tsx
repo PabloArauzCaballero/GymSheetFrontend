@@ -1,3 +1,5 @@
+import { useContext } from 'react';
+import { TextScaleLimit } from '@/components/text';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, type ReactNode } from 'react';
 import {
@@ -191,6 +193,7 @@ export function Button({
   testID?: string;
   style?: StyleProp<ViewStyle>;
 }) {
+  const textLimit = useContext(TextScaleLimit);
   const isDisabled = disabled || loading;
   const tone = buttonTone(variant);
   const metrics = BUTTON_SIZES[size];
@@ -229,6 +232,7 @@ export function Button({
         />
       ) : null}
       <RNText
+        maxFontSizeMultiplier={textLimit}
         numberOfLines={1}
         style={{ color: ink, fontSize: metrics.fontSize, fontWeight: semibold }}
       >

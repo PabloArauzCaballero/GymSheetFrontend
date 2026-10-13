@@ -246,6 +246,7 @@ export function RestOverlay({ kind, onChangeRest }: { kind: 'set' | 'between' | 
               <Text
                 accessibilityLabel={speakRest(remainingMs)}
                 accessibilityLiveRegion="polite"
+                maxFontSizeMultiplier={1.1}
                 style={[
                   { fontFamily: fontFamilies.display, fontSize: CLOCK_FONT, lineHeight: CLOCK_FONT + 12, color: ending ? restRing.ending : colors.text },
                   tabularNums,

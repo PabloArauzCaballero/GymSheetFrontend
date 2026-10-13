@@ -13,7 +13,7 @@ import type { RestSettingChange, SkipReason, SkippedSet, TimedWorkoutSetInput, W
 import { useExerciseMedia } from '@/api/use-exercise-media';
 import { ExercisePicker } from '@/components/exercise-picker';
 import { PressableScale } from '@/components/motion';
-import { Text } from '@/components/text';
+import { Text, TextScaleLimit } from '@/components/text';
 import { Button } from '@/components/ui';
 import { CardioLogger } from '@/features/cardio/cardio-logger';
 import { SuggestedLoad, useNextLoads } from '@/features/programs/suggested-load';
@@ -86,8 +86,16 @@ const SHEET_CLOSE_MS = 360;
 const NAV_LOCK_MS = 450;
 /** Una serie que no se guardó por la red se reintenta sola una vez, tras esta espera. */
 const AUTO_RETRY_MS = 1500;
+/**
+ * Tras cerrarse el descanso, el pie no responde durante este tiempo: «Saltar descanso» y
+ * «Registrar serie» están en el mismo sitio, y si el descanso terminaba solo justo cuando el
+ * dedo iba a saltarlo, el toque caía en «Registrar serie» y apuntaba una serie que no se hizo.
+ */
+const AFTER_REST_GUARD_MS = 700;
 /** Páginas a cada lado de la actual que se pintan enteras; el resto son huecos (no gastan nada). */
 const WINDOW = 1;
+/** Hasta dónde crece el texto aquí con «Texto más grande» (ver `TextScaleLimit`). */
+const TEXT_SCALE_LIMIT = 1.35;
 
 type Session = ReturnType<typeof useWorkoutSession>;
 
@@ -233,7 +241,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
   const navLockedUntil = useRef(0);
   const navigate = (index: number) => {
     const now = Date.now();
-    if (now < navLockedUntil.current) return;
+    if (now < navLockedUntil.current || now - restClosedAt.current < AFTER_REST_GUARD_MS) return;
     navLockedUntil.current = now + NAV_LOCK_MS;
     setExtra(null);
     goTo(index, page);
@@ -339,10 +347,18 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
   const totalSets = countSets(data);
   const logging = useRef(false);
 
+  const restRunning = useWorkoutStore((state) => state.restEndsAt !== null);
+  const restClosedAt = useRef(0);
+  useEffect(() => {
+    if (!restRunning) restClosedAt.current = Date.now();
+  }, [restRunning]);
+  /** ¿El descanso acaba de cerrarse? Entonces este toque iba para él, no para el pie. */
+  const justRested = () => Date.now() - restClosedAt.current < AFTER_REST_GUARD_MS;
+
   const logSet = () => {
     if (!active || !activeSource) return;
-    // D6: el doble toque no registra dos series.
-    if (logging.current || session.addSet.isPending) return;
+    // D6: el doble toque no registra dos series, ni el toque que iba a «Saltar descanso».
+    if (logging.current || session.addSet.isPending || justRested()) return;
     const timed = isTimed(activeSource);
     const draft = draftOf(activeSource);
     const parsed = timed ? parseTimedDraft(draft) : parseDraft(draft);
@@ -777,7 +793,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
           accessibilityLabel="Saltar serie"
           haptic="selection"
           onPress={() => {
-            if (!activeSource || logging.current) return;
+            if (!activeSource || logging.current || justRested()) return;
             setReason({ mode: { kind: 'set', label: `Serie ${numberOf(activeSource)} de ${nameOf(activeSource)}` }, exerciseId: activeSource.id });
           }}
           scaleTo={0.95}
@@ -819,6 +835,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
   };
 
   return (
+    <TextScaleLimit.Provider value={TEXT_SCALE_LIMIT}>
     <View style={{ flex: 1, backgroundColor: colors.background }} testID="workout-focus">
       {/* El gesto de volver choca con deslizar entre ejercicios: aquí se sale con el botón. */}
       <Stack.Screen options={{ gestureEnabled: false }} />
@@ -1117,5 +1134,6 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
         visible={pickerOpen}
       />
     </View>
+    </TextScaleLimit.Provider>
   );
 }
