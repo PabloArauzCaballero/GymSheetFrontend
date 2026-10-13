@@ -3,17 +3,20 @@ import type { ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
 import Animated, { Extrapolation, interpolate, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import type { Exercise, WorkoutSet } from '@gymsheet/types';
-import { ExerciseImage } from '@/components/media';
+import { ExerciseImage, hasArtwork } from '@/components/media';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { setLabel } from '@/features/workout/exercise-card';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
-import { colors, gutter, iconSizes, minTouchTarget, radii, shadows, spacing } from '@/theme';
+import { colors, fontSizes, gutter, iconSizes, minTouchTarget, radii, shadows, spacing } from '@/theme';
 
 type Artwork = Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular' | 'imagenUrl'>;
 
 /** Alto de la imagen del ejercicio: grande, pero deja la serie a la vista sin desplazar. */
-const MEDIA_HEIGHT = 208;
+const MEDIA_HEIGHT = 196;
+const COMPACT_MEDIA_HEIGHT = 148;
+/** Sin imagen no se gasta media pantalla en un marcador: queda como una franja. */
+const PLACEHOLDER_HEIGHT = 112;
 
 /**
  * La imagen del ejercicio. Mientras se pasa de página se mueve un poco menos
@@ -25,8 +28,11 @@ export function PageMedia({
   index,
   width,
   scrollX,
+  compact = false,
   onPress,
 }: {
+  /** En una superserie la página lleva además el selector A1/A2: la imagen cede alto. */
+  compact?: boolean;
   exercise: Artwork | null;
   index: number;
   width: number;
@@ -39,10 +45,10 @@ export function PageMedia({
     const shift = interpolate(
       scrollX.value,
       [(index - 1) * width, index * width, (index + 1) * width],
-      [-width * 0.14, 0, width * 0.14],
+      [-width * 0.06, 0, width * 0.06],
       Extrapolation.CLAMP,
     );
-    return { transform: [{ translateX: shift }, { scale: 1.08 }] };
+    return { transform: [{ translateX: shift }] };
   });
   return (
     <PressableScale
@@ -53,7 +59,7 @@ export function PageMedia({
       onPress={onPress}
       scaleTo={0.985}
       style={{
-        height: MEDIA_HEIGHT,
+        height: exercise && hasArtwork(exercise) ? (compact ? COMPACT_MEDIA_HEIGHT : MEDIA_HEIGHT) : PLACEHOLDER_HEIGHT,
         borderRadius: radii.xxl,
         borderCurve: 'continuous',
         overflow: 'hidden',
@@ -240,7 +246,7 @@ export function FocusPage({
   return (
     <ScrollView
       automaticallyAdjustKeyboardInsets
-      contentContainerStyle={{ paddingHorizontal: gutter, paddingTop: spacing.md, paddingBottom: bottomSpace, gap: spacing.mdl }}
+      contentContainerStyle={{ paddingHorizontal: gutter, paddingTop: spacing.md, paddingBottom: bottomSpace, gap: spacing.md }}
       keyboardDismissMode="on-drag"
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
@@ -255,7 +261,12 @@ export function FocusPage({
             {eyebrow}
           </Text>
         ) : null}
-        <Text accessibilityRole="header" testID="current-name" variant="display">
+        <Text
+          accessibilityRole="header"
+          style={{ fontSize: fontSizes.xl, lineHeight: Math.round(fontSizes.xl * 1.14) }}
+          testID="current-name"
+          variant="display"
+        >
           {name}
         </Text>
         {target ? (

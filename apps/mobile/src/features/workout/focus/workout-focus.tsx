@@ -79,6 +79,12 @@ function bump(text: string, delta: number, min: number): string {
   return String(Math.max(min, Math.round((base + delta) * 100) / 100));
 }
 
+/** ¿El ejercicio se hace con carga? Sin material declarado o con el propio cuerpo, no se exige peso. */
+function needsLoad(source: WorkoutExercise): boolean {
+  const equipment = source.ejercicio?.requiredEquipment?.trim().toLowerCase() ?? '';
+  return equipment !== '' && !/body|corporal|ningun|none/u.test(equipment);
+}
+
 /**
  * Sesión abierta desde hace horas: en vez de un cronómetro de dos días y una
  * pantalla que dice «Hace 2 días», se pregunta qué hacer con ella.
@@ -265,6 +271,12 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
       notify.info(timed ? 'Escribe cuántos segundos aguantaste (de 1 a 3600).' : 'Pon cuántas repeticiones hiciste.');
       return;
     }
+    // Un 0 escrito vale (sin carga); un campo vacío en un ejercicio con material es un olvido.
+    if (!timed && draft.pesoKg.trim() === '' && needsLoad(activeSource)) {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      notify.info('Pon el peso que usaste (0 si fue sin carga).');
+      return;
+    }
     const numeroSerie = Math.max(0, ...activeSource.series.map((set) => set.numeroSerie)) + 1;
     const set: WorkoutSetInput | TimedWorkoutSetInput = {
       numeroSerie,
@@ -421,7 +433,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
         <SuggestedLoad exerciseId={source.ejercicio?.id} loads={loads} />
         <View
           style={{
-            gap: spacing.md,
+            gap: spacing.smd,
             padding: spacing.md,
             borderRadius: radii.xxl,
             borderCurve: 'continuous',
@@ -433,7 +445,6 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
             label="Peso"
             onChangeText={(pesoKg) => setDraft(source, { ...draft, pesoKg })}
             onStep={(direction) => setDraft(source, { ...draft, pesoKg: bump(draft.pesoKg, direction * increment, 0) })}
-            placeholder="0"
             spoken="kilos"
             testID="set-weight"
             unit="kg"
@@ -587,6 +598,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
               key={block.items.map((item) => item.id).join('+')}
               media={
                 <PageMedia
+                  compact={grouped}
                   exercise={exercise}
                   index={index}
                   onPress={source.ejercicio ? () => router.push(routes.exercise(source.ejercicio!.id)) : undefined}

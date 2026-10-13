@@ -171,8 +171,8 @@ export function RirPicker({ value, onChange }: { value: string; onChange: (next:
         <Text strong variant="subhead">
           RIR
         </Text>
-        <Text tone="muted" variant="caption">
-          Reps que te quedaban
+        <Text numberOfLines={1} tone="muted" variant="caption">
+          En reserva
         </Text>
       </View>
       {options.map((option) => {

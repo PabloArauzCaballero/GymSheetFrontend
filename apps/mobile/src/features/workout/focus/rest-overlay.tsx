@@ -152,7 +152,7 @@ export function RestOverlay({ kind }: { kind: 'set' | 'between' | 'round' | 'non
             <Text
               accessibilityLabel={speakRest(remainingMs)}
               accessibilityLiveRegion="polite"
-              style={[{ fontFamily: fontFamilies.display, fontSize: CLOCK_FONT, color: colors.text }, tabularNums]}
+              style={[{ fontFamily: fontFamilies.display, fontSize: CLOCK_FONT, lineHeight: CLOCK_FONT + 12, color: colors.text }, tabularNums]}
               testID="rest-bar-clock"
             >
               {formatRestClock(remainingMs)}
