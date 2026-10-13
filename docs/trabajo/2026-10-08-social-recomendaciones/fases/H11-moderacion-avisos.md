@@ -92,7 +92,7 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 
 **Interfaces:** Produce reportar/bloquear/pausar accesibles y avisos consistentes.
 
-**CA:** dadas las precondiciones de cada fila, al ejecutar sus acciones se cumplen exactamente sus resultados. **DoD:** todos los comandos dirigidos de este grupo devuelven PASS y no hay defectos mayores abiertos. **Estado:** TODO.
+**CA:** dadas las precondiciones de cada fila, al ejecutar sus acciones se cumplen exactamente sus resultados. **DoD:** todos los comandos dirigidos de este grupo devuelven PASS y no hay defectos mayores abiertos. **Estado:** EN CURSO (entradas UI listas; falta PAIR).
 
 **Secuencia por microtarea:**
 
@@ -105,13 +105,13 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 | ID | Cambio verificable | CA: dado / cuando / entonces | DoD dirigido | Estado |
 |---|---|---|---|---|
 
-| H11.S3.M1 | [ ] Reportar desde recurso | Dado usuario abre menú de reel/perfil/mensaje; cuando envía motivo; entonces ve confirmación persistente sin duplicar caso por reintento. | F: `python3 scripts/qa/run-social-pair.py --case H11.S3.M1` → PASS con manifiesto y evidencias | TODO |
+| H11.S3.M1 | [ ] Reportar desde recurso | Dado usuario abre menú de reel/perfil/mensaje; cuando envía motivo; entonces ve confirmación persistente sin duplicar caso por reintento. | UI conectada: Web reel/perfil/mensaje y móvil reel/perfil/mensaje. Type-check de ambas apps y test Web del mensaje PASS. Falta PAIR. | EN CURSO |
 
-| H11.S3.M2 | [ ] Pausar sin perder vínculos | Dado A tiene B conectado; cuando pausa perfil; entonces B conserva chat mientras C no lo descubre. | F: `python3 scripts/qa/run-social-pair.py --case H11.S3.M2` → PASS con manifiesto y evidencias | TODO |
+| H11.S3.M2 | [ ] Pausar sin perder vínculos | Dado A tiene B conectado; cuando pausa perfil; entonces B conserva chat mientras C no lo descubre. | Ajuste versionado de privacidad está conectado en Web y móvil; falta PAIR con A/B/C. | EN CURSO |
 
-| H11.S3.M3 | [ ] Reanudar perfil | Dado A pausado; cuando reactiva; entonces vuelve a elegibilidad con consentimientos conservados. | F: `python3 scripts/qa/run-social-pair.py --case H11.S3.M3` → PASS con manifiesto y evidencias | TODO |
+| H11.S3.M3 | [ ] Reanudar perfil | Dado A pausado; cuando reactiva; entonces vuelve a elegibilidad con consentimientos conservados. | Reanudación versionada está conectada en Web y móvil; falta PAIR y comprobar que consentimientos independientes se conservan. | EN CURSO |
 
-| H11.S3.M4 | [ ] Bloquear desde menú | Dado A está en chat de B; cuando bloquea; entonces desaparece chat en ambas sesiones y no vuelve desde notificación. | F: `python3 scripts/qa/run-social-pair.py --case H11.S3.M4` → PASS con manifiesto y evidencias | TODO |
+| H11.S3.M4 | [ ] Bloquear desde menú | Dado A está en chat de B; cuando bloquea; entonces desaparece chat en ambas sesiones y no vuelve desde notificación. | Bloqueo está conectado desde perfil en Web y móvil; falta PAIR con chat abierto y enlace de aviso anterior. | EN CURSO |
 
 
 ## Salida del hito
