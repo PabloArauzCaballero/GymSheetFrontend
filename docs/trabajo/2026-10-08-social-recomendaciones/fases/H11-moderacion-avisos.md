@@ -49,15 +49,15 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 | ID | Cambio verificable | CA: dado / cuando / entonces | DoD dirigido | Estado |
 |---|---|---|---|---|
 
-| H11.S1.M1 | [x] Reportar contenido autorizado | Dado B puede ver reel o mensaje; cuando reporta con motivo; entonces se crea caso con referencia y evidencia mínima protegida. | E2E PostgreSQL: reporte válido crea referencia y evidencia mínima sin copiar el cuerpo; mensaje ya no visible devuelve 404 y no duplica el caso. Suite H11 PASS 7/7. | HECHO |
+| H11.S1.M1 | [x] Reportar contenido autorizado | Dado B puede ver reel o mensaje; cuando reporta con motivo; entonces se crea caso con referencia y evidencia mínima protegida. | E2E PostgreSQL: reporte válido crea referencia y evidencia mínima sin copiar el cuerpo; mensaje ya no visible devuelve 404 y no duplica el caso. Suite H11 PASS 7/7. Evidencia: [H11.S1](../evidencia/h11-s1-moderacion-e2e-2026-10-13.md) | HECHO |
 
-| H11.S1.M2 | [x] Restringir administración de gimnasio | Dado caso social entre tenants; cuando admin de un gimnasio intenta abrirlo; entonces rechazo salvo permiso central explícito. | E2E PostgreSQL crea caso en gimnasio B; admin A con `moderation:read` recibe 404 y no lo ve en cola; `SYSTEM_ADMIN` sí accede. Suite H11 PASS 7/7. | HECHO |
+| H11.S1.M2 | [x] Restringir administración de gimnasio | Dado caso social entre tenants; cuando admin de un gimnasio intenta abrirlo; entonces rechazo salvo permiso central explícito. | E2E PostgreSQL crea caso en gimnasio B; admin A con `moderation:read` recibe 404 y no lo ve en cola; `SYSTEM_ADMIN` sí accede. Suite H11 PASS 7/7. Evidencia: [H11.S1](../evidencia/h11-s1-moderacion-e2e-2026-10-13.md) | HECHO |
 
-| H11.S1.M3 | [x] Ocultar contenido desde moderación | Dado moderador central resuelve retiro; cuando se consultan feeds y URL media; entonces contenido deja de estar disponible. | E2E PostgreSQL oculta reel al resolver el caso; observador deja de verlo y la URL de media responde 404. Suite H11 PASS 7/7. | HECHO |
+| H11.S1.M3 | [x] Ocultar contenido desde moderación | Dado moderador central resuelve retiro; cuando se consultan feeds y URL media; entonces contenido deja de estar disponible. | E2E PostgreSQL oculta reel al resolver el caso; observador deja de verlo y la URL de media responde 404. Suite H11 PASS 7/7. Evidencia: [H11.S1](../evidencia/h11-s1-moderacion-e2e-2026-10-13.md) | HECHO |
 
-| H11.S1.M4 | [x] Auditar resolución | Dado caso asignado; cuando moderador resuelve; entonces actor, acción, motivo y momento quedan registrados. | E2E PostgreSQL verifica resolución persistida y fila inmutable en `admin.audit_log` con actor, acción, recurso y hora. Suite H11 PASS 7/7. | HECHO |
+| H11.S1.M4 | [x] Auditar resolución | Dado caso asignado; cuando moderador resuelve; entonces actor, acción, motivo y momento quedan registrados. | E2E PostgreSQL verifica resolución persistida y fila inmutable en `admin.audit_log` con actor, acción, recurso y hora. Suite H11 PASS 7/7. Evidencia: [H11.S1](../evidencia/h11-s1-moderacion-e2e-2026-10-13.md) | HECHO |
 
-| H11.S1.M5 | [x] Conservar evidencia tras revocación | Dado mensaje previamente reportado; cuando participantes desconectan; entonces chat desaparece y solo canal central autorizado conserva evidencia según política. | E2E PostgreSQL verifica que el reporte revoca el chat, ambos participantes pierden acceso al historial (404) y el caso con evidencia mínima sigue accesible al admin central. Suite H11 PASS 7/7. | HECHO |
+| H11.S1.M5 | [x] Conservar evidencia tras revocación | Dado mensaje previamente reportado; cuando participantes desconectan; entonces chat desaparece y solo canal central autorizado conserva evidencia según política. | E2E PostgreSQL verifica que el reporte revoca el chat, ambos participantes pierden acceso al historial (404) y el caso con evidencia mínima sigue accesible al admin central. Suite H11 PASS 7/7. Evidencia: [H11.S1](../evidencia/h11-s1-moderacion-e2e-2026-10-13.md) | HECHO |
 
 ## H11.S2 — Notificaciones seguras
 

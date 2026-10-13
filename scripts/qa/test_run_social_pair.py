@@ -113,6 +113,29 @@ class PairRunnerTests(unittest.TestCase):
                                 for reason in case["reasons"])
                             for case in manifest["cases"]))
 
+    def test_h4_phase_registers_cross_platform_feedback_acceptance_and_blocks_missing_drivers(self):
+        runner = load_runner()
+        result, manifest = self.run_cli("--phase", "H4")
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual([case["id"] for case in manifest["cases"]], ["H4.E1"])
+        case = manifest["cases"][0]
+        self.assertEqual(case["verdict"], "BLOCKED")
+        self.assertEqual(case["requiredRoles"], ["A_ANDROID", "A_IOS", "A_WEB"])
+        self.assertEqual(
+            runner.CASE_ASSERTIONS["H4.E1"],
+            "verifiedFeedbackAffectsAndRetractsPreference",
+        )
+        self.assertEqual(
+            case["reasons"],
+            [
+                "required driver H4.E1-A_ANDROID.py missing",
+                "required driver H4.E1-A_IOS.py missing",
+                "required driver H4.E1-A_WEB.py missing",
+            ],
+        )
+        self.assertNotIn("evidence", case)
+        self.assertFalse(manifest["secretsIncluded"])
+
     def test_h7_s4_cases_are_registered_with_explicit_roles_and_assertions(self):
         runner = load_runner()
         expected_roles = {

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""H1/H3.S2/H5/H7.S4/H8/H9/H10 pair QA coordinator. Never substitutes API checks for device evidence.
+"""H1/H3.S2/H4/H5/H7.S4/H8/H9/H10 pair QA coordinator. Never substitutes API checks for device evidence.
 
 Usage: python3 scripts/qa/run-social-pair.py --phase H1
        python3 scripts/qa/run-social-pair.py --phase H7
        python3 scripts/qa/run-social-pair.py --phase H5
        python3 scripts/qa/run-social-pair.py --phase H3
+       python3 scripts/qa/run-social-pair.py --phase H4
        python3 scripts/qa/run-social-pair.py --phase H8
        python3 scripts/qa/run-social-pair.py --phase H9
        python3 scripts/qa/run-social-pair.py --phase H10
@@ -50,6 +51,7 @@ CASES = {
     "H3.S2.M2": "withdrawing a pending request removes it without creating a chat",
     "H3.S2.M3": "undoing a discard restores the candidate while preserving blocks",
     "H3.S2.M4": "connection status stays synchronized across profile surfaces",
+    "H4.E1": "observed recommendation feedback affects soft affinity and undo or block retracts it across clients",
     "H5.S1.M1": "invalid discovery response shows recoverable error",
     "H5.S1.M2": "empty eligible deck explains filters without invented people",
     "H5.S1.M3": "conflicted swipe reconciles authoritative deck",
@@ -126,6 +128,7 @@ CASE_ROLES.update({
     "H3.S2.M3": ("A_WEB", "B_WEB"),
     "H3.S2.M4": ("A_WEB",),
 })
+CASE_ROLES.update({"H4.E1": ("A_ANDROID", "A_IOS", "A_WEB")})
 CASE_ROLES.update({
     **{f"H10.S1.M{i}": ("A_API", "B_API") for i in range(1, 7)},
     **{f"H10.S2.M{i}": ("A_API", "B_API") for i in range(1, 6)},
@@ -211,6 +214,7 @@ CASE_ASSERTIONS.update({
     "H3.S2.M2": "withdrawalRemovedWithoutChat",
     "H3.S2.M3": "discardUndoRestoredCandidate",
     "H3.S2.M4": "connectionStatusSyncedAcrossSurfaces",
+    "H4.E1": "verifiedFeedbackAffectsAndRetractsPreference",
 })
 CASE_ASSERTIONS.update({
     **{f"H10.S1.M{i}": assertion for i, assertion in enumerate((
@@ -798,7 +802,7 @@ def m5_fixture_issues() -> list[str]:
 def case_preflight_issues(case: str, api_issues: list[str], devices: dict) -> list[str]:
     """Combine API readiness with the native devices required by this case."""
     issues = list(api_issues)
-    if case.startswith(("H5.", "H7.S4.", "H8.", "H9.S3.", "H10.S3.")):
+    if case.startswith(("H4.", "H5.", "H7.S4.", "H8.", "H9.S3.", "H10.S3.")):
         issues.extend(case_device_issues(case, devices))
     if case.startswith("H7.S4."):
         if case == "H7.S4.M1":
@@ -828,7 +832,7 @@ def case_preflight_issues(case: str, api_issues: list[str], devices: dict) -> li
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--phase", choices=["H1", "H3", "H5", "H7", "H8", "H9", "H10"])
+    group.add_argument("--phase", choices=["H1", "H3", "H4", "H5", "H7", "H8", "H9", "H10"])
     group.add_argument("--case")
     parser.add_argument("--output", type=pathlib.Path)
     parser.add_argument("--drivers-dir", type=pathlib.Path, default=ROOT / "scripts/qa/drivers")
@@ -858,7 +862,7 @@ def main() -> int:
     evidence_dir.mkdir(parents=True, exist_ok=True)
     cases = []
     for case in selected:
-        if case.startswith(("H3.S2.", "H5.", "H7.S4.", "H8.", "H9.", "H10.")):
+        if case.startswith(("H3.S2.", "H4.", "H5.", "H7.S4.", "H8.", "H9.", "H10.")):
             absent = missing_drivers(case, args.drivers_dir)
             if absent:
                 cases.append({"id": case, "verdict": "BLOCKED",
@@ -868,12 +872,12 @@ def main() -> int:
         preflight_issues = case_preflight_issues(case, common_issues, devices)
         if preflight_issues:
             blocked = {"id": case, "verdict": "BLOCKED", "reasons": preflight_issues}
-            if case.startswith(("H8.", "H9.", "H10.")):
+            if case.startswith(("H4.", "H8.", "H9.", "H10.")):
                 blocked["requiredRoles"] = list(CASE_ROLES[case])
             cases.append(blocked)
             continue
         result = run_case(case, run_id, args.drivers_dir, evidence_dir, api, api_base, web_base)
-        if case.startswith(("H8.", "H9.", "H10.")):
+        if case.startswith(("H4.", "H8.", "H9.", "H10.")):
             result.setdefault("requiredRoles", list(CASE_ROLES[case]))
         if result["verdict"] == "PASS":
             after, after_issues = observe_api(api_base, required_actors)

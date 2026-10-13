@@ -1,4 +1,4 @@
-# H1, H3.S2, H5, H7.S4, H8, H9, and H10 pair runner
+# H1, H3.S2, H4, H5, H7.S4, H8, H9, and H10 pair runner
 
 Run from `GymSheetFrontend`:
 
@@ -7,6 +7,7 @@ python3 scripts/qa/run-social-pair.py --phase H1
 python3 scripts/qa/run-social-pair.py --phase H7
 python3 scripts/qa/run-social-pair.py --phase H5
 python3 scripts/qa/run-social-pair.py --phase H3
+python3 scripts/qa/run-social-pair.py --phase H4
 python3 scripts/qa/run-social-pair.py --phase H8
 python3 scripts/qa/run-social-pair.py --phase H9
 python3 scripts/qa/run-social-pair.py --phase H10
@@ -17,6 +18,8 @@ python3 scripts/qa/run-social-pair.py --case H7.S4.M3 --output /tmp/h7-m3.json
 Set `QA_API_BASE_URL` including `/api/v1`, `QA_WEB_BASE_URL`, `QA_ANDROID_SERIAL`, `QA_IOS_UDID`, and private `QA_TOKEN_A` / `QA_TOKEN_B`. H8.S1.M2/M4 and H8.S3.M1 additionally require a distinct `QA_TOKEN_C`; the runner verifies that A, B, and C resolve to different actors. `QA_RUN_ID` is optional. H7.S4.M1 requires `QA_M1_DISPOSABLE_DEVICE_ACK=H7.S4.M1`, `QA_M1_DISPOSABLE_PAIR_ACK=H7.S4.M1`, and `QA_M1_DISPOSABLE_CONVERSATION_ID`. The first ACK confirms the Android device is dedicated to QA because the driver permanently denies its microphone permission; the second confirms the A/B pair and conversation are disposable because opening the chat can advance A's read cursor. H7.S4.M2 requires `QA_M2_DISPOSABLE_DEVICE_ACK=H7.S4.M2`, `QA_M2_DISPOSABLE_PAIR_ACK=H7.S4.M2`, and `QA_M2_DISPOSABLE_CONVERSATION_ID`. The device ACK confirms `RECORD_AUDIO` is already granted and the dedicated device/app cache may retain the QA recording; M2 never changes permissions. The pair ACK covers the empty reserved chat, its read-cursor side effect, and the one disposable audio message that is logically deleted after both receivers finish. H7.S4.M4 requires `QA_DISPOSABLE_CONVERSATION_ID` and `QA_M4_DISPOSABLE_ACCOUNT_ACK=H7.S4.M4`. H7.S4.M5 separately requires `QA_M5_DISPOSABLE_CONVERSATION_ID`, `QA_M5_DISPOSABLE_CONNECTION_ID`, and `QA_M5_DISPOSABLE_PAIR_ACK=H7.S4.M5`; these values must identify the exact reserved disposable A/B pair. The runner unwraps the backend `{ "ok": true, "data": ... }` response, validates the complete API readiness body (database, migrations and Redis), selected devices, and distinct authenticated A/B identities. It checks the identities again after each case. The manifest contains SHA, branch, dirty flag, ports, tool versions, device identifiers and sanitized API observations; it contains no tokens or raw API responses. Default output is `scripts/qa/evidence/runs/<runId>/manifest.json`.
 
 Drivers are trusted Python files named `<case>-<role>.py` in `scripts/qa/drivers/`; `--drivers-dir` selects a different trusted directory for local development. H1 requires its declared A/B/web roles. H3.S2, H5, and H7 roles are:
+
+H4 registers `H4.E1` with `A_ANDROID`, `A_IOS`, and `A_WEB`. All three clients must prove that only an observed discovery impression affects soft recommendation affinity and that undo/block retracts that feedback. The runner reports missing role drivers as `BLOCKED`; it never treats backend E2E or service tests as device acceptance.
 
 | Case | Roles |
 | --- | --- |

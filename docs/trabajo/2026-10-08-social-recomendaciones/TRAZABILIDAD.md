@@ -104,7 +104,7 @@ Estado inicial: todos los casos pendientes; los IDs son nombres obligatorios par
 | H4.S2.M4 | H4 | REC | Tratar campos desconocidos | HECHO |
 | H4.S2.M5 | H4 | REC | Explorar sin saltar filtros | HECHO |
 | H4.S2.M6 | H4 | REC | Evitar duplicados al paginar | HECHO |
-| H4.S3.M1 | H4 | REC | Aprender de señales válidas | HECHO (función pura; integración pendiente) |
+| H4.S3.M1 | H4 | REC | Aprender de señales válidas | HECHO (impresión observada, outbox, entrega y retractación verificados E2E; falta PAIR) |
 | H4.S3.M2 | H4 | REC | Limitar efecto de una interacción | HECHO |
 | H4.S3.M3 | H4 | REC | Evitar fuga de evaluación | HECHO |
 | H4.S3.M4 | H4 | REC | Separar calidad sintética de real | HECHO |
