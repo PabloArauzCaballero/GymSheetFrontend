@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import test, { describe, it } from 'node:test';
 import {
   activeItemOf,
+  beatsReference,
   blockFill,
   bumpSeconds,
   buildFlowBlocks,
@@ -282,4 +283,15 @@ test('«a todos los que quedan» no toca los ejercicios ya cerrados', () => {
   assert.deepEqual(restTargets(blocks, 'b', 'remaining').map((item) => item.id), ['b', 'c']);
   // El propio entra aunque ya esté cerrado (se le cambia para una serie extra).
   assert.deepEqual(restTargets(blocks, 'a', 'remaining').map((item) => item.id), ['a', 'b', 'c']);
+});
+
+test('mejor que la última vez: más peso, o el mismo con más repeticiones', () => {
+  const ref = { pesoKg: 60, repeticiones: 8 };
+  assert.equal(beatsReference({ pesoKg: 62.5, repeticiones: 5 }, ref), true);
+  assert.equal(beatsReference({ pesoKg: 60, repeticiones: 9 }, ref), true);
+  assert.equal(beatsReference({ pesoKg: 60, repeticiones: 8 }, ref), false);
+  assert.equal(beatsReference({ pesoKg: 57.5, repeticiones: 12 }, ref), false);
+  // Primera vez o sin carga: no hay marca.
+  assert.equal(beatsReference({ pesoKg: 60, repeticiones: 8 }, null), false);
+  assert.equal(beatsReference({ pesoKg: 0, repeticiones: 20 }, { pesoKg: 0, repeticiones: 12 }), false);
 });
