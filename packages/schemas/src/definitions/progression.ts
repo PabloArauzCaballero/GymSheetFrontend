@@ -28,6 +28,10 @@ export const badgeCategories = [
   'SECRETA',
   /** Insignias de modo de programa: rachas de semanas cumplidas, x2,0 y metas de marca. */
   'MODO',
+  /** Contrato 11a (noche 13/10): cardio, vida social y rutinas creadas. */
+  'CARDIO',
+  'SOCIAL',
+  'CREADOR',
 ] as const;
 export type BadgeCategory = (typeof badgeCategories)[number];
 
@@ -65,6 +69,15 @@ export const progressionBadgeSchema = z.object({
   /** De 0 a 1. Nulo en las secretas que aún no se han conseguido. */
   progress: z.number().nullable(),
   progressLabel: z.string().nullable(),
+  /**
+   * Contrato 11a. Opcionales: un servidor anterior no los manda y la carta se
+   * resuelve entonces por `icon` y `category`.
+   */
+  illustration: z.string().nullish(),
+  rarityRank: z.number().int().nullish(),
+  secret: z.boolean().nullish(),
+  criterion: z.string().nullish(),
+  threshold: z.number().nullish(),
 });
 
 export const progressionStatsSchema = z.object({
