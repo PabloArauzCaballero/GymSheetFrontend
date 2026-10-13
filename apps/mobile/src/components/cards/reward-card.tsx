@@ -166,7 +166,8 @@ export function RewardCardFront({
   pointsDelayMs?: number;
 }) {
   const material = cardMaterials[content.rarity];
-  const footer = height * 0.33;
+  // El pie cabe etiqueta + dos líneas de título + puntos sin pisarse.
+  const footer = height * 0.36;
   const artHeight = height - footer;
   const art = width * 0.68;
   // La ilustración flota un poco más que la carta: es lo que da profundidad al inclinarla.
@@ -174,6 +175,10 @@ export function RewardCardFront({
     transform: [{ translateX: tiltX.get() * width * 0.05 }, { translateY: tiltY.get() * width * 0.05 }],
   }));
   const small = fontSizes.xs;
+  // Un título largo («Club de los 100 kg») baja un punto en vez de salirse del
+  // pie: `adjustsFontSizeToFit` solo encoge por ancho, no por alto.
+  const longTitle = content.title.length > 15;
+  const titleSize = longTitle ? fontSizes.sm : fontSizes.md;
 
   return (
     <Frame material={material} width={width}>
@@ -193,6 +198,7 @@ export function RewardCardFront({
           alignItems: 'center',
           justifyContent: 'center',
           gap: 2,
+          overflow: 'hidden',
           paddingHorizontal: width * 0.05,
           borderTopWidth: 1,
           borderTopColor: alpha(material.label, 0.45),
@@ -202,9 +208,17 @@ export function RewardCardFront({
         {content.rarityLabel ? (
           <Text
             allowFontScaling={false}
-            style={{ color: material.label, fontSize: small, fontWeight: semibold, letterSpacing: small * 0.16, textTransform: 'uppercase' }}
+            // Mayúsculas en JS y con altura de línea holgada: con `textTransform`
+            // y la línea justa, la tilde de «COMÚN» y «ÉPICA» se recortaba.
+            style={{
+              color: material.label,
+              fontSize: small,
+              lineHeight: Math.round(small * 1.5),
+              fontWeight: semibold,
+              letterSpacing: small * 0.16,
+            }}
           >
-            {content.rarityLabel}
+            {content.rarityLabel.toLocaleUpperCase('es')}
           </Text>
         ) : null}
         <Text
@@ -215,8 +229,8 @@ export function RewardCardFront({
           style={{
             color: cardFace.title,
             fontFamily: fontFamilies.display,
-            fontSize: fontSizes.md,
-            lineHeight: Math.round(fontSizes.md * 1.1),
+            fontSize: titleSize,
+            lineHeight: Math.round(titleSize * 1.12),
             textAlign: 'center',
           }}
         >

@@ -1,20 +1,20 @@
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import type { Exercise } from '@gymsheet/types';
 import { exerciseService, muscleService } from '@/api/services';
 import { EmptyState, ErrorState, RowsSkeleton } from '@/components/feedback';
-import { Card, Divider } from '@/components/layout';
+import { Divider, ListScreen } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
-import { Button } from '@/components/ui';
 import { titleCase } from '@/components/catalogue-grid';
 import { notify } from '@/notifications';
 import { muscleInfo } from '@/features/body-map';
 import { PickButton } from '@/features/exercise-browser/exercise-row';
 import type { PickConfig } from '@/features/exercise-browser/types';
 import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import type { MuscleExercise } from '@gymsheet/schemas';
 
 const PAGE_SIZE = 30;
 
@@ -111,15 +111,32 @@ const PickRow = memo(function PickRow({
 });
 
 /**
- * Ejercicios de un músculo dentro del selector del asistente. Es la versión en
- * línea de la pantalla de músculo de la pestaña Ejercicios: el asistente tiene
- * que seguir en su propia pila (con su barra de progreso y su botón Atrás), así
- * que no puede saltar a la pestaña de al lado.
+ * Ejercicios de un músculo dentro del selector del asistente, a pantalla
+ * completa. Es la versión en línea de la pantalla de músculo: el asistente
+ * tiene que seguir en su propia pila (con su barra de progreso y su botón
+ * Atrás), así que no puede saltar a otra ruta.
+ *
+ * La lista ES el desplazamiento (`ListScreen`): antes eran hasta 300 filas
+ * dentro de un `ScrollView`, todas montadas a la vez, con un botón «Ver más».
+ * Ahora solo existen las filas a la vista y las páginas llegan al acercarse al final.
  *
  * Esta lista no trae el grupo muscular de cada ejercicio, que el asistente
  * necesita para sus avisos: al añadir se pide la ficha completa.
  */
-export function MusclePickList({ code, pick }: { code: string; pick: PickConfig }) {
+export function MusclePickList({
+  code,
+  pick,
+  header,
+  overlay,
+  bottomSpace,
+}: {
+  code: string;
+  pick: PickConfig;
+  /** Volver, progreso y título del asistente: viaja con la lista. */
+  header: ReactNode;
+  overlay?: ReactNode;
+  bottomSpace?: number;
+}) {
   const queryClient = useQueryClient();
   const exercises = useInfiniteQuery({
     queryKey: ['muscle', code, 'exercises'],
@@ -174,64 +191,65 @@ export function MusclePickList({ code, pick }: { code: string; pick: PickConfig 
   );
 
   return (
-    <View style={{ gap: spacing.md }}>
-      <Text
-        accessibilityRole="header"
-        style={{
-          color: colors.text,
-          fontSize: fontSizes.xl,
-          fontWeight: semibold,
-        }}
-      >
-        {name}
-      </Text>
-      {exercises.isPending ? (
-        <RowsSkeleton />
-      ) : exercises.isError ? (
-        <ErrorState error={exercises.error} onRetry={() => void exercises.refetch()} />
-      ) : items.length === 0 ? (
-        <EmptyState
-          icon="barbell-outline"
-          message="Todavía no hay ejercicios registrados para este músculo."
-          title="Sin ejercicios"
-        />
-      ) : (
+    <ListScreen<MuscleExercise>
+      bottomSpace={bottomSpace}
+      data={items}
+      empty={
+        exercises.isPending ? (
+          <RowsSkeleton />
+        ) : exercises.isError ? (
+          <ErrorState error={exercises.error} onRetry={() => void exercises.refetch()} />
+        ) : (
+          <EmptyState
+            icon="barbell-outline"
+            message="Todavía no hay ejercicios registrados para este músculo."
+            title="Sin ejercicios"
+          />
+        )
+      }
+      // `pick` decide qué filas salen como «añadidas» y `busy` cuáles giran.
+      extraData={[pick, busy]}
+      footer={exercises.isFetchingNextPage ? <ActivityIndicator color={colors.textMuted} /> : undefined}
+      header={
         <>
-          <Text
-            style={{
-              color: colors.textDisabled,
-              fontSize: fontSizes.sm,
-              fontWeight: semibold,
-            }}
-          >
-            {total} {total === 1 ? 'ejercicio' : 'ejercicios'}
-          </Text>
-          <Card list>
-            {items.map((exercise, index) => (
-              <PickRow
-                added={pick.isAdded(exercise.id)}
-                busy={busy.has(exercise.id)}
-                first={index === 0}
-                id={exercise.id}
-                image={exercise.imagen?.url ?? null}
-                imageLabel={exercise.imagen?.textoAlternativo ?? exercise.nombre}
-                key={exercise.id}
-                name={exercise.nombre}
-                onOpen={open}
-                onToggle={toggle}
-              />
-            ))}
-          </Card>
-          {exercises.hasNextPage ? (
-            <Button
-              label="Ver más ejercicios"
-              loading={exercises.isFetchingNextPage}
-              onPress={() => void exercises.fetchNextPage()}
-              variant="ghost"
-            />
-          ) : null}
+          {header}
+          <View style={{ gap: spacing.xs }}>
+            <Text
+              accessibilityRole="header"
+              style={{
+                color: colors.text,
+                fontSize: fontSizes.xl,
+                fontWeight: semibold,
+              }}
+            >
+              {name}
+            </Text>
+            {items.length > 0 ? (
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+                {total} {total === 1 ? 'ejercicio' : 'ejercicios'}
+              </Text>
+            ) : null}
+          </View>
         </>
+      }
+      keyExtractor={(exercise) => exercise.id}
+      onEndReached={() => {
+        if (exercises.hasNextPage && !exercises.isFetchingNextPage) void exercises.fetchNextPage();
+      }}
+      overlay={overlay}
+      renderItem={({ item, index }) => (
+        <PickRow
+          added={pick.isAdded(item.id)}
+          busy={busy.has(item.id)}
+          first={index === 0}
+          id={item.id}
+          image={item.imagen?.url ?? null}
+          imageLabel={item.imagen?.textoAlternativo ?? item.nombre}
+          name={item.nombre}
+          onOpen={open}
+          onToggle={toggle}
+        />
       )}
-    </View>
+    />
   );
 }

@@ -1,7 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
-import Animated, { Extrapolation, FadeIn, interpolate, useAnimatedStyle, ZoomIn, type SharedValue } from 'react-native-reanimated';
+import Animated, {
+  Extrapolation,
+  FadeIn,
+  interpolate,
+  useAnimatedProps,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+  ZoomIn,
+  type SharedValue,
+} from 'react-native-reanimated';
+import Svg, { Circle, Path } from 'react-native-svg';
 import type { Exercise, OmittedMark, SkippedSet, WorkoutSet } from '@gymsheet/types';
 import { ExerciseImage, hasArtwork } from '@/components/media';
 import { Burst, PressableScale } from '@/components/motion';
@@ -97,6 +109,51 @@ export function PageMedia({
 /** Una serie se da por «recién hecha» (y su píldora salta) durante estos milisegundos. */
 const FRESH_MS = 4000;
 
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+/** Largo del trazo del check en el lienzo de 16 (para el `strokeDasharray`). */
+const CHECK_LENGTH = 11;
+
+/**
+ * El ✓ de una serie hecha. Si se acaba de registrar, el trazo se dibuja (el
+ * círculo entra primero, el check después); si no, sale ya dibujado.
+ */
+function DrawnCheck({ fresh }: { fresh: boolean }) {
+  const reduceMotion = useReduceMotion();
+  const animate = fresh && !reduceMotion;
+  const progress = useSharedValue(animate ? 0 : 1);
+  useEffect(() => {
+    if (!animate) return;
+    progress.value = withDelay(140, withTiming(1, { duration: 300 }));
+  }, [animate, progress]);
+  const props = useAnimatedProps(() => ({ strokeDashoffset: CHECK_LENGTH * (1 - progress.value) }));
+  const size = iconSizes.sm;
+  return (
+    <Svg height={size} viewBox="0 0 16 16" width={size}>
+      <Circle cx={8} cy={8} fill={colors.success} r={8} />
+      <AnimatedPath
+        animatedProps={props}
+        d="M4.6 8.3 L7 10.6 L11.4 5.8"
+        fill="none"
+        stroke={colors.background}
+        strokeDasharray={CHECK_LENGTH}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+      />
+    </Svg>
+  );
+}
+
+/** Una acción pequeña al final de la fila de series: a la vista, sin competir con «Registrar». */
+export type TrackAction = {
+  key: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  testID?: string;
+};
+
 function isFresh(iso: string): boolean {
   const at = new Date(iso).getTime();
   return Number.isFinite(at) && Date.now() - at < FRESH_MS;
@@ -114,6 +171,7 @@ export function SetTrack({
   target,
   current,
   onUndoSkip,
+  actions = [],
 }: {
   sets: readonly WorkoutSet[];
   skipped?: readonly SkippedSet[];
@@ -122,6 +180,8 @@ export function SetTrack({
   current: number | null;
   /** Tocar una serie saltada la recupera. */
   onUndoSkip?: (skip: SkippedSet) => void;
+  /** «Deshacer» y «Omitir»: al final de la fila, siempre a la vista sobre los controles. */
+  actions?: readonly TrackAction[];
 }) {
   const reduceMotion = useReduceMotion();
   const entries = [
@@ -149,7 +209,7 @@ export function SetTrack({
               backgroundColor: colors.surfaceHighest,
             }}
           >
-            <Ionicons color={colors.success} name="checkmark-circle" size={iconSizes.sm} />
+            <DrawnCheck fresh={isFresh(entry.set.fechaRegistro)} />
             <Text strong tabular variant="footnote">
               {setLabel(entry.set)}
             </Text>
@@ -202,6 +262,35 @@ export function SetTrack({
           key={`pending-${index}`}
           style={{ width: 32, height: 32, borderRadius: radii.full, borderWidth: 1, borderColor: colors.border }}
         />
+      ))}
+      {actions.map((action) => (
+        <PressableScale
+          accessibilityLabel={action.label}
+          accessibilityRole="button"
+          disabled={action.disabled}
+          haptic="selection"
+          hitSlop={{ top: 6, bottom: 6 }}
+          key={action.key}
+          onPress={action.onPress}
+          scaleTo={0.94}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.xs,
+            height: 32,
+            paddingHorizontal: spacing.smd,
+            borderRadius: radii.full,
+            borderWidth: 1,
+            borderColor: colors.border,
+            opacity: action.disabled ? 0.5 : 1,
+          }}
+          testID={action.testID}
+        >
+          <Ionicons color={colors.textSecondary} name={action.icon} size={iconSizes.xs} />
+          <Text tone="secondary" variant="footnote">
+            {action.label}
+          </Text>
+        </PressableScale>
       ))}
     </View>
   );
@@ -258,42 +347,6 @@ export function RestPills({
         </View>
       ))}
     </PressableScale>
-  );
-}
-
-/** Acciones secundarias de la página: discretas, debajo de la serie y lejos del botón principal. */
-export function QuietActions({
-  actions,
-}: {
-  actions: ReadonlyArray<{ key: string; icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void; disabled?: boolean; testID?: string }>;
-}) {
-  return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: spacing.sm, rowGap: spacing.xs }}>
-      {actions.map((action) => (
-        <PressableScale
-          accessibilityLabel={action.label}
-          disabled={action.disabled}
-          haptic="none"
-          key={action.key}
-          onPress={action.onPress}
-          scaleTo={0.95}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.xs,
-            minHeight: minTouchTarget,
-            paddingHorizontal: spacing.smd,
-            borderRadius: radii.full,
-          }}
-          testID={action.testID}
-        >
-          <Ionicons color={colors.textSecondary} name={action.icon} size={iconSizes.sm} />
-          <Text tone="secondary" variant="footnote">
-            {action.label}
-          </Text>
-        </PressableScale>
-      ))}
-    </View>
   );
 }
 

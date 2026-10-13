@@ -287,6 +287,21 @@ export function lastTimeLabel(set: { pesoKg: number; repeticiones: number }): st
   return `${set.repeticiones} × ${kgLabel(set.pesoKg)} kg`;
 }
 
+/**
+ * Si una serie supera a la mejor de la última vez: más peso, o el mismo peso
+ * con más repeticiones. Sin referencia (primera vez) o sin carga, no hay
+ * marca que batir — un 0 kg × 13 no es «mejor» que 0 kg × 12 en un gesto sin peso.
+ */
+type LoadedSet = { pesoKg: number | null; repeticiones: number | null };
+
+export function beatsReference(set: LoadedSet, reference: LoadedSet | null | undefined): boolean {
+  const weight = set.pesoKg ?? 0;
+  const before = reference?.pesoKg ?? 0;
+  if (!reference || weight <= 0 || before <= 0) return false;
+  if (weight > before) return true;
+  return weight === before && (set.repeticiones ?? 0) > (reference.repeticiones ?? 0);
+}
+
 /** Tope del backend para una serie de fuerza por tiempo. */
 export const MAX_TIMED_SET_SEC = 3600;
 

@@ -1,3 +1,5 @@
+import type { Ionicons } from '@expo/vector-icons';
+import { IconBadge } from '@/components/icon-badge';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
@@ -122,9 +124,16 @@ export default function HomeScreen() {
           <TourTarget id="home.progress">
             <ProgressStrip
               figures={[
-                { key: 'carga', value: formatVolume(training.thisWeek.volumeKg), label: 'Carga esta semana', delta: overload },
-                { key: 'racha', value: `${training.streakWeeks}`, label: 'Semanas seguidas' },
-                { key: 'mes', value: `${training.recentSessions}`, label: 'Sesiones en 4 semanas' },
+                {
+                  key: 'carga',
+                  value: formatVolume(training.thisWeek.volumeKg),
+                  label: 'Carga esta semana',
+                  delta: overload,
+                  icon: 'barbell-outline',
+                  tone: 'weight',
+                },
+                { key: 'racha', value: `${training.streakWeeks}`, label: 'Semanas seguidas', icon: 'flame-outline', tone: 'streak' },
+                { key: 'mes', value: `${training.recentSessions}`, label: 'Sesiones en 4 semanas', icon: 'calendar-outline', tone: 'time' },
               ]}
             />
           </TourTarget>
@@ -141,8 +150,15 @@ export default function HomeScreen() {
             accessibilityLabel={`Tu rango es ${progression.data.level.name}, ${progression.data.points} puntos. Ver la senda completa.`}
             onPress={() => router.push('/trayectoria')}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: spacing.sm }}>
-              <Text variant="headline">{progression.data.level.name}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+              <IconBadge
+                icon={(progression.data.level.icon ?? 'ribbon-outline') as keyof typeof Ionicons.glyphMap}
+                size={36}
+                tone="record"
+              />
+              <Text style={{ flex: 1 }} variant="headline">
+                {progression.data.level.name}
+              </Text>
               <Text tabular tone="secondary" variant="subhead">
                 {`${progression.data.points.toLocaleString('es-ES')} pts`}
               </Text>

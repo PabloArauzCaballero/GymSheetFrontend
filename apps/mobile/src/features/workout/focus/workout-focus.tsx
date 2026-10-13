@@ -19,7 +19,8 @@ import { CardioLogger } from '@/features/cardio/cardio-logger';
 import { SuggestedLoad, useNextLoads } from '@/features/programs/suggested-load';
 import { FinishPage } from '@/features/workout/focus/finish-page';
 import { FocusHeader } from '@/features/workout/focus/focus-header';
-import { DoneCard, FocusPage, GroupSwitch, OmittedCard, PageMedia, QuietActions, RestPills, SetTrack } from '@/features/workout/focus/focus-page';
+import { DoneCard, FocusPage, GroupSwitch, OmittedCard, PageMedia, RestPills, SetTrack } from '@/features/workout/focus/focus-page';
+import { RecordFlash } from '@/features/workout/focus/record-flash';
 import { ReasonSheet, type ReasonSheetMode } from '@/features/workout/focus/reason-sheet';
 import { RestSheet, type RestSheetResult, type RestSheetTarget } from '@/features/workout/focus/rest-sheet';
 import { RestOverlay } from '@/features/workout/focus/rest-overlay';
@@ -42,6 +43,8 @@ import { TimedSetInputs } from '@/features/workout/timed-set-inputs';
 import { countSets, isNetworkFailure, volumeOf, type useWorkoutSession } from '@/features/workout/use-workout-session';
 import {
   activeItemOf,
+  beatsReference,
+  lastTimeLabel,
   blockFill,
   blockState,
   buildFlowBlocks,
@@ -219,6 +222,15 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
   const [restTarget, setRestTarget] = useState<RestSheetTarget | null>(null);
   const [failed, setFailed] = useState<FailedSet | null>(null);
   const [celebrated, setCelebrated] = useState<string | null>(null);
+  /** Destello «Mejor que la última vez» de la serie recién guardada. */
+  const [recordFlash, setRecordFlash] = useState<{ key: number; label: string } | null>(null);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (flashTimer.current) clearTimeout(flashTimer.current);
+    },
+    [],
+  );
 
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollX = useSharedValue(initialPage * width);
@@ -276,6 +288,12 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
     source.ejercicio
       ? previousPerformance(history.data?.items ?? [], source.ejercicio.id, id, isTimed(source) ? isTimedSet : undefined)
       : null;
+
+  /** La mejor serie de la última vez que se hizo el ejercicio (en otra sesión). */
+  const reference_ = (source: WorkoutExercise) => {
+    const previous = reference(source);
+    return previous ? topSet(previous.exercise) : null;
+  };
 
   /** Con qué abre la serie de un ejercicio: lo de hoy, lo sugerido, lo de la última vez o el objetivo. */
   const openingDraft = (source: WorkoutExercise): SetDraft => {
@@ -382,6 +400,14 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
     };
     const loggedId = activeSource.id;
     const loggedName = nameOf(activeSource);
+    // ¿Supera a lo mejor de la última vez (y a lo ya hecho hoy)? Se celebra al guardarse.
+    const strength = 'repeticiones' in parsed ? parsed : null;
+    const reference = strength ? reference_(activeSource) : null;
+    const beatsLastTime =
+      strength !== null &&
+      beatsReference(strength, reference) &&
+      // Si hoy ya hubo una mejor (o igual) que también batía la marca, no se repite el destello.
+      !strengthSets(activeSource).some((done) => !beatsReference(strength, done) && beatsReference(done, reference));
     const blockIndex = active.step.blockIndex;
     const from = page;
     const after = withLoggedSet(blocks, loggedId);
@@ -409,6 +435,12 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
             setExtra(null);
             setChosen((all) => Object.fromEntries(Object.entries(all).filter(([key]) => Number(key) !== blockIndex)));
             if (closed) setCelebrated(loggedId);
+            if (beatsLastTime && strength) {
+              void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              setRecordFlash({ key: Date.now(), label: `${loggedName} · ${lastTimeLabel(strength)}` });
+              if (flashTimer.current) clearTimeout(flashTimer.current);
+              flashTimer.current = setTimeout(() => setRecordFlash(null), 2800);
+            }
             // Debajo del descanso la pantalla ya queda en lo que viene.
             const target = pageAfterLogging(after, next);
             if (target !== from) goTo(target, from);
@@ -935,6 +967,35 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
               track={
                 cardio ? null : (
                   <SetTrack
+                    actions={
+                      omitted
+                        ? []
+                        : [
+                            ...(hasHistory
+                              ? [
+                                  {
+                                    key: 'undo',
+                                    icon: 'arrow-undo-outline' as const,
+                                    label: 'Deshacer',
+                                    onPress: () => undoLast(source),
+                                    disabled: session.removeSet.isPending || session.undoSkip.isPending,
+                                    testID: isHere ? 'undo-set' : undefined,
+                                  },
+                                ]
+                              : []),
+                            ...(!done
+                              ? [
+                                  {
+                                    key: 'omit',
+                                    icon: 'remove-circle-outline' as const,
+                                    label: 'Omitir',
+                                    onPress: () => setReason({ mode: { kind: 'exercise', label: nameOf(source) }, exerciseId: source.id }),
+                                    testID: isHere ? 'omit-exercise' : undefined,
+                                  },
+                                ]
+                              : []),
+                          ]
+                    }
                     current={done || omitted ? null : numberOf(source)}
                     onUndoSkip={(skip) => undoSkip(source, skip)}
                     sets={source.series}
@@ -992,35 +1053,6 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
               ) : (
                 renderInputs(source)
               )}
-              {omitted ? null : (
-                <QuietActions
-                  actions={[
-                    ...(!done
-                      ? [
-                          {
-                            key: 'omit',
-                            icon: 'remove-circle-outline' as const,
-                            label: 'Omitir ejercicio',
-                            onPress: () => setReason({ mode: { kind: 'exercise', label: nameOf(source) }, exerciseId: source.id }),
-                            testID: isHere ? 'omit-exercise' : undefined,
-                          },
-                        ]
-                      : []),
-                    ...(hasHistory && !cardio
-                      ? [
-                          {
-                            key: 'undo',
-                            icon: 'arrow-undo-outline' as const,
-                            label: 'Deshacer',
-                            onPress: () => undoLast(source),
-                            disabled: session.removeSet.isPending || session.undoSkip.isPending,
-                            testID: isHere ? 'undo-set' : undefined,
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
-              )}
             </FocusPage>
           );
         })}
@@ -1051,6 +1083,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
         </View>
       ) : null}
 
+      <RecordFlash flash={recordFlash} />
       <RestOverlay
         kind={restKind}
         onChangeRest={() => {

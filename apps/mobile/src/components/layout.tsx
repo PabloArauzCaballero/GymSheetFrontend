@@ -22,12 +22,13 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedRef, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { AmbientBackground } from '@/components/ambient';
+import { IconBadge } from '@/components/icon-badge';
 import { HeroBar, HeroParallax, ScrollYProvider, type HeroBarProps } from '@/components/hero-bar';
 import { PullIndicator } from '@/components/pull-indicator';
 import { useTourStore, type TourKey } from '@/state/tour-store';
 import { CountUpText, Heartbeat, PressableScale } from '@/components/motion';
 import { Text as AppTextPrimitive } from '@/components/text';
-import { accentPolicy, alpha, cardGap, cardPadding, colors, fontFamilies, fontSizes, gutter as screenGutter, iconSizes, maxContentWidth, maxWideContentWidth, minTouchTarget, radii, screenGap, sectionGap, semibold, shadows, spacing, tabletBreakpoint, tones } from '@/theme';
+import { accentPolicy, alpha, cardGap, cardPadding, colors, fontFamilies, fontSizes, gutter as screenGutter, iconSizes, maxContentWidth, maxWideContentWidth, minTouchTarget, radii, screenGap, sectionGap, semibold, shadows, spacing, tabletBreakpoint, tones , type MetricKey } from '@/theme';
 
 /**
  * One place decides what "wide" means, so a tablet layout cannot drift between
@@ -194,6 +195,8 @@ export function ListScreen<T>({
   onRefresh,
   refreshing = false,
   renderItem,
+  overlay,
+  bottomSpace = 0,
 }: {
   data: readonly T[];
   /** Lo que, además de `data`, obliga a repintar filas (p. ej. una acción en curso). */
@@ -210,6 +213,10 @@ export function ListScreen<T>({
   onRefresh?: () => void;
   refreshing?: boolean;
   renderItem: ListRenderItem<T>;
+  /** Barra fija sobre la lista, encima de la barra de pestañas (como en `ScrollScreen`). */
+  overlay?: ReactNode;
+  /** Hueco extra al final para que `overlay` no tape la última fila. */
+  bottomSpace?: number;
 }) {
   const frame = useScreenFrame();
   const listRef = useRef<FlatList<T> | null>(null);
@@ -220,9 +227,13 @@ export function ListScreen<T>({
   );
 
   return (
-    <ScreenChrome frame={frame}>
+    <ScreenChrome frame={frame} overlay={overlay}>
       <FlatList<T>
-        contentContainerStyle={frame.contentPadding}
+        contentContainerStyle={
+          bottomSpace > 0
+            ? { ...frame.contentPadding, paddingBottom: Number(frame.contentPadding.paddingBottom ?? 0) + bottomSpace }
+            : frame.contentPadding
+        }
         data={data as T[]}
         extraData={extraData}
         ItemSeparatorComponent={Separator}
@@ -280,7 +291,7 @@ function screenRefreshControl(onRefresh: (() => void) | undefined, refreshing: b
   );
 }
 
-type ScreenFrame = {
+export type ScreenFrame = {
   gutter: number;
   topInset: number;
   bottomInset: number;
@@ -295,7 +306,7 @@ type ScreenFrame = {
  * width becomes gutter instead of longer lines, so text stays readable on a
  * tablet.
  */
-function useScreenFrame(): ScreenFrame {
+export function useScreenFrame(): ScreenFrame {
   const insets = useSafeAreaInsets();
   const { wide, width } = useResponsive();
   // A two-column page needs room for two columns; keeping the phone cap on a
@@ -375,7 +386,7 @@ function useTourScroller(scrollToY: (y: number) => void) {
 }
 
 /** Fondo, capa fija sobre la barra de pestañas y franja de la barra de estado. */
-function ScreenChrome({
+export function ScreenChrome({
   children,
   frame,
   overlay,
@@ -719,9 +730,12 @@ export function StatTile({
   icon,
   delta,
   rate,
+  tone,
 }: {
   value: string;
   label: string;
+  /** Color por significado del icono (`metricColors`); sin él, glifo neutro. */
+  tone?: MetricKey;
   /**
    * Cuánto aporta esta cifra a tus puntos, ya redactado («+50 c/u»). Solo en
    * las cifras que suman: una tarifa en todas diría que todo cuenta, y no.
@@ -757,7 +771,9 @@ export function StatTile({
         paddingHorizontal: spacing.md,
       }}
     >
-      {icon ? (
+      {icon && tone ? (
+        <IconBadge icon={icon} tone={tone} />
+      ) : icon ? (
         <Ionicons
           accessibilityElementsHidden
           color={accentPolicy.glyph}
