@@ -1,0 +1,25 @@
+H6 OSM ingestion and PostgreSQL verification (2026-10-08)
+
+Source snapshot: Geofabrik Bolivia, bolivia-261008.osm.pbf
+Bytes: 174099715
+SHA-256: 744149680fea4a037c6a3f4eb60e31dc9f914493f35e3269bf89fcbb14847b34
+License and attribution: ODbL-1.0; © OpenStreetMap contributors
+Extractor output: 6947 rows (6746 CITY, 201 GYM); output bbox in osm-bolivia-261008.manifest.json.
+Real QA coverage: 52 GYM records in the La Paz bounds used for the first coverage probe; 33 in the narrower API E2E bounds.
+
+Commands/results:
+- python3 -m unittest scripts/qa/test_extract_osm_social_places.py -> Ran 3 tests; OK.
+- yarn migration:up against an isolated PostgreSQL 16 database -> all registered migrations applied, including 202610090004-social-map-places and 202610090005-social-map-place-branch-links.
+- yarn db:import:social-map --input /tmp/bolivia-261008-social-places.ndjson --manifest /tmp/bolivia-261008-social-places.manifest.json -> Imported 6947 verified OSM map places.
+- Repeated the same import -> Imported 6947 verified OSM map places; database still has CITY:6746 active and GYM:201 active; duplicates=0.
+- yarn test:e2e --runTestsByPath test/social-map-places.e2e-spec.ts -> PASS, 3/3: authenticated city search; bounded, attributed gym response; over-wide query rejected.
+- Social unit suites -> PASS, 9 suites / 70 tests.
+- Backend type-check -> PASS.
+- Backend lint -> PASS.
+- Web map UI tests -> PASS, 3/3; web type-check and lint -> PASS.
+- Mobile type-check -> PASS; mobile lint -> 0 errors, 2 pre-existing unused-disable warnings in trayectoria.tsx and celebration/stage.tsx.
+
+Environment limits:
+- Android API 36 Google APIs arm64 system-image installation reported "No space left on device". The incomplete image directory created by that attempt was removed; no AVD was produced.
+- iOS simulator is booted, but no new native build or on-device map walkthrough has passed in this run.
+- These checks prove the Bolivia snapshot's tagged coverage only; they do not claim an exhaustive inventory of every gym.

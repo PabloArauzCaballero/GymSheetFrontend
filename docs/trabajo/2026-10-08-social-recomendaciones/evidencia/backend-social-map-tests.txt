@@ -1,0 +1,12 @@
+yarn run v1.22.22
+$ '/Users/josejeremias/Desktop/Mantra Core Technologies/GymSheet/GymSheetBackend/node_modules/.bin/jest' src/modules/social/social-map.policy.spec.ts src/modules/social/social-map.service.spec.ts src/database/migrations/migrations.registry.spec.ts --runInBand
+PASS src/modules/social/social-map.service.spec.ts
+PASS src/database/migrations/migrations.registry.spec.ts
+PASS src/modules/social/social-map.policy.spec.ts
+
+Test Suites: 3 passed, 3 total
+Tests:       10 passed, 10 total
+Snapshots:   0 total
+Time:        1.193 s, estimated 2 s
+Ran all test suites matching /src\/modules\/social\/social-map.policy.spec.ts|src\/modules\/social\/social-map.service.spec.ts|src\/database\/migrations\/migrations.registry.spec.ts/i.
+Done in 1.85s.

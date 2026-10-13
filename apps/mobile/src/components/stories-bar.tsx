@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { profilePhotosService, storiesService } from '@/api/services';
+import { profilePhotosService, socialService, storiesService } from '@/api/services';
 import { PressableScale } from '@/components/motion';
 import { StoryViewer } from '@/components/story-viewer';
 import { ErrorState, Skeleton } from '@/components/feedback';
@@ -14,6 +14,8 @@ import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { initialsOf } from '@/lib/format';
+import { requestId } from '@/lib/request-id';
+import { canSubmitStoryAudience, toggleStoryAudienceRecipient } from '@/lib/story-audience-selection';
 import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
 
 const AVATAR_SIZE = 60;
@@ -163,13 +165,32 @@ function StorySourceSheet({
   onClose,
   onCamera,
   onLibrary,
+  audienceMode,
+  onAudienceModeChange,
+  recipientIds,
+  onRecipientsChange,
+  disabled,
 }: {
   visible: boolean;
   onClose: () => void;
   onCamera: () => void;
   onLibrary: () => void;
+  audienceMode: 'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS';
+  onAudienceModeChange: (mode: 'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS') => void;
+  recipientIds: string[];
+  onRecipientsChange: (update: (current: string[]) => string[]) => void;
+  disabled: boolean;
 }) {
   const insets = useSafeAreaInsets();
+  const connections = useQuery({
+    queryKey: ['connections', 'accepted-for-stories'],
+    queryFn: () => socialService.listConnections('ACCEPTED'),
+    enabled: visible,
+  });
+  const connectionsState = connections.isPending || connections.isFetching
+    ? 'loading'
+    : connections.isError ? 'error' : 'loaded';
+  const selectionIncomplete = !canSubmitStoryAudience(audienceMode, recipientIds, connectionsState);
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent transparent visible={visible}>
@@ -216,11 +237,75 @@ function StorySourceSheet({
           </View>
 
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
-            Se verá 24 horas para el resto del gimnasio.
+            Se verá durante 24 horas para tus conexiones aceptadas.
           </Text>
 
-          <Button icon="camera-outline" label="Hacer una foto o un vídeo" onPress={onCamera} />
-          <Button icon="images-outline" label="Elegir de la galería" onPress={onLibrary} variant="ghost" />
+          <View accessibilityRole="radiogroup" style={{ gap: spacing.sm }}>
+            {([
+              ['ALL_CONNECTIONS', 'Todas mis conexiones aceptadas'],
+              ['SELECTED_CONNECTIONS', 'Solo personas elegidas'],
+            ] as const).map(([mode, label]) => (
+              <Pressable
+                accessibilityLabel={label}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: audienceMode === mode }}
+                key={mode}
+                onPress={() => onAudienceModeChange(mode)}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: minTouchTarget }}
+              >
+                <Ionicons
+                  color={audienceMode === mode ? accentPolicy.ink : colors.textMuted}
+                  name={audienceMode === mode ? 'radio-button-on' : 'radio-button-off'}
+                  size={iconSizes.md}
+                />
+                <Text style={{ color: colors.text, fontSize: fontSizes.sm }}>{label}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {audienceMode === 'SELECTED_CONNECTIONS' ? (
+            <ScrollView accessibilityLabel="Personas que pueden ver la story" style={{ maxHeight: 180 }}>
+              {connections.isLoading ? (
+                <Text accessibilityLiveRegion="polite" style={{ color: colors.textMuted }}>Cargando conexiones…</Text>
+              ) : connections.isError ? (
+                <View accessibilityRole="alert" style={{ alignItems: 'flex-start', gap: spacing.xs }}>
+                  <Text style={{ color: colors.textMuted }}>No se pudieron cargar las conexiones.</Text>
+                  <Button
+                    accessibilityLabel="Reintentar cargar conexiones aceptadas"
+                    label="Reintentar"
+                    loading={connections.isFetching}
+                    onPress={() => void connections.refetch()}
+                    variant="ghost"
+                  />
+                </View>
+              ) : connections.data?.length ? connections.data.map((connection) => {
+                const checked = recipientIds.includes(connection.otherUserId);
+                return (
+                  <Pressable
+                    accessibilityLabel={connection.otherUserName}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked }}
+                    key={connection.otherUserId}
+                    onPress={() => onRecipientsChange((current) => toggleStoryAudienceRecipient(
+                      current,
+                      connection.otherUserId,
+                      !checked,
+                    ))}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: minTouchTarget }}
+                  >
+                    <Ionicons color={checked ? accentPolicy.ink : colors.textMuted} name={checked ? 'checkbox' : 'square-outline'} size={iconSizes.md} />
+                    <Text style={{ color: colors.text, fontSize: fontSizes.sm }}>{connection.otherUserName}</Text>
+                  </Pressable>
+                );
+              }) : <Text style={{ color: colors.textMuted }}>Todavía no tienes conexiones aceptadas.</Text>}
+              {recipientIds.length === 0 ? (
+                <Text style={{ color: colors.textMuted, paddingVertical: spacing.xs }}>Elige al menos una persona para continuar.</Text>
+              ) : null}
+            </ScrollView>
+          ) : null}
+
+          <Button disabled={disabled || selectionIncomplete} icon="camera-outline" label="Hacer una foto o un vídeo" onPress={onCamera} />
+          <Button disabled={disabled || selectionIncomplete} icon="images-outline" label="Elegir de la galería" onPress={onLibrary} variant="ghost" />
         </View>
       </View>
     </Modal>
@@ -275,11 +360,22 @@ export function StoriesBar() {
   /** Por quién se abre el visor; `null` es «cerrado». */
   const [openUserId, setOpenUserId] = useState<string | null>(null);
   const [sourceVisible, setSourceVisible] = useState(false);
+  const [audienceMode, setAudienceMode] = useState<'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS'>('ALL_CONNECTIONS');
+  const [recipientIds, setRecipientIds] = useState<string[]>([]);
+  const uploadAttemptRef = useRef<{
+    file: { uri: string; name: string; mimeType: string };
+    requestId: string;
+    mode: 'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS';
+    recipients: string[];
+  } | null>(null);
+  const [uploadFailed, setUploadFailed] = useState(false);
 
   const feed = useQuery({
     queryKey: ['stories', 'feed'],
     queryFn: () => storiesService.feed(),
     staleTime: 30_000,
+    refetchInterval: openUserId ? 5_000 : false,
+    refetchIntervalInBackground: false,
   });
   const myPhotos = useQuery({
     queryKey: ['profile', 'photos'],
@@ -291,24 +387,48 @@ export function StoriesBar() {
   const currentUserId = principal?.id;
 
   const upload = useMutation({
-    mutationFn: (file: { uri: string; name: string; mimeType: string }) => storiesService.upload(file),
+    mutationFn: (attempt: NonNullable<typeof uploadAttemptRef.current>) => storiesService.upload(attempt.file, {
+      mode: attempt.mode,
+      recipientIds: attempt.recipients,
+      requestId: attempt.requestId,
+    }),
     onSuccess: async () => {
+      uploadAttemptRef.current = null;
+      setUploadFailed(false);
       await queryClient.invalidateQueries({ queryKey: ['stories', 'feed'] });
       notify.success('Story publicada — estará visible 24 horas.');
     },
-    onError: (error: Error) => notify.error(error.message),
+    onError: (error: Error) => {
+      setUploadFailed(true);
+      notify.error(error.message);
+    },
   });
+
+  function retryUpload() {
+    const attempt = uploadAttemptRef.current;
+    if (attempt && !upload.isPending) upload.mutate(attempt);
+  }
 
   function openSourceSheet() {
     // Una subida a la vez: sin esto, pulsar «+» tres veces lanza tres stories.
     if (upload.isPending) return;
+    setAudienceMode('ALL_CONNECTIONS');
+    setRecipientIds([]);
     setSourceVisible(true);
   }
 
   function submitPicked(result: ImagePicker.ImagePickerResult) {
     const asset = result.canceled ? null : result.assets?.[0];
     if (!asset) return;
-    upload.mutate(fileFromAsset(asset));
+    const attempt = {
+      file: fileFromAsset(asset),
+      requestId: requestId(),
+      mode: audienceMode,
+      recipients: [...recipientIds],
+    };
+    uploadAttemptRef.current = attempt;
+    setUploadFailed(false);
+    upload.mutate(attempt);
   }
 
   async function handleFromCamera() {
@@ -395,6 +515,13 @@ export function StoriesBar() {
             <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.xs, maxWidth: COLUMN_WIDTH }}>
               Tu historia
             </Text>
+            {uploadFailed ? (
+              <Pressable accessibilityRole="button" onPress={retryUpload}>
+                <Text style={{ color: colors.volt, fontSize: fontSizes.xs, fontWeight: '700', textDecorationLine: 'underline' }}>
+                  Reintentar subida
+                </Text>
+              </Pressable>
+            ) : null}
             <PressableScale
               accessibilityLabel={upload.isPending ? 'Publicando story…' : 'Agregar story'}
               accessibilityState={{ disabled: upload.isPending, busy: upload.isPending }}
@@ -450,9 +577,14 @@ export function StoriesBar() {
       )}
 
       <StorySourceSheet
+        audienceMode={audienceMode}
+        disabled={upload.isPending}
         onCamera={() => void handleFromCamera()}
         onClose={() => setSourceVisible(false)}
+        onAudienceModeChange={setAudienceMode}
+        onRecipientsChange={setRecipientIds}
         onLibrary={() => void handleFromLibrary()}
+        recipientIds={recipientIds}
         visible={sourceVisible}
       />
 

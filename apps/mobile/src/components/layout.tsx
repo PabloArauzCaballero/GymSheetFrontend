@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import {
   RefreshControl,
+  FlatList,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -10,6 +11,7 @@ import {
   useWindowDimensions,
   View,
   type StyleProp,
+  type ListRenderItem,
   type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -205,6 +207,114 @@ export function ScrollScreen({
 
       {/* Opaque band over the status bar: without it, scrolled content slides
           under the clock and battery and the two become unreadable. */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: topInset,
+          backgroundColor: colors.background,
+        }}
+      />
+    </View>
+  );
+}
+
+/** Lista para pantallas con imágenes: monta sólo las filas cercanas al viewport. */
+export function VirtualizedScreen<T>({
+  data,
+  empty,
+  header,
+  itemGap = 0,
+  keyExtractor,
+  onRefresh,
+  refreshing = false,
+  renderItem,
+}: {
+  data: T[];
+  empty: ReactNode;
+  header: ReactNode;
+  itemGap?: number;
+  keyExtractor: (item: T) => string;
+  onRefresh?: () => void;
+  refreshing?: boolean;
+  renderItem: ListRenderItem<T>;
+}) {
+  const insets = useSafeAreaInsets();
+  const { wide, width } = useResponsive();
+  const listRef = useRef<FlatList<T> | null>(null);
+  const offsetRef = useRef(0);
+  const registerScroller = useTourStore((state) => state.registerScroller);
+  const scroller = useMemo(
+    () => ({
+      scrollBy: (deltaY: number) => {
+        const next = Math.max(0, offsetRef.current + deltaY);
+        offsetRef.current = next;
+        listRef.current?.scrollToOffset({ offset: next, animated: true });
+      },
+      scrollTo: (y: number) => {
+        offsetRef.current = Math.max(0, y);
+        listRef.current?.scrollToOffset({ offset: offsetRef.current, animated: true });
+      },
+      getOffset: () => offsetRef.current,
+    }),
+    [],
+  );
+  useFocusEffect(
+    useCallback(() => {
+      registerScroller(scroller);
+      return () => {
+        if (useTourStore.getState().scroller === scroller) registerScroller(null);
+      };
+    }, [registerScroller, scroller]),
+  );
+  const gutter = Math.max(spacing.lg, (width - (wide ? maxWideContentWidth : maxContentWidth)) / 2);
+  const topInset = Math.max(insets.top, StatusBar.currentHeight ?? 0);
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <AmbientBackground />
+      <FlatList
+        automaticallyAdjustKeyboardInsets
+        contentContainerStyle={{
+          paddingTop: topInset + spacing.xl,
+          paddingBottom: insets.bottom + spacing['2xl'],
+          paddingLeft: gutter + insets.left,
+          paddingRight: gutter + insets.right,
+        }}
+        data={data}
+        initialNumToRender={6}
+        ItemSeparatorComponent={itemGap ? () => <View style={{ height: itemGap }} /> : undefined}
+        keyExtractor={keyExtractor}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
+        ListEmptyComponent={<>{empty}</>}
+        ListHeaderComponent={<View style={{ gap: screenGap, marginBottom: screenGap }}>{header}</View>}
+        maxToRenderPerBatch={6}
+        onMomentumScrollEnd={(event) => {
+          offsetRef.current = event.nativeEvent.contentOffset.y;
+        }}
+        onScrollEndDrag={(event) => {
+          offsetRef.current = event.nativeEvent.contentOffset.y;
+        }}
+        ref={listRef}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              colors={[colors.volt]}
+              onRefresh={onRefresh}
+              progressBackgroundColor={colors.surface}
+              refreshing={refreshing}
+              tintColor={colors.volt}
+            />
+          ) : undefined
+        }
+        renderItem={renderItem}
+        showsVerticalScrollIndicator={false}
+        windowSize={5}
+      />
       <View
         pointerEvents="none"
         style={{

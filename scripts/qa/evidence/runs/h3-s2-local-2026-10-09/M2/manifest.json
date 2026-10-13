@@ -1,0 +1,65 @@
+{
+  "api": {
+    "actors": {
+      "A": {
+        "id": "6142493b-2232-4d71-b865-342b747655a5"
+      },
+      "B": {
+        "id": "b83a7b73-464e-4923-a21d-838408a05ce4"
+      }
+    },
+    "ready": true
+  },
+  "cases": [
+    {
+      "id": "H3.S2.M2",
+      "reasons": [
+        "driver B_WEB exited 1"
+      ],
+      "verdict": "FAIL"
+    }
+  ],
+  "createdAt": "2026-10-09T22:28:31Z",
+  "devices": {
+    "android": {
+      "ready": false,
+      "serial": null
+    },
+    "ios": {
+      "booted": false,
+      "udid": null
+    }
+  },
+  "ports": {
+    "api": 3011,
+    "web": 3002
+  },
+  "repositories": {
+    "backend": {
+      "branch": "feat/biblioteca-ejercicios",
+      "dirty": true,
+      "present": true,
+      "sha": "474da618fe4d191ae5d5f25b2dac537fd3a6856f"
+    },
+    "frontend": {
+      "branch": "dev",
+      "dirty": true,
+      "present": true,
+      "sha": "6b66d8aba9329f4897e900a9e3be09f495c41343"
+    },
+    "recommendations": {
+      "branch": "main",
+      "dirty": true,
+      "present": true,
+      "sha": null
+    }
+  },
+  "runId": "h3s2local20261009",
+  "schemaVersion": 1,
+  "secretsIncluded": false,
+  "versions": {
+    "node": "v24.19.0",
+    "python": "3.14.7",
+    "yarn": "1.22.22"
+  }
+}

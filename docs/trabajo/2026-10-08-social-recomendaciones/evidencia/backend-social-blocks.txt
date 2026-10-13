@@ -1,0 +1,12 @@
+Fecha: 2026-10-08 (hora local)
+Migración: `202610090006-social-blocks` aplicada con `yarn migration:up` en PostgreSQL QA aislado (`127.0.0.1:55432/gymsheet_social_qa`).
+
+Prueba de integración autenticada: `yarn test:e2e --runTestsByPath test/social-blocks.e2e-spec.ts --runInBand`
+Resultado: PASS, 1 suite / 1 test. Dos cuentas sintéticas verificaron persistencia/listado, ocultación de perfil, rechazo de una conexión desde el otro sentido, desbloqueo y conexión posterior.
+
+Pruebas backend dirigidas tras serializar bloqueo y solicitud con locks de las mismas filas de usuario: 2 suites / 37 tests PASS; type-check y ESLint completos PASS. Suite backend completa con DB QA, posterior al endurecimiento: 111 suites / 797 tests PASS. El E2E de bloqueo se repitió: 1 suite / 2 tests PASS, incluida la carrera concurrente conectar/bloquear.
+
+Web: suite Vitest completa, 40 archivos / 268 tests PASS; type-check y lint del monorepo PASS.
+Móvil: type-check y ESLint de pantallas/servicios modificados PASS. El lint general móvil tiene 0 errores y 2 warnings anteriores en `trayectoria.tsx:180` y `celebration/stage.tsx:220`.
+
+Límites: falta ejecutar la suite backend completa después del cambio de serialización, comprobar acceso a historias, reels y sockets con dos sesiones y hacer QA visual real en Android/iOS/web. La implementación aún no cierra H3 ni el plan completo.

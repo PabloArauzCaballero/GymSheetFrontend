@@ -1,0 +1,25 @@
+✔ internal recommendation API requires a service credential (12.879458ms)
+✔ rank endpoint validates contract and only exposes ranked profile IDs, score and reasons (5.104333ms)
+✔ health endpoints work without a business database credential (1.310125ms)
+✔ rank endpoint rejects unknown contract versions before ranking (1.992916ms)
+✔ H4.S2.M1: género elegido por quien busca es filtro obligatorio (1.052125ms)
+✔ H4.S2.M2: edad y distancia estrictas no se amplían implícitamente (0.063625ms)
+✔ H4: no recomienda a menores aunque el candidato cumpla sus preferencias (0.367583ms)
+✔ H4.S2.M3/M4: afinidad declarada ordena y desconocidos no penalizan (0.170917ms)
+✔ H4.S2.M5: exploración solo usa candidatos elegibles (0.396167ms)
+✔ H4.S2.M5: la posición exploratoria queda explicada (4.533208ms)
+✔ H4.S2.M6: paginar con seenIds evita candidatos repetidos (0.112084ms)
+✔ H4.S2: flexibilidad solo amplía el filtro expresamente habilitado (0.061709ms)
+✔ H4.S1.M3/M4/M5: eventos duplicados o viejos no restauran una proyección borrada (0.154334ms)
+✔ H4.S3.M1/M2: una señal única cambia preferencia suavemente y deduplica reintentos (0.40125ms)
+✔ H4.S3.M1: una impresión nunca vista no cuenta como feedback (0.049167ms)
+✔ H4.S3.M3: el corte temporal excluye eventos futuros del entrenamiento (0.056125ms)
+✔ H4.S3.M4: evaluación sintética se etiqueta y no se presenta como métrica real (0.1085ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 77.592667

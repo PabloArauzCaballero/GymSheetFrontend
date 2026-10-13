@@ -102,7 +102,7 @@ export function GuidedWorkout({
               <li className="flex items-center justify-between px-5 py-3 text-sm" key={set.id}>
                 <span className="font-semibold">Serie {set.numeroSerie}</span>
                 <span className="text-[var(--text-muted)]">
-                  {formatNumber(set.pesoKg)} kg × {set.repeticiones} · RIR {set.rir}
+                  {formatNumber(set.pesoKg)} kg × {set.repeticiones}{set.rir === null ? '' : ` · RIR ${set.rir}`}
                 </span>
               </li>
             ))}

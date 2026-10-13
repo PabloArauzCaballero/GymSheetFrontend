@@ -3,11 +3,14 @@ import {
   AccessibilityInfo,
   ActivityIndicator,
   AppState,
+  KeyboardAvoidingView,
   Modal,
   Pressable,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
   useWindowDimensions,
   StatusBar,
@@ -16,6 +19,7 @@ import type { AccessibilityActionEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEventListener } from 'expo';
+import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import type { VideoPlayerStatus } from 'expo-video';
@@ -40,8 +44,14 @@ import { storiesService } from '@/api/services';
 import { DURATION, PREMIUM_EASING, PressableScale } from '@/components/motion';
 import { confirmDelete, notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
+import { secureStoreAuthStorage } from '@/storage/secure-store';
+import { env } from '@/config/env';
+import { resolveStoryMediaSource } from '@/components/story-media-source';
 import { initialsOf } from '@/lib/format';
+import { storyManualPauseAfterAppStateChange } from '@/lib/story-app-state';
+import { firstAvailableStoryId, reconcileStoryFeed } from '@/lib/story-feed-reconciliation';
 import { storyViewersPresentation } from '@/components/story-viewers-presentation';
+import { requestId } from '@/lib/request-id';
 import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 /** Lo que dura una foto en pantalla antes de pasar sola a la siguiente. */
@@ -250,19 +260,6 @@ function relativeTimeEs(iso: string): string {
   return `hace ${Math.floor(hours / 24)} d`;
 }
 
-/** Primera story sin ver de esa persona; si las vio todas, la primera. */
-function firstUnseenIndex(entry: StoryFeedEntry | undefined): number {
-  if (!entry) return 0;
-  const index = entry.stories.findIndex((story) => !story.viewedByMe);
-  return index === -1 ? 0 : index;
-}
-
-/** Por qué story se entra a una persona. `null` si no le queda ninguna. */
-function entryStoryId(entry: StoryFeedEntry | undefined): string | null {
-  if (!entry) return null;
-  return entry.stories[firstUnseenIndex(entry)]?.id ?? null;
-}
-
 /**
  * Dónde está el visor: **qué persona y qué story**, por identidad y no por
  * posición.
@@ -445,6 +442,7 @@ export function StoryViewer({
   onClose: () => void;
 }) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const principal = useAuthStore((state) => state.principal);
   const reduceMotion = useReducedMotion();
   const insets = useSafeAreaInsets();
@@ -460,7 +458,7 @@ export function StoryViewer({
    */
   const [cursor, setCursor] = useState<Cursor | null>(() => {
     const entry = feed.find((candidate) => candidate.userId === startUserId);
-    const storyId = entryStoryId(entry);
+    const storyId = firstAvailableStoryId(entry);
     if (!entry || !storyId) return null;
     return { userId: entry.userId, storyId, run: 0 };
   });
@@ -474,6 +472,7 @@ export function StoryViewer({
    * de una story a la siguiente — desmutear una vez es desmutear la sesión.
    */
   const [muted, setMuted] = useState(true);
+  const [storyAccess, setStoryAccess] = useState<{ storyId: string; token: string | null } | null>(null);
   /**
    * La duración real del clip, guardada JUNTO A LA STORY que la produjo.
    *
@@ -491,6 +490,11 @@ export function StoryViewer({
    */
   const [closing, setClosing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [replyOpen, setReplyOpen] = useState(false);
+  const [replyDraft, setReplyDraft] = useState('');
+  const [replyBusy, setReplyBusy] = useState(false);
+  const replyRequestRef = useRef<{ storyId: string; text: string; requestId: string } | null>(null);
+  const replySubmittingRef = useRef(false);
   const [viewersOpen, setViewersOpen] = useState(false);
   const [appActive, setAppActive] = useState(true);
   const [headerHeight, setHeaderHeight] = useState(DEFAULT_HEADER_HEIGHT);
@@ -507,8 +511,34 @@ export function StoryViewer({
   const storyIndex = entry && cursor ? entry.stories.findIndex((item) => item.id === cursor.storyId) : -1;
   const story = entry && storyIndex !== -1 ? (entry.stories[storyIndex] ?? null) : null;
   const storyId = story?.id ?? null;
+  const storyAccessToken = storyId && storyAccess?.storyId === storyId ? storyAccess.token : null;
+  const storyMediaUri = useMemo(
+    () => story?.mediaUrl ? resolveStoryMediaSource(story.mediaUrl, env.apiUrl) : null,
+    [story?.mediaUrl],
+  );
+  useEffect(() => {
+    if (!storyId) {
+      setStoryAccess(null);
+      return;
+    }
+    let cancelled = false;
+    setStoryAccess(null);
+    void secureStoreAuthStorage.getAccessToken()
+      .then((token) => {
+        if (!cancelled) setStoryAccess({ storyId, token });
+      })
+      .catch(() => {
+        if (!cancelled) setStoryAccess({ storyId, token: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [storyId]);
+  const mediaReady = Boolean(story && storyAccessToken && storyMediaUri);
+  const mediaAccessFailed = storyAccess?.storyId === storyId && (!storyAccess.token || !storyMediaUri);
   const storyViewedByMe = story?.viewedByMe ?? false;
   const isMine = Boolean(entry && principal && entry.userId === principal.id);
+  const canReply = Boolean(entry && principal && entry.userId !== principal.id);
   const isVideo = story?.mediaType === 'video';
   /** La medida sólo vale para la story que la produjo; para el resto, `null`. */
   const measuredMs = videoDuration && videoDuration.storyId === storyId ? videoDuration.ms : null;
@@ -520,7 +550,7 @@ export function StoryViewer({
    * de borrado, la hoja de espectadores abierta y la aplicación en segundo
    * plano. Ninguna de esas situaciones es «el usuario está mirando la story».
    */
-  const paused = held || manualPaused || dragging || closing || busy || viewersOpen || !appActive;
+  const paused = held || manualPaused || dragging || closing || busy || viewersOpen || replyOpen || !appActive || !mediaReady;
 
   /**
    * El reproductor del vídeo en curso.
@@ -532,12 +562,17 @@ export function StoryViewer({
    * crear, cuando la variable de estado de este render todavía no existía.
    */
   const mutedRef = useRef(muted);
-  const player = useVideoPlayer(isVideo && story ? story.mediaUrl : null, (instance) => {
+  const player = useVideoPlayer(
+    isVideo && storyMediaUri && storyAccessToken
+      ? { uri: storyMediaUri, headers: { Authorization: `Bearer ${storyAccessToken}` } }
+      : null,
+    (instance) => {
     instance.muted = mutedRef.current;
     instance.loop = false;
     // Una story no sigue sonando con el teléfono bloqueado ni con la app detrás.
     instance.staysActiveInBackground = false;
-  });
+    },
+  );
 
   // El silencio se aplica sobre el reproductor vigente. `player` está en las
   // dependencias porque cambiar de vídeo crea otro: sin eso, desmutear en la
@@ -632,7 +667,10 @@ export function StoryViewer({
   // El reloj se para cuando la app deja de estar delante: sin esto, abrir el
   // vídeo en el reproductor del sistema consumía stories a espaldas del usuario.
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', (state) => setAppActive(state === 'active'));
+    const subscription = AppState.addEventListener('change', (state) => {
+      setAppActive(state === 'active');
+      setManualPaused((currentlyPaused) => storyManualPauseAfterAppStateChange(currentlyPaused, state));
+    });
     return () => subscription.remove();
   }, []);
 
@@ -672,18 +710,16 @@ export function StoryViewer({
       closeRef.current();
       return;
     }
-    const current = feed.find((candidate) => candidate.userId === cursor.userId);
-    if (!current) {
+    const reconciliation = reconcileStoryFeed(feed, cursor);
+    if (reconciliation.kind === 'close') {
       closeRef.current();
       return;
     }
-    if (current.stories.some((item) => item.id === cursor.storyId)) return;
-    const fallback = entryStoryId(current);
-    if (!fallback) {
-      closeRef.current();
-      return;
+    if (reconciliation.kind === 'advance') {
+      setCursor((previous) => (previous
+        ? { ...previous, storyId: reconciliation.storyId, run: previous.run + 1 }
+        : previous));
     }
-    setCursor((previous) => (previous ? { ...previous, storyId: fallback, run: previous.run + 1 } : previous));
   }, [cursor, feed]);
 
   /**
@@ -728,7 +764,7 @@ export function StoryViewer({
     // stories no es un final de feed, es una entrada que hay que saltarse.
     for (let index = personIndex + 1; index < feed.length; index += 1) {
       const candidate = feed[index];
-      const target = entryStoryId(candidate);
+      const target = firstAvailableStoryId(candidate);
       if (candidate && target) {
         jumpFeedback();
         moveTo(candidate.userId, target);
@@ -920,6 +956,34 @@ export function StoryViewer({
     }
   }
 
+  async function handleReply() {
+    if (!story || isMine || replyBusy || replySubmittingRef.current) return;
+    const text = replyDraft.trim();
+    if (!text) return;
+    let request = replyRequestRef.current;
+    if (!request || request.storyId !== story.id || request.text !== text) {
+      request = { storyId: story.id, text, requestId: requestId() };
+      replyRequestRef.current = request;
+    }
+    replySubmittingRef.current = true;
+    setReplyBusy(true);
+    try {
+      const message = await storiesService.reply(request.storyId, request.text, request.requestId);
+      replySubmittingRef.current = false;
+      replyRequestRef.current = null;
+      onClose();
+      router.push({
+        pathname: '/chat/[id]',
+        params: { id: message.conversationId, storyReplyMessageId: message.id },
+      });
+    } catch (error) {
+      replySubmittingRef.current = false;
+      notify.error(error instanceof Error ? error.message : 'No se pudo responder a la story.');
+    } finally {
+      setReplyBusy(false);
+    }
+  }
+
   /**
    * Acción de accesibilidad: mantener pulsado no existe para un lector de
    * pantalla.
@@ -934,10 +998,9 @@ export function StoryViewer({
     label: manualPaused ? 'Reanudar story' : 'Pausar story',
   };
 
-  // Las zonas de avance se detienen donde empieza el pie **sólo si hay pie**:
-  // en una story ajena no se pinta, y reservarle sitio dejaría una franja
-  // muerta de 72pt en la parte de abajo de la pantalla.
-  const tapZoneBottom = isMine ? footerHeight : 0;
+  // La zona de avance termina antes de las acciones del pie en ambas clases
+  // de story, para que responder nunca avance la story por accidente.
+  const tapZoneBottom = isMine ? footerHeight : canReply ? minTouchTarget + spacing.xl + insets.bottom : 0;
 
   return (
     <Modal animationType="fade" onRequestClose={onClose} statusBarTranslucent transparent visible>
@@ -949,6 +1012,17 @@ export function StoryViewer({
         <GestureDetector gesture={pan}>
           <Animated.View style={[{ flex: 1, overflow: 'hidden', borderRadius: radii.xl }, contentStyle]}>
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+              {!mediaReady ? (
+                <View pointerEvents="none" style={{ position: 'absolute', zIndex: 1, padding: spacing.lg }}>
+                  <Text
+                    accessibilityLiveRegion="polite"
+                    accessibilityRole={mediaAccessFailed ? 'alert' : undefined}
+                    style={{ color: colors.text, textAlign: 'center' }}
+                  >
+                    {mediaAccessFailed ? 'No se pudo cargar esta story.' : 'Cargando story…'}
+                  </Text>
+                </View>
+              ) : null}
               {isVideo ? (
                 // Sin controles nativos y sin pantalla completa: la story YA es
                 // pantalla completa y su lenguaje son los toques laterales y el
@@ -967,7 +1041,11 @@ export function StoryViewer({
               ) : (
                 <Image
                   contentFit="contain"
-                  source={{ uri: story.mediaUrl }}
+                  source={
+                    storyMediaUri && storyAccessToken
+                      ? { uri: storyMediaUri, headers: { Authorization: `Bearer ${storyAccessToken}` } }
+                      : null
+                  }
                   style={{ width: '100%', height: '100%' }}
                   transition={reduceMotion ? 0 : 160}
                 />
@@ -1207,6 +1285,63 @@ export function StoryViewer({
                   </Text>
                 </Pressable>
               </Animated.View>
+            ) : null}
+            {canReply ? (
+              <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                pointerEvents="box-none"
+                style={{ position: 'absolute', left: 0, right: 0, bottom: insets.bottom + spacing.md, zIndex: 5 }}
+              >
+                {replyOpen ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginHorizontal: spacing.md, padding: spacing.xs, borderRadius: radii.full, backgroundColor: 'rgba(0,0,0,0.72)' }}>
+                    <TextInput
+                      accessibilityLabel={`Responder a la story de ${entry?.fullName ?? 'este usuario'}`}
+                      autoFocus
+                      editable={!replyBusy}
+                      maxLength={1000}
+                      onChangeText={setReplyDraft}
+                      onSubmitEditing={() => void handleReply()}
+                      placeholder="Escribe una respuesta…"
+                      placeholderTextColor="rgba(255,255,255,0.7)"
+                      returnKeyType="send"
+                      value={replyDraft}
+                      style={{ minHeight: minTouchTarget, flex: 1, color: '#fff', paddingHorizontal: spacing.md, fontSize: fontSizes.sm }}
+                    />
+                    <PressableScale
+                      accessibilityLabel="Enviar respuesta"
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: replyBusy || !replyDraft.trim(), busy: replyBusy }}
+                      disabled={replyBusy || !replyDraft.trim()}
+                      haptic="selection"
+                      onPress={() => void handleReply()}
+                      style={{ minWidth: minTouchTarget, minHeight: minTouchTarget, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.sm, borderRadius: radii.full, backgroundColor: colors.volt }}
+                    >
+                      <Text style={{ color: colors.background, fontSize: fontSizes.xs, fontWeight: semibold }}>{replyBusy ? 'Enviando…' : 'Enviar'}</Text>
+                    </PressableScale>
+                    <PressableScale
+                      accessibilityLabel="Cancelar respuesta"
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: replyBusy }}
+                      disabled={replyBusy}
+                      haptic="none"
+                      onPress={() => { setReplyOpen(false); setReplyDraft(''); }}
+                      style={{ width: minTouchTarget, height: minTouchTarget, alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <Ionicons color="#fff" name="close" size={iconSizes.md} />
+                    </PressableScale>
+                  </View>
+                ) : (
+                  <PressableScale
+                    accessibilityLabel={`Responder a la story de ${entry?.fullName ?? 'este usuario'}`}
+                    accessibilityRole="button"
+                    haptic="selection"
+                    onPress={() => setReplyOpen(true)}
+                    style={{ minHeight: minTouchTarget, justifyContent: 'center', marginHorizontal: spacing.md, paddingHorizontal: spacing.lg, borderRadius: radii.full, borderWidth: 1, borderColor: 'rgba(255,255,255,0.55)', backgroundColor: 'rgba(0,0,0,0.55)' }}
+                  >
+                    <Text style={{ color: '#fff', fontSize: fontSizes.sm }}>Responder a {entry?.fullName ?? 'esta story'}…</Text>
+                  </PressableScale>
+                )}
+              </KeyboardAvoidingView>
             ) : null}
           </Animated.View>
         </GestureDetector>

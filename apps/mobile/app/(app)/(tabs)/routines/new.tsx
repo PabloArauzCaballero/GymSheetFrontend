@@ -1,44 +1,30 @@
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Pressable, Text, View } from 'react-native';
 import { z } from 'zod';
-import { routineSchema } from '@gymsheet/schemas';
 import {
-  routineVisibilities,
   trainingGoals,
   type Exercise,
+  type FitnessGoal,
   type RoutineVisibility,
   type TrainingGoal,
 } from '@gymsheet/types';
-import { apiClient } from '@/api/client';
-import { exerciseService } from '@/api/services';
+import { exerciseService, onboardingService, routineService } from '@/api/services';
 import { ExercisePicker } from '@/components/exercise-picker';
-import { EmptyState } from '@/components/feedback';
+import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { numericInputProps } from '@/components/keyboard';
 import { Card, ScreenHeader, ScrollScreen, Section } from '@/components/layout';
 import { ExerciseImage } from '@/components/media';
 import { BackLink } from '@/components/nav';
 import { Button, Input } from '@/components/ui';
 import { GOAL_LABEL } from '@/lib/format';
+import { requestId } from '@/lib/request-id';
 import { notify } from '@/notifications';
 import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
-
-/**
- * Writes owned by this screen. They live here rather than in `@/api/services`
- * because that module is the read surface shared by every screen, while these
- * two calls exist only to build a routine. The contract is the same the web app
- * validates against (`routineSchema`), so a backend change breaks both at once.
- */
-type CreateRoutineBody = {
-  nombre: string;
-  descripcion: string | null;
-  visibilidad: RoutineVisibility;
-  objetivo: TrainingGoal;
-};
 
 type RoutineExerciseBody = {
   ejercicioId: string;
@@ -52,21 +38,21 @@ type RoutineExerciseBody = {
   nota: string | null;
 };
 
-const routineWrites = {
-  create: (body: CreateRoutineBody) =>
-    apiClient.request('/routines', routineSchema, { method: 'POST', body }),
-  addExercise: (routineId: string, body: RoutineExerciseBody) =>
-    apiClient.request(`/routines/${routineId}/exercises`, routineSchema, {
-      method: 'POST',
-      body,
-    }),
-};
-
-/** Spanish copy for the visibility enum; mirrors the wording used on the web. */
 const VISIBILITY_LABEL: Record<RoutineVisibility, string> = {
   PRIVATE: 'Privada',
-  SHARED: 'Compartida',
-  TEMPLATE: 'Plantilla',
+  SHARED: 'Compartida con asignados',
+  PUBLIC: 'Pública en tu gimnasio',
+  TEMPLATE: 'Plantilla oficial',
+};
+
+const fitnessToTraining: Record<FitnessGoal, TrainingGoal> = {
+  GAIN_MUSCLE: 'HIPERTROFIA',
+  LOSE_FAT: 'PERDIDA_GRASA',
+  IMPROVE_STRENGTH: 'FUERZA',
+  IMPROVE_ENDURANCE: 'RESISTENCIA',
+  MAINTAIN_FITNESS: 'SALUD_GENERAL',
+  GENERAL_HEALTH: 'SALUD_GENERAL',
+  SPORT_PERFORMANCE: 'RENDIMIENTO_DEPORTIVO',
 };
 
 const routineFormSchema = z.object({
@@ -83,7 +69,7 @@ const routineFormSchema = z.object({
     .max(500, 'La descripción no puede superar los 500 caracteres.')
     .transform((value) => (value === '' ? null : value)),
   objetivo: z.enum(trainingGoals),
-  visibilidad: z.enum(routineVisibilities),
+  visibilidad: z.enum(['PRIVATE', 'PUBLIC']),
 });
 
 type RoutineFormValues = z.input<typeof routineFormSchema>;
@@ -102,6 +88,10 @@ type DraftExercise = {
   repsMin: string;
   repsMax: string;
   descansoSeg: string;
+  pesoObjetivoKg: string;
+  rirObjetivo: string;
+  nota: string;
+  reason?: string;
 };
 
 type DraftNumbers = Omit<DraftExercise, 'key' | 'exercise'>;
@@ -112,6 +102,9 @@ const DRAFT_DEFAULTS: DraftNumbers = {
   repsMin: '8',
   repsMax: '12',
   descansoSeg: '90',
+  pesoObjetivoKg: '',
+  rirObjetivo: '',
+  nota: '',
 };
 
 /** Series is the one target the backend requires; never send a zero. */
@@ -124,6 +117,12 @@ const FALLBACK_SERIES = 3;
  */
 function onlyDigits(value: string): string {
   return value.replace(/[^0-9]/gu, '');
+}
+
+function onlyDecimal(value: string): string {
+  const clean = value.replace(/[^0-9.,]/gu, '').replace(',', '.');
+  const [whole, ...fraction] = clean.split('.');
+  return fraction.length ? `${whole ?? ''}.${fraction.join('').slice(0, 2)}` : (whole ?? '');
 }
 
 function toInt(value: string): number | null {
@@ -148,10 +147,10 @@ function toExerciseBody(draft: DraftExercise, orden: number): RoutineExerciseBod
     seriesObjetivo: toInt(draft.seriesObjetivo) ?? FALLBACK_SERIES,
     repsMin: ordered.min,
     repsMax: ordered.max,
-    pesoObjetivoKg: null,
+    pesoObjetivoKg: draft.pesoObjetivoKg === '' ? null : Number(draft.pesoObjetivoKg),
     descansoSeg: toInt(draft.descansoSeg),
-    rirObjetivo: null,
-    nota: null,
+    rirObjetivo: toInt(draft.rirObjetivo),
+    nota: draft.nota.trim() || null,
   };
 }
 
@@ -226,6 +225,9 @@ function DraftRow({
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
             {`${position}. ${draft.exercise.grupoMuscular ?? 'Sin grupo muscular'}`}
           </Text>
+          {draft.reason ? (
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>{draft.reason}</Text>
+          ) : null}
         </View>
         <Pressable
           accessibilityLabel={`Quitar ${draft.exercise.nombre}`}
@@ -273,6 +275,34 @@ function DraftRow({
           />
         </View>
       </View>
+      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+        <View style={{ flex: 1 }}>
+          <Input
+            keyboardType="decimal-pad"
+            {...numericInputProps}
+            label="Peso objetivo (kg)"
+            onChangeText={(value) => onChange({ pesoObjetivoKg: onlyDecimal(value) })}
+            placeholder="Opcional"
+            value={draft.pesoObjetivoKg}
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Input
+            keyboardType="number-pad"
+            {...numericInputProps}
+            label="RIR objetivo"
+            onChangeText={(value) => onChange({ rirObjetivo: onlyDigits(value) })}
+            placeholder="Opcional"
+            value={draft.rirObjetivo}
+          />
+        </View>
+      </View>
+      <Input
+        label="Nota del ejercicio (opcional)"
+        onChangeText={(value) => onChange({ nota: value })}
+        placeholder="Por ejemplo: agarre neutro"
+        value={draft.nota}
+      />
 
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
         <View style={{ flex: 1 }}>
@@ -300,24 +330,33 @@ function DraftRow({
   );
 }
 
-/**
- * Creates a routine: the header data plus its exercises, composed offline and
- * committed in one action. The backend has no bulk endpoint for this, so saving
- * is `POST /routines` followed by one `POST /routines/{id}/exercises` per row.
- */
+/** Creates a complete routine in one server transaction. */
 export default function NewRoutineScreen() {
+  const { editId } = useLocalSearchParams<{ editId?: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [drafts, setDrafts] = useState<DraftExercise[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [resolvingExercise, setResolvingExercise] = useState(false);
+  const [location, setLocation] = useState<'GYM' | 'HOME' | 'OUTDOORS'>('GYM');
+  const [minutes, setMinutes] = useState(60);
+  const creationKey = useRef(requestId());
+  const onboarding = useQuery({ queryKey: ['onboarding', 'me'], queryFn: () => onboardingService.get() });
+  const existing = useQuery({
+    queryKey: ['routine', editId],
+    queryFn: () => routineService.get(editId!),
+    enabled: Boolean(editId),
+  });
+  const hydrated = useRef(false);
   // Only ever incremented: two rows for the same exercise must not share a key.
   const nextKey = useRef(0);
 
   const {
     control,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors, isValid, dirtyFields },
+    watch,
+    setValue,
   } = useForm<RoutineFormValues, unknown, RoutineFormPayload>({
     resolver: zodResolver(routineFormSchema),
     // The save button reflects validity, so it has to be recomputed as the user
@@ -326,9 +365,73 @@ export default function NewRoutineScreen() {
     defaultValues: {
       nombre: '',
       descripcion: '',
-      objetivo: 'HIPERTROFIA',
+      objetivo: 'SALUD_GENERAL',
       visibilidad: 'PRIVATE',
     },
+  });
+  const selectedGoal = watch('objetivo');
+  const selectedVisibility = watch('visibilidad');
+
+  useEffect(() => {
+    if (editId) return;
+    if (!onboarding.data) return;
+    if (!dirtyFields.objetivo && onboarding.data.primaryGoal) {
+      setValue('objetivo', fitnessToTraining[onboarding.data.primaryGoal], { shouldValidate: true });
+    }
+    if (onboarding.data.trainingLocation === 'HOME' || onboarding.data.trainingLocation === 'OUTDOORS') {
+      setLocation(onboarding.data.trainingLocation);
+    }
+  }, [editId, onboarding.data, dirtyFields.objetivo, setValue]);
+
+  useEffect(() => {
+    if (!editId || !existing.data || hydrated.current) return;
+    hydrated.current = true;
+    const routine = existing.data;
+    setValue('nombre', routine.nombre, { shouldValidate: true });
+    setValue('descripcion', routine.descripcion ?? '', { shouldValidate: true });
+    setValue('objetivo', routine.objetivo ?? 'SALUD_GENERAL', { shouldValidate: true });
+    setValue('visibilidad', routine.visibilidad === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE', { shouldValidate: true });
+    setDrafts(routine.ejercicios.filter((item) => item.ejercicio).sort((a, b) => a.orden - b.orden).map((item, index) => ({
+      key: `${item.id}-${index}`,
+      exercise: item.ejercicio!,
+      seriesObjetivo: String(item.seriesObjetivo),
+      repsMin: item.repsMin === null ? '' : String(item.repsMin),
+      repsMax: item.repsMax === null ? '' : String(item.repsMax),
+      descansoSeg: item.descansoSeg === null ? '' : String(item.descansoSeg),
+      pesoObjetivoKg: item.pesoObjetivoKg === null ? '' : String(item.pesoObjetivoKg),
+      rirObjetivo: item.rirObjetivo === null ? '' : String(item.rirObjetivo),
+      nota: item.nota ?? '',
+    })));
+  }, [editId, existing.data, setValue]);
+
+  const recommend = useMutation({
+    mutationFn: () => routineService.recommend({ objetivo: selectedGoal, lugar: location, minutos: minutes, publico: selectedVisibility === 'PUBLIC' }),
+    onSuccess: (result) => {
+      setDrafts((current) => {
+        const known = new Set(current.map((draft) => draft.exercise.id));
+        const additions = result.items.filter((item) =>
+          !known.has(item.ejercicio.id) &&
+          (selectedVisibility !== 'PUBLIC' || item.ejercicio.tipoEjercicio === 'GLOBAL'),
+        ).map((item) => {
+          nextKey.current += 1;
+          return {
+            key: `${item.ejercicio.id}-${nextKey.current}`,
+            exercise: item.ejercicio,
+            ...DRAFT_DEFAULTS,
+            seriesObjetivo: String(item.seriesObjetivo),
+            repsMin: String(item.repsMin),
+            repsMax: String(item.repsMax),
+            descansoSeg: String(item.descansoSeg),
+            reason: item.motivo,
+          };
+        });
+        return [...current, ...additions];
+      });
+      if (result.requiresReview) notify.warning(result.message);
+      else if (!result.items.length) notify.info('No hay ejercicios compatibles con este lugar y material. Puedes añadirlos manualmente.');
+      else notify.success('Propuesta añadida. Puedes cambiar cualquier ejercicio.');
+    },
+    onError: (error: Error) => notify.error(error),
   });
 
   const updateDraft = (key: string, patch: Partial<DraftNumbers>) => {
@@ -362,41 +465,36 @@ export default function NewRoutineScreen() {
 
   const save = useMutation({
     mutationFn: async (values: RoutineFormPayload) => {
-      const routine = await routineWrites.create({
+      if (values.visibilidad === 'PUBLIC' && drafts.some((draft) => draft.exercise.tipoEjercicio !== 'GLOBAL')) {
+        throw new Error('Para publicar, usa ejercicios del catálogo general o guarda esta rutina como privada.');
+      }
+      const bodies = drafts.map((draft, index) => toExerciseBody(draft, index + 1));
+      if (bodies.some((body) => body.seriesObjetivo < 1 || body.seriesObjetivo > 100 ||
+        (body.repsMin !== null && body.repsMin < 1) ||
+        (body.repsMax !== null && body.repsMax < 1) ||
+        (body.descansoSeg !== null && body.descansoSeg > 7200) ||
+        (body.pesoObjetivoKg !== null && (!Number.isFinite(body.pesoObjetivoKg) || body.pesoObjetivoKg > 2000)) ||
+        (body.rirObjetivo !== null && body.rirObjetivo > 10) ||
+        (body.nota !== null && body.nota.length > 1000))) {
+        throw new Error('Revisa las series, repeticiones, peso, RIR y descansos de los ejercicios.');
+      }
+      const payload = {
         nombre: values.nombre,
         descripcion: values.descripcion,
         visibilidad: values.visibilidad,
         objetivo: values.objetivo,
-      });
-
-      const bodies = drafts.map((draft, index) => toExerciseBody(draft, index + 1));
-      let added = 0;
-      try {
-        // Sequential on purpose: `orden` is positional and the rows are meant to
-        // land in the order the user arranged them.
-        for (const body of bodies) {
-          await routineWrites.addExercise(routine.id, body);
-          added += 1;
-        }
-      } catch (error: unknown) {
-        // The routine already exists on the server: failing the whole mutation
-        // here would strand it and let the user create a duplicate on retry.
-        // Report the failure, then continue to the detail screen with what saved.
-        notify.error(error);
-      }
-
-      return { routineId: routine.id, added, total: bodies.length };
+        creationKey: creationKey.current,
+        ejercicios: bodies,
+      };
+      return editId
+        ? routineService.replaceComplete(editId, payload)
+        : routineService.createComplete(payload);
     },
-    onSuccess: async ({ routineId, added, total }) => {
+    onSuccess: async (routine) => {
       await queryClient.invalidateQueries({ queryKey: ['routines'] });
-      if (added < total) {
-        notify.warning(
-          `La rutina se creó con ${added} de ${total} ejercicios. Añade los que faltan desde la rutina.`,
-        );
-      } else {
-        notify.success('Rutina creada.');
-      }
-      router.replace({ pathname: '/routines/[id]', params: { id: routineId } });
+      if (editId) await queryClient.invalidateQueries({ queryKey: ['routine', editId] });
+      notify.success(editId ? 'Rutina actualizada.' : routine.visibilidad === 'PUBLIC' ? 'Rutina creada y publicada.' : 'Rutina creada.');
+      router.replace({ pathname: '/routines/[id]', params: { id: routine.id } });
     },
     onError: (error: unknown) => {
       notify.error(error);
@@ -407,12 +505,19 @@ export default function NewRoutineScreen() {
     save.mutate(values);
   });
 
+  if (editId && existing.isPending) {
+    return <ScrollScreen><BackLink /><Skeleton height={150} /><Skeleton height={180} /></ScrollScreen>;
+  }
+  if (editId && existing.isError) {
+    return <ScrollScreen><BackLink /><ErrorState error={existing.error} onRetry={() => void existing.refetch()} /></ScrollScreen>;
+  }
+
   return (
     <ScrollScreen>
       <BackLink />
       <ScreenHeader
         subtitle="Define el plan y añade los ejercicios en el orden en que los entrenarás."
-        title="Nueva rutina"
+        title={editId ? 'Editar rutina' : 'Nueva rutina'}
       />
 
       <Section title="Datos de la rutina">
@@ -495,7 +600,7 @@ export default function NewRoutineScreen() {
           render={({ field: { onChange, value } }) => (
             <View style={{ gap: spacing.xs }}>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-                {routineVisibilities.map((visibility) => (
+                {(['PRIVATE', 'PUBLIC'] as const).map((visibility) => (
                   <ChoiceChip
                     key={visibility}
                     label={VISIBILITY_LABEL[visibility]}
@@ -504,6 +609,9 @@ export default function NewRoutineScreen() {
                   />
                 ))}
               </View>
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                Pública: otras personas de tu gimnasio podrán verla y copiarla.
+              </Text>
               {errors.visibilidad?.message ? (
                 <Text style={{ color: colors.danger, fontSize: fontSizes.xs }}>
                   {errors.visibilidad.message}
@@ -514,7 +622,42 @@ export default function NewRoutineScreen() {
         />
       </Section>
 
-      <Section index={3} title={`Ejercicios (${drafts.length})`}>
+      <Section index={3} title="Propuesta de ejercicios">
+        <Card>
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+            Usamos tu objetivo y experiencia guardados. Elige dónde harás esta sesión.
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+            {(['GYM', 'HOME', 'OUTDOORS'] as const).map((place) => (
+              <ChoiceChip
+                key={place}
+                label={{ GYM: 'Gimnasio', HOME: 'Casa', OUTDOORS: 'Exterior' }[place]}
+                onSelect={() => setLocation(place)}
+                selected={location === place}
+              />
+            ))}
+          </View>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+            {[30, 60, 90].map((duration) => (
+              <ChoiceChip
+                key={duration}
+                label={`${duration} min`}
+                onSelect={() => setMinutes(duration)}
+                selected={minutes === duration}
+              />
+            ))}
+          </View>
+          <Button
+            disabled={onboarding.isPending}
+            label="Recomendar ejercicios"
+            loading={recommend.isPending}
+            onPress={() => recommend.mutate()}
+            variant="ghost"
+          />
+        </Card>
+      </Section>
+
+      <Section index={4} title={`Ejercicios (${drafts.length})`}>
         {drafts.length === 0 ? (
           <EmptyState
             icon="barbell-outline"
@@ -544,8 +687,8 @@ export default function NewRoutineScreen() {
       </Section>
 
       <Button
-        disabled={!isValid || drafts.length === 0}
-        label="Crear rutina"
+        disabled={!isValid || drafts.length === 0 || Boolean(editId && !hydrated.current)}
+        label={editId ? 'Guardar cambios' : 'Crear rutina'}
         loading={save.isPending}
         onPress={onSubmit}
       />

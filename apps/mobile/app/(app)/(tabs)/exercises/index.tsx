@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Exercise } from '@gymsheet/types';
-import { Card, Divider, ScrollScreen, ScreenHeader } from '@/components/layout';
+import { Card, ScreenHeader, VirtualizedScreen } from '@/components/layout';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { ExerciseImage } from '@/components/media';
 import { PressableScale } from '@/components/motion';
@@ -154,95 +154,12 @@ export default function ExercisesScreen() {
         : 'Elige una zona para empezar';
 
   return (
-    <ScrollScreen
-      onRefresh={() => {
-        void taxonomy.refetch();
-        if (browsing) void exercises.refetch();
-      }}
-      refreshing={taxonomy.isFetching || exercises.isFetching}
-    >
-      <ScreenHeader subtitle={subtitle} title="Ejercicios" tourKey="exercises" />
-
-      {/* Crear va arriba y no escondido tras el catálogo: quien viene a añadir
-          su propio ejercicio ya sabe que no está en la lista, y hacerle
-          recorrer 1.300 fichas antes de ofrecerle el botón es hacerle perder
-          el tiempo para confirmar algo que ya sabía. */}
-      <Button
-        icon="add-circle-outline"
-        label="Crear un ejercicio propio"
-        onPress={() => router.push('/ejercicio-nuevo')}
-        variant="ghost"
-      />
-
-      <TourTarget id="exercises.search">
-      <Input
-        autoCapitalize="none"
-        autoCorrect={false}
-        label="Buscar"
-        onChangeText={setSearch}
-        placeholder="Nombre, grupo muscular…"
-        returnKeyType="search"
-        value={search}
-      />
-      </TourTarget>
-
-      {/* Breadcrumb: one step back at a time, so the user can widen the filter
-          without losing the zone they were exploring. */}
-      {!searching && muscle ? (
-        <DrillBack label={titleCase(bodyPart ?? '')} onPress={() => setMuscle(null)} />
-      ) : null}
-      {!searching && bodyPart && !muscle ? (
-        <DrillBack label="Todas las zonas" onPress={() => setBodyPart(null)} />
-      ) : null}
-
-      {/* LEVEL 1 — body parts */}
-      {!searching && !bodyPart ? (
-        taxonomy.isPending ? (
-          <View style={{ gap: spacing.sm }}>
-            <Skeleton height={116} />
-            <Skeleton height={116} />
-          </View>
-        ) : taxonomy.isError ? (
-          <ErrorState error={taxonomy.error} onRetry={() => void taxonomy.refetch()} />
-        ) : (
-          <TourTarget id="exercises.grid">
-          <Grid>
-            {groups.map((group, index) => (
-              <GridTile
-                icon={iconFor(group.bodyPart)}
-                index={index}
-                key={group.bodyPart}
-                imageUrl={group.imageUrl}
-                label={titleCase(group.bodyPart)}
-                onPress={() => setBodyPart(group.bodyPart)}
-                total={group.total}
-              />
-            ))}
-          </Grid>
-          </TourTarget>
-        )
-      ) : null}
-
-      {/* LEVEL 2 — muscles inside the chosen body part */}
-      {!searching && bodyPart && !muscle ? (
-        <Grid>
-          {(currentGroup?.muscles ?? []).map((entry, index) => (
-            <GridTile
-              icon={iconFor(bodyPart)}
-              index={index}
-              key={entry.targetMuscle}
-              imageUrl={entry.imageUrl}
-              label={titleCase(entry.targetMuscle)}
-              onPress={() => setMuscle(entry.targetMuscle)}
-              total={entry.total}
-            />
-          ))}
-        </Grid>
-      ) : null}
-
-      {/* LEVEL 3 — the exercises themselves */}
-      {browsing ? (
-        exercises.isPending ? (
+    <VirtualizedScreen
+      data={browsing && !exercises.isError ? items : []}
+      empty={
+        !browsing ? (
+          <></>
+        ) : exercises.isPending ? (
           <View style={{ gap: spacing.sm }}>
             <Skeleton height={72} />
             <Skeleton height={72} />
@@ -250,7 +167,7 @@ export default function ExercisesScreen() {
           </View>
         ) : exercises.isError ? (
           <ErrorState error={exercises.error} onRetry={() => void exercises.refetch()} />
-        ) : items.length === 0 ? (
+        ) : (
           <EmptyState
             icon="search-outline"
             message={
@@ -260,22 +177,108 @@ export default function ExercisesScreen() {
             }
             title="Sin resultados"
           />
-        ) : (
-          <Card>
-            {items.map((exercise, index) => (
-              <View key={exercise.id}>
-                {index > 0 ? <Divider /> : null}
-                <ExerciseRow
-                  exercise={exercise}
-                  onPress={() =>
-                    router.push({ pathname: '/exercises/[id]', params: { id: exercise.id } })
-                  }
-                />
-              </View>
-            ))}
-          </Card>
         )
-      ) : null}
-    </ScrollScreen>
+      }
+      header={
+        <>
+            <ScreenHeader subtitle={subtitle} title="Ejercicios" tourKey="exercises" />
+
+            {/* Crear va arriba y no escondido tras el catálogo: quien viene a añadir
+                su propio ejercicio ya sabe que no está en la lista, y hacerle
+                recorrer 1.300 fichas antes de ofrecerle el botón es hacerle perder
+                el tiempo para confirmar algo que ya sabía. */}
+            <Button
+              icon="add-circle-outline"
+              label="Crear un ejercicio propio"
+              onPress={() => router.push('/ejercicio-nuevo')}
+              variant="ghost"
+            />
+
+            <TourTarget id="exercises.search">
+            <Input
+              autoCapitalize="none"
+              autoCorrect={false}
+              label="Buscar"
+              onChangeText={setSearch}
+              placeholder="Nombre, grupo muscular…"
+              returnKeyType="search"
+              value={search}
+            />
+            </TourTarget>
+
+            {/* Breadcrumb: one step back at a time, so the user can widen the filter
+                without losing the zone they were exploring. */}
+            {!searching && muscle ? (
+              <DrillBack label={titleCase(bodyPart ?? '')} onPress={() => setMuscle(null)} />
+            ) : null}
+            {!searching && bodyPart && !muscle ? (
+              <DrillBack label="Todas las zonas" onPress={() => setBodyPart(null)} />
+            ) : null}
+
+            {/* LEVEL 1 — body parts */}
+            {!searching && !bodyPart ? (
+              taxonomy.isPending ? (
+                <View style={{ gap: spacing.sm }}>
+                  <Skeleton height={116} />
+                  <Skeleton height={116} />
+                </View>
+              ) : taxonomy.isError ? (
+                <ErrorState error={taxonomy.error} onRetry={() => void taxonomy.refetch()} />
+              ) : (
+                <TourTarget id="exercises.grid">
+                <Grid>
+                  {groups.map((group, index) => (
+                    <GridTile
+                      icon={iconFor(group.bodyPart)}
+                      index={index}
+                      key={group.bodyPart}
+                      imageUrl={group.imageUrl}
+                      label={titleCase(group.bodyPart)}
+                      onPress={() => setBodyPart(group.bodyPart)}
+                      total={group.total}
+                    />
+                  ))}
+                </Grid>
+                </TourTarget>
+              )
+            ) : null}
+
+            {/* LEVEL 2 — muscles inside the chosen body part */}
+            {!searching && bodyPart && !muscle ? (
+              <Grid>
+                {(currentGroup?.muscles ?? []).map((entry, index) => (
+                  <GridTile
+                    icon={iconFor(bodyPart)}
+                    index={index}
+                    key={entry.targetMuscle}
+                    imageUrl={entry.imageUrl}
+                    label={titleCase(entry.targetMuscle)}
+                    onPress={() => setMuscle(entry.targetMuscle)}
+                    total={entry.total}
+                  />
+                ))}
+              </Grid>
+            ) : null}
+
+        </>
+      }
+      itemGap={spacing.xs}
+      keyExtractor={(exercise) => exercise.id}
+      renderItem={({ item: exercise }) => (
+        <Card>
+          <ExerciseRow
+            exercise={exercise}
+            onPress={() =>
+              router.push({ pathname: '/exercises/[id]', params: { id: exercise.id } })
+            }
+          />
+        </Card>
+      )}
+      onRefresh={() => {
+        void taxonomy.refetch();
+        if (browsing) void exercises.refetch();
+      }}
+      refreshing={taxonomy.isFetching || exercises.isFetching}
+    />
   );
 }

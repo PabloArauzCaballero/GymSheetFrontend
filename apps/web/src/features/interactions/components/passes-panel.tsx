@@ -8,6 +8,7 @@ import {
   interactionsService,
 } from '@/features/interactions/services/interactions-service';
 import { MemberProfileDialog } from '@/features/social/components/member-profile-dialog';
+import { directoryKeys } from '@/features/social/services/directory-keys';
 import type { InteractionCounts } from '@/shared/api/schemas';
 import { Button } from '@/shared/components/ui/button';
 import { notify } from '@/shared/notifications';
@@ -49,7 +50,7 @@ export function PassesPanel({ counts }: Readonly<{ counts: InteractionCounts | n
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: interactionKeys.passesSent }),
         queryClient.invalidateQueries({ queryKey: interactionKeys.counts }),
-        queryClient.invalidateQueries({ queryKey: ['discovery', 'deck'] }),
+        queryClient.invalidateQueries({ queryKey: directoryKeys.all }),
       ]);
       notify.success('Vuelve a tu baraja.');
     },

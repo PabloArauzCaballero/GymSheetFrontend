@@ -3,6 +3,10 @@ import { createApiClient } from '@gymsheet/api-client';
 import { env, loopbackRewrite } from '@/config/env';
 import { notify } from '@/notifications';
 import { secureStoreAuthStorage, secureStoreTokenProvider } from '@/storage/secure-store';
+import {
+  createH5S2M1FixtureFetch,
+  isH5S2M1FixtureEnabled,
+} from '@/api/h5-s2-m1-fixture';
 
 /**
  * Called when the backend rejects the stored token. The auth store registers
@@ -103,9 +107,22 @@ const deviceFetch: typeof fetch = rewrite
     }
   : fetch;
 
-export const apiClient = createApiClient({
+/**
+ * The fixture is compiled into development bundles only, and still needs an
+ * explicit local opt-in. It wraps the normal transport so all non-fixture API
+ * paths retain the device URL/media behavior above.
+ */
+const h5S2M1Fixture = createH5S2M1FixtureFetch({
+  enabled: isH5S2M1FixtureEnabled(__DEV__, process.env.EXPO_PUBLIC_H5_S2_M1_FIXTURE),
   baseUrl: env.apiUrl,
   fetchImpl: deviceFetch,
+});
+
+export const getH5S2M1FixtureSnapshot = h5S2M1Fixture.snapshot;
+
+export const apiClient = createApiClient({
+  baseUrl: env.apiUrl,
+  fetchImpl: h5S2M1Fixture.fetch,
   tokenProvider: secureStoreTokenProvider,
   refreshSession,
   onUnauthorized: async () => {

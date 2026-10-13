@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { colors, fontSizes, minTouchTarget, radii, spacing } from '@/theme';
 import { Button } from '@/components/ui';
@@ -139,7 +139,7 @@ export function SetEntryForm({
    */
   previous?: { pesoKg: number; repeticiones: number };
   pending: boolean;
-  onSubmit: (draft: { pesoKg: number; repeticiones: number; rir: number }) => void;
+  onSubmit: (draft: { pesoKg: number; repeticiones: number; rir: number | null }) => void;
   /**
    * Cuánto suma cada chip de peso. Preferencia de cuenta (`Ajustes`), no una
    * constante: 2.5 kg es solo el valor por defecto para quien no la cambió.
@@ -155,12 +155,23 @@ export function SetEntryForm({
     rir: initial?.rir ?? '',
   });
 
+  // The last session can arrive after this form mounts; fill only untouched
+  // blanks so a late history request never overwrites what the user typed.
+  useEffect(() => {
+    setDraft((current) => ({
+      pesoKg: current.pesoKg || initial?.pesoKg || (previous ? String(previous.pesoKg) : ''),
+      repeticiones: current.repeticiones || initial?.repeticiones || (previous ? String(previous.repeticiones) : ''),
+      rir: current.rir || initial?.rir || '',
+    }));
+  }, [initial?.pesoKg, initial?.repeticiones, initial?.rir, previous?.pesoKg, previous?.repeticiones]);
+
   const pesoKg = Number(draft.pesoKg.replace(',', '.'));
   const repeticiones = Number(draft.repeticiones);
   const rir = Number(draft.rir);
-  // A set needs a rep count; load may legitimately be 0 (bodyweight) and RIR
-  // defaults to 0 rather than blocking the save.
-  const valid = Number.isFinite(repeticiones) && repeticiones > 0 && Number.isFinite(pesoKg);
+  // A set needs a rep count; load may legitimately be 0 (bodyweight).
+  const valid = draft.pesoKg.trim() !== '' && Number.isFinite(pesoKg) && pesoKg >= 0 && pesoKg <= 2000 &&
+    Number.isInteger(repeticiones) && repeticiones > 0 && repeticiones <= 1000 &&
+    (draft.rir.trim() === '' || (Number.isInteger(rir) && rir >= 0 && rir <= 10));
 
   /** Applies a delta to a field, floored at zero and keeping halves on weight. */
   const bump = (field: keyof SetDraft, delta: number) =>
@@ -243,7 +254,7 @@ export function SetEntryForm({
           onSubmit({
             pesoKg,
             repeticiones,
-            rir: Number.isFinite(rir) ? rir : 0,
+            rir: draft.rir.trim() === '' ? null : rir,
           })
         }
       />

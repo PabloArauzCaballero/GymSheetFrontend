@@ -1,0 +1,120 @@
+# Inventario observado durante la planificación
+
+## discovery_1
+
+exit_code=0
+
+xcrun /usr/bin/xcrun
+adb None
+emulator None
+maestro None
+docker /usr/local/bin/docker
+node /usr/local/bin/node
+yarn /usr/local/bin/yarn
+com.apple.CoreSimulator.SimRuntime.iOS-26-5 iPhone 17 Pro D4C28B4D-3615-4E6D-9092-C180668D5EE6 Shutdown
+com.apple.CoreSimulator.SimRuntime.iOS-26-5 iPhone 17 Pro Max 5D04691B-1F6A-4682-94FF-25852FA9DA99 Shutdown
+com.apple.CoreSimulator.SimRuntime.iOS-26-5 iPhone 17e 7508041F-FD7F-4056-861F-E751F76E41C4 Shutdown
+com.apple.CoreSimulator.SimRuntime.iOS-26-5 iPhone Air EC5F49C7-BA43-4FE3-8A14-5FBE633FAC06 Shutdown
+com.apple.CoreSimulator.SimRuntime.iOS-26-5 iPhone 17 4DE1CBF5-8F29-4CC0-8864-5EF425D981B8 Shutdown
+com.apple.CoreSimulator.SimRuntime.iOS-26-5 iPad Pro 13-inch (M5) B02BB6C4-FE1B-4985-B471-76AA86C91916 Shutdown
+com.apple.CoreSimulator.SimRuntime.iOS-26-5 iPad Pro 11-inch (M5) 4665F189-499B-474E-9B0C-4EAE33D60090 Shutdown
+com.apple.CoreSimulator.SimRuntime.iOS-26-5 iPad mini (A17 Pro) D9DB8728-4227-4FBC-A3B7-91C822DCA7D7 Shutdown
+com.apple.CoreSimulator.SimRuntime.iOS-26-5 iPad Air 13-inch (M4) 0D17371E-F4B4-49F6-8AE9-CC206121E752 Shutdown
+com.apple.CoreSimulator.SimRuntime.iOS-26-5 iPad Air 11-inch (M4) 58113486-2419-43B8-8BD9-37A98DE7A10C Shutdown
+com.apple.CoreSimulator.SimRuntime.iOS-26-5 iPad (A16) 2464B1E7-03BF-4939-9681-5B893256A56C Shutdown
+runtime iOS 26.5 com.apple.CoreSimulator.SimRuntime.iOS-26-5 True
+system-images/*/*/*/source.properties []
+cmdline-tools/*/bin/avdmanager []
+cmdline-tools/*/bin/sdkmanager []
+memory_bytes 17179869184
+
+## frontend_discovery_0
+
+exit_code=0
+
+package.json
+{
+  "name": "gymsheet",
+  "scripts": {
+    "postinstall": "node scripts/dedupe-react.mjs",
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "type-check": "turbo run type-check",
+    "source-check": "turbo run source-check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify": "turbo run source-check type-check lint test build",
+    "web": "yarn workspace @gymsheet/web",
+    "mobile": "yarn workspace @gymsheet/mobile"
+  },
+  "engines": {
+    "node": ">=20 <24"
+  }
+}
+deps {'react': '19.2.0', 'react-dom': '19.2.0'}
+apps/mobile/package.json
+{
+  "name": "@gymsheet/mobile",
+  "scripts": {
+    "start": "expo start",
+    "go": "expo start --go",
+    "go:tunnel": "expo start --go --tunnel",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "type-check": "tsc --noEmit",
+    "lint": "expo lint",
+    "test": "jest --passWithNoTests",
+    "test:stories": "node --test --experimental-strip-types src/components/story-viewers-presentation.test.ts",
+    "test:tour": "node --test --experimental-strip-types src/state/tour-queue.test.ts",
+    "eas-build-pre-install": "node scripts/ensure-install.mjs && node scripts/check-api-url.mjs",
+    "check:api-url": "node scripts/check-api-url.mjs"
+  },
+  "engines": null
+}
+deps {'@expo/vector-icons': '^15.0.2', '@sentry/react-native': '~7.11.0', '@tanstack/react-query': '^5.90.0', 'expo': '~57.0.26', 'expo-constants': '~57.0.20', 'expo-device': '~57.0.2', 'expo-file-system': '~57.0.7', 'expo-font': '~57.0.4', 'expo-haptics': '~57.0.3', 'expo-image': '~57.0.5', 'expo-image-picker': '~57.0.20', 'expo-linear-gradient': '~57.0.2', 'expo-linking': '~57.0.11', 'expo-location': '~57.0.20', 'expo-notifications': '~57.0.21', 'expo-router': '~57.0.24', 'expo-secure-store': '~57.0.4', 'expo-sharing': '~57.0.22', 'expo-splash-screen': '~57.0.9', 'expo-status-bar': '~57.0.1', 'expo-system-ui': '~57.0.4', 'expo-updates': '~57.0.24', 'expo-video': '~57.0.5', 'react': '19.2.3', 'react-dom': '19.2.3', 'react-hook-form': '^7.62.0', 'react-native': '0.86.3', 'react-native-gesture-handler': '~2.32.0', 'react-native-reanimated': '4.5.1', 'react-native-safe-area-context': '~5.7.0', 'react-native-screens': '~4.26.0', 'react-native-worklets': '0.10.1', 'socket.io-client': '^4.8.1', '@types/react': '~19.2.4'}
+apps/web/package.json
+{
+  "name": "@gymsheet/web",
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "source-check": "node scripts/source-check.mjs",
+    "start": "next start",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit",
+    "verify": "yarn source-check && yarn type-check && yarn lint && yarn test && yarn build"
+  },
+  "engines": {
+    "node": ">=20 <24"
+  }
+}
+deps {'@radix-ui/react-dialog': '^1.1.0', '@radix-ui/react-tabs': '^1.1.0', '@tanstack/react-query': '^5.90.0', 'lucide-react': '^0.468.0', 'react': '19.2.0', 'react-dom': '19.2.0', 'react-hook-form': '^7.62.0', 'react-leaflet': '^5.0.0', 'socket.io-client': '^4.8.1', '@axe-core/playwright': '^4.10.0', '@playwright/test': '^1.55.0', '@testing-library/jest-dom': '^6.8.0', '@testing-library/react': '^16.3.0', '@types/react': '^19.2.0', '@types/react-dom': '^19.2.0', '@vitejs/plugin-react': '^5.0.0', 'vitest': '^3.2.0'}
+
+## frontend_discovery_3
+
+exit_code=0
+
+port 3011 closed
+port 3000 closed
+port 3001 closed
+port 8081 closed
+port 5432 closed
+COMMAND ['docker', 'info', '--format', '{{.ServerVersion}}'] EXIT 0 OUTPUT 29.6.2
+ 
+COMMAND ['node', '--version'] EXIT 0 OUTPUT v24.19.0
+ 
+COMMAND ['yarn', '--version'] EXIT 0 OUTPUT 1.22.22
+ 
+COMMAND ['git', '-C', 'GymSheetFrontend', 'rev-parse', 'HEAD'] EXIT 0 OUTPUT 6b66d8aba9329f4897e900a9e3be09f495c41343
+ 
+COMMAND ['git', '-C', 'GymSheetBackend', 'rev-parse', 'HEAD'] EXIT 0 OUTPUT 474da618fe4d191ae5d5f25b2dac537fd3a6856f
+ 
+
+

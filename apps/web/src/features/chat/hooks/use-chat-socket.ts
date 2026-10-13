@@ -15,10 +15,26 @@ export type PresenceUpdate = { userId: string; online: boolean; lastSeenAt: stri
  * `userId` es quien entregó o leyó — nunca el autor del mensaje. El check de
  * los mensajes propios se pinta comparando su `createdAt` contra estas marcas.
  */
-export type ReceiptUpdate = { userId: string; deliveredAt?: string; readAt?: string };
+export type ReceiptUpdate = {
+  conversationId: string;
+  userId: string;
+  deliveredAt?: string;
+  readAt?: string;
+  readFrom?: string | null;
+  settingsChanged?: boolean;
+  conversationRevoked?: boolean;
+};
+export type MessageDeletedEvent = {
+  conversationId: string;
+  messageId: string;
+  scope: 'EVERYONE';
+  deletedAt: string;
+};
 
 type ChatSocketHandlers = {
   onMessage: (message: Message) => void;
+  onMessageUpdated?: (message: Message) => void;
+  onMessageDeleted?: (event: MessageDeletedEvent) => void;
   onPresence?: (presence: PresenceUpdate) => void;
   onReceipt?: (receipt: ReceiptUpdate) => void;
 };
@@ -41,6 +57,8 @@ type ChatSocketHandlers = {
  */
 export function useChatSocket(socketOrigin: string, handlers: ChatSocketHandlers) {
   const socketRef = useRef<Socket | null>(null);
+  const joinedConversationsRef = useRef(new Set<string>());
+  const desiredConversationRef = useRef<string | null>(null);
   const handlersRef = useRef(handlers);
   const [connectionState, setConnectionState] = useState<ChatSocketConnectionState>('connecting');
 
@@ -49,6 +67,7 @@ export function useChatSocket(socketOrigin: string, handlers: ChatSocketHandlers
   }, [handlers]);
 
   useEffect(() => {
+    const joinedConversations = joinedConversationsRef.current;
     const socket = io(`${socketOrigin}/chat`, {
       transports: ['websocket'],
       auth: (callback: (data: object) => void) => {
@@ -60,19 +79,42 @@ export function useChatSocket(socketOrigin: string, handlers: ChatSocketHandlers
     });
     socketRef.current = socket;
     socket.on('connect', () => setConnectionState('connected'));
-    socket.on('disconnect', () => setConnectionState('disconnected'));
+    socket.on('disconnect', () => {
+      joinedConversations.clear();
+      desiredConversationRef.current = null;
+      setConnectionState('disconnected');
+    });
     socket.on('message:new', (message: Message) => handlersRef.current.onMessage(message));
+    socket.on('message:updated', (message: Message) => handlersRef.current.onMessageUpdated?.(message));
+    socket.on('message:deleted', (event: MessageDeletedEvent) =>
+      handlersRef.current.onMessageDeleted?.(event),
+    );
     socket.on('presence:update', (presence: PresenceUpdate) =>
       handlersRef.current.onPresence?.(presence),
     );
-    socket.on('message:delivered', (receipt: { userId: string; deliveredAt: string }) =>
+    socket.on('message:delivered', (receipt: { conversationId: string; userId: string; deliveredAt: string }) =>
       handlersRef.current.onReceipt?.(receipt),
     );
-    socket.on('message:read', (receipt: { userId: string; readAt: string }) =>
+    socket.on('message:read', (receipt: { conversationId: string; userId: string; readAt: string; readFrom?: string | null }) =>
       handlersRef.current.onReceipt?.(receipt),
+    );
+    socket.on('read-receipts:changed', (receipt: { conversationId: string; userId: string }) =>
+      handlersRef.current.onReceipt?.({ ...receipt, settingsChanged: true }),
+    );
+    socket.on('conversation:revoked', (event: { conversationId: string; byUserId: string }) =>
+      handlersRef.current.onReceipt?.({
+        conversationId: event.conversationId,
+        userId: event.byUserId,
+        conversationRevoked: true,
+      }),
     );
 
     return () => {
+      for (const conversationId of joinedConversations) {
+        socket.emit('conversation:leave', { conversationId });
+      }
+      joinedConversations.clear();
+      desiredConversationRef.current = null;
       socket.disconnect();
       socketRef.current = null;
     };
@@ -80,14 +122,37 @@ export function useChatSocket(socketOrigin: string, handlers: ChatSocketHandlers
 
   const joinConversation = useCallback((conversationId: string): Promise<boolean> => {
     return new Promise((resolve) => {
-      if (!socketRef.current) {
+      const socket = socketRef.current;
+      if (!socket) {
         resolve(false);
         return;
       }
-      socketRef.current.emit('conversation:join', { conversationId }, (ack: JoinAck) =>
-        resolve(ack?.joined ?? false),
-      );
+      desiredConversationRef.current = conversationId;
+      socket.emit('conversation:join', { conversationId }, (ack: JoinAck) => {
+        const joined = ack?.joined ?? false;
+        if (!joined) {
+          resolve(false);
+          return;
+        }
+
+        if (socketRef.current === socket && desiredConversationRef.current === conversationId) {
+          joinedConversationsRef.current.add(conversationId);
+          resolve(true);
+          return;
+        }
+
+        // A join can finish after navigation already left its room. The server
+        // may have processed the join anyway, so undo it on the same socket.
+        socket.emit('conversation:leave', { conversationId });
+        resolve(false);
+      });
     });
+  }, []);
+
+  const leaveConversation = useCallback((conversationId: string): void => {
+    if (desiredConversationRef.current === conversationId) desiredConversationRef.current = null;
+    socketRef.current?.emit('conversation:leave', { conversationId });
+    joinedConversationsRef.current.delete(conversationId);
   }, []);
 
   const sendMessage = useCallback((conversationId: string, body: string): Promise<SendAck> => {
@@ -100,5 +165,5 @@ export function useChatSocket(socketOrigin: string, handlers: ChatSocketHandlers
     });
   }, []);
 
-  return { connectionState, joinConversation, sendMessage };
+  return { connectionState, joinConversation, leaveConversation, sendMessage };
 }

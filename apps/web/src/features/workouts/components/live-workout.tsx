@@ -86,12 +86,10 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
       total + item.series.reduce((sum, set) => sum + set.pesoKg * set.repeticiones, 0),
     0,
   );
-  const averageRir = sets
-    ? workout.ejercicios.reduce(
-        (total, item) => total + item.series.reduce((sum, set) => sum + set.rir, 0),
-        0,
-      ) / sets
-    : 0;
+  const ratedSets = workout.ejercicios.flatMap((item) => item.series).filter((set) => set.rir !== null);
+  const averageRir = ratedSets.length
+    ? ratedSets.reduce((total, set) => total + (set.rir ?? 0), 0) / ratedSets.length
+    : null;
   return (
     <div className="grid gap-8">
       <PageHeader
@@ -162,7 +160,7 @@ export function LiveWorkout({ id }: Readonly<{ id: string }>) {
         <MetricCard
           icon={<Gauge className="size-5" />}
           label="RIR medio"
-          value={averageRir.toFixed(1)}
+          value={averageRir === null ? '—' : averageRir.toFixed(1)}
         />
       </section>
       {editable && guided ? (

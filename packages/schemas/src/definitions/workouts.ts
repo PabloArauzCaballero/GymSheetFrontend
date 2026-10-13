@@ -8,7 +8,7 @@ export const workoutSetSchema = z.object({
   numeroSerie: z.number().int(),
   repeticiones: z.number().int(),
   pesoKg: z.number(),
-  rir: z.number().int(),
+  rir: z.number().int().nullable(),
   descansoSegAnterior: z.number().int(),
   fechaRegistro: z.string(),
 });
@@ -16,6 +16,13 @@ export const workoutSetSchema = z.object({
 export const workoutExerciseSchema = z.object({
   id: z.string().uuid(),
   orden: z.number().int(),
+  rutinaEjercicioId: z.string().uuid().nullable().optional().default(null),
+  seriesObjetivo: z.number().int().nullable().optional().default(null),
+  repsMin: z.number().int().nullable().optional().default(null),
+  repsMax: z.number().int().nullable().optional().default(null),
+  pesoObjetivoKg: z.number().nullable().optional().default(null),
+  rirObjetivo: z.number().int().nullable().optional().default(null),
+  descansoSeg: z.number().int().nullable().optional().default(null),
   esEnfasis: z.boolean(),
   nota: z.string().nullable(),
   ejercicio: exerciseSchema.nullable(),
@@ -24,6 +31,7 @@ export const workoutExerciseSchema = z.object({
 
 export const workoutSchema = z.object({
   id: z.string().uuid(),
+  rutinaId: z.string().uuid().nullable().optional().default(null),
   usuarioId: z.string().uuid(),
   fechaInicio: z.string(),
   fechaFin: z.string().nullable(),

@@ -8,6 +8,10 @@ import { cn } from '@/shared/lib/cn';
 // mismo origen: evita mixed-content, hotlink y CORS. Las rutas locales o `data:`
 // se dejan intactas.
 export function mediaProxyUrl(value: string): string {
+  const privateMediaPath = value.match(
+    /^\/(?:api\/v\d+\/)?(me\/(?:conversations\/[0-9a-f-]+\/messages\/[0-9a-f-]+|stories\/[0-9a-f-]+)\/media)$/i,
+  );
+  if (privateMediaPath) return `/api/backend/${privateMediaPath[1]}`;
   return /^https?:\/\//i.test(value) ? `/api/media?url=${encodeURIComponent(value)}` : value;
 }
 

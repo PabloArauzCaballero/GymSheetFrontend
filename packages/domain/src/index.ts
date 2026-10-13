@@ -6,3 +6,5 @@ export * from './auth-options';
 export * from './celebration';
 export * from './points-figures';
 export * from './exercise-media';
+export * from './read-receipt';
+export * from './training-event-message';

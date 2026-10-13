@@ -1,0 +1,91 @@
+# H3.S2 — acciones de conexión con fixture QA reservado.
+#
+# Requiere que el usuario `athlete.mock@gymsheet.local` tenga:
+# - una solicitud recibida de H3_S2_RECEIVED_NAME;
+# - una solicitud enviada a H3_S2_SENT_NAME;
+# - H3_S2_PASS_NAME como primera tarjeta elegible, sin descarte previo.
+# Los tres nombres se pasan con `maestro test -e H3_S2_RECEIVED_NAME='…'
+# -e H3_S2_SENT_NAME='…' -e H3_S2_PASS_NAME='…' ...`. Cada acción queda
+# acotada a esa persona; el flujo falla si falta la fixture en vez de tocar a
+# alguien distinto. Los nombres de recibido y enviado deben ser personas
+# distintas. El login compartido usa la cuenta QA local habitual.
+appId: app.gymsheet.mobile
+name: H3.S2 · Solicitudes y deshacer descarte
+---
+- runFlow: ../login.subflow.yaml
+
+# Abrir la bandeja social y cerrar el tour sólo si todavía aparece.
+- tapOn: 'Comunidad, tab.*'
+- runFlow: ../cerrar-tour.subflow.yaml
+- tapOn: 'Mensajes y solicitudes'
+- extendedWaitUntil:
+    visible: 'Conversaciones, solicitudes y conexiones.'
+    timeout: 60000
+
+# M1: comprobar la solicitud recibida concreta, aceptarla y verificar que pasa
+# a Conexiones y que también aparece en la bandeja de chat.
+- tapOn: Solicitudes
+- extendedWaitUntil:
+    visible: '${H3_S2_RECEIVED_NAME}'
+    timeout: 60000
+- assertVisible: 'Te escribieron'
+- tapOn:
+    text: 'Aceptar solicitud'
+    rightOf: '${H3_S2_RECEIVED_NAME}'
+- extendedWaitUntil:
+    visible: 'Solicitud actualizada.'
+    timeout: 30000
+- assertNotVisible: '${H3_S2_RECEIVED_NAME}'
+- tapOn: Conexiones
+- extendedWaitUntil:
+    visible: '${H3_S2_RECEIVED_NAME}'
+    timeout: 60000
+- tapOn: General
+- extendedWaitUntil:
+    visible: '${H3_S2_RECEIVED_NAME}'
+    timeout: 60000
+
+# M2: retirar sólo la solicitud enviada al objetivo indicado. La comprobación
+# posterior cubre que dejó de estar pendiente y no se convirtió en conexión.
+- tapOn: Solicitudes
+- extendedWaitUntil:
+    visible: '${H3_S2_SENT_NAME}'
+    timeout: 60000
+- assertVisible: 'Enviadas'
+- tapOn:
+    text: Retirar
+    rightOf: '${H3_S2_SENT_NAME}'
+- extendedWaitUntil:
+    visible: 'Solicitud retirada.'
+    timeout: 30000
+- assertNotVisible: '${H3_S2_SENT_NAME}'
+- tapOn: Conexiones
+- assertNotVisible: '${H3_S2_SENT_NAME}'
+- tapOn: General
+- assertNotVisible: '${H3_S2_SENT_NAME}'
+
+# M3: hacer un descarte controlado del candidato QA y deshacer inmediatamente.
+# El objetivo del botón incluye el nombre para que ningún otro perfil reciba
+# una decisión accidental. El mismo objetivo debe volver a quedar arriba.
+- openLink: gymsheet://descubrir
+# iOS puede pedir confirmación al abrir un enlace propio desde Maestro.
+- tapOn:
+    text: Abrir
+    optional: true
+- runFlow: ../cerrar-tour.subflow.yaml
+- extendedWaitUntil:
+    visible: 'Pasar de ${H3_S2_PASS_NAME}'
+    timeout: 60000
+- tapOn: 'Pasar de ${H3_S2_PASS_NAME}'
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertNotVisible: 'Pasar de ${H3_S2_PASS_NAME}'
+- assertVisible:
+    text: 'Deshacer la última decisión'
+    enabled: true
+- tapOn:
+    text: 'Deshacer la última decisión'
+    enabled: true
+- extendedWaitUntil:
+    visible: 'Pasar de ${H3_S2_PASS_NAME}'
+    timeout: 60000

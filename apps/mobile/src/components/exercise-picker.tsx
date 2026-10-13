@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, FlatList, Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,7 +15,6 @@ import { colors, fontSizes, iconSizes, minTouchTarget, radii, spacing } from '@/
 /** How much of the screen the sheet claims: enough rows to scan, still clearly a sheet. */
 const SHEET_HEIGHT = '85%';
 
-/** One page is plenty for a picker — the search box, not scrolling, narrows 1300+ rows. */
 const PAGE_SIZE = 30;
 
 /**
@@ -45,16 +44,18 @@ export function ExercisePicker({
     if (!visible) setSearch('');
   }, [visible]);
 
-  const exercises = useQuery({
+  const exercises = useInfiniteQuery({
     queryKey: ['exercises', 'picker', search],
-    queryFn: () => exerciseService.list({ search: search.trim() || undefined, pageSize: PAGE_SIZE }),
+    queryFn: ({ pageParam }) => exerciseService.list({ search: search.trim() || undefined, page: pageParam, pageSize: PAGE_SIZE }),
+    initialPageParam: 1,
+    getNextPageParam: (last) => last.page < last.totalPages ? last.page + 1 : undefined,
     // Keeps the previous results on screen while the new search resolves, so the
     // list does not collapse into skeletons on every keystroke.
     placeholderData: keepPreviousData,
     enabled: visible,
   });
 
-  const items = exercises.data?.items ?? [];
+  const items = exercises.data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
     <Modal
@@ -160,6 +161,11 @@ export function ExercisePicker({
                 // 1300+ exercises in the catalogue: virtualised rows only, never
                 // a mapped list.
                 data={items}
+                onEndReached={() => {
+                  if (exercises.hasNextPage && !exercises.isFetchingNextPage) void exercises.fetchNextPage();
+                }}
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={exercises.isFetchingNextPage ? <ActivityIndicator color={colors.volt} /> : null}
                 ItemSeparatorComponent={Divider}
                 keyboardShouldPersistTaps="handled"
                 keyExtractor={(exercise) => exercise.id}

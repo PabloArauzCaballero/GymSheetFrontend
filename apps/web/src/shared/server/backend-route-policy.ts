@@ -90,6 +90,11 @@ const allowedPathPatterns = [
   // Punto 11 (conexiones), 10 (estado social) y 5 (directorio + chat).
   /^\/me\/connections$/u,
   new RegExp(`^/me/connections/${resourceId}$`, 'u'),
+  // H10: listar, crear y responder a una revisión vigente.
+  /^\/me\/training-invitations$/u,
+  new RegExp(`^/me/training-invitations/${resourceId}/respond$`, 'u'),
+  new RegExp(`^/me/training-invitations/${resourceId}/calendar\\.ics$`, 'u'),
+  new RegExp(`^/me/training-invitations/${resourceId}/shared-session$`, 'u'),
   /^\/me\/social-status$/u,
   /^\/me\/gym-directory$/u,
   // Ficha social de un socio concreto (directorio + insignias ganadas). Es lo
@@ -107,12 +112,14 @@ const allowedPathPatterns = [
   // plano contra un backend que ya sirve el resto.
   new RegExp(`^/me/conversations/${resourceId}/messages/media$`, 'u'),
   new RegExp(`^/me/conversations/${resourceId}/messages/${resourceId}/view$`, 'u'),
+  new RegExp(`^/me/conversations/${resourceId}/messages/${resourceId}/media$`, 'u'),
   new RegExp(`^/me/conversations/${resourceId}/nickname$`, 'u'),
   new RegExp(`^/me/conversations/${resourceId}/read$`, 'u'),
   // Descubrimiento (R6.1): la baraja, el swipe y el deshacer. `swipes/undo` va
   // en su propia entrada y no como sufijo opcional de `swipes` porque son dos
   // operaciones distintas: una decide, la otra revierte la última decisión.
   /^\/me\/discovery\/deck$/u,
+  /^\/me\/discovery\/preferences$/u,
   /^\/me\/discovery\/swipes$/u,
   /^\/me\/discovery\/swipes\/undo$/u,
   // Stories (R6.2). `/me/stories` es GET del propio + POST multipart; el feed
@@ -122,7 +129,12 @@ const allowedPathPatterns = [
   /^\/me\/stories$/u,
   /^\/me\/stories\/feed$/u,
   new RegExp(`^/me/stories/${resourceId}$`, 'u'),
-  new RegExp(`^/me/stories/${resourceId}/(view|viewers)$`, 'u'),
+  new RegExp(`^/me/stories/${resourceId}/(view|viewers|replies)$`, 'u'),
+  new RegExp(`^/me/stories/${resourceId}/media$`, 'u'),
+  // Reels H9.M1/M2: first-page feed and multipart publication only.
+  /^\/me\/reels$/u,
+  /^\/me\/reels\/feed$/u,
+  new RegExp(`^/me/reels/${resourceId}/media$`, 'u'),
   // Vistas de perfil (R6.3): lista paginada por cursor, resumen y la marca de
   // «ya la revisé».
   /^\/me\/profile-views$/u,

@@ -1,0 +1,17 @@
+yarn run v1.22.22
+$ jest --runInBand --runInBand src/modules/chat/chat-media-cipher.spec.ts src/modules/chat/chat.service.spec.ts
+PASS src/modules/chat/chat.service.spec.ts
+[Nest] 67668  - 10/08/2026, 10:52:19 PM    WARN [ChatService] Object(4) {
+  event: 'chat.push_notify_failed',
+  conversationId: 'conv-1',
+  messageId: 'msg-push-1',
+  reason: 'Error'
+}
+PASS src/modules/chat/chat-media-cipher.spec.ts
+
+Test Suites: 2 passed, 2 total
+Tests:       39 passed, 39 total
+Snapshots:   0 total
+Time:        1.147 s, estimated 2 s
+Ran all test suites matching /src\/modules\/chat\/chat-media-cipher.spec.ts|src\/modules\/chat\/chat.service.spec.ts/i.
+Done in 1.80s.

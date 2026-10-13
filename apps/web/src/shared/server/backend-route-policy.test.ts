@@ -26,12 +26,17 @@ const allowedCases: Array<[string[], string]> = [
   [['me', 'gym-directory'], '/me/gym-directory'],
   [['me', 'conversations'], '/me/conversations'],
   [['me', 'conversations', id, 'messages'], `/me/conversations/${id}/messages`],
+  [
+    ['me', 'conversations', id, 'messages', id, 'media'],
+    `/me/conversations/${id}/messages/${id}/media`,
+  ],
   [['public', 'facilities', 'branches'], '/public/facilities/branches'],
   // R6: descubrimiento, stories, vistas de perfil e interacciones.
   [['me', 'gym-directory', id], `/me/gym-directory/${id}`],
   // Las sedes del gimnasio propio: es la que alimenta el filtro por sucursal.
   [['me', 'facilities', 'branches'], '/me/facilities/branches'],
   [['me', 'discovery', 'deck'], '/me/discovery/deck'],
+  [['me', 'discovery', 'preferences'], '/me/discovery/preferences'],
   [['me', 'discovery', 'swipes'], '/me/discovery/swipes'],
   [['me', 'discovery', 'swipes', 'undo'], '/me/discovery/swipes/undo'],
   [['me', 'stories'], '/me/stories'],
@@ -39,6 +44,11 @@ const allowedCases: Array<[string[], string]> = [
   [['me', 'stories', id], `/me/stories/${id}`],
   [['me', 'stories', id, 'view'], `/me/stories/${id}/view`],
   [['me', 'stories', id, 'viewers'], `/me/stories/${id}/viewers`],
+  [['me', 'stories', id, 'replies'], `/me/stories/${id}/replies`],
+  [['me', 'stories', id, 'media'], `/me/stories/${id}/media`],
+  [['me', 'reels'], '/me/reels'],
+  [['me', 'reels', 'feed'], '/me/reels/feed'],
+  [['me', 'reels', id, 'media'], `/me/reels/${id}/media`],
   [['me', 'profile-views'], '/me/profile-views'],
   [['me', 'profile-views', 'summary'], '/me/profile-views/summary'],
   [['me', 'profile-views', 'checked'], '/me/profile-views/checked'],
@@ -76,6 +86,16 @@ const allowedCases: Array<[string[], string]> = [
   ],
   [['admin', 'moderation', 'users', id, 'history'], `/admin/moderation/users/${id}/history`],
   [['me', 'reports'], '/me/reports'],
+  [['me', 'training-invitations'], '/me/training-invitations'],
+  [['me', 'training-invitations', id, 'respond'], `/me/training-invitations/${id}/respond`],
+  [
+    ['me', 'training-invitations', id, 'shared-session'],
+    `/me/training-invitations/${id}/shared-session`,
+  ],
+  [
+    ['me', 'training-invitations', id, 'calendar.ics'],
+    `/me/training-invitations/${id}/calendar.ics`,
+  ],
 ];
 const blockedCases: Array<[string[]]> = [
   [['admin', 'access', 'mock', 'events']],
@@ -96,6 +116,12 @@ const blockedCases: Array<[string[]]> = [
   [['me', 'interactions']],
   [['me', 'interactions', 'blocked']],
   [['me', 'discovery']],
+  [['me', 'training-invitations', id, 'unexpected']],
+  [['me', 'training-invitations', id, 'shared-session', 'unexpected']],
+  [['me', 'training-invitations', id, 'calendar.json']],
+  // Reels routes are deliberately exact until additional endpoints are agreed.
+  [['me', 'reels', 'unexpected']],
+  [['me', 'reels', id, 'comments']],
   // `push` no es un prefijo abierto: sólo la configuración pública pasa.
   [['notifications', 'push']],
   [['notifications', 'device-tokens', id]],

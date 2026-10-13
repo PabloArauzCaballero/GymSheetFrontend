@@ -19,8 +19,13 @@ const STEPS: readonly FlowStep[] = [
   { label: 'Objetivo', icon: 'flag-outline' },
   { label: 'Medidas', icon: 'barbell-outline' },
   { label: 'Cómo entrenas', icon: 'options-outline' },
-  { label: 'Equipo', icon: 'construct-outline' },
+  { label: 'Lugar y material', icon: 'construct-outline' },
 ];
+
+const preferenceAlreadyAsked: Partial<Record<FitnessGoal, string>> = {
+  GAIN_MUSCLE: 'Hipertrofia',
+  IMPROVE_STRENGTH: 'Fuerza',
+};
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -147,7 +152,7 @@ export default function OnboardingScreen() {
           consentHealth,
           consentData,
         });
-      return onboardingService.saveEquipment(equipment);
+      return onboardingService.saveEquipment(trainingLocation === 'GYM' ? [] : equipment);
     },
     onSuccess: (result) => {
       queryClient.setQueryData(['onboarding', 'me'], result);
@@ -293,7 +298,7 @@ export default function OnboardingScreen() {
             </View>
             <View style={{ gap: spacing.xs }}>
               <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-                Cómo prefieres entrenar
+                Algo que quieras añadir a tu objetivo (opcional)
               </Text>
               <ChoiceGroup
                 onToggle={(value) =>
@@ -303,7 +308,7 @@ export default function OnboardingScreen() {
                       : [...current, value],
                   )
                 }
-                options={preferenceOptions}
+                options={preferenceOptions.filter((option) => option !== preferenceAlreadyAsked[goal])}
                 selected={preferences}
               />
             </View>
@@ -326,17 +331,32 @@ export default function OnboardingScreen() {
         ) : null}
 
         {step === 3 ? (
-          <ChoiceGroup
-            onToggle={(value) =>
-              setEquipment((current) =>
-                current.includes(value)
-                  ? current.filter((item) => item !== value)
-                  : [...current, value],
-              )
-            }
-            options={equipmentOptions}
-            selected={equipment}
-          />
+          trainingLocation === 'GYM' ? (
+            <Card>
+              <Text style={{ color: colors.text, fontSize: fontSizes.md }}>
+                Entrenas en un gimnasio. Tomaremos como disponibles el material habitual, incluido banco y peso corporal.
+              </Text>
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+                Cuando crees una rutina podrás cambiar cualquier ejercicio si tu sede no tiene algo concreto.
+              </Text>
+            </Card>
+          ) : (
+            <View style={{ gap: spacing.md }}>
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+                Marca solo el material que tienes fuera del gimnasio. El peso corporal ya está incluido.
+              </Text>
+              <ChoiceGroup
+                onToggle={(value) =>
+                  setEquipment((current) => {
+                    if (current.includes(value)) return current.filter((item) => item !== value);
+                    return value === 'Máquinas' ? [...current, 'Máquinas', 'Banco'].filter((item, index, all) => all.indexOf(item) === index) : [...current, value];
+                  })
+                }
+                options={equipmentOptions.filter((option) => option !== 'Peso corporal')}
+                selected={equipment}
+              />
+            </View>
+          )
         ) : null}
 
         {step < 3 ? (

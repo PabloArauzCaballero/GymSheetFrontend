@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
+import { useRef } from 'react';
 import type { RoutineExercise } from '@gymsheet/types';
 import { Badge, Card, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { ErrorState, Skeleton } from '@/components/feedback';
@@ -10,11 +11,12 @@ import { BackLink } from '@/components/nav';
 import { useExerciseMedia } from '@/api/use-exercise-media';
 import { PressableScale } from '@/components/motion';
 import { ApiError } from '@gymsheet/api-client';
-import { routineService, workoutService } from '@/api/services';
+import { accountService, routineService, workoutService } from '@/api/services';
 import { Button } from '@/components/ui';
 import { ScheduleRoutine } from '@/components/schedule-routine';
 import { notify } from '@/notifications';
 import { GOAL_LABEL } from '@/lib/format';
+import { requestId } from '@/lib/request-id';
 import { colors, fontSizes, semibold, spacing } from '@/theme';
 
 /** «3 × 8-12» — the shorthand a lifter actually reads off a plan. */
@@ -32,6 +34,8 @@ export default function RoutineDetailScreen() {
   const router = useRouter();
 
   const queryClient = useQueryClient();
+  const copyKey = useRef(requestId());
+  const account = useQuery({ queryKey: ['user', 'me'], queryFn: () => accountService.getMe() });
 
   const routine = useQuery({
     queryKey: ['routine', id],
@@ -65,6 +69,27 @@ export default function RoutineDetailScreen() {
     },
   });
 
+  const visibility = useMutation({
+    mutationFn: (next: 'PRIVATE' | 'PUBLIC') => routineService.update(id, { visibilidad: next }),
+    onSuccess: async (updated) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['routine', id] }),
+        queryClient.invalidateQueries({ queryKey: ['routines'] }),
+      ]);
+      notify.success(updated.visibilidad === 'PUBLIC' ? 'Rutina publicada.' : 'Rutina retirada del catálogo.');
+    },
+    onError: (error: Error) => notify.error(error),
+  });
+  const copy = useMutation({
+    mutationFn: () => routineService.copy(id, copyKey.current),
+    onSuccess: async (saved) => {
+      await queryClient.invalidateQueries({ queryKey: ['routines'] });
+      notify.success('Copia guardada en tus rutinas.');
+      router.push({ pathname: '/routines/[id]', params: { id: saved.id } });
+    },
+    onError: (error: Error) => notify.error(error),
+  });
+
   // Ordering and the media backfill both run before the early returns below.
   // `useExerciseMedia` is a hook, so reaching it only once the query resolves
   // makes the hook count jump between renders and React aborts with "Rendered
@@ -94,6 +119,7 @@ export default function RoutineDetailScreen() {
   }
 
   const data = routine.data;
+  const owned = account.data?.id === data.creadoPorUsuarioId;
 
   return (
     <ScrollScreen onRefresh={() => void routine.refetch()} refreshing={routine.isFetching}>
@@ -103,6 +129,7 @@ export default function RoutineDetailScreen() {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
         <Badge label={`${ordered.length} ejercicios`} />
         {data.objetivo ? <Badge label={GOAL_LABEL[data.objetivo]} tone="success" /> : null}
+        <Badge label={data.visibilidad === 'PUBLIC' ? 'Pública' : data.visibilidad === 'TEMPLATE' ? 'Oficial' : 'Privada'} />
       </View>
 
       {/* The primary action of the screen: turn the plan into a live session. */}
@@ -111,6 +138,27 @@ export default function RoutineDetailScreen() {
         loading={start.isPending}
         onPress={() => start.mutate()}
       />
+      {owned && (data.visibilidad === 'PRIVATE' || data.visibilidad === 'PUBLIC') ? (
+        <Button
+          label="Editar rutina"
+          onPress={() => router.push({ pathname: '/routines/new', params: { editId: data.id } })}
+          variant="ghost"
+        />
+      ) : null}
+      {owned && data.visibilidad !== 'TEMPLATE' ? (
+        <Button
+          label={data.visibilidad === 'PUBLIC' ? 'Retirar publicación' : 'Publicar en mi gimnasio'}
+          loading={visibility.isPending}
+          onPress={() => visibility.mutate(data.visibilidad === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC')}
+          variant="ghost"
+        />
+      ) : null}
+      {!owned && (data.visibilidad === 'PUBLIC' || data.visibilidad === 'TEMPLATE') ? (
+        <>
+          <Button label="Guardar una copia" loading={copy.isPending} onPress={() => copy.mutate()} variant="ghost" />
+          <Button label="Reportar rutina" onPress={() => router.push({ pathname: '/routines/report/[id]', params: { id } })} variant="ghost" />
+        </>
+      ) : null}
 
       <Section index={0} title="Programar">
         <ScheduleRoutine routineId={data.id} />

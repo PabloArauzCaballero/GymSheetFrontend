@@ -28,6 +28,7 @@ export const trainingGoals = [
   'RESISTENCIA',
   'PERDIDA_GRASA',
   'SALUD_GENERAL',
+  'RENDIMIENTO_DEPORTIVO',
   'REHABILITACION',
 ] as const;
 export type TrainingGoal = (typeof trainingGoals)[number];
@@ -51,7 +52,7 @@ export type EquipmentStatus = (typeof equipmentStatuses)[number];
 export const workoutStatuses = ['EN_PROGRESO', 'FINALIZADA', 'CANCELADA'] as const;
 export type WorkoutStatus = (typeof workoutStatuses)[number];
 
-export const routineVisibilities = ['PRIVATE', 'SHARED', 'TEMPLATE'] as const;
+export const routineVisibilities = ['PRIVATE', 'SHARED', 'PUBLIC', 'TEMPLATE'] as const;
 export type RoutineVisibility = (typeof routineVisibilities)[number];
 
 export const routineStatuses = ['ACTIVE', 'ARCHIVED'] as const;

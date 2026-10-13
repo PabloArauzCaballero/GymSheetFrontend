@@ -31,7 +31,7 @@ export default function WorkoutDetailScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [restingFor, setRestingFor] = useState<number | null>(null);
+  const [restingFor, setRestingFor] = useState<{ seconds: number; key: number } | null>(null);
   const listMotion = useListMotion();
   const setFinishedSession = useSessionRewardStore((state) => state.setLast);
 
@@ -66,22 +66,24 @@ export default function WorkoutDetailScreen() {
       sessionExerciseId: string;
       pesoKg: number;
       repeticiones: number;
-      rir: number;
+      rir: number | null;
       numeroSerie: number;
+      previousRestSeconds: number;
+      nextRestSeconds: number;
     }) =>
       workoutService.addSet(input.sessionExerciseId, {
         numeroSerie: input.numeroSerie,
         repeticiones: input.repeticiones,
         pesoKg: input.pesoKg,
         rir: input.rir,
-        descansoSegAnterior: 0,
+        descansoSegAnterior: input.previousRestSeconds,
       }),
-    onSuccess: async () => {
+    onSuccess: async (_set, variables) => {
       await refreshAll();
       notify.success('Serie registrada.');
       // Logging a set is exactly when rest starts, so the clock appears without
       // being asked for — one less tap while the user is out of breath.
-      setRestingFor((current) => current ?? DEFAULT_REST_SECONDS);
+      setRestingFor((current) => ({ seconds: variables.nextRestSeconds, key: (current?.key ?? 0) + 1 }));
     },
     onError: (error: Error) => notify.error(error),
   });
@@ -101,7 +103,7 @@ export default function WorkoutDetailScreen() {
         ejercicioId: exerciseId,
         // Appended at the end: the order of a live session is the order the
         // user actually trained in.
-        orden: (workout.data?.ejercicios.length ?? 0) + 1,
+        orden: Math.max(0, ...(workout.data?.ejercicios.map((exercise) => exercise.orden) ?? [])) + 1,
       }),
     onSuccess: async () => {
       await refreshAll();
@@ -251,7 +253,7 @@ export default function WorkoutDetailScreen() {
             entering={SlideInDown.duration(DURATION.standard).easing(PREMIUM_EASING)}
             exiting={SlideOutDown.duration(DURATION.exit)}
           >
-            <RestTimer autoStart onDone={() => setRestingFor(null)} seconds={restingFor} />
+            <RestTimer key={restingFor.key} autoStart onDone={() => setRestingFor(null)} seconds={restingFor.seconds} />
           </Animated.View>
         ) : null
       }
@@ -289,6 +291,7 @@ export default function WorkoutDetailScreen() {
           const previousTop = reference ? topSet(reference.exercise) : null;
           const previousWhen = reference ? relativeDay(reference.workout.fechaInicio) : null;
           const todayTop = topSet(item);
+          const lastSet = [...item.series].sort((a, b) => b.numeroSerie - a.numeroSerie)[0];
           return (
           <Card key={item.id} accent={item.esEnfasis ? colors.volt : undefined}>
             <PressableScale
@@ -306,7 +309,14 @@ export default function WorkoutDetailScreen() {
                 </Text>
                 <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
                   {item.series.length} {item.series.length === 1 ? 'serie' : 'series'}
+                  {item.seriesObjetivo ? ` / ${item.seriesObjetivo} previstas` : ''}
                 </Text>
+                {item.repsMin !== null || item.repsMax !== null ? (
+                  <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                    {`${item.repsMin ?? item.repsMax}${item.repsMax !== null && item.repsMax !== item.repsMin ? `–${item.repsMax}` : ''} reps`}
+                    {item.descansoSeg !== null ? ` · ${item.descansoSeg}s descanso` : ''}
+                  </Text>
+                ) : null}
               </View>
               {item.esEnfasis ? <Badge label="Énfasis" tone="success" /> : null}
             </PressableScale>
@@ -354,15 +364,11 @@ export default function WorkoutDetailScreen() {
                       >
                         {set.pesoKg} kg × {set.repeticiones}
                       </Text>
-                      <Text
-                        style={{
-                          color: colors.textMuted,
-                          fontSize: fontSizes.xs,
-                          fontVariant: ['tabular-nums'],
-                        }}
-                      >
-                        RIR {set.rir}
-                      </Text>
+                      {set.rir !== null ? (
+                        <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, fontVariant: ['tabular-nums'] }}>
+                          RIR {set.rir}
+                        </Text>
+                      ) : null}
                     </Animated.View>
                   ))}
               </View>
@@ -436,22 +442,27 @@ export default function WorkoutDetailScreen() {
                     same load, so a repeat costs one tap. */}
                 <SetEntryForm
                   previous={previousTop ?? undefined}
-                  initial={(() => {
-                    const last = [...item.series].sort(
-                      (a, b) => b.numeroSerie - a.numeroSerie,
-                    )[0];
-                    return last
+                  initial={lastSet
                       ? {
-                          pesoKg: String(last.pesoKg),
-                          repeticiones: String(last.repeticiones),
-                          rir: String(last.rir),
+                          pesoKg: String(lastSet.pesoKg),
+                          repeticiones: String(lastSet.repeticiones),
+                          rir: lastSet.rir === null ? '' : String(lastSet.rir),
                         }
-                      : undefined;
-                  })()}
+                      : {
+                          pesoKg: item.pesoObjetivoKg == null
+                            ? (/body.?weight|peso corporal|no equipment|sin equipo/i.test(item.ejercicio?.requiredEquipment ?? '') ? '0' : '')
+                            : String(item.pesoObjetivoKg),
+                          repeticiones: item.repsMin == null ? '' : String(item.repsMin),
+                          rir: item.rirObjetivo == null ? '' : String(item.rirObjetivo),
+                        }}
                   onSubmit={(draft) =>
                     addSet.mutate({
                       sessionExerciseId: item.id,
                       numeroSerie: item.series.length + 1,
+                      previousRestSeconds: lastSet
+                        ? Math.min(7200, Math.max(0, Math.round((Date.now() - Date.parse(lastSet.fechaRegistro)) / 1000)))
+                        : 0,
+                      nextRestSeconds: item.descansoSeg ?? DEFAULT_REST_SECONDS,
                       ...draft,
                     })
                   }

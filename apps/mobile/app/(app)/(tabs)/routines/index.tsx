@@ -38,6 +38,7 @@ export default function RoutinesScreen() {
       <TourTarget id="routines.create">
         <Button label="Crear rutina" onPress={() => router.push('/routines/new')} />
       </TourTarget>
+      <Button label="Explorar rutinas publicadas" onPress={() => router.push('/routines/explore')} variant="ghost" />
 
       {/* The week comes before the catalogue on purpose: someone opening this
           screen on a Tuesday wants to know what today is, not to browse. */}

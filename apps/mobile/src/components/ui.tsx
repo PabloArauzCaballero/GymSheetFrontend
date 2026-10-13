@@ -169,6 +169,8 @@ export function Button({
   label,
   onPress,
   icon,
+  accessibilityLabel,
+  testID,
   loading = false,
   disabled = false,
   variant = 'primary',
@@ -186,6 +188,8 @@ export function Button({
    * distintas. Un botón que se explica solo por su texto no necesita ninguno.
    */
   icon?: keyof typeof Ionicons.glyphMap;
+  accessibilityLabel?: string;
+  testID?: string;
   loading?: boolean;
   disabled?: boolean;
   variant?: ButtonVariant;
@@ -232,10 +236,12 @@ export function Button({
 
   return (
     <AnimatedPressable
+      accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
       onPress={onPress}
+      testID={testID}
       onPressIn={() => {
         if (isDisabled) return;
         pressed.value = withSpring(1, BUTTON_SPRING);

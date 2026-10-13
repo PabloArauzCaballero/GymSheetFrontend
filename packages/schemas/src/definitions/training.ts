@@ -33,6 +33,21 @@ export const routineSchema = z.object({
   fechaActualizacion: z.string(),
 });
 
+export const routineRecommendationSchema = z.object({
+  goal: z.enum(trainingGoals),
+  location: z.enum(['GYM', 'HOME', 'OUTDOORS']),
+  requiresReview: z.boolean(),
+  message: z.string(),
+  items: z.array(z.object({
+    ejercicio: exerciseSchema,
+    motivo: z.string(),
+    seriesObjetivo: z.number().int(),
+    repsMin: z.number().int(),
+    repsMax: z.number().int(),
+    descansoSeg: z.number().int(),
+  })),
+});
+
 export const routineAssignmentSchema = z.object({
   id: z.string().uuid(),
   rutinaId: z.string().uuid(),

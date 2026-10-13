@@ -74,10 +74,10 @@ export function WorkoutSetRow({
           max="10"
           min="0"
           onChange={(event) =>
-            setValues((current) => ({ ...current, rir: Number(event.target.value) }))
+            setValues((current) => ({ ...current, rir: event.target.value === '' ? null : Number(event.target.value) }))
           }
           type="number"
-          value={values.rir}
+          value={values.rir ?? ''}
         />
         <div className="flex justify-end gap-1">
           <Button
@@ -113,7 +113,7 @@ export function WorkoutSetRow({
       </span>
       <span className="data-value">{set.pesoKg}</span>
       <span className="data-value">{set.repeticiones}</span>
-      <span className="data-value">{set.rir}</span>
+      <span className="data-value">{set.rir ?? '—'}</span>
       <div className="flex justify-end gap-1 opacity-100 transition-opacity duration-150 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
         {editable ? (
           <>

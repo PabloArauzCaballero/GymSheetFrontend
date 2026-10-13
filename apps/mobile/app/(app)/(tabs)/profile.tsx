@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { View, Text } from 'react-native';
 import { Image } from 'expo-image';
 import { ApiError } from '@gymsheet/api-client';
@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui';
 import { GenderPreference } from '@/components/gender-preference';
 import { ProfilePhotoGallery } from '@/components/profile-photo-gallery';
-import { SocialStatusEditor } from '@/components/social-status-editor';
+import { DiscoveryPreferencesEditor, SocialDiscoverySettingsEditor, SocialStatusEditor } from '@/components/social-status-editor';
 import { WeightIncrementPreference } from '@/components/weight-increment-preference';
 import { BadgeTile, RankHero } from '@/components/progression';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
@@ -319,6 +319,8 @@ export default function ProfileScreen() {
       <ProfilePhotoGallery />
 
       <SocialStatusEditor />
+      <SocialDiscoverySettingsEditor />
+      <DiscoveryPreferencesEditor />
 
       <Section icon="trending-up-outline" title="Evolución del peso">
         {measurements.isPending ? (
@@ -394,6 +396,12 @@ export default function ProfileScreen() {
         />
 
         <NavRow onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />
+        <Divider />
+        <NavRow
+          onPress={() => router.push('/training-invitations' as Href)}
+          subtitle="Invitaciones recibidas, encuentros y cancelaciones"
+          title="Entrenemos juntos"
+        />
         <Divider />
         <NavRow
           onPress={() => router.push('/membership')}

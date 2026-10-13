@@ -5,6 +5,8 @@ export * from './definitions/training';
 export * from './definitions/progression';
 export * from './definitions/tutorials';
 export * from './definitions/social';
+export * from './definitions/social-map';
 export * from './definitions/stories';
+export * from './definitions/reels';
 export * from './definitions/public-facilities';
 export * from './forms';

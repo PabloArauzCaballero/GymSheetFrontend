@@ -6,7 +6,7 @@ export type WorkoutSet = {
   numeroSerie: number;
   repeticiones: number;
   pesoKg: number;
-  rir: number;
+  rir: number | null;
   descansoSegAnterior: number;
   fechaRegistro: string;
 };
@@ -14,6 +14,13 @@ export type WorkoutSet = {
 export type WorkoutExercise = {
   id: string;
   orden: number;
+  rutinaEjercicioId: string | null;
+  seriesObjetivo: number | null;
+  repsMin: number | null;
+  repsMax: number | null;
+  pesoObjetivoKg: number | null;
+  rirObjetivo: number | null;
+  descansoSeg: number | null;
   esEnfasis: boolean;
   nota: string | null;
   ejercicio: Exercise | null;
@@ -22,6 +29,7 @@ export type WorkoutExercise = {
 
 export type Workout = {
   id: string;
+  rutinaId: string | null;
   usuarioId: string;
   fechaInicio: string;
   fechaFin: string | null;
@@ -45,6 +53,6 @@ export type WorkoutSetInput = {
   numeroSerie: number;
   repeticiones: number;
   pesoKg: number;
-  rir: number;
+  rir: number | null;
   descansoSegAnterior: number;
 };

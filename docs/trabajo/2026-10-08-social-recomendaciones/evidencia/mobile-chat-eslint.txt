@@ -1,0 +1,3 @@
+yarn run v1.22.22
+$ '/Users/josejeremias/Desktop/Mantra Core Technologies/GymSheet/GymSheetFrontend/node_modules/.bin/eslint' 'app/(app)/chat/[id].tsx' --max-warnings 0
+Done in 0.97s.

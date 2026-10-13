@@ -1,0 +1,71 @@
+{
+  "api": {
+    "base": "http://localhost:3000",
+    "endpoints": {
+      "/health/live": {
+        "reason": "URLError",
+        "status": "unavailable"
+      },
+      "/health/ready": {
+        "reason": "URLError",
+        "status": "unavailable"
+      }
+    }
+  },
+  "createdAt": "2026-10-09T21:08:49Z",
+  "devices": {
+    "androidConnectedCount": 0,
+    "iosBooted": [
+      {
+        "name": "iPhone 17 Pro",
+        "udid": "D4C28B4D-3615-4E6D-9092-C180668D5EE6"
+      },
+      {
+        "name": "iPad Pro 11-inch (M5)",
+        "udid": "4665F189-499B-474E-9B0C-4EAE33D60090"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS-27.2-arm64-arm-64bit-Mach-O",
+    "python": "3.14.7"
+  },
+  "repositories": {
+    "backend": {
+      "branch": "feat/biblioteca-ejercicios",
+      "dirty": true,
+      "git": true,
+      "present": true,
+      "sha": "474da618fe4d191ae5d5f25b2dac537fd3a6856f"
+    },
+    "frontend": {
+      "branch": "dev",
+      "dirty": true,
+      "git": true,
+      "present": true,
+      "sha": "6b66d8aba9329f4897e900a9e3be09f495c41343"
+    },
+    "recommendations": {
+      "branch": "main",
+      "dirty": true,
+      "git": true,
+      "present": true,
+      "sha": null
+    }
+  },
+  "runId": "a07b19c7-2b5e-4110-b614-5db6ecf60b15",
+  "schemaVersion": 1,
+  "secretsIncluded": false,
+  "tools": {
+    "node": {
+      "available": true,
+      "exitCode": 0,
+      "output": "v24.19.0"
+    },
+    "yarn": {
+      "available": true,
+      "exitCode": 0,
+      "output": "1.22.22"
+    }
+  }
+}

@@ -6,12 +6,20 @@ import type {
   GymDirectoryEntry,
   MemberProfile,
   SocialStatusState,
+  SocialMapBounds,
+  SocialMapCoordinates,
 } from '@/shared/api/schemas';
 import {
   connectionSchema,
   gymDirectoryEntrySchema,
   memberProfileSchema,
   socialStatusSchema,
+  socialDiscoverySettingsSchema,
+  discoveryPreferencesSchema,
+  socialMapAreasSchema,
+  socialMapPeopleSchema,
+  socialMapGymsSchema,
+  socialMapCitiesSchema,
 } from '@/shared/api/schemas';
 
 /**
@@ -53,6 +61,14 @@ export const socialService = {
       `/me/connections${status ? `?status=${status}` : ''}`,
       z.array(connectionSchema),
     ),
+  blockUser: (targetUserId: string) =>
+    apiRequest('/me/blocks', z.object({ blocked: z.literal(true) }), {
+      method: 'POST', body: { targetUserId },
+    }),
+  unblockUser: (targetUserId: string) =>
+    apiRequest(`/me/blocks/${targetUserId}`, z.object({ unblocked: z.literal(true) }), { method: 'DELETE' }),
+  listBlockedUsers: () =>
+    apiRequest('/me/blocks', z.array(z.object({ userId: z.string().uuid(), displayName: z.string(), blockedAt: z.string() }))),
   sendConnection: (addresseeId: string) =>
     apiRequest<Connection>('/me/connections', connectionSchema, {
       method: 'POST',
@@ -73,6 +89,36 @@ export const socialService = {
       method: 'PATCH',
       body: input,
     }),
+  getDiscoverySettings: () =>
+    apiRequest('/me/social-discovery-settings', socialDiscoverySettingsSchema),
+  updateDiscoverySettings: (input: {
+    profileEnabled: boolean; crossGymEnabled: boolean; mapEnabled: boolean; expectedVersion: number;
+  }) => apiRequest('/me/social-discovery-settings', socialDiscoverySettingsSchema, {
+    method: 'PATCH',
+    body: input,
+  }),
+  getDiscoveryPreferences: () => apiRequest('/me/discovery/preferences', discoveryPreferencesSchema),
+  updateDiscoveryPreferences: (input: {
+    genders: ('MALE' | 'FEMALE')[]; intents: ('TRAINING' | 'FRIENDSHIP' | 'DATING')[];
+    minAge: number; maxAge: number; radiusKm: number; flexibleAge: boolean;
+    flexibleDistance: boolean; expectedVersion: number;
+  }) => apiRequest('/me/discovery/preferences', discoveryPreferencesSchema, { method: 'PUT', body: input }),
+  saveMapLocation: (location: SocialMapCoordinates) =>
+    apiRequest('/me/social-map/location', z.object({ saved: z.literal(true) }), {
+      method: 'PATCH', body: location,
+    }),
+  mapAreas: (bounds: SocialMapBounds) => {
+    const query = new URLSearchParams(Object.entries(bounds).map(([key, value]) => [key, String(value)]));
+    return apiRequest(`/me/social-map/areas?${query.toString()}`, socialMapAreasSchema);
+  },
+  mapPeople: (cellId: string) =>
+    apiRequest(`/me/social-map/cells/${encodeURIComponent(cellId)}/people`, socialMapPeopleSchema),
+  mapGyms: (bounds: SocialMapBounds) => {
+    const query = new URLSearchParams(Object.entries(bounds).map(([key, value]) => [key, String(value)]));
+    return apiRequest(`/me/social-map/gyms?${query.toString()}`, socialMapGymsSchema);
+  },
+  searchMapCities: (query: string) =>
+    apiRequest(`/me/social-map/cities?q=${encodeURIComponent(query)}`, socialMapCitiesSchema),
   directory: (filters: DirectoryFilters) =>
     apiRequest<GymDirectoryEntry[]>(
       `/me/gym-directory?${directoryQueryString(filters)}`,
