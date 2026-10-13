@@ -166,7 +166,7 @@ export function RewardCardFront({
   pointsDelayMs?: number;
 }) {
   const material = cardMaterials[content.rarity];
-  const footer = height * 0.3;
+  const footer = height * 0.33;
   const artHeight = height - footer;
   const art = width * 0.68;
   // La ilustración flota un poco más que la carta: es lo que da profundidad al inclinarla.
@@ -216,7 +216,7 @@ export function RewardCardFront({
             color: cardFace.title,
             fontFamily: fontFamilies.display,
             fontSize: fontSizes.md,
-            lineHeight: Math.round(fontSizes.md * 1.15),
+            lineHeight: Math.round(fontSizes.md * 1.1),
             textAlign: 'center',
           }}
         >
