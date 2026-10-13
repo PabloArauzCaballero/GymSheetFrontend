@@ -120,7 +120,8 @@ export const artHues = {
   sky: { light: '#C8ECFF', main: '#3FB2FF', deep: '#1767D6', ink: '#0A2A66' },
   mint: { light: '#C9FFE6', main: '#36DFA0', deep: '#0E9B74', ink: '#04423A' },
   violet: { light: '#EAD2FF', main: '#A66BFF', deep: '#6630D6', ink: '#27106B' },
-  volt: { light: '#F1FFB0', main: '#C3F400', deep: '#7FA800', ink: '#2C3B00' },
+  /** El tono de la marca en las ilustraciones (jade REPP; la clave se conserva). */
+  volt: { light: '#C4F3E8', main: '#3FBFA6', deep: '#2E8B7B', ink: '#0B3A33' },
   steel: { light: '#F2F6FB', main: '#B4C0D0', deep: '#6B7890', ink: '#232B3A' },
   cream: { light: ink.white, main: '#FFF3DC', deep: '#E6CFA6', ink: '#5B4520' },
 } as const satisfies Record<string, ArtHue>;

@@ -1,5 +1,5 @@
 /**
- * Paleta del móvil: dirección «Estudio» (C8.1).
+ * Paleta del móvil: REPP sobre navy y niebla (2026-10-13).
  *
  * Archivo **puro**: sin React Native ni paquetes del monorepo, para que la
  * prueba de contraste (`contrast.test.ts`) y `scripts/check-theme.mjs` lo
@@ -23,35 +23,35 @@ export const ink = {
  */
 export const neutral = {
   /** Lienzo de la pantalla. */
-  background: '#0c0c0b',
+  background: '#0F172A',
   /** Pozos dentro de una tarjeta (campos, pistas de progreso). */
-  surfaceSunken: '#0f0f0d',
-  surfaceLowest: '#11110f',
+  surfaceSunken: '#111A2C',
+  surfaceLowest: '#141E31',
   /** Tarjeta base (e1). */
-  surfaceLow: '#161614',
-  surface: '#1b1a18',
+  surfaceLow: '#172235',
+  surface: '#1A253A',
   /** Tarjeta elevada (e2), hojas. */
-  surfaceHigh: '#201f1c',
+  surfaceHigh: '#1D283D',
   /** Controles, píldoras, chips. */
-  surfaceHighest: '#2b2a26',
-  surfaceSidebar: '#0a0a09',
+  surfaceHighest: '#243247',
+  surfaceSidebar: '#0F172A',
   /** Divisores decorativos. No sirven como único contorno de un control. */
-  borderSubtle: '#24231f',
-  border: '#2f2e29',
-  /** Contorno de control: ≥ 3:1 contra todas las superficies (1.4.11). 3,31 sobre surfaceHighest. */
-  borderControl: '#7d796f',
-  /** Texto principal: 12,6:1 sobre surfaceHighest. */
-  text: '#f2f0ea',
-  /** Texto secundario: 7,25:1 sobre surfaceHighest. */
-  textSecondary: '#bcb8ad',
-  /** Metadatos: 4,86:1 sobre surfaceHighest, 6,63:1 sobre el lienzo. */
-  textMuted: '#9a968b',
+  borderSubtle: '#202C42',
+  border: '#2C3A52',
+  /** Contorno de control: token diferenciado de las líneas decorativas. */
+  borderControl: '#8496AA',
+  /** Texto principal. */
+  text: '#F5F8FA',
+  /** Texto secundario. */
+  textSecondary: '#C1CCD6',
+  /** Metadatos con contraste AA sobre la superficie de control. */
+  textMuted: '#A9B6C2',
   /** Solo controles deshabilitados de verdad; nunca información. */
-  textDisabled: '#5c594f',
+  textDisabled: '#718091',
   /** Placa «papel» para las ilustraciones del dataset (que vienen sobre blanco). */
-  plate: '#ecebe4',
-  /** Tinta sobre la placa: 14,59:1. */
-  plateInk: '#1a1a17',
+  plate: '#E9EEF2',
+  /** Tinta sobre la placa. */
+  plateInk: '#18212B',
   /** Agrupación (superseries, circuitos): 8,11:1 sobre surfaceHighest. */
   group: '#5ed6c0',
   /** Tinte de fondo de la etiqueta de grupo: `group` encima da 8,98:1. */
@@ -150,6 +150,13 @@ export const metricInk = {
   record: '#ffd24a',
   /** Volumen (kg movidos). 6,71:1. */
   volume: '#ff8fb1',
-  /** Saltado / omitido: gris cálido, no es un error. 5,65:1. */
-  skipped: '#a8a294',
+  /** Saltado / omitido: gris niebla, no es un error. 5,99:1. */
+  skipped: '#b4bcc6',
 } as const;
+
+/**
+ * Colores fijos de la identidad REPP V1.0. Solo para el isotipo y su ficha:
+ * no cambian con la marca del gimnasio (el acento de la interfaz es `colors.volt`).
+ */
+export const reppJade = '#2E8B7B';
+export const brandNavy = '#0F172A';

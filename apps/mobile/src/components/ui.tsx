@@ -20,16 +20,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
+  Easing,
   FadeIn,
+  interpolate,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  withSequence,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { AmbientBackground } from '@/components/ambient';
 import { DURATION, PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { accentContrast, accentGlow, accentGradient, accentPolicy, colors, comfortableTouchTarget, fontSizes, iconSizes, maxContentWidth, minTouchTarget, pressScale, pressSpring, radii, semibold, spacing, type TextVariant } from '@/theme';
+import { accentContrast, accentGlow, accentGradient, accentPolicy, colors, comfortableTouchTarget, fontSizes, iconSizes, maxContentWidth, minTouchTarget, onMedia, overlay, pressScale, pressSpring, radii, releaseSpring, semibold, spacing, type TextVariant } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -198,18 +202,30 @@ export function Button({
   const tone = buttonTone(variant);
   const metrics = BUTTON_SIZES[size];
   const pressed = useSharedValue(0);
+  /** 0 → 1: la franja de luz cruza el botón principal al soltarlo. */
+  const sheen = useSharedValue(0);
+  const [buttonWidth, setButtonWidth] = useState(0);
   const reduceMotion = useReducedMotion();
 
-  // Escala y opacidad JUNTAS: la escala sola, a 0,97, casi no se ve en un botón
-  // ancho, y la opacidad sola parece que el botón se apaga. Combinadas, cede.
+  // Al tocar: se hunde (escala), se ilumina por dentro y la etiqueta baja 1 pt.
+  // Al soltar: vuelve con un rebote corto (`releaseSpring`). Es el par
+  // «me hizo caso / te devuelvo el empujón» que hace que un botón se sienta
+  // físico. Con «Reducir movimiento» solo queda el cambio de luz.
   const animated = useAnimatedStyle(() =>
     reduceMotion
       ? { opacity: 1 - pressed.value * 0.2 }
-      : {
-          transform: [{ scale: 1 - pressed.value * (1 - pressScale.button) }],
-          opacity: 1 - pressed.value * 0.1,
-        },
+      : { transform: [{ scale: 1 - pressed.value * (1 - pressScale.button) }] },
   );
+  const glow = useAnimatedStyle(() => ({ opacity: Math.max(0, pressed.value) * 0.16 }));
+  const labelStyle = useAnimatedStyle(() => (reduceMotion ? {} : { transform: [{ translateY: Math.max(0, pressed.value) }] }));
+  const sweep = useAnimatedStyle(() => {
+    const band = Math.max(64, buttonWidth * 0.35);
+    return {
+      opacity: interpolate(sheen.value, [0, 0.15, 0.85, 1], [0, 1, 1, 0]),
+      transform: [{ translateX: interpolate(sheen.value, [0, 1], [-band * 1.5, buttonWidth + band * 0.5]) }, { skewX: '-20deg' }],
+      width: band,
+    };
+  });
   // La acción principal responde también en la mano; el resto, en silencio.
   const touchHaptic = haptic ?? (variant === 'primary' ? 'light' : 'none');
   // Encendida: degradado de marca y halo. Bloqueada no lleva ninguno de los
@@ -221,7 +237,7 @@ export function Button({
   const content = loading ? (
     <ActivityIndicator color={tone.ink} />
   ) : (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+    <Animated.View style={[{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }, labelStyle]}>
       {icon ? (
         <Ionicons
           accessibilityElementsHidden
@@ -238,7 +254,7 @@ export function Button({
       >
         {label}
       </RNText>
-    </View>
+    </Animated.View>
   );
 
   return (
@@ -256,8 +272,17 @@ export function Button({
         if (touchHaptic === 'light') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }}
       onPressOut={() => {
-        pressed.value = withSpring(0, pressSpring);
+        if (reduceMotion) {
+          pressed.value = withTiming(0, { duration: DURATION.quick });
+          return;
+        }
+        pressed.value = withSpring(0, releaseSpring);
+        if (lit) {
+          sheen.value = 0;
+          sheen.value = withSequence(withTiming(0, { duration: 40 }), withTiming(1, { duration: 520, easing: Easing.bezier(0.23, 1, 0.32, 1) }));
+        }
       }}
+      onLayout={(event) => setButtonWidth(event.nativeEvent.layout.width)}
       testID={testID}
       style={[
         {
@@ -285,6 +310,18 @@ export function Button({
           start={{ x: 0, y: 0 }}
           style={StyleSheet.absoluteFill}
         />
+      ) : null}
+      {/* Luz interior al pulsar: el botón «se enciende» bajo el dedo. */}
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: lit ? onMedia.text : colors.text }, glow]} />
+      {lit && !reduceMotion ? (
+        <Animated.View pointerEvents="none" style={[{ position: 'absolute', top: -8, bottom: -8, left: 0 }, sweep]}>
+          <LinearGradient
+            colors={[overlay.clearLight, overlay.glassStrong, overlay.clearLight]}
+            end={{ x: 1, y: 0.5 }}
+            start={{ x: 0, y: 0.5 }}
+            style={{ flex: 1 }}
+          />
+        </Animated.View>
       ) : null}
       {content}
     </AnimatedPressable>

@@ -1,56 +1,56 @@
 /**
- * Semantic design tokens — the single source of truth for the GymSheet visual
+ * Semantic design tokens — the single source of truth for the REPP visual
  * identity. Values mirror the CSS custom properties in the web app
- * (`apps/web/src/app/globals.css`) so the Expo client renders the same dark,
- * high-contrast "volt" theme without duplicating hex codes.
+ * (`apps/web/src/app/globals.css`) so the Expo client renders the same REPP
+ * theme without duplicating brand hex codes.
  *
  * The dark theme is the default identity (`colors`). A light counterpart
  * (`lightColors`) and semantic status tones (`tones`) are provided so both
  * clients can offer a light mode from one source.
  */
 export const colors = {
-  background: '#000000',
-  surfaceLowest: '#080808',
-  surfaceLow: '#0d0d0d',
-  surface: '#131313',
-  surfaceHigh: '#1f1f1f',
-  surfaceHighest: '#2a2a2a',
-  surfaceSidebar: '#050505',
-  borderSubtle: '#1a1a1a',
-  border: '#262626',
-  text: '#f5f5f5',
-  textMuted: '#8c8c8c',
-  textDisabled: '#4d4d4d',
-  /** Vivid brand fill (use black text on top). */
-  volt: '#c3f400',
-  voltDim: '#abd600',
-  /** Readable accent for text/icons on surfaces (equals `volt` in dark). */
-  accentInk: '#c3f400',
+  background: '#0F172A',
+  surfaceLowest: '#121C2D',
+  surfaceLow: '#162033',
+  surface: '#1A2639',
+  surfaceHigh: '#202D42',
+  surfaceHighest: '#27364D',
+  surfaceSidebar: '#0F172A',
+  borderSubtle: '#26364D',
+  border: '#40516B',
+  text: '#F5F8FA',
+  textMuted: '#B2BEC8',
+  textDisabled: '#718091',
+  /** REPP jade fill; `volt` remains as a compatibility alias for consumers. */
+  volt: '#2E8B7B',
+  voltDim: '#2E8B7B',
+  /** Accessible jade for text and fine icons on dark surfaces. */
+  accentInk: '#6BC7B6',
   danger: '#ff6b63',
   warning: '#d7a944',
-  success: '#c3f400',
+  success: '#55CF91',
 } as const;
 
 /** Light-theme counterpart. Same keys as `colors`. */
 export const lightColors: Record<keyof typeof colors, string> = {
-  background: '#f3f4f0',
-  surfaceLowest: '#ffffff',
-  surfaceLow: '#fafbf8',
-  surface: '#ffffff',
-  surfaceHigh: '#f0f1ec',
-  surfaceHighest: '#e6e8e0',
-  surfaceSidebar: '#ffffff',
-  borderSubtle: '#e8e9e3',
-  border: '#d5d7ce',
-  text: '#14160e',
-  textMuted: '#5c6053',
-  textDisabled: '#a6a99d',
-  volt: '#c3f400',
-  voltDim: '#b4e300',
-  accentInk: '#55730a',
-  danger: '#c23b30',
+  background: '#E9EEF2',
+  surfaceLowest: '#FFFFFF',
+  surfaceLow: '#F7F9FA',
+  surface: '#FFFFFF',
+  surfaceHigh: '#F1F4F6',
+  surfaceHighest: '#D3DDE4',
+  surfaceSidebar: '#E9EEF2',
+  borderSubtle: '#D6DEE5',
+  border: '#AAB8C4',
+  text: '#18212B',
+  textMuted: '#53616D',
+  textDisabled: '#77838D',
+  volt: '#2E8B7B',
+  voltDim: '#2E8B7B',
+  accentInk: '#22685D',
+  danger: '#b23a30',
   warning: '#8a6410',
-  success: '#4d6b00',
+  success: '#216B46',
 };
 
 /** Alias for clarity when both palettes are in scope. */
@@ -59,13 +59,13 @@ export const darkColors = colors;
 /** Semantic status tones (background / border / text) per theme. */
 export const tones = {
   dark: {
-    success: { bg: '#182000', border: '#526800', text: '#c3f400' },
+    success: { bg: '#10271e', border: '#28664b', text: '#7dd9a7' },
     warning: { bg: '#241c0c', border: '#5b4820', text: '#e0b65f' },
     danger: { bg: '#241211', border: '#63302c', text: '#ffb4ab' },
     info: { bg: '#111b21', border: '#344654', text: '#a8d4ee' },
   },
   light: {
-    success: { bg: '#eef6cf', border: '#c0d766', text: '#4d6b00' },
+    success: { bg: '#e7f5ec', border: '#92c7a8', text: '#216B46' },
     warning: { bg: '#fbf1d6', border: '#e6cd82', text: '#8a6410' },
     danger: { bg: '#fdeceb', border: '#f0b3ad', text: '#b23a30' },
     info: { bg: '#e9f2fb', border: '#aacdee', text: '#235d88' },

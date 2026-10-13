@@ -51,15 +51,23 @@ function Segment({ fill, current, state }: { fill: number; current: boolean; sta
     const width = `${Math.round(Math.min(1, Math.max(0, fill)) * 100)}%` as const;
     return { width: reduceMotion ? width : withSpring(width, glideSpring) };
   }, [fill, reduceMotion]);
+  // El tramo donde estás engorda: el «aquí» se ve sin contar rayas.
+  const lift = useAnimatedStyle(() => {
+    const scaleY = current ? 1.75 : 1;
+    return { transform: [{ scaleY: reduceMotion ? scaleY : withSpring(scaleY, glideSpring) }] };
+  }, [current, reduceMotion]);
   return (
-    <View
-      style={{
-        flex: 1,
-        height: 4,
-        borderRadius: radii.full,
-        overflow: 'hidden',
-        backgroundColor: current ? colors.borderControl : colors.surfaceHighest,
-      }}
+    <Animated.View
+      style={[
+        {
+          flex: 1,
+          height: 4,
+          borderRadius: radii.full,
+          overflow: 'hidden',
+          backgroundColor: current ? colors.borderControl : colors.surfaceHighest,
+        },
+        lift,
+      ]}
     >
       <Animated.View
         style={[
@@ -76,7 +84,7 @@ function Segment({ fill, current, state }: { fill: number; current: boolean; sta
           animated,
         ]}
       />
-    </View>
+    </Animated.View>
   );
 }
 

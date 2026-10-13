@@ -1,8 +1,8 @@
-import { ReppMark } from '@/components/brand/repp-mark';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AccessibilityInfo, StyleSheet, Text, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import Animated, {
   cancelAnimation,
   interpolate,
@@ -20,6 +20,9 @@ import { DURATION, PREMIUM_EASING } from '@/components/motion';
 import {
   accentContrast,
   accentGradient,
+  brandNavy,
+  onMedia,
+  reppJade,
   brandIntroSweep,
   colors,
   fontSizes,
@@ -146,7 +149,7 @@ const SWEEP_IN = DURATION.slow;
 const WORDMARK_AT = SWEEP_AT + 210;
 /**
  * Ventana total del escalonado, **repartida** entre las letras en vez de un
- * retardo fijo por letra. Con un retardo fijo, `GYMSHEET` (8) y `TOP FITNESS`
+ * retardo fijo por letra. Con un retardo fijo, `REPP` y `TOP FITNESS`
  * (11) tendrían revelados de duración distinta y la cortinilla duraría más en
  * un gimnasio que en otro. Así el acto dura lo mismo para cualquier marca.
  */
@@ -543,10 +546,49 @@ export function BrandIntro({ ready }: { ready: boolean }) {
   const tint = colors.volt;
   const gradient = accentGradient();
   const ink = accentContrast();
+  const isRepp = tenant.name === 'REPP';
 
   const wordmarkSize = fontSizes.lg;
   const tracking = wordmarkSize * WORDMARK_TRACKING;
   const glyphs = [...tenant.wordmark];
+
+  if (isRepp) {
+    return (
+      <Animated.View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: brandNavy, alignItems: 'center', justifyContent: 'center' },
+          stageStyle,
+        ]}
+      >
+        <Animated.View style={[{ alignItems: 'center' }, cameraStyle]}>
+          <Animated.View style={emblemStyle}>
+            <Svg height={92} viewBox="0 0 700 230" width={280}>
+              <Path
+                d="M63 44 H139 C177 44 195 65 187 91 C182 109 167 120 147 126 L188 183 H142 L106 131 H83 L66 183 H22 L62 44 Z M91 76 L82 105 H121 C136 105 146 98 148 88 C150 80 143 76 131 76 Z"
+                fill={onMedia.text}
+              />
+              <Path d="M62 119 L101 77 L126 77 L78 135 L45 183 L20 183 Z" fill={reppJade} />
+              <Path
+                d="M213 44 H337 L327 76 H245 L237 99 H309 L300 128 H228 L220 151 H303 L293 183 H169 Z"
+                fill={onMedia.text}
+              />
+              <Path
+                d="M357 44 H438 C476 44 494 63 485 94 C476 124 451 140 415 140 H379 L366 183 H326 Z M387 76 L378 109 H412 C427 109 438 101 441 89 C444 80 438 76 424 76 Z"
+                fill={onMedia.text}
+              />
+              <Path
+                d="M505 44 H586 C624 44 642 63 633 94 C624 124 599 140 563 140 H527 L514 183 H474 Z M535 76 L526 109 H560 C575 109 586 101 589 89 C592 80 586 76 572 76 Z"
+                fill={onMedia.text}
+              />
+            </Svg>
+          </Animated.View>
+        </Animated.View>
+      </Animated.View>
+    );
+  }
 
   return (
     <Animated.View
@@ -629,7 +671,7 @@ export function BrandIntro({ ready }: { ready: boolean }) {
               }}
             >
               {/* El relleno de marca, con su degradado declarado por inquilino:
-                  el lima de REPP o el rojo de TOP Fitness, sin una sola
+                  el jade de REPP o el rojo de TOP Fitness, sin una sola
                   línea que sepa cuál de los dos es. */}
               <LinearGradient
                 colors={gradient}
@@ -643,24 +685,19 @@ export function BrandIntro({ ready }: { ready: boolean }) {
                   Va en `accentContrast()` porque está *encima* del relleno, que
                   es exactamente el caso que ese token resuelve — el negro sobre
                   el lima y el blanco sobre el rojo. */}
-              {tenant.id === 'gymsheet' ? (
-                // REPP tiene signo propio (vectorial: aguanta el zoom igual que la tipografía).
-                <ReppMark ink={ink} size={EMBLEM * 0.6} tick={ink} />
-              ) : (
-                <Text
-                  style={{
-                    color: ink,
-                    fontSize: EMBLEM * 0.46,
-                    fontWeight: '800',
-                    // Tracking negativo: dos letras sueltas leen como dos letras;
-                    // apretadas leen como un monograma.
-                    letterSpacing: -EMBLEM * 0.02,
-                    includeFontPadding: false,
-                  }}
-                >
-                  {tenant.monogram}
-                </Text>
-              )}
+              <Text
+                style={{
+                  color: ink,
+                  fontSize: EMBLEM * 0.46,
+                  fontWeight: '800',
+                  // Tracking negativo: dos letras sueltas leen como dos letras;
+                  // apretadas leen como un monograma.
+                  letterSpacing: -EMBLEM * 0.02,
+                  includeFontPadding: false,
+                }}
+              >
+                {tenant.monogram}
+              </Text>
 
               {/* El destello que recorre el emblema. El momento reconocible. */}
               {reduceMotion ? null : (
