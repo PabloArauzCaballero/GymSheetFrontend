@@ -31,6 +31,8 @@ export type RestNext = {
   step: string;
   /** «70 kg × 7», «0:45», o `null`. */
   load: string | null;
+  /** Qué es `load`: una carga o un tiempo (cambia su color y su glifo). */
+  loadKind: 'weight' | 'time';
   exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular' | 'imagenUrl'> | null;
   /** El ejercicio cuyo descanso es este (para «Cambiar descanso»). */
   restOwnerId: string | null;

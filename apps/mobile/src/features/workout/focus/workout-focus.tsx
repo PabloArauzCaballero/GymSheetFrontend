@@ -327,6 +327,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
             name: nameOf(nextSource),
             step: nextBlock.kind === 'single' ? `Serie ${next.round}` : roundLabel(next.round, nextBlock.rounds),
             load: previewOf(nextSource),
+            loadKind: isTimed(nextSource) ? ('time' as const) : ('weight' as const),
             exercise: withMedia(nextSource.ejercicio),
             restOwnerId: ownerId,
             finished,
@@ -630,7 +631,23 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
     if (isCardio(source)) {
       return (
         <CardioLogger
-          onSubmit={(set) => session.addCardioSet.mutate({ sessionExerciseId: source.id, set })}
+          onSubmit={(set) => {
+            // D6: un segundo toque mientras se guarda no registra dos tramos.
+            if (session.addCardioSet.isPending) return;
+            const from = page;
+            const after = withLoggedSet(blocks, source.id);
+            const blockIndex = blocks.findIndex((block) => block.items.some((item) => item.id === source.id));
+            session.addCardioSet.mutate(
+              { sessionExerciseId: source.id, set },
+              {
+                // Guardado: se pasa solo a lo que viene (o al resumen), como con una serie.
+                onSuccess: () => {
+                  const target = pageAfterLogging(after, stepFrom(after, Math.max(0, blockIndex)));
+                  if (target !== from) goTo(target, from);
+                },
+              },
+            );
+          }}
           pending={session.addCardioSet.isPending}
           setNumber={source.series.length + 1}
         />
@@ -741,7 +758,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
           testID="finish-primary"
         />
       )
-    ) : activeIsCardio && !activeOmitted ? null : showingDone ? (
+    ) : activeIsCardio && !showingDone ? null : showingDone ? (
       <Button
         icon="arrow-forward"
         label={pendingStep ? 'Siguiente ejercicio' : 'Ver el resumen'}
@@ -751,16 +768,46 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
         testID="next-exercise"
       />
     ) : (
-      <Button
-        haptic="none"
-        icon="checkmark"
-        label="Registrar serie"
-        loading={session.addSet.isPending}
-        onPress={logSet}
-        size="lg"
-        style={{ flex: 1 }}
-        testID="log-set"
-      />
+      <>
+        {/* Saltar la serie, a la vista y al alcance del pulgar, pero sin competir con registrar. */}
+        <PressableScale
+          accessibilityHint="Te pregunta el motivo"
+          accessibilityLabel="Saltar serie"
+          haptic="selection"
+          onPress={() => {
+            if (!activeSource || logging.current) return;
+            setReason({ mode: { kind: 'set', label: `Serie ${numberOf(activeSource)} de ${nameOf(activeSource)}` }, exerciseId: activeSource.id });
+          }}
+          scaleTo={0.95}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: spacing.xs,
+            height: FOOTER_BUTTON,
+            paddingHorizontal: spacing.md,
+            borderRadius: radii.xl,
+            borderCurve: 'continuous',
+            backgroundColor: colors.surfaceHighest,
+          }}
+          testID="skip-set"
+        >
+          <Ionicons color={colors.textSecondary} name="play-skip-forward" size={iconSizes.sm} />
+          <Text strong tone="secondary" variant="subhead">
+            Saltar
+          </Text>
+        </PressableScale>
+        <Button
+          haptic="none"
+          icon="checkmark"
+          label="Registrar serie"
+          loading={session.addSet.isPending}
+          onPress={logSet}
+          size="lg"
+          style={{ flex: 1 }}
+          testID="log-set"
+        />
+      </>
     );
 
   const restOwner = () => {
@@ -832,6 +879,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
                       badge: badgeOf(block, item) ?? '',
                       name: nameOf(item.source),
                       done: isItemDone(item),
+                      omitted: item.source.omitido !== null,
                     }))}
                     onSelect={(itemId) => setChosen((all) => ({ ...all, [index]: itemId }))}
                   />
@@ -854,25 +902,25 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
               scrollX={scrollX}
               target={targetOf(source)}
               testID={isHere ? 'workout-current' : `workout-page-${index}`}
+              aside={
+                cardio || omitted ? null : (
+                  <RestPills
+                    betweenSec={grouped ? block.between : null}
+                    onPress={() => openRest(source)}
+                    restSec={(grouped ? block.restAfter : source.descansoSeg) ?? FALLBACK_REST_SEC}
+                    workSec={isTimed(source) ? source.duracionSeg : null}
+                  />
+                )
+              }
               track={
                 cardio ? null : (
-                  <View style={{ gap: spacing.sm }}>
-                    <SetTrack
-                      current={done || omitted ? null : numberOf(source)}
-                      onUndoSkip={(skip) => undoSkip(source, skip)}
-                      sets={source.series}
-                      skipped={source.saltadas}
-                      target={source.seriesObjetivo}
-                    />
-                    {omitted ? null : (
-                      <RestPills
-                        betweenSec={grouped ? block.between : null}
-                        onPress={() => openRest(source)}
-                        restSec={(grouped ? block.restAfter : source.descansoSeg) ?? FALLBACK_REST_SEC}
-                        workSec={isTimed(source) ? source.duracionSeg : null}
-                      />
-                    )}
-                  </View>
+                  <SetTrack
+                    current={done || omitted ? null : numberOf(source)}
+                    onUndoSkip={(skip) => undoSkip(source, skip)}
+                    sets={source.series}
+                    skipped={source.saltadas}
+                    target={source.seriesObjetivo}
+                  />
                 )
               }
               width={width}
@@ -919,7 +967,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
                       : `Hiciste ${progressLabel(here.item)} series.`
                   }
                   onExtra={() => setExtra(here.item.id)}
-                  title={isBlockDone(block) ? (grouped ? 'Bloque completo' : 'Ejercicio completo') : 'Este ya está'}
+                  title={isBlockDone(block) ? (grouped ? 'Bloque completo' : source.saltadas.length > 0 ? 'Ejercicio cerrado' : 'Ejercicio completo') : 'Este ya está'}
                 />
               ) : (
                 renderInputs(source)
@@ -927,17 +975,6 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
               {omitted ? null : (
                 <QuietActions
                   actions={[
-                    ...(!done && !cardio
-                      ? [
-                          {
-                            key: 'skip',
-                            icon: 'play-skip-forward-outline' as const,
-                            label: 'Saltar serie',
-                            onPress: () => setReason({ mode: { kind: 'set', label: `Serie ${numberOf(source)} de ${nameOf(source)}` }, exerciseId: source.id }),
-                            testID: isHere ? 'skip-set' : undefined,
-                          },
-                        ]
-                      : []),
                     ...(!done
                       ? [
                           {
@@ -990,7 +1027,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
             pointerEvents="none"
             style={{ position: 'absolute', left: 0, right: 0, top: -spacing.xl, bottom: 0 }}
           />
-          <View style={{ flexDirection: 'row', paddingHorizontal: gutter, paddingBottom: insets.bottom + spacing.md }}>{footer}</View>
+          <View style={{ flexDirection: 'row', gap: spacing.sm, paddingHorizontal: gutter, paddingBottom: insets.bottom + spacing.md }}>{footer}</View>
         </View>
       ) : null}
 

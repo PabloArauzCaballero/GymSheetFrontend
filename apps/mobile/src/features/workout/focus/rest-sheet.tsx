@@ -85,7 +85,7 @@ function Dial({
         <Text
           accessibilityLabel={`${label}: ${Math.floor(value / 60)} minutos y ${value % 60} segundos`}
           accessibilityLiveRegion="polite"
-          style={[{ flex: 1, textAlign: 'center', color: colors.text, fontFamily: fontFamilies.display, fontSize: heroNumberFontSize }, tabularNums]}
+          style={[{ flex: 1, textAlign: 'center', color: colors.text, fontFamily: fontFamilies.display, fontSize: heroNumberFontSize, lineHeight: heroNumberFontSize + spacing.smd }, tabularNums]}
           testID={testID}
         >
           {restLabel(value)}

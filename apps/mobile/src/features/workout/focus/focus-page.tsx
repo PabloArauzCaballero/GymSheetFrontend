@@ -15,8 +15,8 @@ import { colors, fontSizes, gutter, iconSizes, metricColors, minTouchTarget, pop
 type Artwork = Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular' | 'imagenUrl'>;
 
 /** Alto de la imagen del ejercicio: grande, pero deja la serie a la vista sin desplazar. */
-const MEDIA_HEIGHT = 196;
-const COMPACT_MEDIA_HEIGHT = 148;
+const MEDIA_HEIGHT = 176;
+const COMPACT_MEDIA_HEIGHT = 112;
 /** Sin imagen no se gasta media pantalla en un marcador: queda como una franja. */
 const PLACEHOLDER_HEIGHT = 112;
 
@@ -208,8 +208,9 @@ export function SetTrack({
 }
 
 /**
- * «Descanso 2:30» (y «Entre ejercicios 0:15» en una superserie): cuánto se
- * va a descansar, a la vista ANTES de registrar, y a un toque de cambiarlo.
+ * «⏳ 2:30» (y «⇄ 0:15» en una superserie): cuánto se va a descansar, a la
+ * vista ANTES de registrar y a un toque de cambiarlo. Va a la derecha del
+ * objetivo para no gastar una fila: lo que se lee es la cifra, con su color.
  */
 export function RestPills({
   restSec,
@@ -222,18 +223,19 @@ export function RestPills({
   workSec: number | null;
   onPress: () => void;
 }) {
-  const pills: Array<{ key: string; icon: keyof typeof Ionicons.glyphMap; label: string; value: string; tone: 'rest' | 'time' }> = [
-    { key: 'rest', icon: 'hourglass-outline', label: betweenSec !== null ? 'Tras la vuelta' : 'Descanso', value: restLabel(restSec), tone: 'rest' },
-  ];
+  const pills: Array<{ key: string; icon: keyof typeof Ionicons.glyphMap; label: string; value: string; tone: 'rest' | 'time' }> = [];
+  if (workSec !== null) pills.push({ key: 'work', icon: 'stopwatch-outline', label: 'Tiempo de trabajo', value: restLabel(workSec), tone: 'time' });
   if (betweenSec !== null) pills.push({ key: 'between', icon: 'swap-horizontal-outline', label: 'Entre ejercicios', value: restLabel(betweenSec), tone: 'time' });
-  if (workSec !== null) pills.push({ key: 'work', icon: 'stopwatch-outline', label: 'Trabajo', value: restLabel(workSec), tone: 'time' });
+  pills.push({ key: 'rest', icon: 'hourglass-outline', label: betweenSec !== null ? 'Descanso tras la vuelta' : 'Descanso', value: restLabel(restSec), tone: 'rest' });
   return (
     <PressableScale
       accessibilityHint="Cambia el descanso"
       accessibilityLabel={pills.map((pill) => `${pill.label} ${pill.value}`).join(', ')}
       haptic="selection"
+      hitSlop={spacing.sm}
       onPress={onPress}
-      style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, minHeight: minTouchTarget }}
+      scaleTo={0.95}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, minHeight: minTouchTarget }}
       testID="rest-pills"
     >
       {pills.map((pill) => (
@@ -243,22 +245,18 @@ export function RestPills({
             flexDirection: 'row',
             alignItems: 'center',
             gap: spacing.xs,
-            height: 34,
-            paddingHorizontal: spacing.smd,
+            height: 32,
+            paddingHorizontal: spacing.sm + spacing.xxs,
             borderRadius: radii.full,
             backgroundColor: metricColors[pill.tone].tint,
           }}
         >
-          <Ionicons color={metricColors[pill.tone].ink} name={pill.icon} size={iconSizes.sm} />
-          <Text tone="secondary" variant="footnote">
-            {pill.label}
-          </Text>
+          <Ionicons color={metricColors[pill.tone].ink} name={pill.icon} size={iconSizes.xs} />
           <Text strong style={{ color: metricColors[pill.tone].ink }} tabular variant="footnote">
             {pill.value}
           </Text>
         </View>
       ))}
-      <Ionicons color={colors.textMuted} name="options-outline" size={iconSizes.sm} />
     </PressableScale>
   );
 }
@@ -385,7 +383,7 @@ export function GroupSwitch({
   activeId,
   onSelect,
 }: {
-  items: ReadonlyArray<{ id: string; badge: string; name: string; done: boolean }>;
+  items: ReadonlyArray<{ id: string; badge: string; name: string; done: boolean; omitted?: boolean }>;
   activeId: string;
   onSelect: (id: string) => void;
 }) {
@@ -395,7 +393,7 @@ export function GroupSwitch({
         const active = item.id === activeId;
         return (
           <PressableScale
-            accessibilityLabel={`${item.badge}, ${item.name}${item.done ? ', hecho' : ''}`}
+            accessibilityLabel={`${item.badge}, ${item.name}${item.omitted ? ', omitido' : item.done ? ', hecho' : ''}`}
             accessibilityState={{ selected: active }}
             haptic="selection"
             key={item.id}
@@ -418,7 +416,11 @@ export function GroupSwitch({
               <Text strong tabular tone="group" variant="caption">
                 {item.badge}
               </Text>
-              {item.done ? <Ionicons color={colors.textSecondary} name="checkmark-circle" size={iconSizes.sm} /> : null}
+              {item.omitted ? (
+                <Ionicons color={metricColors.skipped.ink} name="play-skip-forward" size={iconSizes.xs} />
+              ) : item.done ? (
+                <Ionicons color={colors.success} name="checkmark-circle" size={iconSizes.sm} />
+              ) : null}
             </View>
             <Text numberOfLines={1} strong tone={active ? 'default' : 'secondary'} variant="footnote">
               {item.name}
@@ -447,6 +449,7 @@ export function FocusPage({
   note,
   groupSwitch,
   track,
+  aside,
   children,
   testID,
 }: {
@@ -463,6 +466,8 @@ export function FocusPage({
   note?: string | null;
   groupSwitch?: ReactNode;
   track: ReactNode;
+  /** A la derecha del objetivo: el descanso, tocable. */
+  aside?: ReactNode;
   children: ReactNode;
   testID?: string;
 }) {
@@ -503,10 +508,13 @@ export function FocusPage({
         >
           {name}
         </Text>
-        {target ? (
-          <Text tabular testID="current-target" tone="secondary" variant="subhead">
-            {target}
-          </Text>
+        {target || aside ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <Text style={{ flex: 1 }} tabular testID="current-target" tone="secondary" variant="subhead">
+              {target ?? ''}
+            </Text>
+            {aside}
+          </View>
         ) : null}
       </View>
       {note ? (

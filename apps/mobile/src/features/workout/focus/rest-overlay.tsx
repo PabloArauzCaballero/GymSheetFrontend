@@ -17,7 +17,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 import { ExerciseImage } from '@/components/media';
-import { Pop, PressableScale, PREMIUM_EASING } from '@/components/motion';
+import { Burst, Pop, PressableScale, PREMIUM_EASING } from '@/components/motion';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
 import {
@@ -190,9 +190,35 @@ export function RestOverlay({ kind, onChangeRest }: { kind: 'set' | 'between' | 
               {title}
             </Text>
           </View>
-          <Text tone="muted" variant="footnote">
-            {TIPS[kind]}
-          </Text>
+          {next?.finished ? (
+            // Lo que se acaba de cerrar con esa serie: el «hecho» se celebra aquí, que es donde se mira.
+            <Animated.View
+              entering={reduceMotion ? undefined : ZoomIn.duration(motion.enter).easing(PREMIUM_EASING).withInitialValues({ transform: [{ scale: 0.8 }] })}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.xs,
+                height: 32,
+                paddingHorizontal: spacing.smd,
+                marginTop: spacing.xs,
+                borderRadius: radii.full,
+                backgroundColor: colors.surfaceHighest,
+              }}
+              testID="rest-finished"
+            >
+              <View style={{ width: iconSizes.sm, height: iconSizes.sm, alignItems: 'center', justifyContent: 'center' }}>
+                <Burst active color={colors.success} radius={18} />
+                <Ionicons color={colors.success} name="checkmark-circle" size={iconSizes.sm} />
+              </View>
+              <Text numberOfLines={1} strong variant="footnote">
+                {next.finished}
+              </Text>
+            </Animated.View>
+          ) : (
+            <Text tone="muted" variant="footnote">
+              {TIPS[kind]}
+            </Text>
+          )}
         </View>
 
         <Animated.View
@@ -280,11 +306,15 @@ export function RestOverlay({ kind, onChangeRest }: { kind: 'set' | 'between' | 
                         paddingHorizontal: spacing.sm,
                         height: 24,
                         borderRadius: radii.full,
-                        backgroundColor: metricColors.weight.tint,
+                        backgroundColor: metricColors[next.loadKind].tint,
                       }}
                     >
-                      <Ionicons color={metricColors.weight.ink} name="barbell-outline" size={iconSizes.xs} />
-                      <Text numberOfLines={1} strong style={{ color: metricColors.weight.ink }} tabular variant="footnote">
+                      <Ionicons
+                        color={metricColors[next.loadKind].ink}
+                        name={next.loadKind === 'time' ? 'stopwatch-outline' : 'barbell-outline'}
+                        size={iconSizes.xs}
+                      />
+                      <Text numberOfLines={1} strong style={{ color: metricColors[next.loadKind].ink }} tabular variant="footnote">
                         {next.load}
                       </Text>
                     </View>

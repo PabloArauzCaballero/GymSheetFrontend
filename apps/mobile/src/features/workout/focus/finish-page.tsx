@@ -90,11 +90,13 @@ export function FinishPage({
           <Ionicons color={complete ? metricColors.record.ink : colors.text} name={complete ? 'trophy' : 'flag-outline'} size={iconSizes.lg} />
         </View>
         <Text accessibilityRole="header" variant="display">
-          {complete ? 'Sesión completa' : sets > 0 ? '¿Lo dejamos aquí?' : 'Aún no has registrado nada'}
+          {complete ? (skippedSets > 0 || omitted.length > 0 ? 'Llegaste al final' : 'Sesión completa') : sets > 0 ? '¿Lo dejamos aquí?' : 'Aún no has registrado nada'}
         </Text>
         <Text tone="secondary" variant="body">
           {complete
-            ? 'Hiciste todo lo que pedía el día. Finaliza para guardarla y ver tu progreso.'
+            ? skippedSets > 0 || omitted.length > 0
+              ? 'Hoy dejaste pasar algo, y está bien. Finaliza para guardarla y ver tu progreso.'
+              : 'Hiciste todo lo que pedía el día. Finaliza para guardarla y ver tu progreso.'
             : sets > 0
               ? 'Puedes finalizar ahora y se guarda lo que llevas, o volver atrás y seguir.'
               : 'Desliza hacia atrás para empezar con el primer ejercicio.'}
@@ -122,7 +124,7 @@ export function FinishPage({
           </View>
           {skippedSets > 0 ? (
             <Text tabular tone="secondary" variant="subhead">
-              {`${skippedSets} ${skippedSets === 1 ? 'serie saltada' : 'series saltadas'} · no cuentan para tu volumen`}
+              {`${skippedSets} ${skippedSets === 1 ? 'serie saltada · no cuenta' : 'series saltadas · no cuentan'} para tu volumen`}
             </Text>
           ) : null}
           {omitted.map((line) => (
