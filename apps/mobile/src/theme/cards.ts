@@ -11,7 +11,7 @@
  * Todo lo que es texto va sobre `face` (casi negro) o sobre el pie: los pares
  * están medidos en `contrast.test.ts`.
  */
-import { alpha, ink } from './palette';
+import { alpha, ink } from './palette.ts';
 
 export type CardRarityKey = 'COMUN' | 'RARA' | 'EPICA' | 'LEGENDARIA';
 
