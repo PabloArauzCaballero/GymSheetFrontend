@@ -66,6 +66,7 @@ export const primaryNavigation: NavigationItem[] = [
   // que enterrarla al final la volvería una notificación que nadie atiende.
   { href: '/interacciones', label: 'Interacciones', icon: Sparkles },
   { href: '/chat', label: 'Mensajes', icon: MessageCircle },
+  { href: '/entrenar-juntos', label: 'Entrenar juntos', icon: CalendarCheck },
   { href: '/membership', label: 'Membresía', icon: IdCard },
   { href: '/access', label: 'Acceso', icon: KeyRound },
   { href: '/notifications', label: 'Avisos', icon: Bell },
