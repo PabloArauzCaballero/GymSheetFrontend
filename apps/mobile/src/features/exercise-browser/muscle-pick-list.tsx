@@ -1,7 +1,8 @@
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import { Text, View } from 'react-native';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Text, View } from 'react-native';
 import type { Exercise } from '@gymsheet/types';
 import { exerciseService, muscleService } from '@/api/services';
 import { EmptyState, ErrorState, RowsSkeleton } from '@/components/feedback';
@@ -49,6 +50,66 @@ function Thumb({ uri, label }: { uri: string | null; label: string }) {
   );
 }
 
+const PickRow = memo(function PickRow({
+  id,
+  name,
+  image,
+  imageLabel,
+  first,
+  added,
+  busy,
+  onOpen,
+  onToggle,
+}: {
+  id: string;
+  name: string;
+  image: string | null;
+  imageLabel: string;
+  first: boolean;
+  added: boolean;
+  busy: boolean;
+  onOpen: (id: string) => void;
+  onToggle: (id: string) => void;
+}) {
+  return (
+    <View>
+      {first ? null : <Divider />}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.sm,
+          minHeight: minTouchTarget,
+          paddingVertical: spacing.sm,
+        }}
+      >
+        <PressableScale
+          accessibilityHint="Abre la ficha del ejercicio"
+          accessibilityLabel={name}
+          onPress={() => onOpen(id)}
+          style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.md }}
+        >
+          <Thumb label={imageLabel} uri={image} />
+          <Text numberOfLines={2} style={{ flex: 1, color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
+            {titleCase(name)}
+          </Text>
+        </PressableScale>
+        {busy ? (
+          <View
+            accessibilityLabel={`Añadiendo ${name}`}
+            accessible
+            style={{ width: minTouchTarget, height: minTouchTarget, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <ActivityIndicator color={colors.volt} />
+          </View>
+        ) : (
+          <PickButton added={added} name={name} onToggle={() => onToggle(id)} testID={`pick-${id}`} />
+        )}
+      </View>
+    </View>
+  );
+});
+
 /**
  * Ejercicios de un músculo dentro del selector del asistente. Es la versión en
  * línea de la pantalla de músculo de la pestaña Ejercicios: el asistente tiene
@@ -73,21 +134,44 @@ export function MusclePickList({ code, pick }: { code: string; pick: PickConfig 
   const total = exercises.data?.pages[0]?.total ?? 0;
   const name = muscleInfo(code)?.name ?? 'Músculo';
 
-  const toggle = async (id: string) => {
-    if (pick.isAdded(id)) {
-      pick.remove(id);
-      return;
-    }
-    try {
-      const exercise: Exercise = await queryClient.fetchQuery({
-        queryKey: ['exercise', id],
-        queryFn: () => exerciseService.get(id),
-      });
-      pick.add(exercise);
-    } catch (error) {
-      notify.error(error);
-    }
-  };
+  // Las filas son `memo` y reciben funciones estables: `pick` cambia de
+  // identidad en cada alta (depende de la lista elegida) y, sin esto, un «+»
+  // volvía a pintar todas las filas montadas (90 de 90 con tres páginas).
+  const pickRef = useRef(pick);
+  useEffect(() => {
+    pickRef.current = pick;
+  }, [pick]);
+  // Altas en vuelo: la ficha se pide al servidor antes de añadir; mientras
+  // tanto la fila gira y un segundo toque no cuenta (antes añadía y quitaba).
+  const [busy, setBusy] = useState<ReadonlySet<string>>(() => new Set());
+  const inFlight = useRef(new Set<string>());
+
+  const open = useCallback((id: string) => pickRef.current.onOpen(id), []);
+  const toggle = useCallback(
+    async (id: string) => {
+      if (inFlight.current.has(id)) return;
+      if (pickRef.current.isAdded(id)) {
+        pickRef.current.remove(id);
+        return;
+      }
+      inFlight.current.add(id);
+      setBusy(new Set(inFlight.current));
+      try {
+        const exercise: Exercise = await queryClient.fetchQuery({
+          queryKey: ['exercise', id],
+          queryFn: () => exerciseService.get(id),
+          staleTime: 5 * 60_000,
+        });
+        pickRef.current.add(exercise);
+      } catch (error) {
+        notify.error(error);
+      } finally {
+        inFlight.current.delete(id);
+        setBusy(new Set(inFlight.current));
+      }
+    },
+    [queryClient],
+  );
 
   return (
     <View style={{ gap: spacing.md }}>
@@ -124,52 +208,18 @@ export function MusclePickList({ code, pick }: { code: string; pick: PickConfig 
           </Text>
           <Card list>
             {items.map((exercise, index) => (
-              <View key={exercise.id}>
-                {index > 0 ? <Divider /> : null}
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: spacing.sm,
-                    minHeight: minTouchTarget,
-                    paddingVertical: spacing.sm,
-                  }}
-                >
-                  <PressableScale
-                    accessibilityHint="Abre la ficha del ejercicio"
-                    accessibilityLabel={exercise.nombre}
-                    onPress={() => pick.onOpen(exercise.id)}
-                    style={{
-                      flex: 1,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: spacing.md,
-                    }}
-                  >
-                    <Thumb
-                      label={exercise.imagen?.textoAlternativo ?? exercise.nombre}
-                      uri={exercise.imagen?.url ?? null}
-                    />
-                    <Text
-                      numberOfLines={2}
-                      style={{
-                        flex: 1,
-                        color: colors.text,
-                        fontSize: fontSizes.md,
-                        fontWeight: semibold,
-                      }}
-                    >
-                      {titleCase(exercise.nombre)}
-                    </Text>
-                  </PressableScale>
-                  <PickButton
-                    added={pick.isAdded(exercise.id)}
-                    name={exercise.nombre}
-                    onToggle={() => void toggle(exercise.id)}
-                    testID={`pick-${exercise.id}`}
-                  />
-                </View>
-              </View>
+              <PickRow
+                added={pick.isAdded(exercise.id)}
+                busy={busy.has(exercise.id)}
+                first={index === 0}
+                id={exercise.id}
+                image={exercise.imagen?.url ?? null}
+                imageLabel={exercise.imagen?.textoAlternativo ?? exercise.nombre}
+                key={exercise.id}
+                name={exercise.nombre}
+                onOpen={open}
+                onToggle={toggle}
+              />
             ))}
           </Card>
           {exercises.hasNextPage ? (

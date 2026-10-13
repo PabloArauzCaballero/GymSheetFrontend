@@ -39,13 +39,15 @@ export type CardTier = Readonly<{
  * leería como un fallo, no como gradación.
  */
 export const CARD_TIERS: Readonly<Record<CardRarity, CardTier>> = {
+  // Jade y no gris: la común es la carta que más se ve, y una primera
+  // recompensa gris se lee como «no ha pasado nada».
   COMUN: {
-    frame: ['#F4F6F8', '#AEB6C0', '#5E6670'],
-    glow: '#DDE3EA',
-    rays: 0,
+    frame: ['#E9FFF6', '#5FE3B5', '#149A78'],
+    glow: '#63F2C1',
+    rays: 0.14,
     raysSpin: false,
     shake: 0,
-    particles: 0,
+    particles: 10,
     holo: 'none',
     tensionMs: 420,
     wobbleDeg: 2,

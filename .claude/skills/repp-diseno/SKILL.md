@@ -139,6 +139,35 @@ algo que no ocurrió.
 - Maestro en simulador para recorridos (`animate={false}` en listas si los toques fallan).
 - Capturas con `visual-proof`: iPhone SE (375) y 15 Pro Max (430), estados de carga/vacío/error.
 
+## 11. Identidad REPP (relanzamiento 13/10/2026)
+
+De cara a la gente la app se llama **REPP**. Lo interno no cambia: bundle id `app.gymsheet.mobile`,
+scheme `gymsheet`, slug, paquetes `@gymsheet/*`, claves de almacenamiento e `id: 'gymsheet'` del inquilino.
+
+| Pieza | Dónde | Regla |
+|---|---|---|
+| Signo (R con la pata separada: la raya de una repetición) | `src/components/brand/mark.ts` (trazos puros) · `repp-mark.tsx` (`ReppMark`, `ReppBadge`, `ReppLogo`) | Dibujo propio. No se redibuja ni se sustituye por tipografía. Zona de respeto: ¼ de su lado. |
+| Nombre, rótulo, monograma | `packages/design-tokens/src/tenants.ts` (`name: 'REPP'`, `wordmark: 'REPP'`) | Los textos usan `tenant.name`; nunca «GymSheet» escrito a mano. |
+| Icono, icono adaptable, arranque, favicon | `apps/mobile/assets/*.png` | Se **generan**: `node --experimental-strip-types scripts/render-brand-assets.mjs`. No se editan a mano. |
+| Seña de color | lima «volt» (`colors.volt`) | Relleno de la ficha de marca y de la acción principal. El signo va en `accentContrast()` sobre lima y en claro (raya lima) sobre oscuro. |
+| Tipografía de marca | `fontFamilies.display` (Bricolage Grotesque 700) | «REPP» en versales con tracking +4 % en el logotipo, +34 % como rótulo pequeño. |
+| Voz | — | Red social de gimnasio: de tú, frases cortas, verbo primero, sin jerga técnica ni signos de admiración en cadena. «Te espera una carta», no «Tienes una recompensa disponible». |
+
+Los gimnasios con marca propia (TOP Fitness) conservan su monograma de texto: `tenant.id === 'gymsheet'` decide.
+
+## 12. Cartas de logro
+
+- Material por **rareza** en `src/theme/cards.ts` (`cardMaterials`): Común jade · Rara zafiro · Épica amatista ·
+  Legendaria oro. Marco, arte, foil, sombra y rótulo salen de ahí; nunca del `color` que manda el servidor.
+- Dibujo por **motivo** en `src/components/cards/art.ts`: 33 ilustraciones SVG (claves del contrato 11a), dos
+  tintas de `artHues` + lima de marca. Estilo único: masas planas, una sombra propia, un brillo, sin contornos.
+  Hoja de contactos: `node --experimental-strip-types scripts/render-card-art.mjs <dir>`.
+- `resolveIllustration()` (`cards/resolve.ts`): clave del servidor → icono antiguo → categoría. Nunca un icono de línea.
+- Componentes: `RewardCardFront` / `RewardCardBack` (celebración) y `MiniRewardCard` (listas; `earned`,
+  `pending` apagada, `veiled` secreta). En listas, siempre la mini: sin foil ni trama.
+- La celebración es el único momento teatral: foil en bucle, flotación y sacudida solo ahí.
+- Toda acción que navega o guarda pasa por un cerrojo (`src/lib/tap-lock.ts`) o un `ref`: responde una vez por toque.
+
 ## Checklist
 
 - [ ] Una sola acción principal en volt; el resto `ghost` o texto.
