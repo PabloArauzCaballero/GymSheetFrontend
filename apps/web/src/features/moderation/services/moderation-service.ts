@@ -6,6 +6,7 @@ export const moderationTargetKinds = [
   'PROFILE_PHOTO',
   'CHAT_MESSAGE',
   'USER',
+  'REEL',
 ] as const;
 export type ModerationTargetKind = (typeof moderationTargetKinds)[number];
 
@@ -40,6 +41,7 @@ export const TARGET_LABEL: Record<ModerationTargetKind, string> = {
   PROFILE_PHOTO: 'Foto de perfil',
   CHAT_MESSAGE: 'Mensaje',
   USER: 'Perfil',
+  REEL: 'Reel',
 };
 
 /**
@@ -101,9 +103,7 @@ export type ModerationCaseDetail = z.infer<typeof moderationCaseDetailSchema>;
 const resolveResultSchema = z.object({
   resolved: z.boolean(),
   reportsClosed: z.number().int(),
-  sanction: z
-    .object({ kind: z.string(), days: z.number().int().nullable() })
-    .nullable(),
+  sanction: z.object({ kind: z.string(), days: z.number().int().nullable() }).nullable(),
   contentHidden: z.boolean(),
 });
 
@@ -138,11 +138,9 @@ export const moderationService = {
     ),
 
   release: (targetKind: ModerationTargetKind, targetId: string) =>
-    apiRequest(
-      `${casePath(targetKind, targetId)}/release`,
-      z.object({ released: z.boolean() }),
-      { method: 'POST' },
-    ),
+    apiRequest(`${casePath(targetKind, targetId)}/release`, z.object({ released: z.boolean() }), {
+      method: 'POST',
+    }),
 
   resolve: (
     targetKind: ModerationTargetKind,

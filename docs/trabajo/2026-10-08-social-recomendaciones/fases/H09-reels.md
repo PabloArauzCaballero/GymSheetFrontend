@@ -86,7 +86,7 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 
 | H9.S2.M5 | [x] Aplicar comentario cerrado | Dado autor cierra comentarios; cuando otra persona intenta comentar; entonces rechaza aun con pantalla antigua. | E2E PostgreSQL: cierre y escritura concurrente protegidos; comentarios y respuestas de un nivel; rechazo de tercer nivel; borrado lógico por autor del reel; PASS, ver [slice social](../evidencia/h9-s2-social-reels-2026-10-13.md) | HECHO |
 
-| H9.S2.M6 | [ ] Retirar contenido eliminado | Dado original tiene guardados/reposts; cuando autor o moderador lo retira; entonces no queda reproducible desde colecciones ni enlaces. | E2E PostgreSQL confirma retirada por autor, salida de feed/guardados y 404 de media; falta integrar la acción del moderador para reels. Evidencia parcial: [slice social](../evidencia/h9-s2-social-reels-2026-10-13.md) | EN CURSO |
+| H9.S2.M6 | [x] Retirar contenido eliminado | Dado original tiene guardados/reposts; cuando autor o moderador lo retira; entonces no queda reproducible desde colecciones ni enlaces. | E2E PostgreSQL: borrado por autor y auto-ocultamiento después de tres reporteros distintos; excluido de feed/guardados y media previa devuelve 404; PASS. Evidencia: [slice social](../evidencia/h9-s2-social-reels-2026-10-13.md) | HECHO |
 
 ## H9.S3 — Creación y consumo móvil/web
 

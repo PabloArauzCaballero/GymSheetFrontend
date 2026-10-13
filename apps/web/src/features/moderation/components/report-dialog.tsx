@@ -4,12 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Flag } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogTrigger,
-} from '@/shared/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogTrigger } from '@/shared/components/ui/dialog';
 import { Field } from '@/shared/components/ui/field';
 import { Select } from '@/shared/components/ui/select';
 import { Textarea } from '@/shared/components/ui/textarea';
@@ -113,8 +108,8 @@ export function ReportDialog({
           </Field>
 
           <p className="text-xs leading-5 text-[var(--text-muted)]">
-            Al enviarlo, esta persona deja de aparecerte y se deshace vuestra conexión.
-            Alguien del equipo lo revisará.
+            Al enviarlo, el perfil o contenido deja de aparecerte. Si corresponde, se deshace la
+            conexión. Alguien del equipo lo revisará.
           </p>
 
           <div className="flex justify-end gap-2">

@@ -5,6 +5,7 @@ import { useRef, useState, type FormEvent } from 'react';
 import type { ReelDTO } from '@gymsheet/schemas';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Button } from '@/shared/components/ui/button';
+import { ReportDialog } from '@/features/moderation/components/report-dialog';
 import { reelsService } from '../services/reels-service';
 
 const feedKey = ['reels', 'feed'] as const;
@@ -308,6 +309,16 @@ export function ReelsPageClient() {
                     >
                       Comentarios ({reel.commentsCount ?? 0})
                     </Button>
+                    <ReportDialog
+                      subjectName="este reel"
+                      targetId={reel.id}
+                      targetKind="REEL"
+                      trigger={
+                        <Button type="button" variant="ghost">
+                          Reportar
+                        </Button>
+                      }
+                    />
                   </div>
                 ) : null}
                 {commentsReel === reel.id ? (

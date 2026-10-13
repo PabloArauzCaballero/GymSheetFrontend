@@ -186,7 +186,7 @@ Estado inicial: todos los casos pendientes; los IDs son nombres obligatorios par
 | H9.S2.M3 | H9 | BE | Deduplicar reposts | HECHO: original agrupado con atribuciones de repost; E2E PostgreSQL PASS; ver evidencia H9.S2 2026-10-13 |
 | H9.S2.M4 | H9 | BE | Deshacer repost | HECHO: repost reversible sin retirar original; E2E PostgreSQL PASS; ver evidencia H9.S2 2026-10-13 |
 | H9.S2.M5 | H9 | BE | Aplicar comentario cerrado | HECHO: cierre, replies de un nivel y likes idempotentes; E2E PostgreSQL PASS; ver evidencia H9.S2 2026-10-13 |
-| H9.S2.M6 | H9 | BE | Retirar contenido eliminado | EN CURSO: retirada por dueño verificada; falta integración de ocultamiento de reels con moderación; ver evidencia H9.S2 2026-10-13 |
+| H9.S2.M6 | H9 | BE | Retirar contenido eliminado | HECHO: borrado del autor y auto-ocultamiento tras tres reporteros distintos; feed/guardados/URL previa de media revocados; E2E PASS; ver evidencia H9.S2 2026-10-13 |
 | H9.S3.M1 | H9 | PAIR | Crear video recortado | TODO |
 | H9.S3.M2 | H9 | PAIR | Publicar desde cámara o archivo | EN CURSO: UI web de archivo/cámara, upload, feed READY y preview; falta cámara/dispositivo y PAIR real |
 | H9.S3.M3 | H9 | PAIR | Mantener un reproductor activo | EN CURSO: UI web pausa video previo al iniciar otro; falta scroll de 30 y PAIR |
