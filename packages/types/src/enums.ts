@@ -108,7 +108,14 @@ export type CredentialStatus = (typeof credentialStatuses)[number];
 export const accessOutcomes = ['GRANTED', 'DENIED'] as const;
 export type AccessOutcome = (typeof accessOutcomes)[number];
 
-export const notificationStatuses = ['PENDING', 'SENT', 'FAILED', 'DEAD_LETTER', 'READ'] as const;
+export const notificationStatuses = [
+  'PENDING',
+  'SENT',
+  'FAILED',
+  'DEAD_LETTER',
+  'READ',
+  'SUPPRESSED',
+] as const;
 export type NotificationStatus = (typeof notificationStatuses)[number];
 
 export const tutorialProgressStatuses = ['IN_PROGRESS', 'COMPLETED', 'SKIPPED'] as const;

@@ -80,7 +80,7 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 
 | H11.S2.M1 | [ ] Deduplicar aviso | Dado evento de conexión repetido; cuando worker procesa; entonces un solo aviso por destinatario/evento. | Parcial: PostgreSQL E2E temporal recorre POST/PATCH real de solicitud/aceptación, verifica rollback completo si falla el outbox, retry idempotente y una sola entrega `IN_APP` con worker real. Unitarias 39/39, type-check, ESLint focal y Prettier PASS. No prueba dos procesos concurrentes ni push físico; queda EN CURSO. Evidencia: [E2E notificaciones](../evidencia/h11-s2-m1-notification-idempotency-e2e-2026-10-11.md) | EN CURSO |
 
-| H11.S2.M2 | [ ] Suprimir aviso revocado | Dado mensaje en cola y bloqueo posterior; cuando worker entrega; entonces descarta el aviso del recurso revocado. | B: `yarn test:e2e --runTestsByPath test/social/moderacion-avisos.e2e-spec.ts -t 'H11.S2.M2'` → PASS | TODO |
+| H11.S2.M2 | [x] Suprimir aviso revocado | Dado mensaje en cola y bloqueo posterior; cuando worker entrega; entonces descarta el aviso del recurso revocado. | E2E PostgreSQL crea aceptación y aviso reales, bloquea antes del worker y verifica `SUPPRESSED`, job `COMPLETED`, cero intentos de entrega y ninguna conexión aceptada; la suite H11 completa pasa 2/2. Aislamiento de test verificado con `current_database()` y DB temporal eliminada. Evidencia: [H11.S2.M2](../evidencia/h11-s2-m2-notification-suppression-2026-10-13.md) | HECHO |
 
 | H11.S2.M3 | [ ] Reautorizar enlace | Dado notificación vieja de chat desaparecido; cuando usuario toca; entonces no abre historial y explica no disponibilidad. | B: `yarn test:e2e --runTestsByPath test/social/moderacion-avisos.e2e-spec.ts -t 'H11.S2.M3'` → PASS | TODO |
 

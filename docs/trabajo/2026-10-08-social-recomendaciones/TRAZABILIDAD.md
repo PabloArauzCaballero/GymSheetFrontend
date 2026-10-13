@@ -218,8 +218,8 @@ Estado inicial: todos los casos pendientes; los IDs son nombres obligatorios par
 | H11.S1.M3 | H11 | BE | Ocultar contenido desde moderación | TODO |
 | H11.S1.M4 | H11 | BE | Auditar resolución | TODO |
 | H11.S1.M5 | H11 | BE | Conservar evidencia tras revocación | TODO |
-| H11.S2.M1 | H11 | BE | Deduplicar aviso | EN CURSO: PostgreSQL E2E confirma enqueue deduplicado + worker `SENT/COMPLETED`; falta productor real de aceptación de conexión y dedupe concurrente |
-| H11.S2.M2 | H11 | BE | Suprimir aviso revocado | TODO |
+| H11.S2.M1 | H11 | BE | Deduplicar aviso | EN CURSO: aceptación real, outbox y worker probados en PostgreSQL; queda dedupe entre procesos y push físico |
+| H11.S2.M2 | H11 | BE | Suprimir aviso revocado | HECHO: bloqueo posterior a enqueue produce `SUPPRESSED`, sin intentos, y worker completa el job; E2E aislado |
 | H11.S2.M3 | H11 | BE | Reautorizar enlace | TODO |
 | H11.S2.M4 | H11 | BE | Respetar privacidad en push | TODO |
 | H11.S3.M1 | H11 | PAIR | Reportar desde recurso | TODO |
