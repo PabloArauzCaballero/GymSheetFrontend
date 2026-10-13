@@ -17,6 +17,8 @@ import {
   onboardingSchema,
   profilePhotoSchema,
   exerciseMusclesSchema,
+  exerciseSearchPageSchema,
+  exerciseShortcutsSchema,
   exerciseTaxonomySchema,
   muscleCatalogEntrySchema,
   muscleEquipmentInferenceSchema,
@@ -383,6 +385,11 @@ export interface ExerciseFilters {
   favoritos?: boolean;
   page?: number;
   pageSize?: number;
+  /** Buscador tolerante (contrato 11a §3). */
+  orden?: 'relevancia' | 'nombre' | 'populares' | 'recientes' | 'masUsados';
+  equipo?: string;
+  musculo?: string;
+  conImagen?: boolean;
 }
 
 // El esquema de la taxonomía vive en @gymsheet/schemas: la web lo usa igual.
@@ -403,6 +410,19 @@ export const exerciseService = {
       pageSchema(exerciseSchema),
       { method: 'GET' },
     ),
+  /**
+   * Una página del buscador: resultados, corrección («¿Quisiste decir…?») y lo
+   * que el servidor entendió. `signal` cancela la petición de la tecla anterior.
+   */
+  search: (filters: ExerciseFilters, signal?: AbortSignal) =>
+    apiClient.request(
+      `/exercises?${queryString({ page: 1, pageSize: 30, ...filters })}`,
+      exerciseSearchPageSchema,
+      { method: 'GET', signal },
+    ),
+  /** Recientes, los que más usa la persona y populares: la pantalla vacía del buscador. */
+  shortcuts: (limit = 8) =>
+    apiClient.request(`/exercises/shortcuts?limit=${limit}`, exerciseShortcutsSchema, { method: 'GET' }),
   get: (id: string) => apiClient.request(`/exercises/${id}`, exerciseSchema, { method: 'GET' }),
   taxonomy: () =>
     apiClient.request('/exercises/taxonomy', exerciseTaxonomySchema, { method: 'GET' }),

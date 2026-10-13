@@ -212,6 +212,25 @@ export function pageSchema<T extends z.ZodType>(itemSchema: T) {
 }
 
 /**
+ * Página del buscador de ejercicios (`GET /exercises?search=`). Además de la
+ * página de siempre trae la corrección («¿Quisiste decir sentadilla?») y lo que
+ * el servidor entendió. Opcionales: un servidor anterior no los manda.
+ */
+export const exerciseSearchPageSchema = pageSchema(exerciseSchema).extend({
+  sugerencia: z.string().nullable().optional(),
+  consulta: z.string().nullable().optional(),
+});
+export type ExerciseSearchPage = z.infer<typeof exerciseSearchPageSchema>;
+
+/** Atajos de la pantalla vacía del buscador (`GET /exercises/shortcuts`). */
+export const exerciseShortcutsSchema = z.object({
+  recientes: z.array(exerciseSchema).default([]),
+  masUsados: z.array(exerciseSchema).default([]),
+  populares: z.array(exerciseSchema).default([]),
+});
+export type ExerciseShortcuts = z.infer<typeof exerciseShortcutsSchema>;
+
+/**
  * Zonas del cuerpo y, dentro de cada una, los músculos que entrenan, con
  * cuántos ejercicios tiene cada uno (`GET /exercises/taxonomy`). Alimenta la
  * navegación por zona del catálogo en web y móvil, así ninguna de las dos
