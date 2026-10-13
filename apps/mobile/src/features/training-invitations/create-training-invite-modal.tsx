@@ -109,7 +109,7 @@ export function CreateTrainingInviteModal({
         style={{
           flex: 1,
           justifyContent: "flex-end",
-          backgroundColor: "rgba(0,0,0,0.56)",
+          backgroundColor: colors.background,
         }}
       >
         <Pressable

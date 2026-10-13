@@ -3,7 +3,6 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { trainingInvitationsService } from '../services/training-invitations-service';
 import { TrainingInvitationsClient } from './training-invitations-client';
-
 vi.mock('../services/training-invitations-service', () => ({
   trainingInvitationsService: {
     list: vi.fn(),
