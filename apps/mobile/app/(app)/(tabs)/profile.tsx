@@ -237,6 +237,7 @@ export default function ProfileScreen() {
               title="Mis ejercicios y favoritos"
             />,
             <NavRow key="chat" onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />,
+            <NavRow key="training-invitations" onPress={() => router.push('/training-invitations')} subtitle="Invitaciones recibidas y encuentros" title="Entrenar juntos" />,
           ]}
         </RowGroup>
       </Section>

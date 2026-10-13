@@ -65,6 +65,7 @@ export default function AppLayout() {
         <Stack.Screen name="membership" />
         <Stack.Screen name="notifications" />
         <Stack.Screen name="comunidad-mensajes" />
+        <Stack.Screen name="training-invitations" />
         {/* La baraja de descubrimiento: se abre desde Comunidad y se cierra
             volviendo, así que es una hermana del resto de pantallas de detalle
             y no una sexta pestaña. */}
