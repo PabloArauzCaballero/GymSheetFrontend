@@ -26,7 +26,7 @@ Plan escrito: **12 hitos, 44 subtareas, 197 microtareas**. Ejecución parcial en
 
 IN: R01–R37 y cada hito siguiente. OUT: followers, posts tradicionales, OAuth social, chat antes de conexión, rastreo de posición exacta, modificación de planes completos al compartir sesión, sincronización bidireccional de calendarios, publicación de producción en esta tarea de planificación.
 
-El plan usa el directorio existente de la conversación previa y conserva su borrador en evidencia/plan-inicial.md. Las tareas futuras pueden cambiar producto únicamente al ejecutarse; esta entrega modifica documentación. Los cambios locales previos de rutinas/workouts, moderación y pantallas se preservan. No hay autorización de push ni despliegue inferida de estas decisiones.
+El plan usa el directorio existente de la conversación previa y conserva su borrador en evidencia/plan-inicial.md. Las tareas futuras pueden cambiar producto únicamente al ejecutarse; esta entrega modifica documentación. Los cambios locales previos de rutinas/workouts, moderación y pantallas se preservan. La nota original de planificación no infería permiso para publicar; el usuario autorizó explícitamente push y merge el 2026-10-13. El avance publicado y sus límites están en [PROGRESO.md](PROGRESO.md). No se hizo despliegue.
 
 **Kill-test del conjunto:** A y B de gimnasios diferentes conectan en dispositivos distintos; A desconecta y B intenta leer el chat o descargar una foto mediante URL anterior. Si puede hacerlo, el flujo no está terminado aunque sus pantallas se vean correctas.
 

@@ -87,3 +87,7 @@ No quedan preguntas del cuestionario sin respuesta. Los valores técnicos propue
 - `superpowers:verification-before-completion`: validar el artefacto documental antes de afirmar su estado.
 
 Adaptación explícita: no copiar Angular/MikroORM ni flujos clínicos de Alovida; GymSheet conserva React/Expo/Next/NestJS/Sequelize. No ejecutar hooks específicos de Claude como si existieran en Codex. Esta es la planificación solicitada; no se añadió una aprobación intermedia que obligara a volver a autorizar su redacción.
+
+## Actualización posterior — 2026-10-13
+
+El párrafo anterior describe el estado al redactar el reporte inicial. Luego el usuario autorizó completar el plan y publicar los cambios. El avance local previo se preservó y quedó en commits/push fast-forward: Frontend `0c38165dc3d2f29e7e588fa61eff3ffc33d399e0`, Backend `f44a65efc00ab11eedee3566394aabd50cd4b912`. El slice H9.S2 y sus pruebas están detallados en [evidencia](evidencia/h9-s2-social-reels-2026-10-13.md), y el estado actualizado de subtareas en [PROGRESO.md](PROGRESO.md). No se desplegó. El plan general sigue abierto por trabajo de implementación y aceptación documentado allí.
