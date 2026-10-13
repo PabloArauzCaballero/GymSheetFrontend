@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "GymSheet",
+    "name": "REPP",
     "slug": "gymsheet",
     "version": "1.0.0",
     "orientation": "default",
@@ -20,7 +20,7 @@
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#000000"
+        "backgroundColor": "#c3f400"
       },
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -36,13 +36,13 @@
           "image": "./assets/splash.png",
           "imageWidth": 300,
           "resizeMode": "contain",
-          "backgroundColor": "#000000"
+          "backgroundColor": "#050505"
         }
       ],
       [
         "expo-secure-store",
         {
-          "faceIDPermission": "GymSheet usa Face ID para proteger la sesión guardada en este dispositivo."
+          "faceIDPermission": "REPP usa Face ID para proteger la sesión guardada en este dispositivo."
         }
       ],
       [
@@ -55,15 +55,15 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "GymSheet usa tu ubicación, solo al finalizar un entrenamiento, para verificar tu racha en la sede donde entrenaste."
+          "locationWhenInUsePermission": "REPP usa tu ubicación, solo al finalizar un entrenamiento, para verificar tu racha en la sede donde entrenaste."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "GymSheet usa tus fotos y vídeos para que elijas una imagen de perfil o publiques una story.",
-          "cameraPermission": "GymSheet usa la cámara para que hagas una foto o grabes un vídeo y lo publiques como story.",
-          "microphonePermission": "GymSheet usa el micrófono para grabar el sonido de los vídeos que publiques como story."
+          "photosPermission": "REPP usa tus fotos y vídeos para que elijas una imagen de perfil o publiques una story.",
+          "cameraPermission": "REPP usa la cámara para que hagas una foto o grabes un vídeo y lo publiques como story.",
+          "microphonePermission": "REPP usa el micrófono para grabar el sonido de los vídeos que publiques como story."
         }
       ],
       [
