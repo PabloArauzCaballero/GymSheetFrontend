@@ -238,6 +238,7 @@ export default function ProfileScreen() {
               title="Mis ejercicios y favoritos"
             />,
             <NavRow key="chat" leading={<IconBadge icon="chatbubbles-outline" tone="rest" />} onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />,
+            <NavRow key="training-invitations" leading={<IconBadge icon="people-outline" tone="rest" />} onPress={() => router.push('/training-invitations')} subtitle="Invitaciones recibidas y encuentros" title="Entrenar juntos" />,
           ]}
         </RowGroup>
       </Section>

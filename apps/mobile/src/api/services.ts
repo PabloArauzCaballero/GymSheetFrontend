@@ -641,7 +641,7 @@ export const chatService = {
       method: 'POST',
       body: { otherUserId },
     }),
-  listMessages: (conversationId: string, params: { limit?: number; before?: string } = {}) =>
+  listMessages: (conversationId: string, params: { limit?: number; before?: string; beforeId?: string } = {}) =>
     apiClient.request(
       `/me/conversations/${conversationId}/messages?${socialQueryString(params)}`,
       z.array(messageSchema),

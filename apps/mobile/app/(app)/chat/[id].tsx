@@ -35,6 +35,12 @@ import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { formatTimeOfDay, initialsOf, presenceLabel } from '@/lib/format';
+
+function trainingInviteAcceptedLabel(event: Extract<Message, { type: 'system' }>['systemEvent']): string {
+  if (event.cancelledAt) return `Entrenamiento cancelado · ${event.placeLabel}`;
+  const startsAt = new Intl.DateTimeFormat('es-BO', { dateStyle: 'medium', timeStyle: 'short', timeZone: event.timeZone }).format(new Date(event.startsAt));
+  return `Entrenamiento acordado · ${startsAt} · ${event.placeLabel}`;
+}
 import {
   accentContrast,
   alpha,
@@ -219,14 +225,16 @@ export default function ChatThreadScreen() {
   // Una primera página corta ya es todo el hilo: no hay nada anterior que pedir.
   const hasMoreOlder = !reachedStart && (history.data?.length ?? 0) >= PAGE_SIZE;
   const oldestLoadedAt = messages[0]?.createdAt ?? null;
+  const oldestLoadedId = messages[0]?.id ?? null;
 
   const loadOlderMessages = useCallback(async () => {
-    if (!conversationId || !oldestLoadedAt || loadingOlder || !hasMoreOlder) return;
+    if (!conversationId || !oldestLoadedAt || !oldestLoadedId || loadingOlder || !hasMoreOlder) return;
     setLoadingOlder(true);
     try {
       const page = await chatService.listMessages(conversationId, {
         limit: PAGE_SIZE,
         before: oldestLoadedAt,
+        beforeId: oldestLoadedId,
       });
       // Una página incompleta significa que se llegó al principio del hilo.
       if (page.length < PAGE_SIZE) setReachedStart(true);
@@ -238,7 +246,7 @@ export default function ChatThreadScreen() {
     } finally {
       setLoadingOlder(false);
     }
-  }, [conversationId, hasMoreOlder, loadingOlder, oldestLoadedAt]);
+  }, [conversationId, hasMoreOlder, loadingOlder, oldestLoadedAt, oldestLoadedId]);
 
   /** En una lista invertida el final del hilo es el desplazamiento cero. */
   const scrollToLatest = useCallback(() => {
@@ -491,6 +499,10 @@ export default function ChatThreadScreen() {
   }
 
   function renderMessage({ item, index }: ListRenderItemInfo<Message>) {
+    if (item.type === 'system') {
+      const label = trainingInviteAcceptedLabel(item.systemEvent);
+      return <View accessibilityLabel={label} accessibilityRole="text" style={{ width: '100%', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm }}><Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: fontSizes.sm, textAlign: 'center' }}>{label}</Text></View>;
+    }
     const mine = item.senderId === currentUserId;
     // Los datos van del más nuevo al más viejo: el anterior en el tiempo es el
     // siguiente del arreglo, y en pantalla queda justo encima de este.

@@ -44,7 +44,7 @@ export const chatService = {
    * Historial hacia atrás. `before` es la marca de tiempo del mensaje más
    * antiguo que ya se tiene: el backend devuelve la página anterior a él.
    */
-  listMessages: (conversationId: string, params: { limit?: number; before?: string } = {}) =>
+  listMessages: (conversationId: string, params: { limit?: number; before?: string; beforeId?: string } = {}) =>
     apiRequest<Message[]>(
       `/me/conversations/${conversationId}/messages?${queryString(params)}`,
       z.array(messageSchema),

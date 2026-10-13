@@ -6,6 +6,12 @@ import { DomainImage, mediaProxyUrl } from '@/shared/components/media/domain-ima
 import { cn } from '@/shared/lib/cn';
 import { formatTimeOfDay } from '@/features/chat/lib/chat-time';
 
+function trainingInviteAcceptedLabel(event: Extract<Message, { type: 'system' }>['systemEvent']): string {
+  if (event.cancelledAt) return `Entrenamiento cancelado · ${event.placeLabel}`;
+  const startsAt = new Intl.DateTimeFormat('es-BO', { dateStyle: 'medium', timeStyle: 'short', timeZone: event.timeZone }).format(new Date(event.startsAt));
+  return `Entrenamiento acordado · ${startsAt} · ${event.placeLabel}`;
+}
+
 export function mapsUrlFor(lat: number, lng: number): string {
   return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 }
@@ -43,6 +49,11 @@ export function MessageBubble({
   otherLastDeliveredAt: string | null;
   otherLastReadAt: string | null;
 }>) {
+  if (message.type === 'system') {
+    const label = trainingInviteAcceptedLabel(message.systemEvent);
+    return <li aria-label={label} className="my-3 flex w-full justify-center px-2 text-center text-xs leading-5 text-[var(--text-muted)]" id={`message-${message.id}`} role="status" tabIndex={-1}>{label}</li>;
+  }
+
   const read = mine && otherLastReadAt !== null && message.createdAt <= otherLastReadAt;
   const delivered =
     mine && otherLastDeliveredAt !== null && message.createdAt <= otherLastDeliveredAt;

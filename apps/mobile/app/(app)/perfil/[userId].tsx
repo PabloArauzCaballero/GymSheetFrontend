@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 import { Image } from 'expo-image';
@@ -13,6 +13,7 @@ import { levelTitle } from '@/components/directory-card';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { BadgeTile } from '@/components/progression';
 import { Button } from '@/components/ui';
+import { CreateTrainingInviteModal } from '@/features/training-invitations/create-training-invite-modal';
 import { notify } from '@/notifications';
 import { initialsOf } from '@/lib/format';
 import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
@@ -55,6 +56,7 @@ export default function PerfilDetailScreen() {
   const queryClient = useQueryClient();
   const userId = params.userId;
   const recordedRef = useRef<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   /**
    * Registrar la visita una sola vez, sea cual sea la forma de llegar aquí.
@@ -259,12 +261,15 @@ export default function PerfilDetailScreen() {
           onPress={() => connect.mutate(entry.userId)}
         />
       ) : entry.connectionStatus === 'ACCEPTED' ? (
-        <Button
-          icon="chatbubble-outline"
-          label="Enviar mensaje"
-          loading={message.isPending}
-          onPress={() => message.mutate(entry.userId)}
-        />
+        <View style={{ gap: spacing.sm }}>
+          <Button
+            icon="chatbubble-outline"
+            label="Enviar mensaje"
+            loading={message.isPending}
+            onPress={() => message.mutate(entry.userId)}
+          />
+          <Button icon="barbell-outline" label="Entrenemos juntos" onPress={() => setInviteOpen(true)} variant="ghost" />
+        </View>
       ) : entry.connectionStatus === 'PENDING_SENT' ? (
         <Button
           icon="close-circle-outline"
@@ -291,6 +296,8 @@ export default function PerfilDetailScreen() {
           </Text>
         </View>
       )}
+
+      <CreateTrainingInviteModal onClose={() => setInviteOpen(false)} recipientId={entry.userId} recipientName={entry.displayName} visible={inviteOpen} />
 
       <Section icon="ribbon-outline" title={`Insignias · ${entry.badges.length}`}>
         {entry.badges.length ? (

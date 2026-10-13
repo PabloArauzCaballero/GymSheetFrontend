@@ -81,6 +81,10 @@ const allowedCases: Array<[string[], string]> = [
   ],
   [['admin', 'moderation', 'users', id, 'history'], `/admin/moderation/users/${id}/history`],
   [['me', 'reports'], '/me/reports'],
+  [['me', 'training-invitations'], '/me/training-invitations'],
+  [['me', 'training-invitations', id, 'respond'], `/me/training-invitations/${id}/respond`],
+  [['me', 'training-invitations', id, 'calendar.ics'], `/me/training-invitations/${id}/calendar.ics`],
+  [['me', 'training-invitations', id, 'shared-session'], `/me/training-invitations/${id}/shared-session`],
   // Rutinas REPP F1: estructura por días, calendario, semanas, me gusta y favorito.
   [['routines', id, 'calendar'], `/routines/${id}/calendar`],
   [['routines', id, 'structure'], `/routines/${id}/structure`],

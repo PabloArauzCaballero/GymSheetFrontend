@@ -161,14 +161,16 @@ export function useChatThread({
   // Una primera página corta ya es todo el hilo: no hay nada anterior que pedir.
   const hasMoreOlder = !reachedStart && (history.data?.length ?? 0) >= PAGE_SIZE;
   const oldestLoadedAt = messages[0]?.createdAt ?? null;
+  const oldestLoadedId = messages[0]?.id ?? null;
 
   const loadOlderMessages = async () => {
-    if (!oldestLoadedAt || loadingOlder || !hasMoreOlder) return;
+    if (!oldestLoadedAt || !oldestLoadedId || loadingOlder || !hasMoreOlder) return;
     setLoadingOlder(true);
     try {
       const page = await chatService.listMessages(conversationId, {
         limit: PAGE_SIZE,
         before: oldestLoadedAt,
+        beforeId: oldestLoadedId ?? undefined,
       });
       // Una página incompleta significa que se llegó al principio del hilo.
       if (page.length < PAGE_SIZE) setReachedStart(true);

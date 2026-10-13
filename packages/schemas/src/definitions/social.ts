@@ -152,7 +152,7 @@ export type ConversationSummary = z.infer<typeof conversationSummarySchema>;
 export const messageTypes = ['text', 'image', 'video', 'location'] as const;
 export type MessageType = (typeof messageTypes)[number];
 
-export const messageSchema = z.object({
+export const chatMessageSchema = z.object({
   id: z.string().uuid(),
   conversationId: z.string().uuid(),
   senderId: z.string().uuid(),
@@ -167,7 +167,37 @@ export const messageSchema = z.object({
   locationLng: z.number().nullable(),
   createdAt: z.string(),
 });
+
+export const trainingInviteAcceptedEventSchema = z.object({
+  kind: z.literal('TRAINING_INVITE_ACCEPTED'),
+  invitationId: z.string().uuid(),
+  acceptedRevision: z.number().int().positive(),
+  startsAt: z.string().datetime({ offset: true }),
+  timeZone: z.string().min(1),
+  placeLabel: z.string(),
+  cancelledAt: z.string().datetime({ offset: true }).nullable(),
+});
+
+export const systemMessageSchema = z.object({
+  id: z.string().uuid(),
+  conversationId: z.string().uuid(),
+  senderId: z.null(),
+  type: z.literal('system'),
+  systemEvent: trainingInviteAcceptedEventSchema,
+  body: z.null().optional(),
+  mediaUrl: z.null().optional(),
+  mediaMimeType: z.null().optional(),
+  viewOnce: z.boolean().optional(),
+  viewed: z.boolean().optional(),
+  locationLat: z.null().optional(),
+  locationLng: z.null().optional(),
+  createdAt: z.string(),
+});
+
+/** Mensaje normal o evento de sistema de solo lectura en el historial. */
+export const messageSchema = z.union([chatMessageSchema, systemMessageSchema]);
 export type Message = z.infer<typeof messageSchema>;
+export type ChatMessage = z.infer<typeof chatMessageSchema>;
 
 export const startConversationResponseSchema = z.object({
   conversationId: z.string().uuid(),

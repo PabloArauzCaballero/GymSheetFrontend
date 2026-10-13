@@ -117,6 +117,10 @@ const allowedPathPatterns = [
   // Punto 11 (conexiones), 10 (estado social) y 5 (directorio + chat).
   /^\/me\/connections$/u,
   new RegExp(`^/me/connections/${resourceId}$`, 'u'),
+  /^\/me\/training-invitations$/u,
+  new RegExp(`^/me/training-invitations/${resourceId}/respond$`, "u"),
+  new RegExp(`^/me/training-invitations/${resourceId}/calendar\\.ics$`, "u"),
+  new RegExp(`^/me/training-invitations/${resourceId}/shared-session$`, "u"),
   /^\/me\/social-status$/u,
   /^\/me\/gym-directory$/u,
   // Ficha social de un socio concreto (directorio + insignias ganadas). Es lo

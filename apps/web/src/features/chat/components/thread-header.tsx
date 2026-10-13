@@ -9,6 +9,7 @@ import { PersonAvatar } from '@/shared/components/media/person-avatar';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { CreateTrainingInviteDialog } from '@/features/training-invitations/components/create-training-invite-dialog';
 
 /**
  * Quién está al otro lado.
@@ -116,6 +117,9 @@ export function ThreadHeader({
       <Badge tone={connectionState === 'connected' ? 'success' : 'neutral'}>
         {connectionState === 'connected' ? 'En vivo' : 'Conectando…'}
       </Badge>
+      {conversation?.systemKind === null && conversation.canWrite ? (
+        <CreateTrainingInviteDialog recipientId={conversation.otherUserId} recipientName={conversation.otherUserName} />
+      ) : null}
     </header>
   );
 }
