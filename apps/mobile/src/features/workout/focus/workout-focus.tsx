@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { useKeepAwake } from 'expo-keep-awake';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn, useAnimatedRef, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,7 +21,7 @@ import { FinishPage } from '@/features/workout/focus/finish-page';
 import { FocusHeader } from '@/features/workout/focus/focus-header';
 import { FocusPage, GroupSwitch, PageMedia, SetTrack } from '@/features/workout/focus/focus-page';
 import { RestOverlay } from '@/features/workout/focus/rest-overlay';
-import { SessionMenu, SessionOverview, type OverviewItem } from '@/features/workout/focus/session-menu';
+import { SessionSheet, type OverviewItem, type SessionSheetMode } from '@/features/workout/focus/session-menu';
 import { RirPicker, Stepper } from '@/features/workout/focus/stepper';
 import { parseDraft, parseTimedDraft, type SetDraft } from '@/features/workout/set-inputs';
 import {
@@ -76,7 +76,8 @@ type Session = ReturnType<typeof useWorkoutSession>;
 function bump(text: string, delta: number, min: number): string {
   const current = Number(text.replace(',', '.'));
   const base = Number.isFinite(current) ? current : 0;
-  return String(Math.max(min, Math.round((base + delta) * 100) / 100));
+  // Coma decimal: «62,5», como se escribe aquí (el análisis acepta coma y punto).
+  return String(Math.max(min, Math.round((base + delta) * 100) / 100)).replace('.', ',');
 }
 
 /** ¿El ejercicio se hace con carga? Sin material declarado o con el propio cuerpo, no se exige peso. */
@@ -179,8 +180,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
   const [chosen, setChosen] = useState<Record<number, string>>({});
   const [extra, setExtra] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, SetDraft>>({});
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [overviewOpen, setOverviewOpen] = useState(false);
+  const [sheet, setSheet] = useState<SessionSheetMode>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [resumed, setResumed] = useState(false);
 
@@ -236,7 +236,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
     const rir = last?.rir ?? source.rirObjetivo;
     const seconds = last?.duracionSeg ?? previousHold ?? source.duracionSeg;
     return {
-      pesoKg: weight != null ? String(weight) : '',
+      pesoKg: weight != null ? kgLabel(weight) : '',
       repeticiones: reps != null ? String(reps) : '',
       rir: rir != null ? String(Math.min(4, rir)) : '',
       duracionSeg: seconds != null ? String(seconds) : '',
@@ -332,7 +332,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
           ? `Se guardará con ${totalSets} ${totalSets === 1 ? 'serie registrada' : 'series registradas'}.`
           : 'No has registrado ninguna serie. Se guardará vacía.',
       confirmLabel: 'Finalizar',
-      cancelLabel: 'Seguir entrenando',
+      cancelLabel: 'Seguir',
     });
     if (!result.confirmed) return;
     skipRest();
@@ -357,10 +357,23 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
     else router.replace('/');
   };
 
-  /** Cierra la hoja y, cuando ya no está, hace lo pedido (iOS no apila dos modales). */
+  // iOS no presenta un modal mientras otro se está cerrando: lo que se abra
+  // justo después de cerrar la hoja espera a que termine de irse. Sin esto, un
+  // toque rápido en ⋯ dejaba la hoja sin abrir.
+  const sheetClosedAt = useRef(0);
+  const closeSheet = () => {
+    sheetClosedAt.current = Date.now();
+    setSheet(null);
+  };
+  const afterSheet = (action: () => void) => {
+    const wait = Math.max(0, SHEET_CLOSE_MS - (Date.now() - sheetClosedAt.current));
+    if (wait === 0) action();
+    else setTimeout(action, wait);
+  };
+  /** Cierra la hoja y, cuando ya no está, hace lo pedido. */
   const fromMenu = (action: () => void) => {
-    setMenuOpen(false);
-    setTimeout(action, SHEET_CLOSE_MS);
+    closeSheet();
+    afterSheet(action);
   };
 
   const closingBusy = session.finish.isPending || session.cancel.isPending;
@@ -467,7 +480,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
             accessibilityHint="Rellena peso y repeticiones"
             accessibilityLabel={`La última vez, ${relativeDay(previous.workout.fechaInicio).toLowerCase()}: ${top.repeticiones} por ${kgLabel(top.pesoKg)} kilos`}
             haptic="selection"
-            onPress={() => setDraft(source, { ...draft, pesoKg: String(top.pesoKg), repeticiones: String(top.repeticiones) })}
+            onPress={() => setDraft(source, { ...draft, pesoKg: kgLabel(top.pesoKg), repeticiones: String(top.repeticiones) })}
             style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: minTouchTarget }}
             testID="last-time"
           >
@@ -541,7 +554,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
       <FocusHeader
         fills={blocks.map(blockFill)}
         onClose={minimize}
-        onMore={() => setMenuOpen(true)}
+        onMore={() => afterSheet(() => setSheet('menu'))}
         page={page}
         position={page >= finishPage ? 'Resumen' : `${page + 1} de ${blocks.length}`}
         startIso={data.fechaInicio}
@@ -689,25 +702,21 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
 
       <RestOverlay kind={restKind} />
 
-      <SessionMenu
-        onAdd={() => fromMenu(() => setPickerOpen(true))}
-        onCancel={() => fromMenu(() => void onCancel())}
-        onClose={() => setMenuOpen(false)}
-        onFinish={() => fromMenu(() => void onFinish())}
-        onOverview={() => fromMenu(() => setOverviewOpen(true))}
-        setsLabel={`${totalSets} ${totalSets === 1 ? 'serie registrada' : 'series registradas'}`}
-        visible={menuOpen}
-      />
-      <SessionOverview
+      <SessionSheet
         currentPage={page}
         items={overview}
-        onClose={() => setOverviewOpen(false)}
+        mode={sheet}
+        onAdd={() => fromMenu(() => setPickerOpen(true))}
+        onCancel={() => fromMenu(() => void onCancel())}
+        onClose={closeSheet}
+        onFinish={() => fromMenu(() => void onFinish())}
+        onOverview={() => setSheet('overview')}
         onSelect={(item) => {
-          setOverviewOpen(false);
+          closeSheet();
           setChosen((all) => ({ ...all, [item.page]: item.id }));
           goTo(item.page);
         }}
-        visible={overviewOpen}
+        setsLabel={`${totalSets} ${totalSets === 1 ? 'serie registrada' : 'series registradas'}`}
       />
       <ExercisePicker
         onClose={() => setPickerOpen(false)}

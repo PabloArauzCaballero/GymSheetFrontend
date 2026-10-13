@@ -122,40 +122,33 @@ export function Stepper({
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
       <StepButton icon="remove" label={`Menos ${spoken}`} onStep={() => onStep(-1)} testID={testID ? `${testID}-minus` : undefined} />
-      <View style={{ flex: 1, alignItems: 'center' }}>
-        <Text tone="muted" variant="caption">
-          {label.toUpperCase()}
+      <View style={{ flex: 1, alignItems: 'stretch' }}>
+        <Text style={{ textAlign: 'center' }} tone="muted" variant="caption">
+          {(unit ? `${label} · ${unit}` : label).toUpperCase()}
         </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs }}>
-          <TextInput
-            accessibilityLabel={label}
-            keyboardType={decimal ? 'decimal-pad' : 'number-pad'}
-            {...numericInputProps}
-            maxLength={6}
-            onChangeText={onChangeText}
-            placeholder={placeholder}
-            placeholderTextColor={colors.textDisabled}
-            selectTextOnFocus
-            style={[
-              {
-                minWidth: 56,
-                paddingVertical: 0,
-                color: colors.text,
-                fontFamily: fontFamilies.display,
-                fontSize: heroNumberFontSize,
-                textAlign: 'center',
-              },
-              tabularNums,
-            ]}
-            testID={testID}
-            value={value}
-          />
-          {unit ? (
-            <Text tone="secondary" variant="subhead">
-              {unit}
-            </Text>
-          ) : null}
-        </View>
+        {/* El campo ocupa todo el ancho entre los botones: con un ancho mínimo, «72,5» se cortaba en «72». */}
+        <TextInput
+          accessibilityLabel={unit ? `${label}, ${unit}` : label}
+          keyboardType={decimal ? 'decimal-pad' : 'number-pad'}
+          {...numericInputProps}
+          maxLength={6}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={colors.textDisabled}
+          selectTextOnFocus
+          style={[
+            {
+              paddingVertical: 0,
+              color: colors.text,
+              fontFamily: fontFamilies.display,
+              fontSize: heroNumberFontSize,
+              textAlign: 'center',
+            },
+            tabularNums,
+          ]}
+          testID={testID}
+          value={value}
+        />
       </View>
       <StepButton icon="add" label={`Más ${spoken}`} onStep={() => onStep(1)} testID={testID ? `${testID}-plus` : undefined} />
     </View>
