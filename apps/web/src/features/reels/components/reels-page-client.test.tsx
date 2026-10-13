@@ -14,6 +14,7 @@ vi.mock('../services/reels-service', () => ({
     repost: vi.fn(),
     comments: vi.fn(),
     createComment: vi.fn(),
+    deleteComment: vi.fn(),
   },
 }));
 
@@ -49,6 +50,7 @@ describe('ReelsPageClient', () => {
     vi.mocked(reelsService.repost).mockReset().mockResolvedValue({ reposted: true });
     vi.mocked(reelsService.comments).mockReset().mockResolvedValue([]);
     vi.mocked(reelsService.createComment).mockReset();
+    vi.mocked(reelsService.deleteComment).mockReset().mockResolvedValue({ deleted: true });
   });
 
   it('uploads one selected video and shows the READY reel in the protected feed', async () => {
@@ -133,5 +135,43 @@ describe('ReelsPageClient', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Me gusta' }));
 
     await waitFor(() => expect(reelsService.like).toHaveBeenCalledWith(reel.id, true));
+  });
+
+  it('lets the reel owner remove a comment after confirmation', async () => {
+    const comment = {
+      id: '0190e2cb-a6d4-7ec3-8f91-a6c735631504',
+      reelId: reel.id,
+      parentCommentId: null,
+      userId: '0190e2cb-a6d4-7ec3-8f91-a6c735631505',
+      displayName: 'Otra persona',
+      body: 'Comentario reportado',
+      deleted: false,
+      createdAt: '2026-10-10T12:00:00.000Z',
+    };
+    vi.mocked(reelsService.feed).mockResolvedValue({ items: [reel], nextCursor: null });
+    vi.mocked(reelsService.comments).mockResolvedValue([comment]);
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => true),
+    );
+    try {
+      render(
+        <QueryClientProvider
+          client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}
+        >
+          <ReelsPageClient viewerId={reel.userId} />
+        </QueryClientProvider>,
+      );
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Conexiones' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Comentarios (0)' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Eliminar comentario' }));
+
+      await waitFor(() =>
+        expect(reelsService.deleteComment).toHaveBeenCalledWith(reel.id, comment.id),
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

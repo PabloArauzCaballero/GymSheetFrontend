@@ -16,7 +16,7 @@ function formatDuration(seconds: number) {
   return `${Math.floor(rounded / 60)}:${String(rounded % 60).padStart(2, '0')}`;
 }
 
-export function ReelsPageClient() {
+export function ReelsPageClient({ viewerId }: Readonly<{ viewerId?: string }>) {
   const queryClient = useQueryClient();
   const cameraInput = useRef<HTMLInputElement>(null);
   const libraryInput = useRef<HTMLInputElement>(null);
@@ -60,6 +60,17 @@ export function ReelsPageClient() {
       reelsService.createComment(reelId, body),
     onSuccess: async (_comment, variables) => {
       setCommentDraft('');
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [...feedKey, 'comments', variables.reelId] }),
+        queryClient.invalidateQueries({ queryKey: feedKey }),
+      ]);
+    },
+  });
+
+  const deleteComment = useMutation({
+    mutationFn: ({ reelId, commentId }: { reelId: string; commentId: string }) =>
+      reelsService.deleteComment(reelId, commentId),
+    onSuccess: async (_result, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: [...feedKey, 'comments', variables.reelId] }),
         queryClient.invalidateQueries({ queryKey: feedKey }),
@@ -328,10 +339,31 @@ export function ReelsPageClient() {
                       <p role="alert">No se pudieron cargar los comentarios.</p>
                     ) : null}
                     {comments.data?.map((comment) => (
-                      <p className="text-sm" key={comment.id}>
-                        <strong>{comment.displayName}</strong>:{' '}
-                        {comment.body ?? 'Comentario eliminado'}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2 text-sm" key={comment.id}>
+                        <p>
+                          <strong>{comment.displayName}</strong>:{' '}
+                          {comment.body ?? 'Comentario eliminado'}
+                        </p>
+                        {comment.body &&
+                        (comment.userId === viewerId || reel.userId === viewerId) ? (
+                          <Button
+                            disabled={deleteComment.isPending}
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  'El comentario dejará de estar visible para todos. ¿Eliminarlo?',
+                                )
+                              ) {
+                                deleteComment.mutate({ reelId: reel.id, commentId: comment.id });
+                              }
+                            }}
+                            type="button"
+                            variant="ghost"
+                          >
+                            Eliminar comentario
+                          </Button>
+                        ) : null}
+                      </div>
                     ))}
                     {reel.commentsEnabled !== false ? (
                       <form

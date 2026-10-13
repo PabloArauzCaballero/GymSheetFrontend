@@ -111,6 +111,24 @@ describe("reelsService (mobile)", () => {
     });
   });
 
+  it("deletes a comment through the reel-scoped endpoint", async () => {
+    requestMock.mockResolvedValue({ deleted: true });
+
+    await expect(
+      reelsService.deleteComment(
+        reel.id,
+        "0190e2cb-a6d4-7ec3-8f91-a6c735631503",
+      ),
+    ).resolves.toEqual({
+      deleted: true,
+    });
+    expect(requestMock).toHaveBeenCalledWith(
+      `/me/reels/${reel.id}/comments/0190e2cb-a6d4-7ec3-8f91-a6c735631503`,
+      expect.anything(),
+      { method: "DELETE" },
+    );
+  });
+
   it("preserves transport errors from feed and upload", async () => {
     const feedError = new Error("feed unavailable");
     const uploadError = new Error("upload rejected");

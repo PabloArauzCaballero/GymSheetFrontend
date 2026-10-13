@@ -16,6 +16,7 @@ import { ErrorState, Skeleton } from "@/components/feedback";
 import { notify } from "@/notifications";
 import { env } from "@/config/env";
 import { secureStoreTokenProvider } from "@/storage/secure-store";
+import { useAuthStore } from "@/state/auth-store";
 import { colors, fontSizes, radii, semibold, spacing } from "@/theme";
 
 const tabs: ReadonlyArray<{ id: ReelFeedTab; label: string }> = [
@@ -68,6 +69,7 @@ function ReelPlayer({ reel, token }: { reel: ReelDTO; token: string | null }) {
 
 export default function ReelsScreen() {
   const queryClient = useQueryClient();
+  const userId = useAuthStore((state) => state.principal?.id);
   const [tab, setTab] = useState<ReelFeedTab>("FOR_YOU");
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -142,6 +144,22 @@ export default function ReelsScreen() {
         }),
         queryClient.invalidateQueries({ queryKey: ["reels", "feed"] }),
       ]);
+    },
+    onError: (error: Error) => notify.error(error.message),
+  });
+  const deleteComment = useMutation({
+    mutationFn: (commentId: string) => {
+      if (!reel) throw new Error("El reel ya no está disponible.");
+      return reelsService.deleteComment(reel.id, commentId);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["reels", "comments", reel?.id],
+        }),
+        queryClient.invalidateQueries({ queryKey: ["reels", "feed"] }),
+      ]);
+      notify.success("Comentario eliminado.");
     },
     onError: (error: Error) => notify.error(error.message),
   });
@@ -354,6 +372,32 @@ export default function ReelsScreen() {
                     <Button
                       label="Responder"
                       onPress={() => setReplyTo(item.id)}
+                      variant="ghost"
+                    />
+                  ) : null}
+                  {item.body &&
+                  (item.userId === userId || reel.userId === userId) ? (
+                    <Button
+                      disabled={deleteComment.isPending}
+                      label="Eliminar comentario"
+                      loading={
+                        deleteComment.isPending &&
+                        deleteComment.variables === item.id
+                      }
+                      onPress={() =>
+                        Alert.alert(
+                          "Eliminar comentario",
+                          "El comentario dejará de estar visible para todos.",
+                          [
+                            { text: "Cancelar", style: "cancel" },
+                            {
+                              text: "Eliminar",
+                              style: "destructive",
+                              onPress: () => deleteComment.mutate(item.id),
+                            },
+                          ],
+                        )
+                      }
                       variant="ghost"
                     />
                   ) : null}

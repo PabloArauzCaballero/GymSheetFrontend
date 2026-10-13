@@ -117,7 +117,7 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 
 | H9.S3.M5 | [ ] Comentar y responder | Dado comentario raíz de A; cuando B responde y da like; entonces respuesta queda en ese reel con conteo persistente. | API y UI web/móvil para leer, comentar, responder de un nivel y dar like implementadas; E2E PostgreSQL y tests de servicios PASS; falta PAIR. Ver [slice social](../evidencia/h9-s2-social-reels-2026-10-13.md) | EN CURSO |
 
-| H9.S3.M6 | [ ] Borrar comentario como autor | Dado comentario de B en reel de A; cuando A lo elimina; entonces desaparece para ambos sin borrar comentarios de otros reels. | F: `python3 scripts/qa/run-social-pair.py --case H9.S3.M6` → PASS con manifiesto y evidencias | TODO |
+| H9.S3.M6 | [ ] Borrar comentario como autor | Dado comentario de B en reel de A; cuando A lo elimina; entonces desaparece para ambos sin borrar comentarios de otros reels. | Backend PostgreSQL E2E comprueba autorización, desaparición para autor y dueño, y preservación de otro comentario; Web UI/service 11/11; móvil service 7/7; type-checks y ESLint focal PASS. Falta PAIR en dispositivo. Evidencia: [H9.S3.M6](../evidencia/h9-s3-m6-delete-comments-2026-10-13.md) | EN CURSO |
 
 ## H9.S4 — Compatibilidad y recuperación de datos
 

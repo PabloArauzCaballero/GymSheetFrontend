@@ -44,6 +44,10 @@ export const reelsService = {
       method: 'POST',
       body: { body, ...(parentCommentId ? { parentCommentId } : {}) },
     }),
+  deleteComment: (reelId: string, commentId: string) =>
+    apiRequest(`/me/reels/${reelId}/comments/${commentId}`, z.object({ deleted: z.boolean() }), {
+      method: 'DELETE',
+    }),
   closeComments: (reelId: string, enabled: boolean) =>
     apiRequest(`/me/reels/${reelId}/comments`, z.object({ commentsEnabled: z.boolean() }), {
       method: 'PATCH',
