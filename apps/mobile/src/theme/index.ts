@@ -21,3 +21,4 @@ export { tenantCatalog as tenants } from '@gymsheet/design-tokens';
 export { theme };
 export type { Theme } from '@gymsheet/design-tokens';
 export * from './extras';
+export * from './cards';
