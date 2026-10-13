@@ -14,6 +14,9 @@ name: 10 · Ficha del ejercicio — favorito y me gusta
 - swipe:
     start: 3%, 75%
     end: 3%, 30%
+# En Explorar el campo es la puerta al buscador; dentro, el campo de verdad.
+- tapOn:
+    id: 'exercise-search-open'
 - tapOn:
     id: 'exercise-search'
 - inputText: 'barbell bench press'
