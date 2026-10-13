@@ -2,11 +2,28 @@ import { Ionicons } from '@expo/vector-icons';
 import { ScrollView, View } from 'react-native';
 import { CountUpText } from '@/components/motion';
 import { Text } from '@/components/text';
-import { colors, fontFamilies, fontSizes, gutter, iconSizes, radii, spacing, tabularNums } from '@/theme';
+import { EnterUp } from '@/components/motion';
+import { colors, fontFamilies, fontSizes, gutter, iconSizes, metricColors, radii, spacing, tabularNums, type MetricKey } from '@/theme';
 
-function Stat({ value, label, suffix }: { value: number; label: string; suffix?: string }) {
+function Stat({
+  value,
+  label,
+  suffix,
+  icon,
+  metric,
+}: {
+  value: number;
+  label: string;
+  suffix?: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  metric: MetricKey;
+}) {
+  const tone = metricColors[metric];
   return (
-    <View style={{ flex: 1, gap: spacing.xxs }}>
+    <View style={{ flex: 1, gap: spacing.xs }}>
+      <View style={{ width: 32, height: 32, borderRadius: radii.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tone.tint }}>
+        <Ionicons color={tone.ink} name={icon} size={iconSizes.sm} />
+      </View>
       <CountUpText
         style={[{ color: colors.text, fontFamily: fontFamilies.display, fontSize: fontSizes.xl }, tabularNums]}
         suffix={suffix}
@@ -34,6 +51,8 @@ export function FinishPage({
   volumeKg,
   minutes,
   pending,
+  skippedSets = 0,
+  omitted = [],
 }: {
   width: number;
   bottomSpace: number;
@@ -45,6 +64,10 @@ export function FinishPage({
   minutes: number;
   /** Lo que queda por hacer, en claro: «Remo con barra · 2 series». */
   pending: readonly string[];
+  /** Series saltadas hoy (no cuentan para el volumen). */
+  skippedSets?: number;
+  /** Ejercicios omitidos, con su motivo: «Remo con barra · Equipo ocupado». */
+  omitted?: readonly string[];
 }) {
   return (
     <ScrollView
@@ -61,10 +84,10 @@ export function FinishPage({
             borderRadius: radii.full,
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: colors.surfaceHighest,
+              backgroundColor: complete ? metricColors.record.tint : colors.surfaceHighest,
           }}
         >
-          <Ionicons color={colors.text} name={complete ? 'trophy-outline' : 'flag-outline'} size={iconSizes.lg} />
+          <Ionicons color={complete ? metricColors.record.ink : colors.text} name={complete ? 'trophy' : 'flag-outline'} size={iconSizes.lg} />
         </View>
         <Text accessibilityRole="header" variant="display">
           {complete ? 'Sesión completa' : sets > 0 ? '¿Lo dejamos aquí?' : 'Aún no has registrado nada'}
@@ -80,14 +103,35 @@ export function FinishPage({
 
       <View style={{ gap: spacing.lg, paddingVertical: spacing.lg, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border }}>
         <View style={{ flexDirection: 'row', gap: spacing.md }}>
-          <Stat label={`de ${exercisesTotal} ejercicios`} value={exercisesDone} />
-          <Stat label={sets === 1 ? 'serie' : 'series'} value={sets} />
+          <Stat icon="barbell-outline" label={`de ${exercisesTotal} ejercicios`} metric="weight" value={exercisesDone} />
+          <Stat icon="repeat-outline" label={sets === 1 ? 'serie' : 'series'} metric="reps" value={sets} />
         </View>
         <View style={{ flexDirection: 'row', gap: spacing.md }}>
-          <Stat label="kg movidos" value={volumeKg} />
-          <Stat label="minutos" value={minutes} />
+          <Stat icon="trending-up-outline" label="kg movidos" metric="volume" value={volumeKg} />
+          <Stat icon="time-outline" label="minutos" metric="time" value={minutes} />
         </View>
       </View>
+
+      {skippedSets > 0 || omitted.length > 0 ? (
+        <EnterUp index={1} style={{ gap: spacing.sm }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <Ionicons color={metricColors.skipped.ink} name="play-skip-forward" size={iconSizes.sm} />
+            <Text strong variant="headline">
+              Lo que dejaste pasar
+            </Text>
+          </View>
+          {skippedSets > 0 ? (
+            <Text tabular tone="secondary" variant="subhead">
+              {`${skippedSets} ${skippedSets === 1 ? 'serie saltada' : 'series saltadas'} · no cuentan para tu volumen`}
+            </Text>
+          ) : null}
+          {omitted.map((line) => (
+            <Text key={line} tone="secondary" variant="subhead">
+              {line}
+            </Text>
+          ))}
+        </EnterUp>
+      ) : null}
 
       {pending.length > 0 ? (
         <View style={{ gap: spacing.sm }}>

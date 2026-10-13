@@ -6,13 +6,14 @@ import { BottomSheet } from '@/components/bottom-sheet';
 import { ExerciseImage } from '@/components/media';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { colors, iconSizes, minTouchTarget, radii, spacing, thumbSizes } from '@/theme';
+import { colors, iconSizes, metricColors, minTouchTarget, radii, spacing, thumbSizes, type MetricKey } from '@/theme';
 
 function MenuRow({
   icon,
   label,
   detail,
   danger = false,
+  metric,
   onPress,
   testID,
 }: {
@@ -20,6 +21,8 @@ function MenuRow({
   label: string;
   detail?: string;
   danger?: boolean;
+  /** Color del glifo según lo que toca la acción. */
+  metric?: MetricKey;
   onPress: () => void;
   testID?: string;
 }) {
@@ -38,10 +41,10 @@ function MenuRow({
           borderRadius: radii.full,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: colors.surfaceHighest,
+          backgroundColor: metric ? metricColors[metric].tint : colors.surfaceHighest,
         }}
       >
-        <Ionicons color={danger ? colors.danger : colors.text} name={icon} size={iconSizes.md} />
+        <Ionicons color={danger ? colors.danger : metric ? metricColors[metric].ink : colors.text} name={icon} size={iconSizes.md} />
       </View>
       <View style={{ flex: 1 }}>
         <Text strong tone={danger ? 'danger' : 'default'} variant="body">
@@ -64,6 +67,8 @@ export type OverviewItem = {
   badge: string | null;
   progress: string;
   done: boolean;
+  /** Omitido hoy (se pinta distinto de «hecho»). */
+  omitted?: boolean;
   exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular' | 'imagenUrl'> | null;
 };
 
@@ -86,6 +91,10 @@ export function SessionSheet({
   onAdd,
   onFinish,
   onCancel,
+  onRest,
+  onOmit,
+  restLabel,
+  currentName,
   setsLabel,
   items,
   currentPage,
@@ -97,6 +106,13 @@ export function SessionSheet({
   onAdd: () => void;
   onFinish: () => void;
   onCancel: () => void;
+  /** Hoja de descanso del ejercicio a la vista; `undefined` en el resumen. */
+  onRest?: () => void;
+  /** Omitir el ejercicio a la vista; `undefined` si no aplica. */
+  onOmit?: () => void;
+  /** «2:30». */
+  restLabel?: string;
+  currentName?: string;
   /** «6 series registradas». */
   setsLabel: string;
   items: readonly OverviewItem[];
@@ -121,7 +137,7 @@ export function SessionSheet({
             const here = item.page === currentPage;
             return (
               <PressableScale
-                accessibilityLabel={[item.badge, item.name, item.done ? 'hecho' : `${item.progress} series`].filter(Boolean).join(', ')}
+                accessibilityLabel={[item.badge, item.name, item.omitted ? 'omitido' : item.done ? 'hecho' : `${item.progress} series`].filter(Boolean).join(', ')}
                 accessibilityState={{ selected: here }}
                 haptic="selection"
                 key={item.id}
@@ -151,8 +167,10 @@ export function SessionSheet({
                     {item.name}
                   </Text>
                 </View>
-                {item.done ? (
-                  <Ionicons color={colors.textSecondary} name="checkmark-circle" size={iconSizes.lg} />
+                {item.omitted ? (
+                  <Ionicons color={metricColors.skipped.ink} name="play-skip-forward" size={iconSizes.md} />
+                ) : item.done ? (
+                  <Ionicons color={colors.success} name="checkmark-circle" size={iconSizes.lg} />
                 ) : (
                   <Text strong tabular tone="secondary" variant="subhead">
                     {item.progress}
@@ -164,9 +182,29 @@ export function SessionSheet({
         </View>
       ) : (
         <View style={{ gap: spacing.xs }}>
-          <MenuRow detail="Salta a cualquiera" icon="list" label="Ver todos los ejercicios" onPress={onOverview} testID="menu-overview" />
-          <MenuRow detail="Se añade al final" icon="add" label="Añadir ejercicio" onPress={onAdd} testID="menu-add" />
-          <MenuRow detail={setsLabel} icon="flag-outline" label="Finalizar sesión" onPress={onFinish} testID="menu-finish" />
+          <MenuRow detail="Salta a cualquiera" icon="list" label="Ver todos los ejercicios" metric="weight" onPress={onOverview} testID="menu-overview" />
+          {onRest ? (
+            <MenuRow
+              detail={restLabel ? `Ahora ${restLabel} · puedes aplicarlo a los demás` : 'Descanso e intervalos'}
+              icon="hourglass-outline"
+              label="Cambiar el descanso"
+              metric="rest"
+              onPress={onRest}
+              testID="menu-rest"
+            />
+          ) : null}
+          <MenuRow detail="Se añade al final" icon="add" label="Añadir ejercicio" metric="reps" onPress={onAdd} testID="menu-add" />
+          {onOmit ? (
+            <MenuRow
+              detail={currentName ? `${currentName} · lo que hiciste se guarda` : 'Lo que hiciste se guarda'}
+              icon="play-skip-forward-outline"
+              label="Omitir este ejercicio"
+              metric="skipped"
+              onPress={onOmit}
+              testID="menu-omit"
+            />
+          ) : null}
+          <MenuRow detail={setsLabel} icon="flag" label="Finalizar sesión" metric="record" onPress={onFinish} testID="menu-finish" />
           <MenuRow danger detail="Descarta lo registrado" icon="trash-outline" label="Cancelar sesión" onPress={onCancel} testID="menu-cancel" />
         </View>
       )}

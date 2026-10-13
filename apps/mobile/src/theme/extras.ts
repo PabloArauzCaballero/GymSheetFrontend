@@ -213,3 +213,48 @@ export const muscleGradientDefault = ['#2f2e29', '#161614'] as const;
 
 /** Iniciales y marca de agua sobre el marcador. */
 export const placeholderInk = { initials: alpha(ink.white, 0.92), watermark: alpha(ink.white, 0.12) } as const;
+
+/* ─── Entreno: color por significado ─────────────────────────────────────── */
+
+/**
+ * Cada magnitud del entreno tiene su color, para leer la pantalla sin leer las
+ * etiquetas: el peso es azul, las repeticiones violetas, el esfuerzo ámbar, el
+ * descanso menta. No son la marca (el volt sigue siendo solo la acción
+ * principal) ni cambian con el gimnasio. `ink` es el glifo o la cifra fina
+ * sobre una superficie; `tint`, su fondo. Contraste del `ink` sobre
+ * `surfaceHighest` (#2b2a26, el peor fondo donde se usa): todos ≥ 6,4:1.
+ */
+function metric(base: string) {
+  return { ink: base, tint: alpha(base, 0.14), edge: alpha(base, 0.32) } as const;
+}
+
+export const metricColors = {
+  /** Carga. 7,3:1 sobre surfaceHighest. */
+  weight: metric('#6cb8ff'),
+  /** Repeticiones. 6,6:1. */
+  reps: metric('#b79bff'),
+  /** Esfuerzo (RIR). 8,0:1. */
+  effort: metric('#ffb454'),
+  /** Descanso e intervalos. 8,9:1. */
+  rest: metric('#5fe0b8'),
+  /** Tiempo de trabajo y cronómetro. 9,4:1. */
+  time: metric('#7fe3f0'),
+  /** Racha. 6,7:1. */
+  streak: metric('#ff9a5c'),
+  /** Récord. 9,8:1. */
+  record: metric('#ffd24a'),
+  /** Volumen (kg movidos). 6,4:1. */
+  volume: metric('#ff8fb1'),
+  /** Saltado / omitido: gris cálido, no es un error. 4,9:1. */
+  skipped: metric('#a8a294'),
+} as const;
+
+export type MetricKey = keyof typeof metricColors;
+
+/** Anillo del descanso: de menta (queda tiempo) a ámbar (se acaba) y luz (ya). */
+export const restRing = {
+  calm: metricColors.rest.ink,
+  ending: metricColors.effort.ink,
+  track: alpha(ink.white, 0.08),
+  glow: alpha(metricColors.rest.ink, 0.18),
+} as const;

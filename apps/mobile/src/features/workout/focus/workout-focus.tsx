@@ -3,13 +3,13 @@ import * as Haptics from 'expo-haptics';
 import { useKeepAwake } from 'expo-keep-awake';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, useWindowDimensions, View } from 'react-native';
-import Animated, { FadeIn, useAnimatedRef, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
+import Animated, { FadeInDown, useAnimatedRef, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { isTimedSet, longestTimedSet, previousPerformance, topSet } from '@gymsheet/domain';
 import { secondsLabel } from '@gymsheet/hooks';
-import type { TimedWorkoutSetInput, Workout, WorkoutExercise, WorkoutSetInput } from '@gymsheet/types';
+import type { RestSettingChange, SkipReason, SkippedSet, TimedWorkoutSetInput, Workout, WorkoutExercise, WorkoutSetInput } from '@gymsheet/types';
 import { useExerciseMedia } from '@/api/use-exercise-media';
 import { ExercisePicker } from '@/components/exercise-picker';
 import { PressableScale } from '@/components/motion';
@@ -19,7 +19,9 @@ import { CardioLogger } from '@/features/cardio/cardio-logger';
 import { SuggestedLoad, useNextLoads } from '@/features/programs/suggested-load';
 import { FinishPage } from '@/features/workout/focus/finish-page';
 import { FocusHeader } from '@/features/workout/focus/focus-header';
-import { FocusPage, GroupSwitch, PageMedia, SetTrack } from '@/features/workout/focus/focus-page';
+import { DoneCard, FocusPage, GroupSwitch, OmittedCard, PageMedia, QuietActions, RestPills, SetTrack } from '@/features/workout/focus/focus-page';
+import { ReasonSheet, type ReasonSheetMode } from '@/features/workout/focus/reason-sheet';
+import { RestSheet, type RestSheetResult, type RestSheetTarget } from '@/features/workout/focus/rest-sheet';
 import { RestOverlay } from '@/features/workout/focus/rest-overlay';
 import { SessionSheet, type OverviewItem, type SessionSheetMode } from '@/features/workout/focus/session-menu';
 import { RirPicker, Stepper } from '@/features/workout/focus/stepper';
@@ -37,25 +39,35 @@ import {
   type Item,
 } from '@/features/workout/shared';
 import { TimedSetInputs } from '@/features/workout/timed-set-inputs';
-import { countSets, volumeOf, type useWorkoutSession } from '@/features/workout/use-workout-session';
+import { countSets, isNetworkFailure, volumeOf, type useWorkoutSession } from '@/features/workout/use-workout-session';
 import {
   activeItemOf,
   blockFill,
+  blockState,
   buildFlowBlocks,
   currentStep,
+  FALLBACK_REST_SEC,
   isBlockDone,
   isItemDone,
   isStaleSession,
   kgLabel,
+  nextSetNumber,
   openingWeight,
   pageAfterLogging,
   previousRestSeconds,
   progressLabel,
   restAfterLogging,
+  restLabel,
+  restTargets,
   roundLabel,
   sessionTitle,
+  skipReasonLabel,
   stepFrom,
   withLoggedSet,
+  withOmitted,
+  withSkippedSet,
+  type FlowBlock,
+  type FlowStep,
 } from '@/features/workout/workout-flow';
 import { useWorkoutStore } from '@/features/workout/workout-store';
 import { relativeDay } from '@/lib/format';
@@ -64,12 +76,18 @@ import { captureStreakLocation } from '@/lib/streak-location';
 import { confirm, notify } from '@/notifications';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
 import { useAmbientStore } from '@/state/ambient-store';
-import { colors, footerFade, gutter, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { colors, footerFade, gutter, iconSizes, metricColors, minTouchTarget, radii, spacing } from '@/theme';
 
 /** Alto del botón fijo. */
 const FOOTER_BUTTON = 56;
 /** Lo que tarda en cerrarse una hoja antes de poder abrir otra cosa encima (iOS no apila dos modales). */
 const SHEET_CLOSE_MS = 360;
+/** Tras un toque de navegación («Siguiente ejercicio»), los toques siguientes se ignoran este tiempo. */
+const NAV_LOCK_MS = 450;
+/** Una serie que no se guardó por la red se reintenta sola una vez, tras esta espera. */
+const AUTO_RETRY_MS = 1500;
+/** Páginas a cada lado de la actual que se pintan enteras; el resto son huecos (no gastan nada). */
+const WINDOW = 1;
 
 type Session = ReturnType<typeof useWorkoutSession>;
 
@@ -149,12 +167,17 @@ function StaleGate({
   );
 }
 
+
+type FailedSet = { exerciseId: string; label: string };
+
 /**
  * Entrenamiento en modo enfoque. Un ejercicio (o una superserie) por página, a
  * pantalla completa, y se avanza deslizando; arriba, un tramo por ejercicio
  * como en las historias. Una sola acción abajo, «Registrar serie». El descanso
  * entra a pantalla completa y bloquea lo demás hasta que termina o se salta.
- * Añadir, finalizar y cancelar viven en ⋯. La última página es el cierre.
+ * Saltar una serie, omitir el ejercicio y cambiar el descanso están en la
+ * página, discretos; añadir, finalizar y cancelar viven en ⋯. La última página
+ * es el cierre.
  */
 export function WorkoutFocus({ id, data, session }: { id: string; data: Workout; session: Session }) {
   useKeepAwake();
@@ -167,6 +190,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
 
   const startRest = useWorkoutStore((state) => state.startRest);
   const skipRest = useWorkoutStore((state) => state.skipRest);
+  const retimeRest = useWorkoutStore((state) => state.retimeRest);
   const restKind = useWorkoutStore((state) => state.restKind);
   const setActive = useWorkoutStore((state) => state.setActive);
 
@@ -183,6 +207,10 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
   const [sheet, setSheet] = useState<SessionSheetMode>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [resumed, setResumed] = useState(false);
+  const [reason, setReason] = useState<{ mode: Exclude<ReasonSheetMode, null>; exerciseId: string } | null>(null);
+  const [restTarget, setRestTarget] = useState<RestSheetTarget | null>(null);
+  const [failed, setFailed] = useState<FailedSet | null>(null);
+  const [celebrated, setCelebrated] = useState<string | null>(null);
 
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollX = useSharedValue(initialPage * width);
@@ -190,10 +218,25 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
     scrollX.value = event.contentOffset.x;
   });
 
-  const goTo = (index: number) => {
-    const target = Math.max(0, Math.min(finishPage, index));
-    scrollRef.current?.scrollTo({ x: target * width, animated: !reduceMotion });
-    setPage(target);
+  const goTo = useCallback(
+    (index: number, from: number) => {
+      const target = Math.max(0, Math.min(finishPage, index));
+      // Un salto de varias páginas no pasa por las de en medio (son huecos): se va directo.
+      const animated = !reduceMotion && Math.abs(target - from) <= WINDOW;
+      scrollRef.current?.scrollTo({ x: target * width, animated });
+      setPage(target);
+    },
+    [finishPage, reduceMotion, scrollRef, width],
+  );
+
+  // D6: un segundo toque mientras la página viaja (o mientras se guarda) no hace nada.
+  const navLockedUntil = useRef(0);
+  const navigate = (index: number) => {
+    const now = Date.now();
+    if (now < navLockedUntil.current) return;
+    navLockedUntil.current = now + NAV_LOCK_MS;
+    setExtra(null);
+    goTo(index, page);
   };
 
   // El fondo se anima mientras hay sesión abierta y se calma al cerrarla.
@@ -212,6 +255,14 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
   useEffect(() => {
     setActive({ id: data.id, current: activeName, progress: activeProgress });
   }, [data.id, activeName, activeProgress, setActive]);
+
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (retryTimer.current) clearTimeout(retryTimer.current);
+    },
+    [],
+  );
 
   const reference = (source: WorkoutExercise) =>
     source.ejercicio
@@ -259,10 +310,38 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
     return Number.isFinite(weight) && weight > 0 ? `${kgLabel(weight)} kg × ${reps}` : `${reps} reps`;
   };
 
+  const numberOf = (source: WorkoutExercise) =>
+    nextSetNumber(
+      source.series.map((set) => set.numeroSerie),
+      source.saltadas.map((skip) => skip.numeroSerie),
+    );
+
+  /** Lo que viene después de un paso, listo para la pantalla de descanso. */
+  const describeNext = (after: ReadonlyArray<FlowBlock<Item>>, next: FlowStep | null, ownerId: string, finished: string | null) => {
+    const nextBlock = next ? after[next.blockIndex] : undefined;
+    const nextSource = next ? ordered.find((item) => item.id === next.itemId) : undefined;
+    const label = next ? [stepLabel(after, next), nextSource ? previewOf(nextSource) : null].filter(Boolean).join(' · ') : null;
+    const detail =
+      next && nextSource && nextBlock
+        ? {
+            name: nameOf(nextSource),
+            step: nextBlock.kind === 'single' ? `Serie ${next.round}` : roundLabel(next.round, nextBlock.rounds),
+            load: previewOf(nextSource),
+            exercise: withMedia(nextSource.ejercicio),
+            restOwnerId: ownerId,
+            finished,
+          }
+        : null;
+    return { label, detail };
+  };
+
   const totalSets = countSets(data);
+  const logging = useRef(false);
 
   const logSet = () => {
     if (!active || !activeSource) return;
+    // D6: el doble toque no registra dos series.
+    if (logging.current || session.addSet.isPending) return;
     const timed = isTimed(activeSource);
     const draft = draftOf(activeSource);
     const parsed = timed ? parseTimedDraft(draft) : parseDraft(draft);
@@ -277,7 +356,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
       notify.info('Pon el peso que usaste (0 si fue sin carga).');
       return;
     }
-    const numeroSerie = Math.max(0, ...activeSource.series.map((set) => set.numeroSerie)) + 1;
+    const numeroSerie = numberOf(activeSource);
     const set: WorkoutSetInput | TimedWorkoutSetInput = {
       numeroSerie,
       ...parsed,
@@ -285,46 +364,170 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
       descansoSegAnterior: previousRestSeconds(ordered.flatMap((item) => item.series.map((s) => s.fechaRegistro))),
     };
     const loggedId = activeSource.id;
+    const loggedName = nameOf(activeSource);
     const blockIndex = active.step.blockIndex;
+    const from = page;
     const after = withLoggedSet(blocks, loggedId);
     const next = stepFrom(after, blockIndex);
     const rest = restAfterLogging(after, loggedId);
-    const nextSource = next ? ordered.find((item) => item.id === next.itemId) : undefined;
-    const nextLabel = next ? [stepLabel(after, next), nextSource ? previewOf(nextSource) : null].filter(Boolean).join(' · ') : null;
+    const afterBlock = after[blockIndex];
+    const closed = afterBlock && isBlockDone(afterBlock) ? (afterBlock.kind === 'single' ? `${loggedName} completo` : `${blockName(afterBlock)} completa`) : null;
+    const upcoming = describeNext(after, next, loggedId, closed);
 
+    logging.current = true;
+    setFailed(null);
     // El descanso arranca con el toque, no cuando contesta el servidor: antes
     // tardaba lo que tardara la red y a veces parecía que no había empezado.
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    startRest(id, rest.seconds, nextLabel, rest.kind);
+    startRest(id, rest.seconds, upcoming.label, rest.kind, upcoming.detail);
     // El borrador se guarda: la serie siguiente abre con lo que se acaba de hacer.
     setDraft(activeSource, draft);
 
-    session.addSet.mutate(
-      { sessionExerciseId: loggedId, set },
-      {
-        onSuccess: () => {
-          setExtra(null);
-          setChosen((all) => Object.fromEntries(Object.entries(all).filter(([key]) => Number(key) !== blockIndex)));
-          // Debajo del descanso la pantalla ya queda en lo que viene.
-          const target = pageAfterLogging(after, next);
-          if (target !== page) goTo(target);
-          AccessibilityInfo.announceForAccessibility(`Serie ${numeroSerie} registrada.${nextLabel ? ` Siguiente: ${nextLabel}.` : ''}`);
+    const send = (attempt: number) => {
+      session.addSet.mutate(
+        { sessionExerciseId: loggedId, set },
+        {
+          onSuccess: () => {
+            logging.current = false;
+            setExtra(null);
+            setChosen((all) => Object.fromEntries(Object.entries(all).filter(([key]) => Number(key) !== blockIndex)));
+            if (closed) setCelebrated(loggedId);
+            // Debajo del descanso la pantalla ya queda en lo que viene.
+            const target = pageAfterLogging(after, next);
+            if (target !== from) goTo(target, from);
+            AccessibilityInfo.announceForAccessibility(`Serie ${numeroSerie} registrada.${upcoming.label ? ` Siguiente: ${upcoming.label}.` : ''}`);
+          },
+          onError: (error) => {
+            // Sin red: un reintento solo, con el descanso corriendo (lo normal es que entre).
+            if (isNetworkFailure(error) && attempt === 0) {
+              retryTimer.current = setTimeout(() => send(1), AUTO_RETRY_MS);
+              return;
+            }
+            logging.current = false;
+            // No se guardó: no hay descanso que hacer, y lo tecleado sigue en la página.
+            skipRest();
+            void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            setFailed({ exerciseId: loggedId, label: previewOf(activeSource) ?? `serie ${numeroSerie}` });
+            if (!isNetworkFailure(error)) notify.error(error as Error);
+          },
         },
-        // No se guardó: no hay descanso que hacer (el aviso del error ya salió).
-        onError: () => skipRest(),
+      );
+    };
+    send(0);
+  };
+
+  /** Lo último que se hizo o se saltó en el ejercicio: es lo que deshace «Deshacer». */
+  const undoLast = (source: WorkoutExercise) => {
+    const lastSet = [...source.series].sort((a, b) => b.numeroSerie - a.numeroSerie)[0];
+    const lastSkip = [...source.saltadas].sort((a, b) => b.numeroSerie - a.numeroSerie)[0];
+    if (lastSkip && (!lastSet || lastSkip.numeroSerie > lastSet.numeroSerie)) {
+      session.undoSkip.mutate({ exerciseId: source.id, skip: lastSkip });
+      return;
+    }
+    if (!lastSet) return;
+    // Deshacer una serie deshace también su descanso.
+    skipRest();
+    session.removeSet.mutate(lastSet.id);
+  };
+
+  const undoSkip = (source: WorkoutExercise, skip: SkippedSet) => session.undoSkip.mutate({ exerciseId: source.id, skip });
+
+  /** D1 · saltar la serie que toca: se anota el motivo, no hay descanso y el flujo avanza. */
+  const skipSetOf = (source: WorkoutExercise, motivo: SkipReason, nota: string | null) => {
+    const blockIndex = blocks.findIndex((block) => block.items.some((item) => item.id === source.id));
+    const numeroSerie = numberOf(source);
+    const after = withSkippedSet(blocks, source.id);
+    const next = stepFrom(after, Math.max(0, blockIndex));
+    skipRest();
+    void Haptics.selectionAsync();
+    session.skipSet.mutate({ exerciseId: source.id, numeroSerie, motivo, nota });
+    setExtra(null);
+    setChosen((all) => Object.fromEntries(Object.entries(all).filter(([key]) => Number(key) !== blockIndex)));
+    const target = pageAfterLogging(after, next);
+    if (target !== page) goTo(target, page);
+    AccessibilityInfo.announceForAccessibility(`Serie ${numeroSerie} saltada: ${skipReasonLabel(motivo)}.`);
+    if (motivo === 'DOLOR') notify.info('Si duele, parar es entrenar bien. Si la molestia sigue, coméntalo con tu entrenador.');
+  };
+
+  /** D1 · omitir el ejercicio: lo hecho se conserva, lo que falta no se pide más hoy. */
+  const omitOf = (source: WorkoutExercise, motivo: SkipReason, nota: string | null) => {
+    const blockIndex = blocks.findIndex((block) => block.items.some((item) => item.id === source.id));
+    const after = withOmitted(blocks, source.id);
+    const next = stepFrom(after, Math.max(0, blockIndex));
+    skipRest();
+    void Haptics.selectionAsync();
+    session.omitExercise.mutate({ exerciseId: source.id, motivo, nota });
+    setExtra(null);
+    setChosen((all) => Object.fromEntries(Object.entries(all).filter(([key]) => Number(key) !== blockIndex)));
+    const target = pageAfterLogging(after, next);
+    if (target !== page) goTo(target, page);
+    AccessibilityInfo.announceForAccessibility(`${nameOf(source)} omitido: ${skipReasonLabel(motivo)}.`);
+  };
+
+  /** D2 · la hoja de descanso de un ejercicio, con lo que tiene ahora. */
+  const openRest = (source: WorkoutExercise) => {
+    const block = blocks.find((candidate) => candidate.items.some((item) => item.id === source.id));
+    if (!block) return;
+    const grouped = block.kind !== 'single';
+    const link = session.routineLink.data;
+    setRestTarget({
+      exerciseId: source.id,
+      name: grouped ? blockName(block) : nameOf(source),
+      restSec: (grouped ? block.restAfter : source.descansoSeg) ?? FALLBACK_REST_SEC,
+      betweenSec: grouped ? block.between : null,
+      workSec: isTimed(source) ? source.duracionSeg : null,
+      others: restTargets(blocks, source.id, 'remaining').filter((item) => !block.items.some((own) => own.id === item.id)).length,
+      canSaveToRoutine: Boolean(link?.editable && link.rutinaId),
+      routineName: link?.nombre ?? null,
+    });
+  };
+
+  const applyRest = (result: RestSheetResult) => {
+    const target = restTarget;
+    setRestTarget(null);
+    if (!target) return;
+    const ownBlock = blocks.find((block) => block.items.some((item) => item.id === target.exerciseId));
+    if (!ownBlock) return;
+    const scopeItems = result.scope === 'remaining' ? restTargets(blocks, target.exerciseId, 'remaining') : [];
+    // El bloque del ejercicio entra siempre entero: su descanso de vuelta lo marca el último.
+    const ids = new Set<string>([...ownBlock.items.map((item) => item.id), ...scopeItems.map((item) => item.id)]);
+    const cambios: RestSettingChange[] = [];
+    for (const block of blocks) {
+      for (const item of block.items) {
+        if (!ids.has(item.id)) continue;
+        const change: RestSettingChange = { sesionEjercicioId: item.id, descansoSeg: result.restSec };
+        if (block.kind !== 'single' && result.betweenSec !== null) change.descansoEntreSeg = result.betweenSec;
+        if (item.id === target.exerciseId && result.workSec !== null && isTimed(item.source)) change.duracionSeg = result.workSec;
+        cambios.push(change);
+      }
+    }
+    // Si se está descansando ahora mismo de uno de esos ejercicios, el reloj en marcha también cambia.
+    const running = useWorkoutStore.getState();
+    const ownerId = running.restNextDetail?.restOwnerId;
+    if (running.restEndsAt !== null && ownerId && ids.has(ownerId)) {
+      const seconds = running.restKind === 'between' && result.betweenSec !== null ? result.betweenSec : result.restSec;
+      if (seconds > 0) retimeRest(seconds);
+      else skipRest();
+    }
+    const who = cambios.length === 1 || result.scope === 'one' ? 'para este ejercicio' : `para ${cambios.length} ejercicios`;
+    session.applyRest.mutate(
+      { cambios, guardarEnRutina: result.saveToRoutine },
+      {
+        onSuccess: (response) => {
+          if (result.saveToRoutine && !response.rutina.guardado) {
+            notify.info(`Descanso de ${restLabel(result.restSec)} ${who}. No se pudo guardar en la rutina: vale para hoy.`);
+          } else {
+            notify.success(`Descanso de ${restLabel(result.restSec)} ${who}${response.rutina.guardado ? ', y guardado en tu rutina' : ''}.`);
+          }
+        },
+        // Sin red o sin la ruta en el servidor, el cambio vale para hoy (queda en el teléfono).
+        onError: () => notify.success(`Descanso de ${restLabel(result.restSec)} ${who}.`),
       },
     );
   };
 
-  const undoLast = (source: WorkoutExercise) => {
-    const last = [...source.series].sort((a, b) => b.numeroSerie - a.numeroSerie)[0];
-    if (!last) return;
-    // Deshacer una serie deshace también su descanso.
-    skipRest();
-    session.removeSet.mutate(last.id);
-  };
-
   const onFinish = async () => {
+    if (session.finish.isPending) return;
     const result = await confirm({
       title: 'Finalizar sesión',
       message:
@@ -334,7 +537,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
       confirmLabel: 'Finalizar',
       cancelLabel: 'Seguir',
     });
-    if (!result.confirmed) return;
+    if (!result.confirmed || session.finish.isPending) return;
     skipRest();
     // El permiso de ubicación se pide después de confirmar, no antes.
     const location = await captureStreakLocation();
@@ -342,6 +545,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
   };
 
   const onCancel = async () => {
+    if (session.cancel.isPending) return;
     const result = await confirm({
       title: 'Cancelar sesión',
       message: 'Se descartará la sesión y lo que hayas registrado. No se puede deshacer.',
@@ -349,7 +553,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
       confirmLabel: 'Cancelar sesión',
       cancelLabel: 'Volver',
     });
-    if (result.confirmed) session.cancel.mutate();
+    if (result.confirmed && !session.cancel.isPending) session.cancel.mutate();
   };
 
   const minimize = () => {
@@ -361,8 +565,11 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
   // justo después de cerrar la hoja espera a que termine de irse. Sin esto, un
   // toque rápido en ⋯ dejaba la hoja sin abrir.
   const sheetClosedAt = useRef(0);
-  const closeSheet = () => {
+  const markSheetClosed = () => {
     sheetClosedAt.current = Date.now();
+  };
+  const closeSheet = () => {
+    markSheetClosed();
     setSheet(null);
   };
   const afterSheet = (action: () => void) => {
@@ -401,7 +608,8 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
   const head = sessionTitle(data.observacion);
   const pendingStep = currentStep(blocks);
   const activeIsCardio = activeSource ? isCardio(activeSource) : false;
-  const showingDone = Boolean(active?.done) && extra !== active?.item.id;
+  const activeOmitted = Boolean(activeSource?.omitido);
+  const showingDone = (Boolean(active?.done) && extra !== active?.item.id) || activeOmitted;
 
   const overview: OverviewItem[] = blocks.flatMap((block, blockIndex) =>
     block.items.map((item) => ({
@@ -411,6 +619,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
       badge: badgeOf(block, item),
       progress: progressLabel(item),
       done: isItemDone(item),
+      omitted: item.source.omitido !== null,
       exercise: withMedia(item.source.ejercicio),
     })),
   );
@@ -455,7 +664,9 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
         >
           <Stepper
             decimal
+            icon="barbell-outline"
             label="Peso"
+            metric="weight"
             onChangeText={(pesoKg) => setDraft(source, { ...draft, pesoKg })}
             onStep={(direction) => setDraft(source, { ...draft, pesoKg: bump(draft.pesoKg, direction * increment, 0) })}
             spoken="kilos"
@@ -465,7 +676,9 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
           />
           <View style={{ height: 1, backgroundColor: colors.border }} />
           <Stepper
+            icon="repeat-outline"
             label="Repeticiones"
+            metric="reps"
             onChangeText={(repeticiones) => setDraft(source, { ...draft, repeticiones })}
             onStep={(direction) => setDraft(source, { ...draft, repeticiones: bump(draft.repeticiones, direction, 1) })}
             spoken="repeticiones"
@@ -484,7 +697,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
             style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: minTouchTarget }}
             testID="last-time"
           >
-            <Ionicons color={colors.textSecondary} name="time-outline" size={iconSizes.sm} />
+            <Ionicons color={metricColors.time.ink} name="time-outline" size={iconSizes.sm} />
             <Text style={{ flex: 1 }} tone="secondary" variant="subhead">
               {'La última vez: '}
               <Text strong tabular variant="subhead">
@@ -500,15 +713,17 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
     );
   };
 
-  const exercisesDone = blocks.reduce((sum, block) => sum + block.items.filter(isItemDone).length, 0);
+  const exercisesDone = blocks.reduce((sum, block) => sum + block.items.filter((item) => isItemDone(item) && !item.source.omitido).length, 0);
   const pendingLines = blocks.flatMap((block) =>
     block.items
       .filter((item) => !isItemDone(item) && item.target !== null)
       .map((item) => {
-        const left = (item.target ?? 0) - item.logged;
+        const left = (item.target ?? 0) - item.logged - (item.skipped ?? 0);
         return `${nameOf(item.source)} · ${left} ${left === 1 ? 'serie' : 'series'}`;
       }),
   );
+  const skippedSets = ordered.reduce((sum, item) => sum + item.saltadas.length, 0);
+  const omittedLines = ordered.filter((item) => item.omitido).map((item) => `${nameOf(item)} · ${skipReasonLabel(item.omitido?.motivo ?? 'OTRO')}`);
   const minutes = Math.max(0, Math.round((Date.now() - new Date(data.fechaInicio).getTime()) / 60_000));
 
   const footer =
@@ -517,6 +732,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
         <Button icon="add" label="Añadir ejercicio" onPress={() => setPickerOpen(true)} size="lg" style={{ flex: 1 }} testID="empty-add" />
       ) : (
         <Button
+          icon="flag"
           label="Finalizar sesión"
           loading={session.finish.isPending}
           onPress={() => void onFinish()}
@@ -525,11 +741,11 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
           testID="finish-primary"
         />
       )
-    ) : activeIsCardio ? null : showingDone ? (
+    ) : activeIsCardio && !activeOmitted ? null : showingDone ? (
       <Button
         icon="arrow-forward"
         label={pendingStep ? 'Siguiente ejercicio' : 'Ver el resumen'}
-        onPress={() => goTo(pendingStep ? pendingStep.blockIndex : finishPage)}
+        onPress={() => navigate(pendingStep ? pendingStep.blockIndex : finishPage)}
         size="lg"
         style={{ flex: 1 }}
         testID="next-exercise"
@@ -547,6 +763,11 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
       />
     );
 
+  const restOwner = () => {
+    const ownerId = useWorkoutStore.getState().restNextDetail?.restOwnerId;
+    return ordered.find((item) => item.id === ownerId) ?? activeSource;
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }} testID="workout-focus">
       {/* El gesto de volver choca con deslizar entre ejercicios: aquí se sale con el botón. */}
@@ -558,6 +779,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
         page={page}
         position={page >= finishPage ? 'Resumen' : `${page + 1} de ${blocks.length}`}
         startIso={data.fechaInicio}
+        states={blocks.map(blockState)}
         title={head.title}
         topInset={insets.top}
       />
@@ -584,12 +806,19 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
         testID="workout-pager"
       >
         {blocks.map((block, index) => {
+          const pageKey = block.items.map((item) => item.id).join('+');
           const here = activeItemOf(blocks, index, chosen[index] ?? null);
-          if (!here) return <View key={index} style={{ width }} />;
+          // D6: solo se pintan la página a la vista y sus vecinas. Con todas montadas, cada
+          // toque en −/+ repintaba todas las imágenes y campos de la sesión.
+          if (!here || Math.abs(index - page) > WINDOW) return <View key={pageKey} style={{ width }} />;
           const source = here.item.source;
           const grouped = block.kind !== 'single';
-          const done = here.done && extra !== here.item.id;
+          const omitted = source.omitido;
+          const done = here.done && extra !== here.item.id && !omitted;
           const exercise = withMedia(source.ejercicio);
+          const cardio = isCardio(source);
+          const hasHistory = source.series.length + source.saltadas.length > 0;
+          const isHere = index === page;
           return (
             <FocusPage
               bottomSpace={bottomSpace}
@@ -608,7 +837,8 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
                   />
                 ) : null
               }
-              key={block.items.map((item) => item.id).join('+')}
+              index={index}
+              key={pageKey}
               media={
                 <PageMedia
                   compact={grouped}
@@ -621,57 +851,119 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
               }
               name={nameOf(source)}
               note={source.nota}
+              scrollX={scrollX}
               target={targetOf(source)}
-              testID={index === page ? 'workout-current' : `workout-page-${index}`}
+              testID={isHere ? 'workout-current' : `workout-page-${index}`}
               track={
-                isCardio(source) ? null : (
-                  <SetTrack current={done ? null : source.series.length + 1} sets={source.series} target={source.seriesObjetivo} />
+                cardio ? null : (
+                  <View style={{ gap: spacing.sm }}>
+                    <SetTrack
+                      current={done || omitted ? null : numberOf(source)}
+                      onUndoSkip={(skip) => undoSkip(source, skip)}
+                      sets={source.series}
+                      skipped={source.saltadas}
+                      target={source.seriesObjetivo}
+                    />
+                    {omitted ? null : (
+                      <RestPills
+                        betweenSec={grouped ? block.between : null}
+                        onPress={() => openRest(source)}
+                        restSec={(grouped ? block.restAfter : source.descansoSeg) ?? FALLBACK_REST_SEC}
+                        workSec={isTimed(source) ? source.duracionSeg : null}
+                      />
+                    )}
+                  </View>
                 )
               }
               width={width}
             >
-              {done ? (
+              {isHere && failed?.exerciseId === source.id ? (
                 <Animated.View
-                  entering={reduceMotion ? undefined : FadeIn.duration(220)}
+                  accessibilityLiveRegion="assertive"
+                  entering={reduceMotion ? undefined : FadeInDown.duration(220)}
                   style={{
-                    gap: spacing.md,
-                    padding: spacing.mdl,
-                    borderRadius: radii.xxl,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.smd,
+                    padding: spacing.smd,
+                    borderRadius: radii.lg,
                     borderCurve: 'continuous',
-                    backgroundColor: colors.surfaceLow,
+                    backgroundColor: metricColors.effort.tint,
                   }}
-                  testID="exercise-done"
+                  testID="set-failed"
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
-                    <Ionicons color={colors.success} name="checkmark-circle" size={iconSizes.xl} />
-                    <View style={{ flex: 1 }}>
-                      <Text strong variant="headline">
-                        {isBlockDone(block) ? (grouped ? 'Bloque completo' : 'Ejercicio completo') : 'Este ya está'}
-                      </Text>
-                      <Text tone="secondary" variant="footnote">
-                        {`Hiciste ${progressLabel(here.item)} series.`}
-                      </Text>
-                    </View>
+                  <Ionicons color={metricColors.effort.ink} name="cloud-offline-outline" size={iconSizes.md} />
+                  <View style={{ flex: 1 }}>
+                    <Text strong variant="subhead">
+                      No se guardó la serie
+                    </Text>
+                    <Text tone="secondary" variant="footnote">
+                      {`Tu ${failed.label} sigue aquí. Revisa la conexión y vuelve a intentarlo.`}
+                    </Text>
                   </View>
-                  <Button label="Hacer una serie extra" onPress={() => setExtra(here.item.id)} testID="extra-set" variant="ghost" />
+                  <Button label="Reintentar" loading={session.addSet.isPending} onPress={logSet} testID="set-retry" variant="secondary" />
                 </Animated.View>
+              ) : null}
+              {omitted ? (
+                <OmittedCard
+                  busy={session.resumeExercise.isPending}
+                  mark={omitted}
+                  onResume={() => session.resumeExercise.mutate({ exerciseId: source.id, onServer: data.ejercicios.some((item) => item.id === source.id) })}
+                />
+              ) : done ? (
+                <DoneCard
+                  celebrate={celebrated === source.id}
+                  detail={
+                    source.saltadas.length > 0
+                      ? `Hiciste ${source.series.length} y saltaste ${source.saltadas.length}.`
+                      : `Hiciste ${progressLabel(here.item)} series.`
+                  }
+                  onExtra={() => setExtra(here.item.id)}
+                  title={isBlockDone(block) ? (grouped ? 'Bloque completo' : 'Ejercicio completo') : 'Este ya está'}
+                />
               ) : (
                 renderInputs(source)
               )}
-              {source.series.length > 0 ? (
-                <PressableScale
-                  accessibilityLabel="Deshacer la última serie"
-                  disabled={session.removeSet.isPending}
-                  haptic="none"
-                  onPress={() => undoLast(source)}
-                  style={{ alignSelf: 'center', minHeight: minTouchTarget, justifyContent: 'center', paddingHorizontal: spacing.md }}
-                  testID={index === page ? 'undo-set' : undefined}
-                >
-                  <Text tone="muted" variant="footnote">
-                    Deshacer la última serie
-                  </Text>
-                </PressableScale>
-              ) : null}
+              {omitted ? null : (
+                <QuietActions
+                  actions={[
+                    ...(!done && !cardio
+                      ? [
+                          {
+                            key: 'skip',
+                            icon: 'play-skip-forward-outline' as const,
+                            label: 'Saltar serie',
+                            onPress: () => setReason({ mode: { kind: 'set', label: `Serie ${numberOf(source)} de ${nameOf(source)}` }, exerciseId: source.id }),
+                            testID: isHere ? 'skip-set' : undefined,
+                          },
+                        ]
+                      : []),
+                    ...(!done
+                      ? [
+                          {
+                            key: 'omit',
+                            icon: 'remove-circle-outline' as const,
+                            label: 'Omitir ejercicio',
+                            onPress: () => setReason({ mode: { kind: 'exercise', label: nameOf(source) }, exerciseId: source.id }),
+                            testID: isHere ? 'omit-exercise' : undefined,
+                          },
+                        ]
+                      : []),
+                    ...(hasHistory && !cardio
+                      ? [
+                          {
+                            key: 'undo',
+                            icon: 'arrow-undo-outline' as const,
+                            label: 'Deshacer',
+                            onPress: () => undoLast(source),
+                            disabled: session.removeSet.isPending || session.undoSkip.isPending,
+                            testID: isHere ? 'undo-set' : undefined,
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+              )}
             </FocusPage>
           );
         })}
@@ -681,8 +973,10 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
           exercisesDone={exercisesDone}
           exercisesTotal={ordered.length}
           minutes={minutes}
+          omitted={omittedLines}
           pending={pendingLines}
           sets={totalSets}
+          skippedSets={skippedSets}
           volumeKg={Math.round(volumeOf(data))}
           width={width}
         />
@@ -700,9 +994,16 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
         </View>
       ) : null}
 
-      <RestOverlay kind={restKind} />
+      <RestOverlay
+        kind={restKind}
+        onChangeRest={() => {
+          const owner = restOwner();
+          if (owner) afterSheet(() => openRest(owner));
+        }}
+      />
 
       <SessionSheet
+        currentName={activeSource && !activeOmitted && !active?.done ? nameOf(activeSource) : undefined}
         currentPage={page}
         items={overview}
         mode={sheet}
@@ -710,25 +1011,68 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
         onCancel={() => fromMenu(() => void onCancel())}
         onClose={closeSheet}
         onFinish={() => fromMenu(() => void onFinish())}
+        onOmit={
+          activeSource && !activeOmitted && !active?.done
+            ? () => fromMenu(() => setReason({ mode: { kind: 'exercise', label: nameOf(activeSource) }, exerciseId: activeSource.id }))
+            : undefined
+        }
         onOverview={() => setSheet('overview')}
+        onRest={activeSource && !activeIsCardio ? () => fromMenu(() => openRest(activeSource)) : undefined}
         onSelect={(item) => {
           closeSheet();
           setChosen((all) => ({ ...all, [item.page]: item.id }));
-          goTo(item.page);
+          setExtra(null);
+          goTo(item.page, page);
         }}
+        restLabel={
+          activeSource
+            ? restLabel(
+                (blocks[page]?.kind !== 'single' ? blocks[page]?.restAfter : activeSource.descansoSeg) ?? FALLBACK_REST_SEC,
+              )
+            : undefined
+        }
         setsLabel={`${totalSets} ${totalSets === 1 ? 'serie registrada' : 'series registradas'}`}
+      />
+      <ReasonSheet
+        mode={reason?.mode ?? null}
+        onChoose={(motivo, nota) => {
+          const current = reason;
+          markSheetClosed();
+          setReason(null);
+          const source = current ? ordered.find((item) => item.id === current.exerciseId) : undefined;
+          if (!current || !source) return;
+          if (current.mode.kind === 'set') skipSetOf(source, motivo, nota);
+          else omitOf(source, motivo, nota);
+        }}
+        onClose={() => {
+          markSheetClosed();
+          setReason(null);
+        }}
+      />
+      <RestSheet
+        onApply={(result) => {
+          markSheetClosed();
+          applyRest(result);
+        }}
+        onClose={() => {
+          markSheetClosed();
+          setRestTarget(null);
+        }}
+        target={restTarget}
       />
       <ExercisePicker
         onClose={() => setPickerOpen(false)}
-        onSelect={(exerciseId) =>
+        onSelect={(exerciseId) => {
+          // D6: un segundo toque mientras se añade no lo añade dos veces.
+          if (session.addExercise.isPending) return;
           session.addExercise.mutate(exerciseId, {
             onSuccess: () => {
               setPickerOpen(false);
               // El nuevo va al final: se salta a su página (la que era la del resumen).
-              setTimeout(() => goTo(finishPage), SHEET_CLOSE_MS);
+              setTimeout(() => goTo(finishPage, page), SHEET_CLOSE_MS);
             },
-          })
-        }
+          });
+        }}
         pending={session.addExercise.isPending}
         visible={pickerOpen}
       />

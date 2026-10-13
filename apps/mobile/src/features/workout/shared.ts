@@ -76,6 +76,8 @@ export function toFlowItems(ordered: readonly WorkoutExercise[]): Item[] {
     grupoTipo: item.grupoTipo,
     target: item.seriesObjetivo,
     logged: isCardio(item) ? item.series.length : strengthSets(item).length,
+    skipped: item.saltadas.length,
+    omitted: item.omitido !== null,
     descansoSeg: item.descansoSeg,
     descansoEntreSeg: item.descansoEntreSeg,
     source: item,

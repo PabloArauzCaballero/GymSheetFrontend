@@ -2,12 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useEffect, useRef } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { numericInputProps } from '@/components/keyboard';
 import { DURATION, PREMIUM_EASING, PRESS_SPRING } from '@/components/motion';
 import { Text } from '@/components/text';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
-import { colors, fontFamilies, heroNumberFontSize, iconSizes, radii, spacing, tabularNums } from '@/theme';
+import { colors, fontFamilies, heroNumberFontSize, iconSizes, metricColors, radii, settleSpring, spacing, tabularNums, type MetricKey } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -21,7 +21,7 @@ const HOLD_EVERY_MS = 90;
  * Botón −/+ que repite mientras se mantiene pulsado (subir 20 kg sin dar ocho
  * toques). Un tic háptico por paso: es un valor que pasa por muescas.
  */
-function StepButton({
+export function StepButton({
   icon,
   label,
   onStep,
@@ -95,7 +95,12 @@ function StepButton({
 
 /**
  * Un valor de la serie con sus dos botones: − a la izquierda, + a la derecha y
- * la cifra, grande, en medio. La cifra es un campo: se toca y se teclea.
+ * la cifra, grande, en medio. La cifra es un campo: se toca y se teclea. Cada
+ * magnitud lleva su color (peso azul, repeticiones violeta) en un glifo junto
+ * al rótulo; la cifra se queda en blanco, que es lo que se lee.
+ *
+ * Al pulsar − o + la cifra da un pequeño salto en la dirección del cambio: es
+ * la respuesta a «¿me hizo caso?» cuando el dedo tapa el botón.
  */
 export function Stepper({
   label,
@@ -106,6 +111,8 @@ export function Stepper({
   onChangeText,
   onStep,
   spoken,
+  metric,
+  icon,
   testID,
 }: {
   label: string;
@@ -117,40 +124,59 @@ export function Stepper({
   onStep: (direction: -1 | 1) => void;
   /** «kilos», «repeticiones»: lo que dicen los botones al lector de pantalla. */
   spoken: string;
+  metric: MetricKey;
+  icon: keyof typeof Ionicons.glyphMap;
   testID?: string;
 }) {
+  const reduceMotion = useReduceMotion();
+  const kick = useSharedValue(0);
+  const tone = metricColors[metric];
+  const step = (direction: -1 | 1) => {
+    onStep(direction);
+    if (reduceMotion) return;
+    // Sube al sumar, baja al restar, y vuelve con muelle.
+    kick.value = withSequence(withTiming(-direction, { duration: 70, easing: PREMIUM_EASING }), withSpring(0, settleSpring));
+  };
+  const animated = useAnimatedStyle(() => ({
+    transform: [{ translateY: kick.value * 5 }, { scale: 1 + Math.abs(kick.value) * 0.05 }],
+  }));
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
-      <StepButton icon="remove" label={`Menos ${spoken}`} onStep={() => onStep(-1)} testID={testID ? `${testID}-minus` : undefined} />
+      <StepButton icon="remove" label={`Menos ${spoken}`} onStep={() => step(-1)} testID={testID ? `${testID}-minus` : undefined} />
       <View style={{ flex: 1, alignItems: 'stretch' }}>
-        <Text style={{ textAlign: 'center' }} tone="muted" variant="caption">
-          {(unit ? `${label} · ${unit}` : label).toUpperCase()}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs }}>
+          <Ionicons color={tone.ink} name={icon} size={iconSizes.sm} />
+          <Text tone="muted" variant="caption">
+            {(unit ? `${label} · ${unit}` : label).toUpperCase()}
+          </Text>
+        </View>
         {/* El campo ocupa todo el ancho entre los botones: con un ancho mínimo, «72,5» se cortaba en «72». */}
-        <TextInput
-          accessibilityLabel={unit ? `${label}, ${unit}` : label}
-          keyboardType={decimal ? 'decimal-pad' : 'number-pad'}
-          {...numericInputProps}
-          maxLength={6}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor={colors.textDisabled}
-          selectTextOnFocus
-          style={[
-            {
-              paddingVertical: 0,
-              color: colors.text,
-              fontFamily: fontFamilies.display,
-              fontSize: heroNumberFontSize,
-              textAlign: 'center',
-            },
-            tabularNums,
-          ]}
-          testID={testID}
-          value={value}
-        />
+        <Animated.View style={animated}>
+          <TextInput
+            accessibilityLabel={unit ? `${label}, ${unit}` : label}
+            keyboardType={decimal ? 'decimal-pad' : 'number-pad'}
+            {...numericInputProps}
+            maxLength={6}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            placeholderTextColor={colors.textDisabled}
+            selectTextOnFocus
+            style={[
+              {
+                paddingVertical: 0,
+                color: colors.text,
+                fontFamily: fontFamilies.display,
+                fontSize: heroNumberFontSize,
+                textAlign: 'center',
+              },
+              tabularNums,
+            ]}
+            testID={testID}
+            value={value}
+          />
+        </Animated.View>
       </View>
-      <StepButton icon="add" label={`Más ${spoken}`} onStep={() => onStep(1)} testID={testID ? `${testID}-plus` : undefined} />
+      <StepButton icon="add" label={`Más ${spoken}`} onStep={() => step(1)} testID={testID ? `${testID}-plus` : undefined} />
     </View>
   );
 }
@@ -160,6 +186,7 @@ export function RirPicker({ value, onChange }: { value: string; onChange: (next:
   const options = ['0', '1', '2', '3', '4'];
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+      <Ionicons color={metricColors.effort.ink} name="flame-outline" size={iconSizes.md} />
       <View style={{ flex: 1 }}>
         <Text strong variant="subhead">
           RIR
@@ -187,11 +214,13 @@ export function RirPicker({ value, onChange }: { value: string; onChange: (next:
               borderRadius: radii.full,
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: active ? colors.text : colors.surfaceHighest,
+              borderWidth: 1.5,
+              borderColor: active ? metricColors.effort.ink : 'transparent',
+              backgroundColor: active ? metricColors.effort.tint : colors.surfaceHighest,
             }}
             testID={`set-rir-${option}`}
           >
-            <Text strong style={{ color: active ? colors.background : colors.textSecondary }} tabular variant="subhead">
+            <Text strong style={{ color: active ? metricColors.effort.ink : colors.textSecondary }} tabular variant="subhead">
               {option === '4' ? '4+' : option}
             </Text>
           </Pressable>
