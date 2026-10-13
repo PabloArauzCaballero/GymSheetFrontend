@@ -213,11 +213,11 @@ Estado inicial: todos los casos pendientes; los IDs son nombres obligatorios par
 | H10.S3.M5 | H10 | PAIR | Abrir lugar correcto | EN CURSO: web/móvil abren Maps por etiqueta acordada; falta validar destino en dispositivo; [evidencia](evidencia/h10-s3-m4-m5-agenda-map-2026-10-12.md) |
 | H10.S4.M1 | H10 | BE | Aplicar esquema sin pérdida | HECHO |
 | H10.S4.M2 | H10 | BE | Reabrir desde base vacía | HECHO |
-| H11.S1.M1 | H11 | BE | Reportar contenido autorizado | TODO |
-| H11.S1.M2 | H11 | BE | Restringir administración de gimnasio | TODO |
-| H11.S1.M3 | H11 | BE | Ocultar contenido desde moderación | TODO |
-| H11.S1.M4 | H11 | BE | Auditar resolución | TODO |
-| H11.S1.M5 | H11 | BE | Conservar evidencia tras revocación | TODO |
+| H11.S1.M1 | H11 | BE | Reportar contenido autorizado | HECHO: referencia y evidencia mínima; no reporta contenido que el usuario ya no puede ver; [E2E](evidencia/h11-s1-moderacion-e2e-2026-10-13.md) |
+| H11.S1.M2 | H11 | BE | Restringir administración de gimnasio | HECHO: admin de otro tenant no ve caso ni cola; central sí accede; [E2E](evidencia/h11-s1-moderacion-e2e-2026-10-13.md) |
+| H11.S1.M3 | H11 | BE | Ocultar contenido desde moderación | HECHO: el feed omite el reel y el media endpoint da 404; [E2E](evidencia/h11-s1-moderacion-e2e-2026-10-13.md) |
+| H11.S1.M4 | H11 | BE | Auditar resolución | HECHO: decisión, moderador, nota, hora y `admin.audit_log` verificados; [E2E](evidencia/h11-s1-moderacion-e2e-2026-10-13.md) |
+| H11.S1.M5 | H11 | BE | Conservar evidencia tras revocación | HECHO: participantes pierden historial y central conserva caso mínimo; [E2E](evidencia/h11-s1-moderacion-e2e-2026-10-13.md) |
 | H11.S2.M1 | H11 | BE | Deduplicar aviso | EN CURSO: aceptación real, outbox y worker probados en PostgreSQL; queda dedupe entre procesos y push físico |
 | H11.S2.M2 | H11 | BE | Suprimir aviso revocado | HECHO: bloqueo posterior a enqueue produce `SUPPRESSED`, sin intentos, y worker completa el job; E2E aislado |
 | H11.S2.M3 | H11 | BE | Reautorizar enlace | HECHO: enlace viejo falla con 404 después de revocar; Web explica indisponibilidad; [E2E](evidencia/h11-s2-m3-m4-notification-safety-2026-10-13.md) |

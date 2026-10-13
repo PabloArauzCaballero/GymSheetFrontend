@@ -10,7 +10,7 @@
 
 **Spec:** [Especificación](../ESPECIFICACION.md) y [contratos](../ARQUITECTURA_Y_CONTRATOS.md).
 
-**Requisitos:** R21, R22, R28, R33. **Dependencias:** H6, H7, H8, H9, H10. **Estado:** TODO.
+**Requisitos:** R21, R22, R28, R33. **Dependencias:** H6, H7, H8, H9, H10. **Estado:** EN CURSO (S1 backend HECHO; S2.M1 y S3 todavía abiertos).
 
 ## Restricciones globales
 
@@ -36,7 +36,7 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 
 **Interfaces:** Consume target tipado; produce caso auditable con acceso central explícito.
 
-**CA:** dadas las precondiciones de cada fila, al ejecutar sus acciones se cumplen exactamente sus resultados. **DoD:** todos los comandos dirigidos de este grupo devuelven PASS y no hay defectos mayores abiertos. **Estado:** TODO.
+**CA:** dadas las precondiciones de cada fila, al ejecutar sus acciones se cumplen exactamente sus resultados. **DoD:** todos los comandos dirigidos de este grupo devuelven PASS y no hay defectos mayores abiertos. **Estado:** HECHO (backend; falta recorrido PAIR en H11.S3).
 
 **Secuencia por microtarea:**
 
@@ -49,15 +49,15 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 | ID | Cambio verificable | CA: dado / cuando / entonces | DoD dirigido | Estado |
 |---|---|---|---|---|
 
-| H11.S1.M1 | [ ] Reportar contenido autorizado | Dado B puede ver reel o mensaje; cuando reporta con motivo; entonces se crea caso con referencia y evidencia mínima protegida. | B: `yarn test:e2e --runTestsByPath test/social/moderacion-avisos.e2e-spec.ts -t 'H11.S1.M1'` → PASS | TODO |
+| H11.S1.M1 | [x] Reportar contenido autorizado | Dado B puede ver reel o mensaje; cuando reporta con motivo; entonces se crea caso con referencia y evidencia mínima protegida. | E2E PostgreSQL: reporte válido crea referencia y evidencia mínima sin copiar el cuerpo; mensaje ya no visible devuelve 404 y no duplica el caso. Suite H11 PASS 7/7. | HECHO |
 
-| H11.S1.M2 | [ ] Restringir administración de gimnasio | Dado caso social entre tenants; cuando admin de un gimnasio intenta abrirlo; entonces rechazo salvo permiso central explícito. | B: `yarn test:e2e --runTestsByPath test/social/moderacion-avisos.e2e-spec.ts -t 'H11.S1.M2'` → PASS | TODO |
+| H11.S1.M2 | [x] Restringir administración de gimnasio | Dado caso social entre tenants; cuando admin de un gimnasio intenta abrirlo; entonces rechazo salvo permiso central explícito. | E2E PostgreSQL crea caso en gimnasio B; admin A con `moderation:read` recibe 404 y no lo ve en cola; `SYSTEM_ADMIN` sí accede. Suite H11 PASS 7/7. | HECHO |
 
-| H11.S1.M3 | [ ] Ocultar contenido desde moderación | Dado moderador central resuelve retiro; cuando se consultan feeds y URL media; entonces contenido deja de estar disponible. | B: `yarn test:e2e --runTestsByPath test/social/moderacion-avisos.e2e-spec.ts -t 'H11.S1.M3'` → PASS | TODO |
+| H11.S1.M3 | [x] Ocultar contenido desde moderación | Dado moderador central resuelve retiro; cuando se consultan feeds y URL media; entonces contenido deja de estar disponible. | E2E PostgreSQL oculta reel al resolver el caso; observador deja de verlo y la URL de media responde 404. Suite H11 PASS 7/7. | HECHO |
 
-| H11.S1.M4 | [ ] Auditar resolución | Dado caso asignado; cuando moderador resuelve; entonces actor, acción, motivo y momento quedan registrados. | B: `yarn test:e2e --runTestsByPath test/social/moderacion-avisos.e2e-spec.ts -t 'H11.S1.M4'` → PASS | TODO |
+| H11.S1.M4 | [x] Auditar resolución | Dado caso asignado; cuando moderador resuelve; entonces actor, acción, motivo y momento quedan registrados. | E2E PostgreSQL verifica resolución persistida y fila inmutable en `admin.audit_log` con actor, acción, recurso y hora. Suite H11 PASS 7/7. | HECHO |
 
-| H11.S1.M5 | [ ] Conservar evidencia tras revocación | Dado mensaje previamente reportado; cuando participantes desconectan; entonces chat desaparece y solo canal central autorizado conserva evidencia según política. | B: `yarn test:e2e --runTestsByPath test/social/moderacion-avisos.e2e-spec.ts -t 'H11.S1.M5'` → PASS | TODO |
+| H11.S1.M5 | [x] Conservar evidencia tras revocación | Dado mensaje previamente reportado; cuando participantes desconectan; entonces chat desaparece y solo canal central autorizado conserva evidencia según política. | E2E PostgreSQL verifica que el reporte revoca el chat, ambos participantes pierden acceso al historial (404) y el caso con evidencia mínima sigue accesible al admin central. Suite H11 PASS 7/7. | HECHO |
 
 ## H11.S2 — Notificaciones seguras
 
