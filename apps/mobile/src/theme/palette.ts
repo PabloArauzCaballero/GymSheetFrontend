@@ -126,3 +126,30 @@ export function contrastRatio(a: string, b: string): number {
 export function mobileBrand(id: string, base: TenantBrandColors): TenantBrandColors {
   return { ...base, ...brandOverrides[id] };
 }
+
+/**
+ * Color por magnitud del entreno (peso, repeticiones, esfuerzo, descanso…).
+ * Solo la tinta; el tinte y el filo se derivan en `extras.ts`. Vive aquí, en
+ * el archivo puro, para que la prueba de contraste los mida. Ratios sobre
+ * `surfaceHighest`, el peor fondo donde se usan (los recalcula la prueba).
+ */
+export const metricInk = {
+  /** Carga. 6,80:1. */
+  weight: '#6cb8ff',
+  /** Repeticiones. 6,26:1. */
+  reps: '#b79bff',
+  /** Esfuerzo (RIR). 8,15:1. */
+  effort: '#ffb454',
+  /** Descanso e intervalos. 8,78:1. */
+  rest: '#5fe0b8',
+  /** Tiempo de trabajo y cronómetro. 9,68:1. */
+  time: '#7fe3f0',
+  /** Racha. 6,86:1. */
+  streak: '#ff9a5c',
+  /** Récord. 9,97:1. */
+  record: '#ffd24a',
+  /** Volumen (kg movidos). 6,71:1. */
+  volume: '#ff8fb1',
+  /** Saltado / omitido: gris cálido, no es un error. 5,65:1. */
+  skipped: '#a8a294',
+} as const;

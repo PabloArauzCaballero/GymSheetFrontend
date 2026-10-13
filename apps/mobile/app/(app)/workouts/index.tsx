@@ -1,25 +1,18 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Badge, Card, Divider, ScrollScreen, ScreenHeader } from '@/components/layout';
+import { ScrollScreen, ScreenHeader } from '@/components/layout';
+import { EnterUp } from '@/components/motion';
+import { SessionRow } from '@/features/workout/session-row';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
-import { NavRow } from '@/components/list';
 import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { exportWorkoutHistory } from '@/lib/export-progress';
 import { notify } from '@/notifications';
 import { workoutService } from '@/api/services';
-import {
-  WORKOUT_LABEL,
-  WORKOUT_TONE,
-  formatDuration,
-  formatTimeOfDay,
-  relativeDay,
-} from '@/lib/format';
-import { accentPolicy, iconSizes, spacing } from '@/theme';
+import { spacing } from '@/theme';
 
 export default function WorkoutsScreen() {
   const router = useRouter();
@@ -47,6 +40,8 @@ export default function WorkoutsScreen() {
   const sessions = workouts.data?.items ?? [];
 
   const [exporting, setExporting] = useState<'csv' | 'pdf' | null>(null);
+  const lastOpen = useRef(0);
+  const [pulling, setPulling] = useState(false);
 
   /**
    * Saving the history is the one action here that leaves the app, so it
@@ -73,7 +68,14 @@ export default function WorkoutsScreen() {
   useScreenTour('workouts');
 
   return (
-    <ScrollScreen onRefresh={() => void workouts.refetch()} refreshing={workouts.isFetching}>
+    <ScrollScreen
+      onRefresh={() => {
+        // Solo el gesto enciende el indicador: una recarga en segundo plano no empuja la lista.
+        setPulling(true);
+        void workouts.refetch().finally(() => setPulling(false));
+      }}
+      refreshing={pulling}
+    >
       {/* Entrenos era una pestaña y no necesitaba salida: la barra siempre
           estaba debajo. Al bajar al stack sí la necesita, y no basta con el
           gesto del sistema — es la razón por la que `BackLink` existe: «un
@@ -83,7 +85,7 @@ export default function WorkoutsScreen() {
           llevan; ésta se habría quedado sin él justo al dejar de ser pestaña. */}
       <BackLink />
       <ScreenHeader
-        subtitle={workouts.data ? `${workouts.data.total} sesiones registradas` : 'Tu historial.'}
+        subtitle={workouts.data ? `${workouts.data.total} ${workouts.data.total === 1 ? 'sesión registrada' : 'sesiones registradas'}` : 'Tu historial.'}
         title="Entrenos"
         tourKey="workouts"
       />
@@ -126,16 +128,18 @@ export default function WorkoutsScreen() {
           icon="add-circle-outline"
           label="Empezar entrenamiento"
           loading={startFree.isPending}
-          onPress={() => startFree.mutate()}
+          onPress={() => {
+            if (!startFree.isPending) startFree.mutate();
+          }}
         />
       )}
       </TourTarget>
 
       {workouts.isPending ? (
         <View style={{ gap: spacing.sm }}>
-          <Skeleton height={64} />
-          <Skeleton height={64} />
-          <Skeleton height={64} />
+          <Skeleton height={92} />
+          <Skeleton height={92} />
+          <Skeleton height={92} />
         </View>
       ) : workouts.isError ? (
         <ErrorState error={workouts.error} onRetry={() => void workouts.refetch()} />
@@ -146,53 +150,22 @@ export default function WorkoutsScreen() {
           title="Todavía sin entrenos"
         />
       ) : (
-        <Card list>
-          {sessions.map((session, index) => {
-            const duration = formatDuration(session.fechaInicio, session.fechaFin);
-            return (
-              <View key={session.id}>
-                {index > 0 ? <Divider /> : null}
-                <NavRow
-                  leading={
-                    <Ionicons
-                      accessibilityElementsHidden
-                      // Decorativo: el título de la fila ya dice qué es esto.
-                      color={accentPolicy.glyph}
-                      importantForAccessibility="no-hide-descendants"
-                      name={
-                        session.estado === 'EN_PROGRESO'
-                          ? 'flame'
-                          : session.estado === 'CANCELADA'
-                            ? 'close-circle-outline'
-                            : 'barbell-outline'
-                      }
-                      size={iconSizes.md}
-                    />
-                  }
-                  meta={
-                    <Badge
-                      label={WORKOUT_LABEL[session.estado]}
-                      tone={WORKOUT_TONE[session.estado]}
-                    />
-                  }
-                  onPress={() => router.push({ pathname: '/workouts/[id]', params: { id: session.id } })}
-                  subtitle={[
-                    `${session.ejercicios.length} ejercicios`,
-                    duration,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
-                  // The clock time is what tells two sessions on the same day
-                  // apart. Home already does this; a history of fourteen rows
-                  // all reading "Hace 2 días" distinguishes nothing at all.
-                  title={[relativeDay(session.fechaInicio), formatTimeOfDay(session.fechaInicio)]
-                    .filter(Boolean)
-                    .join('  ')}
-                />
-              </View>
-            );
-          })}
-        </Card>
+        <View style={{ gap: spacing.smd }}>
+          {sessions.map((session, index) => (
+            // Cascada corta, una sola vez: guía la vista hacia abajo al llegar.
+            <EnterUp index={index} key={session.id}>
+              <SessionRow
+                onPress={() => {
+                  // D6: dos toques seguidos no abren la sesión dos veces.
+                  if (Date.now() - lastOpen.current < 600) return;
+                  lastOpen.current = Date.now();
+                  router.push({ pathname: '/workouts/[id]', params: { id: session.id } });
+                }}
+                session={session}
+              />
+            </EnterUp>
+          ))}
+        </View>
       )}
     </ScrollScreen>
   );

@@ -4,9 +4,9 @@ import { View } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { sessionClock } from '@/features/workout/workout-flow';
+import { sessionClock, type BlockState } from '@/features/workout/workout-flow';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
-import { colors, glideSpring, gutter, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { colors, glideSpring, gutter, iconSizes, metricColors, minTouchTarget, radii, spacing } from '@/theme';
 
 /** El cronómetro de la sesión. Aislado: su tic de un segundo no repinta la página. */
 function SessionClock({ startIso }: { startIso: string }) {
@@ -45,7 +45,7 @@ function RoundButton({ icon, label, onPress, testID }: { icon: keyof typeof Ioni
 }
 
 /** Un tramo de la barra de progreso: el relleno es absoluto y sin hijos, así que animar su ancho no recoloca nada. */
-function Segment({ fill, current }: { fill: number; current: boolean }) {
+function Segment({ fill, current, state }: { fill: number; current: boolean; state: BlockState }) {
   const reduceMotion = useReduceMotion();
   const animated = useAnimatedStyle(() => {
     const width = `${Math.round(Math.min(1, Math.max(0, fill)) * 100)}%` as const;
@@ -61,7 +61,21 @@ function Segment({ fill, current }: { fill: number; current: boolean }) {
         backgroundColor: current ? colors.borderControl : colors.surfaceHighest,
       }}
     >
-      <Animated.View style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: radii.full, backgroundColor: colors.text }, animated]} />
+      <Animated.View
+        style={[
+          {
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            borderRadius: radii.full,
+            // Omitido: el tramo se cierra en gris (no es trabajo hecho). Hecho: verde de «listo».
+            backgroundColor: state === 'omitted' ? metricColors.skipped.ink : state === 'done' ? colors.success : colors.text,
+            opacity: state === 'omitted' ? 0.55 : 1,
+          },
+          animated,
+        ]}
+      />
     </View>
   );
 }
@@ -76,6 +90,7 @@ export function FocusHeader({
   position,
   startIso,
   fills,
+  states,
   page,
   topInset,
   onClose,
@@ -86,6 +101,7 @@ export function FocusHeader({
   position: string;
   startIso: string;
   fills: readonly number[];
+  states: readonly BlockState[];
   page: number;
   topInset: number;
   onClose: () => void;
@@ -113,7 +129,7 @@ export function FocusHeader({
       </View>
       <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ flexDirection: 'row', gap: spacing.xs }}>
         {fills.map((fill, index) => (
-          <Segment current={index === page} fill={fill} key={index} />
+          <Segment current={index === page} fill={fill} key={index} state={states[index] ?? 'pending'} />
         ))}
       </View>
     </View>

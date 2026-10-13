@@ -17,7 +17,7 @@ export function WorkoutScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const session = useWorkoutSession(id);
   const { workout } = session;
-  const data = workout.data;
+  const data = session.data;
   const endSession = useWorkoutStore((state) => state.endSession);
 
   // Una sesión que ya no está en curso no deja descanso ni mini-barra detrás.

@@ -1,3 +1,4 @@
+import { createContext, useContext } from 'react';
 import { Text as RNText, type TextProps as RNTextProps } from 'react-native';
 import { accentContrast, colors, semibold, tabularNums, textVariants, type TextVariant } from '@/theme';
 
@@ -45,6 +46,14 @@ function toneColor(tone: TextTone): string {
   }
 }
 
+/**
+ * Tope de «Texto más grande» para una zona de la app. Por defecto no hay tope.
+ * Solo lo usa el entreno en curso: sus controles tienen alto fijo (botones de
+ * 56, píldoras, anillo) y con el texto al 235 % la cifra del reloj se salía
+ * del anillo y «Registrar serie» se cortaba. Allí el texto crece hasta ×1,35.
+ */
+export const TextScaleLimit = createContext<number | undefined>(undefined);
+
 export type TextProps = RNTextProps & {
   /** Paso de la rampa: display/title/headline/body/subhead/footnote/caption/numeric. */
   variant?: TextVariant;
@@ -68,8 +77,10 @@ export function Text({
   style,
   ...props
 }: TextProps) {
+  const limit = useContext(TextScaleLimit);
   return (
     <RNText
+      maxFontSizeMultiplier={limit}
       {...props}
       style={[
         textVariants[variant],

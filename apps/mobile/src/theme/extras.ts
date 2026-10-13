@@ -5,7 +5,7 @@
  * «leído» de un chat). Viven aquí para que `check-theme` siga a cero fuera de
  * `src/theme/` y para que quien los cambie vea el resto de la paleta.
  */
-import { alpha, ink } from './palette';
+import { alpha, ink, metricInk } from './palette';
 
 /* ─── Podio (rank-badge) ─────────────────────────────────────────────────── */
 
@@ -213,3 +213,40 @@ export const muscleGradientDefault = ['#2f2e29', '#161614'] as const;
 
 /** Iniciales y marca de agua sobre el marcador. */
 export const placeholderInk = { initials: alpha(ink.white, 0.92), watermark: alpha(ink.white, 0.12) } as const;
+
+/* ─── Entreno: color por significado ─────────────────────────────────────── */
+
+/**
+ * Cada magnitud del entreno tiene su color, para leer la pantalla sin leer las
+ * etiquetas: el peso es azul, las repeticiones violetas, el esfuerzo ámbar, el
+ * descanso menta. No son la marca (el volt sigue siendo solo la acción
+ * principal) ni cambian con el gimnasio. `ink` es el glifo o la cifra fina
+ * sobre una superficie; `tint`, su fondo; `edge`, el filo de lo seleccionado.
+ * Las tintas y su contraste (todas ≥ 5,6:1 sobre `surfaceHighest`) están en
+ * `palette.ts`, donde las mide la prueba.
+ */
+function metric(base: string) {
+  return { ink: base, tint: alpha(base, 0.14), edge: alpha(base, 0.32) } as const;
+}
+
+export const metricColors = {
+  weight: metric(metricInk.weight),
+  reps: metric(metricInk.reps),
+  effort: metric(metricInk.effort),
+  rest: metric(metricInk.rest),
+  time: metric(metricInk.time),
+  streak: metric(metricInk.streak),
+  record: metric(metricInk.record),
+  volume: metric(metricInk.volume),
+  skipped: metric(metricInk.skipped),
+} as const;
+
+export type MetricKey = keyof typeof metricColors;
+
+/** Anillo del descanso: de menta (queda tiempo) a ámbar (se acaba) y luz (ya). */
+export const restRing = {
+  calm: metricColors.rest.ink,
+  ending: metricColors.effort.ink,
+  track: alpha(ink.white, 0.08),
+  glow: alpha(metricColors.rest.ink, 0.18),
+} as const;

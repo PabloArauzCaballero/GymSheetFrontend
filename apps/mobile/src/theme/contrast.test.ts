@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { tenantCatalog } from '../../../../packages/design-tokens/src/tenants.ts';
 import { readFileSync } from 'node:fs';
-import { contrastRatio, mobileBrand, neutral } from './palette.ts';
+import { contrastRatio, metricInk, mobileBrand, neutral } from './palette.ts';
 
 const surfaces = {
   background: neutral.background,
@@ -128,3 +128,7 @@ for (const tenant of Object.values(tenantCatalog)) {
     }
   });
 }
+
+test('color por magnitud del entreno: cada tinta cumple AA como texto en todas las superficies', () => {
+  for (const [name, color] of Object.entries(metricInk)) eachSurface(color, TEXT_AA, `metricInk.${name}`);
+});

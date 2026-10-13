@@ -43,11 +43,16 @@ import {
   undoSwipeResultSchema,
   workoutFinishSchema,
   workoutSchema,
+  restSettingsResultSchema,
+  skippedSetSchema,
+  workoutRoutineLinkSchema,
 } from '@gymsheet/schemas';
 import type {
   AddWorkoutExerciseInput,
   CardioSetInput,
   FitnessGoal,
+  RestSettingChange,
+  SkipReason,
   TimedWorkoutSetInput,
   TrainingGoal,
   WorkoutSetInput,
@@ -252,6 +257,28 @@ export const workoutService = {
     apiClient.request(`/workouts/sets/${setId}`, looseObject, { method: 'PATCH', body: input }),
   removeSet: (setId: string) =>
     apiClient.request(`/workouts/sets/${setId}`, deletedSchema, { method: 'DELETE' }),
+
+  /* D1 · series saltadas y ejercicios omitidos (contrato 11a §1). Idempotentes. */
+  skipSet: (sessionExerciseId: string, input: { numeroSerie: number; motivo: SkipReason; nota: string | null }) =>
+    apiClient.request(`/workouts/session-exercises/${sessionExerciseId}/skipped-sets`, skippedSetSchema, {
+      method: 'POST',
+      body: input,
+    }),
+  unskipSet: (skippedSetId: string) =>
+    apiClient.request(`/workouts/skipped-sets/${skippedSetId}`, deletedSchema, { method: 'DELETE' }),
+  omitExercise: (sessionExerciseId: string, input: { motivo: SkipReason; nota: string | null }) =>
+    apiClient.request(`/workouts/session-exercises/${sessionExerciseId}/omit`, looseObject, {
+      method: 'POST',
+      body: input,
+    }),
+  unomitExercise: (sessionExerciseId: string) =>
+    apiClient.request(`/workouts/session-exercises/${sessionExerciseId}/omit`, looseObject, { method: 'DELETE' }),
+
+  /* D2 · descanso e intervalo a mano (contrato 11a §2). */
+  routineLink: (id: string) =>
+    apiClient.request(`/workouts/${id}/routine-link`, workoutRoutineLinkSchema, { method: 'GET' }),
+  restSettings: (id: string, input: { cambios: RestSettingChange[]; guardarEnRutina: boolean }) =>
+    apiClient.request(`/workouts/${id}/rest-settings`, restSettingsResultSchema, { method: 'PATCH', body: input }),
 };
 
 export const routineService = {

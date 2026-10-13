@@ -23,6 +23,10 @@ export type FlowItem = {
   target: number | null;
   /** Series ya registradas hoy. */
   logged: number;
+  /** Series saltadas hoy (D1): avanzan el flujo, pero no son trabajo hecho. */
+  skipped?: number;
+  /** Ejercicio omitido (D1): el flujo lo da por cerrado. */
+  omitted?: boolean;
   descansoSeg: number | null;
   descansoEntreSeg: number | null;
 };
@@ -87,7 +91,13 @@ export function buildFlowBlocks<T extends FlowItem>(items: readonly T[]): Array<
 
 /** ¿Le quedan series objetivo a este ejercicio? Sin objetivo, nunca se da por terminado solo. */
 export function isItemDone(item: FlowItem): boolean {
-  return item.target !== null && item.logged >= item.target;
+  if (item.omitted) return true;
+  return item.target !== null && attempted(item) >= item.target;
+}
+
+/** Series por las que ya se pasó: las hechas más las saltadas. Es lo que mueve el flujo. */
+export function attempted(item: Pick<FlowItem, 'logged' | 'skipped'>): number {
+  return item.logged + (item.skipped ?? 0);
 }
 
 export function isBlockDone(block: FlowBlock<FlowItem>): boolean {
@@ -109,12 +119,12 @@ function stepInBlock(block: FlowBlock<FlowItem>, blockIndex: number): FlowStep |
   if (block.kind === 'single') {
     const item = block.items[0];
     if (!item || isItemDone(item)) return null;
-    return { blockIndex, itemId: item.id, round: item.logged + 1 };
+    return { blockIndex, itemId: item.id, round: attempted(item) + 1 };
   }
   const pending = block.items.filter((item) => !isItemDone(item));
   if (pending.length === 0) return null;
-  const round = Math.min(...pending.map((item) => item.logged)) + 1;
-  const item = block.items.find((candidate) => !isItemDone(candidate) && candidate.logged < round);
+  const round = Math.min(...pending.map(attempted)) + 1;
+  const item = block.items.find((candidate) => !isItemDone(candidate) && attempted(candidate) < round);
   return item ? { blockIndex, itemId: item.id, round } : null;
 }
 
@@ -148,7 +158,7 @@ export function stepOf(blocks: ReadonlyArray<FlowBlock<FlowItem>>, itemId: strin
   if (!block || !item) return null;
   const natural = stepInBlock(block, blockIndex);
   if (natural && natural.itemId === itemId) return natural;
-  return { blockIndex, itemId, round: item.logged + 1 };
+  return { blockIndex, itemId, round: attempted(item) + 1 };
 }
 
 /** Los mismos bloques con una serie más registrada en `itemId` (antes de que responda el servidor). */
@@ -156,6 +166,22 @@ export function withLoggedSet<T extends FlowItem>(blocks: ReadonlyArray<FlowBloc
   return blocks.map((block) => ({
     ...block,
     items: block.items.map((item) => (item.id === itemId ? { ...item, logged: item.logged + 1 } : item)),
+  }));
+}
+
+/** Los mismos bloques con una serie saltada más en `itemId`. */
+export function withSkippedSet<T extends FlowItem>(blocks: ReadonlyArray<FlowBlock<T>>, itemId: string): Array<FlowBlock<T>> {
+  return blocks.map((block) => ({
+    ...block,
+    items: block.items.map((item) => (item.id === itemId ? { ...item, skipped: (item.skipped ?? 0) + 1 } : item)),
+  }));
+}
+
+/** Los mismos bloques con `itemId` omitido. */
+export function withOmitted<T extends FlowItem>(blocks: ReadonlyArray<FlowBlock<T>>, itemId: string): Array<FlowBlock<T>> {
+  return blocks.map((block) => ({
+    ...block,
+    items: block.items.map((item) => (item.id === itemId ? { ...item, omitted: true } : item)),
   }));
 }
 
@@ -217,7 +243,7 @@ export function restAfterLogging(
     next !== null &&
     done !== undefined &&
     block.items.findIndex((item) => item.id === next.itemId) > position &&
-    next.round === done.logged;
+    next.round === attempted(done);
   if (laterInRound) return { seconds: block.between, kind: block.between > 0 ? 'between' : 'none' };
   return { seconds: block.restAfter ?? fallback, kind: 'round' };
 }
@@ -289,11 +315,77 @@ export function blockFill(block: FlowBlock<FlowItem>): number {
   let total = 0;
   for (const item of block.items) {
     // Sin objetivo (añadido a mano): una serie ya lo da por empezado y hecho.
-    const target = item.target ?? Math.max(1, item.logged);
+    const target = item.target ?? Math.max(1, attempted(item));
     total += target;
-    done += Math.min(item.logged, target);
+    // Omitido: el tramo se cierra entero (se pinta apagado, ver `blockState`).
+    done += item.omitted ? target : Math.min(attempted(item), target);
   }
   return total > 0 ? done / total : 0;
+}
+
+/** Cómo se pinta el tramo de un bloque: hecho, a medias, omitido entero o con series saltadas. */
+export type BlockState = 'pending' | 'active' | 'done' | 'partial' | 'omitted';
+
+export function blockState(block: FlowBlock<FlowItem>): BlockState {
+  if (block.items.length > 0 && block.items.every((item) => item.omitted)) return 'omitted';
+  const anySkipped = block.items.some((item) => item.omitted || (item.skipped ?? 0) > 0);
+  if (isBlockDone(block)) return anySkipped ? 'partial' : 'done';
+  return block.items.some((item) => attempted(item) > 0) ? 'active' : 'pending';
+}
+
+/** El número de la serie que viene: una más que la mayor hecha o saltada. */
+export function nextSetNumber(done: readonly number[], skipped: readonly number[] = []): number {
+  return Math.max(0, ...done, ...skipped) + 1;
+}
+
+/** Motivos de saltar u omitir (D1), con su texto. El orden es el de la hoja. */
+export const SKIP_REASONS = [
+  { code: 'CANSANCIO', label: 'Cansancio' },
+  { code: 'PRISA', label: 'Voy con prisa' },
+  { code: 'DOLOR', label: 'Dolor o molestia' },
+  { code: 'EQUIPO_OCUPADO', label: 'Equipo ocupado' },
+  { code: 'TECNICA', label: 'No me sale la técnica' },
+  { code: 'OTRO', label: 'Otro motivo' },
+] as const;
+
+export type SkipReasonCode = (typeof SKIP_REASONS)[number]['code'];
+
+export function skipReasonLabel(code: string): string {
+  return SKIP_REASONS.find((reason) => reason.code === code)?.label ?? 'Otro motivo';
+}
+
+/* ─── Descanso a mano (D2) ───────────────────────────────────────────────── */
+
+export const REST_STEP = 5;
+export const REST_MAX_SEC = 7200;
+export const REST_BETWEEN_MAX_SEC = 600;
+/** Atajos de la hoja de descanso. */
+export const REST_SHORTCUTS = [30, 60, 90, 120, 180] as const;
+
+/** Acota y redondea al paso de 5 s. */
+export function clampRest(seconds: number, max = REST_MAX_SEC): number {
+  if (!Number.isFinite(seconds)) return 0;
+  return Math.max(0, Math.min(max, Math.round(seconds / REST_STEP) * REST_STEP));
+}
+
+/** 150 → «2:30», 45 → «0:45». */
+export function restLabel(seconds: number): string {
+  const total = Math.max(0, Math.round(seconds));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
+
+/**
+ * A quién aplica un cambio de descanso: solo al ejercicio, o a todos los que
+ * aún tienen trabajo pendiente hoy (el propio incluido).
+ */
+export function restTargets<T extends FlowItem>(
+  blocks: ReadonlyArray<FlowBlock<T>>,
+  itemId: string,
+  scope: 'one' | 'remaining',
+): T[] {
+  const all = blocks.flatMap((block) => block.items);
+  if (scope === 'one') return all.filter((item) => item.id === itemId);
+  return all.filter((item) => item.id === itemId || !isItemDone(item));
 }
 
 /**

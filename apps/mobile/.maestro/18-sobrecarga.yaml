@@ -56,19 +56,7 @@ env:
       EMAIL: athlete.mock@gymsheet.local
       EXERCISE: ${BENCH}
       SETS: '[{"pesoKg":60,"repeticiones":12,"rir":2},{"pesoKg":60,"repeticiones":12,"rir":2},{"pesoKg":60,"repeticiones":12,"rir":2}]'
-# Las series entraron por API: se tira de la pantalla hacia abajo (pull to refresh) para recargarlas.
-- swipe:
-    start: 50%,25%
-    end: 50%,70%
-- extendedWaitUntil:
-    visible: '.*60 kg × 12.*'
-    timeout: 30000
-- repeat:
-    times: 4
-    commands:
-      - scroll
-- tapOn: 'Finalizar sesión'
-- tapOn: 'Finalizar'
+- runFlow: finalizar-sesion.subflow.yaml
 # Hubo cambios respecto de la rutina (3 series en vez de 4): la tarjeta ofrece revisarlos;
 # el flujo 21 cubre actualizarla.
 # RF-15 · p02: el resumen enseña el bono por sobrecarga y «sube a 62,5 kg».

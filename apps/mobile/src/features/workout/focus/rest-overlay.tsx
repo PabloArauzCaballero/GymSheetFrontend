@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -5,25 +6,30 @@ import Animated, {
   cancelAnimation,
   Easing,
   FadeIn,
+  FadeInDown,
   FadeOut,
+  interpolateColor,
   useAnimatedProps,
   useSharedValue,
   withTiming,
+  ZoomIn,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
-import { PressableScale } from '@/components/motion';
+import { ExerciseImage } from '@/components/media';
+import { Burst, Pop, PressableScale, PREMIUM_EASING } from '@/components/motion';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
 import {
   REST_STEP_SEC,
   formatRestClock,
   speakRest,
+  useForegroundTick,
   useRestRemaining,
   useWorkoutStore,
 } from '@/features/workout/workout-store';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
-import { alpha, colors, fontFamilies, gutter, motion, radii, spacing, tabularNums } from '@/theme';
+import { alpha, colors, fontFamilies, gutter, iconSizes, metricColors, motion, radii, restRing, spacing, tabularNums } from '@/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -31,18 +37,26 @@ const DIAL = 264;
 const STROKE = 10;
 /** Cifra del reloj: la protagonista de la pantalla, fuera de la rampa a propósito. */
 const CLOCK_FONT = 72;
+/** Desde aquí el anillo vira de menta a ámbar: «se acaba». */
+const ENDING_MS = 10_000;
+/** Los últimos segundos laten uno a uno. */
+const PULSE_FROM_SEC = 3;
+const THUMB = 52;
 
 /**
  * El anillo del descanso, animado en el hilo de UI: una sola interpolación
  * lineal desde lo que queda hasta cero, que se rearma si cambia el fin
- * (−15 / +15). No depende de los tics de React, así que no da saltos aunque el
- * hilo de JS esté ocupado guardando la serie.
+ * (−15 / +15, «Cambiar descanso») o si la app vuelve de segundo plano. No
+ * depende de los tics de React, así que no da saltos aunque el hilo de JS
+ * esté ocupado guardando la serie. El color vira al acercarse el final.
  */
-function RestDial({ endsAt, totalMs }: { endsAt: number; totalMs: number }) {
+function RestDial({ endsAt, totalMs, ending }: { endsAt: number; totalMs: number; ending: boolean }) {
   const reduceMotion = useReduceMotion();
+  const foreground = useForegroundTick();
   const radius = (DIAL - STROKE) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = useSharedValue(1);
+  const urgency = useSharedValue(0);
 
   useEffect(() => {
     const remaining = Math.max(0, endsAt - Date.now());
@@ -52,22 +66,26 @@ function RestDial({ endsAt, totalMs }: { endsAt: number; totalMs: number }) {
     // Con «Reducir movimiento» el anillo no viaja: el reloj ya dice cuánto queda.
     if (!reduceMotion) progress.value = withTiming(0, { duration: remaining, easing: Easing.linear });
     return () => cancelAnimation(progress);
-  }, [endsAt, totalMs, reduceMotion, progress]);
+  }, [endsAt, totalMs, reduceMotion, progress, foreground]);
+
+  useEffect(() => {
+    urgency.value = withTiming(ending ? 1 : 0, { duration: reduceMotion ? 0 : 600, easing: PREMIUM_EASING });
+  }, [ending, reduceMotion, urgency]);
 
   const animatedProps = useAnimatedProps(() => ({
     strokeDashoffset: circumference * (1 - progress.value),
+    stroke: interpolateColor(urgency.value, [0, 1], [restRing.calm, restRing.ending]),
   }));
 
   return (
     <Svg height={DIAL} style={{ transform: [{ rotate: '-90deg' }] }} width={DIAL}>
-      <Circle cx={DIAL / 2} cy={DIAL / 2} fill="none" r={radius} stroke={colors.surfaceHighest} strokeWidth={STROKE} />
+      <Circle cx={DIAL / 2} cy={DIAL / 2} fill="none" r={radius} stroke={restRing.track} strokeWidth={STROKE} />
       <AnimatedCircle
         animatedProps={animatedProps}
         cx={DIAL / 2}
         cy={DIAL / 2}
         fill="none"
         r={radius}
-        stroke={colors.text}
         strokeDasharray={`${circumference} ${circumference}`}
         strokeLinecap="round"
         strokeWidth={STROKE}
@@ -76,7 +94,19 @@ function RestDial({ endsAt, totalMs }: { endsAt: number; totalMs: number }) {
   );
 }
 
-function Adjust({ label, spoken, onPress, testID }: { label: string; spoken: string; onPress: () => void; testID?: string }) {
+function Adjust({
+  label,
+  spoken,
+  icon,
+  onPress,
+  testID,
+}: {
+  label: string;
+  spoken: string;
+  icon?: keyof typeof Ionicons.glyphMap;
+  onPress: () => void;
+  testID?: string;
+}) {
   return (
     <PressableScale
       accessibilityLabel={spoken}
@@ -84,8 +114,10 @@ function Adjust({ label, spoken, onPress, testID }: { label: string; spoken: str
       onPress={onPress}
       scaleTo={0.94}
       style={{
-        minWidth: 96,
-        height: 56,
+        flexDirection: 'row',
+        gap: spacing.xs,
+        minWidth: 88,
+        height: 52,
         paddingHorizontal: spacing.md,
         alignItems: 'center',
         justifyContent: 'center',
@@ -94,31 +126,42 @@ function Adjust({ label, spoken, onPress, testID }: { label: string; spoken: str
       }}
       testID={testID}
     >
-      <Text strong tabular variant="headline">
+      {icon ? <Ionicons color={metricColors.rest.ink} name={icon} size={iconSizes.sm} /> : null}
+      <Text strong tabular variant="subhead">
         {label}
       </Text>
     </PressableScale>
   );
 }
 
+const TIPS: Record<'set' | 'between' | 'round' | 'none', string> = {
+  set: 'Respira hondo y suelta los hombros.',
+  between: 'Cambia de sitio con calma: ya casi.',
+  round: 'Vuelta hecha. Bebe un poco de agua.',
+  none: '',
+};
+
 /**
  * Descanso a pantalla completa. Mientras corre, es lo único que hay: el reloj,
- * lo que viene y tres decisiones (−15, +15, saltar). Tapa y bloquea lo de
- * debajo: con la barra flotante de antes se podía seguir tocando la serie
- * siguiente con el descanso en marcha y no quedaba claro si se estaba
- * entrenando o descansando. Se cierra sola al llegar a cero.
+ * lo que viene y las decisiones sobre el tiempo (−15, +15, cambiarlo, saltar).
+ * Tapa y bloquea lo de debajo: con la barra flotante de antes se podía seguir
+ * tocando la serie siguiente con el descanso en marcha y no quedaba claro si
+ * se estaba entrenando o descansando. Se cierra sola al llegar a cero.
  */
-export function RestOverlay({ kind }: { kind: 'set' | 'between' | 'round' | 'none' }) {
+export function RestOverlay({ kind, onChangeRest }: { kind: 'set' | 'between' | 'round' | 'none'; onChangeRest?: () => void }) {
   const insets = useSafeAreaInsets();
+  const reduceMotion = useReduceMotion();
   const { remainingMs, totalMs, running } = useRestRemaining();
   const endsAt = useWorkoutStore((state) => state.restEndsAt);
-  const next = useWorkoutStore((state) => state.restNext);
+  const next = useWorkoutStore((state) => state.restNextDetail);
   const adjust = useWorkoutStore((state) => state.adjustRest);
   const skip = useWorkoutStore((state) => state.skipRest);
 
   if (!running || endsAt === null) return null;
 
   const title = kind === 'between' ? 'Cambio de ejercicio' : kind === 'round' ? 'Descanso de la vuelta' : 'Descanso';
+  const ending = remainingMs <= ENDING_MS;
+  const secondsLeft = Math.ceil(remainingMs / 1000);
 
   return (
     <Animated.View
@@ -133,61 +176,155 @@ export function RestOverlay({ kind }: { kind: 'set' | 'between' | 'round' | 'non
       <View
         style={{
           flex: 1,
-          paddingTop: insets.top + spacing.xl,
-          paddingBottom: insets.bottom + spacing.lg,
+          paddingTop: insets.top + spacing.lg,
+          paddingBottom: insets.bottom + spacing.md,
           paddingHorizontal: gutter,
           alignItems: 'center',
           justifyContent: 'space-between',
         }}
       >
-        <Text accessibilityRole="header" tone="secondary" variant="headline">
-          {title}
-        </Text>
-
-        <View style={{ alignItems: 'center', gap: spacing.xl }}>
-          <View style={{ width: DIAL, height: DIAL, alignItems: 'center', justifyContent: 'center' }}>
-            <View style={StyleSheet.absoluteFill}>
-              <RestDial endsAt={endsAt} totalMs={totalMs} />
-            </View>
-            <Text
-              accessibilityLabel={speakRest(remainingMs)}
-              accessibilityLiveRegion="polite"
-              style={[{ fontFamily: fontFamilies.display, fontSize: CLOCK_FONT, lineHeight: CLOCK_FONT + 12, color: colors.text }, tabularNums]}
-              testID="rest-bar-clock"
-            >
-              {formatRestClock(remainingMs)}
+        <View style={{ alignItems: 'center', gap: spacing.xs }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <Ionicons color={metricColors.rest.ink} name="hourglass-outline" size={iconSizes.md} />
+            <Text accessibilityRole="header" variant="headline">
+              {title}
             </Text>
+          </View>
+          {next?.finished ? (
+            // Lo que se acaba de cerrar con esa serie: el «hecho» se celebra aquí, que es donde se mira.
+            <Animated.View
+              entering={reduceMotion ? undefined : ZoomIn.duration(motion.enter).easing(PREMIUM_EASING).withInitialValues({ transform: [{ scale: 0.8 }] })}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.xs,
+                height: 32,
+                paddingHorizontal: spacing.smd,
+                marginTop: spacing.xs,
+                borderRadius: radii.full,
+                backgroundColor: colors.surfaceHighest,
+              }}
+              testID="rest-finished"
+            >
+              <View style={{ width: iconSizes.sm, height: iconSizes.sm, alignItems: 'center', justifyContent: 'center' }}>
+                <Burst active color={colors.success} radius={18} />
+                <Ionicons color={colors.success} name="checkmark-circle" size={iconSizes.sm} />
+              </View>
+              <Text numberOfLines={1} strong variant="footnote">
+                {next.finished}
+              </Text>
+            </Animated.View>
+          ) : (
+            <Text tone="muted" variant="footnote">
+              {TIPS[kind]}
+            </Text>
+          )}
+        </View>
+
+        <Animated.View
+          entering={reduceMotion ? undefined : ZoomIn.duration(motion.enter).easing(PREMIUM_EASING).withInitialValues({ transform: [{ scale: 0.94 }] })}
+          style={{ alignItems: 'center', gap: spacing.lg }}
+        >
+          <View style={{ width: DIAL, height: DIAL, alignItems: 'center', justifyContent: 'center' }}>
+            {/* Halo quieto detrás del anillo: da volumen sin moverse solo. */}
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                width: DIAL - STROKE * 4,
+                height: DIAL - STROKE * 4,
+                borderRadius: radii.full,
+                backgroundColor: restRing.glow,
+                opacity: 0.35,
+              }}
+            />
+            <View style={StyleSheet.absoluteFill}>
+              <RestDial ending={ending} endsAt={endsAt} totalMs={totalMs} />
+            </View>
+            {/* Los tres últimos segundos laten: uno por segundo, con causa (se acaba). */}
+            <Pop trigger={secondsLeft <= PULSE_FROM_SEC ? secondsLeft : 'calm'}>
+              <Text
+                accessibilityLabel={speakRest(remainingMs)}
+                accessibilityLiveRegion="polite"
+                maxFontSizeMultiplier={1.1}
+                style={[
+                  { fontFamily: fontFamilies.display, fontSize: CLOCK_FONT, lineHeight: CLOCK_FONT + 12, color: ending ? restRing.ending : colors.text },
+                  tabularNums,
+                ]}
+                testID="rest-bar-clock"
+              >
+                {formatRestClock(remainingMs)}
+              </Text>
+            </Pop>
             <Text tabular tone="muted" variant="footnote">
               {`de ${formatRestClock(totalMs)}`}
             </Text>
           </View>
 
-          <View style={{ flexDirection: 'row', gap: spacing.md }}>
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
             <Adjust label={`−${REST_STEP_SEC} s`} onPress={() => adjust(-REST_STEP_SEC)} spoken={`Quitar ${REST_STEP_SEC} segundos`} testID="rest-minus" />
             <Adjust label={`+${REST_STEP_SEC} s`} onPress={() => adjust(REST_STEP_SEC)} spoken={`Añadir ${REST_STEP_SEC} segundos`} testID="rest-plus" />
+            {onChangeRest ? <Adjust icon="options-outline" label="Cambiar" onPress={onChangeRest} spoken="Cambiar el descanso" testID="rest-change" /> : null}
           </View>
-        </View>
+        </Animated.View>
 
-        <View style={{ alignSelf: 'stretch', gap: spacing.md }}>
+        <View style={{ alignSelf: 'stretch', gap: spacing.smd }}>
           {next ? (
-            <View
+            <Animated.View
+              entering={reduceMotion ? undefined : FadeInDown.duration(motion.enter).delay(120)}
               style={{
-                gap: spacing.xxs,
-                padding: spacing.md,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.smd,
+                padding: spacing.smd,
                 borderRadius: radii.xl,
                 borderCurve: 'continuous',
                 backgroundColor: colors.surfaceLow,
               }}
+              testID="rest-next"
             >
-              <Text tone="muted" variant="caption">
-                A CONTINUACIÓN
-              </Text>
-              <Text numberOfLines={2} strong variant="headline">
-                {next}
-              </Text>
-            </View>
+              <View style={{ width: THUMB, height: THUMB }}>
+                {next.exercise ? <ExerciseImage exercise={next.exercise} rounded={radii.md} size="fill" /> : null}
+              </View>
+              <View style={{ flex: 1, gap: spacing.xxs }}>
+                <Text tone="muted" variant="caption">
+                  A CONTINUACIÓN
+                </Text>
+                <Text numberOfLines={1} strong variant="headline">
+                  {next.name}
+                </Text>
+                {/* Paso y carga en su propia línea, sin partir: «25 kg × 9» nunca queda cortado en dos. */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                  <Text tabular tone="secondary" variant="footnote">
+                    {next.step}
+                  </Text>
+                  {next.load ? (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: spacing.xs,
+                        paddingHorizontal: spacing.sm,
+                        height: 24,
+                        borderRadius: radii.full,
+                        backgroundColor: metricColors[next.loadKind].tint,
+                      }}
+                    >
+                      <Ionicons
+                        color={metricColors[next.loadKind].ink}
+                        name={next.loadKind === 'time' ? 'stopwatch-outline' : 'barbell-outline'}
+                        size={iconSizes.xs}
+                      />
+                      <Text numberOfLines={1} strong style={{ color: metricColors[next.loadKind].ink }} tabular variant="footnote">
+                        {next.load}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+            </Animated.View>
           ) : null}
-          <Button label="Saltar descanso" onPress={skip} size="lg" testID="rest-skip" variant="secondary" />
+          <Button icon="play-skip-forward" label="Saltar descanso" onPress={skip} size="lg" testID="rest-skip" variant="secondary" />
         </View>
       </View>
     </Animated.View>

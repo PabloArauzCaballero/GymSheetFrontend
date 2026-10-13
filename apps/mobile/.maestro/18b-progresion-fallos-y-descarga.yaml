@@ -12,14 +12,10 @@ env:
 - runFlow: login-as.subflow.yaml
 - openLink: gymsheet:///workouts/${SESSION}
 - extendedWaitUntil:
-    visible: 'En progreso'
+    visible:
+      id: 'workout-focus'
     timeout: 60000
-- repeat:
-    times: 3
-    commands:
-      - scroll
-- tapOn: 'Finalizar sesión'
-- tapOn: 'Finalizar'
+- runFlow: finalizar-sesion.subflow.yaml
 - extendedWaitUntil:
     visible: 'Seguir|.*Insignia conseguida.*|.*subido de rango.*'
     timeout: 60000

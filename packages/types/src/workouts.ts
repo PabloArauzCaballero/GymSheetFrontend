@@ -20,6 +20,21 @@ export type WorkoutSet = {
   fechaRegistro: string;
 };
 
+/** Por qué se saltó una serie o se omitió un ejercicio (D1). */
+export const skipReasons = ['CANSANCIO', 'PRISA', 'DOLOR', 'EQUIPO_OCUPADO', 'TECNICA', 'OTRO'] as const;
+export type SkipReason = (typeof skipReasons)[number];
+
+/** Serie saltada: no es una fila de `series`; no cuenta para volumen, récords ni puntos. */
+export type SkippedSet = {
+  id: string;
+  numeroSerie: number;
+  motivo: SkipReason;
+  nota: string | null;
+  fechaRegistro: string;
+};
+
+export type OmittedMark = { motivo: SkipReason; nota: string | null; fecha: string };
+
 export type WorkoutExercise = {
   id: string;
   orden: number;
@@ -38,6 +53,10 @@ export type WorkoutExercise = {
   grupoTipo: RoutineGroupType | null;
   ejercicio: Exercise | null;
   series: WorkoutSet[];
+  /** Series saltadas con su motivo (D1). Vacío en respuestas anteriores al contrato. */
+  saltadas: SkippedSet[];
+  /** Ejercicio omitido con su motivo, o `null`. */
+  omitido: OmittedMark | null;
 };
 
 export type Workout = {
@@ -48,6 +67,17 @@ export type Workout = {
   estado: WorkoutStatus;
   observacion: string | null;
   ejercicios: WorkoutExercise[];
+  /** De dónde nació la sesión (`null` si fue libre o el servidor aún no lo dice). */
+  rutinaId?: string | null;
+  rutinaDiaId?: string | null;
+};
+
+/** `PATCH /workouts/:id/rest-settings`: un cambio de descanso, intervalo o tiempo de trabajo. */
+export type RestSettingChange = {
+  sesionEjercicioId: string;
+  descansoSeg?: number;
+  descansoEntreSeg?: number;
+  duracionSeg?: number;
 };
 
 export type CreateWorkoutInput = {
