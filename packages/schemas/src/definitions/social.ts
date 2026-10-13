@@ -175,6 +175,7 @@ export const trainingInviteAcceptedEventSchema = z.object({
   startsAt: z.string().datetime({ offset: true }),
   timeZone: z.string().min(1),
   placeLabel: z.string(),
+  cancelledAt: z.string().datetime({ offset: true }).nullable(),
 });
 
 export const systemMessageSchema = z.object({
