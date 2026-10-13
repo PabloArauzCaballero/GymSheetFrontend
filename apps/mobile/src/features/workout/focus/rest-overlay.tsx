@@ -37,11 +37,13 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const DIAL = 264;
 const STROKE = 10;
 /** Lienzo de la onda: sobresale del anillo por fuera. */
-const WAVE = DIAL + 64;
-/** Radio medio de la onda: justo por fuera del anillo. */
-const WAVE_RADIUS = DIAL / 2 + 10;
+const WAVE = DIAL + 76;
+/** Radio medio de la onda: por fuera del anillo, sin cruzarlo ni en la cresta más honda. */
+const WAVE_RADIUS = DIAL / 2 + 18;
 /** La cabeza del anillo: un punto de luz que marca dónde va el tiempo. */
 const HEAD = STROKE * 0.9;
+/** Margen del lienzo del anillo para que el halo de la cabeza no se recorte en el borde. */
+const PAD = 16;
 /** Cifra del reloj: la protagonista de la pantalla, fuera de la rampa a propósito. */
 const CLOCK_FONT = 72;
 /** Desde aquí el anillo vira de menta a ámbar: «se acaba». */
@@ -87,20 +89,20 @@ function RestDial({ endsAt, totalMs, ending }: { endsAt: number; totalMs: number
   const headProps = useAnimatedProps(() => {
     const angle = progress.value * 2 * Math.PI;
     return {
-      cx: DIAL / 2 + radius * Math.cos(angle),
-      cy: DIAL / 2 + radius * Math.sin(angle),
+      cx: PAD + DIAL / 2 + radius * Math.cos(angle),
+      cy: PAD + DIAL / 2 + radius * Math.sin(angle),
       fill: interpolateColor(urgency.value, [0, 1], [restRing.calm, restRing.ending]),
       opacity: progress.value > 0.004 ? 1 : 0,
     };
   });
 
   return (
-    <Svg height={DIAL} style={{ transform: [{ rotate: '-90deg' }] }} width={DIAL}>
-      <Circle cx={DIAL / 2} cy={DIAL / 2} fill="none" r={radius} stroke={restRing.track} strokeWidth={STROKE} />
+    <Svg height={DIAL + PAD * 2} style={{ margin: -PAD, transform: [{ rotate: '-90deg' }] }} width={DIAL + PAD * 2}>
+      <Circle cx={PAD + DIAL / 2} cy={PAD + DIAL / 2} fill="none" r={radius} stroke={restRing.track} strokeWidth={STROKE} />
       <AnimatedCircle
         animatedProps={animatedProps}
-        cx={DIAL / 2}
-        cy={DIAL / 2}
+        cx={PAD + DIAL / 2}
+        cy={PAD + DIAL / 2}
         fill="none"
         r={radius}
         strokeDasharray={`${circumference} ${circumference}`}

@@ -126,9 +126,9 @@ export function RestWave({ size, radius, ending }: { size: number; radius: numbe
       <Animated.View style={[{ width: size, height: size }, spin]}>
         <Svg height={size} width={size}>
           {/* Capa de fondo: ancha, lenta, casi solo relleno. */}
-          <WaveLayer amp={9} fillOpacity={0.1} lobes={4} phase={phase} radius={radius} size={size} speed={-1} strokeOpacity={0.28} urgency={urgency} />
+          <WaveLayer amp={8} fillOpacity={0.07} lobes={4} phase={phase} radius={radius} size={size} speed={-1} strokeOpacity={0.28} urgency={urgency} />
           {/* Capa de delante: más crestas, más rápida, con el filo marcado. */}
-          <WaveLayer amp={6} fillOpacity={0.08} lobes={7} phase={phase} radius={radius - 4} size={size} speed={2} strokeOpacity={0.55} urgency={urgency} />
+          <WaveLayer amp={5} fillOpacity={0.05} lobes={7} phase={phase} radius={radius - 5} size={size} speed={2} strokeOpacity={0.55} urgency={urgency} />
         </Svg>
       </Animated.View>
     </View>
