@@ -326,12 +326,14 @@ export default function TrayectoriaScreen() {
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <StatTile
                 icon="barbell-outline"
+                tone="weight"
                 label="Entrenamientos"
                 rate={chips?.session}
                 value={`${stats.totalSessions}`}
               />
               <StatTile
                 icon="layers-outline"
+                tone="reps"
                 label="Series"
                 rate={chips?.sets}
                 value={stats.totalSets.toLocaleString('es-ES')}
@@ -340,12 +342,14 @@ export default function TrayectoriaScreen() {
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <StatTile
                 icon="scale-outline"
+                tone="volume"
                 label="Volumen total"
                 rate={chips?.volume}
                 value={`${Math.round(stats.totalVolumeKg / 1000).toLocaleString('es-ES')} t`}
               />
               <StatTile
                 icon="trophy-outline"
+                tone="record"
                 label="Racha más larga"
                 rate={chips?.streak}
                 value={
@@ -358,6 +362,7 @@ export default function TrayectoriaScreen() {
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <StatTile
                 icon="flame-outline"
+                tone="streak"
                 label="Racha actual"
                 value={
                   stats.currentStreakDays > 0
@@ -367,6 +372,7 @@ export default function TrayectoriaScreen() {
               />
               <StatTile
                 icon="calendar-outline"
+                tone="time"
                 label="Semanas seguidas"
                 value={`${stats.weeklyStreak}`}
               />
@@ -374,11 +380,13 @@ export default function TrayectoriaScreen() {
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <StatTile
                 icon="trending-up-outline"
+                tone="record"
                 label="Récords batidos"
                 value={`${stats.personalRecords}`}
               />
               <StatTile
                 icon="body-outline"
+                tone="effort"
                 label="Grupos trabajados"
                 value={`${stats.distinctMuscleGroups}`}
               />
