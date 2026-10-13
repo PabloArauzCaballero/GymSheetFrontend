@@ -7,6 +7,7 @@ import { cn } from '@/shared/lib/cn';
 import { formatTimeOfDay } from '@/features/chat/lib/chat-time';
 
 function trainingInviteAcceptedLabel(event: Extract<Message, { type: 'system' }>['systemEvent']): string {
+  if (event.cancelledAt) return `Entrenamiento cancelado · ${event.placeLabel}`;
   const startsAt = new Intl.DateTimeFormat('es-BO', { dateStyle: 'medium', timeStyle: 'short', timeZone: event.timeZone }).format(new Date(event.startsAt));
   return `Entrenamiento acordado · ${startsAt} · ${event.placeLabel}`;
 }
