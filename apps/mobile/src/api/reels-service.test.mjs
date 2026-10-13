@@ -30,7 +30,7 @@ describe("reelsService (mobile)", () => {
     await reelsService.feed();
 
     expect(requestMock).toHaveBeenCalledWith(
-      "/me/reels/feed",
+      "/me/reels/feed?tab=MINE",
       reelsFeedSchema,
       { method: "GET" },
     );
@@ -69,7 +69,7 @@ describe("reelsService (mobile)", () => {
     }
   });
 
-  it("accepts READY reel DTOs and the agreed first feed page only", () => {
+  it("accepts READY reel DTOs and signed continuation cursors", () => {
     expect(reelSchema.safeParse(reel).success).toBe(true);
     expect(
       reelSchema.safeParse({ ...reel, status: "PROCESSING" }).success,
@@ -80,7 +80,19 @@ describe("reelsService (mobile)", () => {
     expect(
       reelsFeedSchema.safeParse({ items: [reel], nextCursor: "cursor" })
         .success,
-    ).toBe(false);
+    ).toBe(true);
+  });
+
+  it("requests the chosen social tab and signed continuation cursor", async () => {
+    requestMock.mockResolvedValue({ items: [], nextCursor: null });
+
+    await reelsService.feed("CONNECTIONS", "signed-cursor");
+
+    expect(requestMock).toHaveBeenCalledWith(
+      "/me/reels/feed?tab=CONNECTIONS&cursor=signed-cursor",
+      reelsFeedSchema,
+      { method: "GET" },
+    );
   });
 
   it("preserves transport errors from feed and upload", async () => {

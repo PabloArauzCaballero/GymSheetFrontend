@@ -9,16 +9,25 @@ export const reelSchema = z
     durationSeconds: z.number().finite().positive().max(90),
     status: z.literal("READY"),
     createdAt: z.string().datetime(),
+    commentsEnabled: z.boolean().optional(),
+    commentsCount: z.number().int().nonnegative().optional(),
+    likesCount: z.number().int().nonnegative().optional(),
+    likedByMe: z.boolean().optional(),
+    savedByMe: z.boolean().optional(),
+    repostedByMe: z.boolean().optional(),
+    sharedBy: z
+      .array(z.object({ userId: z.string().uuid(), displayName: z.string() }))
+      .optional(),
   })
   .strict();
 
 export type ReelDTO = z.infer<typeof reelSchema>;
 
-/** The agreed first feed response is a single page with no continuation cursor. */
+/** A feed page and its optional signed continuation cursor. */
 export const reelsFeedSchema = z
   .object({
     items: z.array(reelSchema),
-    nextCursor: z.null(),
+    nextCursor: z.string().min(1).nullable(),
   })
   .strict();
 

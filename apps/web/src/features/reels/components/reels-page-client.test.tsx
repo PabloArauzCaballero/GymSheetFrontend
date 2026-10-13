@@ -6,7 +6,15 @@ import { reelsService } from '../services/reels-service';
 import { ReelsPageClient } from './reels-page-client';
 
 vi.mock('../services/reels-service', () => ({
-  reelsService: { feed: vi.fn(), upload: vi.fn() },
+  reelsService: {
+    feed: vi.fn(),
+    upload: vi.fn(),
+    like: vi.fn(),
+    save: vi.fn(),
+    repost: vi.fn(),
+    comments: vi.fn(),
+    createComment: vi.fn(),
+  },
 }));
 
 const reel: ReelDTO = {
@@ -36,6 +44,11 @@ describe('ReelsPageClient', () => {
   beforeEach(() => {
     vi.mocked(reelsService.feed).mockReset().mockResolvedValue({ items: [], nextCursor: null });
     vi.mocked(reelsService.upload).mockReset();
+    vi.mocked(reelsService.like).mockReset().mockResolvedValue({ liked: true });
+    vi.mocked(reelsService.save).mockReset().mockResolvedValue({ saved: true });
+    vi.mocked(reelsService.repost).mockReset().mockResolvedValue({ reposted: true });
+    vi.mocked(reelsService.comments).mockReset().mockResolvedValue([]);
+    vi.mocked(reelsService.createComment).mockReset();
   });
 
   it('uploads one selected video and shows the READY reel in the protected feed', async () => {
@@ -109,5 +122,16 @@ describe('ReelsPageClient', () => {
     fireEvent.play(videos[1] as HTMLVideoElement);
 
     expect(pause).toHaveBeenCalledOnce();
+  });
+
+  it('loads a selected social feed and applies its interaction through the service', async () => {
+    vi.mocked(reelsService.feed).mockResolvedValue({ items: [reel], nextCursor: null });
+    renderPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Conexiones' }));
+    await waitFor(() => expect(reelsService.feed).toHaveBeenLastCalledWith('CONNECTIONS'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Me gusta' }));
+
+    await waitFor(() => expect(reelsService.like).toHaveBeenCalledWith(reel.id, true));
   });
 });

@@ -61,7 +61,7 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 
 **Archivos:** `B/src/modules/reels/reels-feed.repository.ts (nuevo)`; `B/src/modules/reels/reel-interactions.service.ts (nuevo)`; `B/src/modules/reels/reel-comments.service.ts (nuevo)`. **Pruebas nuevas:** `B/test/social/reels.e2e-spec.ts`.
 
-**Interfaces:** Produce feed FOR_YOU/CONNECTIONS por cursor, acciones únicas y respuestas de un nivel.
+**Interfaces:** Produce feed FOR_YOU/CONNECTIONS por cursor, acciones únicas y respuestas de un nivel. La API y la web cubren feeds/interacciones; el endpoint Para ti todavía ordena cronológicamente y no tiene ranking fitness integrado.
 
 **CA:** dadas las precondiciones de cada fila, al ejecutar sus acciones se cumplen exactamente sus resultados. **DoD:** todos los comandos dirigidos de este grupo devuelven PASS y no hay defectos mayores abiertos. **Estado:** TODO.
 
@@ -76,17 +76,17 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 | ID | Cambio verificable | CA: dado / cuando / entonces | DoD dirigido | Estado |
 |---|---|---|---|---|
 
-| H9.S2.M1 | [ ] Separar dos feeds | Dado videos generales y de conexiones; cuando se consultan tabs; entonces Conexiones contiene solo publicaciones/reposts autorizados. | B: `yarn test:e2e --runTestsByPath test/social/reels.e2e-spec.ts -t 'H9.S2.M1'` → PASS | TODO |
+| H9.S2.M1 | [x] Separar dos feeds | Dado videos generales y de conexiones; cuando se consultan tabs; entonces Conexiones contiene solo publicaciones/reposts autorizados. | E2E PostgreSQL en [slice social](../evidencia/h9-s2-social-reels-2026-10-13.md): feed CONNECTIONS separado de FOR_YOU, bloqueos y autores elegibles; PASS | HECHO |
 
-| H9.S2.M2 | [ ] Mantener guardados privados | Dado A guarda reel; cuando B consulta colecciones de A; entonces no obtiene guardados privados. | B: `yarn test:e2e --runTestsByPath test/social/reels.e2e-spec.ts -t 'H9.S2.M2'` → PASS | TODO |
+| H9.S2.M2 | [x] Mantener guardados privados | Dado A guarda reel; cuando B consulta colecciones de A; entonces no obtiene guardados privados. | E2E PostgreSQL: el listado de guardados queda ligado a la cuenta autenticada y respeta visibilidad actual; PASS, ver [slice social](../evidencia/h9-s2-social-reels-2026-10-13.md) | HECHO |
 
-| H9.S2.M3 | [ ] Deduplicar reposts | Dado B y C conectados con A repostean mismo reel; cuando A consulta feed; entonces video aparece una sola vez con autor original. | B: `yarn test:e2e --runTestsByPath test/social/reels.e2e-spec.ts -t 'H9.S2.M3'` → PASS | TODO |
+| H9.S2.M3 | [x] Deduplicar reposts | Dado B y C conectados con A repostean mismo reel; cuando A consulta feed; entonces video aparece una sola vez con autor original. | E2E PostgreSQL: una fila de reel y una tarjeta agrupada con las dos atribuciones; PASS, ver [slice social](../evidencia/h9-s2-social-reels-2026-10-13.md) | HECHO |
 
-| H9.S2.M4 | [ ] Deshacer repost | Dado B había reposteado; cuando retira repost; entonces deja de atribuirse a B sin eliminar original. | B: `yarn test:e2e --runTestsByPath test/social/reels.e2e-spec.ts -t 'H9.S2.M4'` → PASS | TODO |
+| H9.S2.M4 | [x] Deshacer repost | Dado B había reposteado; cuando retira repost; entonces deja de atribuirse a B sin eliminar original. | E2E PostgreSQL: retiro idempotente y original aún disponible; PASS, ver [slice social](../evidencia/h9-s2-social-reels-2026-10-13.md) | HECHO |
 
-| H9.S2.M5 | [ ] Aplicar comentario cerrado | Dado autor cierra comentarios; cuando otra persona intenta comentar; entonces rechaza aun con pantalla antigua. | B: `yarn test:e2e --runTestsByPath test/social/reels.e2e-spec.ts -t 'H9.S2.M5'` → PASS | TODO |
+| H9.S2.M5 | [x] Aplicar comentario cerrado | Dado autor cierra comentarios; cuando otra persona intenta comentar; entonces rechaza aun con pantalla antigua. | E2E PostgreSQL: cierre y escritura concurrente protegidos; comentarios y respuestas de un nivel; rechazo de tercer nivel; borrado lógico por autor del reel; PASS, ver [slice social](../evidencia/h9-s2-social-reels-2026-10-13.md) | HECHO |
 
-| H9.S2.M6 | [ ] Retirar contenido eliminado | Dado original tiene guardados/reposts; cuando autor o moderador lo retira; entonces no queda reproducible desde colecciones ni enlaces. | B: `yarn test:e2e --runTestsByPath test/social/reels.e2e-spec.ts -t 'H9.S2.M6'` → PASS | TODO |
+| H9.S2.M6 | [ ] Retirar contenido eliminado | Dado original tiene guardados/reposts; cuando autor o moderador lo retira; entonces no queda reproducible desde colecciones ni enlaces. | E2E PostgreSQL confirma retirada por autor, salida de feed/guardados y 404 de media; falta integrar la acción del moderador para reels. Evidencia parcial: [slice social](../evidencia/h9-s2-social-reels-2026-10-13.md) | EN CURSO |
 
 ## H9.S3 — Creación y consumo móvil/web
 
@@ -115,7 +115,7 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 
 | H9.S3.M4 | [ ] Conectar desde autor | Dado reel de B; cuando A abre perfil y conecta; entonces mismo estado en Conocer y mapa. | F: `python3 scripts/qa/run-social-pair.py --case H9.S3.M4` → PASS con manifiesto y evidencias | TODO |
 
-| H9.S3.M5 | [ ] Comentar y responder | Dado comentario raíz de A; cuando B responde y da like; entonces respuesta queda en ese reel con conteo persistente. | F: `python3 scripts/qa/run-social-pair.py --case H9.S3.M5` → PASS con manifiesto y evidencias | TODO |
+| H9.S3.M5 | [ ] Comentar y responder | Dado comentario raíz de A; cuando B responde y da like; entonces respuesta queda en ese reel con conteo persistente. | API de comentarios/respuestas de un nivel, like y web para leer/crear comentario implementados; sin UI de respuesta nativa ni PAIR. Ver [slice social](../evidencia/h9-s2-social-reels-2026-10-13.md) | EN CURSO |
 
 | H9.S3.M6 | [ ] Borrar comentario como autor | Dado comentario de B en reel de A; cuando A lo elimina; entonces desaparece para ambos sin borrar comentarios de otros reels. | F: `python3 scripts/qa/run-social-pair.py --case H9.S3.M6` → PASS con manifiesto y evidencias | TODO |
 

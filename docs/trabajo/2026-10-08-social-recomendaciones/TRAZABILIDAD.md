@@ -181,17 +181,17 @@ Estado inicial: todos los casos pendientes; los IDs son nombres obligatorios par
 | H9.S1.M2 | H9 | BE | Evitar publicación incompleta | HECHO: upload storage fallido no crea fila y PROCESSING queda fuera del feed |
 | H9.S1.M3 | H9 | BE | Reintentar procesamiento | EN CURSO: retry durable de upload/rollback protegido; E2E 1/1; worker/transcodificación pendientes |
 | H9.S1.M4 | H9 | BE | Validar archivo por contenido | HECHO: parser 17/17 valida tablas `stsz`/`stsc`/`stco`/`co64` y rangos en `mdat`; falso MP4 rechazado; smoke ffmpeg de MP4 real 1 s aceptado por el parser; no valida decode de codec; PAIR BLOCKED |
-| H9.S2.M1 | H9 | BE | Separar dos feeds | TODO |
-| H9.S2.M2 | H9 | BE | Mantener guardados privados | TODO |
-| H9.S2.M3 | H9 | BE | Deduplicar reposts | TODO |
-| H9.S2.M4 | H9 | BE | Deshacer repost | TODO |
-| H9.S2.M5 | H9 | BE | Aplicar comentario cerrado | TODO |
-| H9.S2.M6 | H9 | BE | Retirar contenido eliminado | TODO |
+| H9.S2.M1 | H9 | BE | Separar dos feeds | HECHO: feeds MINE/FOR_YOU/CONNECTIONS, autorización y filtros; E2E PostgreSQL PASS; ver evidencia H9.S2 2026-10-13 |
+| H9.S2.M2 | H9 | BE | Mantener guardados privados | HECHO: colección privada por actor y visibilidad revalidada; E2E PostgreSQL PASS; ver evidencia H9.S2 2026-10-13 |
+| H9.S2.M3 | H9 | BE | Deduplicar reposts | HECHO: original agrupado con atribuciones de repost; E2E PostgreSQL PASS; ver evidencia H9.S2 2026-10-13 |
+| H9.S2.M4 | H9 | BE | Deshacer repost | HECHO: repost reversible sin retirar original; E2E PostgreSQL PASS; ver evidencia H9.S2 2026-10-13 |
+| H9.S2.M5 | H9 | BE | Aplicar comentario cerrado | HECHO: cierre, replies de un nivel y likes idempotentes; E2E PostgreSQL PASS; ver evidencia H9.S2 2026-10-13 |
+| H9.S2.M6 | H9 | BE | Retirar contenido eliminado | EN CURSO: retirada por dueño verificada; falta integración de ocultamiento de reels con moderación; ver evidencia H9.S2 2026-10-13 |
 | H9.S3.M1 | H9 | PAIR | Crear video recortado | TODO |
 | H9.S3.M2 | H9 | PAIR | Publicar desde cámara o archivo | EN CURSO: UI web de archivo/cámara, upload, feed READY y preview; falta cámara/dispositivo y PAIR real |
 | H9.S3.M3 | H9 | PAIR | Mantener un reproductor activo | EN CURSO: UI web pausa video previo al iniciar otro; falta scroll de 30 y PAIR |
 | H9.S3.M4 | H9 | PAIR | Conectar desde autor | TODO |
-| H9.S3.M5 | H9 | PAIR | Comentar y responder | TODO |
+| H9.S3.M5 | H9 | PAIR | Comentar y responder | EN CURSO: API de comentarios/respuestas y like, lectura/creación web; falta UI de respuesta nativa y PAIR; evidencia H9.S2 2026-10-13 |
 | H9.S3.M6 | H9 | PAIR | Borrar comentario como autor | TODO |
 | H9.S4.M1 | H9 | BE | Aplicar esquema sin pérdida | HECHO: E2E 1/1 conserva usuario/story previos y confirma CHECK por duration/provider/status inválidos |
 | H9.S4.M2 | H9 | BE | Reabrir desde base vacía | HECHO: registro completo desde template0, fixture, constraint y rollback protegido |

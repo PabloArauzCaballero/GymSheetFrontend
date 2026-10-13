@@ -22,10 +22,48 @@ export function ReelsPageClient() {
   const activeVideo = useRef<HTMLVideoElement | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectionError, setSelectionError] = useState<string | null>(null);
+  const [feedTab, setFeedTab] = useState<'MINE' | 'FOR_YOU' | 'CONNECTIONS'>('MINE');
+  const [commentsReel, setCommentsReel] = useState<string | null>(null);
+  const [commentDraft, setCommentDraft] = useState('');
 
   const feed = useQuery({
-    queryKey: feedKey,
-    queryFn: reelsService.feed,
+    queryKey: [...feedKey, feedTab],
+    queryFn: () => reelsService.feed(feedTab),
+  });
+
+  const comments = useQuery({
+    queryKey: [...feedKey, 'comments', commentsReel],
+    queryFn: () => reelsService.comments(commentsReel!),
+    enabled: commentsReel !== null,
+  });
+
+  const interact = useMutation({
+    mutationFn: async ({
+      reelId,
+      action,
+      value,
+    }: {
+      reelId: string;
+      action: 'like' | 'save' | 'repost';
+      value: boolean;
+    }) => {
+      if (action === 'like') return reelsService.like(reelId, value);
+      if (action === 'save') return reelsService.save(reelId, value);
+      return reelsService.repost(reelId, value);
+    },
+    onSuccess: async () => queryClient.invalidateQueries({ queryKey: feedKey }),
+  });
+
+  const createComment = useMutation({
+    mutationFn: ({ reelId, body }: { reelId: string; body: string }) =>
+      reelsService.createComment(reelId, body),
+    onSuccess: async (_comment, variables) => {
+      setCommentDraft('');
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [...feedKey, 'comments', variables.reelId] }),
+        queryClient.invalidateQueries({ queryKey: feedKey }),
+      ]);
+    },
   });
 
   const upload = useMutation({
@@ -152,8 +190,34 @@ export function ReelsPageClient() {
       </section>
 
       <section aria-labelledby="my-reels-title" className="grid gap-4">
+        <div className="flex flex-wrap gap-2" aria-label="Feeds de reels">
+          {(
+            [
+              ['FOR_YOU', 'Para ti'],
+              ['CONNECTIONS', 'Conexiones'],
+              ['MINE', 'Mis reels'],
+            ] as const
+          ).map(([tab, label]) => (
+            <Button
+              aria-pressed={feedTab === tab}
+              key={tab}
+              onClick={() => {
+                setFeedTab(tab);
+                setCommentsReel(null);
+              }}
+              type="button"
+              variant={feedTab === tab ? 'primary' : 'secondary'}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
         <h2 className="text-lg font-semibold" id="my-reels-title">
-          Mis reels publicados
+          {feedTab === 'MINE'
+            ? 'Mis reels publicados'
+            : feedTab === 'FOR_YOU'
+              ? 'Para ti'
+              : 'Conexiones'}
         </h2>
         {feed.isLoading ? <p role="status">Cargando reels…</p> : null}
         {feed.isError ? (
@@ -165,7 +229,11 @@ export function ReelsPageClient() {
           </div>
         ) : null}
         {feed.isSuccess && feed.data.items.length === 0 ? (
-          <p className="text-sm text-[var(--text-muted)]">Tus reels publicados aparecerán aquí.</p>
+          <p className="text-sm text-[var(--text-muted)]">
+            {feedTab === 'MINE'
+              ? 'Tus reels publicados aparecerán aquí.'
+              : 'Todavía no hay reels disponibles en este feed.'}
+          </p>
         ) : null}
         {feed.isSuccess && feed.data.items.length > 0 ? (
           <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -194,6 +262,100 @@ export function ReelsPageClient() {
                 <p className="text-sm text-[var(--text-muted)]">
                   Duración: {formatDuration(reel.durationSeconds)}
                 </p>
+                {feedTab !== 'MINE' ? (
+                  <div className="flex flex-wrap gap-2" aria-label="Interacciones del reel">
+                    <Button
+                      disabled={interact.isPending}
+                      onClick={() =>
+                        interact.mutate({ reelId: reel.id, action: 'like', value: !reel.likedByMe })
+                      }
+                      type="button"
+                      variant="secondary"
+                    >
+                      {reel.likedByMe ? 'Quitar me gusta' : 'Me gusta'}
+                      {reel.likesCount ? ` (${reel.likesCount})` : ''}
+                    </Button>
+                    <Button
+                      disabled={interact.isPending}
+                      onClick={() =>
+                        interact.mutate({ reelId: reel.id, action: 'save', value: !reel.savedByMe })
+                      }
+                      type="button"
+                      variant="secondary"
+                    >
+                      {reel.savedByMe ? 'Quitar de guardados' : 'Guardar'}
+                    </Button>
+                    <Button
+                      disabled={interact.isPending}
+                      onClick={() =>
+                        interact.mutate({
+                          reelId: reel.id,
+                          action: 'repost',
+                          value: !reel.repostedByMe,
+                        })
+                      }
+                      type="button"
+                      variant="secondary"
+                    >
+                      {reel.repostedByMe ? 'Deshacer repost' : 'Repostear'}
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        setCommentsReel((current) => (current === reel.id ? null : reel.id))
+                      }
+                      type="button"
+                      variant="secondary"
+                    >
+                      Comentarios ({reel.commentsCount ?? 0})
+                    </Button>
+                  </div>
+                ) : null}
+                {commentsReel === reel.id ? (
+                  <section aria-label="Comentarios del reel" className="grid gap-3">
+                    {comments.isLoading ? <p role="status">Cargando comentarios…</p> : null}
+                    {comments.isError ? (
+                      <p role="alert">No se pudieron cargar los comentarios.</p>
+                    ) : null}
+                    {comments.data?.map((comment) => (
+                      <p className="text-sm" key={comment.id}>
+                        <strong>{comment.displayName}</strong>:{' '}
+                        {comment.body ?? 'Comentario eliminado'}
+                      </p>
+                    ))}
+                    {reel.commentsEnabled !== false ? (
+                      <form
+                        className="flex gap-2"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          const body = commentDraft.trim();
+                          if (body) createComment.mutate({ reelId: reel.id, body });
+                        }}
+                      >
+                        <label className="sr-only" htmlFor={`reel-comment-${reel.id}`}>
+                          Escribe un comentario
+                        </label>
+                        <input
+                          className="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2"
+                          id={`reel-comment-${reel.id}`}
+                          maxLength={1000}
+                          onChange={(event) => setCommentDraft(event.currentTarget.value)}
+                          value={commentDraft}
+                        />
+                        <Button
+                          disabled={createComment.isPending || !commentDraft.trim()}
+                          type="submit"
+                          variant="primary"
+                        >
+                          Comentar
+                        </Button>
+                      </form>
+                    ) : (
+                      <p className="text-sm text-[var(--text-muted)]">
+                        Los comentarios están cerrados.
+                      </p>
+                    )}
+                  </section>
+                ) : null}
               </li>
             ))}
           </ul>

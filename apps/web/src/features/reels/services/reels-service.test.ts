@@ -30,7 +30,7 @@ describe('reelsService', () => {
 
     await reelsService.feed();
 
-    expect(apiRequestMock).toHaveBeenCalledWith('/me/reels/feed', reelsFeedSchema);
+    expect(apiRequestMock).toHaveBeenCalledWith('/me/reels/feed?tab=MINE', reelsFeedSchema);
   });
 
   it('uploads only the selected file as multipart field `file`', async () => {
@@ -52,10 +52,21 @@ describe('reelsService', () => {
     expect(reelSchema.safeParse({ ...reel, unexpected: true }).success).toBe(false);
   });
 
-  it('parses the agreed feed envelope data and rejects a non-null cursor', () => {
+  it('parses the agreed feed envelope data and signed continuation cursors', () => {
     expect(reelsFeedSchema.safeParse({ items: [reel], nextCursor: null }).success).toBe(true);
-    expect(reelsFeedSchema.safeParse({ items: [reel], nextCursor: 'next-page' }).success).toBe(
-      false,
+    expect(
+      reelsFeedSchema.safeParse({ items: [reel], nextCursor: 'signed-next-page' }).success,
+    ).toBe(true);
+  });
+
+  it('binds feed requests to the selected tab and optional cursor', async () => {
+    apiRequestMock.mockResolvedValue({ items: [], nextCursor: null });
+
+    await reelsService.feed('CONNECTIONS', 'cursor.value');
+
+    expect(apiRequestMock).toHaveBeenCalledWith(
+      '/me/reels/feed?tab=CONNECTIONS&cursor=cursor.value',
+      reelsFeedSchema,
     );
   });
 });
