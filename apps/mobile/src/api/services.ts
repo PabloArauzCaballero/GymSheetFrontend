@@ -77,8 +77,8 @@ const deletedSchema = z.object({ deleted: z.literal(true) });
  * `@gymsheet/schemas`, the same source the web app validates against, so a
  * backend change surfaces as a `contract` error on both clients at once.
  *
- * Everything here is a GET: the mobile app currently reports state, it does not
- * mutate it. Writes belong next to the screen that owns them.
+ * Mutations keep explicit inputs and response schemas beside their routes so a
+ * screen cannot drift from the backend contract.
  */
 export const profileService = {
   /** Anthropometric profile. 404 means the user has not onboarded yet. */
@@ -308,6 +308,27 @@ export const routineService = {
     apiClient.request(`/routines/${routineId}/schedule`, routineAssignmentSchema, {
       method: 'POST',
       body: input,
+    }),
+};
+
+const moderationReportResultSchema = z.object({
+  id: z.string().uuid(),
+  status: z.string(),
+  contentHidden: z.boolean(),
+});
+
+export type ModerationReportReason =
+  | 'ACOSO'
+  | 'PERFIL_FALSO'
+  | 'SPAM'
+  | 'OTRO';
+
+/** Report actions shared by profile and chat entry points in the mobile app. */
+export const moderationService = {
+  report: (targetKind: 'USER' | 'CHAT_MESSAGE', targetId: string, reason: ModerationReportReason) =>
+    apiClient.request('/me/reports', moderationReportResultSchema, {
+      method: 'POST',
+      body: { targetKind, targetId, reason },
     }),
 };
 

@@ -1,12 +1,22 @@
 'use client';
 
-import { Check, CheckCheck, Eye, EyeOff, MapPin, MoreHorizontal, PlayCircle } from 'lucide-react';
+import {
+  Check,
+  CheckCheck,
+  Eye,
+  EyeOff,
+  Flag,
+  MapPin,
+  MoreHorizontal,
+  PlayCircle,
+} from 'lucide-react';
 import { useState } from 'react';
 import type { Message } from '@/shared/api/schemas';
 import { isMessageReadByOther, trainingInviteAcceptedMessage } from '@gymsheet/domain';
 import { DomainImage, mediaProxyUrl } from '@/shared/components/media/domain-image';
 import { cn } from '@/shared/lib/cn';
 import { formatTimeOfDay } from '@/features/chat/lib/chat-time';
+import { ReportDialog } from '@/features/moderation/components/report-dialog';
 
 export function mapsUrlFor(lat: number, lng: number): string {
   return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
@@ -186,6 +196,22 @@ export function MessageBubble({
           />
         ) : null}
       </span>
+      {!mine && !message.deletedAt ? (
+        <ReportDialog
+          subjectName="este mensaje"
+          targetId={message.id}
+          targetKind="CHAT_MESSAGE"
+          trigger={
+            <button
+              aria-label="Reportar mensaje"
+              className="min-h-11 self-end rounded px-2 text-xs text-[var(--text-muted)] hover:bg-[var(--surface-high)] hover:text-[var(--text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+              type="button"
+            >
+              <Flag aria-hidden className="mr-1 inline size-3.5" /> Reportar
+            </button>
+          }
+        />
+      ) : null}
     </li>
   );
 }

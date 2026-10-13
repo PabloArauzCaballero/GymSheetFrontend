@@ -1,5 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { render as testingRender, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi } from 'vitest';
+import type { ReactElement } from 'react';
 import type { Message } from '@/shared/api/schemas';
 import { MessageBubble } from './message-bubble';
 
@@ -18,6 +20,13 @@ const audioMessage: Message = {
   locationLng: null,
   createdAt: '2026-10-09T10:00:00.000Z',
 };
+
+function render(ui: ReactElement) {
+  const client = new QueryClient({
+    defaultOptions: { mutations: { retry: false } },
+  });
+  return testingRender(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+}
 
 describe('MessageBubble audio', () => {
   it('shows the server-provided story reference without loading story media', () => {
@@ -39,6 +48,27 @@ describe('MessageBubble audio', () => {
     );
 
     expect(screen.getByLabelText('Referencia a una story')).toHaveTextContent('Respuesta a una story');
+  });
+
+  it('offers a report action for a message received from another person', () => {
+    render(
+      <MessageBubble
+        groupedWithPrevious={false}
+        message={audioMessage}
+        mine={false}
+        onEditMessage={vi.fn()}
+        canEdit={false}
+        onOpenImage={vi.fn()}
+        onRevealViewOnce={vi.fn()}
+        revealedUrl={null}
+        revealPending={false}
+        otherLastDeliveredAt={null}
+        otherLastReadAt={null}
+        otherReadReceiptsSinceAt={null}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Reportar mensaje' })).toBeTruthy();
   });
 
   it('plays an authenticated audio attachment through the media proxy', () => {

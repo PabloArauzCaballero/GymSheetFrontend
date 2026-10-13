@@ -64,7 +64,7 @@ import {
   recoverFromHistoryError,
   viewerUriWhileHistoryAccessPending,
 } from '@/hooks/chat-history-recovery';
-import { chatService } from '@/api/services';
+import { chatService, moderationService } from '@/api/services';
 import { env } from '@/config/env';
 import { secureStoreTokenProvider } from '@/storage/secure-store';
 import { useChatSocket, type PresenceUpdate } from '@/hooks/use-chat-socket';
@@ -340,6 +340,12 @@ export default function ChatThreadScreen() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['chat', 'conversations'] });
     },
+    onError: (error: Error) => notify.error(error.message),
+  });
+  const reportMessage = useMutation({
+    mutationFn: ({ messageId, reason }: { messageId: string; reason: 'ACOSO' | 'SPAM' | 'OTRO' }) =>
+      moderationService.report('CHAT_MESSAGE', messageId, reason),
+    onSuccess: () => notify.success('Gracias por avisar. Este chat ya no estará disponible.'),
     onError: (error: Error) => notify.error(error.message),
   });
   const updateReadReceiptSettings = useMutation({
@@ -1156,6 +1162,28 @@ export default function ChatThreadScreen() {
           <Text accessibilityLabel="Mensaje editado" style={{ color: mutedOnBubble, fontSize: 10, alignSelf: 'flex-end' }}>
             Editado
           </Text>
+        ) : null}
+        {!mine && !item.deletedAt ? (
+          <PressableScale
+            accessibilityLabel="Reportar mensaje"
+            disabled={reportMessage.isPending}
+            haptic="none"
+            onPress={() => Alert.alert(
+              'Reportar mensaje',
+              'Elige el motivo. Al reportarlo, este chat se cerrará para ambos.',
+              [
+                { text: 'Acoso', onPress: () => reportMessage.mutate({ messageId: item.id, reason: 'ACOSO' }) },
+                { text: 'Spam', onPress: () => reportMessage.mutate({ messageId: item.id, reason: 'SPAM' }) },
+                { text: 'Otro', onPress: () => reportMessage.mutate({ messageId: item.id, reason: 'OTRO' }) },
+                { text: 'Cancelar', style: 'cancel' },
+              ],
+            )}
+            scaleTo={0.97}
+            style={{ alignSelf: 'flex-start', marginTop: spacing.xs, minHeight: minTouchTarget, justifyContent: 'center' }}
+            testID={`chat-message-report-${item.id}`}
+          >
+            <Text style={{ color: mutedOnBubble, fontSize: fontSizes.xs, fontWeight: semibold }}>Reportar</Text>
+          </PressableScale>
         ) : null}
         {mine && currentUserId && canWrite && canEditMessage(item, currentUserId) && !deletedMessageIdsRef.current.has(item.id) ? (
           <PressableScale
