@@ -1,10 +1,19 @@
 /// <reference types="node" />
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import test, { describe, it } from 'node:test';
 import {
+  activeItemOf,
+  blockFill,
   bumpSeconds,
   buildFlowBlocks,
   currentStep,
+  isStaleSession,
+  openingWeight,
+  pageAfterLogging,
+  sessionClock,
+  sessionTitle,
+  stepFrom,
+  withLoggedSet,
   lastTimeLabel,
   parseSeconds,
   previousRestSeconds,
@@ -124,4 +133,65 @@ test('bumpSeconds: suma y resta sin salir de 1–3600', () => {
   assert.equal(bumpSeconds('3', -5), '1');
   assert.equal(bumpSeconds('', 5), '5');
   assert.equal(bumpSeconds('3599', 5), '3600');
+});
+
+describe('modo enfoque', () => {
+
+  it('blockFill: la fracción hecha del bloque, sin pasar de 1', () => {
+    const [single] = buildFlowBlocks([item('a', { logged: 1 })]);
+    assert.equal(blockFill(single!), 1 / 3);
+    const [over] = buildFlowBlocks([item('a', { logged: 5 })]);
+    assert.equal(blockFill(over!), 1);
+    const [superset] = buildFlowBlocks([item('a', { grupo: 1, logged: 3 }), item('b', { grupo: 1, logged: 0 })]);
+    assert.equal(blockFill(superset!), 0.5);
+    const [manual] = buildFlowBlocks([item('a', { target: null, logged: 0 })]);
+    assert.equal(blockFill(manual!), 0);
+  });
+
+  it('activeItemOf: el que toca, el elegido, o el último si el bloque terminó', () => {
+    const blocks = buildFlowBlocks([item('a', { grupo: 1, logged: 1 }), item('b', { grupo: 1, logged: 0 }), item('c')]);
+    assert.equal(activeItemOf(blocks, 0)?.item.id, 'b');
+    assert.equal(activeItemOf(blocks, 0)?.step.round, 1);
+    assert.equal(activeItemOf(blocks, 0, 'a')?.item.id, 'a');
+    assert.equal(activeItemOf(blocks, 1)?.item.id, 'c');
+    const done = buildFlowBlocks([item('a', { grupo: 1, logged: 3 }), item('b', { grupo: 1, logged: 3 })]);
+    assert.equal(activeItemOf(done, 0)?.item.id, 'b');
+    assert.equal(activeItemOf(done, 0)?.done, true);
+    assert.equal(activeItemOf(done, 4), null);
+  });
+
+  it('pageAfterLogging: el bloque del paso siguiente o el resumen', () => {
+    const blocks = buildFlowBlocks([item('a', { logged: 2 }), item('b')]);
+    const after = withLoggedSet(blocks, 'a');
+    assert.equal(pageAfterLogging(after, stepFrom(after, 0)), 1);
+    const last = withLoggedSet(buildFlowBlocks([item('a', { logged: 2 })]), 'a');
+    assert.equal(pageAfterLogging(last, stepFrom(last, 0)), 1);
+  });
+
+  it('sesión vieja y cronómetro', () => {
+    const now = Date.parse('2026-10-13T12:00:00Z');
+    assert.equal(isStaleSession('2026-10-13T11:00:00Z', now), false);
+    assert.equal(isStaleSession('2026-10-11T11:00:00Z', now), true);
+    assert.equal(sessionClock('2026-10-13T11:55:53Z', now), '4:07');
+    assert.equal(sessionClock('2026-10-13T10:57:27Z', now), '1:02:33');
+    assert.equal(sessionClock('2026-10-13T12:00:10Z', now), '0:00');
+  });
+
+  it('sessionTitle: el día manda, la rutina acompaña', () => {
+    assert.deepEqual(sessionTitle('Plan: Torso-pierna de Diego · 4 días · Torso fuerte'), {
+      title: 'Torso fuerte', subtitle: 'Torso-pierna de Diego · 4 días',
+    });
+    assert.deepEqual(sessionTitle('Plan: Full body'), { title: 'Full body', subtitle: null });
+    assert.deepEqual(sessionTitle('me dolía el hombro'), { title: 'Entrenamiento', subtitle: null });
+    assert.deepEqual(sessionTitle(null), { title: 'Entrenamiento', subtitle: null });
+  });
+
+  it('openingWeight: nunca inventa un 0', () => {
+    assert.equal(openingWeight({ today: 62.5, suggested: 65, lastTime: 60, target: 50 }), 62.5);
+    assert.equal(openingWeight({ suggested: 65, lastTime: 60 }), 65);
+    assert.equal(openingWeight({ suggested: 0, lastTime: 60 }), 60);
+    assert.equal(openingWeight({ target: 40 }), 40);
+    assert.equal(openingWeight({}), null);
+    assert.equal(openingWeight({ today: 0 }), 0);
+  });
 });
