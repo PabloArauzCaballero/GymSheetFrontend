@@ -218,7 +218,7 @@ Estado inicial: todos los casos pendientes; los IDs son nombres obligatorios par
 | H11.S1.M3 | H11 | BE | Ocultar contenido desde moderación | HECHO: el feed omite el reel y el media endpoint da 404; [E2E](evidencia/h11-s1-moderacion-e2e-2026-10-13.md) |
 | H11.S1.M4 | H11 | BE | Auditar resolución | HECHO: decisión, moderador, nota, hora y `admin.audit_log` verificados; [E2E](evidencia/h11-s1-moderacion-e2e-2026-10-13.md) |
 | H11.S1.M5 | H11 | BE | Conservar evidencia tras revocación | HECHO: participantes pierden historial y central conserva caso mínimo; [E2E](evidencia/h11-s1-moderacion-e2e-2026-10-13.md) |
-| H11.S2.M1 | H11 | BE | Deduplicar aviso | EN CURSO: aceptación real, outbox y worker probados en PostgreSQL; queda dedupe entre procesos y push físico |
+| H11.S2.M1 | H11 | BE | Deduplicar aviso | HECHO: retry y 8 enqueues concurrentes dejan una notificación y una entrega; [E2E](evidencia/h11-s1-moderacion-e2e-2026-10-13.md). Sin push físico |
 | H11.S2.M2 | H11 | BE | Suprimir aviso revocado | HECHO: bloqueo posterior a enqueue produce `SUPPRESSED`, sin intentos, y worker completa el job; E2E aislado |
 | H11.S2.M3 | H11 | BE | Reautorizar enlace | HECHO: enlace viejo falla con 404 después de revocar; Web explica indisponibilidad; [E2E](evidencia/h11-s2-m3-m4-notification-safety-2026-10-13.md) |
 | H11.S2.M4 | H11 | BE | Respetar privacidad en push | HECHO: preferencia opt-in default false; E2E valida preview genérico/permitido; [evidencia](evidencia/h11-s2-m3-m4-notification-safety-2026-10-13.md) |

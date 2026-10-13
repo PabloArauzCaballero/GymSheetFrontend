@@ -10,7 +10,7 @@
 
 **Spec:** [Especificación](../ESPECIFICACION.md) y [contratos](../ARQUITECTURA_Y_CONTRATOS.md).
 
-**Requisitos:** R21, R22, R28, R33. **Dependencias:** H6, H7, H8, H9, H10. **Estado:** EN CURSO (S1 backend HECHO; S2.M1 y S3 todavía abiertos).
+**Requisitos:** R21, R22, R28, R33. **Dependencias:** H6, H7, H8, H9, H10. **Estado:** EN CURSO (S1/S2 backend HECHO; S3 PAIR todavía abierto).
 
 ## Restricciones globales
 
@@ -65,7 +65,7 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 
 **Interfaces:** Produce eventos deduplicados con destino reautorizado y preferencias de usuario.
 
-**CA:** dadas las precondiciones de cada fila, al ejecutar sus acciones se cumplen exactamente sus resultados. **DoD:** todos los comandos dirigidos de este grupo devuelven PASS y no hay defectos mayores abiertos. **Estado:** TODO.
+**CA:** dadas las precondiciones de cada fila, al ejecutar sus acciones se cumplen exactamente sus resultados. **DoD:** todos los comandos dirigidos de este grupo devuelven PASS y no hay defectos mayores abiertos. **Estado:** HECHO (backend; falta recorrido PAIR en H11.S3).
 
 **Secuencia por microtarea:**
 
@@ -78,7 +78,7 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 | ID | Cambio verificable | CA: dado / cuando / entonces | DoD dirigido | Estado |
 |---|---|---|---|---|
 
-| H11.S2.M1 | [ ] Deduplicar aviso | Dado evento de conexión repetido; cuando worker procesa; entonces un solo aviso por destinatario/evento. | Parcial: PostgreSQL E2E temporal recorre POST/PATCH real de solicitud/aceptación, verifica rollback completo si falla el outbox, retry idempotente y una sola entrega `IN_APP` con worker real. Unitarias 39/39, type-check, ESLint focal y Prettier PASS. No prueba dos procesos concurrentes ni push físico; queda EN CURSO. Evidencia: [E2E notificaciones](../evidencia/h11-s2-m1-notification-idempotency-e2e-2026-10-11.md) | EN CURSO |
+| H11.S2.M1 | [x] Deduplicar aviso | Dado evento de conexión repetido; cuando worker procesa; entonces un solo aviso por destinatario/evento. | PostgreSQL E2E temporal recorre POST/PATCH real, rollback completo al fallar outbox, retry, 8 reintentos concurrentes por transacciones independientes y una sola notificación/entrega con worker real. Evidencia: [H11.S2.M1](../evidencia/h11-s2-m1-notification-idempotency-e2e-2026-10-11.md) y [corrida concurrente](../evidencia/h11-s1-moderacion-e2e-2026-10-13.md). | HECHO (backend; sin envío push físico) |
 
 | H11.S2.M2 | [x] Suprimir aviso revocado | Dado mensaje en cola y bloqueo posterior; cuando worker entrega; entonces descarta el aviso del recurso revocado. | E2E PostgreSQL crea aceptación y aviso reales, bloquea antes del worker y verifica `SUPPRESSED`, job `COMPLETED`, cero intentos de entrega y ninguna conexión aceptada; la suite H11 pasa 4/4 para M1–M4. Aislamiento de test verificado con `current_database()` y DB temporal eliminada. Evidencia: [H11.S2.M2](../evidencia/h11-s2-m2-notification-suppression-2026-10-13.md), [regresión M1–M4](../evidencia/h11-s2-m3-m4-notification-safety-2026-10-13.md) | HECHO |
 

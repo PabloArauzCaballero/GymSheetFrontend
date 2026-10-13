@@ -1,6 +1,6 @@
 # H11.S1 — Moderación y revocación de chat
 
-Fecha: 2026-10-13. Código backend publicado como `74c66b4` (sobre `219c168`).
+Fecha: 2026-10-13. Código backend publicado como `74c66b4` (sobre `219c168`); la prueba adicional de duplicados concurrentes está en `fa3e5df`.
 
 ## Comportamiento cubierto
 
@@ -13,6 +13,7 @@ Fecha: 2026-10-13. Código backend publicado como `74c66b4` (sobre `219c168`).
 ## Verificación
 
 - Backend `test/social/moderacion-avisos.e2e-spec.ts`: PostgreSQL E2E PASS 7/7 (H11.S1.M1–M5 y H11.S2.M1–M4).
+- H11.S2.M1 focal: PASS 1/1 con ocho llamadas duplicadas concurrentes en transacciones distintas; una notificación y un intento de entrega.
 - Backend `src/modules/moderation/moderation.service.spec.ts`: PASS 15/15.
 - Node 22; E2E aislado contra `127.0.0.1:55432`, DB base `gymsheet_social_qa`, rol local `postgres`, y `AUTH_RATE_LIMIT_MAX=100`. El test crea su propia base aleatoria, confirma su conexión y la elimina en `afterAll`.
 - Primera corrida completa con límite del `.env` falló por 429 al registrar fixtures; se corrigió solo el entorno de prueba y la corrida completa siguiente pasó. Las corridas sin configuración QA o con rol incorrecto fallaron antes de ejecutar casos y no modificaron la base base.
@@ -20,4 +21,4 @@ Fecha: 2026-10-13. Código backend publicado como `74c66b4` (sobre `219c168`).
 
 ## Estado y límites
 
-H11.S1.M1–M5 quedan HECHO para backend. La suite combinada también regresó H11.S2.M1–M4 en verde. No demuestra todavía experiencia PAIR en móvil/Web para H11.S3, concurrencia entre varios workers para S2.M1 ni envío push físico. El commit backend `74c66b4` está pendiente de push al momento de redactar esta evidencia.
+H11.S1.M1–M5 y H11.S2.M1–M4 quedan HECHO para backend. La evidencia verifica idempotencia bajo enqueues concurrentes en PostgreSQL; no valida el transporte push con dispositivos físicos. H11.S3 requiere el recorrido PAIR en móvil/Web.
