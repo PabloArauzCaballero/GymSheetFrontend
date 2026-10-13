@@ -10,7 +10,7 @@
 
 **Spec:** [Especificación](../ESPECIFICACION.md) y [contratos](../ARQUITECTURA_Y_CONTRATOS.md).
 
-**Requisitos:** R08, R09, R10, R11. **Dependencias:** H2, H3. **Estado:** EN CURSO; ranking, proyección SQLite, worker de outbox, integración HTTP backend→motor, revalidación, fallback, cursor firmado ligado a filtros y rollback de modelos versionados implementados. El gate del motor para señales persiste; la señal de producto aún no se conecta. Antes del emisor faltan impresión verificable en la baraja, fuente declarada de `interests`, retractación coherente con undo/bloqueo y orden causal de proyecciones. También faltan guardrails automáticos y aceptación operativa/de producto.
+**Requisitos:** R08, R09, R10, R11. **Dependencias:** H2, H3. **Estado:** EN CURSO; ranking, proyección SQLite, worker de outbox, integración HTTP backend→motor, impresión observada de un solo uso, intereses declarados, retractación por undo/bloqueo, revalidación, fallback, cursor ligado a filtros y rollback versionado implementados. La prueba integrada PostgreSQL→HTTP→SQLite confirma que las señales aceptadas se retiran del vector al deshacer o bloquear. Faltan guardrails automáticos con datos representativos y aceptación operativa/de producto en web, Android e iOS.
 
 ## Restricciones globales
 
@@ -65,7 +65,7 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 
 **Interfaces:** Produce rankPeople(request): RankResponse; fórmulas y fixtures en RECOMENDADOR.md.
 
-**CA:** dadas las precondiciones de cada fila, al ejecutar sus acciones se cumplen exactamente sus resultados. **DoD:** todos los comandos dirigidos de este grupo devuelven PASS y no hay defectos mayores abiertos. **Estado:** EN CURSO; motor de aprendizaje verificado con fixtures, pero aún no recibe señales autorizadas del producto por las carencias de contrato descritas arriba.
+**CA:** dadas las precondiciones de cada fila, al ejecutar sus acciones se cumplen exactamente sus resultados. **DoD:** todos los comandos dirigidos de este grupo devuelven PASS y no hay defectos mayores abiertos. **Estado:** EN CURSO; las señales observadas del producto ya llegan al motor y undo/bloqueo reconstruyen el vector sin el feedback revocado. Aún faltan guardrails automáticos y aceptación real con datos/producto.
 
 **Secuencia por microtarea:**
 
@@ -96,7 +96,7 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 
 **Interfaces:** Consume impresiones verificadas, conectar, descartar y conexión mutua; produce parámetros versionados y reporte offline.
 
-**CA:** dadas las precondiciones de cada fila, al ejecutar sus acciones se cumplen exactamente sus resultados. **DoD:** todos los comandos dirigidos de este grupo devuelven PASS y no hay defectos mayores abiertos. **Estado:** EN CURSO.
+**CA:** dadas las precondiciones de cada fila, al ejecutar sus acciones se cumplen exactamente sus resultados. **DoD:** todos los comandos dirigidos de este grupo devuelven PASS y no hay defectos mayores abiertos. **Estado:** HECHO para persistencia, contrato y entrega/retractación backend→motor: una E2E crea señal solo desde impresión observada; el worker entrega PASS y retractación, y SQLite termina sin preferencias de esos viewers tras undo y bloqueo. La aceptación del hito sigue pendiente de guardrails y PAIR.
 
 **Secuencia por microtarea:**
 

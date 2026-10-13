@@ -96,6 +96,8 @@ export type UpdateDiscoveryPreferencesInput = z.infer<typeof updateDiscoveryPref
 
 export const gymDirectoryEntrySchema = z.object({
   userId: z.string().uuid(),
+  /** Present only for cards issued by the discovery deck. */
+  impressionId: z.string().uuid().optional(),
   /** Nombre corto: "Ana P.", nunca el nombre completo del directorio. */
   displayName: z.string(),
   objetivo: z.string().nullable(),

@@ -120,6 +120,7 @@ const allowedPathPatterns = [
   // operaciones distintas: una decide, la otra revierte la última decisión.
   /^\/me\/discovery\/deck$/u,
   /^\/me\/discovery\/preferences$/u,
+  /^\/me\/discovery\/impressions$/u,
   /^\/me\/discovery\/swipes$/u,
   /^\/me\/discovery\/swipes\/undo$/u,
   // Stories (R6.2). `/me/stories` es GET del propio + POST multipart; el feed

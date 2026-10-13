@@ -495,7 +495,10 @@ export default function DescubrirScreen() {
   }, [translateX, translateY]);
 
   const swipe = useMutation({
-    mutationFn: ({ entry, direction }: Decision) => discoveryService.swipe(entry.userId, direction),
+    mutationFn: async ({ entry, direction }: Decision) => {
+      if (entry.impressionId) await discoveryService.observeImpression(entry.impressionId);
+      return discoveryService.swipe(entry.userId, direction, entry.impressionId);
+    },
     onSuccess: async (result, variables) => {
       if (variables.filterKey === activeDeckKeyRef.current && result.matched) setMatchedEntry(variables.entry);
       // El directorio y las solicitudes sí cambian con un «me gusta»; la baraja

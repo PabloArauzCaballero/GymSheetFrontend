@@ -108,7 +108,10 @@ export function DescubrirClient({
   };
 
   const decide = useMutation({
-    mutationFn: ({ entry, direction }: Decision) => discoveryService.swipe(entry.userId, direction),
+    mutationFn: async ({ entry, direction }: Decision) => {
+      if (entry.impressionId) await discoveryService.observeImpression(entry.impressionId);
+      return discoveryService.swipe(entry.userId, direction, entry.impressionId);
+    },
     onMutate: ({ entry, filterKey: decisionFilterKey }: Decision) => {
       if (decisionFilterKey !== activeFilterKeyRef.current) return;
       setQueue((current) => current.filter((card) => card.userId !== entry.userId));
@@ -193,7 +196,11 @@ export function DescubrirClient({
         emptyAction={
           <div className="flex flex-wrap justify-center gap-2">
             {visibleHistory.length > 0 ? (
-              <Button loading={undo.isPending} onClick={() => undo.mutate({ filterKey })} variant="secondary">
+              <Button
+                loading={undo.isPending}
+                onClick={() => undo.mutate({ filterKey })}
+                variant="secondary"
+              >
                 Deshacer la última
               </Button>
             ) : null}
@@ -216,7 +223,10 @@ export function DescubrirClient({
         />
       </DeckSurface>
 
-      <MemberDetailSheet entry={detail?.filterKey === filterKey ? detail.entry : null} onClose={() => setDetail(null)} />
+      <MemberDetailSheet
+        entry={detail?.filterKey === filterKey ? detail.entry : null}
+        onClose={() => setDetail(null)}
+      />
       <MatchCelebration
         match={match?.filterKey === filterKey ? match.entry : null}
         onClose={() => setMatch(null)}

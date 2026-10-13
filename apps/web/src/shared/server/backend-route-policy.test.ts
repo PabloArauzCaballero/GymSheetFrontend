@@ -38,6 +38,7 @@ const allowedCases: Array<[string[], string]> = [
   [['me', 'discovery', 'deck'], '/me/discovery/deck'],
   [['me', 'discovery', 'preferences'], '/me/discovery/preferences'],
   [['me', 'discovery', 'swipes'], '/me/discovery/swipes'],
+  [['me', 'discovery', 'impressions'], '/me/discovery/impressions'],
   [['me', 'discovery', 'swipes', 'undo'], '/me/discovery/swipes/undo'],
   [['me', 'stories'], '/me/stories'],
   [['me', 'stories', 'feed'], '/me/stories/feed'],

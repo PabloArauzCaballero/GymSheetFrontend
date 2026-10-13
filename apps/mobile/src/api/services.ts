@@ -574,11 +574,16 @@ export const discoveryService = {
       z.array(gymDirectoryEntrySchema),
       { method: 'GET' },
     ),
+  observeImpression: (impressionId: string) =>
+    apiClient.request('/me/discovery/impressions', z.object({ observed: z.literal(true) }), {
+      method: 'POST',
+      body: { impressionId },
+    }),
   /** «Me gusta» mutuo = match automático: la respuesta llega con `matched: true`. */
-  swipe: (targetId: string, direction: SwipeDirection) =>
+  swipe: (targetId: string, direction: SwipeDirection, impressionId?: string) =>
     apiClient.request('/me/discovery/swipes', swipeResultSchema, {
       method: 'POST',
-      body: { targetId, direction },
+      body: { targetId, direction, impressionId },
     }),
   /** Deshace el último swipe. Responde 409 si el match ya tiene mensajes. */
   undoSwipe: () =>
