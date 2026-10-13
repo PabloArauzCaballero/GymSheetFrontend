@@ -9,7 +9,7 @@ import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { SkeletonList } from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Button } from '@/shared/components/ui/button';
-import { trainingInvitationsService } from '../services/training-invitations-service';
+import { trainingInvitationsService, type ListedTrainingInvitation } from '../services/training-invitations-service';
 import { InvitationCard } from './training-invitation-card';
 
 const invitationsKey = (sessionUserId: string) => ['training-invitations', sessionUserId] as const;

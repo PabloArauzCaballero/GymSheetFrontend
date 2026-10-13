@@ -43,6 +43,7 @@ export const knownRoutes = new Set([
   'dashboard',
   'descubrir',
   'exercises',
+  'entrenar-juntos',
   'interacciones',
   'membership',
   'notifications',
