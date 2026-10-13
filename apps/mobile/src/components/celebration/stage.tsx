@@ -387,7 +387,7 @@ export function CardStage({
           <View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
             {tier.rays > 0 && !reduceMotion ? (
               <Rays
-                alpha={tier.rays}
+                alpha={Math.min(tier.rays, 0.34)}
                 appear={raysIn}
                 size={Math.max(screenWidth, screenHeight) * 1.25}
                 spin={raysSpin}
