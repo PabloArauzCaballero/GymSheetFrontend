@@ -21,6 +21,16 @@ import {
   restAfterLogging,
   roundLabel,
   upcomingItems,
+  blockState,
+  clampRest,
+  isItemDone,
+  nextSetNumber,
+  REST_MAX_SEC,
+  restLabel,
+  restTargets,
+  skipReasonLabel,
+  withOmitted,
+  withSkippedSet,
   type FlowItem,
 } from './workout-flow.ts';
 
@@ -33,6 +43,10 @@ const item = (id: string, extra: Partial<FlowItem> = {}): FlowItem => ({
   descansoEntreSeg: null,
   ...extra,
 });
+
+const single = (id: string, target: number, logged: number): FlowItem => item(id, { target, logged });
+const grouped = (id: string, grupo: number, target: number, logged: number): FlowItem =>
+  item(id, { grupo, target, logged, descansoEntreSeg: 10, descansoSeg: 90 });
 
 /** Press suelto (2:00) + superserie A (A1 sin transición, 1:30 tras la vuelta) + plancha. */
 function day(logged: Record<string, number> = {}) {
@@ -194,4 +208,78 @@ describe('modo enfoque', () => {
     assert.equal(openingWeight({}), null);
     assert.equal(openingWeight({ today: 0 }), 0);
   });
+});
+
+/* ─── D1 · saltar y omitir ───────────────────────────────────────────────── */
+
+test('una serie saltada avanza el flujo sin contar como hecha', () => {
+  const blocks = buildFlowBlocks([single('a', 3, 1), single('b', 2, 0)]);
+  const after = withSkippedSet(blocks, 'a');
+  assert.deepEqual(currentStep(after), { blockIndex: 0, itemId: 'a', round: 3 });
+  assert.equal(after[0]?.items[0]?.logged, 1);
+  assert.equal(progressLabel(after[0]!.items[0]!), '1/3');
+});
+
+test('saltar la última serie cierra el ejercicio y pasa al siguiente', () => {
+  const blocks = buildFlowBlocks([single('a', 2, 1), single('b', 2, 0)]);
+  const after = withSkippedSet(blocks, 'a');
+  assert.equal(isItemDone(after[0]!.items[0]!), true);
+  assert.deepEqual(currentStep(after), { blockIndex: 1, itemId: 'b', round: 1 });
+  assert.equal(blockState(after[0]!), 'partial');
+  assert.equal(blockFill(after[0]!), 1);
+});
+
+test('un ejercicio omitido se da por cerrado y su tramo se marca', () => {
+  const blocks = buildFlowBlocks([single('a', 3, 1), single('b', 2, 0)]);
+  const after = withOmitted(blocks, 'a');
+  assert.deepEqual(currentStep(after), { blockIndex: 1, itemId: 'b', round: 1 });
+  assert.equal(blockState(after[0]!), 'omitted');
+  assert.equal(blockState(after[1]!), 'pending');
+});
+
+test('en una superserie, omitir A1 deja el bloque en A2', () => {
+  const blocks = buildFlowBlocks([grouped('a1', 1, 2, 0), grouped('a2', 1, 2, 0)]);
+  const after = withOmitted(blocks, 'a1');
+  assert.deepEqual(currentStep(after), { blockIndex: 0, itemId: 'a2', round: 1 });
+  // Sin transición hacia un ejercicio que ya no se hace: tras A2 viene el descanso de la vuelta.
+  const logged = withLoggedSet(after, 'a2');
+  assert.equal(restAfterLogging(logged, 'a2').kind, 'round');
+});
+
+test('saltar en una superserie cuenta como paso de la vuelta', () => {
+  const blocks = buildFlowBlocks([grouped('a1', 1, 2, 0), grouped('a2', 1, 2, 0)]);
+  const after = withSkippedSet(blocks, 'a1');
+  assert.deepEqual(currentStep(after), { blockIndex: 0, itemId: 'a2', round: 1 });
+});
+
+test('el número de la serie siguiente salta las hechas y las saltadas', () => {
+  assert.equal(nextSetNumber([], []), 1);
+  assert.equal(nextSetNumber([1, 2], []), 3);
+  assert.equal(nextSetNumber([1], [2]), 3);
+  assert.equal(nextSetNumber([], [1, 2]), 3);
+});
+
+test('los motivos tienen texto y uno desconocido cae en «Otro motivo»', () => {
+  assert.equal(skipReasonLabel('PRISA'), 'Voy con prisa');
+  assert.equal(skipReasonLabel('LO_QUE_SEA'), 'Otro motivo');
+});
+
+/* ─── D2 · descanso a mano ───────────────────────────────────────────────── */
+
+test('el descanso se acota y se redondea a pasos de 5 s', () => {
+  assert.equal(clampRest(92), 90);
+  assert.equal(clampRest(93), 95);
+  assert.equal(clampRest(-10), 0);
+  assert.equal(clampRest(99999), REST_MAX_SEC);
+  assert.equal(clampRest(Number.NaN), 0);
+  assert.equal(restLabel(150), '2:30');
+  assert.equal(restLabel(45), '0:45');
+});
+
+test('«a todos los que quedan» no toca los ejercicios ya cerrados', () => {
+  const blocks = buildFlowBlocks([single('a', 2, 2), single('b', 2, 1), single('c', 2, 0)]);
+  assert.deepEqual(restTargets(blocks, 'b', 'one').map((item) => item.id), ['b']);
+  assert.deepEqual(restTargets(blocks, 'b', 'remaining').map((item) => item.id), ['b', 'c']);
+  // El propio entra aunque ya esté cerrado (se le cambia para una serie extra).
+  assert.deepEqual(restTargets(blocks, 'a', 'remaining').map((item) => item.id), ['a', 'b', 'c']);
 });

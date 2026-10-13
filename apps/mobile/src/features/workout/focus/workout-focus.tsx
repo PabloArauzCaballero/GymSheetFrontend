@@ -769,7 +769,9 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
       />
     ) : (
       <>
-        {/* Saltar la serie, a la vista y al alcance del pulgar, pero sin competir con registrar. */}
+        {/* Saltar la serie, a la vista y al alcance del pulgar, pero sin competir con registrar.
+            Solo donde hay series que saltar: un ejercicio añadido a mano no tiene objetivo. */}
+        {activeSource?.seriesObjetivo == null ? null : (
         <PressableScale
           accessibilityHint="Te pregunta el motivo"
           accessibilityLabel="Saltar serie"
@@ -797,6 +799,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
             Saltar
           </Text>
         </PressableScale>
+        )}
         <Button
           haptic="none"
           icon="checkmark"

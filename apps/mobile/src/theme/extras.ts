@@ -5,7 +5,7 @@
  * «leído» de un chat). Viven aquí para que `check-theme` siga a cero fuera de
  * `src/theme/` y para que quien los cambie vea el resto de la paleta.
  */
-import { alpha, ink } from './palette';
+import { alpha, ink, metricInk } from './palette';
 
 /* ─── Podio (rank-badge) ─────────────────────────────────────────────────── */
 
@@ -221,32 +221,24 @@ export const placeholderInk = { initials: alpha(ink.white, 0.92), watermark: alp
  * etiquetas: el peso es azul, las repeticiones violetas, el esfuerzo ámbar, el
  * descanso menta. No son la marca (el volt sigue siendo solo la acción
  * principal) ni cambian con el gimnasio. `ink` es el glifo o la cifra fina
- * sobre una superficie; `tint`, su fondo. Contraste del `ink` sobre
- * `surfaceHighest` (#2b2a26, el peor fondo donde se usa): todos ≥ 6,4:1.
+ * sobre una superficie; `tint`, su fondo; `edge`, el filo de lo seleccionado.
+ * Las tintas y su contraste (todas ≥ 5,6:1 sobre `surfaceHighest`) están en
+ * `palette.ts`, donde las mide la prueba.
  */
 function metric(base: string) {
   return { ink: base, tint: alpha(base, 0.14), edge: alpha(base, 0.32) } as const;
 }
 
 export const metricColors = {
-  /** Carga. 7,3:1 sobre surfaceHighest. */
-  weight: metric('#6cb8ff'),
-  /** Repeticiones. 6,6:1. */
-  reps: metric('#b79bff'),
-  /** Esfuerzo (RIR). 8,0:1. */
-  effort: metric('#ffb454'),
-  /** Descanso e intervalos. 8,9:1. */
-  rest: metric('#5fe0b8'),
-  /** Tiempo de trabajo y cronómetro. 9,4:1. */
-  time: metric('#7fe3f0'),
-  /** Racha. 6,7:1. */
-  streak: metric('#ff9a5c'),
-  /** Récord. 9,8:1. */
-  record: metric('#ffd24a'),
-  /** Volumen (kg movidos). 6,4:1. */
-  volume: metric('#ff8fb1'),
-  /** Saltado / omitido: gris cálido, no es un error. 4,9:1. */
-  skipped: metric('#a8a294'),
+  weight: metric(metricInk.weight),
+  reps: metric(metricInk.reps),
+  effort: metric(metricInk.effort),
+  rest: metric(metricInk.rest),
+  time: metric(metricInk.time),
+  streak: metric(metricInk.streak),
+  record: metric(metricInk.record),
+  volume: metric(metricInk.volume),
+  skipped: metric(metricInk.skipped),
 } as const;
 
 export type MetricKey = keyof typeof metricColors;
