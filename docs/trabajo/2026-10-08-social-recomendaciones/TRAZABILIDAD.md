@@ -188,10 +188,10 @@ Estado inicial: todos los casos pendientes; los IDs son nombres obligatorios par
 | H9.S2.M5 | H9 | BE | Aplicar comentario cerrado | HECHO: cierre, replies de un nivel y likes idempotentes; E2E PostgreSQL PASS; ver evidencia H9.S2 2026-10-13 |
 | H9.S2.M6 | H9 | BE | Retirar contenido eliminado | HECHO: borrado del autor y auto-ocultamiento tras tres reporteros distintos; feed/guardados/URL previa de media revocados; E2E PASS; ver evidencia H9.S2 2026-10-13 |
 | H9.S3.M1 | H9 | PAIR | Crear video recortado | TODO |
-| H9.S3.M2 | H9 | PAIR | Publicar desde cámara o archivo | EN CURSO: UI web de archivo/cámara, upload, feed READY y preview; falta cámara/dispositivo y PAIR real |
+| H9.S3.M2 | H9 | PAIR | Publicar desde cámara o archivo | EN CURSO: UI web/móvil con captura/selección y upload; type-check/servicio móvil PASS; falta validación de dispositivo/PAIR |
 | H9.S3.M3 | H9 | PAIR | Mantener un reproductor activo | EN CURSO: UI web pausa video previo al iniciar otro; falta scroll de 30 y PAIR |
 | H9.S3.M4 | H9 | PAIR | Conectar desde autor | TODO |
-| H9.S3.M5 | H9 | PAIR | Comentar y responder | EN CURSO: API de comentarios/respuestas y like, lectura/creación web; falta UI de respuesta nativa y PAIR; evidencia H9.S2 2026-10-13 |
+| H9.S3.M5 | H9 | PAIR | Comentar y responder | EN CURSO: API y UI web/móvil para comentar/responder/like; falta PAIR; evidencia H9.S2 2026-10-13 |
 | H9.S3.M6 | H9 | PAIR | Borrar comentario como autor | TODO |
 | H9.S4.M1 | H9 | BE | Aplicar esquema sin pérdida | HECHO: E2E 1/1 conserva usuario/story previos y confirma CHECK por duration/provider/status inválidos |
 | H9.S4.M2 | H9 | BE | Reabrir desde base vacía | HECHO: registro completo desde template0, fixture, constraint y rollback protegido |

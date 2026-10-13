@@ -7,8 +7,8 @@ Fecha: 2026-10-13. Cambios en Backend y Frontend, sobre el trabajo ya publicado.
 - Backend añade migración de guardados privados, reposts reversibles, likes, comentarios/respuestas de un nivel y estado de comentarios. Las mutaciones revalidan acceso al ejecutarse; el endpoint de media vuelve a revisar consentimiento, conexión, bloqueos, suspensión, edad disponible y estado del reel.
 - Moderación acepta reportes REEL dentro del flujo existente. Tres reporteros distintos disparan auto-ocultamiento reversible; el contenido sale del feed y la descarga autenticada de una URL previa devuelve 404.
 - `GET /me/reels/feed` expone `MINE`, `FOR_YOU` y `CONNECTIONS`, con cursor firmado ligado al usuario y tab. Los reposts se agrupan por reel y conservan atribución de quienes lo compartieron. `GET /me/reels/saved` devuelve solo los guardados del actor.
-- Web ofrece tabs, likes, guardados, reposts y consulta/publicación de comentarios. Los schemas compartidos aceptan los campos sociales y el cursor. El servicio móvil expone los mismos contratos y acciones sociales.
-- La web permite reportar el reel desde su tarjeta; el panel de moderación reconoce `REEL` en su contrato de cola y detalle.
+- Web y móvil ofrecen tabs, likes, guardados, reposts, comentarios y respuestas de un nivel. En móvil la ruta `/reels` cuelga de Comunidad, reproduce un único reel con bearer token en la URL privada y publica desde cámara o galería. Los schemas compartidos aceptan los campos sociales y el cursor.
+- Web y móvil permiten reportar el reel; el panel de moderación web reconoce `REEL` en su contrato de cola y detalle.
 - El cursor retiene los microsegundos de PostgreSQL; las pruebas verifican página 50 + 1 sin duplicados, rechazo de cursor usado con otro tab y separación de feeds.
 - La retirada por el dueño o el auto-ocultamiento por reportes elimina el acceso desde feed/guardados y bloquea una URL previa de media.
 
@@ -19,7 +19,8 @@ Fecha: 2026-10-13. Cambios en Backend y Frontend, sobre el trabajo ya publicado.
 - Moderación backend: E2E `test/social/moderacion-avisos.e2e-spec.ts` **1/1 PASS**; servicios/política de moderación **30/30 PASS**.
 - Web: type-check, ESLint y Prettier focal — **PASS**; Vitest de cliente/servicio — **10/10 PASS**.
 - Móvil: type-check — **PASS**; Vitest dedicado `vitest.reels.config.mts` — **5/5 PASS**.
+- Móvil UI: type-check, ESLint y Prettier focal — **PASS**; Vitest de servicio móvil actualizado — **6/6 PASS**.
 
 ## Alcance pendiente
 
-Esta evidencia cubre contratos y comportamiento de API/servicios. No demuestra flujo PAIR con dos cuentas en Android/iOS/web, UI de reels nativa, recorte/portada, ranking fitness de producción ni despliegue. H9 y H12 siguen abiertos hasta cerrar esos casos y correr aceptación de dispositivo.
+Esta evidencia cubre contratos, servicios y UI implementada. No demuestra flujo PAIR con dos cuentas en Android/iOS/web ni reproducción/captura nativa en dispositivo; recorte/portada y ranking fitness de producción también siguen pendientes. H9 y H12 siguen abiertos hasta cerrar esos casos y correr aceptación de dispositivo.

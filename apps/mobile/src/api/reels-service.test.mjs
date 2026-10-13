@@ -95,6 +95,22 @@ describe("reelsService (mobile)", () => {
     );
   });
 
+  it("reports a reel using the moderation target kind", async () => {
+    requestMock.mockResolvedValue({
+      id: reel.id,
+      status: "PENDIENTE",
+      contentHidden: false,
+    });
+
+    await reelsService.report(reel.id, "SPAM");
+
+    expect(requestMock.mock.calls[0]?.[0]).toBe("/me/reports");
+    expect(requestMock.mock.calls[0]?.[2]).toMatchObject({
+      method: "POST",
+      body: { targetKind: "REEL", targetId: reel.id, reason: "SPAM" },
+    });
+  });
+
   it("preserves transport errors from feed and upload", async () => {
     const feedError = new Error("feed unavailable");
     const uploadError = new Error("upload rejected");

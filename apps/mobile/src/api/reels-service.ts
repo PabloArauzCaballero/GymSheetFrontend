@@ -62,6 +62,28 @@ export const reelsService = {
       method: "POST",
       body: { body, ...(parentCommentId ? { parentCommentId } : {}) },
     }),
+  deleteComment: (reelId: string, commentId: string) =>
+    apiClient.request(
+      `/me/reels/${reelId}/comments/${commentId}`,
+      z.object({ deleted: z.boolean() }),
+      { method: "DELETE" },
+    ),
+  report: (
+    reelId: string,
+    reason: "SPAM" | "ACOSO" | "CONTENIDO_SEXUAL" | "OTRO",
+  ) =>
+    apiClient.request(
+      "/me/reports",
+      z.object({
+        id: z.string().uuid(),
+        status: z.string(),
+        contentHidden: z.boolean(),
+      }),
+      {
+        method: "POST",
+        body: { targetKind: "REEL", targetId: reelId, reason },
+      },
+    ),
   upload: (file: { uri: string; name: string; mimeType: string }) => {
     const form = new FormData();
     form.append("file", {

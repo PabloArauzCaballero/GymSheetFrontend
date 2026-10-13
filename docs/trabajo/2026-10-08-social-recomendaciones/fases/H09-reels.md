@@ -109,13 +109,13 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 
 | H9.S3.M1 | [ ] Crear video recortado | Dado video fuente supera 90 segundos; cuando se recorta a 60 y publica; entonces resultado dura 60 y usa portada elegida. | F: `python3 scripts/qa/run-social-pair.py --case H9.S3.M1` → PASS con manifiesto y evidencias | TODO |
 
-| H9.S3.M2 | [ ] Publicar desde cámara o archivo | Dado permisos concedidos; cuando se prueban ambas entradas; entonces ambas alcanzan READY con preview correcto. | F: `python3 scripts/qa/run-social-pair.py --case H9.S3.M2` → PASS con manifiesto y evidencias | EN CURSO: flujo web y preview implementados; falta cámara/dispositivo y PAIR real |
+| H9.S3.M2 | [ ] Publicar desde cámara o archivo | Dado permisos concedidos; cuando se prueban ambas entradas; entonces ambas alcanzan READY con preview correcto. | Web y móvil ya implementan captura/selección y upload validado; servicio móvil 6/6, type-check y ESLint focal PASS. Falta prueba de dispositivo y PAIR real; ver [evidencia H9.S2](../evidencia/h9-s2-social-reels-2026-10-13.md) | EN CURSO |
 
 | H9.S3.M3 | [ ] Mantener un reproductor activo | Dado scroll rápido por 30 reels; cuando se cambia de video visible; entonces solo el actual reproduce y audio anterior se detiene. | F: `python3 scripts/qa/run-social-pair.py --case H9.S3.M3` → PASS con manifiesto y evidencias | EN CURSO: el reproductor web pausa el video previo al iniciar otro; falta scroll de 30 reels y aceptación PAIR |
 
 | H9.S3.M4 | [ ] Conectar desde autor | Dado reel de B; cuando A abre perfil y conecta; entonces mismo estado en Conocer y mapa. | F: `python3 scripts/qa/run-social-pair.py --case H9.S3.M4` → PASS con manifiesto y evidencias | TODO |
 
-| H9.S3.M5 | [ ] Comentar y responder | Dado comentario raíz de A; cuando B responde y da like; entonces respuesta queda en ese reel con conteo persistente. | API de comentarios/respuestas de un nivel, like y web para leer/crear comentario implementados; sin UI de respuesta nativa ni PAIR. Ver [slice social](../evidencia/h9-s2-social-reels-2026-10-13.md) | EN CURSO |
+| H9.S3.M5 | [ ] Comentar y responder | Dado comentario raíz de A; cuando B responde y da like; entonces respuesta queda en ese reel con conteo persistente. | API y UI web/móvil para leer, comentar, responder de un nivel y dar like implementadas; E2E PostgreSQL y tests de servicios PASS; falta PAIR. Ver [slice social](../evidencia/h9-s2-social-reels-2026-10-13.md) | EN CURSO |
 
 | H9.S3.M6 | [ ] Borrar comentario como autor | Dado comentario de B en reel de A; cuando A lo elimina; entonces desaparece para ambos sin borrar comentarios de otros reels. | F: `python3 scripts/qa/run-social-pair.py --case H9.S3.M6` → PASS con manifiesto y evidencias | TODO |
 
