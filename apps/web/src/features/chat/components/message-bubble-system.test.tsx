@@ -17,6 +17,7 @@ describe('training invitation chat events', () => {
         startsAt: '2026-10-11T15:00:00.000Z',
         timeZone: 'America/La_Paz',
         placeLabel: 'Gimnasio Central',
+        cancelledAt: null,
       },
       createdAt: '2026-10-10T15:00:00.000Z',
     });
