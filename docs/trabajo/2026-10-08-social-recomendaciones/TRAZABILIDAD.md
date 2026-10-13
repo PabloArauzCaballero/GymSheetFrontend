@@ -220,8 +220,8 @@ Estado inicial: todos los casos pendientes; los IDs son nombres obligatorios par
 | H11.S1.M5 | H11 | BE | Conservar evidencia tras revocación | TODO |
 | H11.S2.M1 | H11 | BE | Deduplicar aviso | EN CURSO: aceptación real, outbox y worker probados en PostgreSQL; queda dedupe entre procesos y push físico |
 | H11.S2.M2 | H11 | BE | Suprimir aviso revocado | HECHO: bloqueo posterior a enqueue produce `SUPPRESSED`, sin intentos, y worker completa el job; E2E aislado |
-| H11.S2.M3 | H11 | BE | Reautorizar enlace | TODO |
-| H11.S2.M4 | H11 | BE | Respetar privacidad en push | TODO |
+| H11.S2.M3 | H11 | BE | Reautorizar enlace | HECHO: enlace viejo falla con 404 después de revocar; Web explica indisponibilidad; [E2E](evidencia/h11-s2-m3-m4-notification-safety-2026-10-13.md) |
+| H11.S2.M4 | H11 | BE | Respetar privacidad en push | HECHO: preferencia opt-in default false; E2E valida preview genérico/permitido; [evidencia](evidencia/h11-s2-m3-m4-notification-safety-2026-10-13.md) |
 | H11.S3.M1 | H11 | PAIR | Reportar desde recurso | TODO |
 | H11.S3.M2 | H11 | PAIR | Pausar sin perder vínculos | TODO |
 | H11.S3.M3 | H11 | PAIR | Reanudar perfil | TODO |
