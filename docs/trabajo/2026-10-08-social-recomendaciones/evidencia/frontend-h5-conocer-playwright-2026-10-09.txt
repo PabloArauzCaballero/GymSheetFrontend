@@ -1,0 +1,23 @@
+H5.S1.M1–M2, H5.S1.M4 y H5.S2.M1 — Playwright web
+Fecha: 2026-10-09 (America/La_Paz)
+Node: v22.23.3. Cuenta QA sintética: `active.mock@gymsheet.local`.
+
+Comandos ejecutados (la contraseña no se registró):
+  PATH=/Users/josejeremias/.npm/_npx/52027bd8fc0022aa/node_modules/node/bin:$PATH yarn workspace @gymsheet/web playwright test e2e/social/conocer.spec.ts --grep 'H5.S2.M1'
+  PATH=/Users/josejeremias/.npm/_npx/52027bd8fc0022aa/node_modules/node/bin:$PATH yarn workspace @gymsheet/web playwright test e2e/social/conocer.spec.ts
+
+Resultado focal S2.M1:
+  ✓ Chromium: Tab alcanza «Me interesa» con foco visible; Space emite LIKE para Ana. La respuesta 503 sintética restaura Ana; arrastrarla emite el mismo payload targetId/direction.
+  ✓ viewport Playwright móvil: mismo resultado
+  2 passed (2.8s Chromium + 2.7s viewport móvil)
+
+Resultado de la matriz combinada:
+  ✓ Chromium: H5.S1.M1, H5.S1.M2, H5.S1.M4, H5.S2.M1
+  ✓ viewport Playwright móvil: H5.S1.M1, H5.S1.M2, H5.S1.M4, H5.S2.M1
+  8 passed (31.1s)
+
+M1 prueba un envelope `{ ok: true, data: [...] }` con UUID inválido aislado y cubre error recuperable/reintento. M2 intercepta `data: []` y comprueba vacío honesto/enlace a Comunidad. M4 intercepta tanto GET de baraja como POST de swipe; mide una nueva petición tras regresar y ausencia de `cursor`, pero no simula cursor vencido ni persistencia. S2.M1 comprueba que Tab llega con foco visible; Space y arrastre generan dos solicitudes con el mismo targetId y dirección LIKE. El 503 de la primera solicitud es sintético para restaurar la tarjeta y permitir repetirla; el gesto posterior también está interceptado. Valida teclado/gesto web, no lector de pantalla ni cliente nativo.
+
+Autenticación/sesión usa la API QA real. La API se inició temporalmente contra `127.0.0.1:55432/gymsheet_social_qa` en `3011`, con `NODE_ENV=test`, JWT sintético, correo LOG, push y recomendaciones externas desactivados. Readiness: PostgreSQL ready, migraciones up-to-date. En los arranques registrados, el bootstrap insertó cero elementos de catálogo y actualizó 24 niveles y 28 insignias. No se hicieron swipes contra backend. El login puede crear/rotar credenciales de sesión QA; no se limpiaron sesiones. No se borraron filas.
+
+La web también pidió `/me/tutorial-progress` y `PUT /me/tutorial-progress/platform-intro`; esta API QA respondió 404 durante el login/recorrido. No impidió los casos H5 y queda como hallazgo ajeno a esta matriz. API y Next dev se apagaron tras la ejecución. `mobile` es un viewport emulado Pixel 7, no Android nativo. PAIR y Android/iOS reales siguen pendientes.

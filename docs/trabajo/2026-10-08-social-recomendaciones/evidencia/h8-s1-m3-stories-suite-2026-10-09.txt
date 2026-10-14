@@ -1,0 +1,77 @@
+yarn run v1.22.22
+$ jest --runInBand --runInBand src/modules/stories
+PASS src/modules/stories/stories.repository.integration.spec.ts
+  ● Console
+
+    console.log
+      ◇ injected env (90) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+
+      at _log (../node_modules/dotenv/lib/main.js:131:11)
+
+    console.warn
+      stories integration specs skipped: SKIP_DB_INTEGRATION_TESTS=1
+
+      162 |       );
+      163 |     }
+    > 164 |     console.warn("stories integration specs skipped: SKIP_DB_INTEGRATION_TESTS=1");
+          |             ^
+      165 |   }
+      166 |
+      167 |   repository = new StoriesRepository(
+
+      at Object.<anonymous> (modules/stories/stories.repository.integration.spec.ts:164:13)
+
+PASS src/modules/stories/stories.service.spec.ts
+[Nest] 8285  - 10/09/2026, 4:27:26 PM   ERROR [StoriesPurgeService] Object(4) {
+  event: 'stories_purge.story_failed',
+  storyId: 'expired-1',
+  errorName: 'Error',
+  errorMessage: 'disk unavailable'
+}
+PASS src/modules/stories/stories-purge.service.spec.ts
+[Nest] 8285  - 10/09/2026, 4:27:26 PM     LOG [MediaRetentionService] Object(2) {
+  event: 'media.retention.file_removed',
+  storageKey: 'stories/some-key.jpg'
+}
+[Nest] 8285  - 10/09/2026, 4:27:26 PM     LOG [MediaRetentionService] Object(3) {
+  event: 'media.retention.file_kept',
+  storageKey: 'stories/shared-key.jpg',
+  reason: 'still_referenced'
+}
+[Nest] 8285  - 10/09/2026, 4:27:26 PM     LOG [MediaRetentionService] Object(2) {
+  event: 'media.retention.file_removed',
+  storageKey: 'expired-1.jpg'
+}
+[Nest] 8285  - 10/09/2026, 4:27:26 PM     LOG [MediaRetentionService] Object(3) {
+  event: 'media.retention.file_kept',
+  storageKey: 'shared.jpg',
+  reason: 'still_referenced'
+}
+[Nest] 8285  - 10/09/2026, 4:27:26 PM     LOG [MediaRetentionService] Object(2) {
+  event: 'media.retention.file_removed',
+  storageKey: 'expired-1.jpg'
+}
+[Nest] 8285  - 10/09/2026, 4:27:26 PM     LOG [MediaRetentionService] Object(2) {
+  event: 'media.retention.file_removed',
+  storageKey: 'expired-1.jpg'
+}
+[Nest] 8285  - 10/09/2026, 4:27:26 PM     LOG [MediaRetentionService] Object(2) {
+  event: 'media.retention.file_removed',
+  storageKey: 'expired-0.jpg'
+}
+[Nest] 8285  - 10/09/2026, 4:27:26 PM     LOG [MediaRetentionService] Object(2) {
+  event: 'media.retention.file_removed',
+  storageKey: 'expired-1.jpg'
+}
+[Nest] 8285  - 10/09/2026, 4:27:26 PM     LOG [MediaRetentionService] Object(2) {
+  event: 'media.retention.file_removed',
+  storageKey: 'expired-3.jpg'
+}
+PASS src/modules/stories/stories.repository.spec.ts
+
+Test Suites: 4 passed, 4 total
+Tests:       44 passed, 44 total
+Snapshots:   0 total
+Time:        1.659 s, estimated 4 s
+Ran all test suites matching /src\/modules\/stories/i.
+Done in 2.68s.

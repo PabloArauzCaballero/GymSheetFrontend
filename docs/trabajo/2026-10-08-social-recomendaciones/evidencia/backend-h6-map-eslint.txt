@@ -1,0 +1,3 @@
+yarn run v1.22.22
+$ '/Users/josejeremias/Desktop/Mantra Core Technologies/GymSheet/GymSheetBackend/node_modules/.bin/eslint' src/modules/social/social-map.service.ts src/modules/social/social-map.repository.ts src/modules/social/social-map.controller.ts src/modules/social/social-map.schemas.ts src/modules/social/social.repository.ts src/modules/social/social-map.service.spec.ts src/modules/social/social-map.repository.spec.ts
+Done in 2.36s.

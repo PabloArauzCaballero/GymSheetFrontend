@@ -1,0 +1,10 @@
+Fecha: 2026-10-08 (hora local)
+Repo: `GymSheetRecommendations`, Node `v22.23.3`.
+
+Prueba RED: `node --test --test-name-pattern='sobreviven reinicios' test/recommender.test.mjs` falló porque el almacén anterior no tenía `close()` ni persistencia.
+
+Implementación: `node:sqlite` con tablas de inbox, versiones/tombstones y perfil público mínimo; transacciones `BEGIN IMMEDIATE`/commit/rollback por lote; `busy_timeout`; archivo con permisos 0600 y carpeta 0700. `start.mjs` usa `RECOMMENDATIONS_DB_PATH` o `./var/recommendations.sqlite`, sin credenciales de la base GymSheet.
+
+Verificación: `node --test` → PASS, 19 tests; incluye cierre/reinicio, lectura de proyección, dedupe durable, tombstone que bloquea replay y rollback completo si un batch contiene un evento inválido. La API responde `projection: sqlite` en readiness.
+
+Límites: SQLite sirve al proceso local único, no a réplicas en filesystem compartido. Todavía faltan outbox/backend, preferencias aprendidas persistentes y persistencia/versionado de modelos.

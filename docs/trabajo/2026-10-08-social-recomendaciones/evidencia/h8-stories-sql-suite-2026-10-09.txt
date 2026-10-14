@@ -1,0 +1,64 @@
+yarn run v1.22.22
+$ jest --runInBand --runInBand src/modules/stories
+PASS src/modules/stories/stories.repository.integration.spec.ts
+  ● Console
+
+    console.log
+      ◇ injected env (85) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+
+      at _log (../node_modules/dotenv/lib/main.js:131:11)
+
+PASS src/modules/stories/stories.service.spec.ts
+[Nest] 29426  - 10/09/2026, 5:15:31 PM   ERROR [StoriesPurgeService] Object(4) {
+  event: 'stories_purge.story_failed',
+  storyId: 'expired-1',
+  errorName: 'Error',
+  errorMessage: 'disk unavailable'
+}
+PASS src/modules/stories/stories-purge.service.spec.ts
+[Nest] 29426  - 10/09/2026, 5:15:31 PM     LOG [MediaRetentionService] Object(2) {
+  event: 'media.retention.file_removed',
+  storageKey: 'stories/some-key.jpg'
+}
+[Nest] 29426  - 10/09/2026, 5:15:31 PM     LOG [MediaRetentionService] Object(3) {
+  event: 'media.retention.file_kept',
+  storageKey: 'stories/shared-key.jpg',
+  reason: 'still_referenced'
+}
+[Nest] 29426  - 10/09/2026, 5:15:31 PM     LOG [MediaRetentionService] Object(2) {
+  event: 'media.retention.file_removed',
+  storageKey: 'expired-1.jpg'
+}
+[Nest] 29426  - 10/09/2026, 5:15:31 PM     LOG [MediaRetentionService] Object(3) {
+  event: 'media.retention.file_kept',
+  storageKey: 'shared.jpg',
+  reason: 'still_referenced'
+}
+[Nest] 29426  - 10/09/2026, 5:15:31 PM     LOG [MediaRetentionService] Object(2) {
+  event: 'media.retention.file_removed',
+  storageKey: 'expired-1.jpg'
+}
+[Nest] 29426  - 10/09/2026, 5:15:31 PM     LOG [MediaRetentionService] Object(2) {
+  event: 'media.retention.file_removed',
+  storageKey: 'expired-1.jpg'
+}
+[Nest] 29426  - 10/09/2026, 5:15:31 PM     LOG [MediaRetentionService] Object(2) {
+  event: 'media.retention.file_removed',
+  storageKey: 'expired-0.jpg'
+}
+[Nest] 29426  - 10/09/2026, 5:15:31 PM     LOG [MediaRetentionService] Object(2) {
+  event: 'media.retention.file_removed',
+  storageKey: 'expired-1.jpg'
+}
+[Nest] 29426  - 10/09/2026, 5:15:31 PM     LOG [MediaRetentionService] Object(2) {
+  event: 'media.retention.file_removed',
+  storageKey: 'expired-3.jpg'
+}
+PASS src/modules/stories/stories.repository.spec.ts
+
+Test Suites: 4 passed, 4 total
+Tests:       45 passed, 45 total
+Snapshots:   0 total
+Time:        2.193 s
+Ran all test suites matching /src\/modules\/stories/i.
+Done in 3.46s.

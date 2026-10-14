@@ -1,0 +1,59 @@
+{
+  "api": {
+    "actors": {},
+    "ready": false
+  },
+  "cases": [
+    {
+      "id": "H5.S2.M1",
+      "reasons": [
+        "API /health/ready unavailable",
+        "selected android device is not connected"
+      ],
+      "verdict": "BLOCKED"
+    }
+  ],
+  "createdAt": "2026-10-09T13:00:51Z",
+  "devices": {
+    "android": {
+      "ready": false,
+      "serial": null
+    },
+    "ios": {
+      "booted": true,
+      "udid": "D4C28B4D-3615-4E6D-9092-C180668D5EE6"
+    }
+  },
+  "ports": {
+    "api": 3011,
+    "web": 3002
+  },
+  "repositories": {
+    "backend": {
+      "branch": "feat/biblioteca-ejercicios",
+      "dirty": true,
+      "present": true,
+      "sha": "474da618fe4d191ae5d5f25b2dac537fd3a6856f"
+    },
+    "frontend": {
+      "branch": "dev",
+      "dirty": true,
+      "present": true,
+      "sha": "6b66d8aba9329f4897e900a9e3be09f495c41343"
+    },
+    "recommendations": {
+      "branch": "main",
+      "dirty": true,
+      "present": true,
+      "sha": null
+    }
+  },
+  "runId": "ed669d6c-a5b0-4b28-9388-dfa0fcdb117d",
+  "schemaVersion": 1,
+  "secretsIncluded": false,
+  "versions": {
+    "node": "v24.19.0",
+    "python": "3.14.7",
+    "yarn": "1.22.22"
+  }
+}
