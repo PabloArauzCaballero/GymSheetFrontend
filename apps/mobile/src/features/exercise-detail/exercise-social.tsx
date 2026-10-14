@@ -1,13 +1,22 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Text, View } from 'react-native';
-import type { Exercise } from '@gymsheet/types';
-import { exerciseCommunityService } from '@/api/services';
-import { PressableScale } from '@/components/motion';
-import { notify } from '@/notifications';
-import { alpha, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { Ionicons } from "@expo/vector-icons";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Text, View } from "react-native";
+import type { Exercise } from "@gymsheet/types";
+import { exerciseCommunityService } from "@/api/services";
+import { PressableScale } from "@/components/motion";
+import { notify } from "@/notifications";
+import {
+  alpha,
+  colors,
+  fontSizes,
+  iconSizes,
+  minTouchTarget,
+  radii,
+  semibold,
+  spacing,
+} from "@/theme";
 
-type Patch = Partial<Pick<Exercise, 'meGusta' | 'meGustaTotal' | 'esFavorito'>>;
+type Patch = Partial<Pick<Exercise, "meGusta" | "meGustaTotal" | "esFavorito">>;
 
 function ToggleButton({
   active,
@@ -39,9 +48,9 @@ function ToggleButton({
       onPress={onPress}
       style={{
         flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
         gap: spacing.sm,
         minHeight: minTouchTarget,
         borderRadius: radii.md,
@@ -81,7 +90,7 @@ function ToggleButton({
  */
 export function ExerciseSocial({ exercise }: { exercise: Exercise }) {
   const queryClient = useQueryClient();
-  const key = ['exercise', exercise.id] as const;
+  const key = ["exercise", exercise.id] as const;
 
   const patch = (change: Patch) =>
     queryClient.setQueryData<Exercise>(key, (current) =>
@@ -104,7 +113,8 @@ export function ExerciseSocial({ exercise }: { exercise: Exercise }) {
       });
       return previous;
     },
-    onSuccess: (result) => patch({ meGusta: result.meGusta, meGustaTotal: result.meGustaTotal }),
+    onSuccess: (result) =>
+      patch({ meGusta: result.meGusta, meGustaTotal: result.meGustaTotal }),
     onError: (error, _next, previous) => {
       if (previous) patch(previous);
       notify.error(error);
@@ -112,13 +122,14 @@ export function ExerciseSocial({ exercise }: { exercise: Exercise }) {
   });
 
   const favorite = useMutation({
-    mutationFn: (next: boolean) => exerciseCommunityService.setFavorite(exercise.id, next),
+    mutationFn: (next: boolean) =>
+      exerciseCommunityService.setFavorite(exercise.id, next),
     onMutate: (next) => {
       const previous = { esFavorito: exercise.esFavorito ?? false };
       patch({ esFavorito: next });
       return previous;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['exercises'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["exercises"] }),
     onError: (error, _next, previous) => {
       if (previous) patch(previous);
       notify.error(error);
@@ -130,12 +141,12 @@ export function ExerciseSocial({ exercise }: { exercise: Exercise }) {
   const total = exercise.meGustaTotal;
 
   return (
-    <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+    <View style={{ flexDirection: "row", gap: spacing.sm }}>
       <ToggleButton
         accessibilityLabel={
           liked
-            ? `Me gusta, activado. ${total} ${total === 1 ? 'persona' : 'personas'}`
-            : `Dar me gusta. ${total} ${total === 1 ? 'persona' : 'personas'}`
+            ? `Me gusta, activado. ${total} ${total === 1 ? "persona" : "personas"}`
+            : `Dar me gusta. ${total} ${total === 1 ? "persona" : "personas"}`
         }
         active={liked}
         activeIcon="heart"
@@ -147,7 +158,9 @@ export function ExerciseSocial({ exercise }: { exercise: Exercise }) {
       />
       <ToggleButton
         accessibilityLabel={
-          isFavorite ? 'Favorito, activado. Solo tú lo ves' : 'Marcar como favorito. Solo tú lo ves'
+          isFavorite
+            ? "Favorito, activado. Solo tú lo ves"
+            : "Marcar como favorito. Solo tú lo ves"
         }
         active={isFavorite}
         activeIcon="star"

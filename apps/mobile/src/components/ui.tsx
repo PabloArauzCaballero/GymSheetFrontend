@@ -218,6 +218,10 @@ export function Button({
   );
   const glow = useAnimatedStyle(() => ({ opacity: Math.max(0, pressed.value) * 0.16 }));
   const labelStyle = useAnimatedStyle(() => (reduceMotion ? {} : { transform: [{ translateY: Math.max(0, pressed.value) }] }));
+  // El glifo se adelanta y gira un poco al tocar: el botón «arranca».
+  const iconStyle = useAnimatedStyle(() =>
+    reduceMotion ? {} : { transform: [{ translateX: pressed.value * 3 }, { rotate: `${pressed.value * -8}deg` }] },
+  );
   const sweep = useAnimatedStyle(() => {
     const band = Math.max(64, buttonWidth * 0.35);
     return {
@@ -239,13 +243,15 @@ export function Button({
   ) : (
     <Animated.View style={[{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }, labelStyle]}>
       {icon ? (
-        <Ionicons
-          accessibilityElementsHidden
-          color={ink}
-          importantForAccessibility="no-hide-descendants"
-          name={icon}
-          size={iconSizes.md}
-        />
+        <Animated.View style={iconStyle}>
+          <Ionicons
+            accessibilityElementsHidden
+            color={ink}
+            importantForAccessibility="no-hide-descendants"
+            name={icon}
+            size={iconSizes.md}
+          />
+        </Animated.View>
       ) : null}
       <RNText
         maxFontSizeMultiplier={textLimit}

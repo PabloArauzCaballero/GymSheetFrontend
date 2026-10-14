@@ -74,6 +74,42 @@ export function QuietAction({
   );
 }
 
+/** El botón principal con su aviso: se usa en el flujo o en la barra fija. */
+export function PrimaryCta({
+  intent,
+  onPress,
+  loading,
+  done = false,
+  disabledReason,
+}: {
+  intent: PrimaryIntent;
+  onPress: () => void;
+  loading?: boolean;
+  done?: boolean;
+  disabledReason?: string;
+}) {
+  return (
+    <View style={{ gap: spacing.xs }}>
+      <Pop trigger={done}>
+        <Button
+          icon={done ? 'checkmark-circle' : PRIMARY_ICON[intent]}
+          label={done ? 'Guardada' : PRIMARY_LABEL[intent]}
+          disabled={Boolean(disabledReason)}
+          loading={loading && !done}
+          onPress={done ? () => undefined : onPress}
+          size="lg"
+          testID="routine-primary-cta"
+        />
+      </Pop>
+      {disabledReason ? (
+        <Text tone="muted" variant="footnote">
+          {disabledReason}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
 /**
  * Bloque de acciones del detalle: **un solo** botón principal según el caso
  * (ajena → «Guardar en mis rutinas»; propia sin programa → «Activar
@@ -91,6 +127,7 @@ export function DetailActions({
   onTryDay,
   tryingDay,
   onShare,
+  showPrimary = true,
 }: {
   intent: PrimaryIntent;
   onPrimary: () => void;
@@ -105,24 +142,19 @@ export function DetailActions({
   onTryDay?: () => void;
   tryingDay?: boolean;
   onShare?: () => void;
+  /** `false`: el CTA vive en la barra fija (`DetailCtaBar`). */
+  showPrimary?: boolean;
 }) {
   return (
     <View style={{ gap: spacing.sm }}>
-      <Pop trigger={primaryDone}>
-        <Button
-          icon={primaryDone ? 'checkmark-circle' : PRIMARY_ICON[intent]}
-          label={primaryDone ? 'Guardada' : PRIMARY_LABEL[intent]}
-          disabled={Boolean(primaryDisabledReason)}
-          loading={primaryLoading && !primaryDone}
-          onPress={primaryDone ? () => undefined : onPrimary}
-          size="lg"
-          testID="routine-primary-cta"
+      {showPrimary ? (
+        <PrimaryCta
+          disabledReason={primaryDisabledReason}
+          done={primaryDone}
+          intent={intent}
+          loading={primaryLoading}
+          onPress={onPrimary}
         />
-      </Pop>
-      {primaryDisabledReason ? (
-        <Text tone="muted" variant="footnote">
-          {primaryDisabledReason}
-        </Text>
       ) : null}
       {existingCopy && onOpenCopy ? (
         <PressableScale

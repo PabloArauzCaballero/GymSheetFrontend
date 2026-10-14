@@ -5,7 +5,7 @@ import { Share, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '@gymsheet/api-client';
 import type { Routine } from '@gymsheet/types';
-import { canActivateProgram, canSaveCopy, isAnyDayRoutine, routineColumns, savedCopyLabel } from '@gymsheet/hooks';
+import { canSaveCopy, isAnyDayRoutine, routineColumns, savedCopyLabel } from '@gymsheet/hooks';
 import { routineBuilderService, routineCatalogService, routineService } from '@/api/services';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { ScrollScreen } from '@/components/layout';
@@ -13,6 +13,7 @@ import { usePullRefresh } from '@/hooks/use-pull-refresh';
 import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { ScheduleRoutine } from '@/components/schedule-routine';
+import { DetailCtaBar, CTA_BAR_SPACE, activateBlockReason } from '@/features/routine-detail/detail-cta-bar';
 import { DetailActions, type PrimaryIntent } from '@/features/routine-detail/detail-actions';
 import { DetailHeader } from '@/features/routine-detail/detail-header';
 import { DetailHero, heroContentOf, heroHeightFor } from '@/features/routine-detail/detail-hero';
@@ -127,7 +128,7 @@ export function RoutineDetailScreen() {
         {pendingShare ? (
           <EmptyState
             icon="mail-unread-outline"
-            message="Acepta la invitación desde Rutinas › Mías › Compartidas conmigo para ver los ejercicios."
+            message="Acepta la invitación desde Rutinas › Privadas › Compartidas conmigo para ver los ejercicios."
             title="Aún no aceptaste esta rutina"
           >
             <Button label="Ir a mis invitaciones" onPress={() => router.replace('/routines')} />
@@ -176,33 +177,29 @@ export function RoutineDetailScreen() {
 
   const more: MoreAction[] = [
     ...(data.esMia && !isPublic
-      ? [
-          {
-            key: 'publish',
-            label: 'Publicar',
-            icon: 'globe-outline' as const,
-            onPress: () => void actions.publish(),
-          },
-        ]
+      ? [{ key: 'publish', label: 'Publicar', icon: 'globe-outline' as const, onPress: () => void actions.publish() }]
       : []),
     ...(data.esMia && isPublic
       ? [{ key: 'unpublish', label: 'Despublicar', icon: 'eye-off-outline' as const, onPress: () => void actions.unpublish() }]
       : []),
     ...(!data.esMia && isPublic
-      ? [
-          {
-            key: 'report',
-            label: 'Denunciar rutina',
-            icon: 'flag-outline' as const,
-            destructive: true,
-            onPress: () => setReport({ kind: 'ROUTINE', id: data.id, label: data.nombre }),
-          },
-        ]
+      ? [{ key: 'report', label: 'Denunciar rutina', icon: 'flag-outline' as const, destructive: true, onPress: () => setReport({ kind: 'ROUTINE', id: data.id, label: data.nombre }) }]
       : []),
   ];
 
+  const primaryDisabledReason = intent === 'activate' ? activateBlockReason(data) : undefined;
+
   return (
     <ScrollScreen
+      overlay={
+        <DetailCtaBar
+          disabledReason={primaryDisabledReason}
+          done={intent === 'save' && actions.copied}
+          intent={intent}
+          loading={intent === 'save' ? actions.copying : intent === 'train' ? start.isPending : false}
+          onPress={onPrimary}
+        />
+      }
       hero={<DetailHero content={heroContentOf(data)} />}
       heroBar={{
         title: data.nombre,
@@ -236,15 +233,7 @@ export function RoutineDetailScreen() {
               onPrimary={onPrimary}
               onShare={onShare}
               onTryDay={intent === 'train' ? undefined : () => start.mutate(undefined)}
-              primaryDisabledReason={
-                intent === 'activate' && !canActivateProgram(data)
-                  ? data.estado === 'ARCHIVED'
-                    ? 'Está archivada: no se puede activar.'
-                    : 'Añade ejercicios para poder activarla.'
-                  : undefined
-              }
-              primaryDone={intent === 'save' && actions.copied}
-              primaryLoading={intent === 'save' ? actions.copying : intent === 'train' ? start.isPending : false}
+              showPrimary={false}
               tryingDay={intent !== 'train' && start.isPending}
             />
           }
@@ -295,6 +284,8 @@ export function RoutineDetailScreen() {
           <ScheduleRoutine routineId={data.id} />
         </DetailSection>
       ) : null}
+
+      <View style={{ height: CTA_BAR_SPACE }} />
 
       <MoreSheet actions={more} onClose={() => setMoreOpen(false)} title={data.nombre} visible={moreOpen} />
       <ReportSheet onClose={() => setReport(null)} target={report} />

@@ -56,7 +56,7 @@ export function CatalogFiltersSheet({
           <ChoiceChip
             accessibilityLabel={days === 1 ? '1 día por semana' : `${days} días por semana`}
             key={days}
-            label={String(days)}
+            label={days === 1 ? '1 día' : `${days} días`}
             onSelect={() => set({ diasPorSemana: value.diasPorSemana === days ? null : days })}
             selected={value.diasPorSemana === days}
             testID={`filter-days-${days}`}

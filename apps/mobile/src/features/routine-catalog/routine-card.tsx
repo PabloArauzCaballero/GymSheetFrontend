@@ -38,6 +38,28 @@ function socialLine(card: RoutineCard): string {
     .join(' · ');
 }
 
+/** Dato corto con icono: «3 días/sem». */
+function MetaPill({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+        paddingHorizontal: spacing.smd,
+        paddingVertical: spacing.xs,
+        borderRadius: radii.full,
+        backgroundColor: colors.surfaceHigh,
+      }}
+    >
+      <Ionicons color={colors.volt} name={icon} size={iconSizes.xs} />
+      <Text strong tabular variant="footnote">
+        {label}
+      </Text>
+    </View>
+  );
+}
+
 /**
  * Enlace al detalle de una rutina con la precarga al contacto. Dentro, quien
  * lo usa envuelve su portada en `Link.AppleZoom` para que crezca hasta el
@@ -117,6 +139,8 @@ export function RoutineCardView({ card }: { card: RoutineCard }) {
       style={{
         borderRadius: radii.xxl,
         borderCurve: 'continuous',
+        borderWidth: 1,
+        borderColor: colors.borderSubtle,
         backgroundColor: colors.surfaceLow,
         boxShadow: shadows.card,
       }}
@@ -131,39 +155,59 @@ export function RoutineCardView({ card }: { card: RoutineCard }) {
               overflow: 'hidden',
             }}
           >
-            <RoutineCover goal={card.objetivo} style={{ aspectRatio: coverAspect }} uri={card.portadaUrl}>
+            <RoutineCover goal={card.objetivo} scrim="soft" style={{ aspectRatio: coverAspect }} uri={card.portadaUrl}>
               {card.objetivo ? (
                 <View style={{ position: 'absolute', top: spacing.md, left: spacing.md }}>
                   <MediaChip label={GOAL_LABEL[card.objetivo]} />
                 </View>
               ) : null}
-              <View
-                style={{
-                  position: 'absolute',
-                  left: cardPadding,
-                  right: cardPadding,
-                  bottom: spacing.md,
-                  gap: spacing.xs,
-                }}
-              >
-                <Text numberOfLines={2} style={{ color: ink.white }} variant="title">
-                  {card.nombre}
-                </Text>
-                <Text numberOfLines={1} style={{ color: alpha(ink.white, 0.82) }} tabular variant="footnote">
-                  {planLine(card)}
-                </Text>
-              </View>
+              {showsCommunity ? (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: spacing.md,
+                    right: spacing.md,
+                    minHeight: 32,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.xs,
+                    paddingHorizontal: spacing.smd,
+                    borderRadius: radii.full,
+                    backgroundColor: alpha(ink.black, 0.5),
+                  }}
+                >
+                  <Ionicons color={rating ? ratingStar : ink.white} name={rating ? 'star' : 'sparkles'} size={iconSizes.xs} />
+                  <Text strong style={{ color: ink.white }} tabular variant="footnote">
+                    {rating ?? 'Nueva'}
+                  </Text>
+                </View>
+              ) : null}
             </RoutineCover>
           </View>
         </Link.AppleZoom>
+
+        <View style={{ paddingHorizontal: cardPadding, paddingTop: spacing.md, gap: spacing.smd }}>
+          <Text numberOfLines={2} variant="title">
+            {card.nombre}
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+            <MetaPill icon="calendar-outline" label={`${card.diasPorSemana} ${card.diasPorSemana === 1 ? 'día' : 'días'}/sem`} />
+            {card.duracionSemanas ? <MetaPill icon="time-outline" label={`${card.duracionSemanas} semanas`} /> : null}
+            {showsCommunity && card.copias > 0 ? <MetaPill icon="download-outline" label={compactCount(card.copias)} /> : null}
+          </View>
+        </View>
 
         <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
             gap: spacing.smd,
-            paddingHorizontal: cardPadding,
+            minHeight: 44 + spacing.lg,
+            marginTop: spacing.md,
+            marginHorizontal: cardPadding,
             paddingVertical: spacing.md,
+            borderTopWidth: 1,
+            borderTopColor: colors.borderSubtle,
           }}
         >
           <PersonAvatar
@@ -181,20 +225,18 @@ export function RoutineCardView({ card }: { card: RoutineCard }) {
               {showsCommunity ? socialLine(card) : card.visibilidad === 'PUBLIC' ? 'Pública' : 'Solo tú la ves'}
             </Text>
           </View>
-          {showsCommunity ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-              <Ionicons color={rating ? ratingStar : colors.textMuted} name={rating ? 'star' : 'star-outline'} size={iconSizes.sm} />
-              <Text strong tabular tone={rating ? 'default' : 'muted'} variant="subhead">
-                {rating ?? 'Nueva'}
-              </Text>
-            </View>
-          ) : (
-            <Ionicons
-              color={colors.textMuted}
-              name={card.visibilidad === 'PUBLIC' ? 'globe-outline' : 'lock-closed-outline'}
-              size={iconSizes.sm}
-            />
-          )}
+          <View
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: radii.full,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: colors.surfaceHigh,
+            }}
+          >
+            <Ionicons color={colors.textSecondary} name="chevron-forward" size={iconSizes.sm - 2} />
+          </View>
         </View>
     </RoutineLink>
   );

@@ -37,9 +37,7 @@ import { StrengthProgramCard } from '@/features/programs/program-card';
 import { CatalogFiltersSheet } from '@/features/routine-catalog/catalog-filters';
 import { CatalogTabBar, MineChips, ResultCount } from '@/features/routine-catalog/catalog-tab-bar';
 import { InvitationCard } from '@/features/routine-catalog/invitation-card';
-import { ForYouBlock } from '@/features/routine-catalog/for-you-block';
 import { RoutineCardSkeleton, RoutineCardView } from '@/features/routine-catalog/routine-card';
-import { useRecommendedRoutines } from '@/features/routine-catalog/use-recommended-routines';
 import { useRoutineCatalog } from '@/features/routine-catalog/use-routine-catalog';
 import { GOAL_LABEL } from '@/lib/format';
 import { colors, fontSizes, gutter, iconSizes, radii, spacing } from '@/theme';
@@ -93,7 +91,6 @@ export function RoutinesCatalogScreen() {
     if (profileGoal && !touched.current) setFiltersState(initialCatalogFilters(profileGoal));
   }, [profileGoal]);
 
-  const forYou = useRecommendedRoutines();
   const catalog = useRoutineCatalog(tab, chip, applied);
   const assignments = useQuery({
     queryKey: ['routines', 'assignments', 'me'],
@@ -108,7 +105,6 @@ export function RoutinesCatalogScreen() {
   const pull = usePullRefresh(() =>
     Promise.all([
       catalog.refetch(),
-      forYou.refetch(),
       assignments.refetch(),
       invitations.refetch(),
       queryClient.invalidateQueries({ queryKey: ['programs'] }),
@@ -137,8 +133,7 @@ export function RoutinesCatalogScreen() {
       refreshing={pull.refreshing}
     >
       <ScreenHeader title="Rutinas" tourKey="routines" />
-      {/* Cabecera: accesos en casillas iguales. La acción principal de la
-          pantalla es elegir una rutina (la de «Para ti»), no crearla. */}
+      {/* Cabecera: accesos en casillas iguales. */}
       <TourTarget id="routines.create">
         <QuickActions
           actions={[
@@ -181,8 +176,6 @@ export function RoutinesCatalogScreen() {
           </TourTarget>
         </Section>
       ) : null}
-
-      <ForYouBlock state={forYou.state} />
 
       {/* Explorar: pestañas, búsqueda y objetivo juntos, a 16 entre sí; antes
           iban a 32 como si fueran secciones distintas y la pantalla se partía. */}

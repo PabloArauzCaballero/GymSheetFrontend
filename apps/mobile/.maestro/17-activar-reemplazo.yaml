@@ -11,7 +11,7 @@ env:
 # RF-14 · p01: activar una rutina propia sin programa previo (A2 → A5).
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Pierna 3 días' }
+    env: { TAB: 'Privadas', NAME: 'Pierna 3 días' }
 - tapOn: 'Activar programa'
 - extendedWaitUntil:
     visible: 'Paso 1 de 3.*'
@@ -71,7 +71,7 @@ env:
 # RF-14 · p04: confirmar el reemplazo cambia la tarjeta; la anterior queda reemplazada.
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Empuje 4 días' }
+    env: { TAB: 'Privadas', NAME: 'Empuje 4 días' }
 - tapOn: 'Activar programa'
 - extendedWaitUntil:
     visible: 'Ya tienes «Torso de Leo».*'

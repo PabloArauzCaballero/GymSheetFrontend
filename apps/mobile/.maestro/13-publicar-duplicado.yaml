@@ -12,7 +12,7 @@ env:
 # RF-09 · p01: confirmación al publicar una rutina nueva.
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Pierna para publicar' }
+    env: { TAB: 'Privadas', NAME: 'Pierna para publicar' }
 # Publicar vive en el menú ⋯ del detalle (C8.3.1).
 - tapOn:
     id: 'routine-more'

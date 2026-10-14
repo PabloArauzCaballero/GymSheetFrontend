@@ -5,13 +5,13 @@ import { FilterChip } from '@/components/filter-chip';
 import { colors, fontSizes, gutter, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 /**
- * Orden y nombres del móvil (C8.3.4): lo propio primero, luego lo que REPP
- * recomienda y al final lo público. Los ámbitos son los de `CATALOG_TABS`.
+ * Orden y nombres del móvil (2026-10-14): lo público primero, luego lo que REPP
+ * recomienda y al final lo privado. Los ámbitos son los de `CATALOG_TABS`.
  */
 const TABS: readonly { scope: CatalogTab; label: string }[] = [
-  { scope: 'mine', label: 'Mías' },
-  { scope: 'official', label: 'Recomendadas' },
   { scope: 'public', label: 'Públicas' },
+  { scope: 'official', label: 'Recomendadas' },
+  { scope: 'mine', label: 'Privadas' },
 ];
 
 /**
