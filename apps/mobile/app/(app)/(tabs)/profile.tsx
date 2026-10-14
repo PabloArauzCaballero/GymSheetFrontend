@@ -1,5 +1,6 @@
 import { IconBadge } from '@/components/icon-badge';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
@@ -16,6 +17,7 @@ import { Text } from '@/components/text';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { Button } from '@/components/ui';
 import { WeightIncrementPreference } from '@/components/weight-increment-preference';
+import { confirm, notify } from '@/notifications';
 import { membershipService, profilePhotosService, profileService, progressionService } from '@/api/services';
 import { GOAL_LABEL, MEMBERSHIP_LABEL, MEMBERSHIP_TONE, formatDate, initialsOf, shortName } from '@/lib/format';
 import { routes } from '@/lib/routes';
@@ -56,9 +58,28 @@ function RowGroup({ children }: { children: ReactNode[] }) {
  */
 export default function ProfileScreen() {
   const principal = useAuthStore((state) => state.principal);
+  const logout = useAuthStore((state) => state.logout);
+  const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
   const resetTour = useTourStore((state) => state.reset);
   useScreenTour('profile');
+
+  const onLogout = async () => {
+    const result = await confirm({
+      title: 'Cerrar sesión',
+      message: 'Se cerrará la sesión en este dispositivo. Deberás iniciar sesión de nuevo.',
+      confirmLabel: 'Cerrar sesión',
+      cancelLabel: 'Volver',
+    });
+    if (!result.confirmed) return;
+    setSigningOut(true);
+    try {
+      await logout();
+      notify.success('Sesión cerrada.');
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   const measurements = useQuery({
     queryKey: ['profile', 'body-measurements'],
@@ -262,6 +283,15 @@ export default function ProfileScreen() {
           ]}
         </RowGroup>
       </Section>
+
+      <Button
+        icon="log-out-outline"
+        label="Cerrar sesión"
+        loading={signingOut}
+        onPress={() => void onLogout()}
+        size="lg"
+        variant="danger"
+      />
     </ScrollScreen>
   );
 }
