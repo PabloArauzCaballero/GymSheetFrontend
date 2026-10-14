@@ -167,16 +167,22 @@ export function WorkoutScreen() {
     ? previousPerformance(history.data?.items ?? [], current.ejercicio.id, id, currentTimed ? isTimedSet : undefined)
     : null;
   const previousTop = reference && !currentTimed ? topSet(reference.exercise) : null;
+  const previousLastRaw = reference && !currentTimed
+    ? [...strengthSets(reference.exercise)].sort((a, b) => b.numeroSerie - a.numeroSerie)[0]
+    : null;
+  const previousLast = previousLastRaw?.pesoKg != null && previousLastRaw.repeticiones != null
+    ? { pesoKg: previousLastRaw.pesoKg, repeticiones: previousLastRaw.repeticiones }
+    : previousTop;
   const previousHold = reference && currentTimed ? longestTimedSet(reference.exercise) : null;
   const suggested = loads?.items.find((entry) => entry.ejercicioId === current?.ejercicio?.id);
 
-  // El borrador de la serie se rellena al cambiar de ejercicio: la última serie
-  // de hoy, si no la carga sugerida, si no la última vez, si no el objetivo.
+  // El borrador espera el historial para dar prioridad a la carga más reciente:
+  // serie de hoy, último registro anterior, sugerencia del plan y objetivo.
   useEffect(() => {
-    if (!current || draftFor === current.id) return;
+    if (!current || draftFor === current.id || history.isPending) return;
     const last = [...strengthSets(current)].sort((a, b) => b.numeroSerie - a.numeroSerie)[0];
-    const weight = last?.pesoKg ?? (suggested?.pesoSugeridoKg || null) ?? previousTop?.pesoKg ?? current.pesoObjetivoKg;
-    const reps = last?.repeticiones ?? previousTop?.repeticiones ?? current.repsMax ?? current.repsMin;
+    const weight = last?.pesoKg ?? previousLast?.pesoKg ?? suggested?.pesoSugeridoKg ?? current.pesoObjetivoKg;
+    const reps = last?.repeticiones ?? previousLast?.repeticiones ?? current.repsMax ?? current.repsMin;
     const rir = last?.rir ?? current.rirObjetivo;
     // Por tiempo: lo de la última serie de hoy, si no lo de la última vez, si no el objetivo.
     const seconds = last?.duracionSeg ?? previousHold ?? current.duracionSeg;
@@ -187,7 +193,7 @@ export function WorkoutScreen() {
       duracionSeg: seconds != null ? String(seconds) : '',
     });
     setDraftFor(current.id);
-  }, [current, draftFor, previousTop, previousHold, suggested]);
+  }, [current, draftFor, history.isPending, previousLast, previousHold, suggested]);
 
   // El fondo se anima mientras hay sesión abierta y se calma al cerrarla.
   const setAmbient = useAmbientStore((state) => state.setIntensity);
@@ -369,8 +375,8 @@ export function WorkoutScreen() {
             ) : (
               <SetInputs
                 lastTime={
-                  previousTop && reference
-                    ? { ...previousTop, when: relativeDay(reference.workout.fechaInicio).toLowerCase() }
+                  previousLast && reference
+                    ? { ...previousLast, when: relativeDay(reference.workout.fechaInicio).toLowerCase() }
                     : null
                 }
                 onChange={setDraft}
