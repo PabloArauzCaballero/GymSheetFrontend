@@ -29,12 +29,12 @@ type ExportFormat = 'csv' | 'pdf';
 const FORMATS = {
   csv: {
     path: '/export/workout-history/csv',
-    fileName: 'gymsheet-avance.csv',
+    fileName: 'repp-avance.csv',
     mimeType: 'text/csv',
   },
   pdf: {
     path: '/export/workout-history/pdf',
-    fileName: 'gymsheet-avance.pdf',
+    fileName: 'repp-avance.pdf',
     mimeType: 'application/pdf',
   },
 } as const;

@@ -57,9 +57,11 @@ export type TenantDefinition = {
 /** Identidad de referencia del producto. */
 export const gymsheetTenant: TenantDefinition = {
   id: 'gymsheet',
-  name: 'GymSheet',
-  wordmark: 'GYMSHEET',
-  monogram: 'GS',
+  // De cara a la gente la app se llama REPP (relanzamiento 13/10). El `id`
+  // se queda: es el que viaja en configuración, cookies y almacenamiento.
+  name: 'REPP',
+  wordmark: 'REPP',
+  monogram: 'R',
   colors: {
     accent: '#c3f400',
     accentDim: '#abd600',

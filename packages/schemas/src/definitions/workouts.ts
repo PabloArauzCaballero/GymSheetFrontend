@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { routineGroupTypes, workoutStatuses } from '@gymsheet/types';
+import { routineGroupTypes, skipReasons, workoutStatuses } from '@gymsheet/types';
 import { exerciseSchema } from './core';
 import { cardioSessionExtrasSchema } from '../cardio';
 import { programSessionExtrasSchema } from '../programs';
@@ -18,6 +18,23 @@ export const workoutSetSchema = z.object({
   rpe: z.number().int().nullable().default(null),
   descansoSegAnterior: z.number().int(),
   fechaRegistro: z.string(),
+});
+
+/** Motivo desconocido (un cliente viejo frente a un servidor nuevo) → «Otro»: nunca rompe la sesión. */
+const skipReasonSchema = z.enum(skipReasons).catch('OTRO');
+
+export const skippedSetSchema = z.object({
+  id: z.string(),
+  numeroSerie: z.number().int(),
+  motivo: skipReasonSchema,
+  nota: z.string().nullable().default(null),
+  fechaRegistro: z.string(),
+});
+
+export const omittedMarkSchema = z.object({
+  motivo: skipReasonSchema,
+  nota: z.string().nullable().default(null),
+  fecha: z.string(),
 });
 
 export const workoutExerciseSchema = z.object({
@@ -39,6 +56,9 @@ export const workoutExerciseSchema = z.object({
   grupoTipo: z.enum(routineGroupTypes).nullable().default(null),
   ejercicio: exerciseSchema.nullable(),
   series: z.array(workoutSetSchema),
+  // D1: ausentes mientras el servidor no tenga el contrato de la noche del 13/10.
+  saltadas: z.array(skippedSetSchema).optional().default([]),
+  omitido: omittedMarkSchema.nullable().optional().default(null),
 });
 
 export const workoutSchema = z.object({
@@ -50,6 +70,30 @@ export const workoutSchema = z.object({
   observacion: z.string().nullable(),
   geoVerificada: z.boolean(),
   ejercicios: z.array(workoutExerciseSchema),
+  rutinaId: z.string().nullable().optional().default(null),
+  rutinaDiaId: z.string().nullable().optional().default(null),
+});
+
+/** `GET /workouts/:id/routine-link`: si «Guardar en mi rutina» está disponible. */
+export const workoutRoutineLinkSchema = z.object({
+  rutinaId: z.string().nullable().default(null),
+  rutinaDiaId: z.string().nullable().default(null),
+  nombre: z.string().nullable().default(null),
+  editable: z.boolean().default(false),
+});
+
+/** `PATCH /workouts/:id/rest-settings`. */
+export const restSettingsResultSchema = z.object({
+  sesion: workoutSchema,
+  rutina: z
+    .object({
+      guardado: z.boolean().default(false),
+      rutinaId: z.string().nullable().default(null),
+      ejerciciosActualizados: z.number().int().default(0),
+      motivo: z.string().nullable().default(null),
+    })
+    .optional()
+    .default({ guardado: false, rutinaId: null, ejerciciosActualizados: 0, motivo: null }),
 });
 
 /**

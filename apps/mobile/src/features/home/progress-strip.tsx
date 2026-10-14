@@ -1,13 +1,18 @@
+import type React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
+import { IconBadge } from '@/components/icon-badge';
 import { Card } from '@/components/layout';
 import { Text } from '@/components/text';
-import { colors, iconSizes, spacing, tones } from '@/theme';
+import { colors, iconSizes, spacing, tones, type MetricKey } from '@/theme';
 
 export type ProgressFigure = {
   key: string;
   value: string;
   label: string;
+  /** Icono con color por significado, encima de la cifra. */
+  icon?: React.ComponentProps<typeof Ionicons>['name'];
+  tone?: MetricKey;
   delta?: { label: string; direction: 'up' | 'down' | 'flat' } | null;
 };
 
@@ -35,6 +40,11 @@ export function ProgressStrip({ figures }: { figures: readonly ProgressFigure[] 
               borderLeftColor: colors.border,
             }}
           >
+            {figure.icon && figure.tone ? (
+              <View style={{ paddingBottom: spacing.xxs }}>
+                <IconBadge delay={index * 70} icon={figure.icon} size={28} tone={figure.tone} />
+              </View>
+            ) : null}
             <Text adjustsFontSizeToFit minimumFontScale={0.7} numberOfLines={1} variant="numeric">
               {figure.value}
             </Text>

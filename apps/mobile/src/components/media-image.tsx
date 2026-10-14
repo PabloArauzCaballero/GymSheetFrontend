@@ -19,10 +19,17 @@ export function MediaImage({
   fallback,
   contentFit = 'cover',
   accessibilityLabel,
+  instant = false,
   style,
   children,
 }: {
   uri: string | null | undefined;
+  /**
+   * Sin fundido ni esqueleto: para una imagen que ya se estaba viendo en la
+   * pantalla anterior (la portada que crece desde la tarjeta). Un fundido ahí
+   * se lee como un parpadeo en mitad de la transición.
+   */
+  instant?: boolean;
   /** Lo que se pinta si no hay URL o la descarga falla. */
   fallback?: ReactNode;
   contentFit?: ImageContentFit;
@@ -60,9 +67,10 @@ export function MediaImage({
             recyclingKey={uri}
             source={{ uri }}
             style={StyleSheet.absoluteFill}
-            transition={reduceMotion ? 0 : { duration: 320, effect: 'cross-dissolve' }}
+            priority={instant ? 'high' : 'normal'}
+            transition={reduceMotion || instant ? 0 : { duration: 320, effect: 'cross-dissolve' }}
           />
-          {state === 'loading' ? <Shimmer /> : null}
+          {state === 'loading' && !instant ? <Shimmer /> : null}
         </>
       )}
       {children}

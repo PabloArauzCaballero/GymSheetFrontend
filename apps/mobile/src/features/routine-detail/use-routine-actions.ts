@@ -7,6 +7,9 @@ import type { Routine } from '@gymsheet/types';
 import { routineCatalogService, routineService } from '@/api/services';
 import { notify } from '@/notifications';
 
+/** Lo que se queda el botón en «Guardada ✓» antes de abrir la copia. */
+const SAVED_PAUSE_MS = 700;
+
 /**
  * Publicar, despublicar, guardar (copiar) y sincronizar (RF-09, RF-10). Publicar pide
  * confirmación y, si el backend responde `409 ROUTINE_DUPLICATE`, ofrece ver la
@@ -76,7 +79,9 @@ export function useRoutineActions(routine: Routine) {
       // Una línea: con el nombre de la copia (ya es el título de la pantalla) el aviso saltaba a dos y
       // tapaba «‹ Volver».
       notify.success('Guardada en tus rutinas.');
-      router.replace({ pathname: '/routines/[id]', params: { id: created.id } });
+      // El botón enseña «Guardada ✓» un instante antes de saltar a la copia:
+      // sin esa pausa, la pantalla cambiaba sin que se viera que el toque sirvió.
+      setTimeout(() => router.replace({ pathname: '/routines/[id]', params: { id: created.id } }), SAVED_PAUSE_MS);
     },
     onError: (error: Error) => {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
@@ -117,6 +122,7 @@ export function useRoutineActions(routine: Routine) {
     publishing: publish.isPending,
     unpublishing: unpublish.isPending,
     copying: copy.isPending,
+    copied: copy.isSuccess,
     syncing: sync.isPending,
   };
 }

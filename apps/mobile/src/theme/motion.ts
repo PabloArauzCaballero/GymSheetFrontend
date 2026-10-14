@@ -27,3 +27,11 @@ export const settleSpring = { damping: 24, stiffness: 220, mass: 0.7, overshootC
 export const glideSpring = { damping: 28, stiffness: 260, mass: 0.8, overshootClamping: true } as const;
 /** Solo logros (récord, celebración): el único rebote permitido. */
 export const celebrateSpring = { damping: 12, stiffness: 180, mass: 0.8 } as const;
+/**
+ * Golpe de una microinteracción social (estrella que se rellena, «me gusta»):
+ * rebasa un poco y vuelve. Es la respuesta a un toque que cambia un dato de la
+ * comunidad, no un control de navegación; por eso sí lleva carácter.
+ */
+export const popSpring = { damping: 11, stiffness: 320, mass: 0.6 } as const;
+/** Retardo entre elementos de una entrada o de una cascada (estrellas, filas). */
+export const stagger = 45;

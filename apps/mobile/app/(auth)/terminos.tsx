@@ -10,9 +10,9 @@ export default function TerminosScreen() {
       <BackLink />
       <ScreenHeader subtitle="Última actualización: 25 de agosto de 2026" title="Términos y condiciones" />
       <View style={{ gap: spacing.lg }}>
-        <Section title="1. Qué es GymSheet">
+        <Section title="1. Qué es REPP">
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 22 }}>
-            GymSheet es una aplicación de registro de entrenamiento, progresión y funciones
+            REPP es una aplicación de registro de entrenamiento, progresión y funciones
             sociales entre socios de un mismo gimnasio. Al crear una cuenta aceptas estos términos
             y la política de privacidad.
           </Text>

@@ -5,7 +5,7 @@ import type { RoutineDay } from '@gymsheet/types';
 import { ExerciseImage, hasArtwork } from '@/components/media';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { colors, iconSizes, radii, shadows, spacing } from '@/theme';
+import { cardPadding, colors, iconSizes, radii, shadows, spacing } from '@/theme';
 import { dayMinutes, dayMuscles } from '@/features/routine-detail/routine-plan';
 
 export function dayKicker(day: Pick<RoutineDay, 'diaSemana'>, number: number): string {
@@ -17,36 +17,43 @@ export function dayTitle(day: Pick<RoutineDay, 'nombre' | 'diaSemana'>): string 
   return day.nombre?.trim() || (day.diaSemana ? WEEKDAY_NAMES[day.diaSemana as Weekday] : 'Entreno');
 }
 
-const THUMB = 56;
+/** El día no tiene nombre propio, o su nombre es el del día de la semana («Lunes»). */
+function sameAsWeekday(day: Pick<RoutineDay, 'nombre' | 'diaSemana'>): boolean {
+  const weekday = day.diaSemana ? WEEKDAY_NAMES[day.diaSemana as Weekday] : null;
+  const name = day.nombre?.trim();
+  return !name || (weekday !== null && name.toLowerCase() === weekday.toLowerCase());
+}
+
+const THUMB = 44;
 const MAX_THUMBS = 4;
 
 /**
- * Tarjeta de un día (rediseño 2026-10-11): «LUNES · DÍA 1», el nombre del día,
- * los músculos que trabaja y «6 ejercicios · ≈55 min», con una tira de
- * miniaturas de los ejercicios (y «+N» si hay más). Abre la pantalla del Día.
+ * Tarjeta de un día (tercera pasada, 2026-10-12): «DÍA 1 · LUNES», el nombre
+ * del día y los músculos; abajo, las láminas de sus ejercicios montadas una
+ * sobre otra (como las caras de quien comenta) y «6 ejercicios · ≈55 min». Un
+ * solo bloque de texto y una sola fila de apoyo: antes eran tres filas, dos de
+ * ellas con iconos. Abre la pantalla del Día.
  */
 export function DayCard({ day, number, onPress }: { day: RoutineDay; number: number; onPress: () => void }) {
   // Solo los ejercicios con imagen: una casilla con un glifo de relleno se lee
-  // como «falta la foto». Los demás se cuentan en «+N». Cuatro casillas como
-  // mucho (caben en un iPhone SE).
+  // como «falta la foto».
   const withArtwork = day.ejercicios.filter((item) => item.ejercicio && hasArtwork(item.ejercicio));
-  const thumbs = withArtwork.slice(0, day.ejercicios.length > MAX_THUMBS ? MAX_THUMBS - 1 : MAX_THUMBS);
-  const rest = day.ejercicios.length - thumbs.length;
+  const thumbs = withArtwork.slice(0, MAX_THUMBS);
   const count = day.ejercicios.length;
   const minutes = dayMinutes(day);
   const muscles = dayMuscles(day, 3);
-  const meta = [`${count} ${count === 1 ? 'ejercicio' : 'ejercicios'}`, minutes ? `≈${minutes} min` : null]
-    .filter(Boolean)
-    .join(' · ');
+  const countLabel = `${count} ${count === 1 ? 'ejercicio' : 'ejercicios'}`;
+  const meta = [countLabel, minutes ? `≈${minutes} min` : null].filter(Boolean).join(' · ');
   return (
     <PressableScale
       accessibilityHint="Abre el día"
       accessibilityLabel={`${dayKicker(day, number)}. ${dayTitle(day)}. ${muscles.join(', ')}. ${meta}`}
+      haptic="selection"
       onPress={onPress}
-      scaleTo={0.985}
+      scaleTo={0.975}
       style={{
-        gap: spacing.smd,
-        padding: spacing.md,
+        gap: spacing.md,
+        padding: cardPadding,
         borderRadius: radii.xl,
         borderCurve: 'continuous',
         backgroundColor: colors.surfaceLow,
@@ -55,9 +62,10 @@ export function DayCard({ day, number, onPress }: { day: RoutineDay; number: num
       testID={`day-card-${day.id}`}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
-        <View style={{ flex: 1, gap: spacing.xxs }}>
-          <Text style={{ letterSpacing: 0.6 }} tone="muted" variant="caption">
-            {dayKicker(day, number).toUpperCase()}
+        <View style={{ flex: 1, gap: spacing.xs }}>
+          <Text style={{ letterSpacing: 0.8 }} tone="accent" variant="caption">
+            {/* Si el título ya es el día de la semana, no se repite arriba. */}
+            {(sameAsWeekday(day) ? `Día ${number}` : dayKicker(day, number)).toUpperCase()}
           </Text>
           <Text numberOfLines={2} variant="headline">
             {dayTitle(day)}
@@ -65,6 +73,11 @@ export function DayCard({ day, number, onPress }: { day: RoutineDay; number: num
           {muscles.length > 0 ? (
             <Text numberOfLines={1} tone="secondary" variant="subhead">
               {muscles.join(' · ')}
+            </Text>
+          ) : null}
+          {thumbs.length < 2 ? (
+            <Text numberOfLines={1} style={{ marginTop: spacing.xs }} tabular tone="muted" variant="footnote">
+              {meta}
             </Text>
           ) : null}
         </View>
@@ -77,40 +90,32 @@ export function DayCard({ day, number, onPress }: { day: RoutineDay; number: num
         />
       </View>
 
-      {thumbs.length > 0 && thumbs.length + (rest > 0 ? 1 : 0) > 1 ? (
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.sm,
-          }}
-        >
-          {thumbs.map((item) =>
-            item.ejercicio ? (
-              <ExerciseImage exercise={item.ejercicio} key={item.id} rounded={radii.md} size={THUMB} />
-            ) : null,
-          )}
-          {rest > 0 ? (
-            <View
-              style={{
-                width: THUMB,
-                height: THUMB,
-                borderRadius: radii.md,
-                borderCurve: 'continuous',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: colors.surfaceHighest,
-              }}
-            >
-              <Text strong tabular tone="secondary" variant="subhead">{`+${rest}`}</Text>
-            </View>
-          ) : null}
+      {/* Con láminas: una fila propia, montadas como caras. Sin ellas, el dato
+          va pegado al texto (una fila suelta abajo dejaba un hueco). */}
+      {thumbs.length >= 2 ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
+          <View style={{ flexDirection: 'row' }}>
+            {thumbs.map((item, index) =>
+              item.ejercicio ? (
+                <View
+                  key={item.id}
+                  style={{
+                    marginLeft: index === 0 ? 0 : -spacing.smd,
+                    borderRadius: radii.full,
+                    borderWidth: 2,
+                    borderColor: colors.surfaceLow,
+                  }}
+                >
+                  <ExerciseImage exercise={item.ejercicio} rounded={radii.full} size={THUMB} />
+                </View>
+              ) : null,
+            )}
+          </View>
+          <Text numberOfLines={1} style={{ flex: 1 }} tabular tone="muted" variant="footnote">
+            {meta}
+          </Text>
         </View>
       ) : null}
-
-      <Text tabular tone="muted" variant="footnote">
-        {meta}
-      </Text>
     </PressableScale>
   );
 }

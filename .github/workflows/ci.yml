@@ -49,5 +49,7 @@ jobs:
       # de src/theme, y contraste AA de los tokens en todas las marcas.
       - run: yarn workspace @gymsheet/mobile check:theme
       - run: yarn workspace @gymsheet/mobile test:theme
+      # Lógica pura del móvil (entreno, buscador, programas, invitaciones…).
+      - run: yarn workspace @gymsheet/mobile test
       - name: Expo Doctor
         run: yarn workspace @gymsheet/mobile dlx expo-doctor || true

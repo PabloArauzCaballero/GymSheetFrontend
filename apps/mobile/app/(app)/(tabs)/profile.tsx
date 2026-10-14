@@ -1,3 +1,4 @@
+import { IconBadge } from '@/components/icon-badge';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
@@ -202,14 +203,14 @@ export default function ProfileScreen() {
         <RowGroup>
           {[
             <NavRow
-              key="datos"
+              key="datos" leading={<IconBadge icon="person-circle-outline" tone="reps" />}
               onPress={() => router.push(missingProfile ? '/onboarding' : '/profile-edit')}
               subtitle={dataSubtitle}
               testID="profile-data"
               title="Mis datos"
             />,
             <NavRow
-              key="peso"
+              key="peso" leading={<IconBadge icon="scale-outline" tone="volume" />}
               onPress={() => router.push('/registrar-peso')}
               subtitle={
                 measurements.isError
@@ -226,7 +227,7 @@ export default function ProfileScreen() {
               </View>
             ) : (
               <NavRow
-                key="membresia"
+                key="membresia" leading={<IconBadge icon="card-outline" tone="record" />}
                 meta={member ? <Badge label={MEMBERSHIP_LABEL[member.estado]} tone={MEMBERSHIP_TONE[member.estado]} /> : null}
                 onPress={() => router.push('/membership')}
                 subtitle={
@@ -249,16 +250,16 @@ export default function ProfileScreen() {
       <Section title="Tu actividad">
         <RowGroup>
           {[
-            <NavRow key="entrenos" onPress={() => router.push('/workouts')} subtitle="Todas tus sesiones, con sus series" title="Mis entrenos" />,
+            <NavRow key="entrenos" leading={<IconBadge icon="barbell-outline" tone="weight" />} onPress={() => router.push('/workouts')} subtitle="Todas tus sesiones, con sus series" title="Mis entrenos" />,
             <NavRow
-              key="ejercicios"
+              key="ejercicios" leading={<IconBadge icon="star-outline" tone="effort" />}
               onPress={() => router.push(routes.exerciseFavorites())}
               subtitle="Tus favoritos ☆ y el catálogo completo"
               testID="profile-exercises"
               title="Mis ejercicios y favoritos"
             />,
-            <NavRow key="chat" onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />,
-            <NavRow key="training-invitations" onPress={() => router.push('/training-invitations')} subtitle="Invitaciones recibidas y encuentros" title="Entrenar juntos" />,
+            <NavRow key="chat" leading={<IconBadge icon="chatbubbles-outline" tone="rest" />} onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />,
+            <NavRow key="training-invitations" leading={<IconBadge icon="people-outline" tone="rest" />} onPress={() => router.push('/training-invitations')} subtitle="Invitaciones recibidas y encuentros" title="Entrenar juntos" />,
           ]}
         </RowGroup>
       </Section>

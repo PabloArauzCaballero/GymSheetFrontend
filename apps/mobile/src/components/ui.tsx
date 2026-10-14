@@ -1,3 +1,5 @@
+import { useContext } from 'react';
+import { TextScaleLimit } from '@/components/text';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, type ReactNode } from 'react';
 import {
@@ -5,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  StyleSheet,
   Text as RNText,
   TextInput,
   useWindowDimensions,
@@ -15,6 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   FadeIn,
   useAnimatedStyle,
@@ -25,7 +29,7 @@ import Animated, {
 import { AmbientBackground } from '@/components/ambient';
 import { DURATION, PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { accentContrast, accentPolicy, colors, comfortableTouchTarget, fontSizes, iconSizes, maxContentWidth, minTouchTarget, pressScale, pressSpring, radii, semibold, spacing, type TextVariant } from '@/theme';
+import { accentContrast, accentGlow, accentGradient, accentPolicy, colors, comfortableTouchTarget, fontSizes, iconSizes, maxContentWidth, minTouchTarget, pressScale, pressSpring, radii, semibold, spacing, type TextVariant } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -171,7 +175,7 @@ export function Button({
   disabled = false,
   variant = 'primary',
   size = 'md',
-  haptic = 'none',
+  haptic,
   accessibilityHint,
   testID,
   style,
@@ -189,17 +193,29 @@ export function Button({
   testID?: string;
   style?: StyleProp<ViewStyle>;
 }) {
+  const textLimit = useContext(TextScaleLimit);
   const isDisabled = disabled || loading;
   const tone = buttonTone(variant);
   const metrics = BUTTON_SIZES[size];
   const pressed = useSharedValue(0);
   const reduceMotion = useReducedMotion();
 
+  // Escala y opacidad JUNTAS: la escala sola, a 0,97, casi no se ve en un botón
+  // ancho, y la opacidad sola parece que el botón se apaga. Combinadas, cede.
   const animated = useAnimatedStyle(() =>
     reduceMotion
       ? { opacity: 1 - pressed.value * 0.2 }
-      : { transform: [{ scale: 1 - pressed.value * (1 - pressScale.button) }] },
+      : {
+          transform: [{ scale: 1 - pressed.value * (1 - pressScale.button) }],
+          opacity: 1 - pressed.value * 0.1,
+        },
   );
+  // La acción principal responde también en la mano; el resto, en silencio.
+  const touchHaptic = haptic ?? (variant === 'primary' ? 'light' : 'none');
+  // Encendida: degradado de marca y halo. Bloqueada no lleva ninguno de los
+  // dos: un botón apagado que sigue brillando invita a pulsarlo.
+  const lit = variant === 'primary' && !isDisabled;
+  const gradient = accentGradient();
 
   const ink = isDisabled ? colors.textDisabled : tone.ink;
   const content = loading ? (
@@ -216,6 +232,7 @@ export function Button({
         />
       ) : null}
       <RNText
+        maxFontSizeMultiplier={textLimit}
         numberOfLines={1}
         style={{ color: ink, fontSize: metrics.fontSize, fontWeight: semibold }}
       >
@@ -235,8 +252,8 @@ export function Button({
       onPressIn={() => {
         if (isDisabled) return;
         pressed.value = withSpring(1, pressSpring);
-        if (haptic === 'selection') void Haptics.selectionAsync();
-        if (haptic === 'light') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        if (touchHaptic === 'selection') void Haptics.selectionAsync();
+        if (touchHaptic === 'light') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }}
       onPressOut={() => {
         pressed.value = withSpring(0, pressSpring);
@@ -254,11 +271,21 @@ export function Button({
           alignItems: 'center',
           justifyContent: 'center',
           paddingHorizontal: metrics.paddingHorizontal,
+          boxShadow: lit ? accentGlow(colors.volt) : undefined,
         },
         animated,
         style,
       ]}
     >
+      {lit ? (
+        <LinearGradient
+          colors={[gradient[0], gradient[1]]}
+          end={{ x: 1, y: 1 }}
+          pointerEvents="none"
+          start={{ x: 0, y: 0 }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
       {content}
     </AnimatedPressable>
   );

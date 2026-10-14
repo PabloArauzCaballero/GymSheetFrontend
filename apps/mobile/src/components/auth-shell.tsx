@@ -1,3 +1,4 @@
+import { ReppMark } from '@/components/brand/repp-mark';
 import type { ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -75,17 +76,22 @@ export function BrandEmblem({ size = EMBLEM }: { size?: number }) {
           start={{ x: 0, y: 0 }}
           style={StyleSheet.absoluteFill}
         />
-        <Text
-          style={{
-            color: accentContrast(),
-            fontSize: size * 0.44,
-            fontWeight: '800',
-            letterSpacing: -size * 0.02,
-            includeFontPadding: false,
-          }}
-        >
-          {tenant.monogram}
-        </Text>
+        {tenant.id === 'gymsheet' ? (
+          // REPP tiene signo propio; los gimnasios con marca, su monograma.
+          <ReppMark ink={accentContrast()} size={size * 0.6} tick={accentContrast()} />
+        ) : (
+          <Text
+            style={{
+              color: accentContrast(),
+              fontSize: size * 0.44,
+              fontWeight: '800',
+              letterSpacing: -size * 0.02,
+              includeFontPadding: false,
+            }}
+          >
+            {tenant.monogram}
+          </Text>
+        )}
       </View>
     </View>
   );

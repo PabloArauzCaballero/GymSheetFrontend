@@ -168,6 +168,8 @@ export const exerciseSchema = z
     nombre: z.string(),
     /** Nombre revisado en español (C3.b); la interfaz muestra `nombreEs ?? nombre`. */
     nombreEs: z.string().nullable().optional(),
+    /** Su lámina (o el póster de su vídeo), ya resuelta por el servidor. Aditivo. */
+    imagenUrl: z.string().nullable().optional(),
     grupoMuscular: z.string(),
     descripcion: z.string().nullable(),
     tipoEjercicio: z.enum(['GLOBAL', 'PERSONAL']),
@@ -208,6 +210,25 @@ export function pageSchema<T extends z.ZodType>(itemSchema: T) {
     totalPages: z.number().int(),
   });
 }
+
+/**
+ * Página del buscador de ejercicios (`GET /exercises?search=`). Además de la
+ * página de siempre trae la corrección («¿Quisiste decir sentadilla?») y lo que
+ * el servidor entendió. Opcionales: un servidor anterior no los manda.
+ */
+export const exerciseSearchPageSchema = pageSchema(exerciseSchema).extend({
+  sugerencia: z.string().nullable().optional(),
+  consulta: z.string().nullable().optional(),
+});
+export type ExerciseSearchPage = z.infer<typeof exerciseSearchPageSchema>;
+
+/** Atajos de la pantalla vacía del buscador (`GET /exercises/shortcuts`). */
+export const exerciseShortcutsSchema = z.object({
+  recientes: z.array(exerciseSchema).default([]),
+  masUsados: z.array(exerciseSchema).default([]),
+  populares: z.array(exerciseSchema).default([]),
+});
+export type ExerciseShortcuts = z.infer<typeof exerciseShortcutsSchema>;
 
 /**
  * Zonas del cuerpo y, dentro de cada una, los músculos que entrenan, con

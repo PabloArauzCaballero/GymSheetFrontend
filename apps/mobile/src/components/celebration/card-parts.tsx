@@ -1,13 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import type { CardTier, Particle } from '@gymsheet/domain';
 import { LinearGradient } from 'expo-linear-gradient';
-import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
-import { CountUpText } from '@/components/motion';
 import { withAlpha } from '@/components/progression';
-import { celebrationPalette, fontSizes, radii, semibold, spacing } from '@/theme';
-import type { CardScene } from './scene';
+import { celebrationPalette, fontSizes, radii, spacing, type CardMaterial } from '@/theme';
 
 /**
  * Las piezas visuales de la carta. Ninguna decide cuándo se mueve: reciben
@@ -19,9 +15,6 @@ import type { CardScene } from './scene';
  */
 
 type Gradient = readonly [string, string, ...string[]];
-
-/** Superficie interior de las dos caras: casi negra, con un punto de azul frío. */
-const FACE_INK = celebrationPalette.faceInk;
 
 /* ─── Rayos ──────────────────────────────────────────────────────────────── */
 
@@ -223,259 +216,28 @@ export function Particles({
   );
 }
 
-/* ─── Brillo holográfico ─────────────────────────────────────────────────── */
-
-function sheenColors(mode: CardTier['holo'], tint: string): Gradient {
-  if (mode === 'rainbow') {
-    return celebrationPalette.sheen.rainbow;
-  }
-  if (mode === 'soft') {
-    const { clear, softPeak } = celebrationPalette.sheen;
-    return [clear, withAlpha(tint, 0.3), softPeak, withAlpha(tint, 0.3), clear];
-  }
-  const { clear, plainPeak } = celebrationPalette.sheen;
-  return [clear, plainPeak, clear];
-}
-
-function HoloSheen({
-  width,
-  height,
-  mode,
-  tint,
-  sweep,
-}: {
-  width: number;
-  height: number;
-  mode: CardTier['holo'];
-  tint: string;
-  sweep: SharedValue<number>;
-}) {
-  const band = width * 0.62;
-  const style = useAnimatedStyle(() => ({
-    transform: [{ translateX: -band * 1.6 + sweep.value * (width + band * 2.2) }, { rotate: '18deg' }],
-  }));
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={[{ position: 'absolute', top: -height * 0.3, height: height * 1.6, width: band }, style]}
-    >
-      <LinearGradient
-        colors={sheenColors(mode, tint)}
-        end={{ x: 1, y: 0.5 }}
-        start={{ x: 0, y: 0.5 }}
-        style={{ flex: 1 }}
-      />
-    </Animated.View>
-  );
-}
-
-/* ─── Caras ──────────────────────────────────────────────────────────────── */
-
-const FRAME_PADDING = 5;
-
-function Frame({ tier, children }: { tier: CardTier; children: ReactNode }) {
-  return (
-    <LinearGradient
-      colors={tier.frame}
-      end={{ x: 1, y: 1 }}
-      start={{ x: 0, y: 0 }}
-      style={{ flex: 1, borderRadius: radii.lg, padding: FRAME_PADDING }}
-    >
-      <View
-        style={{
-          flex: 1,
-          borderRadius: radii.md,
-          backgroundColor: FACE_INK,
-          overflow: 'hidden',
-        }}
-      >
-        {children}
-      </View>
-    </LinearGradient>
-  );
-}
-
-/** Dorso: la marca, un patrón de rombos y el marco de la rareza que se intuye. */
-export function CardBack({ width, tier }: { width: number; tier: CardTier }) {
-  const medal = width * 0.44;
-  return (
-    <Frame tier={tier}>
-      <View
-        pointerEvents="none"
-        style={[
-          StyleSheet.absoluteFill,
-          {
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            justifyContent: 'space-around',
-            alignContent: 'space-around',
-            padding: spacing.sm,
-          },
-        ]}
-      >
-        {Array.from({ length: 42 }, (_, index) => (
-          <View
-            key={index}
-            style={{
-              width: 9,
-              height: 9,
-              margin: 4,
-              borderWidth: 1,
-              borderColor: withAlpha(tier.frame[1], 0.2),
-              transform: [{ rotate: '45deg' }],
-            }}
-          />
-        ))}
-      </View>
-      <View
-        pointerEvents="none"
-        style={{
-          position: 'absolute',
-          top: 8,
-          left: 8,
-          right: 8,
-          bottom: 8,
-          borderRadius: radii.sm,
-          borderWidth: 1,
-          borderColor: withAlpha(tier.frame[0], 0.28),
-        }}
-      />
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm }}>
-        <View
-          style={{
-            width: medal,
-            height: medal,
-            borderRadius: medal / 2,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 2,
-            borderColor: tier.frame[1],
-            backgroundColor: withAlpha(tier.frame[2], 0.45),
-          }}
-        >
-          <Ionicons color={tier.frame[0]} name="barbell" size={medal * 0.46} />
-        </View>
-        <Text
-          style={{
-            color: withAlpha(tier.frame[0], 0.85),
-            fontSize: fontSizes.xs,
-            fontWeight: semibold,
-            letterSpacing: fontSizes.xs * 0.3,
-          }}
-        >
-          GYMSHEET
-        </Text>
-      </View>
-    </Frame>
-  );
-}
-
-/** Frente: el arte con el icono, y la banda con rareza, nombre y puntos. */
-export function CardFront({
-  width,
-  height,
-  scene,
-  sweep,
-  pointsDelayMs,
-}: {
-  width: number;
-  height: number;
-  scene: CardScene;
-  sweep: SharedValue<number>;
-  pointsDelayMs: number;
-}) {
-  const { tier } = scene;
-  const disc = width * 0.54;
-  return (
-    <Frame tier={tier}>
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <LinearGradient
-          colors={[withAlpha(scene.tint, 0.5), withAlpha(scene.tint, 0.04)]}
-          end={{ x: 0.5, y: 1 }}
-          start={{ x: 0.5, y: 0 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View
-          style={{
-            width: disc,
-            height: disc,
-            borderRadius: disc / 2,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 2,
-            borderColor: withAlpha(scene.tint, 0.75),
-            backgroundColor: withAlpha(scene.tint, 0.18),
-            shadowColor: scene.tint,
-            shadowOpacity: 0.8,
-            shadowRadius: 18,
-            shadowOffset: { width: 0, height: 0 },
-          }}
-        >
-          <Ionicons color={scene.ink} name={scene.icon} size={disc * 0.5} />
-        </View>
-      </View>
-
-      <View
-        style={{
-          alignItems: 'center',
-          gap: 2,
-          paddingHorizontal: spacing.sm,
-          paddingTop: spacing.sm,
-          paddingBottom: spacing.sm + 2,
-          borderTopWidth: 1,
-          borderTopColor: withAlpha(tier.frame[1], 0.6),
-          backgroundColor: celebrationPalette.footerScrim,
-        }}
-      >
-        {scene.rarityLabel ? (
-          <Text
-            style={{
-              color: tier.frame[0],
-              fontSize: fontSizes.xs,
-              fontWeight: semibold,
-              letterSpacing: fontSizes.xs * 0.18,
-              textTransform: 'uppercase',
-            }}
-          >
-            {scene.rarityLabel}
-          </Text>
-        ) : null}
-        <Text
-          numberOfLines={2}
-          style={{ color: celebrationPalette.light, fontSize: fontSizes.md, fontWeight: semibold, textAlign: 'center' }}
-        >
-          {scene.title}
-        </Text>
-        {scene.points > 0 ? (
-          <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-            <Text style={{ color: scene.ink, fontSize: fontSizes.sm, fontWeight: semibold }}>+</Text>
-            <CountUpText
-              delayMs={pointsDelayMs}
-              style={{ color: scene.ink, fontSize: fontSizes.sm, fontWeight: semibold, fontVariant: ['tabular-nums'] }}
-              value={scene.points}
-            />
-            <Text style={{ color: scene.ink, fontSize: fontSizes.sm, fontWeight: semibold }}> pts</Text>
-          </View>
-        ) : null}
-      </View>
-
-      <HoloSheen height={height} mode={tier.holo} sweep={sweep} tint={scene.tint} width={width} />
-    </Frame>
-  );
-}
-
 /* ─── Sello ──────────────────────────────────────────────────────────────── */
 
 /** Cae grande y se clava: la escala baja de 1,6 a 1 con un muelle que rebasa. */
-export function Stamp({ label, tier, progress }: { label: string; tier: CardTier; progress: SharedValue<number> }) {
+export function Stamp({
+  label,
+  material,
+  progress,
+  exit,
+}: {
+  label: string;
+  material: CardMaterial;
+  progress: SharedValue<number>;
+  exit: SharedValue<number>;
+}) {
   const style = useAnimatedStyle(() => ({
-    opacity: Math.min(1, progress.value * 3),
+    opacity: Math.min(1, progress.value * 3) * (1 - exit.value),
     transform: [{ rotate: '-9deg' }, { scale: 1.6 - 0.6 * progress.value }],
   }));
   return (
     <Animated.View pointerEvents="none" style={[{ position: 'absolute', top: -16, right: -22 }, style]}>
       <LinearGradient
-        colors={[tier.frame[0], tier.frame[1]]}
+        colors={[material.frame[0], material.frame[1]]}
         end={{ x: 1, y: 1 }}
         start={{ x: 0, y: 0 }}
         style={{
@@ -486,7 +248,10 @@ export function Stamp({ label, tier, progress }: { label: string; tier: CardTier
           borderColor: celebrationPalette.light,
         }}
       >
-        <Text style={{ color: celebrationPalette.stampInk, fontSize: fontSizes.sm, fontWeight: '800', letterSpacing: 0.8 }}>
+        <Text
+          allowFontScaling={false}
+          style={{ color: celebrationPalette.stampInk, fontSize: fontSizes.sm, fontWeight: '800', letterSpacing: 0.8 }}
+        >
           {label}
         </Text>
       </LinearGradient>

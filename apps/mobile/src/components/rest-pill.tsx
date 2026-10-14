@@ -22,7 +22,7 @@ export function RestPill({ seconds, suffix }: { seconds: number; suffix?: string
     <View
       accessibilityLabel={label}
       accessible
-      style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs }}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.sm, paddingHorizontal: spacing.xs }}
     >
       <View style={{ flex: 1, borderTopWidth: 1, borderStyle: 'dashed', borderColor: colors.border }} />
       <Ionicons

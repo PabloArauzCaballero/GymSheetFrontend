@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { commentDeletedSchema, commentPageSchema, contentRatingSchema, routineCommentSchema } from '@gymsheet/schemas';
+import {
+  commentDeletedSchema,
+  commentLikeSchema,
+  commentPageSchema,
+  contentRatingSchema,
+  routineCommentSchema,
+} from '@gymsheet/schemas';
 import type { ContentKind, CreateCommentInput, ReportTargetKind } from '@gymsheet/types';
 import type { RequestFn } from './routine-services';
 
@@ -29,6 +35,10 @@ export function createCommunityServices(request: RequestFn) {
       ),
     comment: (kind: ContentKind, id: string, input: CreateCommentInput) =>
       request(`/comments/${kind}/${id}`, routineCommentSchema, { method: 'POST', body: input }),
+    likeComment: (commentId: string) =>
+      request(`/comments/${commentId}/like`, commentLikeSchema, { method: 'PUT' }),
+    unlikeComment: (commentId: string) =>
+      request(`/comments/${commentId}/like`, commentLikeSchema, { method: 'DELETE' }),
     removeComment: (commentId: string) =>
       request(`/comments/${commentId}`, commentDeletedSchema, { method: 'DELETE' }),
     report: (input: {

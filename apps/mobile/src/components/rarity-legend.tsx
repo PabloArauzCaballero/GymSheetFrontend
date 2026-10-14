@@ -2,13 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   CARD_RARITY_HINT,
   CARD_RARITY_LABEL,
-  CARD_TIERS,
   SECRET_BADGES_HINT,
   type CardRarity,
 } from '@gymsheet/domain';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { accentPolicy, cardMaterials, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 const ORDER: readonly CardRarity[] = ['COMUN', 'RARA', 'EPICA', 'LEGENDARIA'];
 
@@ -66,7 +65,7 @@ export function RarityLegend() {
                   height: 10,
                   marginTop: 5,
                   borderRadius: radii.full,
-                  backgroundColor: CARD_TIERS[rarity].frame[1],
+                  backgroundColor: cardMaterials[rarity].label,
                 }}
               />
               <Text style={{ flex: 1, color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>

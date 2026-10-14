@@ -1,4 +1,4 @@
-import { Children, useCallback, useContext, useMemo, useRef, type ReactNode } from 'react';
+import { Children, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
 // En SDK 57 expo-router trae React Navigation embebido y no lo reexporta: este
 // es el mismo módulo que usa su `Tabs`, así que el contexto es el mismo objeto.
 // Si una actualización de expo-router lo mueve, el type-check lo dirá.
@@ -8,8 +8,8 @@ import { useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   FlatList,
+  Platform,
   RefreshControl,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -20,11 +20,15 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useAnimatedRef, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { AmbientBackground } from '@/components/ambient';
+import { IconBadge } from '@/components/icon-badge';
+import { HeroBar, HeroParallax, ScrollYProvider, type HeroBarProps } from '@/components/hero-bar';
+import { PullIndicator } from '@/components/pull-indicator';
 import { useTourStore, type TourKey } from '@/state/tour-store';
 import { CountUpText, Heartbeat, PressableScale } from '@/components/motion';
 import { Text as AppTextPrimitive } from '@/components/text';
-import { accentPolicy, alpha, cardGap, cardPadding, colors, fontFamilies, fontSizes, gutter as screenGutter, iconSizes, maxContentWidth, maxWideContentWidth, minTouchTarget, radii, screenGap, sectionGap, semibold, shadows, spacing, tabletBreakpoint, tones } from '@/theme';
+import { accentPolicy, alpha, cardGap, cardPadding, colors, fontFamilies, fontSizes, gutter as screenGutter, iconSizes, maxContentWidth, maxWideContentWidth, minTouchTarget, radii, screenGap, sectionGap, semibold, shadows, spacing, tabletBreakpoint, tones , type MetricKey } from '@/theme';
 
 /**
  * One place decides what "wide" means, so a tablet layout cannot drift between
@@ -73,8 +77,14 @@ export function ScrollScreen({
   overlay,
   refreshing = false,
   hero,
+  heroBar,
 }: {
   children: ReactNode;
+  /**
+   * Con `hero`: barra fija con volver (y ⋯) que se vuelve vidrio y recibe el
+   * título cuando la portada queda atrás.
+   */
+  heroBar?: HeroBarProps;
   /**
    * Portada a sangre arriba del todo: ocupa el ancho completo (sin el margen
    * lateral) y se mete bajo la barra de estado. Se encarga ella de su área
@@ -97,50 +107,69 @@ export function ScrollScreen({
   refreshing?: boolean;
 }) {
   const frame = useScreenFrame();
-  const scrollRef = useRef<ScrollView | null>(null);
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const offsetRef = useTourScroller((y) => scrollRef.current?.scrollTo({ y, animated: true }));
+  // El desplazamiento vive en el hilo de UI (Reanimated): la portada, la barra
+  // y el indicador de recarga lo siguen sin un render de React por fotograma.
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+  });
+  const [heroHeight, setHeroHeight] = useState(0);
 
   return (
-    <ScreenChrome frame={frame} overlay={overlay}>
-      <ScrollView
-        // El desplazamiento se anota al terminar el gesto, no en cada
-        // fotograma. `onScroll` con `scrollEventThrottle` instala un evento
-        // animado en el puente, y coexistir con las animaciones nativas que ya
-        // hay en pantalla hacía saltar «Sending `onAnimatedValueUpdate` with no
-        // listeners registered» en cada scroll. El tour sólo necesita saber
-        // dónde está la lista cuando va a moverla, no mientras el dedo viaja.
-        onMomentumScrollEnd={(event) => {
-          offsetRef.current = event.nativeEvent.contentOffset.y;
-        }}
-        onScrollEndDrag={(event) => {
-          offsetRef.current = event.nativeEvent.contentOffset.y;
-        }}
-        ref={scrollRef}
-        contentContainerStyle={{
-          ...frame.contentPadding,
-          ...(hero ? { paddingTop: 0 } : null),
-          gap: screenGap,
-          // flexGrow lets a short page fill the viewport so it can centre; a
-          // tall one still scrolls normally because the content wins over it.
-          ...(center ? { flexGrow: 1, justifyContent: 'center' as const } : null),
-        }}
-        {...SCREEN_SCROLL_BEHAVIOUR}
-        refreshControl={screenRefreshControl(onRefresh, refreshing)}
+    <ScrollYProvider value={scrollY}>
+      <ScreenChrome
+        frame={frame}
+        overlay={overlay}
+        statusBand={!hero}
+        top={
+          <>
+            {onRefresh ? <PullIndicator refreshing={refreshing} top={frame.topInset + spacing.sm} /> : null}
+            {hero && heroBar ? (
+              <HeroBar {...heroBar} gutter={frame.gutter + frame.insets.left} heroHeight={heroHeight} topInset={frame.topInset} />
+            ) : null}
+          </>
+        }
       >
-        {hero ? (
-          <View
-            style={{
-              marginLeft: -(frame.gutter + frame.insets.left),
-              marginRight: -(frame.gutter + frame.insets.right),
-              marginBottom: -spacing.md,
-            }}
-          >
-            {hero}
-          </View>
-        ) : null}
-        {children}
-      </ScrollView>
-    </ScreenChrome>
+        <Animated.ScrollView
+          // El tour sólo necesita saber dónde está la lista cuando va a moverla.
+          onMomentumScrollEnd={(event) => {
+            offsetRef.current = event.nativeEvent.contentOffset.y;
+          }}
+          onScroll={onScroll}
+          onScrollEndDrag={(event) => {
+            offsetRef.current = event.nativeEvent.contentOffset.y;
+          }}
+          ref={scrollRef}
+          scrollEventThrottle={16}
+          contentContainerStyle={{
+            ...frame.contentPadding,
+            ...(hero ? { paddingTop: 0 } : null),
+            gap: screenGap,
+            // flexGrow lets a short page fill the viewport so it can centre; a
+            // tall one still scrolls normally because the content wins over it.
+            ...(center ? { flexGrow: 1, justifyContent: 'center' as const } : null),
+          }}
+          {...SCREEN_SCROLL_BEHAVIOUR}
+          refreshControl={screenRefreshControl(onRefresh, refreshing)}
+        >
+          {hero ? (
+            <View
+              onLayout={(event) => setHeroHeight(event.nativeEvent.layout.height)}
+              style={{
+                marginLeft: -(frame.gutter + frame.insets.left),
+                marginRight: -(frame.gutter + frame.insets.right),
+                marginBottom: -spacing.md,
+              }}
+            >
+              <HeroParallax height={heroHeight}>{hero}</HeroParallax>
+            </View>
+          ) : null}
+          {children}
+        </Animated.ScrollView>
+      </ScreenChrome>
+    </ScrollYProvider>
   );
 }
 
@@ -166,6 +195,8 @@ export function ListScreen<T>({
   onRefresh,
   refreshing = false,
   renderItem,
+  overlay,
+  bottomSpace = 0,
 }: {
   data: readonly T[];
   /** Lo que, además de `data`, obliga a repintar filas (p. ej. una acción en curso). */
@@ -182,6 +213,10 @@ export function ListScreen<T>({
   onRefresh?: () => void;
   refreshing?: boolean;
   renderItem: ListRenderItem<T>;
+  /** Barra fija sobre la lista, encima de la barra de pestañas (como en `ScrollScreen`). */
+  overlay?: ReactNode;
+  /** Hueco extra al final para que `overlay` no tape la última fila. */
+  bottomSpace?: number;
 }) {
   const frame = useScreenFrame();
   const listRef = useRef<FlatList<T> | null>(null);
@@ -192,9 +227,13 @@ export function ListScreen<T>({
   );
 
   return (
-    <ScreenChrome frame={frame}>
+    <ScreenChrome frame={frame} overlay={overlay}>
       <FlatList<T>
-        contentContainerStyle={frame.contentPadding}
+        contentContainerStyle={
+          bottomSpace > 0
+            ? { ...frame.contentPadding, paddingBottom: Number(frame.contentPadding.paddingBottom ?? 0) + bottomSpace }
+            : frame.contentPadding
+        }
         data={data as T[]}
         extraData={extraData}
         ItemSeparatorComponent={Separator}
@@ -213,7 +252,7 @@ export function ListScreen<T>({
           offsetRef.current = event.nativeEvent.contentOffset.y;
         }}
         ref={listRef}
-        refreshControl={screenRefreshControl(onRefresh, refreshing)}
+        refreshControl={screenRefreshControl(onRefresh, refreshing, false)}
         renderItem={renderItem}
         {...SCREEN_SCROLL_BEHAVIOUR}
       />
@@ -237,7 +276,7 @@ const SCREEN_SCROLL_BEHAVIOUR = {
   showsVerticalScrollIndicator: false,
 } as const;
 
-function screenRefreshControl(onRefresh: (() => void) | undefined, refreshing: boolean) {
+function screenRefreshControl(onRefresh: (() => void) | undefined, refreshing: boolean, ownIndicator = true) {
   if (!onRefresh) return undefined;
   // Volt spinner on black: the default is invisible on this theme.
   return (
@@ -246,12 +285,13 @@ function screenRefreshControl(onRefresh: (() => void) | undefined, refreshing: b
       onRefresh={onRefresh}
       progressBackgroundColor={colors.surface}
       refreshing={refreshing}
-      tintColor={colors.volt}
+      // En iOS la rueda del sistema se oculta: el indicador es `PullIndicator`.
+      tintColor={Platform.OS === 'ios' && ownIndicator ? 'transparent' : colors.volt}
     />
   );
 }
 
-type ScreenFrame = {
+export type ScreenFrame = {
   gutter: number;
   topInset: number;
   bottomInset: number;
@@ -266,7 +306,7 @@ type ScreenFrame = {
  * width becomes gutter instead of longer lines, so text stays readable on a
  * tablet.
  */
-function useScreenFrame(): ScreenFrame {
+export function useScreenFrame(): ScreenFrame {
   const insets = useSafeAreaInsets();
   const { wide, width } = useResponsive();
   // A two-column page needs room for two columns; keeping the phone cap on a
@@ -346,14 +386,20 @@ function useTourScroller(scrollToY: (y: number) => void) {
 }
 
 /** Fondo, capa fija sobre la barra de pestañas y franja de la barra de estado. */
-function ScreenChrome({
+export function ScreenChrome({
   children,
   frame,
   overlay,
+  top,
+  statusBand = true,
 }: {
   children: ReactNode;
   frame: ScreenFrame;
   overlay?: ReactNode;
+  /** Capa fija arriba (barra de portada, indicador de recarga). */
+  top?: ReactNode;
+  /** La franja opaca bajo el reloj. Con portada a sangre no va: la imagen llega arriba. */
+  statusBand?: boolean;
 }) {
   const { gutter, insets, topInset, bottomInset } = frame;
   return (
@@ -379,18 +425,21 @@ function ScreenChrome({
           clock, then fading out over a short tail, so it reads as the content
           dissolving into the top edge rather than as a black strip with a hard
           line under it. */}
-      <LinearGradient
-        colors={[colors.background, colors.background, alpha(colors.background, 0)]}
-        locations={[0, topInset / (topInset + STATUS_FADE), 1]}
-        pointerEvents="none"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: topInset + STATUS_FADE,
-        }}
-      />
+      {statusBand ? (
+        <LinearGradient
+          colors={[colors.background, colors.background, alpha(colors.background, 0)]}
+          locations={[0, topInset / (topInset + STATUS_FADE), 1]}
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: topInset + STATUS_FADE,
+          }}
+        />
+      ) : null}
+      {top}
     </View>
   );
 }
@@ -681,9 +730,12 @@ export function StatTile({
   icon,
   delta,
   rate,
+  tone,
 }: {
   value: string;
   label: string;
+  /** Color por significado del icono (`metricColors`); sin él, glifo neutro. */
+  tone?: MetricKey;
   /**
    * Cuánto aporta esta cifra a tus puntos, ya redactado («+50 c/u»). Solo en
    * las cifras que suman: una tarifa en todas diría que todo cuenta, y no.
@@ -719,7 +771,9 @@ export function StatTile({
         paddingHorizontal: spacing.md,
       }}
     >
-      {icon ? (
+      {icon && tone ? (
+        <IconBadge icon={icon} tone={tone} />
+      ) : icon ? (
         <Ionicons
           accessibilityElementsHidden
           color={accentPolicy.glyph}

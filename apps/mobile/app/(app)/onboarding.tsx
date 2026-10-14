@@ -161,6 +161,10 @@ export default function OnboardingScreen() {
   const complete = useMutation({
     mutationFn: () => onboardingService.complete(),
     onSuccess: () => {
+      // Lo que se acaba de contar cambia el perfil y las recomendaciones: sin
+      // esto «Para ti» seguía pidiendo «Cuéntanos tu objetivo» varios minutos.
+      void queryClient.invalidateQueries({ queryKey: ['profile'] });
+      void queryClient.invalidateQueries({ queryKey: ['routines'] });
       notify.success('¡Listo! Ya puedes entrenar.');
       router.replace('/home');
     },

@@ -18,13 +18,26 @@ import {
   markLevelSeen,
   type CelebrationSubject,
 } from '@/components/celebration';
+import { RewardCardBack } from '@/components/cards/reward-card';
 import { Card } from '@/components/layout';
-import { CountUpText, DURATION, PREMIUM_EASING } from '@/components/motion';
+import { CountUpText, DURATION, EnterUp, PREMIUM_EASING } from '@/components/motion';
 import { Text as UIText } from '@/components/text';
 import { Button } from '@/components/ui';
 import { useAuthStore } from '@/state/auth-store';
 import type { FinishedSession } from '@/state/session-reward-store';
-import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, spacing, textVariants } from '@/theme';
+import {
+  alpha,
+  colors,
+  fontSizes,
+  iconSizes,
+  ink,
+  metricColors,
+  radii,
+  semibold,
+  spacing,
+  textVariants,
+  type MetricKey,
+} from '@/theme';
 
 /**
  * «Sesión terminada»: el momento en que la app enseña causa y efecto.
@@ -37,6 +50,45 @@ import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, spacing, t
 /** Escalonado del desglose: una fila cada 90 ms mientras la cifra cuenta. */
 const ROW_STEP = 90;
 const BREAKDOWN_ORDER: readonly (keyof PointsBreakdown)[] = ['session', 'sets', 'volume', 'streak', 'badges', 'modes'];
+
+/** De dónde sale cada partida: un glifo y el color de su magnitud, los mismos que en el entreno. */
+const BREAKDOWN_GLYPH: Readonly<
+  Record<keyof PointsBreakdown, { icon: keyof typeof Ionicons.glyphMap; metric: MetricKey }>
+> = {
+  session: { icon: 'checkmark-circle', metric: 'rest' },
+  sets: { icon: 'layers', metric: 'reps' },
+  volume: { icon: 'barbell', metric: 'weight' },
+  streak: { icon: 'flame', metric: 'streak' },
+  badges: { icon: 'ribbon', metric: 'record' },
+  modes: { icon: 'flash', metric: 'effort' },
+};
+
+/** Las cartas que esperan, bocabajo y en abanico: se ve cuántas y de qué rareza, no cuáles. */
+function RewardFan({ subjects }: { subjects: readonly CelebrationSubject[] }) {
+  const shown = subjects.slice(0, 3);
+  const width = 46;
+  const height = width * 1.4;
+  const spread = shown.length - 1;
+  return (
+    <View accessibilityElementsHidden importantForAccessibility="no" style={{ width: width + spread * 18 + 12, height: height + 8 }}>
+      {shown.map((item, index) => (
+        <View
+          key={index}
+          style={{
+            position: 'absolute',
+            left: 6 + index * 18,
+            top: 4,
+            width,
+            height,
+            transform: [{ rotate: `${(index - spread / 2) * 9}deg` }],
+          }}
+        >
+          <RewardCardBack height={height} rarity={item.kind === 'badge' ? item.badge.rarity : 'LEGENDARIA'} width={width} />
+        </View>
+      ))}
+    </View>
+  );
+}
 
 /** La barra del tramo: avanza lo que movió la sesión; si hubo ascenso, se llena y vuelve a empezar. */
 function RewardTrack({
@@ -77,18 +129,33 @@ function RewardTrack({
   const style = useAnimatedStyle(() => ({
     width: `${Math.min(1, Math.max(0, fill.value)) * 100}%`,
   }));
+  // Un destello recorre la barra cuando llega: «esto se acaba de mover».
+  const shine = useSharedValue(0);
+  useEffect(() => {
+    if (reduceMotion) return;
+    shine.value = withDelay(delayMs + DURATION.slow * 2, withTiming(1, { duration: 900, easing: PREMIUM_EASING }));
+    return () => cancelAnimation(shine);
+  }, [delayMs, reduceMotion, shine]);
+  const shineStyle = useAnimatedStyle(() => ({
+    opacity: shine.value <= 0 || shine.value >= 1 ? 0 : 0.55,
+    transform: [{ translateX: -60 + shine.value * 420 }, { skewX: '-20deg' }],
+  }));
 
   return (
     <View
       accessible
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: 100, now: Math.round(Math.min(1, Math.max(0, to)) * 100) }}
-      style={{ height: spacing.sm, borderRadius: radii.full, backgroundColor: colors.surfaceHighest, overflow: 'hidden' }}
+      style={{ height: 10, borderRadius: radii.full, backgroundColor: colors.surfaceHighest, overflow: 'hidden' }}
     >
       {/* Relleno absoluto y sin hijos: animar su ancho no recoloca nada más
           (la excepción de animate-expo) y conserva el radio, que `scaleX` deformaría. */}
       <Animated.View
         style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: radii.full, backgroundColor: color }, style]}
+      />
+      <Animated.View
+        pointerEvents="none"
+        style={[{ position: 'absolute', top: 0, bottom: 0, width: 36, backgroundColor: alpha(ink.white, 0.9) }, shineStyle]}
       />
     </View>
   );
@@ -158,8 +225,9 @@ export function SessionSummary({
   }, [hasQueue]);
 
   const levelName = reward.levelAfter?.name ?? null;
-  // Neutra: en el resumen el acento es del récord y de «Seguir».
-  const trackColor = colors.textSecondary;
+  // El color de los puntos (el mismo ámbar de las insignias), no el acento: el
+  // acento del resumen es de la acción.
+  const trackColor = metricColors.record.ink;
   const distance =
     reward.leveledUp && levelName
       ? `Has subido a ${levelName}.`
@@ -167,58 +235,110 @@ export function SessionSummary({
         ? `Te faltan ${reward.pointsToNextLevel.toLocaleString('es-ES')} puntos para ${reward.nextLevel.name}.`
         : 'Has llegado al final de la senda.';
 
+  // «Seguir» y «Abrir recompensa» sólo responden una vez por toque real: un
+  // doble toque en «Seguir» navegaba dos veces y dejaba la lista montada doble.
+  const leaving = useRef(false);
+  const goOn = () => {
+    if (leaving.current) return;
+    leaving.current = true;
+    onContinue();
+  };
+  const openRewards = () => {
+    autoOpened.current = true;
+    setQueue((current) => (current.length > 0 ? current : subjects));
+  };
+
   return (
     <View style={{ gap: spacing.lg }}>
       <Card>
-        <UIText accessibilityRole="header" variant="headline">
-          Puntos de la sesión
-        </UIText>
-        {/* Sin puntos no se pinta «+0»: una cifra que cuenta hasta cero es un
-            parpadeo, no un dato. */}
-        {reward.pointsEarned > 0 ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
           <View
-            accessible
-            accessibilityLabel={`Has ganado ${reward.pointsEarned} puntos`}
-            style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs }}
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: radii.full,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: metricColors.record.tint,
+              borderWidth: 1,
+              borderColor: metricColors.record.edge,
+            }}
           >
-            <CountUpText prefix="+" style={[textVariants.display, { color: colors.text }]} value={reward.pointsEarned} />
-            <UIText tone="muted" variant="body">
-              puntos
-            </UIText>
+            <Ionicons color={metricColors.record.ink} name="sparkles" size={iconSizes.lg} />
           </View>
-        ) : (
-          <UIText tone="muted" variant="subhead">
-            Esta sesión no sumó puntos.
-          </UIText>
-        )}
+          <View style={{ flex: 1 }}>
+            <UIText accessibilityRole="header" tone="secondary" variant="subhead">
+              Puntos de la sesión
+            </UIText>
+            {/* Sin puntos no se pinta «+0»: una cifra que cuenta hasta cero es un
+                parpadeo, no un dato. */}
+            {reward.pointsEarned > 0 ? (
+              <View
+                accessible
+                accessibilityLabel={`Has ganado ${reward.pointsEarned} puntos`}
+                style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs }}
+              >
+                <CountUpText
+                  prefix="+"
+                  style={[textVariants.display, { color: colors.text, fontVariant: ['tabular-nums'] }]}
+                  value={reward.pointsEarned}
+                />
+                <UIText tone="muted" variant="body">
+                  puntos
+                </UIText>
+              </View>
+            ) : (
+              <UIText tone="muted" variant="subhead">
+                Esta sesión no sumó puntos.
+              </UIText>
+            )}
+          </View>
+        </View>
 
         <View style={{ gap: spacing.sm }}>
-          {rows.map((key) => (
-            // Sin entrada escalonada (C8.1: el único rebote/efecto de la pantalla
-            // es el sello de récord; la cifra ya cuenta).
-            <View
-              key={key}
-              style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md }}
-            >
-              <Text style={{ color: colors.textMuted, fontSize: fontSizes.md, flex: 1 }}>{BREAKDOWN_LABEL[key]}</Text>
-              <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold, fontVariant: ['tabular-nums'] }}>
-                {`+${reward.breakdown[key].toLocaleString('es-ES')}`}
-              </Text>
-            </View>
-          ))}
+          {rows.map((key, index) => {
+            const glyph = BREAKDOWN_GLYPH[key];
+            const tone = metricColors[glyph.metric];
+            return (
+              // Entran en cascada mientras la cifra cuenta: «de aquí sale».
+              <EnterUp index={index} key={key}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 36 }}>
+                  <View
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: radii.md,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: tone.tint,
+                    }}
+                  >
+                    <Ionicons color={tone.ink} name={glyph.icon} size={iconSizes.sm} />
+                  </View>
+                  <Text style={{ color: colors.textSecondary, fontSize: fontSizes.sm, flex: 1 }}>{BREAKDOWN_LABEL[key]}</Text>
+                  <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold, fontVariant: ['tabular-nums'] }}>
+                    {`+${reward.breakdown[key].toLocaleString('es-ES')}`}
+                  </Text>
+                </View>
+              </EnterUp>
+            );
+          })}
         </View>
       </Card>
 
       <Card>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: spacing.md }}>
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-            {levelName ? `Tu total · ${levelName}` : 'Tu total'}
-          </Text>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.footnote }}>Tu rango</Text>
+            <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSizes.lg, fontWeight: semibold }}>
+              {levelName ?? 'Tu total'}
+            </Text>
+          </View>
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs }}>
             <CountUpText
               delayMs={totalAt}
               from={reward.pointsBefore}
-              style={{ color: colors.text, fontSize: fontSizes.xl, fontWeight: semibold, fontVariant: ['tabular-nums'] }}
+              style={{ color: metricColors.record.ink, fontSize: fontSizes.xl, fontWeight: semibold, fontVariant: ['tabular-nums'] }}
               value={reward.pointsAfter}
             />
             <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>pts</Text>
@@ -231,7 +351,7 @@ export function SessionSummary({
           leveledUp={reward.leveledUp}
           to={reward.levelProgress}
         />
-        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{distance}</Text>
+        <Text style={{ color: colors.textSecondary, fontSize: fontSizes.sm }}>{distance}</Text>
         {session.geoVerified ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
             <Ionicons color={colors.success} name="location" size={iconSizes.sm} />
@@ -243,21 +363,21 @@ export function SessionSummary({
       {subjects.length > 0 ? (
         <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-            <Ionicons color={accentPolicy.glyph} name="gift-outline" size={iconSizes.lg} />
+            <RewardFan subjects={subjects} />
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
-                {subjects.length === 1 ? 'Tienes una recompensa' : `Tienes ${subjects.length} recompensas`}
+                {subjects.length === 1 ? 'Te espera una carta' : `Te esperan ${subjects.length} cartas`}
               </Text>
               <Text numberOfLines={2} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
                 {subjects.map((item) => (item.kind === 'badge' ? item.badge.name : `Rango ${item.level.name}`)).join(' · ')}
               </Text>
             </View>
           </View>
-          <Button icon="sparkles" label="Abrir recompensa" onPress={() => setQueue(subjects)} />
+          <Button icon="sparkles" label={subjects.length === 1 ? 'Abrir carta' : 'Abrir cartas'} onPress={openRewards} />
         </Card>
       ) : null}
 
-      <Button label="Seguir" onPress={onContinue} variant={subjects.length > 0 ? 'ghost' : 'primary'} />
+      <Button label="Seguir" onPress={goOn} variant={subjects.length > 0 ? 'ghost' : 'primary'} />
 
       <CelebrationModal onClose={() => setQueue([])} subjects={queue} />
     </View>

@@ -5,7 +5,14 @@ import { routineCardSchema } from './catalog';
 export const routineRecommendationSchema = z.object({
   rutina: routineCardSchema,
   motivo: z.string(),
-  plantilla: z.string().nullish(),
+  // El servidor envía hoy la ficha entera de la plantilla (`{ plantilla: slug,
+  // nivel, equipo… }`) y antes enviaba solo el slug. Con `z.string()` cada
+  // recomendación fallaba la validación y se descartaba: «Para ti» no salía
+  // nunca. Se aceptan las dos formas y se queda el slug.
+  plantilla: z
+    .union([z.string(), z.object({ plantilla: z.string().nullish() }).passthrough()])
+    .nullish()
+    .transform((value) => (typeof value === 'string' ? value : (value?.plantilla ?? null))),
 });
 
 /**
