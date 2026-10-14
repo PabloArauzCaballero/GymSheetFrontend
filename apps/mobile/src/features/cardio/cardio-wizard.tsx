@@ -1,43 +1,35 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Text, View } from 'react-native';
-import {
-  WEEKDAYS,
-  WEEKDAY_INITIALS,
-  WEEKDAY_NAMES,
-  buildCardioPlan,
-  defaultCardioForm,
-  maxHeartRate,
-  validateCardio,
-  zoneBounds,
-  zoneLabel,
-  type CardioForm,
-} from '@gymsheet/hooks';
-import { cardioModalityLabels } from '@gymsheet/hooks';
-import { cardioModalities } from '@gymsheet/types';
+import { useState } from 'react';
+import { View } from 'react-native';
+import Animated, { FadeIn, SlideInLeft, SlideInRight, SlideOutLeft, SlideOutRight } from 'react-native-reanimated';
+import { buildCardioPlan, defaultCardioForm, validateCardio, type CardioForm } from '@gymsheet/hooks';
 import { ApiError } from '@gymsheet/api-client';
 import { confirm } from '@gymsheet/notifications';
 import { programService } from '@/api/services';
-import { numericInputProps } from '@/components/keyboard';
 import { ScreenHeader, ScrollScreen } from '@/components/layout';
 import { BackLink } from '@/components/nav';
-import { Button, Input } from '@/components/ui';
-import { ChoiceChip } from '@/components/wizard/choice-chip';
+import { StepProgress, type FlowStep } from '@/components/step-flow';
+import { Button } from '@/components/ui';
+import { DaysPhase, IntensityPhase, MinutesPhase, ModalityPhase, ProgressionPhase, SummaryPhase } from '@/features/cardio/cardio-phases';
+import { useReduceMotion } from '@/notifications/use-reduce-motion';
 import { notify } from '@/notifications';
-import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
+import { spacing } from '@/theme';
 
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <View style={{ gap: spacing.sm }}>
-      <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, fontWeight: semibold }}>{title}</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>{children}</View>
-    </View>
-  );
-}
+const STEPS: readonly FlowStep[] = [
+  { label: 'Cardio', icon: 'walk' },
+  { label: 'Días', icon: 'calendar' },
+  { label: 'Tiempo', icon: 'timer' },
+  { label: 'Esfuerzo', icon: 'speedometer' },
+  { label: 'Subida', icon: 'trending-up' },
+  { label: 'Listo', icon: 'checkmark-circle' },
+];
+const PHASES = [ModalityPhase, DaysPhase, MinutesPhase, IntensityPhase, ProgressionPhase, SummaryPhase];
+/** Campos que valida cada fase antes de dejar avanzar. */
+const PHASE_FIELDS: readonly (readonly ('dias' | 'minutos' | 'fcReposo' | 'fcMax')[])[] = [[], ['dias'], ['minutos'], ['fcReposo', 'fcMax'], [], []];
 
 /**
- * Asistente corto de cardio (RF-17): modalidad → días → minutos → intensidad (zonas de pulso
+ * Asistente de cardio por fases (RF-17): modalidad → días → minutos → intensidad (zonas de pulso
  * con Karvonen, o sensación 1–10) → progresión. Crea el plan y lo activa en el carril de cardio,
  * que convive con el de pesas.
  */
@@ -45,13 +37,12 @@ export function CardioWizardScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<CardioForm>({ ...defaultCardioForm, dias: [1, 3, 5] });
-  const [submitted, setSubmitted] = useState(false);
+  const [phase, setPhase] = useState(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const [showErrors, setShowErrors] = useState(false);
+  const reduceMotion = useReduceMotion();
   const errors = validateCardio(form);
   const set = (patch: Partial<CardioForm>) => setForm((current) => ({ ...current, ...patch }));
-
-  const hrMax = Number(form.fcMax) || maxHeartRate(30);
-  const hrRest = Number(form.fcReposo) || null;
-  const bounds = useMemo(() => zoneBounds(form.zona, hrMax, hrRest), [form.zona, hrMax, hrRest]);
 
   const activate = useMutation({
     mutationFn: (replace: boolean) =>
@@ -76,96 +67,48 @@ export function CardioWizardScreen() {
     },
   });
 
+  const Phase = PHASES[phase] ?? SummaryPhase;
+  const last = phase === STEPS.length - 1;
+  const go = (to: number) => {
+    setDirection(to > phase ? 1 : -1);
+    setShowErrors(false);
+    setPhase(to);
+  };
+  const next = () => {
+    if ((PHASE_FIELDS[phase] ?? []).some((field) => errors[field])) {
+      setShowErrors(true);
+      return;
+    }
+    go(phase + 1);
+  };
+  const enter = reduceMotion ? FadeIn.duration(0) : direction === 1 ? SlideInRight.duration(260) : SlideInLeft.duration(260);
+  const exit = reduceMotion ? undefined : direction === 1 ? SlideOutLeft.duration(200) : SlideOutRight.duration(200);
+
   return (
     <ScrollScreen>
       <BackLink />
-      <ScreenHeader detail subtitle="Convive con tu programa de pesas." title="Plan de cardio" />
-
-      <Group title="Modalidad">
-        {cardioModalities.map((modality) => (
-          <ChoiceChip
-            key={modality}
-            label={cardioModalityLabels[modality]}
-            onSelect={() => set({ modalidad: modality })}
-            selected={form.modalidad === modality}
-            testID={`modality-${modality}`}
+      <ScreenHeader detail subtitle={`Paso ${phase + 1} de ${STEPS.length}`} title="Plan de cardio" />
+      <StepProgress current={phase} steps={STEPS} />
+      <Animated.View entering={enter} exiting={exit} key={phase}>
+        <Phase errors={errors} form={form} set={set} showErrors={showErrors} />
+      </Animated.View>
+      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+        {phase > 0 ? <Button icon="arrow-back" label="Atrás" onPress={() => go(phase - 1)} style={{ flex: 1 }} variant="ghost" /> : null}
+        {last ? (
+          <Button
+            icon="checkmark"
+            label="Activar plan de cardio"
+            loading={activate.isPending}
+            onPress={() => {
+              setShowErrors(true);
+              if (Object.keys(errors).length === 0) activate.mutate(false);
+            }}
+            style={{ flex: 2 }}
           />
-        ))}
-      </Group>
-
-      <Group title="Días">
-        {WEEKDAYS.map((day) => (
-          <ChoiceChip
-            accessibilityLabel={WEEKDAY_NAMES[day]}
-            key={day}
-            label={WEEKDAY_INITIALS[day]}
-            onSelect={() => set({ dias: form.dias.includes(day) ? form.dias.filter((d) => d !== day) : [...form.dias, day] })}
-            selected={form.dias.includes(day)}
-            testID={`cardio-day-${day}`}
-          />
-        ))}
-      </Group>
-      {submitted && errors.dias ? <Text style={{ color: colors.danger, fontSize: fontSizes.sm }}>{errors.dias}</Text> : null}
-
-      <Input
-        {...numericInputProps}
-        error={submitted ? errors.minutos : undefined}
-        keyboardType="number-pad"
-        label="Minutos por sesión"
-        onChangeText={(minutos) => set({ minutos })}
-        testID="cardio-target-minutes"
-        value={form.minutos}
-      />
-
-      <Group title="Intensidad">
-        <ChoiceChip label="Por zonas de pulso" onSelect={() => set({ modoIntensidad: 'ZONA_FC' })} selected={form.modoIntensidad === 'ZONA_FC'} testID="intensity-zones" />
-        <ChoiceChip label="Por sensación 1–10" onSelect={() => set({ modoIntensidad: 'RPE' })} selected={form.modoIntensidad === 'RPE'} testID="intensity-rpe" />
-      </Group>
-
-      {form.modoIntensidad === 'ZONA_FC' ? (
-        <View style={{ gap: spacing.md, borderRadius: radii.lg, backgroundColor: colors.surfaceLow, padding: spacing.md }}>
-          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            <View style={{ flex: 1 }}>
-              <Input {...numericInputProps} error={submitted ? errors.fcReposo : undefined} keyboardType="number-pad" label="FC en reposo" onChangeText={(fcReposo) => set({ fcReposo })} testID="hr-rest" value={form.fcReposo} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Input {...numericInputProps} error={submitted ? errors.fcMax : undefined} keyboardType="number-pad" label="FC máxima" onChangeText={(fcMax) => set({ fcMax })} placeholder={String(maxHeartRate(30))} testID="hr-max" value={form.fcMax} />
-            </View>
-          </View>
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-            La FC máxima por defecto es 208 − 0,7 × edad (para 30 años: {maxHeartRate(30)}). Puedes cambiarla.
-          </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-            {[1, 2, 3, 4, 5].map((zone) => (
-              <ChoiceChip accessibilityLabel={zoneLabel(zone)} key={zone} label={`Z${zone}`} onSelect={() => set({ zona: zone })} selected={form.zona === zone} testID={`zone-${zone}`} />
-            ))}
-          </View>
-          <Text accessibilityLiveRegion="polite" style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }} testID="zone-bounds">
-            {zoneLabel(form.zona)}: {bounds.minBpm}–{bounds.maxBpm} lpm
-          </Text>
-        </View>
-      ) : (
-        <Group title="Esfuerzo objetivo (1 muy suave · 10 máximo)">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rpe) => (
-            <ChoiceChip accessibilityLabel={`Esfuerzo ${rpe}`} key={rpe} label={String(rpe)} minWidth={44} onSelect={() => set({ rpe })} selected={form.rpe === rpe} testID={`rpe-${rpe}`} />
-          ))}
-        </Group>
-      )}
-
-      <Group title="Progresión semanal">
-        {[0, 5, 10].map((pct) => (
-          <ChoiceChip accessibilityLabel={`${pct} por ciento por semana`} key={pct} label={`${pct} %`} onSelect={() => set({ progresion: pct })} selected={form.progresion === pct} testID={`progression-${pct}`} />
-        ))}
-      </Group>
-
-      <Button
-        label="Activar plan de cardio"
-        loading={activate.isPending}
-        onPress={() => {
-          setSubmitted(true);
-          if (Object.keys(errors).length === 0) activate.mutate(false);
-        }}
-      />
+        ) : (
+          <Button icon="arrow-forward" label="Siguiente" onPress={next} style={{ flex: 2 }} />
+        )}
+      </View>
     </ScrollScreen>
   );
 }
