@@ -139,6 +139,8 @@ export function RoutineCardView({ card }: { card: RoutineCard }) {
       style={{
         borderRadius: radii.xxl,
         borderCurve: 'continuous',
+        borderWidth: 1,
+        borderColor: colors.borderSubtle,
         backgroundColor: colors.surfaceLow,
         boxShadow: shadows.card,
       }}
@@ -201,8 +203,11 @@ export function RoutineCardView({ card }: { card: RoutineCard }) {
             alignItems: 'center',
             gap: spacing.smd,
             minHeight: 44 + spacing.lg,
-            paddingHorizontal: cardPadding,
+            marginTop: spacing.md,
+            marginHorizontal: cardPadding,
             paddingVertical: spacing.md,
+            borderTopWidth: 1,
+            borderTopColor: colors.borderSubtle,
           }}
         >
           <PersonAvatar
@@ -220,7 +225,18 @@ export function RoutineCardView({ card }: { card: RoutineCard }) {
               {showsCommunity ? socialLine(card) : card.visibilidad === 'PUBLIC' ? 'Pública' : 'Solo tú la ves'}
             </Text>
           </View>
-          <Ionicons color={colors.textMuted} name="chevron-forward" size={iconSizes.sm} />
+          <View
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: radii.full,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: colors.surfaceHigh,
+            }}
+          >
+            <Ionicons color={colors.textSecondary} name="chevron-forward" size={iconSizes.sm - 2} />
+          </View>
         </View>
     </RoutineLink>
   );

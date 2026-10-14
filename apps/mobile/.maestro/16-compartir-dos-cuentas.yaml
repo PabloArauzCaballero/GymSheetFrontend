@@ -11,7 +11,7 @@ env:
 # RF-13 · p01: A busca a B (sin email).
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Plan para compartir' }
+    env: { TAB: 'Privadas', NAME: 'Plan para compartir' }
 - scrollUntilVisible:
     element: 'Compartir con…'
     centerElement: true
@@ -41,7 +41,7 @@ env:
 - extendedWaitUntil:
     visible: 'Crear rutina'
     timeout: 60000
-- tapOn: 'Pestaña Mías'
+- tapOn: 'Pestaña Privadas'
 - tapOn:
     id: 'chip-shared'
 - extendedWaitUntil:
@@ -57,7 +57,7 @@ env:
 - takeScreenshot: RF-13_p05_detalle-bloqueado-antes-de-aceptar_ios_oscuro
 - tapOn: 'Ir a mis invitaciones'
 # RF-13 · p06: aceptar → ve la rutina completa.
-- tapOn: 'Pestaña Mías'
+- tapOn: 'Pestaña Privadas'
 - tapOn:
     id: 'chip-shared'
 - tapOn: 'Aceptar'
@@ -73,7 +73,7 @@ env:
     env: { EMAIL: 'athlete.mock@gymsheet.local', FIRST: 'Athlete' }
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Plan para compartir' }
+    env: { TAB: 'Privadas', NAME: 'Plan para compartir' }
 - scrollUntilVisible:
     element: 'Aceptó'
     centerElement: true

@@ -61,8 +61,8 @@ env:
     timeout: 30000
 - takeScreenshot: RF-01_p05_pestana-repp_ios_oscuro
 
-# RF-01 · p06: Mías › Creadas por mí.
-- tapOn: 'Pestaña Mías'
+# RF-01 · p06: Privadas › Creadas por mí.
+- tapOn: 'Pestaña Privadas'
 - assertVisible: 'Creadas por mí'
 - extendedWaitUntil:
     visible: '[0-9]+ rutinas.*'

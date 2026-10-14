@@ -1,5 +1,5 @@
 # Abre el detalle de una rutina buscándola por nombre en una pestaña del catálogo.
-# Variables: TAB (Públicas|REPP|Mías), NAME (texto a buscar y nombre exacto de la tarjeta).
+# Variables: TAB (Públicas|Recomendadas|Privadas), NAME (texto a buscar y nombre exacto de la tarjeta).
 appId: app.gymsheet.mobile
 ---
 # Sale de donde esté (resumen, detalle de una corrida anterior…) y vuelve a la lista de Rutinas.

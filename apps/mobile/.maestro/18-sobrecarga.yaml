@@ -11,7 +11,7 @@ env:
 - runFlow: login-as.subflow.yaml
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Empuje 4 días' }
+    env: { TAB: 'Privadas', NAME: 'Empuje 4 días' }
 - tapOn: 'Activar programa'
 - extendedWaitUntil:
     visible: 'Paso 1 de 3.*'
@@ -45,7 +45,7 @@ env:
 # La sesión: lunes (Empuje). Se muestra el peso sugerido y se registran 3×12 a 60 kg.
 - runFlow:
     file: start-day.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Empuje 4 días', DIA: 'lunes' }
+    env: { TAB: 'Privadas', NAME: 'Empuje 4 días', DIA: 'lunes' }
 - extendedWaitUntil:
     visible: 'Sugerido: 60 kg × 8–12'
     timeout: 30000
@@ -74,7 +74,7 @@ env:
 # RF-15 · p03: la siguiente sesión sugiere 62,5 kg × 8–12.
 - runFlow:
     file: start-day.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Empuje 4 días', DIA: 'lunes' }
+    env: { TAB: 'Privadas', NAME: 'Empuje 4 días', DIA: 'lunes' }
 - extendedWaitUntil:
     visible: 'Sugerido: 62,5 kg × 8–12'
     timeout: 30000

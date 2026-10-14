@@ -10,7 +10,7 @@ env:
 - runFlow: login-as.subflow.yaml
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Pierna 3 días' }
+    env: { TAB: 'Privadas', NAME: 'Pierna 3 días' }
 - tapOn: 'Activar programa'
 - tapOn: 'Siguiente'
 - tapOn:
