@@ -13,7 +13,7 @@ import { Text } from '@/components/text';
 import { GOAL_LABEL } from '@/lib/format';
 import { RoutineCover } from '@/features/routine-catalog/routine-cover';
 import { MediaChip } from '@/features/routine-catalog/media-chip';
-import { alpha, cardPadding, colors, coverAspect, iconSizes, ink, radii, ratingStar, shadows, spacing } from '@/theme';
+import { alpha, cardPadding, colors, iconSizes, ink, radii, ratingStar, shadows, spacing } from '@/theme';
 
 const AVATAR = 36;
 
@@ -155,7 +155,7 @@ export function RoutineCardView({ card }: { card: RoutineCard }) {
               overflow: 'hidden',
             }}
           >
-            <RoutineCover goal={card.objetivo} scrim="soft" style={{ aspectRatio: coverAspect }} uri={card.portadaUrl}>
+            <RoutineCover goal={card.objetivo} scrim="soft" style={{ aspectRatio: 1.85 }} uri={card.portadaUrl}>
               {card.objetivo ? (
                 <View style={{ position: 'absolute', top: spacing.md, left: spacing.md }}>
                   <MediaChip label={GOAL_LABEL[card.objetivo]} />
@@ -186,15 +186,14 @@ export function RoutineCardView({ card }: { card: RoutineCard }) {
           </View>
         </Link.AppleZoom>
 
-        <View style={{ paddingHorizontal: cardPadding, paddingTop: spacing.md, gap: spacing.smd }}>
-          <Text numberOfLines={2} variant="title">
+        <View style={{ paddingHorizontal: cardPadding, paddingTop: spacing.mdl, gap: spacing.md }}>
+          <Text numberOfLines={2} style={{ fontSize: 24, lineHeight: 29, letterSpacing: -0.4 }} variant="title">
             {card.nombre}
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
             <MetaPill icon="calendar-outline" label={`${card.diasPorSemana} ${card.diasPorSemana === 1 ? 'día' : 'días'}/sem`} />
             {card.duracionSemanas ? <MetaPill icon="time-outline" label={`${card.duracionSemanas} semanas`} /> : null}
-            {showsCommunity && card.copias > 0 ? <MetaPill icon="download-outline" label={compactCount(card.copias)} /> : null}
-          </View>
+                      </View>
         </View>
 
         <View
@@ -255,7 +254,7 @@ export function RoutineCardSkeleton() {
         overflow: 'hidden',
       }}
     >
-      <View style={{ aspectRatio: coverAspect }}>
+      <View style={{ aspectRatio: 1.85 }}>
         <Skeleton height="100%" radius={0} />
       </View>
       <View
