@@ -1064,6 +1064,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
           exercisesDone={exercisesDone}
           exercisesTotal={ordered.length}
           minutes={minutes}
+          muscles={ordered.filter((item) => item.series.length > 0 && item.ejercicio).map((item) => item.ejercicio!)}
           omitted={omittedLines}
           pending={pendingLines}
           sets={totalSets}

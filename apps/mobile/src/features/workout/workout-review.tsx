@@ -14,7 +14,16 @@ import { countSets, volumeOf } from '@/features/workout/use-workout-session';
 import { buildFlowBlocks, progressLabel, type FlowBlock } from '@/features/workout/workout-flow';
 import { WORKOUT_LABEL, WORKOUT_TONE, formatDuration, relativeDay } from '@/lib/format';
 import { routes } from '@/lib/routes';
+import { SessionMuscles } from '@/features/body-map/session-muscles';
+import { FlowNode, type NodeState } from '@/features/workout/review-flow';
 import { spacing } from '@/theme';
+
+/** ✓ si todo lo prescrito se hizo, aro si quedó a medias, tenue si no se tocó. */
+function stateOf(sources: readonly Workout['ejercicios'][number][]): NodeState {
+  const done = sources.filter((source) => source.series.length >= (source.seriesObjetivo ?? 1)).length;
+  if (done === sources.length) return 'done';
+  return sources.some((source) => source.series.length > 0) ? 'partial' : 'empty';
+}
 
 /**
  * Una sesión ya cerrada (o cancelada), para repasarla: todos los ejercicios
@@ -78,26 +87,37 @@ export function WorkoutReview({ data, onRefresh, refreshing }: { data: Workout; 
         </Text>
       ) : null}
 
-      <View style={{ gap: spacing.sm }}>
-        {blocks.map((block) => {
+      <View>
+        {blocks.map((block, index) => {
+          const state = stateOf(block.items.map((item) => item.source));
+          const key = block.items.map((item) => item.id).join('+');
           if (block.kind === 'single') {
             const item = block.items[0];
-            return item ? renderItem(block, item) : null;
+            return item ? (
+              <FlowNode index={index} key={key} state={state} total={blocks.length}>
+                {renderItem(block, item)}
+              </FlowNode>
+            ) : null;
           }
           return (
-            <GroupBlock
-              key={block.items.map((item) => item.id).join('+')}
-              label={blockName(block)}
-              restSeconds={block.restAfter}
-              rounds={block.rounds ?? 1}
-              testID={`workout-block-${block.label}`}
-              transition={transitionLabel(block.between)}
-            >
-              {block.items.map((item) => renderItem(block, item))}
-            </GroupBlock>
+            <FlowNode branch index={index} key={key} state={state} total={blocks.length}>
+              <GroupBlock
+                label={blockName(block)}
+                restSeconds={block.restAfter}
+                rounds={block.rounds ?? 1}
+                testID={`workout-block-${block.label}`}
+                transition={transitionLabel(block.between)}
+              >
+                {block.items.map((item) => renderItem(block, item))}
+              </GroupBlock>
+            </FlowNode>
           );
         })}
       </View>
+
+      <SessionMuscles
+        exercises={ordered.filter((item) => item.series.length > 0 && item.ejercicio).map((item) => item.ejercicio!)}
+      />
     </ScrollScreen>
   );
 }
