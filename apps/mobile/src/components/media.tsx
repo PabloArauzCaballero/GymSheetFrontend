@@ -1,8 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { VideoView, useVideoPlayer } from 'expo-video';
-import { useEffect, useState } from 'react';
-import { Pressable, Text, useWindowDimensions, View } from 'react-native';
+import { useState } from 'react';
+import { Text, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { useReducedMotion } from 'react-native-reanimated';
 import {
@@ -11,25 +10,20 @@ import {
   type ProfileGender,
 } from '@gymsheet/domain';
 import type { Exercise, ExerciseMedia } from '@gymsheet/types';
+import { ExerciseVideo } from '@/components/exercise-video';
 import { Shimmer } from '@/components/shimmer';
 import { MuscleHero } from '@/features/body-map/muscle-hero';
 import { zoneMuscles } from '@/features/body-map/zones';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  accentContrast,
-  alpha,
   colors,
   fontFamilies,
   fontSizes,
-  iconSizes,
   motion,
   muscleGradientDefault,
   muscleGradients,
-  onMedia,
-  overlay,
   placeholderInk,
   radii,
-  semibold,
   spacing,
 } from '@/theme';
 
@@ -297,9 +291,6 @@ export function ExerciseImage({
   );
 }
 
-/** Lado máximo del reproductor. El clip es 1:1, y más ancho empuja los datos fuera de pantalla. */
-const VIDEO_MAX_SIDE = 320;
-
 /**
  * La demostración del ejercicio en la ficha: vídeo si lo hay, lámina si no.
  *
@@ -318,130 +309,12 @@ export function ExerciseDemo({
   // MP4 y no WebM: AVPlayer de iOS no decodifica WebM, así que el formato que
   // ahorra bytes en la web aquí dejaría la ficha en negro.
   if (!video?.mp4Url) return <ExerciseImage exercise={exercise} size="hero" />;
-  return <ExerciseVideo altText={video.altText} exercise={exercise} poster={video.poster} uri={video.mp4Url} />;
-}
-
-/**
- * Reproductor de una demostración.
- *
- * Empieza en el póster y **no descarga el vídeo hasta que se pulsa**: la fuente
- * del reproductor es nula mientras nadie lo pide, que es la única forma de que
- * abrir una ficha con datos móviles no cueste 1,9 MB. Por lo mismo no hay
- * reproducción automática, lo que además respeta «reducir movimiento» sin
- * necesidad de una rama aparte. En bucle y en silencio: es un gesto técnico
- * repetido, no un vídeo que contar.
- */
-function ExerciseVideo({
-  uri,
-  poster,
-  altText,
-  exercise,
-}: {
-  uri: string;
-  poster: string | null;
-  altText: string;
-  /** Sin póster, la lámina del ejercicio hace de portada: nunca un cuadro vacío. */
-  exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular'>;
-}) {
-  const { width } = useWindowDimensions();
-  // A todo el ancho y apaisado, como portada: un cuadrado estrecho y centrado se leía como «falta algo».
-  const side = Math.min(width - spacing.lg * 2, VIDEO_MAX_SIDE * 1.6);
-  const [playing, setPlaying] = useState(false);
-  // `useVideoPlayer` memoriza por fuente: con `null` no hay descarga ninguna, y
-  // al pasar a la URL se crea el reproductor ya con el clip pedido.
-  const player = useVideoPlayer(playing ? uri : null, (instance) => {
-    instance.loop = true;
-    instance.muted = true;
-  });
-
-  useEffect(() => {
-    if (playing) player.play();
-  }, [playing, player]);
-
-  const frame = {
-    width: side,
-    height: Math.round(side * 0.75),
-    alignSelf: 'center' as const,
-    borderRadius: radii.xl,
-    borderCurve: 'continuous' as const,
-    overflow: 'hidden' as const,
-    backgroundColor: colors.surfaceHigh,
-  };
-
-  if (playing) {
-    return (
-      <View style={frame}>
-        <VideoView
-          accessibilityLabel={altText}
-          contentFit="contain"
-          nativeControls
-          player={player}
-          style={{ width: '100%', height: '100%' }}
-        />
-      </View>
-    );
-  }
-
   return (
-    <Pressable
-      accessibilityLabel={`Reproducir demostración. ${altText}`}
-      accessibilityRole="button"
-      onPress={() => setPlaying(true)}
-      style={({ pressed }) => ({ ...frame, transform: [{ scale: pressed ? 0.98 : 1 }] })}
-    >
-      {poster ? (
-        <Image
-          accessibilityElementsHidden
-          cachePolicy="memory-disk"
-          contentFit="cover"
-          importantForAccessibility="no-hide-descendants"
-          source={{ uri: poster }}
-          style={{ width: '100%', height: '100%' }}
-          transition={200}
-        />
-      ) : (
-        <ExerciseImage exercise={exercise} rounded={0} size="fill" />
-      )}
-      {/* Velo para que el botón se lea sobre cualquier foto. */}
-      <LinearGradient
-        colors={[overlay.clearDark, overlay.scrimFaint, overlay.scrimSoft]}
-        pointerEvents="none"
-        style={{ position: 'absolute', inset: 0 }}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          inset: 0,
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: spacing.xs,
-        }}
-      >
-        <View
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: radii.full,
-            backgroundColor: colors.volt,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 3,
-            borderColor: overlay.glassStrong,
-            boxShadow: `0 8px 24px ${alpha(colors.volt, 0.45)}`,
-          }}
-        >
-          <Ionicons color={accentContrast()} name="play" size={iconSizes.lg} style={{ marginLeft: 3 }} />
-        </View>
-        <Text
-          style={{
-            color: onMedia.text,
-            fontSize: fontSizes.sm,
-            fontWeight: semibold,
-          }}
-        >
-          Ver la técnica
-        </Text>
-      </View>
-    </Pressable>
+    <ExerciseVideo
+      altText={video.altText}
+      fallback={<ExerciseImage exercise={exercise} rounded={0} size="fill" />}
+      poster={video.poster}
+      uri={video.mp4Url}
+    />
   );
 }
