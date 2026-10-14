@@ -318,6 +318,7 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
                   label={bodyPartLabelEs(group.bodyPart)}
                   onPress={() => setBodyPart(group.bodyPart)}
                   total={group.total}
+                  zone={group.bodyPart}
                 />
               ))}
             </Grid>
@@ -339,6 +340,7 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
                 setView('search');
               }}
               total={entry.total}
+              zone={entry.targetMuscle}
             />
           ))}
         </Grid>

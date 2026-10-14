@@ -1,8 +1,9 @@
 import { Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { EnterUp, PressableScale } from '@/components/motion';
-import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+import { MuscleHero } from '@/features/body-map';
+import { accentPolicy, alpha, colors, fontSizes, iconSizes, radii, semibold, shadows, spacing } from '@/theme';
 
 /**
  * Icon per body part.
@@ -32,6 +33,44 @@ const BODY_PART_ICON: ReadonlyArray<readonly [RegExp, keyof typeof Ionicons.glyp
 
 const FALLBACK_ICON: keyof typeof Ionicons.glyphMap = 'fitness-outline';
 
+/**
+ * Zona o músculo del catálogo → músculos de la lámina anatómica. La tarjeta
+ * enseña el cuerpo con esa zona encendida: es la respuesta más rápida a «¿es
+ * esta?» y no depende de la foto que mande el servidor (en TEST la «imagen» de
+ * cada zona es un vídeo, que no se puede pintar como imagen y dejaba la placa
+ * en blanco). Sin coincidencia, la tarjeta usa el icono.
+ */
+const ZONE_MUSCLES: ReadonlyArray<readonly [RegExp, readonly string[]]> = [
+  [/glute|gl[uú]teo/i, ['GLUTEUS_MAXIMUS', 'GLUTEUS_MEDIUS']],
+  [/quad|cu[aá]driceps/i, ['QUADRICEPS']],
+  [/hamstring|isquio|femoral/i, ['HAMSTRINGS']],
+  [/adductor|aductor/i, ['ADDUCTORS']],
+  [/abductor/i, ['ABDUCTORS']],
+  [/calf|calves|lower leg|pantorrilla|gemelo/i, ['GASTROCNEMIUS', 'SOLEUS']],
+  [/upper leg|pierna|tren inferior|leg/i, ['QUADRICEPS', 'HAMSTRINGS', 'ADDUCTORS', 'GLUTEUS_MAXIMUS']],
+  [/bicep/i, ['BICEPS_BRACHII', 'BRACHIALIS']],
+  [/tricep/i, ['TRICEPS_BRACHII']],
+  [/forearm|lower arm|antebrazo/i, ['FOREARM_FLEXORS', 'FOREARM_EXTENSORS', 'BRACHIORADIALIS']],
+  [/upper arm|brazo/i, ['BICEPS_BRACHII', 'TRICEPS_BRACHII', 'BRACHIALIS']],
+  [/lat|dorsal/i, ['LATISSIMUS_DORSI']],
+  [/trap/i, ['TRAPEZIUS']],
+  [/spine|erector|lumbar/i, ['ERECTOR_SPINAE']],
+  [/upper back|romboid/i, ['RHOMBOIDS', 'TRAPEZIUS', 'TERES_MAJOR', 'INFRASPINATUS']],
+  [/back|espalda|cadena posterior|posterior/i, ['LATISSIMUS_DORSI', 'TRAPEZIUS', 'ERECTOR_SPINAE', 'RHOMBOIDS']],
+  [/serratus|serrato/i, ['SERRATUS_ANTERIOR']],
+  [/chest|pecho|pector/i, ['PECTORALIS_MAJOR', 'PECTORALIS_MINOR']],
+  [/abs\b|waist|core|abdom|cintura/i, ['RECTUS_ABDOMINIS', 'OBLIQUES']],
+  [/delt|shoulder|hombro/i, ['DELTOID']],
+  [/levator|neck|cuello/i, ['LEVATOR_SCAPULAE', 'STERNOCLEIDOMASTOID']],
+  [/tren superior|upper/i, ['PECTORALIS_MAJOR', 'DELTOID', 'BICEPS_BRACHII', 'LATISSIMUS_DORSI']],
+];
+
+export function zoneMuscles(name: string): readonly string[] | null {
+  return ZONE_MUSCLES.find(([pattern]) => pattern.test(name))?.[1] ?? null;
+}
+
+const TILE_ART = 128;
+
 /** `upper arms` → `Upper arms`. The catalogue stores them lowercase. */
 export function titleCase(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -51,19 +90,23 @@ export function iconFor(bodyPart: string): keyof typeof Ionicons.glyphMap {
  */
 export function GridTile({
   icon,
-  imageUrl,
   index,
   label,
   onPress,
   total,
+  zone,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
+  /** Se ignora: el servidor puede mandar un vídeo aquí. La lámina sale de `zone`. */
   imageUrl?: string | null;
   index: number;
   label: string;
   onPress: () => void;
   total: number;
+  /** Nombre de la zona o músculo en el catálogo, para encender su silueta. */
+  zone?: string;
 }) {
+  const muscles = zone ? zoneMuscles(zone) : null;
   return (
     <EnterUp index={index} style={{ width: '48%' }}>
       <PressableScale
@@ -71,49 +114,49 @@ export function GridTile({
         onPress={onPress}
         style={{
           overflow: 'hidden',
-          borderRadius: radii.lg,
-          borderWidth: 1,
-          borderColor: colors.borderSubtle,
-          borderTopColor: colors.border,
-          backgroundColor: colors.surface,
+          borderRadius: radii.xl,
+          borderCurve: 'continuous',
+          backgroundColor: colors.surfaceLow,
+          boxShadow: shadows.card,
         }}
       >
-        {/* The plate, not a glyph. These illustrations show a body with the
-            worked muscle picked out in red, which is the fastest possible
-            answer to "is this the one I want?" — and it needs no translation.
-            The icon stays as the fallback for a group the catalogue has no
-            artwork for, so the grid never renders a hole. */}
-        <View
-          style={{
-            height: 116,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: imageUrl ? colors.plate : colors.surfaceHigh,
-          }}
-        >
-          {imageUrl ? (
-            <Image
-              accessibilityIgnoresInvertColors
-              contentFit="contain"
-              source={{ uri: imageUrl }}
-              style={{ width: '100%', height: '100%' }}
-              transition={180}
-            />
+        {/* La figura con la zona encendida: se elige con el ojo, no leyendo. */}
+        <View style={{ height: TILE_ART, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceLowest }}>
+          {muscles ? (
+            <View style={{ alignSelf: 'stretch' }}>
+              <MuscleHero codes={muscles} height={TILE_ART} padding={1.35} />
+            </View>
           ) : (
-            <Ionicons color={colors.textMuted} name={icon} size={iconSizes.xl} />
+            <View
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: radii.full,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: alpha(colors.volt, 0.16),
+              }}
+            >
+              <Ionicons color={colors.accentInk} name={icon} size={iconSizes.lg} />
+            </View>
           )}
+          <LinearGradient
+            colors={[alpha(colors.surfaceLow, 0), colors.surfaceLow]}
+            pointerEvents="none"
+            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 28 }}
+          />
         </View>
 
-        <View style={{ gap: 2, padding: spacing.md }}>
-          <Text
-            numberOfLines={2}
-            style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: '700' }}
-          >
-            {label}
-          </Text>
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-            {`${total} ${total === 1 ? 'ejercicio' : 'ejercicios'}`}
-          </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.md }}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: '700', letterSpacing: -0.2 }}>
+              {label}
+            </Text>
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, fontVariant: ['tabular-nums'] }}>
+              {`${total} ${total === 1 ? 'ejercicio' : 'ejercicios'}`}
+            </Text>
+          </View>
+          <Ionicons color={colors.textMuted} name="chevron-forward" size={iconSizes.sm} />
         </View>
       </PressableScale>
     </EnterUp>
