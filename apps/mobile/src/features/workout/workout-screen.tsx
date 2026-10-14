@@ -174,12 +174,12 @@ export function WorkoutScreen() {
     ? { pesoKg: previousLastRaw.pesoKg, repeticiones: previousLastRaw.repeticiones }
     : previousTop;
   const previousHold = reference && currentTimed ? longestTimedSet(reference.exercise) : null;
-  const suggested = loads?.items.find((entry) => entry.ejercicioId === current?.ejercicio?.id);
+  const suggested = loads.items.find((entry) => entry.ejercicioId === current?.ejercicio?.id);
 
   // El borrador espera el historial para dar prioridad a la carga más reciente:
   // serie de hoy, último registro anterior, sugerencia del plan y objetivo.
   useEffect(() => {
-    if (!current || draftFor === current.id || history.isPending) return;
+    if (!current || draftFor === current.id || history.isPending || loads.isPending) return;
     const last = [...strengthSets(current)].sort((a, b) => b.numeroSerie - a.numeroSerie)[0];
     const weight = last?.pesoKg ?? previousLast?.pesoKg ?? suggested?.pesoSugeridoKg ?? current.pesoObjetivoKg;
     const reps = last?.repeticiones ?? previousLast?.repeticiones ?? current.repsMax ?? current.repsMin;
@@ -193,7 +193,7 @@ export function WorkoutScreen() {
       duracionSeg: seconds != null ? String(seconds) : '',
     });
     setDraftFor(current.id);
-  }, [current, draftFor, history.isPending, previousLast, previousHold, suggested]);
+  }, [current, draftFor, history.isPending, loads.isPending, previousLast, previousHold, suggested]);
 
   // El fondo se anima mientras hay sesión abierta y se calma al cerrarla.
   const setAmbient = useAmbientStore((state) => state.setIntensity);
