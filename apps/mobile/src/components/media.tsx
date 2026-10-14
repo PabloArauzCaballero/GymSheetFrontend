@@ -12,8 +12,12 @@ import {
 } from '@gymsheet/domain';
 import type { Exercise, ExerciseMedia } from '@gymsheet/types';
 import { Shimmer } from '@/components/shimmer';
+import { MuscleHero } from '@/features/body-map/muscle-hero';
+import { zoneMuscles } from '@/features/body-map/zones';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
+  accentContrast,
+  alpha,
   colors,
   fontFamilies,
   fontSizes,
@@ -21,6 +25,8 @@ import {
   motion,
   muscleGradientDefault,
   muscleGradients,
+  onMedia,
+  overlay,
   placeholderInk,
   radii,
   semibold,
@@ -130,6 +136,10 @@ function ExercisePlaceholder({
   /** Lado aproximado en pt: decide el tamaño de las iniciales. */
   side: number;
 }) {
+  // En marcos grandes (portada del entreno, ficha), sin foto se enseña el
+  // cuerpo con el músculo que trabaja encendido: dice más que unas iniciales.
+  const muscles = side >= 96 ? (zoneMuscles(exercise.nombre) ?? zoneMuscles(exercise.grupoMuscular ?? '')) : null;
+  if (muscles) return <AnatomyCover muscles={muscles} />;
   const index = groupIndex(exercise.grupoMuscular);
   const [from, to] = muscleGradients[index] ?? muscleGradientDefault;
   return (
@@ -160,6 +170,19 @@ function ExercisePlaceholder({
         {exerciseInitials(exercise.nombre)}
       </Text>
     </LinearGradient>
+  );
+}
+
+/** La lámina anatómica a todo el marco, midiendo su alto (el marco puede ser `fill`). */
+function AnatomyCover({ muscles }: { muscles: readonly string[] }) {
+  const [height, setHeight] = useState(0);
+  return (
+    <View
+      onLayout={(event) => setHeight(Math.round(event.nativeEvent.layout.height))}
+      style={{ width: '100%', height: '100%', backgroundColor: colors.surfaceLowest }}
+    >
+      {height > 0 ? <MuscleHero codes={muscles} height={height} padding={1.25} /> : null}
+    </View>
   );
 }
 
@@ -292,7 +315,7 @@ export function ExerciseDemo({
   // MP4 y no WebM: AVPlayer de iOS no decodifica WebM, así que el formato que
   // ahorra bytes en la web aquí dejaría la ficha en negro.
   if (!video?.mp4Url) return <ExerciseImage exercise={exercise} size="hero" />;
-  return <ExerciseVideo altText={video.altText} poster={video.poster} uri={video.mp4Url} />;
+  return <ExerciseVideo altText={video.altText} exercise={exercise} poster={video.poster} uri={video.mp4Url} />;
 }
 
 /**
@@ -309,13 +332,17 @@ function ExerciseVideo({
   uri,
   poster,
   altText,
+  exercise,
 }: {
   uri: string;
   poster: string | null;
   altText: string;
+  /** Sin póster, la lámina del ejercicio hace de portada: nunca un cuadro vacío. */
+  exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular'>;
 }) {
   const { width } = useWindowDimensions();
-  const side = Math.min(width - spacing.lg * 2, VIDEO_MAX_SIDE);
+  // A todo el ancho y apaisado, como portada: un cuadrado estrecho y centrado se leía como «falta algo».
+  const side = Math.min(width - spacing.lg * 2, VIDEO_MAX_SIDE * 1.6);
   const [playing, setPlaying] = useState(false);
   // `useVideoPlayer` memoriza por fuente: con `null` no hay descarga ninguna, y
   // al pasar a la URL se crea el reproductor ya con el clip pedido.
@@ -330,9 +357,10 @@ function ExerciseVideo({
 
   const frame = {
     width: side,
-    height: side,
+    height: Math.round(side * 0.75),
     alignSelf: 'center' as const,
-    borderRadius: radii.lg,
+    borderRadius: radii.xl,
+    borderCurve: 'continuous' as const,
     overflow: 'hidden' as const,
     backgroundColor: colors.surfaceHigh,
   };
@@ -356,18 +384,27 @@ function ExerciseVideo({
       accessibilityLabel={`Reproducir demostración. ${altText}`}
       accessibilityRole="button"
       onPress={() => setPlaying(true)}
-      style={({ pressed }) => ({ ...frame, opacity: pressed ? 0.6 : 1 })}
+      style={({ pressed }) => ({ ...frame, transform: [{ scale: pressed ? 0.98 : 1 }] })}
     >
       {poster ? (
         <Image
           accessibilityElementsHidden
           cachePolicy="memory-disk"
-          contentFit="contain"
+          contentFit="cover"
           importantForAccessibility="no-hide-descendants"
           source={{ uri: poster }}
           style={{ width: '100%', height: '100%' }}
+          transition={200}
         />
-      ) : null}
+      ) : (
+        <ExerciseImage exercise={exercise} rounded={0} size="fill" />
+      )}
+      {/* Velo para que el botón se lea sobre cualquier foto. */}
+      <LinearGradient
+        colors={[overlay.clearDark, overlay.scrimFaint, overlay.scrimSoft]}
+        pointerEvents="none"
+        style={{ position: 'absolute', inset: 0 }}
+      />
       <View
         style={{
           position: 'absolute',
@@ -379,20 +416,23 @@ function ExerciseVideo({
       >
         <View
           style={{
-            width: 56,
-            height: 56,
+            width: 64,
+            height: 64,
             borderRadius: radii.full,
             backgroundColor: colors.volt,
             alignItems: 'center',
             justifyContent: 'center',
+            borderWidth: 3,
+            borderColor: overlay.glassStrong,
+            boxShadow: `0 8px 24px ${alpha(colors.volt, 0.45)}`,
           }}
         >
-          <Ionicons color={colors.background} name="play" size={iconSizes.lg} />
+          <Ionicons color={accentContrast()} name="play" size={iconSizes.lg} style={{ marginLeft: 3 }} />
         </View>
         <Text
           style={{
-            color: colors.text,
-            fontSize: fontSizes.xs,
+            color: onMedia.text,
+            fontSize: fontSizes.sm,
             fontWeight: semibold,
           }}
         >
