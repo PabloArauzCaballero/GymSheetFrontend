@@ -132,13 +132,16 @@ function ExercisePlaceholder({
   exercise,
   side,
 }: {
-  exercise: Pick<Exercise, 'nombre' | 'grupoMuscular'>;
+  exercise: Pick<Exercise, 'nombre' | 'grupoMuscular'> & { targetMuscle?: string | null };
   /** Lado aproximado en pt: decide el tamaño de las iniciales. */
   side: number;
 }) {
   // En marcos grandes (portada del entreno, ficha), sin foto se enseña el
   // cuerpo con el músculo que trabaja encendido: dice más que unas iniciales.
-  const muscles = side >= 96 ? (zoneMuscles(exercise.nombre) ?? zoneMuscles(exercise.grupoMuscular ?? '')) : null;
+  const muscles =
+    side >= 96
+      ? (zoneMuscles(exercise.targetMuscle ?? '') ?? zoneMuscles(exercise.nombre) ?? zoneMuscles(exercise.grupoMuscular ?? ''))
+      : null;
   if (muscles) return <AnatomyCover muscles={muscles} />;
   const index = groupIndex(exercise.grupoMuscular);
   const [from, to] = muscleGradients[index] ?? muscleGradientDefault;
@@ -200,7 +203,7 @@ export function ExerciseImage({
   size,
   rounded = radii.md,
 }: {
-  exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular' | 'imagenUrl'>;
+  exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular' | 'imagenUrl'> & { targetMuscle?: string | null };
   /**
    * Lado en px, `'hero'` para el marco del detalle o `'fill'` para ocupar el
    * contenedor (mosaico de portada).
