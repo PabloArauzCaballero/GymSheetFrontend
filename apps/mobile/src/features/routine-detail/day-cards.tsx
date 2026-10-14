@@ -6,7 +6,7 @@ import type { RoutineDay } from '@gymsheet/types';
 import { ExerciseImage, hasArtwork } from '@/components/media';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { alpha, colors, fontFamilies, iconSizes, metricColors, overlay, radii, shadows, spacing, type MetricKey } from '@/theme';
+import { alpha, colors, fontFamilies, fontSizes, iconSizes, metricColors, overlay, radii, shadows, spacing, type MetricKey } from '@/theme';
 import { dayMinutes, dayMuscles } from '@/features/routine-detail/routine-plan';
 
 export function dayKicker(day: Pick<RoutineDay, 'diaSemana'>, number: number): string {
@@ -84,10 +84,10 @@ export function DayCard({ day, number, onPress }: { day: RoutineDay; number: num
         {/* El número del día: el ancla con la que se recorre la rutina. */}
         <View style={{ width: BADGE, height: BADGE, borderRadius: radii.lg, borderCurve: 'continuous', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
           <LinearGradient colors={[alpha(colors.volt, 0.38), alpha(colors.volt, 0.14)]} end={{ x: 1, y: 1 }} start={{ x: 0, y: 0 }} style={StyleSheet.absoluteFill} />
-          <Text style={{ color: colors.accentInk, fontSize: 10, letterSpacing: 1.2, lineHeight: 12 }} variant="caption">
+          <Text style={{ color: colors.accentInk, fontSize: fontSizes.xs, letterSpacing: 1.2, lineHeight: 14 }} variant="caption">
             DÍA
           </Text>
-          <Text style={{ color: colors.text, fontFamily: fontFamilies.display, fontSize: 26, lineHeight: 30 }} tabular>
+          <Text style={{ color: colors.text, fontFamily: fontFamilies.display, fontSize: fontSizes.xl, lineHeight: 30 }} tabular>
             {number}
           </Text>
         </View>
