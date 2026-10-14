@@ -67,7 +67,7 @@ export const celebrationPalette = {
  */
 export const stageBackground = {
   celebration: '#050507',
-  brandIntro: '#050505',
+  brandIntro: '#0F172A',
 } as const;
 
 /** Barrido de luz del emblema de arranque: blanco puro, transparente en los extremos. */

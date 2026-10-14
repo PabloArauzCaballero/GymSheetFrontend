@@ -23,7 +23,7 @@ import {
 } from '@/components/interactions-counts';
 import { TourTarget } from '@/components/tour';
 import { ACTIVE_BAR_SPACE, ActiveWorkoutBar, useActiveWorkout } from '@/features/workout/active-workout-bar';
-import { accentContrast, colors, fontSizes, iconSizes, semibold } from '@/theme';
+import { accentContrast, alpha, colors, fontSizes, iconSizes, semibold } from '@/theme';
 
 /** Outline when resting, filled when active — the platform convention. */
 const ICONS = {
@@ -134,11 +134,25 @@ function tabIcon(screen: keyof typeof ICONS) {
     const style = useAnimatedStyle(() => ({
       transform: [{ scale: scale.value }],
     }));
+    // La píldora del destino activo: se abre desde el centro del icono (0.9 → 1
+    // de 0 a 1 en opacidad, más rápido el ancho que el alto). Dice «estás aquí»
+    // con un solo relleno jade suave, sin latir ni moverse sola.
+    const pill = useAnimatedStyle(() => {
+      const on = (scale.value - 0.9) / 0.1;
+      return { opacity: on, transform: [{ scaleX: 0.55 + on * 0.45 }, { scaleY: 0.8 + on * 0.2 }] };
+    });
 
     return (
       // El icono es el ancla del tutorial de bienvenida: la tarjeta que habla de
       // «Rutinas» señala el botón real de Rutinas, no una lista abstracta.
       <TourTarget grow={10} id={`tab.${screen}`}>
+        <ReAnimated.View
+          pointerEvents="none"
+          style={[
+            { position: 'absolute', top: -4, bottom: -4, left: -16, right: -16, borderRadius: 999, backgroundColor: alpha(colors.volt, 0.2) },
+            pill,
+          ]}
+        />
         <ReAnimated.View style={style}>
           <Ionicons color={color} name={ICONS[screen][focused ? 1 : 0]} size={iconSizes.lg} />
         </ReAnimated.View>

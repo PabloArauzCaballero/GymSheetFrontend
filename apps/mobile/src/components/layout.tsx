@@ -676,7 +676,8 @@ export function Row({
         minHeight: minTouchTarget,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1 }}>
+      {/* La etiqueta no cede: es el valor el que salta de línea («Secundar-ios» partía la palabra). */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 0, maxWidth: '45%' }}>
         {icon ? (
           <Ionicons
             accessibilityElementsHidden

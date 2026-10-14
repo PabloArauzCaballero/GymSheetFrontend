@@ -19,40 +19,32 @@ out=assets
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-BG='#000000'   # colors.background
-FG='#c3f400'   # colors.volt
+BG='#0F172A'   # REPP navy
+FG='#2E8B7B'   # REPP jade
 
-# The mark: a barbell, centred, drawn only with rounded rectangles so it stays
-# legible when the launcher shrinks it to 40 px.
-mark() { # $1 = fill
+# The official REPP R mark, copied from the supplied identity vector.
+mark() {
   cat <<XML
-  <g fill="$1">
-    <rect x="300" y="484" width="424" height="56"  rx="28"/>
-    <rect x="248" y="392" width="56"  height="240" rx="20"/>
-    <rect x="720" y="392" width="56"  height="240" rx="20"/>
-    <rect x="176" y="432" width="56"  height="160" rx="18"/>
-    <rect x="792" y="432" width="56"  height="160" rx="18"/>
-    <rect x="136" y="464" width="32"  height="96"  rx="14"/>
-    <rect x="856" y="464" width="32"  height="96"  rx="14"/>
-  </g>
+  <path d="M25 19 H61 C82 19 94 31 88 48 C84 59 75 65 63 68 L88 101 H65 L42 70 H34 L24 101 H5 L25 19 Z M39 37 L34 54 H55 C64 54 70 50 71 43 C72 39 68 37 60 37 Z" fill="#FFFFFF"/>
+  <path d="M25 61 L48 37 H62 L34 71 L14 101 H3 Z" fill="$FG"/>
 XML
 }
 
 # icon.png — 1024, opaque. The App Store rejects a transparent or
 # alpha-channelled icon outright, so the background is painted, not inherited.
 cat > "$tmp/icon.svg" <<XML
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <rect width="1024" height="1024" fill="$BG"/>
-  $(mark "$FG")
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="$BG"/>
+  $(mark)
 </svg>
 XML
 
 # adaptive-icon.png — Android foreground layer, transparent, and scaled to
 # ~62% so the mark survives the circular/squircle masks the launcher applies.
 cat > "$tmp/adaptive-icon.svg" <<XML
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <g transform="translate(512 512) scale(0.62) translate(-512 -512)">
-    $(mark "$FG")
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 120 120">
+  <g transform="translate(22.8 22.8) scale(0.62)">
+    $(mark)
   </g>
 </svg>
 XML
@@ -60,17 +52,17 @@ XML
 # splash.png — sits on the #000000 canvas declared in app.json with
 # resizeMode "contain", so it carries the mark and no background of its own.
 cat > "$tmp/splash.svg" <<XML
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <g transform="translate(512 512) scale(0.78) translate(-512 -512)">
-    $(mark "$FG")
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 120 120">
+  <g transform="translate(13.2 13.2) scale(0.78)">
+    $(mark)
   </g>
 </svg>
 XML
 
 cat > "$tmp/favicon.svg" <<XML
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <rect width="1024" height="1024" fill="$BG"/>
-  $(mark "$FG")
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="$BG"/>
+  $(mark)
 </svg>
 XML
 

@@ -122,12 +122,12 @@ export const tones = {
  */
 export const accentPolicy = {
   get glyph(): string {
-    return getActiveTenant().id === 'gymsheet' ? '#cfd8c4' : neutral.textSecondary;
+    return getActiveTenant().id === 'gymsheet' ? '#cdd8e2' : neutral.textSecondary;
   },
   get ink(): string {
     return colors.accentInk;
   },
   get quietLink(): string {
-    return getActiveTenant().id === 'gymsheet' ? '#a9b69a' : neutral.textSecondary;
+    return getActiveTenant().id === 'gymsheet' ? '#9fd3c8' : neutral.textSecondary;
   },
 };

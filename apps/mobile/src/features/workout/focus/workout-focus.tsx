@@ -892,6 +892,8 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
         onMomentumScrollEnd={(event) => {
           const index = Math.round(event.nativeEvent.contentOffset.x / width);
           if (index !== page) {
+            // Un tic al asentarse en la página nueva: el paso de ejercicio se siente en la mano.
+            void Haptics.selectionAsync();
             setPage(index);
             setExtra(null);
           }

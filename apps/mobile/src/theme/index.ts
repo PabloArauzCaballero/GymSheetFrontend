@@ -14,7 +14,7 @@ export * from './type';
 export * from './radius';
 export * from './shadow';
 export * from './motion';
-export { alpha, contrastRatio, ink, onMedia, overlay } from './palette';
+export { alpha, brandNavy, contrastRatio, ink, onMedia, overlay, reppJade } from './palette';
 export { getActiveTenant, setActiveTenant, useActiveTenant } from './tenant';
 export type { TenantDefinition } from './tenant';
 export { tenantCatalog as tenants } from '@gymsheet/design-tokens';
