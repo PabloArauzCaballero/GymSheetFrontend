@@ -12,11 +12,13 @@ import { AmbientBackground } from '@/components/ambient';
 import { ErrorState, RowsSkeleton } from '@/components/feedback';
 import { BadgePop, EnterUp, PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { shortName } from '@/lib/format';
 import { Button } from '@/components/ui';
 import { CommentComposer } from '@/features/routine-community/comment-composer';
 import { CommentThread } from '@/features/routine-community/comment-thread';
 import { countComments, useRoutineComments } from '@/features/routine-community/use-comments';
+import { MediaPickerSheet } from '@/features/routine-community/media-picker-sheet';
+import type { PendingAttachment } from '@/features/routine-community/attachments';
+import { pickFile, pickFromCamera, pickFromLibrary } from '@/features/routine-community/pick-media';
 import { MoreSheet, type MoreAction } from '@/features/routine-detail/more-sheet';
 import { ReportSheet, type ReportTarget } from '@/features/routine-detail/report-sheet';
 import { alpha, colors, gutter, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
@@ -71,12 +73,15 @@ export function CommentsScreen() {
   const list = useRef<FlatList<RoutineComment> | null>(null);
 
   const routine = useQuery({ queryKey: ['routine', id], queryFn: () => routineService.get(id), enabled: Boolean(id) });
-  const { query, items, send, like, remove, me } = useRoutineComments(id);
+  const { query, items, send, like, remove } = useRoutineComments(id);
   const [draft, setDraft] = useState('');
   const [replyTo, setReplyTo] = useState<RoutineComment | null>(null);
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
   const [menu, setMenu] = useState<RoutineComment | null>(null);
   const [report, setReport] = useState<ReportTarget | null>(null);
+  const [attachment, setAttachment] = useState<PendingAttachment | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   // Se llegó tocando «Responder» en el detalle: el hilo abierto y el campo listo.
   const preset = useRef(false);
@@ -110,12 +115,34 @@ export function CommentsScreen() {
   };
   const submit = () => {
     const texto = draft.trim();
-    if (!texto) return;
-    send.mutate({ texto, respuestaA: replyTo?.id ?? null });
+    if (!texto && !attachment) return;
+    send.mutate({ texto, respuestaA: replyTo?.id ?? null, adjunto: attachment });
     setDraft('');
+    setAttachment(null);
     if (!replyTo) list.current?.scrollToOffset({ offset: 0, animated: true });
     setReplyTo(null);
   };
+
+  // Tras elegir, la hoja ya se cerró: el selector del sistema se abre un instante después
+  // para que iOS no tenga dos presentaciones a la vez.
+  const choose = (pick: () => Promise<PendingAttachment | null>) => () => {
+    setAddOpen(false);
+    setTimeout(() => void pick().then((picked) => picked && setAttachment(picked)), 450);
+  };
+  const addActions: MoreAction[] = [
+    { key: 'library', label: 'Foto o video', icon: 'images-outline', onPress: choose(pickFromLibrary) },
+    { key: 'camera', label: 'Cámara', icon: 'camera-outline', onPress: choose(pickFromCamera) },
+    { key: 'file', label: 'Archivo', icon: 'document-outline', onPress: choose(pickFile) },
+    {
+      key: 'gif',
+      label: 'GIF o sticker',
+      icon: 'sparkles-outline',
+      onPress: () => {
+        setAddOpen(false);
+        setTimeout(() => setPickerOpen(true), 450);
+      },
+    },
+  ];
 
   const actions: MoreAction[] = menu
     ? [
@@ -131,7 +158,6 @@ export function CommentsScreen() {
             },
       ]
     : [];
-  const myName = shortName(me?.nombreCompleto, me?.email);
   const total = countComments(items);
 
   return (
@@ -254,7 +280,18 @@ export function CommentsScreen() {
         ]}
       >
         <CommentComposer
-          me={{ id: me?.id ?? 'me', name: myName }}
+          attachment={attachment}
+          onAdd={() => {
+            input.current?.blur();
+            Keyboard.dismiss();
+            setAddOpen(true);
+          }}
+          onClearAttachment={() => setAttachment(null)}
+          onEmoji={() => {
+            input.current?.blur();
+            Keyboard.dismiss();
+            setPickerOpen(true);
+          }}
           onCancelReply={() => setReplyTo(null)}
           onChange={setDraft}
           onSend={submit}
@@ -265,6 +302,18 @@ export function CommentsScreen() {
         />
       </Animated.View>
 
+      <MoreSheet
+        actions={addActions}
+        onClose={() => setAddOpen(false)}
+        title="Adjuntar"
+        visible={addOpen}
+      />
+      <MediaPickerSheet
+        onAttachment={(picked) => setAttachment({ source: 'remote', attachment: picked })}
+        onClose={() => setPickerOpen(false)}
+        onEmoji={(emoji) => setDraft((current) => (current + emoji).slice(0, 1000))}
+        visible={pickerOpen}
+      />
       <MoreSheet
         actions={actions}
         onClose={() => setMenu(null)}
