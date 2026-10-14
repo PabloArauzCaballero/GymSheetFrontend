@@ -1,14 +1,26 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
+import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { clockLabel, secondsLabel } from '@gymsheet/hooks';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { useStopwatch } from '@/features/cardio/use-stopwatch';
-import { Chip, Field, type SetDraft } from '@/features/workout/set-inputs';
-import { bumpSeconds, MAX_TIMED_SET_SEC } from '@/features/workout/workout-flow';
-import { colors, comfortableTouchTarget, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { Stepper } from '@/features/workout/focus/stepper';
+import type { SetDraft } from '@/features/workout/set-inputs';
+import { bumpSeconds, kgLabel, MAX_TIMED_SET_SEC } from '@/features/workout/workout-flow';
+import { useReduceMotion } from '@/notifications/use-reduce-motion';
+import { colors, iconSizes, metricColors, minTouchTarget, radii, spacing } from '@/theme';
+
+/** Alto del botón del cronómetro: el control que más se toca con las manos ocupadas. */
+const TIMER_HEIGHT = 64;
+
+function bumpKg(text: string, delta: number): string {
+  const current = Number(text.replace(',', '.'));
+  const base = Number.isFinite(current) ? current : 0;
+  return kgLabel(Math.max(0, Math.round((base + delta) * 100) / 100));
+}
 
 /**
  * Los campos de una serie por tiempo (plancha 45 s): los segundos, grandes, con
@@ -66,78 +78,117 @@ export function TimedSetInputs({
 
   const elapsed = clockLabel(clock.seconds);
   const target = targetSeconds !== null ? clockLabel(targetSeconds) : null;
+  const reduceMotion = useReduceMotion();
+  const [loaded, setLoaded] = useState(() => value.pesoKg.trim() !== '' && Number(value.pesoKg.replace(',', '.')) > 0);
+  const reached = targetSeconds !== null && clock.seconds >= targetSeconds;
+  const fraction = targetSeconds ? Math.min(1, clock.seconds / targetSeconds) : 0;
+  // El relleno es absoluto y sin hijos: animar su ancho no recoloca nada.
+  const fill = useAnimatedStyle(() => {
+    const width = `${Math.round(fraction * 100)}%` as const;
+    return { width: reduceMotion ? width : withTiming(width, { duration: 900 }) };
+  }, [fraction, reduceMotion]);
 
   return (
-    <View style={{ gap: spacing.smd }} testID="timed-set-inputs">
-      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-        <Field
+    <View style={{ gap: spacing.md }} testID="timed-set-inputs">
+      <View style={{ gap: spacing.smd, padding: spacing.md, borderRadius: radii.xxl, borderCurve: 'continuous', backgroundColor: colors.surfaceLow }}>
+        <Stepper
+          icon="stopwatch-outline"
           label="Segundos"
-          onChange={(duracionSeg) => onChange({ ...value, duracionSeg })}
-          suffix="s"
+          metric="time"
+          onChangeText={(duracionSeg) => onChange({ ...value, duracionSeg })}
+          onStep={(direction) => onChange({ ...value, duracionSeg: bumpSeconds(value.duracionSeg, direction * 5) })}
+          spoken="segundos, de cinco en cinco"
           testID="set-seconds"
           value={value.duracionSeg}
         />
-        <Field
-          decimal
-          label="Lastre"
-          onChange={(pesoKg) => onChange({ ...value, pesoKg })}
-          suffix="kg"
-          testID="set-weight"
-          value={value.pesoKg}
-        />
+        <PressableScale
+          accessibilityHint="Mide la serie y escribe los segundos"
+          accessibilityLabel={clock.running ? `Parar el cronómetro, ${clock.seconds} segundos` : 'Iniciar el cronómetro'}
+          haptic="selection"
+          onPress={toggle}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.smd,
+            height: TIMER_HEIGHT,
+            paddingHorizontal: spacing.md,
+            borderRadius: radii.xl,
+            borderCurve: 'continuous',
+            overflow: 'hidden',
+            backgroundColor: colors.surfaceHighest,
+          }}
+          testID="set-timer"
+        >
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: reached ? metricColors.rest.tint : metricColors.time.tint },
+              fill,
+            ]}
+          />
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: radii.full,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: reached ? metricColors.rest.edge : metricColors.time.edge,
+            }}
+          >
+            <Ionicons color={reached ? metricColors.rest.ink : metricColors.time.ink} name={clock.running ? 'stop' : 'play'} size={iconSizes.md} />
+          </View>
+          <Text strong style={{ flex: 1 }} variant="headline">
+            {clock.running ? (reached ? '¡Objetivo! Parar' : 'Parar') : clock.seconds > 0 ? 'Volver a medir' : 'Cronómetro'}
+          </Text>
+          <Text accessibilityLiveRegion="polite" strong tabular testID="set-timer-clock" variant="headline">
+            {target ? `${elapsed} / ${target}` : elapsed}
+          </Text>
+        </PressableScale>
+        {loaded ? (
+          <>
+            <View style={{ height: 1, backgroundColor: colors.border }} />
+            <Stepper
+              decimal
+              icon="barbell-outline"
+              label="Lastre"
+              metric="weight"
+              onChangeText={(pesoKg) => onChange({ ...value, pesoKg })}
+              onStep={(direction) => onChange({ ...value, pesoKg: bumpKg(value.pesoKg, direction * 2.5) })}
+              spoken="kilos de lastre"
+              testID="set-weight"
+              unit="kg"
+              value={value.pesoKg}
+            />
+          </>
+        ) : (
+          <PressableScale
+            accessibilityLabel="Añadir lastre"
+            haptic="selection"
+            onPress={() => setLoaded(true)}
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, minHeight: minTouchTarget }}
+            testID="add-load"
+          >
+            <Ionicons color={metricColors.weight.ink} name="add-circle-outline" size={iconSizes.sm} />
+            <Text tone="secondary" variant="footnote">
+              Añadir lastre
+            </Text>
+          </PressableScale>
+        )}
       </View>
-
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-        <Chip label="−5 s" onPress={() => onChange({ ...value, duracionSeg: bumpSeconds(value.duracionSeg, -5) })} spoken="Cinco segundos menos" />
-        <Chip label="+5 s" onPress={() => onChange({ ...value, duracionSeg: bumpSeconds(value.duracionSeg, 5) })} spoken="Cinco segundos más" />
-      </View>
-
-      <PressableScale
-        accessibilityHint="Mide la serie y escribe los segundos"
-        accessibilityLabel={clock.running ? `Parar el cronómetro, ${clock.seconds} segundos` : 'Iniciar el cronómetro'}
-        haptic="selection"
-        onPress={toggle}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.sm,
-          minHeight: comfortableTouchTarget,
-          paddingHorizontal: spacing.md,
-          borderRadius: radii.md,
-          borderCurve: 'continuous',
-          backgroundColor: colors.surfaceHigh,
-        }}
-        testID="set-timer"
-      >
-        <Ionicons color={colors.text} name={clock.running ? 'stop' : 'play'} size={iconSizes.md} />
-        <Text strong style={{ flex: 1 }} variant="headline">
-          {clock.running ? 'Parar' : clock.seconds > 0 ? 'Volver a medir' : 'Cronómetro'}
-        </Text>
-        <Text accessibilityLiveRegion="polite" strong tabular testID="set-timer-clock" variant="headline">
-          {target ? `${elapsed} / ${target}` : elapsed}
-        </Text>
-      </PressableScale>
 
       {lastTime ? (
         <PressableScale
           accessibilityHint="Rellena los segundos"
-          accessibilityLabel={`Última vez, ${lastTime.when}: ${lastTime.seconds} segundos`}
+          accessibilityLabel={`La última vez, ${lastTime.when}: ${lastTime.seconds} segundos`}
           haptic="selection"
           onPress={() => onChange({ ...value, duracionSeg: String(lastTime.seconds) })}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.sm,
-            minHeight: minTouchTarget,
-            paddingHorizontal: spacing.smd,
-            borderRadius: radii.md,
-            backgroundColor: colors.surface,
-          }}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: minTouchTarget }}
           testID="last-time"
         >
-          <Ionicons color={colors.textSecondary} name="time-outline" size={iconSizes.sm} />
+          <Ionicons color={metricColors.time.ink} name="time-outline" size={iconSizes.sm} />
           <Text style={{ flex: 1 }} tone="secondary" variant="subhead">
-            {'Última vez: '}
+            {'La última vez: '}
             <Text strong tabular variant="subhead">
               {secondsLabel(lastTime.seconds)}
             </Text>

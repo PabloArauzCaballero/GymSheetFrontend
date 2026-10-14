@@ -47,7 +47,7 @@ export function ExerciseRow({
   moreLabel = 'Más opciones',
   testID,
 }: {
-  exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular'> | null;
+  exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular' | 'imagenUrl'> | null;
   name: string;
   prescription: ExercisePrescription;
   /** Línea de apoyo: músculo en español. */
@@ -66,7 +66,7 @@ export function ExerciseRow({
 }) {
   const meta = prescriptionLabel(prescription);
   const body = (
-    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.smd }}>
+    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
       <View>
         {exercise ? (
           <ExerciseImage exercise={exercise} rounded={radii.md} size={thumbSizes.row} />
@@ -171,7 +171,7 @@ export function ExerciseRow({
   const frame = grouped
     ? { paddingVertical: spacing.smd }
     : {
-        padding: spacing.smd,
+        padding: spacing.md,
         paddingRight: cardPadding - spacing.sm,
         borderRadius: radii.xl,
         borderCurve: 'continuous' as const,

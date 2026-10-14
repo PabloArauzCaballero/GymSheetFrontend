@@ -5,7 +5,7 @@
  * «leído» de un chat). Viven aquí para que `check-theme` siga a cero fuera de
  * `src/theme/` y para que quien los cambie vea el resto de la paleta.
  */
-import { alpha, ink } from './palette';
+import { alpha, ink, metricInk } from './palette';
 
 /* ─── Podio (rank-badge) ─────────────────────────────────────────────────── */
 
@@ -177,3 +177,76 @@ export const ratingStar = '#f5b94a';
 
 /** Franja de luz del esqueleto: blanco casi transparente. */
 export const shimmerBand = [alpha(ink.white, 0), alpha(ink.white, 0.09), alpha(ink.white, 0)] as const;
+
+/* ─── Comunidad: comentarios y «me gusta» ────────────────────────────────── */
+
+/** Corazón del «me gusta»: cálido y ajeno a la marca, se reconoce en cualquier gimnasio. */
+export const likeHeart = '#ff5d73';
+
+/** Línea de hilo que une un comentario con sus respuestas. */
+export const threadLine = alpha(ink.white, 0.12);
+
+/** Velo inferior del pie fijo: el contenido se disuelve en el lienzo bajo el botón. */
+export const footerFade = [alpha('#0c0c0b', 0), alpha('#0c0c0b', 0.92), '#0c0c0b'] as const;
+
+/* ─── Ejercicio sin lámina ───────────────────────────────────────────────── */
+
+/**
+ * Marcador de un ejercicio que no trae imagen: un degradado profundo por zona
+ * del cuerpo (mismo orden que `GROUP_ICON` de `components/media.tsx`) con su
+ * icono en marca de agua y las iniciales del ejercicio. Tonos oscuros para que
+ * las iniciales blancas midan ≥ 7:1 sobre cualquiera de los dos extremos.
+ */
+export const muscleGradients = [
+  ['#5c1f2b', '#1c0e12'],
+  ['#1d4a3a', '#0d1814'],
+  ['#1f3a5c', '#0e1520'],
+  ['#5a3412', '#1c120a'],
+  ['#3a1f5c', '#14101f'],
+  ['#123d4f', '#0c161c'],
+  ['#4a4416', '#18160b'],
+  ['#3d2a4f', '#15101b'],
+] as const;
+
+/** Sin zona reconocida. */
+export const muscleGradientDefault = ['#2f2e29', '#161614'] as const;
+
+/** Iniciales y marca de agua sobre el marcador. */
+export const placeholderInk = { initials: alpha(ink.white, 0.92), watermark: alpha(ink.white, 0.12) } as const;
+
+/* ─── Entreno: color por significado ─────────────────────────────────────── */
+
+/**
+ * Cada magnitud del entreno tiene su color, para leer la pantalla sin leer las
+ * etiquetas: el peso es azul, las repeticiones violetas, el esfuerzo ámbar, el
+ * descanso menta. No son la marca (el volt sigue siendo solo la acción
+ * principal) ni cambian con el gimnasio. `ink` es el glifo o la cifra fina
+ * sobre una superficie; `tint`, su fondo; `edge`, el filo de lo seleccionado.
+ * Las tintas y su contraste (todas ≥ 5,6:1 sobre `surfaceHighest`) están en
+ * `palette.ts`, donde las mide la prueba.
+ */
+function metric(base: string) {
+  return { ink: base, tint: alpha(base, 0.14), edge: alpha(base, 0.32) } as const;
+}
+
+export const metricColors = {
+  weight: metric(metricInk.weight),
+  reps: metric(metricInk.reps),
+  effort: metric(metricInk.effort),
+  rest: metric(metricInk.rest),
+  time: metric(metricInk.time),
+  streak: metric(metricInk.streak),
+  record: metric(metricInk.record),
+  volume: metric(metricInk.volume),
+  skipped: metric(metricInk.skipped),
+} as const;
+
+export type MetricKey = keyof typeof metricColors;
+
+/** Anillo del descanso: de menta (queda tiempo) a ámbar (se acaba) y luz (ya). */
+export const restRing = {
+  calm: metricColors.rest.ink,
+  ending: metricColors.effort.ink,
+  track: alpha(ink.white, 0.08),
+  glow: alpha(metricColors.rest.ink, 0.18),
+} as const;

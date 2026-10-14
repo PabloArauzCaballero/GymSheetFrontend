@@ -1,26 +1,28 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Fragment, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { exerciseGroupLabelEs, muscleLabelEs, selectExercisePoster } from '@gymsheet/domain';
 import { dayView, estimateDayMinutes, transitionLabel, type DayBlock, type DayExerciseView } from '@gymsheet/hooks';
 import type { Routine, RoutineDay } from '@gymsheet/types';
 import { routineBuilderService, routineService } from '@/api/services';
 import { ExerciseRow } from '@/components/exercise-row';
+import { muscleGroupIcon } from '@/components/media';
 import { EmptyState, ErrorState, RowsSkeleton, Skeleton } from '@/components/feedback';
 import { GroupBlock } from '@/components/group-block';
 import { ScrollScreen } from '@/components/layout';
+import { usePullRefresh } from '@/hooks/use-pull-refresh';
 import { BackLink } from '@/components/nav';
 import { RestPill } from '@/components/rest-pill';
 import { StickyFooter, StickyFooterSpacer } from '@/components/sticky-footer';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
-import { colors, gutter, ink, radii, shadows, spacing } from '@/theme';
+import { colors, gutter, ink, spacing } from '@/theme';
 import { MediaChip } from '@/features/routine-catalog/media-chip';
 import { RoutineCover } from '@/features/routine-catalog/routine-cover';
 import { dayKicker, dayTitle } from '@/features/routine-detail/day-cards';
-import { GlassButton } from '@/features/routine-detail/detail-hero';
+import { heroHeightFor } from '@/features/routine-detail/detail-hero';
 import { MoreSheet } from '@/features/routine-detail/more-sheet';
 import { ReportSheet, type ReportTarget } from '@/features/routine-detail/report-sheet';
 import { dayNumber, orderedDays } from '@/features/routine-detail/routine-plan';
@@ -93,6 +95,7 @@ export function DayScreen() {
   }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const weekNumber = Math.max(1, Number(semana) || 1);
   const start = useStartRoutine(id);
   const [report, setReport] = useState<ReportTarget | null>(null);
@@ -108,6 +111,8 @@ export function DayScreen() {
     queryFn: () => routineBuilderService.calendar(id),
     enabled: Boolean(id) && routine.isSuccess,
   });
+
+  const pull = usePullRefresh(routine.refetch);
 
   if (routine.isPending) {
     return (
@@ -152,7 +157,8 @@ export function DayScreen() {
   const items = view.ejercicios;
   const topInset = insets.top;
   const minutes = estimateDayMinutes(items);
-  const muscles = musclesOf(items);
+  // Tres como mucho: un cuarto chip partía la fila en dos sobre la portada.
+  const muscles = musclesOf(items, 3);
   const groups = view.bloques.filter((block) => block.kind !== 'single').length;
   const kicker = [
     `Semana ${weekNumber}${total ? ` de ${total}` : ''}`,
@@ -161,7 +167,8 @@ export function DayScreen() {
   const openDay = (day: RoutineDay) =>
     router.replace({ pathname: '/routines/[id]/dia/[diaId]', params: { id: data.id, diaId: day.id, semana: String(weekNumber) } });
 
-  const coverUri = dayCoverUri(items);
+  // La portada que el servidor ya eligió para el día; si no viene, se busca aquí.
+  const coverUri = base.portadaUrl ?? dayCoverUri(items);
   const header = (
     <View style={{ gap: spacing.smd }}>
       <Text tabular testID="day-kicker" tone="muted" variant="footnote">
@@ -173,7 +180,12 @@ export function DayScreen() {
     </View>
   );
   const hero = (
-    <RoutineCover goal={data.objetivo} style={{ height: 300 }} uri={coverUri}>
+    <RoutineCover
+      glyph={coverUri ? undefined : muscleGroupIcon(items[0]?.grupoMuscular ?? items[0]?.bodyPart)}
+      goal={data.objetivo}
+      style={{ height: heroHeightFor(width, topInset) - 24 }}
+      uri={coverUri}
+    >
       <View
         style={{
           position: 'absolute',
@@ -203,15 +215,6 @@ export function DayScreen() {
             ))}
           </View>
         ) : null}
-      </View>
-      <View
-        style={{
-          position: 'absolute',
-          top: topInset + spacing.sm,
-          left: gutter,
-        }}
-      >
-        <GlassButton icon="chevron-back" label="Volver" onPress={() => router.back()} testID="day-back" />
       </View>
     </RoutineCover>
   );
@@ -247,6 +250,7 @@ export function DayScreen() {
         media: item.media,
         nombre: item.nombre,
         grupoMuscular: item.grupoMuscular ?? '',
+        imagenUrl: base.ejercicios.find((entry) => entry.id === item.routineExerciseId)?.ejercicio?.imagenUrl,
       }}
       flag={item.ajustado ? 'Ajustado por la descarga' : undefined}
       grouped={grouped}
@@ -278,7 +282,7 @@ export function DayScreen() {
 
   return (
     <ScrollScreen
-      onRefresh={() => void routine.refetch()}
+      onRefresh={pull.onRefresh}
       overlay={
         <StickyFooter>
           <Button
@@ -293,7 +297,8 @@ export function DayScreen() {
         </StickyFooter>
       }
       hero={hero}
-      refreshing={routine.isRefetching}
+      heroBar={{ title: dayTitle(base), onBack: () => router.back(), backTestID: 'day-back' }}
+      refreshing={pull.refreshing}
     >
       <View
         accessibilityLabel={`Unos ${minutes} minutos, ${items.length} ejercicios, ${view.totalSeries} series${groups ? `, ${groups} ${groups === 1 ? 'bloque' : 'bloques'}` : ''}`}
@@ -301,10 +306,9 @@ export function DayScreen() {
         style={{
           flexDirection: 'row',
           paddingVertical: spacing.md,
-          borderRadius: radii.xl,
-          borderCurve: 'continuous',
-          backgroundColor: colors.surfaceLow,
-          boxShadow: shadows.e1,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderColor: colors.border,
         }}
         testID="day-summary"
       >
@@ -336,7 +340,7 @@ export function DayScreen() {
             style={{
               flex: 1,
               alignItems: 'center',
-              gap: spacing.xxs,
+              gap: spacing.xs,
               borderLeftWidth: index === 0 ? 0 : StyleSheet.hairlineWidth,
               borderLeftColor: colors.border,
             }}
@@ -356,7 +360,7 @@ export function DayScreen() {
         ))}
       </View>
 
-      <View style={{ gap: spacing.sm }}>
+      <View style={{ gap: spacing.smd }}>
         {view.bloques.map((block, index) => {
           const key = block.items.map((item) => item.routineExerciseId).join('+');
           const last = index === view.bloques.length - 1;

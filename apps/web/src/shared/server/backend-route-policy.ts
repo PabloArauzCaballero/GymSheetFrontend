@@ -202,6 +202,8 @@ const allowedPathPatterns = [
   // de un comentario se identifica por su UUID, no por un comodín.
   new RegExp(`^/(ratings|comments)/(?:${contentKind})/${resourceId}$`, 'u'),
   new RegExp(`^/comments/${uuid}$`, 'u'),
+  // «Me gusta» de un comentario (PUT/DELETE): solo ese sufijo.
+  new RegExp(`^/comments/${uuid}/like$`, 'u'),
   // Programas (RF-14..16, RF-19, RF-20) y cardio (RF-17).
   /^\/programs\/active$/u,
   /^\/programs\/(strength|cardio)\/activate$/u,

@@ -1,162 +1,164 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { ScrollView, View } from 'react-native';
-import {
-  compactCount,
-  downloadsLabel,
-  durationLabel,
-  ratingLabel,
-  ratingValue,
-  recommendationReason,
-} from '@gymsheet/hooks';
+import { downloadsLabel, durationLabel, ratingLabel, ratingValue, recommendationReason } from '@gymsheet/hooks';
 import type { RoutineRecommendation } from '@gymsheet/types';
-import { Skeleton } from '@/components/feedback';
 import { Card } from '@/components/layout';
 import { NavRow } from '@/components/list';
-import { PressableScale } from '@/components/motion';
 import { PersonAvatar } from '@/components/person-avatar';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
-import { accentPolicy, colors, iconSizes, ink, radii, ratingStar, shadows, spacing } from '@/theme';
+import {
+  accentPolicy,
+  alpha,
+  cardPadding,
+  colors,
+  coverAspect,
+  gutter,
+  iconSizes,
+  ink,
+  radii,
+  ratingStar,
+  shadows,
+  spacing,
+} from '@/theme';
 import { MediaChip } from '@/features/routine-catalog/media-chip';
+import { planLine, RoutineCardSkeleton, RoutineLink } from '@/features/routine-catalog/routine-card';
 import { RoutineCover } from '@/features/routine-catalog/routine-cover';
 import type { ForYouState } from '@/features/routine-catalog/use-recommended-routines';
 
-const HERO_COVER = 208;
-const ALT_WIDTH = 232;
-const ALT_COVER = 112;
-
-/** «★ 4,6 · ⬇ 12 · 4 días/sem»: las mismas cifras que la tarjeta del catálogo. */
-function Numbers({ item }: { item: RoutineRecommendation }) {
-  const card = item.rutina;
-  const rating = ratingValue(card.valoracion);
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-        <Ionicons
-          color={rating ? ratingStar : colors.textMuted}
-          name={rating ? 'star' : 'star-outline'}
-          size={iconSizes.sm}
-        />
-        <Text tabular tone="secondary" variant="subhead">
-          {rating ?? 'Nueva'}
-        </Text>
-      </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-        <Ionicons color={colors.textMuted} name="arrow-down-circle-outline" size={iconSizes.sm} />
-        <Text tabular tone="secondary" variant="subhead">
-          {compactCount(card.copias)}
-        </Text>
-      </View>
-      <Text tabular tone="secondary" variant="subhead">
-        {`${card.diasPorSemana} días/sem · ${durationLabel(card.duracionSemanas)}`}
-      </Text>
-    </View>
-  );
-}
+const ALT_WIDTH = 248;
+const AVATAR = 36;
 
 /**
- * La recomendación principal: portada grande con el motivo y el nombre encima,
- * quién la hizo, sus cifras y la única acción en acento de la pantalla.
+ * La recomendación principal: la misma tarjeta del catálogo (portada a 3:2 que
+ * crece hasta el detalle) con el sello «Para ti» y, debajo, POR QUÉ se
+ * recomienda: es lo único que esta tarjeta sabe y las demás no. Toda la
+ * tarjeta abre la rutina; ya no lleva un botón aparte dentro.
  */
-function HeroCard({ item, onOpen }: { item: RoutineRecommendation; onOpen: () => void }) {
+function HeroCard({ item }: { item: RoutineRecommendation }) {
   const card = item.rutina;
   const reason = recommendationReason(item);
+  const rating = ratingValue(card.valoracion);
   return (
-    <View
-      accessibilityLabel={`Recomendada para ti. ${card.nombre}. ${reason}. ${ratingLabel(card.valoracion)}. ${downloadsLabel(card.copias)}`}
+    <RoutineLink
+      id={card.id}
+      label={`Recomendada para ti. ${card.nombre}. ${reason}. ${ratingLabel(card.valoracion)}. ${downloadsLabel(card.copias)}`}
       style={{
         borderRadius: radii.xxl,
         borderCurve: 'continuous',
-        backgroundColor: colors.surfaceRaised,
-        boxShadow: shadows.e2,
-        overflow: 'hidden',
+        backgroundColor: colors.surfaceLow,
+        boxShadow: shadows.card,
       }}
       testID="for-you-hero"
     >
-      <RoutineCover goal={card.objetivo} style={{ height: HERO_COVER }} uri={card.portadaUrl}>
-        <View style={{ position: 'absolute', top: spacing.smd, left: spacing.smd }}>
-          <MediaChip icon="sparkles" label="Para ti" />
-        </View>
+      <Link.AppleZoom>
         <View
           style={{
-            position: 'absolute',
-            left: spacing.mdl,
-            right: spacing.mdl,
-            bottom: spacing.md,
-            gap: spacing.xs,
+            borderTopLeftRadius: radii.xxl,
+            borderTopRightRadius: radii.xxl,
+            borderCurve: 'continuous',
+            overflow: 'hidden',
           }}
         >
-          <Text numberOfLines={2} style={{ color: ink.white }} variant="title">
-            {card.nombre}
+          <RoutineCover goal={card.objetivo} style={{ aspectRatio: coverAspect }} uri={card.portadaUrl}>
+            <View style={{ position: 'absolute', top: spacing.md, left: spacing.md }}>
+              <MediaChip icon="sparkles" label="Para ti" />
+            </View>
+            <View
+              style={{
+                position: 'absolute',
+                left: cardPadding,
+                right: cardPadding,
+                bottom: spacing.md,
+                gap: spacing.xs,
+              }}
+            >
+              <Text numberOfLines={2} style={{ color: ink.white }} variant="title">
+                {card.nombre}
+              </Text>
+              <Text numberOfLines={1} style={{ color: alpha(ink.white, 0.82) }} tabular variant="footnote">
+                {planLine(card)}
+              </Text>
+            </View>
+          </RoutineCover>
+        </View>
+      </Link.AppleZoom>
+      <View style={{ paddingHorizontal: cardPadding, paddingVertical: spacing.md, gap: spacing.smd }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }}>
+          <Ionicons color={accentPolicy.glyph} name="sparkles" size={iconSizes.sm} style={{ marginTop: 2 }} />
+          <Text style={{ flex: 1 }} tone="secondary" variant="subhead">
+            {reason}
           </Text>
         </View>
-      </RoutineCover>
-      <View
-        style={{
-          padding: spacing.mdl,
-          paddingTop: spacing.md,
-          gap: spacing.md,
-        }}
-      >
-        <Text tone="secondary" variant="subhead">
-          {reason}
-        </Text>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.sm,
-          }}
-        >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
           <PersonAvatar
             id={card.autor.id}
             name={card.autor.nombre}
             official={card.esOficial}
             photoUrl={card.autor.fotoUrl}
-            size={24}
+            size={AVATAR}
           />
-          <Text numberOfLines={1} style={{ flex: 1 }} tone="muted" variant="subhead">
-            {card.esOficial ? 'REPP · Oficial' : card.autor.nombre}
-          </Text>
+          <View style={{ flex: 1, gap: spacing.xxs }}>
+            <Text numberOfLines={1} strong variant="subhead">
+              {card.esOficial ? 'Equipo REPP' : card.autor.nombre}
+            </Text>
+            <Text numberOfLines={1} tabular tone="muted" variant="footnote">
+              {card.copias > 0 ? downloadsLabel(card.copias) : 'Estrénala tú'}
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <Ionicons color={rating ? ratingStar : colors.textMuted} name={rating ? 'star' : 'star-outline'} size={iconSizes.sm} />
+            <Text strong tabular tone={rating ? 'default' : 'muted'} variant="subhead">
+              {rating ?? 'Nueva'}
+            </Text>
+          </View>
         </View>
-        <Numbers item={item} />
-        <Button label="Ver rutina" onPress={onOpen} testID="for-you-open" />
       </View>
-    </View>
+    </RoutineLink>
   );
 }
 
-/** Alternativa en el carrusel: portada corta, nombre y el motivo en una línea. */
-function AltCard({ item, onOpen }: { item: RoutineRecommendation; onOpen: () => void }) {
+/** Alternativa en el carrusel: la misma tarjeta en pequeño, con el motivo en una línea. */
+function AltCard({ item }: { item: RoutineRecommendation }) {
   const card = item.rutina;
   const rating = ratingValue(card.valoracion);
   return (
-    <PressableScale
-      accessibilityLabel={`${card.nombre}. ${recommendationReason(item)}`}
-      haptic="selection"
-      onPress={onOpen}
-      scaleTo={0.98}
+    <RoutineLink
+      id={card.id}
+      label={`${card.nombre}. ${recommendationReason(item)}`}
       style={{
         width: ALT_WIDTH,
         borderRadius: radii.xl,
         borderCurve: 'continuous',
         backgroundColor: colors.surfaceLow,
-        boxShadow: shadows.e1,
-        overflow: 'hidden',
+        boxShadow: shadows.e2,
       }}
       testID={`for-you-alt-${card.id}`}
     >
-      <RoutineCover goal={card.objetivo} scrim="soft" style={{ height: ALT_COVER }} uri={card.portadaUrl} />
-      <View style={{ padding: spacing.smd, gap: spacing.xs }}>
+      <Link.AppleZoom>
+        <View
+          style={{
+            borderTopLeftRadius: radii.xl,
+            borderTopRightRadius: radii.xl,
+            borderCurve: 'continuous',
+            overflow: 'hidden',
+          }}
+        >
+          <RoutineCover goal={card.objetivo} scrim="soft" style={{ aspectRatio: coverAspect }} uri={card.portadaUrl} />
+        </View>
+      </Link.AppleZoom>
+      <View style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.smd, gap: spacing.xxs }}>
         <Text numberOfLines={1} variant="headline">
           {card.nombre}
         </Text>
-        <Text numberOfLines={1} tone="muted" variant="footnote">
-          {`${rating ? `★ ${rating} · ` : ''}${card.diasPorSemana} días/sem`}
+        <Text numberOfLines={1} tabular tone="muted" variant="footnote">
+          {[rating ? `★ ${rating}` : null, `${card.diasPorSemana} días/sem`, durationLabel(card.duracionSemanas)]
+            .filter(Boolean)
+            .join(' · ')}
         </Text>
       </View>
-    </PressableScale>
+    </RoutineLink>
   );
 }
 
@@ -165,7 +167,7 @@ function AltCard({ item, onOpen }: { item: RoutineRecommendation; onOpen: () => 
  * pestañas. Cada estado de la petición tiene su forma y ninguno rompe el
  * catálogo de debajo.
  */
-export function ForYouBlock({ state, onOpen }: { state: ForYouState; onOpen: (id: string) => void }) {
+export function ForYouBlock({ state }: { state: ForYouState }) {
   const router = useRouter();
 
   if (state.kind === 'hidden') return null;
@@ -176,7 +178,7 @@ export function ForYouBlock({ state, onOpen }: { state: ForYouState; onOpen: (id
         <Text accessibilityRole="header" variant="title">
           Para ti
         </Text>
-        <Skeleton height={420} radius={radii.xxl} />
+        <RoutineCardSkeleton />
       </View>
     );
   }
@@ -217,20 +219,22 @@ export function ForYouBlock({ state, onOpen }: { state: ForYouState; onOpen: (id
 
   const { hero, alternatives } = state.block;
   return (
-    <View style={{ gap: spacing.smd }} testID="for-you">
+    <View style={{ gap: spacing.md }} testID="for-you">
       <Text accessibilityRole="header" variant="title">
         Para ti
       </Text>
-      <HeroCard item={hero} onOpen={() => onOpen(hero.rutina.id)} />
+      <HeroCard item={hero} />
       {alternatives.length > 0 ? (
         <ScrollView
-          contentContainerStyle={{ gap: spacing.smd, paddingRight: spacing.md }}
+          // A sangre, como los chips de objetivo: el carrusel llega al borde y
+          // la última tarjeta no se corta contra el margen.
+          contentContainerStyle={{ gap: spacing.smd, paddingHorizontal: gutter, paddingTop: spacing.xs, paddingBottom: spacing.lg }}
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={{ overflow: 'visible' }}
+          style={{ marginHorizontal: -gutter, marginBottom: -spacing.lg, overflow: 'visible' }}
         >
           {alternatives.map((item) => (
-            <AltCard item={item} key={item.rutina.id} onOpen={() => onOpen(item.rutina.id)} />
+            <AltCard item={item} key={item.rutina.id} />
           ))}
         </ScrollView>
       ) : null}

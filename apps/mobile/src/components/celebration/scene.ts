@@ -1,7 +1,9 @@
 import type { Ionicons } from '@expo/vector-icons';
 import { CARD_RARITY_LABEL, seedFrom, tierFor, type CardTier } from '@gymsheet/domain';
 import type { ProgressionBadge, ProgressionLevel } from '@gymsheet/schemas';
-import { accentPolicy, colors } from '@/theme';
+import type { IllustrationKey } from '@/components/cards/art';
+import { resolveIllustration } from '@/components/cards/resolve';
+import { accentPolicy, cardMaterials, colors, type CardMaterial, type CardRarityKey } from '@/theme';
 
 /**
  * Lo que se celebra. Dos casos, y sólo dos.
@@ -17,6 +19,10 @@ export type CelebrationSubject =
 /** Todo lo que la carta pinta, resuelto una vez desde el sujeto. */
 export interface CardScene {
   tier: CardTier;
+  /** Material de la carta (marco, arte, foil) y su dibujo. */
+  rarity: CardRarityKey;
+  material: CardMaterial;
+  art: IllustrationKey;
   rarityLabel: string | null;
   /** Color de la luz: fondo del arte, halo y rayos del frente. */
   tint: string;
@@ -46,6 +52,9 @@ export function sceneOf(subject: CelebrationSubject): CardScene {
     const points = badge.pointsReward;
     return {
       tier: tierFor(badge.rarity),
+      rarity: badge.rarity,
+      material: cardMaterials[badge.rarity],
+      art: resolveIllustration(badge),
       rarityLabel,
       // El color del catálogo es lo que distingue una insignia de las otras
       // treinta; apagarlo aquí sería celebrarlas todas igual.
@@ -69,6 +78,9 @@ export function sceneOf(subject: CelebrationSubject): CardScene {
   return {
     // Un rango nuevo es lo más grande que pasa en la app: fila legendaria.
     tier: tierFor(null),
+    rarity: 'LEGENDARIA',
+    material: cardMaterials.LEGENDARIA,
+    art: 'crown',
     rarityLabel: null,
     // Acento del gimnasio y no `level.color`: la rampa de niveles se escribió
     // sin inquilinos y metía un azul a pantalla completa en marcas rojas.

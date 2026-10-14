@@ -29,17 +29,25 @@ env:
 # Entrenar: el pie fijo sigue visible tras el scroll.
 - tapOn: 'Entrenar este día'
 - extendedWaitUntil:
-    visible: 'En progreso'
+    visible:
+      id: 'workout-focus'
     timeout: 60000
-# Se salta al remo (A1) desde la tira de miniaturas.
+# Se salta al remo (A1) desde ⋯ → «Ver todos los ejercicios».
 - tapOn:
-    id: 'strip-2'
-- assertVisible: 'Vuelta 1/3'
+    id: 'workout-more'
+- tapOn:
+    id: 'menu-overview'
+- tapOn: 'A1, .*'
+- extendedWaitUntil:
+    visible: '.*Vuelta 1/3'
+    timeout: 10000
 - tapOn:
     id: 'log-set'
 # Sin transición: pasa sola a A2, sin descanso.
 - extendedWaitUntil:
-    visible: 'A2, .*0/3 series'
+    visible:
+      id: 'group-switch-A2'
+      selected: true
     timeout: 20000
 - assertNotVisible:
     id: 'rest-bar'
@@ -49,10 +57,11 @@ env:
 - extendedWaitUntil:
     visible: 'Quedan (2 minutos y 0|1 minuto y 5\d) segundos de descanso'
     timeout: 20000
-- assertVisible: 'Vuelta 2/3'
-- takeScreenshot: C3_entreno_descanso_2min_ios_oscuro
+# Debajo del descanso la página ya está en la vuelta 2.
 - tapOn:
     id: 'rest-skip'
+- assertVisible: '.*Vuelta 2/3'
+- takeScreenshot: C3_entreno_vuelta_2_ios_oscuro
 # Se deja la cuenta sin sesión abierta para el flujo siguiente.
 - runScript:
     file: scripts-cancel-open-session.js

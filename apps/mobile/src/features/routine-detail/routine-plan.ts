@@ -110,6 +110,10 @@ export function ownCopiesOf(
  */
 export function coverImageUri(routine: Pick<Routine, 'dias'>): string | null {
   const exercises = coverExercises(routine, 50);
+  // Lo que el servidor ya resolvió por ejercicio, si viene.
+  for (const exercise of exercises) {
+    if (exercise.imagenUrl) return exercise.imagenUrl;
+  }
   for (const exercise of exercises) {
     const images = exercise.media.filter((item) => item.mediaType === 'IMAGE');
     const image = images.find((item) => item.isPrimary) ?? images[0];

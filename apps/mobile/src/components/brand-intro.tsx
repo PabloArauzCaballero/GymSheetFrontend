@@ -1,3 +1,4 @@
+import { ReppMark } from '@/components/brand/repp-mark';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -628,7 +629,7 @@ export function BrandIntro({ ready }: { ready: boolean }) {
               }}
             >
               {/* El relleno de marca, con su degradado declarado por inquilino:
-                  el verde de GymSheet o el rojo de TOP Fitness, sin una sola
+                  el lima de REPP o el rojo de TOP Fitness, sin una sola
                   línea que sepa cuál de los dos es. */}
               <LinearGradient
                 colors={gradient}
@@ -642,19 +643,24 @@ export function BrandIntro({ ready }: { ready: boolean }) {
                   Va en `accentContrast()` porque está *encima* del relleno, que
                   es exactamente el caso que ese token resuelve — el negro sobre
                   el lima y el blanco sobre el rojo. */}
-              <Text
-                style={{
-                  color: ink,
-                  fontSize: EMBLEM * 0.46,
-                  fontWeight: '800',
-                  // Tracking negativo: dos letras sueltas leen como dos letras;
-                  // apretadas leen como un monograma.
-                  letterSpacing: -EMBLEM * 0.02,
-                  includeFontPadding: false,
-                }}
-              >
-                {tenant.monogram}
-              </Text>
+              {tenant.id === 'gymsheet' ? (
+                // REPP tiene signo propio (vectorial: aguanta el zoom igual que la tipografía).
+                <ReppMark ink={ink} size={EMBLEM * 0.6} tick={ink} />
+              ) : (
+                <Text
+                  style={{
+                    color: ink,
+                    fontSize: EMBLEM * 0.46,
+                    fontWeight: '800',
+                    // Tracking negativo: dos letras sueltas leen como dos letras;
+                    // apretadas leen como un monograma.
+                    letterSpacing: -EMBLEM * 0.02,
+                    includeFontPadding: false,
+                  }}
+                >
+                  {tenant.monogram}
+                </Text>
+              )}
 
               {/* El destello que recorre el emblema. El momento reconocible. */}
               {reduceMotion ? null : (

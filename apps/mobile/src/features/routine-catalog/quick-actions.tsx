@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { colors, iconSizes, radii, shadows, spacing } from '@/theme';
+import { colors, comfortableTouchTarget, iconSizes, radii, shadows, spacing } from '@/theme';
 
 export type QuickAction = {
   key: string;
@@ -13,10 +13,9 @@ export type QuickAction = {
 };
 
 /**
- * Accesos de la cabecera de Rutinas en casillas iguales con el icono arriba
- * y la palabra debajo (como los atajos de una app de banca o de Salud). Antes
- * eran tres botones de distinto ancho y estilo partidos en dos filas: no se
- * sabía cuál importaba más. Ninguno va en acento: la acción principal de la
+ * Accesos de la cabecera de Rutinas: un círculo con su icono y la palabra
+ * debajo, sin casilla alrededor (antes era un círculo dentro de una tarjeta:
+ * caja dentro de caja). Ninguno va en acento: la acción principal de la
  * pantalla es elegir una rutina.
  */
 export function QuickActions({ actions }: { actions: readonly QuickAction[] }) {
@@ -27,31 +26,22 @@ export function QuickActions({ actions }: { actions: readonly QuickAction[] }) {
           accessibilityLabel={action.label}
           key={action.key}
           onPress={action.onPress}
-          scaleTo={0.96}
-          style={{
-            flex: 1,
-            alignItems: 'center',
-            gap: spacing.sm,
-            paddingVertical: spacing.md,
-            paddingHorizontal: spacing.xs,
-            borderRadius: radii.xl,
-            borderCurve: 'continuous',
-            backgroundColor: colors.surfaceLow,
-            boxShadow: shadows.e1,
-          }}
+          scaleTo={0.94}
+          style={{ flex: 1, alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs }}
           testID={action.testID}
         >
           <View
             style={{
-              width: 40,
-              height: 40,
+              width: comfortableTouchTarget + spacing.sm,
+              height: comfortableTouchTarget + spacing.sm,
               borderRadius: radii.full,
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: colors.surfaceHighest,
+              backgroundColor: colors.surfaceHigh,
+              boxShadow: shadows.e1,
             }}
           >
-            <Ionicons color={colors.text} name={action.icon} size={iconSizes.md} />
+            <Ionicons color={colors.text} name={action.icon} size={iconSizes.lg} />
           </View>
           <Text numberOfLines={2} style={{ textAlign: 'center' }} tone="secondary" variant="footnote">
             {action.label}

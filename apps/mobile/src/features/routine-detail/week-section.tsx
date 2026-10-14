@@ -3,9 +3,9 @@ import { View } from 'react-native';
 import type { MonthColumn, Weekday } from '@gymsheet/hooks';
 import type { Routine, RoutineWeek } from '@gymsheet/types';
 import { ErrorState, Skeleton } from '@/components/feedback';
-import { PressableScale } from '@/components/motion';
+import { EnterUp, PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { colors, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { cardPadding, colors, comfortableTouchTarget, iconSizes, radii, spacing } from '@/theme';
 import { MonthView } from '@/features/routine-detail/calendar-views';
 import { DayCard } from '@/features/routine-detail/day-cards';
 import { orderedDays } from '@/features/routine-detail/routine-plan';
@@ -47,19 +47,16 @@ export function WeekSection({
   const monthOpen = mode === 'month';
   const weeksTotal = total || routine.duracionSemanas || 0;
   return (
-    <View style={{ gap: spacing.md }}>
-      <View style={{ gap: spacing.xxs }}>
-        <Text accessibilityRole="header" variant="title">
-          Los días
-        </Text>
-        <Text tone="muted" variant="subhead">
-          Toca un día para ver sus ejercicios.
-        </Text>
-      </View>
+    <View style={{ gap: spacing.mdl }}>
+      <Text accessibilityRole="header" variant="title">
+        Los días
+      </Text>
 
-      <View style={{ gap: spacing.smd }}>
+      <View style={{ gap: spacing.md }}>
         {days.map((day, index) => (
-          <DayCard day={day} key={day.id} number={index + 1} onPress={() => onOpenDay(day.id, 1)} />
+          <EnterUp index={index} key={day.id}>
+            <DayCard day={day} number={index + 1} onPress={() => onOpenDay(day.id, 1)} />
+          </EnterUp>
         ))}
       </View>
 
@@ -74,9 +71,9 @@ export function WeekSection({
             flexDirection: 'row',
             alignItems: 'center',
             gap: spacing.sm,
-            minHeight: minTouchTarget,
-            paddingHorizontal: spacing.md,
-            borderRadius: radii.lg,
+            minHeight: comfortableTouchTarget + spacing.xs,
+            paddingHorizontal: cardPadding,
+            borderRadius: radii.xl,
             borderCurve: 'continuous',
             backgroundColor: colors.surfaceLow,
           }}

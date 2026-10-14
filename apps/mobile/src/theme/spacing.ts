@@ -18,8 +18,12 @@ export const spacing = {
   '2xl': 48,
 } as const;
 
-/** Margen lateral de pantalla. */
-export const gutter = 20;
+/**
+ * Margen lateral de pantalla: 24, el mismo que ya usaban las pantallas de
+ * acceso, de formulario y de interacciones. Con 20 las tarjetas de Rutinas
+ * quedaban pegadas al borde (revisión de TestFlight del 2026-10-11).
+ */
+export const gutter = 24;
 
 /** Ritmo vertical dentro de una tarjeta. */
 export const cardGap = 12;
@@ -67,3 +71,10 @@ export const tabletBreakpoint = 700;
 
 /** Tope con dos columnas. */
 export const maxWideContentWidth = 1040;
+
+/**
+ * Proporción de una portada: 3:2, la de las láminas del catálogo (850×567).
+ * Con una portada más alta la imagen se recorta por los lados y se amplía
+ * (a 3× se veía blanda); a 3:2 llena el ancho sin recorte.
+ */
+export const coverAspect = 3 / 2;

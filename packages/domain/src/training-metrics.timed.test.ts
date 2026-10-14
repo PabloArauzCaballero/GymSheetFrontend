@@ -23,7 +23,7 @@ const timed = (duracionSeg: number, pesoKg: number | null = null): WorkoutSet =>
   ...base, id: `t${duracionSeg}`, repeticiones: null, pesoKg, duracionSeg,
 });
 const exercise = (id: string, series: WorkoutSet[]): WorkoutExercise => ({
-  id, orden: 1, esEnfasis: false, nota: null, series,
+  id, orden: 1, esEnfasis: false, nota: null, series, saltadas: [], omitido: null,
   ejercicio: { id } as WorkoutExercise['ejercicio'],
   seriesObjetivo: 3, repsMin: null, repsMax: null, pesoObjetivoKg: null, rirObjetivo: null,
   descansoSeg: null, descansoEntreSeg: null, duracionSeg: 45, grupo: null, grupoTipo: null,

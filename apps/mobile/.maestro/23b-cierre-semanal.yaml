@@ -13,7 +13,8 @@ env:
 - runFlow: login-as.subflow.yaml
 - openLink: gymsheet:///workouts/${SESSION}
 - extendedWaitUntil:
-    visible: 'En progreso'
+    visible:
+      id: 'workout-focus'
     timeout: 60000
 - runScript:
     file: scripts-log-sets.js
@@ -27,18 +28,7 @@ env:
       EMAIL: athlete.mock@gymsheet.local
       EXERCISE: ${ROW}
       SETS: '[{"pesoKg":50,"repeticiones":10,"rir":2},{"pesoKg":50,"repeticiones":10,"rir":2},{"pesoKg":50,"repeticiones":10,"rir":2}]'
-- swipe:
-    start: 50%,25%
-    end: 50%,70%
-- extendedWaitUntil:
-    visible: '.*60 kg × 12.*'
-    timeout: 30000
-- repeat:
-    times: 5
-    commands:
-      - scroll
-- tapOn: 'Finalizar sesión'
-- tapOn: 'Finalizar'
+- runFlow: finalizar-sesion.subflow.yaml
 - extendedWaitUntil:
     visible: 'Seguir|.*Insignia conseguida.*|.*subido de rango.*'
     timeout: 60000

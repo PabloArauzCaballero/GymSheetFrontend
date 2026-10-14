@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createApiClient } from './client';
+import { routineRecommendationSchema } from '@gymsheet/schemas';
 import { createRecommendationServices } from './recommendation-services';
 
 const UUID = '8b1f6a52-3d5e-4d0b-9a63-0c8b4a5f1d11';
@@ -80,5 +81,16 @@ describe('recomendaciones (C7)', () => {
       404,
     );
     await expect(services.recommended()).rejects.toMatchObject({ kind: 'not-found' });
+  });
+});
+
+describe('plantilla como ficha', () => {
+  it('acepta la ficha entera de la plantilla y se queda con el slug', () => {
+    const parsed = routineRecommendationSchema.parse({
+      rutina: card,
+      motivo: 'x',
+      plantilla: { plantilla: 'repp-torso-pierna-4-dias', nivel: 'INTERMEDIO', equipo: ['BARRA'] },
+    });
+    expect(parsed.plantilla).toBe('repp-torso-pierna-4-dias');
   });
 });

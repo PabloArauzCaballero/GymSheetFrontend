@@ -56,6 +56,8 @@ export type RoutineDay = {
   diaSemana: number | null;
   nombre: string | null;
   orden: number;
+  /** Portada del día: la lámina del primer ejercicio que tiene imagen. Puede no venir. */
+  portadaUrl?: string | null;
   ejercicios: RoutineExercise[];
 };
 

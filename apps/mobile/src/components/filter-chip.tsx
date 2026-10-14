@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { StyleSheet } from 'react-native';
-import { colors, iconSizes, minTouchTarget, radii, shadows, spacing } from '@/theme';
+import { useReduceMotion } from '@/notifications/use-reduce-motion';
+import { colors, iconSizes, minTouchTarget, motion, radii, spacing } from '@/theme';
 
 /**
  * Chip de filtro (C8.1: nunca en acento). Lo elegido se invierte —relleno
@@ -26,6 +27,7 @@ export function FilterChip({
   testID?: string;
 }) {
   const glyph = selected ? 'checkmark' : icon;
+  const reduceMotion = useReduceMotion();
   return (
     <PressableScale
       accessibilityLabel={accessibilityLabel ?? label}
@@ -46,7 +48,11 @@ export function FilterChip({
         borderWidth: StyleSheet.hairlineWidth,
         borderColor: selected ? colors.text : colors.border,
         backgroundColor: selected ? colors.text : colors.surfaceLow,
-        boxShadow: selected ? undefined : shadows.e1,
+        // El relleno VIAJA de un estado a otro en vez de saltar (transición
+        // CSS de Reanimated, en el hilo de UI). Con «Reducir movimiento», nada.
+        transitionProperty: ['backgroundColor', 'borderColor'],
+        transitionDuration: reduceMotion ? 0 : motion.enter,
+        transitionTimingFunction: 'ease-out',
       }}
       testID={testID}
     >

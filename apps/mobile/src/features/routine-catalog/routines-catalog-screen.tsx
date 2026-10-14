@@ -19,14 +19,17 @@ import { trainingGoals, type TrainingGoal } from '@gymsheet/types';
 import { ApiError } from '@gymsheet/api-client';
 import { profileService, routineService, routineSharingService } from '@/api/services';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import { usePullRefresh } from '@/hooks/use-pull-refresh';
 import { EmptyState, ErrorState } from '@/components/feedback';
 import { FilterChip } from '@/components/filter-chip';
 import { ScrollScreen, ScreenHeader, Section } from '@/components/layout';
-import { PressableScale } from '@/components/motion';
+import { BadgePop, EnterUp, PressableScale } from '@/components/motion';
+import { Text as AppText } from '@/components/text';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { QuickActions } from '@/features/routine-catalog/quick-actions';
 import { routes } from '@/lib/routes';
-import { Button, Input } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { SEARCH_HEIGHT, SearchField } from '@/features/routine-catalog/search-field';
 import { WeekPlan } from '@/components/week-plan';
 import { useActivePrograms } from '@/features/programs/use-active-programs';
 import { CardioProgramCard } from '@/features/cardio/cardio-program-card';
@@ -39,7 +42,7 @@ import { RoutineCardSkeleton, RoutineCardView } from '@/features/routine-catalog
 import { useRecommendedRoutines } from '@/features/routine-catalog/use-recommended-routines';
 import { useRoutineCatalog } from '@/features/routine-catalog/use-routine-catalog';
 import { GOAL_LABEL } from '@/lib/format';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { colors, fontSizes, gutter, iconSizes, radii, spacing } from '@/theme';
 
 const EMPTY_COPY: Record<string, { title: string; message: string }> = {
   public: {
@@ -102,6 +105,15 @@ export function RoutinesCatalogScreen() {
   });
 
   const programs = useActivePrograms();
+  const pull = usePullRefresh(() =>
+    Promise.all([
+      catalog.refetch(),
+      forYou.refetch(),
+      assignments.refetch(),
+      invitations.refetch(),
+      queryClient.invalidateQueries({ queryKey: ['programs'] }),
+    ]),
+  );
   // ¿Hoy toca pesas? Con el plan de cardio el mismo día se avisa «Haz primero las pesas».
   const strengthRoutine = useQuery({
     queryKey: ['routine', programs.data?.fuerza?.rutinaId],
@@ -121,14 +133,8 @@ export function RoutinesCatalogScreen() {
 
   return (
     <ScrollScreen
-      onRefresh={() => {
-        void catalog.refetch();
-        void forYou.refetch();
-        void assignments.refetch();
-        void invitations.refetch();
-        void queryClient.invalidateQueries({ queryKey: ['programs'] });
-      }}
-      refreshing={catalog.isRefetching}
+      onRefresh={pull.onRefresh}
+      refreshing={pull.refreshing}
     >
       <ScreenHeader title="Rutinas" tourKey="routines" />
       {/* Cabecera: accesos en casillas iguales. La acción principal de la
@@ -176,95 +182,106 @@ export function RoutinesCatalogScreen() {
         </Section>
       ) : null}
 
-      <ForYouBlock onOpen={open} state={forYou.state} />
+      <ForYouBlock state={forYou.state} />
 
-      <CatalogTabBar onChange={setTab} value={tab} />
-      {tab === 'mine' ? (
-        <MineChips onChange={setChip} pendingInvitations={pending} value={chip} />
-      ) : null}
+      {/* Explorar: pestañas, búsqueda y objetivo juntos, a 16 entre sí; antes
+          iban a 32 como si fueran secciones distintas y la pantalla se partía. */}
+      <View style={{ gap: spacing.md }}>
+        <AppText accessibilityRole="header" variant="title">
+          Explorar
+        </AppText>
+        <CatalogTabBar onChange={setTab} value={tab} />
+        {tab === 'mine' ? (
+          <MineChips onChange={setChip} pendingInvitations={pending} value={chip} />
+        ) : null}
 
-      <View
-        style={{
-          flexDirection: 'row',
-          gap: spacing.sm,
-          alignItems: 'flex-end',
-        }}
-      >
-        <View style={{ flex: 1 }}>
-          <Input
-            autoCapitalize="none"
-            autoCorrect={false}
-            clearButtonMode="while-editing"
-            icon="search"
-            label="Buscar rutinas"
-            labelHidden
-            onChangeText={setSearch}
-            placeholder="Buscar rutina…"
-            returnKeyType="search"
-            testID="routine-search"
-            value={search}
-          />
-        </View>
-        {tab === 'public' ? (
-          <PressableScale
-            accessibilityLabel={count > 0 ? `Filtros, ${count} aplicados` : 'Filtros'}
-            onPress={() => setSheet(true)}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: spacing.xs,
-              minHeight: minTouchTarget,
-              borderRadius: radii.md,
-              borderWidth: 1,
-              borderColor: count > 0 ? colors.borderControl : colors.border,
-              backgroundColor: count > 0 ? colors.surfaceHighest : colors.surface,
-              paddingHorizontal: spacing.md,
-            }}
-            testID="open-filters"
-          >
-            <Ionicons color={colors.text} name="options-outline" size={iconSizes.md} />
-            <Text
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: spacing.sm,
+            alignItems: 'center',
+          }}
+        >
+          <SearchField onChangeText={setSearch} value={search} />
+          {tab === 'public' ? (
+            <PressableScale
+              accessibilityLabel={count > 0 ? `Filtros, ${count} aplicados` : 'Filtros'}
+              haptic="selection"
+              onPress={() => setSheet(true)}
+              scaleTo={0.94}
               style={{
-                color: colors.text,
-                fontSize: fontSizes.sm,
-                fontWeight: semibold,
+                width: SEARCH_HEIGHT,
+                height: SEARCH_HEIGHT,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: radii.lg,
+                borderCurve: 'continuous',
+                backgroundColor: count > 0 ? colors.text : colors.surfaceHigh,
               }}
+              testID="open-filters"
             >
-              {count > 0 ? `Filtros (${count})` : 'Filtros'}
-            </Text>
-          </PressableScale>
+              <Ionicons
+                color={count > 0 ? colors.background : colors.text}
+                name="options-outline"
+                size={iconSizes.md}
+              />
+              {count > 0 ? (
+                <BadgePop
+                  style={{
+                    position: 'absolute',
+                    top: -spacing.xs,
+                    right: -spacing.xs,
+                    minWidth: 20,
+                    height: 20,
+                    paddingHorizontal: spacing.xs,
+                    borderRadius: radii.full,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: colors.volt,
+                  }}
+                  value={count}
+                >
+                  <AppText strong tabular tone="onAccent" variant="caption">
+                    {count}
+                  </AppText>
+                </BadgePop>
+              ) : null}
+            </PressableScale>
+          ) : null}
+        </View>
+
+        {tab === 'public' ? (
+          <ScrollView
+            // A sangre: los chips corren hasta el borde de la pantalla y el
+            // primero arranca alineado con el margen.
+            contentContainerStyle={{ gap: spacing.sm, paddingHorizontal: gutter }}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginHorizontal: -gutter }}
+            testID="goal-chips"
+          >
+            <FilterChip
+              label="Todos"
+              onPress={() => setFilters({ ...filters, objetivo: null })}
+              selected={!filters.objetivo}
+            />
+            {trainingGoals.map((goal: TrainingGoal) => (
+              <FilterChip
+                key={goal}
+                label={GOAL_LABEL[goal]}
+                onPress={() =>
+                  setFilters({
+                    ...filters,
+                    objetivo: filters.objetivo === goal ? null : goal,
+                  })
+                }
+                selected={filters.objetivo === goal}
+                testID={`goal-chip-${goal}`}
+              />
+            ))}
+          </ScrollView>
         ) : null}
       </View>
-
-      {tab === 'public' ? (
-        <ScrollView
-          contentContainerStyle={{ gap: spacing.sm }}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          testID="goal-chips"
-        >
-          <FilterChip
-            label="Todos"
-            onPress={() => setFilters({ ...filters, objetivo: null })}
-            selected={!filters.objetivo}
-          />
-          {trainingGoals.map((goal: TrainingGoal) => (
-            <FilterChip
-              key={goal}
-              label={GOAL_LABEL[goal]}
-              onPress={() =>
-                setFilters({
-                  ...filters,
-                  objetivo: filters.objetivo === goal ? null : goal,
-                })
-              }
-              selected={filters.objetivo === goal}
-              testID={`goal-chip-${goal}`}
-            />
-          ))}
-        </ScrollView>
-      ) : null}
-
 
       <CatalogFiltersSheet
         onChange={setFilters}
@@ -274,7 +291,7 @@ export function RoutinesCatalogScreen() {
       />
 
       {catalog.isPending ? (
-        <View style={{ gap: spacing.md }}>
+        <View style={{ gap: spacing.xl }}>
           <RoutineCardSkeleton />
           <RoutineCardSkeleton />
         </View>
@@ -301,7 +318,7 @@ export function RoutinesCatalogScreen() {
           ) : null}
         </EmptyState>
       ) : (
-        <View style={{ gap: spacing.md }}>
+        <View style={{ gap: spacing.xl }}>
           {catalog.isError ? (
             <Text
               accessibilityRole="alert"
@@ -324,8 +341,12 @@ export function RoutinesCatalogScreen() {
           {pendingCards.map((card) => (
             <InvitationCard card={card} key={card.id} onAccepted={open} />
           ))}
-          {regularCards.map((card) => (
-            <RoutineCardView card={card} key={card.id} onPress={() => open(card.id)} />
+          {regularCards.map((card, index) => (
+            // Entrada en cascada, una vez y solo las primeras: guía el ojo
+            // hacia abajo cuando llega la lista; las de «Ver más» ya no esperan.
+            <EnterUp index={index} key={card.id}>
+              <RoutineCardView card={card} />
+            </EnterUp>
           ))}
           {catalog.hasNextPage ? (
             <Button

@@ -1,0 +1,15 @@
+# Finaliza la sesión abierta desde el modo enfoque: ⋯ → «Finalizar sesión» → confirmar.
+# (Antes el botón estaba al final de un scroll vertical; ahora vive en el menú y en la última página.)
+appId: app.gymsheet.mobile
+---
+- tapOn:
+    id: 'rest-skip'
+    optional: true
+- tapOn:
+    id: 'workout-more'
+- tapOn:
+    id: 'menu-finish'
+- extendedWaitUntil:
+    visible: 'Finalizar'
+    timeout: 10000
+- tapOn: 'Finalizar'

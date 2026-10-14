@@ -1,3 +1,4 @@
+import { wizardTapLock } from '@/lib/tap-lock';
 import { useCallback } from 'react';
 import { router } from 'expo-router';
 import {
@@ -38,9 +39,13 @@ export function useRoutineDraft(): WizardApi {
     (paso: number) => {
       dispatch({ type: 'intentar', paso });
       if (!canAdvance(state.draft, paso)) return;
-      const target = Math.min(paso + 1, WIZARD_STEPS.length - 1);
-      dispatch({ type: 'ir', paso: target });
-      router.push(wizardStepPath(target));
+      // Una vez por toque: un doble toque en «Siguiente» apilaba el paso dos veces
+      // (y «Volver» parecía no hacer nada, porque volvía a la copia).
+      wizardTapLock.run(() => {
+        const target = Math.min(paso + 1, WIZARD_STEPS.length - 1);
+        dispatch({ type: 'ir', paso: target });
+        router.push(wizardStepPath(target));
+      });
     },
     [dispatch, state.draft],
   );
