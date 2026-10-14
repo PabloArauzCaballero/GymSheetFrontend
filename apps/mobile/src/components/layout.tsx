@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
+  FlatList,
   RefreshControl,
   ScrollView,
   StatusBar,
@@ -14,6 +15,7 @@ import {
   Text,
   useWindowDimensions,
   View,
+  type ListRenderItem,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
@@ -236,6 +238,117 @@ export function ScrollScreen({
 
 /** Lo que tarda en desvanecerse la franja de la barra de estado, en pt. */
 const STATUS_FADE = 24;
+
+/** Lista para pantallas con imágenes: monta sólo las filas cercanas al viewport. */
+export function VirtualizedScreen<T>({
+  data,
+  empty,
+  header,
+  itemGap = 0,
+  keyExtractor,
+  onRefresh,
+  refreshing = false,
+  renderItem,
+}: {
+  data: T[];
+  empty: ReactNode;
+  header: ReactNode;
+  itemGap?: number;
+  keyExtractor: (item: T) => string;
+  onRefresh?: () => void;
+  refreshing?: boolean;
+  renderItem: ListRenderItem<T>;
+}) {
+  const insets = useSafeAreaInsets();
+  const { wide, width } = useResponsive();
+  const listRef = useRef<FlatList<T> | null>(null);
+  const offsetRef = useRef(0);
+  const registerScroller = useTourStore((state) => state.registerScroller);
+  const scroller = useMemo(
+    () => ({
+      scrollBy: (deltaY: number) => {
+        const next = Math.max(0, offsetRef.current + deltaY);
+        offsetRef.current = next;
+        listRef.current?.scrollToOffset({ offset: next, animated: true });
+      },
+      scrollTo: (y: number) => {
+        offsetRef.current = Math.max(0, y);
+        listRef.current?.scrollToOffset({ offset: offsetRef.current, animated: true });
+      },
+      getOffset: () => offsetRef.current,
+    }),
+    [],
+  );
+  useFocusEffect(
+    useCallback(() => {
+      registerScroller(scroller);
+      return () => {
+        if (useTourStore.getState().scroller === scroller) registerScroller(null);
+      };
+    }, [registerScroller, scroller]),
+  );
+  const gutter = Math.max(spacing.lg, (width - (wide ? maxWideContentWidth : maxContentWidth)) / 2);
+  const topInset = Math.max(insets.top, StatusBar.currentHeight ?? 0);
+  const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
+  const bottomInset = Math.max(insets.bottom, tabBarHeight);
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <AmbientBackground waveform={false} />
+      <FlatList
+        automaticallyAdjustKeyboardInsets
+        contentContainerStyle={{
+          paddingTop: topInset + spacing.xl,
+          paddingBottom: bottomInset + spacing['2xl'],
+          paddingLeft: gutter + insets.left,
+          paddingRight: gutter + insets.right,
+        }}
+        data={data}
+        initialNumToRender={6}
+        ItemSeparatorComponent={itemGap ? () => <View style={{ height: itemGap }} /> : undefined}
+        keyExtractor={keyExtractor}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
+        ListEmptyComponent={<>{empty}</>}
+        ListHeaderComponent={<View style={{ gap: screenGap, marginBottom: screenGap }}>{header}</View>}
+        maxToRenderPerBatch={6}
+        onMomentumScrollEnd={(event) => {
+          offsetRef.current = event.nativeEvent.contentOffset.y;
+        }}
+        onScrollEndDrag={(event) => {
+          offsetRef.current = event.nativeEvent.contentOffset.y;
+        }}
+        ref={listRef}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              colors={[colors.volt]}
+              onRefresh={onRefresh}
+              progressBackgroundColor={colors.surface}
+              refreshing={refreshing}
+              tintColor={colors.volt}
+            />
+          ) : undefined
+        }
+        renderItem={renderItem}
+        showsVerticalScrollIndicator={false}
+        windowSize={5}
+      />
+      <LinearGradient
+        colors={[colors.background, colors.background, `${colors.background}00`]}
+        locations={[0, topInset / (topInset + STATUS_FADE), 1]}
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: topInset + STATUS_FADE,
+        }}
+      />
+    </View>
+  );
+}
 
 /** Page title plus an optional line of context underneath. */
 /**

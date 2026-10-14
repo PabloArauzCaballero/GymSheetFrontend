@@ -18,6 +18,7 @@
       "channel": "development"
     },
     "preview": {
+      "autoIncrement": true,
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_ENVIRONMENT": "staging",
