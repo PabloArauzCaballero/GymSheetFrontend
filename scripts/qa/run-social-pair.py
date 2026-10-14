@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""H1/H3.S2/H4/H5/H7.S4/H8/H9/H10 pair QA coordinator. Never substitutes API checks for device evidence.
+"""H1/H3.S2/H4/H5/H7.S4/H8/H9/H10/H11 pair QA coordinator. Never substitutes API checks for device evidence.
 
 Usage: python3 scripts/qa/run-social-pair.py --phase H1
        python3 scripts/qa/run-social-pair.py --phase H7
@@ -9,6 +9,7 @@ Usage: python3 scripts/qa/run-social-pair.py --phase H1
        python3 scripts/qa/run-social-pair.py --phase H8
        python3 scripts/qa/run-social-pair.py --phase H9
        python3 scripts/qa/run-social-pair.py --phase H10
+       python3 scripts/qa/run-social-pair.py --phase H11
        python3 scripts/qa/run-social-pair.py --case H1.S3.M1 --output /tmp/h1.json
        python3 scripts/qa/run-social-pair.py --case H7.S4.M1 --output /tmp/h7.json
 
@@ -119,6 +120,10 @@ CASES = {
     "H10.S3.M5": "opening location uses the agreed place",
     "H10.S4.M1": "training migration preserves compatible legacy data",
     "H10.S4.M2": "empty database migrations load training fixture",
+    "H11.S3.M1": "reporting a reel profile or message confirms one persistent case",
+    "H11.S3.M2": "pausing a profile preserves its chat and hides it from discovery",
+    "H11.S3.M3": "resuming a profile restores eligibility and preserves consent choices",
+    "H11.S3.M4": "blocking from chat revokes both sessions and an old notification link",
 }
 CASE_ROLES = {"H1.S3.M1": ("A", "B"), "H1.S3.M2": ("A", "B", "WEB_A"),
               "H1.S3.M3": ("A", "B"), "H1.S3.M4": ("A",)}
@@ -139,6 +144,10 @@ CASE_ROLES.update({
     "H10.S3.M5": ("A_ANDROID", "A_WEB"),
     "H10.S4.M1": ("A_API",),
     "H10.S4.M2": ("A_API",),
+    "H11.S3.M1": ("A_ANDROID", "A_IOS", "B_WEB"),
+    "H11.S3.M2": ("A_ANDROID", "A_IOS", "B_WEB", "C_WEB"),
+    "H11.S3.M3": ("A_ANDROID", "A_IOS", "B_WEB", "C_WEB"),
+    "H11.S3.M4": ("A_ANDROID", "A_IOS", "B_IOS", "B_WEB"),
 })
 CASE_ROLES.update({
     "H7.S4.M1": ("A_ANDROID",),
@@ -233,6 +242,10 @@ CASE_ASSERTIONS.update({
     "H10.S3.M5": "locationOpensAgreedPlace",
     "H10.S4.M1": "legacyTrainingDataSurvivesMigration",
     "H10.S4.M2": "emptyDatabaseLoadsTrainingFixture",
+    "H11.S3.M1": "reportFromResourceCreatesOnePersistentCase",
+    "H11.S3.M2": "pausePreservesConnectionAndHidesFromDiscovery",
+    "H11.S3.M3": "resumeRestoresEligibilityAndPreservesConsent",
+    "H11.S3.M4": "blockRevokesChatAndOldNotificationLink",
 })
 CASE_ASSERTIONS.update({
     "H8.S1.M1": "authorizedStoryVisibleAcrossGyms",
@@ -802,7 +815,7 @@ def m5_fixture_issues() -> list[str]:
 def case_preflight_issues(case: str, api_issues: list[str], devices: dict) -> list[str]:
     """Combine API readiness with the native devices required by this case."""
     issues = list(api_issues)
-    if case.startswith(("H4.", "H5.", "H7.S4.", "H8.", "H9.S3.", "H10.S3.")):
+    if case.startswith(("H4.", "H5.", "H7.S4.", "H8.", "H9.S3.", "H10.S3.", "H11.S3.")):
         issues.extend(case_device_issues(case, devices))
     if case.startswith("H7.S4."):
         if case == "H7.S4.M1":
@@ -832,7 +845,7 @@ def case_preflight_issues(case: str, api_issues: list[str], devices: dict) -> li
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--phase", choices=["H1", "H3", "H4", "H5", "H7", "H8", "H9", "H10"])
+    group.add_argument("--phase", choices=["H1", "H3", "H4", "H5", "H7", "H8", "H9", "H10", "H11"])
     group.add_argument("--case")
     parser.add_argument("--output", type=pathlib.Path)
     parser.add_argument("--drivers-dir", type=pathlib.Path, default=ROOT / "scripts/qa/drivers")
@@ -862,7 +875,7 @@ def main() -> int:
     evidence_dir.mkdir(parents=True, exist_ok=True)
     cases = []
     for case in selected:
-        if case.startswith(("H3.S2.", "H4.", "H5.", "H7.S4.", "H8.", "H9.", "H10.")):
+        if case.startswith(("H3.S2.", "H4.", "H5.", "H7.S4.", "H8.", "H9.", "H10.", "H11.S3.")):
             absent = missing_drivers(case, args.drivers_dir)
             if absent:
                 cases.append({"id": case, "verdict": "BLOCKED",
@@ -872,12 +885,12 @@ def main() -> int:
         preflight_issues = case_preflight_issues(case, common_issues, devices)
         if preflight_issues:
             blocked = {"id": case, "verdict": "BLOCKED", "reasons": preflight_issues}
-            if case.startswith(("H4.", "H8.", "H9.", "H10.")):
+            if case.startswith(("H4.", "H8.", "H9.", "H10.", "H11.S3.")):
                 blocked["requiredRoles"] = list(CASE_ROLES[case])
             cases.append(blocked)
             continue
         result = run_case(case, run_id, args.drivers_dir, evidence_dir, api, api_base, web_base)
-        if case.startswith(("H4.", "H8.", "H9.", "H10.")):
+        if case.startswith(("H4.", "H8.", "H9.", "H10.", "H11.S3.")):
             result.setdefault("requiredRoles", list(CASE_ROLES[case]))
         if result["verdict"] == "PASS":
             after, after_issues = observe_api(api_base, required_actors)

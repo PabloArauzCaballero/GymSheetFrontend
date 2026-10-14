@@ -692,6 +692,39 @@ class PairRunnerTests(unittest.TestCase):
             issues = runner.case_preflight_issues("H10.S3.M3", [], devices)
         self.assertIn("H10.S3.M3 disposable invitation ID is invalid", issues)
 
+    def test_h11_s3_cases_are_registered_with_roles_and_assertions(self):
+        runner = load_runner()
+        expected_roles = {
+            "H11.S3.M1": ("A_ANDROID", "A_IOS", "B_WEB"),
+            "H11.S3.M2": ("A_ANDROID", "A_IOS", "B_WEB", "C_WEB"),
+            "H11.S3.M3": ("A_ANDROID", "A_IOS", "B_WEB", "C_WEB"),
+            "H11.S3.M4": ("A_ANDROID", "A_IOS", "B_IOS", "B_WEB"),
+        }
+        expected_assertions = {
+            "H11.S3.M1": "reportFromResourceCreatesOnePersistentCase",
+            "H11.S3.M2": "pausePreservesConnectionAndHidesFromDiscovery",
+            "H11.S3.M3": "resumeRestoresEligibilityAndPreservesConsent",
+            "H11.S3.M4": "blockRevokesChatAndOldNotificationLink",
+        }
+        self.assertEqual([case for case in runner.CASES if case.startswith("H11.S3.")],
+                         list(expected_roles))
+        for case, roles in expected_roles.items():
+            self.assertEqual(runner.CASE_ROLES[case], roles)
+            self.assertEqual(runner.CASE_ASSERTIONS[case], expected_assertions[case])
+            self.assertTrue(all(role in runner.CASE_ROLE_ACTORS for role in roles))
+
+    def test_h11_phase_emits_all_cases_and_blocks_missing_drivers(self):
+        result, manifest = self.run_cli("--phase", "H11")
+        self.assertEqual(result.returncode, 2)
+        cases = manifest["cases"]
+        self.assertEqual([case["id"] for case in cases],
+                         [f"H11.S3.M{i}" for i in range(1, 5)])
+        self.assertTrue(all(case["verdict"] == "BLOCKED" for case in cases))
+        self.assertTrue(all(case["requiredRoles"] for case in cases))
+        self.assertTrue(all(any("required driver" in reason for reason in case["reasons"])
+                            for case in cases))
+        self.assertFalse(manifest["secretsIncluded"])
+
     def test_h9_api_service_unavailable_blocks_when_driver_is_present(self):
         runner = load_runner()
         api = {"ready": False, "actors": {}}

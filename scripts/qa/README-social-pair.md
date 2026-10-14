@@ -1,4 +1,4 @@
-# H1, H3.S2, H4, H5, H7.S4, H8, H9, and H10 pair runner
+# H1, H3.S2, H4, H5, H7.S4, H8, H9, H10, and H11 pair runner
 
 Run from `GymSheetFrontend`:
 
@@ -11,6 +11,7 @@ python3 scripts/qa/run-social-pair.py --phase H4
 python3 scripts/qa/run-social-pair.py --phase H8
 python3 scripts/qa/run-social-pair.py --phase H9
 python3 scripts/qa/run-social-pair.py --phase H10
+python3 scripts/qa/run-social-pair.py --phase H11
 python3 scripts/qa/run-social-pair.py --case H1.S3.M1 --output /tmp/h1-m1.json
 python3 scripts/qa/run-social-pair.py --case H7.S4.M3 --output /tmp/h7-m3.json
 ```
@@ -49,6 +50,8 @@ H9 registers all 18 H9.S1–H9.S4 cases. S1/S2/S4 use API-only roles (`A_API`, `
 H9 proof assertion keys are, in order: S1.M1–M4 `serverRejectsDurationAboveNinety`, `interruptedUploadNeverVisible`, `processingRetryCreatesNoDuplicates`, `invalidVideoContentRejected`; S2.M1–M6 `connectionsFeedContainsAuthorizedReels`, `savedReelsRemainPrivate`, `repostsDeduplicatedByOriginalReel`, `undoRepostPreservesOriginal`, `closedCommentsRejectNewParticipation`, `deletedReelUnavailableFromCollections`; S3.M1–M6 `trimmedReelUsesSelectedCover`, `cameraAndFileReachReadyWithPreview`, `onlyActiveVisibleReelPlays`, `authorConnectionMatchesDiscoveryAndMap`, `commentReplyLikePersisted`, `authorDeletesOnlyTargetComment`; S4.M1–M2 `reelMigrationPreservesCompatibleData`, `emptyDatabaseLoadsReelFixture`.
 
 H10 registers all 18 H10.S1–H10.S4 cases. S1/S2/S4 use API roles (`A_API`, `B_API` where both participants are involved); S3 declares Android/iOS/web roles for forms, timezone, calendar, permission and location. Drivers must make the `CASE_ASSERTIONS` proof true; a missing driver produces `BLOCKED`. The H10 phase run is a manifest/preflight and only proves acceptance when every selected case has a verified driver result.
+
+H11 registers H11.S3.M1–M4 for reporting from a resource, pausing and resuming a profile, and blocking from chat. Every case covers Android, iOS, and web: M1 uses `A_ANDROID`, `A_IOS`, `B_WEB`; M2/M3 add `C_WEB` to verify discovery eligibility; M4 uses `A_ANDROID`, `A_IOS`, `B_IOS`, `B_WEB` to check both chat sessions. The runner checks the connected Android device, booted iOS simulator, authenticated distinct A/B/C identities, and fixed role drivers. These drivers are not present yet, so `--phase H11` emits all four required cases as `BLOCKED`; it does not claim that the UI or PAIR acceptance passed. The required proof keys are `reportFromResourceCreatesOnePersistentCase`, `pausePreservesConnectionAndHidesFromDiscovery`, `resumeRestoresEligibilityAndPreservesConsent`, and `blockRevokesChatAndOldNotificationLink`.
 
 The runner starts all roles for one case concurrently with arguments `--case`, `--role`, `--run-id`, `--evidence-dir`. Multi-role H7 cases, H5.S2.M4, and the explicitly synchronized H9 cases also receive the same `--barrier-dir`, created with mode `0700` as a fresh random directory under `<evidence-dir>/.barriers/`. It is unique per case invocation, even when `QA_RUN_ID` is reused or the manifest output points to a shared directory such as `/tmp`. Keep barriers and screenshot/media artifacts separate; the runner retains barrier markers with the evidence. Each process receives the normalized API/web base URLs and only the `QA_TOKEN_*` belonging to its role's actor. It can verify its own `apiActorId` by calling `/auth/me` with that token. Tokens are never passed in arguments or included in the manifest. Each driver must exit 0 and print one JSON object to stdout:
 

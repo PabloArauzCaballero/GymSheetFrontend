@@ -18,7 +18,7 @@ Aplican íntegramente R01–R37, el aislamiento de datos privados, 18+, filtros 
 
 **CA del hito:** Dado el entorno de prueba y sus dependencias, cuando se ejecutan sus casos, entonces administración central resuelve reportes y los avisos no reabren recursos revocados.
 
-**DoD del hito:** cada fila en PASS con su salida literal y [gates](../CALIDAD_Y_DOD.md), recorrido visible del hito en Android/iOS/web; `python3 scripts/qa/run-social-pair.py --phase H11` genera manifest sin casos obligatorios omitidos. Comando por implementar en H1.
+**DoD del hito:** cada fila en PASS con su salida literal y [gates](../CALIDAD_Y_DOD.md), recorrido visible del hito en Android/iOS/web; `python3 scripts/qa/run-social-pair.py --phase H11` genera manifest con los cuatro casos H11.S3 sin omisiones. El runner ya está implementado; drivers y ejecución PAIR siguen pendientes.
 
 ## Foco de revisión
 
@@ -37,6 +37,8 @@ Los casos negativos de cada grupo y H12 ejercitan estos cinco riesgos; no se con
 **Interfaces:** Consume target tipado; produce caso auditable con acceso central explícito.
 
 **CA:** dadas las precondiciones de cada fila, al ejecutar sus acciones se cumplen exactamente sus resultados. **DoD:** todos los comandos dirigidos de este grupo devuelven PASS y no hay defectos mayores abiertos. **Estado:** HECHO (backend; falta recorrido PAIR en H11.S3).
+
+**PAIR H11.S3:** roles declarados: M1 `A_ANDROID`/`A_IOS`/`B_WEB`; M2 y M3 agregan `C_WEB`; M4 `A_ANDROID`/`A_IOS`/`B_IOS`/`B_WEB`. El manifiesto requiere pruebas autenticadas por rol, Android conectado e iOS booted.
 
 **Secuencia por microtarea:**
 
