@@ -29,15 +29,12 @@ export const ORDER_LABELS: Record<RoutineCatalogOrder, string> = {
 };
 
 export const CATALOG_TABS = [
-  { scope: 'public', label: 'Públicas' },
+  { scope: 'all', label: 'Todas' },
   { scope: 'official', label: 'REPP' },
-  { scope: 'mine', label: 'Mías' },
+  { scope: 'shared', label: 'Compartidas' },
 ] as const satisfies readonly { scope: RoutineCatalogScope; label: string }[];
 
 export type CatalogTab = (typeof CATALOG_TABS)[number]['scope'];
-
-/** Chips de «Mías»: lo que creé yo o lo que me compartieron. */
-export type MineChip = 'created' | 'shared';
 
 /** Cuántos filtros (sin contar el buscador ni el orden) están aplicados. */
 export function activeFilterCount(state: CatalogFilterState): number {
@@ -51,20 +48,18 @@ export function hasActiveFilters(state: CatalogFilterState): boolean {
 }
 
 /**
- * Traduce la pestaña, el chip de «Mías» y los filtros a la consulta del backend.
- * «Creadas por mí» es `scope=mine`; «Compartidas conmigo» es `scope=shared`. Los
- * filtros de Públicas no se envían a las demás pestañas: no los muestran.
+ * Traduce la pestaña y los filtros a la consulta del backend. «Todas» mezcla lo
+ * público con lo que creé yo; REPP y Compartidas van aparte. Los filtros solo se
+ * envían desde «Todas»: las demás pestañas no los muestran.
  */
 export function toCatalogQuery(
   tab: CatalogTab,
-  chip: MineChip,
   state: CatalogFilterState,
   cursor?: string | null,
 ): RoutineCatalogQuery {
-  const scope: RoutineCatalogScope = tab === 'mine' ? (chip === 'shared' ? 'shared' : 'mine') : tab;
-  const filtered = tab === 'public';
+  const filtered = tab === 'all';
   return {
-    scope,
+    scope: tab,
     q: state.q.trim() || undefined,
     objetivo: filtered ? (state.objetivo ?? undefined) : undefined,
     diasPorSemana: filtered ? (state.diasPorSemana ?? undefined) : undefined,
