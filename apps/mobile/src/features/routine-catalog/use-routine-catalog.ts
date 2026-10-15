@@ -1,23 +1,23 @@
 import { useInfiniteQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import type { RoutineCard, RoutineRecommendation } from '@gymsheet/types';
-import { toCatalogQuery, type CatalogFilterState, type CatalogTab, type MineChip } from '@gymsheet/hooks';
+import { toCatalogQuery, type CatalogFilterState, type CatalogTab } from '@gymsheet/hooks';
 import { routineCatalogService } from '@/api/services';
 
 /** Claves del catálogo: invalidar `['routines', 'catalog']` refresca todas las pestañas. */
-export const catalogKey = (tab: CatalogTab, chip: MineChip, filters: CatalogFilterState) =>
-  ['routines', 'catalog', tab, chip, filters] as const;
+export const catalogKey = (tab: CatalogTab, filters: CatalogFilterState) =>
+  ['routines', 'catalog', tab, filters] as const;
 
 /**
  * Una pestaña del catálogo con paginación por cursor. Cada combinación de
  * pestaña, chip y filtros tiene su propia caché, así que volver a una pestaña no
  * pide nada de nuevo mientras los datos estén frescos.
  */
-export function useRoutineCatalog(tab: CatalogTab, chip: MineChip, filters: CatalogFilterState) {
+export function useRoutineCatalog(tab: CatalogTab, filters: CatalogFilterState) {
   return useInfiniteQuery({
-    queryKey: catalogKey(tab, chip, filters),
+    queryKey: catalogKey(tab, filters),
     initialPageParam: null as string | null,
     queryFn: ({ pageParam }) =>
-      routineCatalogService.list(toCatalogQuery(tab, chip, filters, pageParam)),
+      routineCatalogService.list(toCatalogQuery(tab, filters, pageParam)),
     getNextPageParam: (last) => last.siguienteCursor,
   });
 }

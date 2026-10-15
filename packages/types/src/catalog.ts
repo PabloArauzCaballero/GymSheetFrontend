@@ -1,8 +1,8 @@
 import type { RatingSummary } from './core';
 import type { TrainingGoal } from './enums';
 
-/** Pestañas del catálogo de rutinas (RF-01): Públicas, REPP, Mías y Compartidas conmigo. */
-export const routineCatalogScopes = ['public', 'official', 'mine', 'shared'] as const;
+/** Pestañas del catálogo de rutinas (RF-01): Todas (públicas + las tuyas), REPP y Compartidas conmigo. */
+export const routineCatalogScopes = ['all', 'public', 'official', 'mine', 'shared'] as const;
 export type RoutineCatalogScope = (typeof routineCatalogScopes)[number];
 
 export const routineCatalogOrders = ['recientes', 'valoradas', 'populares'] as const;

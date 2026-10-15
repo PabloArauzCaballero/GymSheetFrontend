@@ -13,7 +13,6 @@ import {
   ORDER_LABELS,
   type CatalogFilterState,
   type CatalogTab,
-  type MineChip,
 } from '@gymsheet/hooks';
 import { trainingGoals, type TrainingGoal } from '@gymsheet/types';
 import { ApiError } from '@gymsheet/api-client';
@@ -35,7 +34,7 @@ import { useActivePrograms } from '@/features/programs/use-active-programs';
 import { CardioProgramCard } from '@/features/cardio/cardio-program-card';
 import { StrengthProgramCard } from '@/features/programs/program-card';
 import { CatalogFiltersSheet } from '@/features/routine-catalog/catalog-filters';
-import { CatalogTabBar, MineChips, ResultCount } from '@/features/routine-catalog/catalog-tab-bar';
+import { CatalogTabBar, ResultCount } from '@/features/routine-catalog/catalog-tab-bar';
 import { InvitationCard } from '@/features/routine-catalog/invitation-card';
 import { RoutineCardSkeleton, RoutineCardView } from '@/features/routine-catalog/routine-card';
 import { useRoutineCatalog } from '@/features/routine-catalog/use-routine-catalog';
@@ -43,17 +42,13 @@ import { GOAL_LABEL } from '@/lib/format';
 import { colors, fontSizes, gutter, iconSizes, radii, spacing } from '@/theme';
 
 const EMPTY_COPY: Record<string, { title: string; message: string }> = {
-  public: {
-    title: 'Aún no hay rutinas públicas con estos filtros',
-    message: 'Prueba con otro objetivo o quita algún filtro.',
+  all: {
+    title: 'Aún no hay rutinas con estos filtros',
+    message: 'Prueba con otro objetivo, quita algún filtro o crea la tuya.',
   },
   official: {
-    title: 'Aún no hay rutinas destacadas',
-    message: 'Las rutinas de REPP aparecerán aquí en cuanto se publiquen.',
-  },
-  created: {
-    title: 'No has creado rutinas',
-    message: 'Crea tu primera rutina por días y semanas.',
+    title: 'Aún no hay rutinas de REPP',
+    message: 'Las rutinas del equipo REPP aparecerán aquí en cuanto se publiquen.',
   },
   shared: {
     title: 'Nadie te ha compartido una rutina',
@@ -65,8 +60,7 @@ const EMPTY_COPY: Record<string, { title: string; message: string }> = {
 export function RoutinesCatalogScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<CatalogTab>('public');
-  const [chip, setChip] = useState<MineChip>('created');
+  const [tab, setTab] = useState<CatalogTab>('all');
   const [filters, setFiltersState] = useState<CatalogFilterState>(emptyCatalogFilters);
   // El objetivo del perfil precarga el filtro (C7) una sola vez y solo si la
   // persona no ha tocado los filtros: nunca se pisa una elección suya.
@@ -91,7 +85,7 @@ export function RoutinesCatalogScreen() {
     if (profileGoal && !touched.current) setFiltersState(initialCatalogFilters(profileGoal));
   }, [profileGoal]);
 
-  const catalog = useRoutineCatalog(tab, chip, applied);
+  const catalog = useRoutineCatalog(tab, applied);
   const assignments = useQuery({
     queryKey: ['routines', 'assignments', 'me'],
     queryFn: () => routineService.myAssignments(),
@@ -123,7 +117,6 @@ export function RoutinesCatalogScreen() {
   const cards = catalog.data?.pages.flatMap((page) => page.items) ?? [];
   const pendingCards = cards.filter(isPendingInvitation);
   const regularCards = cards.filter((card) => !isPendingInvitation(card));
-  const emptyKey = tab === 'mine' ? chip : tab;
   const count = activeFilterCount(filters);
   const open = (id: string) => router.push({ pathname: '/routines/[id]', params: { id } });
 
@@ -183,10 +176,7 @@ export function RoutinesCatalogScreen() {
         <AppText accessibilityRole="header" variant="title">
           Explorar
         </AppText>
-        <CatalogTabBar onChange={setTab} value={tab} />
-        {tab === 'mine' ? (
-          <MineChips onChange={setChip} pendingInvitations={pending} value={chip} />
-        ) : null}
+        <CatalogTabBar onChange={setTab} pendingInvitations={pending} value={tab} />
 
         <View
           style={{
@@ -196,7 +186,7 @@ export function RoutinesCatalogScreen() {
           }}
         >
           <SearchField onChangeText={setSearch} value={search} />
-          {tab === 'public' ? (
+          {tab === 'all' ? (
             <PressableScale
               accessibilityLabel={count > 0 ? `Filtros, ${count} aplicados` : 'Filtros'}
               haptic="selection"
@@ -243,7 +233,7 @@ export function RoutinesCatalogScreen() {
           ) : null}
         </View>
 
-        {tab === 'public' ? (
+        {tab === 'all' ? (
           <ScrollView
             // A sangre: los chips corren hasta el borde de la pantalla y el
             // primero arranca alineado con el margen.
@@ -293,10 +283,10 @@ export function RoutinesCatalogScreen() {
       ) : cards.length === 0 ? (
         <EmptyState
           icon="albums-outline"
-          message={EMPTY_COPY[emptyKey]?.message ?? ''}
-          title={EMPTY_COPY[emptyKey]?.title ?? 'Sin rutinas'}
+          message={EMPTY_COPY[tab]?.message ?? ''}
+          title={EMPTY_COPY[tab]?.title ?? 'Sin rutinas'}
         >
-          {tab === 'public' && hasActiveFilters(applied) ? (
+          {tab === 'all' && hasActiveFilters(applied) ? (
             <Button
               label="Limpiar filtros"
               onPress={() => {
@@ -306,7 +296,7 @@ export function RoutinesCatalogScreen() {
               variant="ghost"
             />
           ) : null}
-          {tab === 'mine' && chip === 'created' ? (
+          {tab === 'all' && !hasActiveFilters(applied) ? (
             <Button label="Crear rutina" onPress={() => router.push('/routines/new')} variant="secondary" />
           ) : null}
         </EmptyState>
@@ -323,7 +313,7 @@ export function RoutinesCatalogScreen() {
           ) : null}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
             <ResultCount hasMore={catalog.hasNextPage} shown={cards.length} />
-            {tab === 'public' ? (
+            {tab === 'all' ? (
               <Text numberOfLines={1} style={{ flexShrink: 1, color: colors.textMuted, fontSize: fontSizes.sm }}>
                 Orden: {ORDER_LABELS[filters.orden]}
                 {filters.deMiGimnasio ? ' · De mi gimnasio' : ''}
