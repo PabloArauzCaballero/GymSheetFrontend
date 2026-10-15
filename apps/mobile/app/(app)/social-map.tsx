@@ -239,7 +239,15 @@ export default function SocialMapScreen() {
           </View>
           <View style={{ gap: spacing.sm, padding: spacing.md, borderRadius: radii.xl, backgroundColor: socialMapColors.glass, borderColor: socialMapColors.glassBorder, borderWidth: 1 }}>
             <Text style={{ color: colors.text, fontSize: fontSizes.footnote }}>{status}</Text>
-            {location.settingsLoaded && !location.sharing ? (
+            {location.missingAge ? (
+              <>
+                <Text style={{ color: colors.textSecondary, fontSize: fontSizes.footnote, lineHeight: 18 }}>
+                  Para aparecer en el mapa necesitamos tu fecha de nacimiento: aquí solo se muestran mayores de edad.
+                </Text>
+                <Button icon="calendar-outline" label="Añadir fecha de nacimiento" onPress={() => router.push(location.notOnboarded ? '/onboarding' : '/profile-edit')} size="sm" />
+              </>
+            ) : null}
+            {!location.missingAge && location.settingsLoaded && !location.sharing ? (
               <Button icon="eye-outline" label="Aparecer en el mapa" loading={location.appear.isPending} onPress={() => location.appear.mutate()} size="sm" />
             ) : null}
             <Text accessibilityRole="link" onPress={() => { void Linking.openURL('https://www.openstreetmap.org/copyright'); }} style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
