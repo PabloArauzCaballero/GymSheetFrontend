@@ -1,125 +1,113 @@
 import type {} from '../../../../web/node_modules/vitest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import SocialMapScreen from '../../../app/(app)/social-map';
 
-const { mapAreas, mapGyms, mapPeople, publicBranches, region } = vi.hoisted(() => ({
-  mapAreas: vi.fn(), mapGyms: vi.fn(), mapPeople: vi.fn(), publicBranches: vi.fn(),
-  region: { latitude: -16.5, longitude: -68.15, latitudeDelta: 0.12, longitudeDelta: 0.12 },
+type Props = { children?: ReactNode; onPress?: () => void; accessibilityLabel?: string };
+
+const { mapAreas, mapGyms, mapNearby, publicBranches, region, Box, Press } = vi.hoisted(() => ({
+  mapAreas: vi.fn(), mapGyms: vi.fn(), mapNearby: vi.fn(), publicBranches: vi.fn(),
+  region: { latitude: -16.5, longitude: -68.13, latitudeDelta: 0.09, longitudeDelta: 0.09 },
+  Box: ({ children }: Props) => <div>{children}</div>,
+  Press: ({ children, onPress, accessibilityLabel }: Props) => <button aria-label={accessibilityLabel} onClick={onPress}>{children}</button>,
 }));
 
 vi.mock('@/api/services', () => ({
-  socialService: { mapAreas, mapGyms, mapPeople, searchMapCities: vi.fn(), sendConnection: vi.fn() },
+  socialService: {
+    mapAreas, mapGyms, mapNearby, searchMapCities: vi.fn(),
+    getDiscoverySettings: vi.fn().mockResolvedValue({ profileEnabled: true, crossGymEnabled: false, mapEnabled: true, version: 1 }),
+    saveMapLocation: vi.fn(), updateDiscoverySettings: vi.fn(),
+  },
   facilitiesService: { publicBranches },
 }));
+vi.mock('expo-location', () => ({
+  getForegroundPermissionsAsync: vi.fn().mockResolvedValue({ granted: false }),
+  requestForegroundPermissionsAsync: vi.fn(), getCurrentPositionAsync: vi.fn(), Accuracy: { Balanced: 3 },
+}));
 vi.mock('@/state/auth-store', () => ({ useAuthStore: () => 'viewer-1' }));
-vi.mock('@/theme', () => ({ colors: {}, radii: {}, spacing: {} }));
-vi.mock('@/notifications', () => ({ notify: { error: vi.fn() } }));
-vi.mock('expo-router', () => ({ Stack: { Screen: () => null }, useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('@/theme', () => ({ colors: {}, radii: {}, spacing: {}, fontSizes: {}, iconSizes: {}, socialMapColors: {}, mediaChip: {}, heroScrim: {}, glideSpring: {}, shadows: {}, minTouchTarget: 44, semibold: '600', stagger: 45 }));
+vi.mock('@/notifications', () => ({ notify: { error: vi.fn(), success: vi.fn() } }));
+vi.mock('expo-router', () => ({ Stack: { Screen: () => null }, useRouter: () => ({ push: vi.fn(), back: vi.fn() }) }));
 vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) }));
-vi.mock('@/components/layout', () => ({ Card: ({ children }: { children: ReactNode }) => <section>{children}</section> }));
+vi.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
+vi.mock('expo-linear-gradient', () => ({ LinearGradient: () => null }));
+vi.mock('@/components/motion', () => ({ PressableScale: Press }));
+vi.mock('@/components/bottom-sheet', () => ({ BottomSheet: ({ visible, children }: Props & { visible: boolean }) => (visible ? <div>{children}</div> : null) }));
+vi.mock('@/components/social-status-editor', () => ({ DiscoveryPreferencesEditor: () => <div>Editor de preferencias</div> }));
+vi.mock('@/components/feedback', () => ({ ErrorState: () => <div>Error</div> }));
+vi.mock('@/components/media-image', () => ({ MediaImage: Box }));
+vi.mock('@/components/person-avatar', () => ({ PersonAvatar: () => null }));
 vi.mock('@/components/ui', () => ({ Button: ({ label, onPress }: { label: string; onPress: () => void }) => <button onClick={onPress}>{label}</button> }));
+vi.mock('react-native-reanimated', () => {
+  const chain = { duration: () => chain, delay: () => chain, springify: () => chain, damping: () => chain, stiffness: () => chain };
+  return { default: { View: Box }, FadeIn: chain, FadeOut: chain, SlideInDown: chain, SlideOutDown: chain };
+});
 vi.mock('react-native', () => ({
-  View: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  ScrollView: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  Text: ({ children }: { children: ReactNode }) => <span>{children}</span>,
+  View: Box, ScrollView: Box,
+  Text: ({ children }: Props) => <span>{children}</span>,
   TextInput: () => <input />,
-  ActivityIndicator: () => <span role="status">Cargando</span>,
-  Pressable: ({ children, onPress, accessibilityLabel }: { children: ReactNode; onPress: () => void; accessibilityLabel?: string }) => <button aria-label={accessibilityLabel} onClick={onPress}>{children}</button>,
   Linking: { openURL: vi.fn() },
+  useWindowDimensions: () => ({ width: 390, height: 844 }),
 }));
-vi.mock('react-native-maps', () => ({
-  default: ({ children, onRegionChangeComplete }: { children: ReactNode; onRegionChangeComplete: (value: typeof region) => void }) => <div><button onClick={() => onRegionChangeComplete(region)}>Mover mapa</button>{children}</div>,
-  Circle: () => null,
-  Marker: ({ title, onPress }: { title: string; onPress: () => void }) => <button aria-label={`Marcador ${title}`} onClick={onPress}>{title}</button>,
-}));
+vi.mock('react-native-maps', async () => {
+  const { forwardRef, useImperativeHandle } = await import('react');
+  const MapView = forwardRef(({ children, onRegionChangeComplete }: { children: ReactNode; onRegionChangeComplete: (value: typeof region) => void }, ref) => {
+    useImperativeHandle(ref, () => ({ animateToRegion: vi.fn() }));
+    return <div><button onClick={() => onRegionChangeComplete({ ...region })}>Mover mapa</button>{children}</div>;
+  });
+  return { default: MapView, Marker: Press };
+});
 
-function deferred<T>() {
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((done) => { resolve = done; });
-  return { promise, resolve };
-}
-
-const gymA = {
-  kind: 'GYM', source: 'OPENSTREETMAP', sourceId: 'node/1', name: 'Gimnasio A',
-  address: 'Dirección A', city: 'La Paz', region: 'La Paz', latitude: -16.5, longitude: -68.15,
+const gym = {
+  kind: 'GYM', source: 'OPENSTREETMAP', sourceId: 'node/1', name: 'Gimnasio Sopocachi',
+  address: 'Av. 20 de Octubre', city: 'La Paz', region: 'La Paz', latitude: -16.51, longitude: -68.13,
   tags: { amenity: 'gym' }, license: 'ODbL-1.0', attribution: '© OpenStreetMap contributors',
-  registered: false, updatedAt: '2026-10-08T00:00:00.000Z',
+  registered: false, updatedAt: '2026-10-15T00:00:00.000Z',
 };
-const gymB = { ...gymA, sourceId: 'node/2', name: 'Gimnasio B', address: 'Dirección B', latitude: -17.39, longitude: -66.16 };
-const areasA = { cells: [{ id: 'A', center: { latitude: -16.5, longitude: -68.15 }, count: 1 }] };
-const areasB = { cells: [{ id: 'B', center: { latitude: -17.39, longitude: -66.16 }, count: 2 }] };
+const person = {
+  userId: '11111111-1111-4111-8111-111111111111', displayName: 'Ana P.', objetivo: null, branchId: null, branchName: null,
+  connectionStatus: 'NONE', connectionId: null, socialStatus: null, photoUrl: null, photos: [], age: 27, gender: 'FEMALE',
+  experienceLevel: null, points: null, levelCode: null, distanceKm: 2,
+};
 
 function renderMap() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   return render(<QueryClientProvider client={client}><SocialMapScreen /></QueryClientProvider>);
 }
 
-function searchB() {
-  region.latitude = -17.39;
-  region.longitude = -66.16;
-  fireEvent.click(screen.getByRole('button', { name: 'Mover mapa' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Buscar en esta zona' }));
-}
+beforeEach(() => {
+  vi.clearAllMocks();
+  Object.assign(region, { latitudeDelta: 0.09, longitudeDelta: 0.09 });
+  mapGyms.mockResolvedValue([gym]);
+  mapAreas.mockResolvedValue({ cells: [] });
+  publicBranches.mockResolvedValue([]);
+  mapNearby.mockResolvedValue({ preferencesApplied: true, people: [person] });
+});
 
-describe('H6.S3.M6 — mapa móvil', () => {
-  beforeEach(() => {
-    region.latitude = -16.5;
-    region.longitude = -68.15;
-    mapAreas.mockReset();
-    mapGyms.mockReset();
-    mapPeople.mockReset().mockResolvedValue([]);
-    publicBranches.mockReset().mockResolvedValue([]);
+describe('SocialMapScreen', () => {
+  it('pinta los gimnasios de la zona sin tener que pulsar buscar', async () => {
+    renderMap();
+    expect(await screen.findByLabelText('Gimnasio Sopocachi')).toBeTruthy();
+    expect(mapGyms).toHaveBeenCalledTimes(1);
+    expect(screen.getByText(/1 gimnasio en esta zona/)).toBeTruthy();
   });
 
-  it('conserva solo los puntos B cuando áreas y gimnasios A terminan después de B', async () => {
-    const slowAreas = deferred<typeof areasA>();
-    const slowGyms = deferred<typeof gymA[]>();
-    mapAreas.mockImplementation((bounds) => bounds.south > -17 ? slowAreas.promise : Promise.resolve(areasB));
-    mapGyms.mockImplementation((bounds) => bounds.south > -17 ? slowGyms.promise : Promise.resolve([gymB]));
+  it('al tocar un gimnasio muestra la cuadrícula de personas cercanas según preferencias', async () => {
     renderMap();
-    fireEvent.click(screen.getByRole('button', { name: 'Buscar en esta zona' }));
-    await waitFor(() => expect(screen.getByRole('status')).toBeTruthy());
-    searchB();
-    expect(await screen.findByRole('button', { name: 'Marcador Gimnasio B' })).toBeTruthy();
-    expect(await screen.findByRole('button', { name: 'Marcador 2 personas' })).toBeTruthy();
-
-    await act(async () => { slowAreas.resolve(areasA); slowGyms.resolve([gymA]); await slowAreas.promise; await slowGyms.promise; });
-    expect(screen.getByRole('button', { name: 'Marcador Gimnasio B' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Marcador 2 personas' })).toBeTruthy();
-    expect(screen.queryByText('Gimnasio A')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Marcador 1 persona' })).toBeNull();
+    fireEvent.click(await screen.findByLabelText('Gimnasio Sopocachi'));
+    await waitFor(() => expect(mapNearby).toHaveBeenCalledWith({ latitude: gym.latitude, longitude: gym.longitude }));
+    expect(await screen.findByLabelText('Ana P., 27 años, a 2 km')).toBeTruthy();
+    expect(screen.getByText('1 persona cerca')).toBeTruthy();
+    expect(screen.getByText('Según tus preferencias')).toBeTruthy();
   });
 
-  it('descarta una sede registrada seleccionada A al consultar B', async () => {
-    publicBranches.mockResolvedValue([{
-      id: 'branch-A', nombre: 'Sede A', descripcion: null, latitud: -16.5, longitud: -68.15,
-      servicios: [], imagenUrl: null, amenidades: [], marca: null,
-    }]);
-    mapAreas.mockResolvedValue(areasB);
-    mapGyms.mockResolvedValue([gymB]);
+  it('con el mapa demasiado alejado no consulta gimnasios y pide acercarse', async () => {
     renderMap();
-    fireEvent.click(screen.getByRole('button', { name: 'Buscar en esta zona' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Marcador Sede A' }));
-    expect(screen.getByRole('button', { name: 'Abrir navegación' })).toBeTruthy();
-    searchB();
-    expect(await screen.findByRole('button', { name: 'Marcador Gimnasio B' })).toBeTruthy();
-    expect(screen.queryByText('Sede A')).toBeNull();
-  });
-
-  it('descarta la ficha seleccionada A al consultar B aunque las áreas A lleguen tarde', async () => {
-    const slowAreas = deferred<typeof areasA>();
-    mapAreas.mockImplementation((bounds) => bounds.south > -17 ? slowAreas.promise : Promise.resolve(areasB));
-    mapGyms.mockImplementation((bounds) => Promise.resolve(bounds.south > -17 ? [gymA] : [gymB]));
-    renderMap();
-    fireEvent.click(screen.getByRole('button', { name: 'Buscar en esta zona' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Marcador Gimnasio A' }));
-    expect(screen.getByRole('button', { name: 'Abrir navegación' })).toBeTruthy();
-    searchB();
-    expect(await screen.findByRole('button', { name: 'Marcador Gimnasio B' })).toBeTruthy();
-    await act(async () => { slowAreas.resolve(areasA); await slowAreas.promise; });
-    expect(screen.queryByText('Gimnasio A')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Abrir navegación' })).toBeNull();
+    await screen.findByLabelText('Gimnasio Sopocachi');
+    Object.assign(region, { latitudeDelta: 8, longitudeDelta: 8 });
+    fireEvent.click(screen.getByText('Mover mapa'));
+    expect(await screen.findByText('Acerca el mapa para ver los gimnasios')).toBeTruthy();
+    expect(mapGyms).toHaveBeenCalledTimes(1);
   });
 });
