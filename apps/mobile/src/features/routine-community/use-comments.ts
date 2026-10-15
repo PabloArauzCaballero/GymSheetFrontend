@@ -1,11 +1,12 @@
 import { useInfiniteQuery, useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { ApiError } from '@gymsheet/api-client';
-import type { CommentPage, RoutineComment } from '@gymsheet/types';
+import type { CommentAttachment, CommentPage, RoutineComment } from '@gymsheet/types';
 import { communityService } from '@/api/services';
 import { shortName } from '@/lib/format';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
+import { previewOf, type PendingAttachment } from '@/features/routine-community/attachments';
 
 type Pages = InfiniteData<CommentPage, string | null>;
 
@@ -54,14 +55,23 @@ export function useRoutineComments(routineId: string) {
   const restore = (previous: Pages | undefined) => queryClient.setQueryData(key, previous);
 
   const send = useMutation({
-    mutationFn: (input: { texto: string; respuestaA: string | null }) =>
-      communityService.comment('ROUTINE', routineId, input.texto, input.respuestaA),
+    mutationFn: async (input: { texto: string; respuestaA: string | null; adjunto: PendingAttachment | null }) => {
+      let adjunto: CommentAttachment | null = null;
+      if (input.adjunto?.source === 'remote') adjunto = input.adjunto.attachment;
+      else if (input.adjunto) {
+        const { uri, name, mimeType, width, height } = input.adjunto;
+        const uploaded = await communityService.uploadAttachment({ uri, name, mimeType });
+        adjunto = { ...uploaded, ancho: width ?? null, alto: height ?? null };
+      }
+      return communityService.comment('ROUTINE', routineId, input.texto, input.respuestaA, adjunto);
+    },
     onMutate: async (input) => {
       const previous = await snapshot();
       const draft: RoutineComment = {
         id: `temp-${Date.now()}`,
         autor: { id: me?.id ?? 'me', nombre: shortName(me?.nombreCompleto, me?.email) },
         texto: input.texto,
+        adjunto: input.adjunto ? previewOf(input.adjunto) : null,
         respuestaA: input.respuestaA,
         creadoEn: new Date().toISOString(),
         esMio: true,
@@ -139,7 +149,7 @@ export function useRoutineComments(routineId: string) {
                   .filter((item) => item.id !== id || item.respuestas.length > 0)
                   .map((item) =>
                     item.id === id
-                      ? { ...item, texto: '' }
+                      ? { ...item, texto: '', adjunto: null }
                       : { ...item, respuestas: item.respuestas.filter((reply) => reply.id !== id) },
                   ),
               })),

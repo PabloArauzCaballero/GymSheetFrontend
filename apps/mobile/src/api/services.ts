@@ -48,6 +48,7 @@ import {
   restSettingsResultSchema,
   skippedSetSchema,
   workoutRoutineLinkSchema,
+  commentAttachmentSchema,
 } from '@gymsheet/schemas';
 import type {
   AddWorkoutExerciseInput,
@@ -67,7 +68,7 @@ import type {
   SocialStatusState,
   SwipeDirection,
 } from '@gymsheet/schemas';
-import type { UserGender } from '@gymsheet/types';
+import type { CommentAttachment, UserGender } from '@gymsheet/types';
 import {
   createCardioServices,
   createCatalogServices,
@@ -351,7 +352,20 @@ export const communityService = {
     id: string,
     texto: string,
     respuestaA?: string | null,
-  ) => communityApi.comment(kind, id, { texto, ...(respuestaA ? { respuestaA } : {}) }),
+    adjunto?: CommentAttachment | null,
+  ) =>
+    communityApi.comment(kind, id, {
+      texto,
+      ...(respuestaA ? { respuestaA } : {}),
+      ...(adjunto ? { adjunto } : {}),
+    }),
+  gifs: communityApi.gifs,
+  /** Sube la foto, video o archivo de un comentario; devuelve el adjunto para enviarlo. */
+  uploadAttachment: (file: { uri: string; name: string; mimeType: string }) => {
+    const form = new FormData();
+    form.append('file', { uri: file.uri, name: file.name, type: file.mimeType } as unknown as Blob);
+    return apiClient.upload('/comments/media', commentAttachmentSchema, form, { timeoutMs: 120_000 });
+  },
   deleteComment: communityApi.removeComment,
   likeComment: communityApi.likeComment,
   unlikeComment: communityApi.unlikeComment,

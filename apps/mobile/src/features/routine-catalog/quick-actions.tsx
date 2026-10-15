@@ -25,7 +25,7 @@ const TONE: Record<string, MetricKey> = { create: 'rest', exercises: 'weight', c
  */
 export function QuickActions({ actions }: { actions: readonly QuickAction[] }) {
   return (
-    <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+    <View style={{ flexDirection: 'row', alignItems: 'stretch', gap: spacing.md }}>
       {actions.map((action, index) => {
         const tone = metricColors[TONE[action.key] ?? 'rest'];
         return (
@@ -35,10 +35,11 @@ export function QuickActions({ actions }: { actions: readonly QuickAction[] }) {
               onPress={action.onPress}
               scaleTo={0.95}
               style={{
-                minHeight: 96,
-                padding: spacing.smd,
+                height: 116,
+                padding: spacing.md,
                 gap: spacing.sm,
                 justifyContent: 'space-between',
+                alignSelf: 'stretch',
                 borderRadius: radii.xl,
                 borderCurve: 'continuous',
                 overflow: 'hidden',
@@ -69,7 +70,7 @@ export function QuickActions({ actions }: { actions: readonly QuickAction[] }) {
               >
                 <Ionicons color={tone.ink} name={action.icon} size={iconSizes.md + 2} />
               </View>
-              <Text numberOfLines={2} strong variant="footnote">
+              <Text numberOfLines={2} strong style={{ minHeight: 36 }} variant="subhead">
                 {action.label}
               </Text>
             </PressableScale>

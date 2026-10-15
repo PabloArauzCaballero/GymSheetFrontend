@@ -63,33 +63,35 @@ function StatsStrip({ cells }: { cells: Cell[] }) {
           style={{
             flex: 1,
             alignItems: 'center',
-            gap: spacing.xxs,
+            justifyContent: 'flex-start',
+            gap: spacing.xs,
             paddingHorizontal: spacing.xs,
             borderLeftWidth: index === 0 ? 0 : StyleSheet.hairlineWidth,
             borderLeftColor: colors.border,
           }}
         >
-          {cell.icon && cell.metric ? (
-            <View
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: radii.full,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: metricColors[cell.metric].tint,
-              }}
-            >
-              <Ionicons color={metricColors[cell.metric].ink} name={cell.icon} size={iconSizes.sm} />
-            </View>
-          ) : null}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-            {cell.stars != null ? <Ionicons color={ratingStar} name="star" size={iconSizes.sm} /> : null}
-            <Text numberOfLines={1} style={{ color: colors.text }} variant="numeric">
-              {cell.value}
-            </Text>
+          {/* Misma estructura en todas las celdas: icono, cifra, palabra. Así las
+              cuatro cifras quedan en la misma línea. */}
+          <View
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: radii.full,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: cell.metric ? metricColors[cell.metric].tint : colors.surfaceHigh,
+            }}
+          >
+            <Ionicons
+              color={cell.metric ? metricColors[cell.metric].ink : cell.stars != null ? ratingStar : colors.accentInk}
+              name={cell.icon ?? 'star'}
+              size={iconSizes.sm}
+            />
           </View>
-          <Text numberOfLines={1} tone="muted" variant="caption">
+          <Text adjustsFontSizeToFit minimumFontScale={0.8} numberOfLines={1} style={{ color: colors.text }} variant="numeric">
+            {cell.value}
+          </Text>
+          <Text adjustsFontSizeToFit minimumFontScale={0.85} numberOfLines={1} tone="muted" variant="caption">
             {cell.caption}
           </Text>
         </View>
@@ -169,12 +171,14 @@ export function DetailHeader({ routine, actions }: { routine: Routine; actions?:
               : 'Sin reseñas',
             accessibility: ratingLabel(routine.valoracion).replace('★', 'Valoración'),
             stars: routine.valoracion.promedio,
+            icon: 'star' as const,
           },
           {
             key: 'downloads',
             value: compactCount(routine.copias),
             caption: routine.copias === 1 ? 'descarga' : 'descargas',
             accessibility: `${routine.copias} ${routine.copias === 1 ? 'descarga' : 'descargas'}`,
+            icon: 'download-outline' as const,
           },
         ]
       : []),
