@@ -4,8 +4,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, X } from 'lucide-react';
 import { socialService } from '@/features/social/services/social-service';
 import type { Connection } from '@/shared/api/schemas';
-import { queryKeys } from '@/shared/api/query-keys';
+import { directoryKeys } from '@/features/social/services/directory-keys';
 import { connectionKeys } from '@/features/social/services/directory-keys';
+import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import {
@@ -22,13 +23,19 @@ export function RequestsTab() {
     queryFn: () => socialService.listConnections('PENDING'),
   });
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.connections });
+  const invalidate = (includeConversations = false) => Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeys.connections }),
+    queryClient.invalidateQueries({ queryKey: directoryKeys.all }),
+    ...(includeConversations
+      ? [queryClient.invalidateQueries({ queryKey: queryKeys.conversations })]
+      : []),
+  ]);
 
   const respond = useMutation({
     mutationFn: ({ id, action }: { id: string; action: 'ACCEPT' | 'REJECT' }) =>
       socialService.respondConnection(id, action),
-    onSuccess: async () => {
-      await invalidate();
+    onSuccess: async (_result, variables) => {
+      await invalidate(variables.action === 'ACCEPT');
       notify.success('Solicitud actualizada.');
     },
     onError: (error: Error) => notify.error(error),

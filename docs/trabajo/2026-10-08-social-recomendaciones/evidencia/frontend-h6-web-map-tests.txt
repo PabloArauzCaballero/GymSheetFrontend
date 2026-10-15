@@ -1,0 +1,13 @@
+yarn run v1.22.22
+$ vitest run src/features/social-map/components/social-map-client.test.tsx
+
+ RUN  v3.2.7 /Users/josejeremias/Desktop/Mantra Core Technologies/GymSheet/GymSheetFrontend/apps/web
+
+ ✓ src/features/social-map/components/social-map-client.test.tsx (2 tests) 73ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  23:05:45
+   Duration  621ms (transform 67ms, setup 51ms, collect 122ms, tests 73ms, environment 133ms, prepare 29ms)
+
+Done in 1.31s.

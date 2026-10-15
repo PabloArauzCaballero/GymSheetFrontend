@@ -42,7 +42,7 @@
       [
         "expo-secure-store",
         {
-          "faceIDPermission": "REPP usa Face ID para proteger la sesión guardada en este dispositivo."
+          "faceIDPermission": "REPP usa Face ID para proteger la sesi\u00f3n guardada en este dispositivo."
         }
       ],
       [
@@ -55,15 +55,15 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "REPP usa tu ubicación, solo al finalizar un entrenamiento, para verificar tu racha en la sede donde entrenaste."
+          "locationWhenInUsePermission": "REPP usa tu ubicaci\u00f3n, solo al finalizar un entrenamiento, para verificar tu racha en la sede donde entrenaste."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "REPP usa tus fotos y vídeos para que elijas una imagen de perfil o publiques una story.",
-          "cameraPermission": "REPP usa la cámara para que hagas una foto o grabes un vídeo y lo publiques como story.",
-          "microphonePermission": "REPP usa el micrófono para grabar el sonido de los vídeos que publiques como story."
+          "photosPermission": "REPP usa tus fotos y v\u00eddeos para que elijas una imagen de perfil o publiques una story.",
+          "cameraPermission": "REPP usa la c\u00e1mara para que hagas una foto o grabes un v\u00eddeo y lo publiques como story.",
+          "microphonePermission": "REPP usa el micr\u00f3fono para grabar mensajes de voz y el sonido de los v\u00eddeos que publiques como story."
         }
       ],
       [
@@ -81,7 +81,13 @@
         }
       ],
       "./plugins/with-path-spaces-fix",
-      "./plugins/with-cleartext-domains"
+      "./plugins/with-cleartext-domains",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "REPP usa el micr\u00f3fono para grabar mensajes de voz que eliges enviar en el chat y el sonido de los v\u00eddeos que publiques como story."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

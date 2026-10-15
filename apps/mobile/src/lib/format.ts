@@ -9,6 +9,7 @@ export const GOAL_LABEL: Record<TrainingGoal, string> = {
   RESISTENCIA: 'Resistencia',
   PERDIDA_GRASA: 'Pérdida de grasa',
   SALUD_GENERAL: 'Salud general',
+  RENDIMIENTO_DEPORTIVO: 'Rendimiento deportivo',
   REHABILITACION: 'Rehabilitación',
 };
 
@@ -172,5 +173,6 @@ export const GOAL_ICON: Record<TrainingGoal, keyof typeof Ionicons.glyphMap> = {
   RESISTENCIA: 'pulse',
   PERDIDA_GRASA: 'flame',
   SALUD_GENERAL: 'leaf',
+  RENDIMIENTO_DEPORTIVO: 'trophy',
   REHABILITACION: 'medkit',
 };

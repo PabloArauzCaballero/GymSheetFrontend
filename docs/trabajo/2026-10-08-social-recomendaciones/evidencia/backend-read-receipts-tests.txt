@@ -1,0 +1,18 @@
+yarn run v1.22.22
+$ '/Users/josejeremias/Desktop/Mantra Core Technologies/GymSheet/GymSheetBackend/node_modules/.bin/jest' src/modules/chat/chat.service.spec.ts src/modules/chat/read-receipt-policy.spec.ts src/modules/chat/read-receipt-settings.service.spec.ts --runInBand
+PASS src/modules/chat/chat.service.spec.ts
+[Nest] 63080  - 10/08/2026, 10:16:31 PM    WARN [ChatService] Object(4) {
+  event: 'chat.push_notify_failed',
+  conversationId: 'conv-1',
+  messageId: 'msg-push-1',
+  reason: 'Error'
+}
+PASS src/modules/chat/read-receipt-settings.service.spec.ts
+PASS src/modules/chat/read-receipt-policy.spec.ts
+
+Test Suites: 3 passed, 3 total
+Tests:       43 passed, 43 total
+Snapshots:   0 total
+Time:        1.174 s, estimated 2 s
+Ran all test suites matching /src\/modules\/chat\/chat.service.spec.ts|src\/modules\/chat\/read-receipt-policy.spec.ts|src\/modules\/chat\/read-receipt-settings.service.spec.ts/i.
+Done in 1.88s.

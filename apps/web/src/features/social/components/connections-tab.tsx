@@ -14,7 +14,7 @@ import {
 } from '@/shared/components/feedback/skeleton';
 import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
-import { notify } from '@/shared/notifications';
+import { confirm, notify } from '@/shared/notifications';
 
 export function ConnectionsTab() {
   const router = useRouter();
@@ -33,11 +33,25 @@ export function ConnectionsTab() {
   const remove = useMutation({
     mutationFn: (id: string) => socialService.withdrawConnection(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.connections });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.connections }),
+        queryClient.invalidateQueries({ queryKey: ['chat'] }),
+      ]);
       notify.success('Conexión eliminada.');
     },
     onError: (error: Error) => notify.error(error),
   });
+
+  async function disconnect(connectionId: string): Promise<void> {
+    const result = await confirm({
+      title: 'Desconectar',
+      message: 'Se cerrará el chat y dejarás de ver esta conexión. Si vuelven a conectar, el chat empezará vacío.',
+      severity: 'danger',
+      confirmLabel: 'Desconectar',
+      cancelLabel: 'Cancelar',
+    });
+    if (result.confirmed) remove.mutate(connectionId);
+  }
 
   if (connections.isLoading) return <SkeletonList rows={4} variant="stacked" />;
   if (connections.isError) {
@@ -67,17 +81,15 @@ export function ConnectionsTab() {
               <MessageCircle className="size-4" />
               Mensaje
             </Button>
-            {connection.direction === 'SENT' ? (
-              <Button
-                aria-label="Eliminar conexión"
-                loading={remove.isPending && remove.variables === connection.id}
-                onClick={() => remove.mutate(connection.id)}
-                size="sm"
-                variant="secondary"
-              >
-                <UserMinus className="size-4" />
-              </Button>
-            ) : null}
+            <Button
+              loading={remove.isPending && remove.variables === connection.id}
+              onClick={() => void disconnect(connection.id)}
+              size="sm"
+              variant="secondary"
+            >
+              <UserMinus className="size-4" />
+              Desconectar
+            </Button>
           </div>
         </Card>
       ))}

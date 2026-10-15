@@ -9,12 +9,19 @@ import { colors, fontSizes, semibold } from '@/theme';
 export function useNextLoads() {
   const programs = useActivePrograms();
   const program = programs.data?.fuerza ?? null;
-  const loads = useQuery({
+  const query = useQuery({
     queryKey: ['programs', program?.id, 'next-loads'],
     queryFn: () => programService.nextLoads(program?.id ?? ''),
     enabled: Boolean(program) && program?.modo !== 'NONE',
   });
-  return loads.data ?? null;
+  return {
+    items: query.data?.items ?? [],
+    // The empty list means "no suggestion" only after the active program and
+    // its loads have both resolved.
+    isPending:
+      programs.isPending ||
+      (program !== null && program.modo !== 'NONE' && query.isPending),
+  };
 }
 
 /** «Sugerido: 62,5 kg × 8–12» bajo el nombre del ejercicio dentro de la sesión (RF-15). */
@@ -25,7 +32,7 @@ export function SuggestedLoad({
   exerciseId: string | undefined;
   loads: ReturnType<typeof useNextLoads>;
 }) {
-  const item = loads?.items.find((entry) => entry.ejercicioId === exerciseId);
+  const item = loads.items.find((entry) => entry.ejercicioId === exerciseId);
   if (!item) return null;
   const reps = item.repsMin === item.repsMax ? `${item.repsMin}` : `${item.repsMin}–${item.repsMax}`;
   const text = item.pesoSugeridoKg > 0 ? `Sugerido: ${formatKg(item.pesoSugeridoKg)} × ${reps}` : `Objetivo: ${reps} reps`;

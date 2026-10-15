@@ -28,6 +28,7 @@ export const trainingGoals = [
   'RESISTENCIA',
   'PERDIDA_GRASA',
   'SALUD_GENERAL',
+  'RENDIMIENTO_DEPORTIVO',
   'REHABILITACION',
 ] as const;
 export type TrainingGoal = (typeof trainingGoals)[number];

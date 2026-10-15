@@ -131,6 +131,7 @@ export const GOAL_LABELS: Record<TrainingGoal, string> = {
   RESISTENCIA: 'Resistencia',
   PERDIDA_GRASA: 'Pérdida de grasa',
   SALUD_GENERAL: 'Salud general',
+  RENDIMIENTO_DEPORTIVO: 'Rendimiento deportivo',
   REHABILITACION: 'Rehabilitación',
 };
 

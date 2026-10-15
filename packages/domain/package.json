@@ -11,7 +11,8 @@
   "scripts": {
     "type-check": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:read-receipts": "node --experimental-strip-types --test test/read-receipt.test.mjs"
   },
   "dependencies": {
     "@gymsheet/types": "*"
@@ -21,5 +22,6 @@
     "@gymsheet/tsconfig": "*",
     "typescript": "^5.7.0",
     "vitest": "^3.2.0"
-  }
+  },
+  "resolutions": {}
 }

@@ -1,0 +1,12 @@
+yarn run v1.22.22
+$ jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/social/historias.e2e-spec.ts
+PASS test/social/historias.e2e-spec.ts
+  stories across tenant boundaries (e2e)
+    ✓ feeds and records an active connected story across tenants, but does not record an expired one (520 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        3.444 s
+Ran all test suites within paths "test/social/historias.e2e-spec.ts".
+Done in 4.25s.

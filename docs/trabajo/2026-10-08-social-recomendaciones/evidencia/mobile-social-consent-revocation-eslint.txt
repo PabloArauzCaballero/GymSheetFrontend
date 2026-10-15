@@ -1,0 +1,3 @@
+yarn run v1.22.22
+$ '/Users/josejeremias/Desktop/Mantra Core Technologies/GymSheet/GymSheetFrontend/node_modules/.bin/eslint' 'app/(app)/(tabs)/profile.tsx' 'app/(app)/chat/[id].tsx' src/components/social-status-editor.tsx src/hooks/use-chat-socket.ts --max-warnings 0
+Done in 0.99s.

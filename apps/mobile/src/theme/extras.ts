@@ -152,6 +152,7 @@ export const goalGradients = {
   RESISTENCIA: ['#123d4f', '#0c161c'],
   PERDIDA_GRASA: ['#5a3412', '#1c120a'],
   SALUD_GENERAL: ['#1d4a2b', '#0d1810'],
+  RENDIMIENTO_DEPORTIVO: ['#4b3b12', '#17140a'],
   REHABILITACION: ['#1f3a5c', '#0e1520'],
   DEFAULT: ['#2b2a26', '#11110f'],
 } as const satisfies Record<string, readonly [string, string]>;

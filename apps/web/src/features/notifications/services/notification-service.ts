@@ -4,6 +4,7 @@ import { notificationPreferenceSchema, notificationSchema, pageSchema } from '@/
 
 export type NotificationPreferenceInput = {
   recordatoriosVencimiento: boolean;
+  vistaPreviaMensajes: boolean;
   canalPreferido: 'IN_APP' | 'HTTP_GATEWAY';
   consentimientoExternoEn?: string | null;
   versionConsentimiento?: string | null;

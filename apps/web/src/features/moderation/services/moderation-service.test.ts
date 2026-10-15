@@ -50,7 +50,7 @@ afterEach(() => vi.unstubAllGlobals());
 describe('moderación: tipos y motivos', () => {
   it('conoce los cuatro tipos antiguos y los tres nuevos', () => {
     expect([...moderationTargetKinds].sort()).toEqual(
-      ['CHAT_MESSAGE', 'COMMENT', 'EXERCISE', 'PROFILE_PHOTO', 'ROUTINE', 'STORY', 'USER'].sort(),
+      ['CHAT_MESSAGE', 'COMMENT', 'EXERCISE', 'PROFILE_PHOTO', 'REEL', 'ROUTINE', 'STORY', 'USER'].sort(),
     );
   });
 

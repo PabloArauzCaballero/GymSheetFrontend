@@ -12,6 +12,7 @@ import { ButtonLink } from '@/shared/components/ui/button';
 import { Dialog, DialogContent } from '@/shared/components/ui/dialog';
 import { ConnectionActionButton, useConnectionActions } from './connection-actions';
 import { MemberProfileBody } from './member-profile-body';
+import { BlockMemberButton } from './block-member-button';
 
 /**
  * La ficha de un socio, sin salir de la lista desde la que se abrió.
@@ -72,6 +73,7 @@ export function MemberProfileDialog({
                 Ver el perfil completo
                 <ArrowUpRight aria-hidden className="size-4" />
               </ButtonLink>
+              <BlockMemberButton displayName={member.displayName} onBlocked={onClose} userId={member.userId} />
             </div>
           </div>
         ) : null}

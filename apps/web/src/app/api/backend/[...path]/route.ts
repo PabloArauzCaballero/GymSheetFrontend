@@ -32,6 +32,7 @@ async function forward(request: NextRequest, parts: string[]) {
       path.startsWith('/export/') ||
       path === '/admin/media' ||
       path === '/me/stories' ||
+      path.startsWith('/me/stories/') ||
       path.endsWith('/messages/media')
         ? 60_000
         : undefined,
@@ -40,7 +41,7 @@ async function forward(request: NextRequest, parts: string[]) {
     ...(body && body.byteLength > 0 ? { body } : {}),
   });
   const responseHeaders = new Headers();
-  for (const key of ['content-type', 'content-disposition', 'x-request-id']) {
+  for (const key of ['content-type', 'content-disposition', 'cache-control', 'x-content-type-options', 'x-request-id']) {
     const value = backendResponse.headers.get(key);
     if (value) responseHeaders.set(key, value);
   }

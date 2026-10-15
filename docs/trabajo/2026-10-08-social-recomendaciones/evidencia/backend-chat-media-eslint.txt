@@ -1,0 +1,3 @@
+yarn run v1.22.22
+$ '/Users/josejeremias/Desktop/Mantra Core Technologies/GymSheet/GymSheetBackend/node_modules/.bin/eslint' src/modules/chat/chat-media-cipher.ts src/modules/chat/chat.service.ts src/modules/chat/chat.service.spec.ts src/config/env.ts
+Done in 2.04s.

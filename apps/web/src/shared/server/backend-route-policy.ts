@@ -1,10 +1,4 @@
 const resourceId = '[A-Za-z0-9-]+';
-/**
- * Código de músculo de la taxonomía (`PECTORALIS_MAJOR`, `DELTOID_ANTERIOR`).
- * Va aparte de `resourceId` porque lleva guion bajo, y abrir el guion bajo a
- * todos los identificadores ampliaría cada ruta de la lista sin necesidad.
- */
-const muscleCode = '[A-Za-z][A-Za-z0-9_]{0,63}';
 // Clave de permiso granular, p. ej. `admin-access:manage` o `moderation:read`
 // (dominio:acción, `admin-permission.catalog.ts`). Va URL-encodeada en el
 // segmento (`encodeURIComponent` convierte `:` en `%3A`), así que el patrón
@@ -14,12 +8,7 @@ const permissionKey = '[a-z-]+%3A[a-z-]+';
 // alternativa explícita en vez de un comodín, igual que el token de activación
 // más abajo — así una URL no puede colar un valor que el backend rechazaría
 // de todos modos, pero sin llegar a intentarlo.
-const moderationTargetKind = 'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER|ROUTINE|EXERCISE|COMMENT';
-
-// Lo que se valora y se comenta (`ContentKind`, enum cerrado).
-const contentKind = 'ROUTINE|EXERCISE';
-// UUID con guiones: el segmento de un comentario no puede ser `ROUTINE` ni nada parecido.
-const uuid = '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}';
+const moderationTargetKind = 'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER';
 
 const allowedPathPatterns = [
   /^\/access\/me$/u,
@@ -66,15 +55,6 @@ const allowedPathPatterns = [
     'u',
   ),
   new RegExp(`^/admin/moderation/users/${resourceId}/history$`, 'u'),
-  // Rutinas REPP (RF-B2): el listado y el alta de oficiales, marcar/desmarcar
-  // (POST/DELETE) y las métricas de una rutina. Una alternativa explícita por
-  // sufijo: `/admin/routines/:id/<otra cosa>` no pasa.
-  /^\/admin\/routines$/u,
-  new RegExp(`^/admin/routines/${resourceId}/(official|insights)$`, 'u'),
-  // Soporte de entrenamiento (RF-B3): la ficha de un socio y el recálculo de
-  // una semana cerrada. Son las dos únicas rutas de soporte que se abren.
-  new RegExp(`^/admin/support/users/${resourceId}/training$`, 'u'),
-  new RegExp(`^/admin/support/programs/${resourceId}/recompute-week$`, 'u'),
   // Permisos granulares del personal (H01): catálogo, los de un usuario,
   // otorgar y revocar. `/me` es la vista propia (qué puedo hacer yo).
   /^\/admin\/permissions\/me$/u,
@@ -87,14 +67,7 @@ const allowedPathPatterns = [
   /^\/exercises\/personal$/u,
   // Máquina que corresponde a un músculo, para el alta de ejercicio propio.
   /^\/exercises\/equipment-suggestion$/u,
-  /^\/exercises\/taxonomy$/u,
   new RegExp(`^/exercises/${resourceId}(/media)?$`, 'u'),
-  // Los músculos que trabaja un ejercicio, para los chips que abren cada uno.
-  new RegExp(`^/exercises/${resourceId}/muscles$`, 'u'),
-  // Me gusta público de un ejercicio (POST y DELETE, idempotentes) y el
-  // favorito privado de quien mira (PUT con `{ isFavorite }`).
-  new RegExp(`^/exercises/${resourceId}/like$`, 'u'),
-  new RegExp(`^/me/exercises/${resourceId}/preference$`, 'u'),
   /^\/export\/workout-history(\/csv)?$/u,
   /^\/memberships\/me$/u,
   /^\/membership\/plans$/u,
@@ -117,6 +90,11 @@ const allowedPathPatterns = [
   // Punto 11 (conexiones), 10 (estado social) y 5 (directorio + chat).
   /^\/me\/connections$/u,
   new RegExp(`^/me/connections/${resourceId}$`, 'u'),
+  // H10: listar, crear y responder a una revisión vigente.
+  /^\/me\/training-invitations$/u,
+  new RegExp(`^/me/training-invitations/${resourceId}/respond$`, 'u'),
+  new RegExp(`^/me/training-invitations/${resourceId}/calendar\\.ics$`, 'u'),
+  new RegExp(`^/me/training-invitations/${resourceId}/shared-session$`, 'u'),
   /^\/me\/social-status$/u,
   /^\/me\/gym-directory$/u,
   // Ficha social de un socio concreto (directorio + insignias ganadas). Es lo
@@ -134,12 +112,15 @@ const allowedPathPatterns = [
   // plano contra un backend que ya sirve el resto.
   new RegExp(`^/me/conversations/${resourceId}/messages/media$`, 'u'),
   new RegExp(`^/me/conversations/${resourceId}/messages/${resourceId}/view$`, 'u'),
+  new RegExp(`^/me/conversations/${resourceId}/messages/${resourceId}/media$`, 'u'),
   new RegExp(`^/me/conversations/${resourceId}/nickname$`, 'u'),
   new RegExp(`^/me/conversations/${resourceId}/read$`, 'u'),
   // Descubrimiento (R6.1): la baraja, el swipe y el deshacer. `swipes/undo` va
   // en su propia entrada y no como sufijo opcional de `swipes` porque son dos
   // operaciones distintas: una decide, la otra revierte la última decisión.
   /^\/me\/discovery\/deck$/u,
+  /^\/me\/discovery\/preferences$/u,
+  /^\/me\/discovery\/impressions$/u,
   /^\/me\/discovery\/swipes$/u,
   /^\/me\/discovery\/swipes\/undo$/u,
   // Stories (R6.2). `/me/stories` es GET del propio + POST multipart; el feed
@@ -149,7 +130,12 @@ const allowedPathPatterns = [
   /^\/me\/stories$/u,
   /^\/me\/stories\/feed$/u,
   new RegExp(`^/me/stories/${resourceId}$`, 'u'),
-  new RegExp(`^/me/stories/${resourceId}/(view|viewers)$`, 'u'),
+  new RegExp(`^/me/stories/${resourceId}/(view|viewers|replies)$`, 'u'),
+  new RegExp(`^/me/stories/${resourceId}/media$`, 'u'),
+  // Reels H9.M1/M2: first-page feed and multipart publication only.
+  /^\/me\/reels$/u,
+  /^\/me\/reels\/feed$/u,
+  new RegExp(`^/me/reels/${resourceId}/media$`, 'u'),
   // Vistas de perfil (R6.3): lista paginada por cursor, resumen y la marca de
   // «ya la revisé».
   /^\/me\/profile-views$/u,
@@ -175,38 +161,12 @@ const allowedPathPatterns = [
   // Catálogo anatómico: alimenta el selector de músculo del ejercicio propio.
   /^\/muscles$/u,
   /^\/muscle-groups$/u,
-  // La figura anatómica: la ficha de un músculo y sus ejercicios por rol.
-  new RegExp(`^/muscles/${muscleCode}$`, 'u'),
-  new RegExp(`^/muscles/${muscleCode}/exercises$`, 'u'),
   /^\/routines$/u,
   /^\/routines\/import$/u,
   /^\/routines\/assignments\/(me|coach)$/u,
   new RegExp(`^/routines/exercises/${resourceId}$`, 'u'),
   new RegExp(`^/routines/${resourceId}$`, 'u'),
-  new RegExp(`^/routines/${resourceId}/(exercises|assign|schedule|start)$`, 'u'),
-  // Rutinas por días (asistente de creación): estructura completa, semanas
-  // generadas y el ajuste de una semana concreta (1 a 52, de uno o dos dígitos).
-  new RegExp(`^/routines/${resourceId}/(calendar|structure)$`, 'u'),
-  new RegExp(`^/routines/${resourceId}/weeks/[0-9]{1,2}$`, 'u'),
-  // Publicar, copiar y compartir (RF-09, RF-10, RF-13). Una alternativa
-  // explícita por sufijo: `/routines/:id/<otra cosa>` no pasa.
-  new RegExp(`^/routines/${resourceId}/(publish|unpublish|copy|sync-from-source|shares)$`, 'u'),
-  new RegExp(`^/routines/${resourceId}/shares/${resourceId}$`, 'u'),
-  /^\/me\/routine-invitations$/u,
-  new RegExp(`^/routine-shares/${resourceId}/(accept|decline)$`, 'u'),
-  // Valoraciones y comentarios (RF-12): `kind` es el enum cerrado, y el borrado
-  // de un comentario se identifica por su UUID, no por un comodín.
-  new RegExp(`^/(ratings|comments)/(?:${contentKind})/${resourceId}$`, 'u'),
-  new RegExp(`^/comments/${uuid}$`, 'u'),
-  // «Me gusta» de un comentario (PUT/DELETE): solo ese sufijo.
-  new RegExp(`^/comments/${uuid}/like$`, 'u'),
-  // Programas (RF-14..16, RF-19, RF-20) y cardio (RF-17).
-  /^\/programs\/active$/u,
-  /^\/programs\/(strength|cardio)\/activate$/u,
-  new RegExp(`^/programs/${resourceId}/(stop|progress|next-loads|close)$`, 'u'),
-  new RegExp(`^/workouts/${resourceId}/apply-to-routine$`, 'u'),
-  /^\/cardio-plans$/u,
-  new RegExp(`^/cardio-plans/${resourceId}$`, 'u'),
+  new RegExp(`^/routines/${resourceId}/(exercises|assign|start)$`, 'u'),
   /^\/user-exercises$/u,
   new RegExp(`^/user-exercises/${resourceId}$`, 'u'),
   /^\/users\/me$/u,
