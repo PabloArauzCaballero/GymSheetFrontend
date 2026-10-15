@@ -1,17 +1,25 @@
+import { Ionicons } from '@expo/vector-icons';
 import { ScrollView, Text, View } from 'react-native';
 import { type CatalogTab, type MineChip } from '@gymsheet/hooks';
 import { SegmentLabel, SegmentedPill } from '@/components/motion';
 import { FilterChip } from '@/components/filter-chip';
-import { colors, fontSizes, gutter, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { colors, fontSizes, gutter, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 /**
- * Orden y nombres del móvil (2026-10-14): lo público primero, luego lo que REPP
- * recomienda y al final lo privado. Los ámbitos son los de `CATALOG_TABS`.
+ * Orden y nombres del móvil: lo público primero, luego lo que REPP destaca y al
+ * final lo privado. Cada pestaña lleva icono y UNA palabra: con tres opciones a
+ * lo ancho, «Recomendadas» obligaba a encoger la letra y se leía apretado.
+ * Los ámbitos son los de `CATALOG_TABS`.
  */
-const TABS: readonly { scope: CatalogTab; label: string }[] = [
-  { scope: 'public', label: 'Públicas' },
-  { scope: 'official', label: 'Recomendadas' },
-  { scope: 'mine', label: 'Privadas' },
+const TABS: readonly {
+  scope: CatalogTab;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  iconActive: keyof typeof Ionicons.glyphMap;
+}[] = [
+  { scope: 'public', label: 'Públicas', icon: 'globe-outline', iconActive: 'globe' },
+  { scope: 'official', label: 'Destacadas', icon: 'sparkles-outline', iconActive: 'sparkles' },
+  { scope: 'mine', label: 'Privadas', icon: 'lock-closed-outline', iconActive: 'lock-closed' },
 ];
 
 /**
@@ -43,15 +51,25 @@ export function CatalogTabBar({
           accessibilityLabel: `Pestaña ${tab.label}`,
         }))}
         pillColor={colors.surfaceHighest}
-        renderItem={(option, active) => (
-          <SegmentLabel
-            active={active}
-            activeColor={colors.text}
-            inactiveColor={colors.textMuted}
-            label={TABS.find((tab) => tab.scope === option.value)?.label ?? ''}
-            style={{ fontSize: fontSizes.sm, fontWeight: semibold }}
-          />
-        )}
+        renderItem={(option, active) => {
+          const tab = TABS.find((item) => item.scope === option.value);
+          return (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+              <Ionicons
+                color={active ? colors.volt : colors.textMuted}
+                name={(active ? tab?.iconActive : tab?.icon) ?? 'ellipse-outline'}
+                size={iconSizes.sm}
+              />
+              <SegmentLabel
+                active={active}
+                activeColor={colors.text}
+                inactiveColor={colors.textMuted}
+                label={tab?.label ?? ''}
+                style={{ fontSize: fontSizes.sm, fontWeight: semibold }}
+              />
+            </View>
+          );
+        }}
         style={{
           alignSelf: 'stretch',
           borderRadius: radii.full,
