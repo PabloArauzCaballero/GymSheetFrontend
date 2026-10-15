@@ -124,14 +124,15 @@ export function DirectoryCardFace({
   const photos = galleryOf(entry);
   const index = Math.min(Math.max(photoIndex, 0), Math.max(photos.length - 1, 0));
   const current = photos[index] ?? null;
-  // La siguiente foto se descarga antes de que nadie la pida: sin esto, el
-  // primer toque del carrusel muestra un hueco gris y la ilusión se rompe justo
-  // en el gesto que la tarjeta existe para ofrecer.
+  // Sólo la baraja ofrece un carrusel de fotos. En Comunidad y en las tarjetas
+  // de interacciones se pintaba una sola foto, pero este prefetch descargaba la
+  // siguiente de cada persona igualmente: hasta 50 solicitudes extra al abrir
+  // Comunidad, muchas con la resolución original.
   const nextUrl = photos[index + 1]?.url ?? null;
 
   useEffect(() => {
-    if (nextUrl) void Image.prefetch(nextUrl);
-  }, [nextUrl]);
+    if (onStepPhoto && nextUrl) void Image.prefetch(nextUrl).catch(() => undefined);
+  }, [nextUrl, onStepPhoto]);
 
   const meta = [
     entry.objetivo ? (TRAINING_GOAL_LABEL[entry.objetivo] ?? entry.objetivo) : null,
@@ -160,7 +161,9 @@ export function DirectoryCardFace({
     >
       {current ? (
         <Image
+          cachePolicy="disk"
           contentFit="cover"
+          priority="low"
           source={{ uri: current.url }}
           style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
           // Entre fotos de la misma persona el cruce es corto: es navegación

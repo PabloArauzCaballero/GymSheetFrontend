@@ -113,10 +113,74 @@ export function Chip({ label, spoken, onPress, testID }: { label: string; spoken
   );
 }
 
+function StepperField({
+  label,
+  value,
+  unit,
+  decimal = false,
+  testID,
+  onChange,
+  onStep,
+}: {
+  label: string;
+  value: string;
+  unit: string;
+  decimal?: boolean;
+  testID: string;
+  onChange: (next: string) => void;
+  onStep: (direction: -1 | 1) => void;
+}) {
+  return (
+    <View style={{ flex: 1, gap: spacing.sm }}>
+      <Text strong tone="muted" variant="caption" style={{ letterSpacing: 1.1 }}>
+        {label.toUpperCase()}
+      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.xxs }}>
+        {([-1, 1] as const).map((direction) =>
+          direction === -1 ? (
+            <PressableScale
+              accessibilityLabel={`Reducir ${label.toLowerCase()}`}
+              haptic="selection"
+              key={direction}
+              onPress={() => onStep(direction)}
+              style={{ width: 40, height: 40, borderRadius: radii.full, backgroundColor: colors.surfaceHighest, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Ionicons color={colors.text} name="remove" size={iconSizes.md} />
+            </PressableScale>
+          ) : null,
+        )}
+        <View style={{ flex: 1, minWidth: 48, alignItems: 'center' }}>
+          <TextInput
+            accessibilityLabel={label}
+            keyboardType={decimal ? 'decimal-pad' : 'number-pad'}
+            {...numericInputProps}
+            onChangeText={onChange}
+            placeholder="0"
+            placeholderTextColor={colors.textMuted}
+            selectTextOnFocus
+            style={[{ minWidth: 48, padding: 0, color: colors.text, fontSize: fontSizes['2xl'], lineHeight: 40, fontWeight: '800', textAlign: 'center' }, tabularNums]}
+            testID={testID}
+            value={value}
+          />
+          <Text tone="muted" variant="caption">{unit}</Text>
+        </View>
+        <PressableScale
+          accessibilityLabel={`Aumentar ${label.toLowerCase()}`}
+          haptic="selection"
+          onPress={() => onStep(1)}
+          style={{ width: 40, height: 40, borderRadius: radii.full, backgroundColor: colors.surfaceHighest, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <Ionicons color={colors.text} name="add" size={iconSizes.md} />
+        </PressableScale>
+      </View>
+    </View>
+  );
+}
+
 /**
- * Los campos de la serie del ejercicio actual (C8.3.3): peso, reps y RIR
- * grandes, «Última vez: 9 × 80 kg» que al tocarlo rellena, y los ajustes de un
- * toque. El botón «Registrar serie» no está aquí: va fijo abajo.
+ * Entrada de serie: los valores se pueden teclear o ajustar con botones
+ * grandes. «Última vez» carga la marca anterior con un toque; registrar queda
+ * fijo abajo durante la sesión.
  */
 export function SetInputs({
   value,
@@ -127,38 +191,20 @@ export function SetInputs({
   value: SetDraft;
   onChange: (next: SetDraft) => void;
   weightIncrementKg?: number;
-  /** La mejor serie de la última vez que se hizo este ejercicio, en otra sesión. */
+  /** La última serie registrada la vez anterior que se hizo este ejercicio. */
   lastTime?: { pesoKg: number; repeticiones: number; when: string } | null;
 }) {
-  const bump = (field: keyof SetDraft, delta: number) => {
+  const bump = (field: 'pesoKg' | 'repeticiones', delta: number) => {
     const current = Number(String(value[field]).replace(',', '.'));
     const base = Number.isFinite(current) ? current : 0;
     const next = Math.max(0, Math.round((base + delta) * 100) / 100);
     onChange({ ...value, [field]: String(next) });
   };
   const step = kgLabel(weightIncrementKg);
+  const selectedRir = Number(value.rir || 0);
 
   return (
-    <View style={{ gap: spacing.smd }}>
-      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-        <Field
-          decimal
-          label="Peso"
-          onChange={(pesoKg) => onChange({ ...value, pesoKg })}
-          suffix="kg"
-          testID="set-weight"
-          value={value.pesoKg}
-        />
-        <Field label="Reps" onChange={(repeticiones) => onChange({ ...value, repeticiones })} testID="set-reps" value={value.repeticiones} />
-        <Field label="RIR" onChange={(rir) => onChange({ ...value, rir })} testID="set-rir" value={value.rir} />
-      </View>
-
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-        <Chip label={`−${step} kg`} onPress={() => bump('pesoKg', -weightIncrementKg)} spoken={`Quitar ${step} kilos`} />
-        <Chip label={`+${step} kg`} onPress={() => bump('pesoKg', weightIncrementKg)} spoken={`Sumar ${step} kilos`} />
-        <Chip label="−1 rep" onPress={() => bump('repeticiones', -1)} spoken="Una repetición menos" />
-        <Chip label="+1 rep" onPress={() => bump('repeticiones', 1)} spoken="Una repetición más" />
-      </View>
+    <View style={{ gap: spacing.md, padding: spacing.md, borderRadius: radii.xl, borderCurve: 'continuous', borderWidth: 1, borderColor: colors.borderSubtle, backgroundColor: colors.surface }}>
       {lastTime ? (
         <PressableScale
           accessibilityHint="Rellena peso y repeticiones"
@@ -173,16 +219,16 @@ export function SetInputs({
             gap: spacing.sm,
             minHeight: minTouchTarget,
             paddingHorizontal: spacing.smd,
-            borderRadius: radii.md,
-            backgroundColor: colors.surface,
+            borderRadius: radii.full,
+            backgroundColor: colors.surfaceHighest,
           }}
           testID="last-time"
         >
           <Ionicons color={colors.textSecondary} name="time-outline" size={iconSizes.sm} />
-          <Text style={{ flex: 1 }} tone="secondary" variant="subhead">
-            {'Última vez: '}
+          <Text style={{ flex: 1 }} tone="secondary" variant="footnote">
+            {'Último registro · '}
             <Text strong tabular variant="subhead">
-              {`${lastTime.repeticiones} × ${kgLabel(lastTime.pesoKg)} kg`}
+              {`${kgLabel(lastTime.pesoKg)} kg × ${lastTime.repeticiones}`}
             </Text>
           </Text>
           <Text tone="muted" variant="footnote">
@@ -191,6 +237,55 @@ export function SetInputs({
         </PressableScale>
       ) : null}
 
+      <View style={{ flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.xs }}>
+        <StepperField
+          decimal
+          label="Peso"
+          onChange={(pesoKg) => onChange({ ...value, pesoKg })}
+          onStep={(direction) => bump('pesoKg', weightIncrementKg * direction)}
+          testID="set-weight"
+          unit={`KG · ±${step}`}
+          value={value.pesoKg}
+        />
+        <View style={{ width: 1, backgroundColor: colors.borderSubtle, marginVertical: spacing.xs }} />
+        <StepperField
+          label="Reps"
+          onChange={(repeticiones) => onChange({ ...value, repeticiones })}
+          onStep={(direction) => bump('repeticiones', direction)}
+          testID="set-reps"
+          unit="REPS · ±1"
+          value={value.repeticiones}
+        />
+      </View>
+
+      <View style={{ gap: spacing.sm }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <Ionicons color={colors.warning} name="flame-outline" size={iconSizes.sm} />
+            <Text strong variant="subhead">RIR</Text>
+          </View>
+          <Text tone="muted" variant="caption">Repeticiones en reserva</Text>
+        </View>
+        <View accessibilityRole="radiogroup" style={{ flexDirection: 'row', gap: spacing.xs }}>
+          {[0, 1, 2, 3, 4].map((rir) => {
+            const selected = rir === 4 ? selectedRir >= 4 : selectedRir === rir;
+            return (
+              <PressableScale
+                accessibilityLabel={`RIR ${rir === 4 ? '4 o más' : rir}`}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: selected }}
+                haptic="selection"
+                key={rir}
+                onPress={() => onChange({ ...value, rir: String(rir) })}
+                style={{ flex: 1, minHeight: minTouchTarget, borderRadius: radii.full, alignItems: 'center', justifyContent: 'center', backgroundColor: selected ? colors.groupTint : colors.surfaceHighest, borderWidth: selected ? 1.5 : 1, borderColor: selected ? colors.group : 'transparent' }}
+                testID={rir === 0 ? 'set-rir' : undefined}
+              >
+                <Text strong tabular tone={selected ? 'group' : 'secondary'} variant="subhead">{rir === 4 ? '4+' : rir}</Text>
+              </PressableScale>
+            );
+          })}
+        </View>
+      </View>
     </View>
   );
 }

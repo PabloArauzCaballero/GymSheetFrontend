@@ -11,14 +11,17 @@
     "ios": "expo run:ios",
     "type-check": "tsc --noEmit",
     "lint": "expo lint && node scripts/check-theme.mjs",
-    "test": "jest --passWithNoTests",
+    "test": "node --import ./scripts/register-ts-extension.mjs --test --experimental-strip-types \"src/**/*.test.ts\"",
     "test:unit": "node --test \"src/**/*.test.ts\"",
     "test:stories": "node --test --experimental-strip-types src/components/story-viewers-presentation.test.ts",
     "test:tour": "node --test --experimental-strip-types src/state/tour-queue.test.ts",
     "eas-build-pre-install": "node scripts/ensure-install.mjs && node scripts/check-api-url.mjs",
     "check:api-url": "node scripts/check-api-url.mjs",
     "check:theme": "node scripts/check-theme.mjs",
-    "test:theme": "node --test --experimental-strip-types src/theme/contrast.test.ts"
+    "test:theme": "node --test --experimental-strip-types src/theme/contrast.test.ts",
+    "test:chat-audio": "node --import ./scripts/register-ts-extension.mjs --test --experimental-strip-types src/lib/chat-audio.test.ts",
+    "test:h5-s2-m1-fixture": "node --import ./scripts/register-ts-extension.mjs --test --experimental-strip-types src/api/h5-s2-m1-fixture.test.mjs",
+    "test:social-cache": "node --import ./scripts/register-ts-extension.mjs --test --experimental-strip-types src/api/social-cache.test.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/bricolage-grotesque": "^0.4.1",
@@ -72,11 +75,14 @@
     "rn-emoji-keyboard": "^1.7.0",
     "socket.io-client": "^4.8.1",
     "zod": "^4.1.0",
-    "zustand": "^5.0.0"
+    "zustand": "^5.0.0",
+    "expo-audio": "~57.0.5",
+    "react-native-maps": "1.27.2"
   },
   "devDependencies": {
     "@gymsheet/tsconfig": "*",
     "@types/react": "~19.2.4",
     "typescript": "~6.0.3"
-  }
+  },
+  "resolutions": {}
 }

@@ -1,0 +1,488 @@
+# Inventario de checkout para continuidad del plan
+
+Fecha UTC: 2026-10-09T20:24:21.736406+00:00
+Lectura solamente; no se modificaron archivos de producto ni se limpiaron cambios.
+
+## GymSheetFrontend
+
+### branch
+```text
+dev
+```
+exit code: 0
+
+### HEAD
+```text
+6b66d8aba9329f4897e900a9e3be09f495c41343
+```
+exit code: 0
+
+### status
+```text
+ M README.md
+ M apps/mobile/.env.example
+ M apps/mobile/app.json
+ M apps/mobile/app/(app)/(tabs)/comunidad.tsx
+ M apps/mobile/app/(app)/(tabs)/exercises/index.tsx
+ M apps/mobile/app/(app)/(tabs)/profile.tsx
+ M apps/mobile/app/(app)/(tabs)/routines/[id].tsx
+ M apps/mobile/app/(app)/(tabs)/routines/index.tsx
+ M apps/mobile/app/(app)/(tabs)/routines/new.tsx
+ M apps/mobile/app/(app)/chat/[id].tsx
+ M apps/mobile/app/(app)/comunidad-mensajes.tsx
+ M apps/mobile/app/(app)/descubrir.tsx
+ M apps/mobile/app/(app)/onboarding.tsx
+ M apps/mobile/app/(app)/perfil/[userId].tsx
+ M apps/mobile/app/(app)/workouts/[id].tsx
+ M apps/mobile/package.json
+ M apps/mobile/src/api/client.ts
+ M apps/mobile/src/api/services.ts
+ M apps/mobile/src/components/directory-card.tsx
+ M apps/mobile/src/components/exercise-picker.tsx
+ M apps/mobile/src/components/layout.tsx
+ M apps/mobile/src/components/media.tsx
+ M apps/mobile/src/components/set-entry-form.tsx
+ M apps/mobile/src/components/social-status-editor.tsx
+ M apps/mobile/src/components/ui.tsx
+ M apps/mobile/src/hooks/use-chat-socket.ts
+ M apps/mobile/src/lib/format.ts
+ M apps/web/src/app/api/backend/[...path]/route.ts
+ M apps/web/src/features/chat/components/message-bubble.tsx
+ M apps/web/src/features/chat/components/message-thread-client.tsx
+ M apps/web/src/features/chat/components/thread-header.tsx
+ M apps/web/src/features/chat/hooks/use-chat-socket.ts
+ M apps/web/src/features/chat/hooks/use-chat-thread.ts
+ M apps/web/src/features/chat/services/chat-service.ts
+ M apps/web/src/features/profile/components/profile-page-client.tsx
+ M apps/web/src/features/social/components/comunidad-client.tsx
+ M apps/web/src/features/social/components/connections-tab.tsx
+ M apps/web/src/features/social/components/descubrir-client.tsx
+ M apps/web/src/features/social/components/member-profile-client.tsx
+ M apps/web/src/features/social/components/member-profile-dialog.tsx
+ M apps/web/src/features/social/services/social-service.ts
+ M apps/web/src/features/workouts/components/guided-workout.tsx
+ M apps/web/src/features/workouts/components/live-workout.tsx
+ M apps/web/src/features/workouts/components/set-entry-form.tsx
+ M apps/web/src/features/workouts/components/workout-set-row.tsx
+ M apps/web/src/shared/components/media/domain-image.test.tsx
+ M apps/web/src/shared/components/media/domain-image.tsx
+ M apps/web/src/shared/server/backend-route-policy.test.ts
+ M apps/web/src/shared/server/backend-route-policy.ts
+ M packages/domain/package.json
+ M packages/domain/src/index.ts
+ M packages/schemas/src/definitions/social.ts
+ M packages/schemas/src/definitions/training.ts
+ M packages/schemas/src/definitions/workouts.ts
+ M packages/schemas/src/index.ts
+ M packages/types/src/enums.ts
+ M packages/types/src/workouts.ts
+ M yarn.lock
+?? apps/mobile/app.config.js
+?? apps/mobile/app/(app)/(tabs)/routines/explore.tsx
+?? apps/mobile/app/(app)/(tabs)/routines/report/
+?? apps/mobile/app/(app)/personas-bloqueadas.tsx
+?? apps/mobile/app/(app)/social-map.tsx
+?? apps/mobile/scripts/register-ts-extension.mjs
+?? apps/mobile/scripts/resolve-ts-extension.mjs
+?? apps/mobile/src/api/h5-s2-m1-fixture.test.mjs
+?? apps/mobile/src/api/h5-s2-m1-fixture.ts
+?? apps/mobile/src/components/button-accessibility.test.mjs
+?? apps/mobile/src/features/
+?? apps/mobile/src/hooks/chat-history-recovery.test.ts
+?? apps/mobile/src/hooks/chat-history-recovery.ts
+?? apps/mobile/src/hooks/chat-message-deletion.test.ts
+?? apps/mobile/src/hooks/chat-message-deletion.ts
+?? apps/mobile/src/hooks/chat-message-edit-cache.test.ts
+?? apps/mobile/src/hooks/chat-message-edit-cache.ts
+?? apps/mobile/src/hooks/chat-message-edit.test.ts
+?? apps/mobile/src/hooks/chat-message-edit.ts
+?? apps/mobile/src/hooks/chat-receipt-settings.test.ts
+?? apps/mobile/src/hooks/chat-receipt-settings.ts
+?? apps/mobile/src/hooks/chat-socket-routing.test.ts
+?? apps/mobile/src/hooks/chat-socket-routing.ts
+?? apps/mobile/src/lib/chat-audio.test.ts
+?? apps/mobile/src/lib/chat-audio.ts
+?? apps/mobile/src/lib/request-id.ts
+?? apps/web/e2e/social/
+?? apps/web/src/app/(portal)/comunidad/bloqueados/
+?? apps/web/src/app/(portal)/comunidad/mapa/
+?? apps/web/src/features/chat/components/message-bubble-audio.test.tsx
+?? apps/web/src/features/chat/components/message-bubble-edit.test.tsx
+?? apps/web/src/features/chat/components/message-thread-client.test.tsx
+?? apps/web/src/features/chat/components/thread-header.test.tsx
+?? apps/web/src/features/chat/hooks/use-chat-thread.test.tsx
+?? apps/web/src/features/chat/lib/message-edit.test.ts
+?? apps/web/src/features/chat/lib/message-edit.ts
+?? apps/web/src/features/social-map/
+?? apps/web/src/features/social/components/block-member-button.tsx
+?? apps/web/src/features/social/components/blocked-users-client.tsx
+?? apps/web/src/features/social/components/descubrir-client-contract.test.tsx
+?? apps/web/src/features/social/components/descubrir-client.test.tsx
+?? apps/web/src/features/social/components/discovery-preferences-card.tsx
+?? apps/web/src/features/social/components/social-discovery-settings-card.tsx
+?? docs/rutinas-flujo-y-criterios.md
+?? docs/trabajo/
+?? packages/domain/src/read-receipt.ts
+?? packages/domain/test/
+?? packages/schemas/src/definitions/social-map.ts
+?? scripts/qa/
+```
+exit code: 0
+
+### diff stat
+```text
+ README.md                                          |  15 +
+ apps/mobile/.env.example                           |   8 +
+ apps/mobile/app.json                               |   8 +-
+ apps/mobile/app/(app)/(tabs)/comunidad.tsx         | 303 +++----
+ apps/mobile/app/(app)/(tabs)/exercises/index.tsx   | 217 ++---
+ apps/mobile/app/(app)/(tabs)/profile.tsx           |   4 +-
+ apps/mobile/app/(app)/(tabs)/routines/[id].tsx     |  50 +-
+ apps/mobile/app/(app)/(tabs)/routines/index.tsx    |   1 +
+ apps/mobile/app/(app)/(tabs)/routines/new.tsx      | 301 +++++--
+ apps/mobile/app/(app)/chat/[id].tsx                | 876 +++++++++++++++++++--
+ apps/mobile/app/(app)/comunidad-mensajes.tsx       |  34 +-
+ apps/mobile/app/(app)/descubrir.tsx                | 114 ++-
+ apps/mobile/app/(app)/onboarding.tsx               |  50 +-
+ apps/mobile/app/(app)/perfil/[userId].tsx          |  27 +-
+ apps/mobile/app/(app)/workouts/[id].tsx            |  63 +-
+ apps/mobile/package.json                           |   4 +
+ apps/mobile/src/api/client.ts                      |  19 +-
+ apps/mobile/src/api/services.ts                    | 103 ++-
+ apps/mobile/src/components/directory-card.tsx      |  13 +-
+ apps/mobile/src/components/exercise-picker.tsx     |  16 +-
+ apps/mobile/src/components/layout.tsx              | 110 +++
+ apps/mobile/src/components/media.tsx               |  80 +-
+ apps/mobile/src/components/set-entry-form.tsx      |  23 +-
+ .../mobile/src/components/social-status-editor.tsx | 142 +++-
+ apps/mobile/src/components/ui.tsx                  |   3 +
+ apps/mobile/src/hooks/use-chat-socket.ts           |  95 ++-
+ apps/mobile/src/lib/format.ts                      |   1 +
+ apps/web/src/app/api/backend/[...path]/route.ts    |   2 +-
+ .../features/chat/components/message-bubble.tsx    | 136 +++-
+ .../chat/components/message-thread-client.tsx      |  80 +-
+ .../src/features/chat/components/thread-header.tsx | 121 ++-
+ .../web/src/features/chat/hooks/use-chat-socket.ts |  83 +-
+ .../web/src/features/chat/hooks/use-chat-thread.ts | 240 +++++-
+ .../web/src/features/chat/services/chat-service.ts |  16 +
+ .../profile/components/profile-page-client.tsx     |   5 +
+ .../social/components/comunidad-client.tsx         |   8 +-
+ .../features/social/components/connections-tab.tsx |  38 +-
+ .../social/components/descubrir-client.tsx         |  89 ++-
+ .../social/components/member-profile-client.tsx    |   2 +
+ .../social/components/member-profile-dialog.tsx    |   2 +
+ .../src/features/social/services/social-service.ts |  46 ++
+ .../workouts/components/guided-workout.tsx         |   2 +-
+ .../features/workouts/components/live-workout.tsx  |  12 +-
+ .../workouts/components/set-entry-form.tsx         |   4 +-
+ .../workouts/components/workout-set-row.tsx        |   6 +-
+ .../shared/components/media/domain-image.test.tsx  |   7 +-
+ .../src/shared/components/media/domain-image.tsx   |   3 +
+ .../src/shared/server/backend-route-policy.test.ts |   2 +
+ apps/web/src/shared/server/backend-route-policy.ts |   2 +
+ packages/domain/package.json                       |   3 +-
+ packages/domain/src/index.ts                       |   1 +
+ packages/schemas/src/definitions/social.ts         |  67 +-
+ packages/schemas/src/definitions/training.ts       |  15 +
+ packages/schemas/src/definitions/workouts.ts       |  10 +-
+ packages/schemas/src/index.ts                      |   1 +
+ packages/types/src/enums.ts                        |   3 +-
+ packages/types/src/workouts.ts                     |  12 +-
+ yarn.lock                                          |  14 +-
+ 58 files changed, 3119 insertions(+), 593 deletions(-)
+```
+exit code: 0
+
+### staged diff stat
+```text
+(vacío)
+```
+exit code: 0
+
+## GymSheetBackend
+
+### branch
+```text
+feat/biblioteca-ejercicios
+```
+exit code: 0
+
+### HEAD
+```text
+474da618fe4d191ae5d5f25b2dac537fd3a6856f
+```
+exit code: 0
+
+### status
+```text
+ M .env.example
+ M docker-compose.coolify.yml
+ M package.json
+ M src/common/enums/domain.enums.ts
+ M src/config/env.ts
+ M src/database/migrations/index.ts
+ M src/database/models/index.ts
+ M src/main.ts
+ M src/modules/chat/chat-events.service.ts
+ M src/modules/chat/chat.controller.ts
+ M src/modules/chat/chat.gateway.ts
+ M src/modules/chat/chat.mapper.ts
+ M src/modules/chat/chat.module.ts
+ M src/modules/chat/chat.repository.ts
+ M src/modules/chat/chat.schemas.ts
+ M src/modules/chat/chat.service.spec.ts
+ M src/modules/chat/chat.service.ts
+ M src/modules/chat/conversation-participant.model.ts
+ M src/modules/chat/conversation.model.ts
+ M src/modules/chat/message.model.ts
+ M src/modules/export/export.service.ts
+ M src/modules/integration/domain-event.catalog.ts
+ M src/modules/integration/integration.module.ts
+ M src/modules/media/adapters/local-storage.adapter.spec.ts
+ M src/modules/media/adapters/local-storage.adapter.ts
+ M src/modules/media/adapters/mime-extension.ts
+ M src/modules/media/adapters/minio-storage.adapter.spec.ts
+ M src/modules/media/adapters/minio-storage.adapter.ts
+ M src/modules/media/media-storage.port.ts
+ M src/modules/media/media.service.spec.ts
+ M src/modules/moderation/moderation.module.ts
+ M src/modules/moderation/moderation.policy.ts
+ M src/modules/moderation/moderation.repository.ts
+ M src/modules/moderation/moderation.service.ts
+ M src/modules/profiles/onboarding.service.ts
+ M src/modules/profiles/profiles.module.ts
+ M src/modules/profiles/profiles.repository.ts
+ M src/modules/profiles/profiles.service.ts
+ M src/modules/social/profile-social-settings.model.ts
+ M src/modules/social/social-discovery.spec.ts
+ M src/modules/social/social-interactions.spec.ts
+ M src/modules/social/social.controller.ts
+ M src/modules/social/social.module.ts
+ M src/modules/social/social.repository.ts
+ M src/modules/social/social.schemas.ts
+ M src/modules/social/social.service.spec.ts
+ M src/modules/social/social.service.ts
+ M src/modules/training/routine.model.ts
+ M src/modules/training/training.controller.ts
+ M src/modules/training/training.module.ts
+ M src/modules/training/training.repository.ts
+ M src/modules/training/training.schemas.ts
+ M src/modules/training/training.service.ts
+ M src/modules/users/users.module.ts
+ M src/modules/users/users.repository.ts
+ M src/modules/users/users.service.ts
+ M src/modules/workouts/workout-session-exercise.model.ts
+ M src/modules/workouts/workout-session.model.ts
+ M src/modules/workouts/workout-set.model.ts
+ M src/modules/workouts/workout.mapper.ts
+ M src/modules/workouts/workouts.repository.ts
+ M src/modules/workouts/workouts.schemas.ts
+ M src/modules/workouts/workouts.service.spec.ts
+ M src/modules/workouts/workouts.service.ts
+ M test/jest-e2e.json
+ M yarn.lock
+?? docs/data-reform/chat-media-private-migration.md
+?? scripts/qa/
+?? src/database/migrations/202610060001-routine-workout-flow.ts
+?? src/database/migrations/202610080001-chat-read-receipt-preferences.ts
+?? src/database/migrations/202610090001-social-profile-discovery-consent.ts
+?? src/database/migrations/202610090002-chat-revocation.ts
+?? src/database/migrations/202610090003-social-map-locations.ts
+?? src/database/migrations/202610090004-social-map-places.ts
+?? src/database/migrations/202610090005-social-map-place-branch-links.ts
+?? src/database/migrations/202610090006-social-blocks.ts
+?? src/database/migrations/202610090007-social-discovery-preferences.ts
+?? src/database/migrations/202610090008-social-recommendation-versions.ts
+?? src/database/migrations/202610090009-chat-message-idempotency.ts
+?? src/database/migrations/202610090010-chat-audio-message.ts
+?? src/database/migrations/202610090011-chat-sticker-message.ts
+?? src/database/migrations/202610090012-chat-message-edit.ts
+?? src/database/migrations/202610090013-chat-message-idempotency-body.ts
+?? src/database/migrations/202610090014-chat-message-local-visibility.ts
+?? src/database/migrations/202610090015-chat-message-global-delete.ts
+?? src/modules/chat/chat-audio-validation.spec.ts
+?? src/modules/chat/chat-audio-validation.ts
+?? src/modules/chat/chat-events.service.spec.ts
+?? src/modules/chat/chat-image-metadata.spec.ts
+?? src/modules/chat/chat-image-metadata.ts
+?? src/modules/chat/chat-media-cipher.spec.ts
+?? src/modules/chat/chat-media-cipher.ts
+?? src/modules/chat/chat-media-privacy.spec.ts
+?? src/modules/chat/chat-request-fingerprint.spec.ts
+?? src/modules/chat/chat-request-fingerprint.ts
+?? src/modules/chat/chat-sticker-catalog.spec.ts
+?? src/modules/chat/chat-sticker-catalog.ts
+?? src/modules/chat/chat.gateway.spec.ts
+?? src/modules/chat/fixtures/
+?? src/modules/chat/message-mutations.service.ts
+?? src/modules/chat/message-visibility.model.ts
+?? src/modules/chat/migration/
+?? src/modules/chat/read-receipt-policy.spec.ts
+?? src/modules/chat/read-receipt-policy.ts
+?? src/modules/chat/read-receipt-settings.controller.ts
+?? src/modules/chat/read-receipt-settings.service.spec.ts
+?? src/modules/chat/read-receipt-settings.service.ts
+?? src/modules/media/adapters/minio-chat-public-policy.spec.ts
+?? src/modules/media/adapters/minio-public-policy.ts
+?? src/modules/social/discovery-deck.cursor.spec.ts
+?? src/modules/social/discovery-deck.cursor.ts
+?? src/modules/social/gym-places.policy.ts
+?? src/modules/social/recommendations-client.spec.ts
+?? src/modules/social/recommendations-client.ts
+?? src/modules/social/social-block.policy.spec.ts
+?? src/modules/social/social-block.policy.ts
+?? src/modules/social/social-discovery-preferences.schemas.spec.ts
+?? src/modules/social/social-discovery-settings.policy.spec.ts
+?? src/modules/social/social-discovery-settings.policy.ts
+?? src/modules/social/social-map-location.model.ts
+?? src/modules/social/social-map-place.model.ts
+?? src/modules/social/social-map.controller.ts
+?? src/modules/social/social-map.policy.spec.ts
+?? src/modules/social/social-map.policy.ts
+?? src/modules/social/social-map.repository.spec.ts
+?? src/modules/social/social-map.repository.ts
+?? src/modules/social/social-map.schemas.ts
+?? src/modules/social/social-map.service.spec.ts
+?? src/modules/social/social-map.service.ts
+?? src/modules/social/social-pair-lock.ts
+?? src/modules/social/social-recommendation-outbox.service.spec.ts
+?? src/modules/social/social-recommendation-outbox.service.ts
+?? src/modules/social/social-revocation.repository.spec.ts
+?? src/modules/training/routine-recommendation.spec.ts
+?? src/modules/training/routine-recommendation.ts
+?? src/modules/training/training.schemas.spec.ts
+?? src/workers/recommendations-projection.runner.ts
+?? src/workers/recommendations-projection.worker.ts
+?? src/workers/recommendations-worker.module.ts
+?? src/workers/social-map-places-import.command.spec.ts
+?? src/workers/social-map-places-import.command.ts
+?? test/e2e-env.setup.ts
+?? test/social-blocks.e2e-spec.ts
+?? test/social-discovery-preferences.e2e-spec.ts
+?? test/social-map-places.e2e-spec.ts
+?? test/social-recommender-revocation.e2e-spec.ts
+?? test/social-recommender-timeout.e2e-spec.ts
+?? test/social-recommender.e2e-spec.ts
+?? test/social/
+```
+exit code: 0
+
+### diff stat
+```text
+ .env.example                                       |   6 +-
+ docker-compose.coolify.yml                         |  11 +-
+ package.json                                       |   4 +
+ src/common/enums/domain.enums.ts                   |   2 +
+ src/config/env.ts                                  |  11 +-
+ src/database/migrations/index.ts                   |  34 ++
+ src/database/models/index.ts                       |   6 +
+ src/main.ts                                        |  17 +
+ src/modules/chat/chat-events.service.ts            |  28 +-
+ src/modules/chat/chat.controller.ts                |  51 ++-
+ src/modules/chat/chat.gateway.ts                   |  63 +++-
+ src/modules/chat/chat.mapper.ts                    |  25 +-
+ src/modules/chat/chat.module.ts                    |  22 +-
+ src/modules/chat/chat.repository.ts                | 370 +++++++++++++++++---
+ src/modules/chat/chat.schemas.ts                   |  36 +-
+ src/modules/chat/chat.service.spec.ts              | 254 +++++++++++++-
+ src/modules/chat/chat.service.ts                   | 135 ++++++--
+ src/modules/chat/conversation-participant.model.ts |   8 +
+ src/modules/chat/conversation.model.ts             |   6 +
+ src/modules/chat/message.model.ts                  |  20 +-
+ src/modules/export/export.service.ts               |   3 +-
+ src/modules/integration/domain-event.catalog.ts    |  13 +
+ src/modules/integration/integration.module.ts      |   3 +
+ .../media/adapters/local-storage.adapter.spec.ts   |   7 +
+ .../media/adapters/local-storage.adapter.ts        |   6 +-
+ src/modules/media/adapters/mime-extension.ts       |   1 +
+ .../media/adapters/minio-storage.adapter.spec.ts   |  10 +
+ .../media/adapters/minio-storage.adapter.ts        |  11 +
+ src/modules/media/media-storage.port.ts            |   2 +
+ src/modules/media/media.service.spec.ts            |   1 +
+ src/modules/moderation/moderation.module.ts        |   2 +
+ src/modules/moderation/moderation.policy.ts        |   5 +-
+ src/modules/moderation/moderation.repository.ts    |  13 +-
+ src/modules/moderation/moderation.service.ts       |  10 +-
+ src/modules/profiles/onboarding.service.ts         |   2 +-
+ src/modules/profiles/profiles.module.ts            |   2 +
+ src/modules/profiles/profiles.repository.ts        |  13 +-
+ src/modules/profiles/profiles.service.ts           |  13 +-
+ .../social/profile-social-settings.model.ts        |  22 ++
+ src/modules/social/social-discovery.spec.ts        |   9 +-
+ src/modules/social/social-interactions.spec.ts     |  34 ++
+ src/modules/social/social.controller.ts            |  56 ++-
+ src/modules/social/social.module.ts                |  17 +-
+ src/modules/social/social.repository.ts            | 368 +++++++++++++++++++-
+ src/modules/social/social.schemas.ts               |  38 +++
+ src/modules/social/social.service.spec.ts          | 374 ++++++++++++++++++++-
+ src/modules/social/social.service.ts               | 312 ++++++++++++++++-
+ src/modules/training/routine.model.ts              |   3 +
+ src/modules/training/training.controller.ts        |  45 ++-
+ src/modules/training/training.module.ts            |   2 +
+ src/modules/training/training.repository.ts        |  67 +++-
+ src/modules/training/training.schemas.ts           |  38 ++-
+ src/modules/training/training.service.ts           | 258 +++++++++++---
+ src/modules/users/users.module.ts                  |   3 +-
+ src/modules/users/users.repository.ts              |  19 +-
+ src/modules/users/users.service.ts                 |  41 ++-
+ .../workouts/workout-session-exercise.model.ts     |  21 ++
+ src/modules/workouts/workout-session.model.ts      |   3 +
+ src/modules/workouts/workout-set.model.ts          |   4 +-
+ src/modules/workouts/workout.mapper.ts             |  18 +-
+ src/modules/workouts/workouts.repository.ts        |  25 +-
+ src/modules/workouts/workouts.schemas.ts           |   4 +-
+ src/modules/workouts/workouts.service.spec.ts      |  50 ++-
+ src/modules/workouts/workouts.service.ts           |  77 ++++-
+ test/jest-e2e.json                                 |   1 +
+ yarn.lock                                          | 195 ++++++++++-
+ 66 files changed, 3086 insertions(+), 244 deletions(-)
+```
+exit code: 0
+
+### staged diff stat
+```text
+(vacío)
+```
+exit code: 0
+
+## GymSheetRecommendations
+
+### branch
+```text
+main
+```
+exit code: 0
+
+### HEAD
+```text
+fatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.
+Use '--' to separate paths from revisions, like this:
+'git <command> [<revision>...] -- [<file>...]'
+HEAD
+```
+exit code: 128
+
+### status
+```text
+?? .env.example
+?? .gitignore
+?? README.md
+?? config/
+?? package.json
+?? src/
+?? test/
+```
+exit code: 0
+
+### diff stat
+```text
+(vacío)
+```
+exit code: 0
+
+### staged diff stat
+```text
+(vacío)
+```
+exit code: 0
+

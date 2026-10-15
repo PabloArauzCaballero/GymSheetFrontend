@@ -89,6 +89,8 @@ export const overlay = {
   scrimSolid: alpha(ink.black, 0.92),
   /** Velo leve sobre una foto (botón sobre imagen). */
   scrimFaint: alpha(ink.black, 0.35),
+  /** Velo de las hojas inferiores del chat. */
+  scrimSheet: alpha(ink.black, 0.52),
   /** Realce claro sobre fondos oscuros (contornos de vidrio, pistas). */
   glass: alpha(ink.white, 0.14),
   glassStrong: alpha(ink.white, 0.28),

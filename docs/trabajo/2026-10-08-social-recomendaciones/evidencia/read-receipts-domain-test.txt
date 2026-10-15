@@ -1,0 +1,27 @@
+yarn workspace v1.22.22
+yarn run v1.22.22
+$ node --experimental-strip-types --test test/read-receipt.test.mjs
+TAP version 13
+# Subtest: messages read before read receipts were enabled never appear read retroactively
+ok 1 - messages read before read receipts were enabled never appear read retroactively
+  ---
+  duration_ms: 0.494042
+  type: 'test'
+  ...
+# Subtest: an always-enabled receipt interval has no lower timestamp bound
+ok 2 - an always-enabled receipt interval has no lower timestamp bound
+  ---
+  duration_ms: 0.044041
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 100.757709
+Done in 0.54s.
+Done in 0.66s.

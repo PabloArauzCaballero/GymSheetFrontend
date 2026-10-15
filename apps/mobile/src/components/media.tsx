@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { useReducedMotion } from 'react-native-reanimated';
 import {
@@ -19,6 +19,8 @@ import {
   colors,
   fontFamilies,
   fontSizes,
+  iconSizes,
+  ink,
   motion,
   muscleGradientDefault,
   muscleGradients,
@@ -44,6 +46,10 @@ export function primaryMedia(exercise: Pick<Exercise, 'media'>): ExerciseMedia |
  */
 function posterOf(exercise: Pick<Exercise, 'media'>): { uri: string; altText: string } | null {
   const poster = selectExercisePoster(exercise.media, null);
+  // A GIF without a thumbnail must not be the resting image in a recycled row.
+  if (exercise.media.some((item) => item.mediaType === 'GIF' && item.url === poster?.url && !item.thumbnailUrl)) {
+    return null;
+  }
   return poster ? { uri: poster.url, altText: poster.altText } : null;
 }
 
@@ -207,17 +213,16 @@ export function ExerciseImage({
 }) {
   const isHero = size === 'hero';
   const reduceMotion = useReducedMotion();
-  // The detail view loops the movement when the dataset provides a GIF; rows
-  // stay on the still image. Reduce Motion keeps the still everywhere.
-  const animated = isHero && !reduceMotion ? animatedMedia(exercise) : null;
-  const media = animated ?? primaryMedia(exercise);
+  // Animated media is requested only after an explicit play action.
+  const media = primaryMedia(exercise);
   const poster = posterOf(exercise);
-  // El GIF manda en el detalle; si no hay lámina, cae al póster del vídeo, que
-  // antes dejaba la tarjeta con el icono genérico.
-  // `imagenUrl` es lo que el servidor ya resolvió (lámina o póster): manda en
-  // filas y miniaturas; el GIF del detalle sigue teniendo preferencia. Si no
-  // viene (servidor anterior), se calcula aquí como antes.
-  const uri = animated?.url ?? exercise.imagenUrl ?? media?.url ?? media?.thumbnailUrl ?? poster?.uri ?? null;
+  const resolvedImage = exercise.media.some(
+    (item) => item.mediaType === 'GIF' && item.url === exercise.imagenUrl && !item.thumbnailUrl,
+  ) ? null : exercise.imagenUrl;
+  // Small rows use the prepared thumbnail; detail keeps the resolved full-size art.
+  const uri = isHero
+    ? resolvedImage ?? media?.url ?? media?.thumbnailUrl ?? poster?.uri ?? null
+    : media?.thumbnailUrl ?? resolvedImage ?? media?.url ?? poster?.uri ?? null;
   const altText = media?.altText || poster?.altText || exercise.nombre;
   const [loaded, setLoaded] = useState(false);
 
@@ -228,9 +233,9 @@ export function ExerciseImage({
   // Con `imagenUrl`: es foto salvo que el ejercicio solo tenga el póster de un
   // vídeo (una ilustración sobre blanco, que va sobre la placa).
   const posterOnly = primaryMedia(exercise) === null && poster !== null;
-  const photo =
-    !animated &&
-    (uri !== null && uri === exercise.imagenUrl ? !posterOnly : media?.mediaType === 'IMAGE' && media.url === uri);
+  const photo = uri !== null && uri === resolvedImage
+    ? !posterOnly
+    : media?.mediaType === 'IMAGE' && (media.thumbnailUrl === uri || media.url === uri);
 
   const frame = isHero
     ? { width: HERO_SIZE, height: HERO_SIZE, alignSelf: 'center' as const }
@@ -274,6 +279,7 @@ export function ExerciseImage({
             accessibilityLabel={altText}
             accessible
             cachePolicy="memory-disk"
+            priority={isHero ? 'normal' : 'low'}
             // Ilustración: `contain`, recortarla le corta las extremidades.
             // Foto: `cover`, que llene el cuadro sin bandas.
             contentFit={photo ? 'cover' : 'contain'}
@@ -292,7 +298,7 @@ export function ExerciseImage({
 }
 
 /**
- * La demostración del ejercicio en la ficha: vídeo si lo hay, lámina si no.
+ * La demostración del ejercicio en la ficha: vídeo o GIF al pulsar, lámina mientras tanto.
  *
  * Es el único sitio de la aplicación que reproduce vídeo del catálogo. Las
  * listas se quedan en la imagen fija por ancho de banda, y un ejercicio sin
@@ -302,19 +308,59 @@ export function ExerciseDemo({
   exercise,
   gender,
 }: {
-  exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular'>;
+  exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular' | 'imagenUrl'>;
   gender: ProfileGender;
 }) {
   const video = selectExerciseVideo(exercise.media, gender);
   // MP4 y no WebM: AVPlayer de iOS no decodifica WebM, así que el formato que
   // ahorra bytes en la web aquí dejaría la ficha en negro.
-  if (!video?.mp4Url) return <ExerciseImage exercise={exercise} size="hero" />;
+  if (video?.mp4Url) {
+    return (
+      <ExerciseVideo
+        altText={video.altText}
+        fallback={<ExerciseImage exercise={exercise} rounded={0} size="fill" />}
+        poster={video.poster}
+        uri={video.mp4Url}
+      />
+    );
+  }
+  const gif = animatedMedia(exercise);
+  if (gif) return <ExerciseGif key={gif.url} exercise={exercise} gif={gif} />;
+  return <ExerciseImage exercise={exercise} size="hero" />;
+}
+
+/** An animated demonstration is downloaded only after the user asks to play it. */
+function ExerciseGif({ exercise, gif }: {
+  exercise: Pick<Exercise, 'media' | 'nombre' | 'grupoMuscular' | 'imagenUrl'>;
+  gif: ExerciseMedia;
+}) {
+  const [playing, setPlaying] = useState(false);
   return (
-    <ExerciseVideo
-      altText={video.altText}
-      fallback={<ExerciseImage exercise={exercise} rounded={0} size="fill" />}
-      poster={video.poster}
-      uri={video.mp4Url}
-    />
+    <Pressable
+      accessibilityLabel={playing ? 'Detener demostración animada' : `Reproducir demostración animada. ${gif.altText}`}
+      accessibilityRole="button"
+      onPress={() => setPlaying((value) => !value)}
+      style={{ width: HERO_SIZE, height: HERO_SIZE, alignSelf: 'center' }}
+    >
+      {playing ? (
+        <Image
+          accessibilityElementsHidden
+          cachePolicy="disk"
+          contentFit="contain"
+          importantForAccessibility="no-hide-descendants"
+          source={{ uri: gif.url }}
+          style={{ width: HERO_SIZE, height: HERO_SIZE, borderRadius: radii.lg, backgroundColor: ink.white }}
+        />
+      ) : (
+        <View style={{ width: HERO_SIZE, height: HERO_SIZE }}>
+          <ExerciseImage exercise={exercise} size="hero" />
+          <View pointerEvents="none" style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.volt, alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons color={colors.background} name="play" size={iconSizes.md} />
+            </View>
+          </View>
+        </View>
+      )}
+    </Pressable>
   );
 }

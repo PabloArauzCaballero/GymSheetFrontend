@@ -1,0 +1,3 @@
+yarn run v1.22.22
+$ '/Users/josejeremias/Desktop/Mantra Core Technologies/GymSheet/GymSheetBackend/node_modules/.bin/eslint' test/social/stories.e2e-spec.ts src/modules/stories/stories.controller.ts src/modules/stories/stories.repository.ts src/modules/stories/stories.repository.spec.ts src/modules/stories/stories.repository.integration.spec.ts src/modules/stories/stories.service.ts src/modules/stories/stories.service.spec.ts
+Done in 2.89s.

@@ -1,0 +1,24 @@
+Fecha: 2026-10-09 (America/La_Paz).
+
+Preferencias explícitas de Conocer:
+- Migración `202610090007-social-discovery-preferences` aplicada en PostgreSQL QA aislado `127.0.0.1:55432/gymsheet_social_qa`.
+- `GET/PUT /me/discovery/preferences` guarda géneros, intenciones, edad, radio, flexibilidad y versión; la carrera de dos PUT simultáneos produce un 200 y un 409.
+- GET inicial devuelve `configured:false`; no se asignan filtros a quien no los eligió. La baraja exige configuración y aplica género/edad en SQL.
+- UI web/móvil, contrato compartido y proxy web integrados.
+
+Ranking e integración:
+- Backend envía al motor un recorte de candidatos previamente autorizados, sin nombre ni fotos, y solo usa coordenadas públicas de sede. El motor requiere credencial interna.
+- El worker del backend entrega eventos versionados del outbox al inbox SQLite; en una corrida real sobre QA, seis trabajos terminaron `COMPLETED`.
+- E2E HTTP real PostgreSQL→backend→motor confirma que el candidato con afinidad declarada aparece antes que el control. El backend limita los IDs al conjunto autorizado y vuelve a consultar directorio/edad/visibilidad/bloqueos/conexiones/consentimiento antes de responder.
+- El backend aplica límite HTTP de 300 ms y vuelve al ranking local en ausencia, error o respuesta inválida del motor. Hay pruebas unitarias de fallback; kill-test HTTP aún pendiente.
+- SQLite conserva proyección, dedupe, versiones, tombstones y modelos inmutables. La prueba registra `affinity-v2`, activa, reinicia el servicio y restaura `affinity-v1`; el ranking declara de nuevo esa versión. El vector de aprendizaje sigue como función pura: falta persistir y aplicar señales reales.
+- Cursor de página ligado a preferencias/filtros sigue pendiente.
+
+Verificación ejecutada el 2026-10-09:
+- Backend: `DB_HOST=127.0.0.1 DB_PORT=55432 DB_NAME=gymsheet_social_qa DB_USER=postgres DB_PASSWORD=qa PATH=/opt/homebrew/opt/node@22/bin:$PATH yarn test --runInBand` → 114 suites / 811 tests PASS.
+- Backend: `yarn type-check` PASS; `yarn lint` PASS.
+- E2E PostgreSQL con motor HTTP real: `test/social-recommender.e2e-spec.ts`, `test/social-discovery-preferences.e2e-spec.ts`, `test/social-blocks.e2e-spec.ts`, `test/social-map-places.e2e-spec.ts` → 4 suites / 7 tests PASS.
+- `GymSheetRecommendations`: `PATH=/opt/homebrew/opt/node@22/bin:$PATH yarn run check` → 21 tests PASS (incluye reinicio y rollback de modelo).
+- Web: última suite registrada 40 archivos / 269 tests PASS; móvil type-check PASS. No hubo build ni QA visual nativo.
+
+Estado: H4 continúa EN CURSO. Outbox, consumo/proyección, preferencias, ranking HTTP, revalidación, fallback y rollback manual de modelos tienen cobertura. Faltan cursor invalidable por filtros, aprendizaje persistente desde señales de producto, escenarios E2E de carrera/timeout, carga/rendimiento y aceptación Android/iOS/web.

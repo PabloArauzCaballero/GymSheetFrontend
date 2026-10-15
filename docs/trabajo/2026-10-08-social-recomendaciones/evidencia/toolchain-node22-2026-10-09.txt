@@ -1,0 +1,15 @@
+# Toolchain para validaciones sociales
+Fecha local: 2026-10-09
+
+Comandos ejecutados desde GymSheetBackend con PATH=/opt/homebrew/opt/node@22/bin:$PATH:
+
+```text
+$ node --version
+v22.23.3
+exit code: 0
+$ yarn --version
+1.22.22
+exit code: 0
+```
+
+El mismo PATH se usó en las verificaciones de H8.S1.M3. No se cambió la versión global del sistema.

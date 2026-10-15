@@ -8,7 +8,7 @@ import { profilePhotosService } from '@/api/services';
 import { Card, Section } from '@/components/layout';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { notify } from '@/notifications';
-import { colors, iconSizes, onMedia, overlay, radii, spacing } from '@/theme';
+import { colors, iconSizes, ink, overlay, radii, spacing } from '@/theme';
 
 const MAX_PHOTOS = 6;
 const THUMB_SIZE = 92;
@@ -70,7 +70,7 @@ export function ProfilePhotoGallery() {
   const atLimit = count >= MAX_PHOTOS;
 
   return (
-    <Section title="Fotos de perfil">
+    <Section icon="images-outline" title="Fotos de perfil">
       {photos.isPending ? (
         <Skeleton height={THUMB_SIZE} />
       ) : photos.isError ? (
@@ -108,7 +108,7 @@ export function ProfilePhotoGallery() {
                     justifyContent: 'center',
                   }}
                 >
-                  <Ionicons color={onMedia.text} name="close" size={14} />
+                  <Ionicons color={ink.white} name="close" size={14} />
                 </PressableScale>
               </View>
             ))}

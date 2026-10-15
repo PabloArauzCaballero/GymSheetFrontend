@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Flame, Heart, MessagesSquare, Search, SlidersHorizontal } from 'lucide-react';
+import { Flame, Heart, MapPin, MessagesSquare, Search, ShieldBan, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState, type ReactNode } from 'react';
 import {
@@ -151,6 +151,12 @@ function CommunityHeader({
   return (
     <header className="reveal grid gap-5 border-b border-[var(--border-subtle)] pb-8">
       <div className="flex justify-end gap-2">
+        <HeaderAction badge={null} href="/comunidad/mapa" label="Explorar personas y gimnasios en el mapa">
+          <MapPin aria-hidden className="size-5" />
+        </HeaderAction>
+        <HeaderAction badge={null} href="/comunidad/bloqueados" label="Personas bloqueadas">
+          <ShieldBan aria-hidden className="size-5" />
+        </HeaderAction>
         <HeaderAction
           badge={
             preferencesCount > 0 ? (

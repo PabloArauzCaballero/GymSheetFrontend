@@ -1,0 +1,106 @@
+# Inventario actualizado de planificación
+Fecha UTC: 2026-10-09T01:29:38.326743+00:00
+Solo lectura; estas salidas no prueban funcionalidades sociales.
+
+## frontend head
+$ git -C GymSheetFrontend rev-parse HEAD
+exit_code=0
+6b66d8aba9329f4897e900a9e3be09f495c41343
+
+
+
+## backend head
+$ git -C GymSheetBackend rev-parse HEAD
+exit_code=0
+474da618fe4d191ae5d5f25b2dac537fd3a6856f
+
+
+
+## frontend changes
+$ git -C GymSheetFrontend status --short
+exit_code=0
+ M apps/mobile/app/(app)/(tabs)/comunidad.tsx
+ M apps/mobile/app/(app)/(tabs)/exercises/index.tsx
+ M apps/mobile/app/(app)/(tabs)/routines/[id].tsx
+ M apps/mobile/app/(app)/(tabs)/routines/index.tsx
+ M apps/mobile/app/(app)/(tabs)/routines/new.tsx
+ M apps/mobile/app/(app)/onboarding.tsx
+ M apps/mobile/app/(app)/workouts/[id].tsx
+ M apps/mobile/src/api/services.ts
+ M apps/mobile/src/components/directory-card.tsx
+ M apps/mobile/src/components/exercise-picker.tsx
+ M apps/mobile/src/components/layout.tsx
+ M apps/mobile/src/components/media.tsx
+ M apps/mobile/src/components/set-entry-form.tsx
+ M apps/mobile/src/lib/format.ts
+ M apps/web/src/features/profile/components/profile-page-client.tsx
+ M apps/web/src/features/workouts/components/guided-workout.tsx
+ M apps/web/src/features/workouts/components/live-workout.tsx
+ M apps/web/src/features/workouts/components/set-entry-form.tsx
+ M apps/web/src/features/workouts/components/workout-set-row.tsx
+ M packages/schemas/src/definitions/training.ts
+ M packages/schemas/src/definitions/workouts.ts
+ M packages/types/src/enums.ts
+ M packages/types/src/workouts.ts
+?? apps/mobile/app/(app)/(tabs)/routines/explore.tsx
+?? apps/mobile/app/(app)/(tabs)/routines/report/
+?? apps/mobile/src/lib/request-id.ts
+?? docs/rutinas-flujo-y-criterios.md
+?? docs/trabajo/
+
+
+
+## backend changes
+$ git -C GymSheetBackend status --short
+exit_code=0
+ M src/common/enums/domain.enums.ts
+ M src/database/migrations/index.ts
+ M src/modules/export/export.service.ts
+ M src/modules/moderation/moderation.policy.ts
+ M src/modules/moderation/moderation.repository.ts
+ M src/modules/moderation/moderation.service.ts
+ M src/modules/profiles/onboarding.service.ts
+ M src/modules/training/routine.model.ts
+ M src/modules/training/training.controller.ts
+ M src/modules/training/training.module.ts
+ M src/modules/training/training.repository.ts
+ M src/modules/training/training.schemas.ts
+ M src/modules/training/training.service.ts
+ M src/modules/workouts/workout-session-exercise.model.ts
+ M src/modules/workouts/workout-session.model.ts
+ M src/modules/workouts/workout-set.model.ts
+ M src/modules/workouts/workout.mapper.ts
+ M src/modules/workouts/workouts.repository.ts
+ M src/modules/workouts/workouts.schemas.ts
+ M src/modules/workouts/workouts.service.spec.ts
+ M src/modules/workouts/workouts.service.ts
+?? src/database/migrations/202610060001-routine-workout-flow.ts
+?? src/modules/training/routine-recommendation.spec.ts
+?? src/modules/training/routine-recommendation.ts
+?? src/modules/training/training.schemas.spec.ts
+
+
+
+## ios devices
+$ xcrun simctl list devices available
+exit_code=0
+== Devices ==
+-- iOS 26.5 --
+    iPhone 17 Pro (D4C28B4D-3615-4E6D-9092-C180668D5EE6) (Shutdown) 
+    iPhone 17 Pro Max (5D04691B-1F6A-4682-94FF-25852FA9DA99) (Shutdown) 
+    iPhone 17e (7508041F-FD7F-4056-861F-E751F76E41C4) (Shutdown) 
+    iPhone Air (EC5F49C7-BA43-4FE3-8A14-5FBE633FAC06) (Shutdown) 
+    iPhone 17 (4DE1CBF5-8F29-4CC0-8864-5EF425D981B8) (Shutdown) 
+    iPad Pro 13-inch (M5) (B02BB6C4-FE1B-4985-B471-76AA86C91916) (Shutdown) 
+    iPad Pro 11-inch (M5) (4665F189-499B-474E-9B0C-4EAE33D60090) (Shutdown) 
+    iPad mini (A17 Pro) (D9DB8728-4227-4FBC-A3B7-91C822DCA7D7) (Shutdown) 
+    iPad Air 13-inch (M4) (0D17371E-F4B4-49F6-8AE9-CC206121E752) (Shutdown) 
+    iPad Air 11-inch (M4) (58113486-2419-43B8-8BD9-37A98DE7A10C) (Shutdown) 
+    iPad (A16) (2464B1E7-03BF-4939-9681-5B893256A56C) (Shutdown) 
+
+
+
+## android avds
+$ /Users/josejeremias/Library/Android/sdk/emulator/emulator -list-avds
+exit_code=0
+

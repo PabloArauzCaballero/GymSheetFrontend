@@ -60,3 +60,18 @@ yarn workspace @gymsheet/mobile start
 - El navegador consume solo rutas BFF `/api/*`; el JWT permanece en cookie HttpOnly.
 - Tokens móviles solo en Expo SecureStore. Nunca Web Storage/AsyncStorage sin cifrar.
 - `packages/*` no importan desde `apps/*`. Fuente única de verdad para la lógica.
+
+## QA social
+
+El runner PAIR de descubrimiento tiene drivers A_WEB para H5.S1.M1–M4 y
+H5.S2.M1. M3 simula el 409 desde el navegador y consulta las conexiones por API
+en modo solo lectura; esa evidencia cubre reconciliación web, no una carrera
+persistida del backend. M4
+comprueba el retorno a un deck sin cursor con el swipe controlado; no prueba la
+persistencia real de decisiones.
+El driver H5.S2.M1 observa la retirada optimista y recuperación con Tab+Space,
+y compara ese `LIKE` con el arrastre usando una candidata y respuestas de swipe
+interceptadas; no escribe swipes al backend ni reemplaza
+los roles nativos Android/iOS que faltan.
+Consulta [`scripts/qa/README-social-pair.md`](scripts/qa/README-social-pair.md)
+para ejecutar la aceptación y revisar sus límites.

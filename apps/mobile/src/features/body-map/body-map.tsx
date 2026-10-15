@@ -20,7 +20,6 @@ import {
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
-  FadeOut,
   runOnJS,
   useAnimatedStyle,
   useReducedMotion,
@@ -446,13 +445,15 @@ export function BodyMap({
             <Animated.View style={[StyleSheet.absoluteFill, contentStyle]}>
               <Animated.View
                 entering={reduceMotion ? undefined : FadeIn.duration(motion.enter)}
-                exiting={reduceMotion ? undefined : FadeOut.duration(motion.exit)}
+                // La lámina anterior se desmonta antes de decodificar la nueva:
+                // cada WebP mide 1536×3072 y mantener ambas durante el fundido
+                // disparaba el pico de memoria al cambiar de cara o capa.
                 key={tag}
                 style={{ position: 'absolute', left: frame.x, top: frame.y, width: frame.width, height: frame.height }}
               >
                 <Image
                   accessibilityIgnoresInvertColors
-                  cachePolicy="memory-disk"
+                  cachePolicy="disk"
                   contentFit="contain"
                   source={IMAGES[tag]}
                   style={{ width: '100%', height: '100%' }}

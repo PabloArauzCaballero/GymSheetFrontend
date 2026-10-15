@@ -1,7 +1,7 @@
 'use client';
 
 import { Upload } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CameraCapture } from '@/shared/components/media/camera-capture';
 import { Button } from '@/shared/components/ui/button';
 import { Dialog, DialogContent } from '@/shared/components/ui/dialog';
@@ -33,6 +33,7 @@ export function MediaSourceDialog({
   busy = false,
   captureFileName,
   captureLabel = 'Usar esta foto',
+  children,
   description,
   fileLabel = 'Elegir un archivo',
   onOpenChange,
@@ -47,6 +48,7 @@ export function MediaSourceDialog({
   /** Nombre (sin extensión) con el que viaja el fotograma capturado. */
   captureFileName: string;
   captureLabel?: string;
+  children?: ReactNode;
   description?: string;
   fileLabel?: string;
   onOpenChange: (open: boolean) => void;
@@ -113,6 +115,7 @@ export function MediaSourceDialog({
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="max-w-2xl" description={description} title={title}>
+        {children}
         {camera === 'available' ? (
           <Tabs defaultValue="file">
             <TabsList>
@@ -127,6 +130,7 @@ export function MediaSourceDialog({
             <TabsContent value="camera">
               <CameraCapture
                 captureLabel={captureLabel}
+                disabled={busy}
                 onCapture={(frame) =>
                   pick(
                     new File([frame.blob], `${captureFileName}.jpg`, {

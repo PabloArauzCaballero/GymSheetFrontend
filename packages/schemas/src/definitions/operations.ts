@@ -287,6 +287,7 @@ export const notificationSchema = z.object({
 
 export const notificationPreferenceSchema = z.object({
   recordatoriosVencimiento: z.boolean(),
+  vistaPreviaMensajes: z.boolean(),
   canalPreferido: z.enum(['IN_APP', 'HTTP_GATEWAY']),
   consentimientoExternoEn: z.string().nullable(),
   versionConsentimiento: z.string().nullable(),

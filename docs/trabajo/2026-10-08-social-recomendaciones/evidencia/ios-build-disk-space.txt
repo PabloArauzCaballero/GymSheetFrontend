@@ -1,0 +1,14 @@
+Comando: `PATH=/opt/homebrew/opt/node@22/bin:$PATH yarn expo run:ios --device D4C28B4D-3615-4E6D-9092-C180668D5EE6`
+Directorio: `GymSheetFrontend/apps/mobile`
+Resultado: CocoaPods completó `pod install`; Xcode comenzó el build y terminó con código 65.
+Causa literal del `.xcactivitylog`: `unable to open ... RNSentry-dummy.dia ... No space left on device` y `unable to open output file ... ExplicitPrecompiledModules/os-...pcm: No space left on device`. El script de ExpoModulesJSI falló como consecuencia.
+Estado observado durante la compilación: 260 MiB disponibles; `ios/Pods` ocupaba 1.2 GB y el DerivedData de esta compilación fallida, 553 MB.
+Acción de recuperación: se retiró únicamente el directorio `~/Library/Developer/Xcode/DerivedData/GymSheet-exwsgiynarxhplbbruwxtfyvwxwr`, creado por este intento fallido. Después quedaron 830 MiB libres. Se conservó `ios/Pods` y no se borraron cachés o datos previos.
+No se instaló ni abrió la app; no hay aceptación iOS.
+
+Reintento: 2026-10-09.
+- Tras liberar el AOSP ATD que se instaló para Android, quedaron 2.5 GiB disponibles y se repitió `PATH=/opt/homebrew/opt/node@22/bin:$PATH yarn expo run:ios --device D4C28B4D-3615-4E6D-9092-C180668D5EE6`.
+- Xcode compiló Sentry, React Native, mapas y módulos Expo, pero volvió a quedarse sin espacio durante el enlace (264 MiB libres al fallar); no instaló la app. También reveló que la fase de `expo-updates` ejecutaba su script con ruta sin comillas y cortaba el workspace en `Desktop/Mantra`.
+- Se corrigió la fase generada desde `ios/Podfile` para entrecomillar `create-updates-resources-ios.sh`; `pod install` terminó y el `Pods.xcodeproj` generado contiene el comando corregido. Falta repetir el build con más espacio libre.
+- Se retiró únicamente el DerivedData creado por este segundo intento fallido. Los Pods y cachés anteriores se conservaron. El espacio libre volvió a 2.2 GiB.
+- Android: `system-images;android-36;aosp_atd;arm64-v8a` se instaló, pero el emulador rechazó arrancar con 916 MiB libres. Se eliminó ese AVD temporal y se desinstaló la imagen que se instaló en esta corrida. No queda AVD.

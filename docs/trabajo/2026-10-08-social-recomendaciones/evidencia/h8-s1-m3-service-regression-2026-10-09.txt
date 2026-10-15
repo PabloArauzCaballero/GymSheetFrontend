@@ -1,0 +1,35 @@
+yarn run v1.22.22
+$ jest --runInBand --runInBand src/modules/stories/stories.service.spec.ts -t 'rejects an expired story without recording a view'
+PASS src/modules/stories/stories.service.spec.ts
+  StoriesService.upload
+    ○ skipped rejects an empty file
+    ○ skipped rejects a disallowed mime type
+    ○ skipped infers media type from the mime type and stores the story
+  StoriesService.view
+    ✓ rejects an expired story without recording a view (7 ms)
+    ○ skipped rejects viewing a story that does not exist
+    ○ skipped rejects viewing a story from a different tenant
+    ○ skipped answers 404 — not 403 — when the viewer has no accepted connection with the author
+    ○ skipped records the view of a match's story
+    ○ skipped records the view of an own story without asking about connections
+  StoriesService.remove
+    ○ skipped rejects removing a story the caller does not own
+    ○ skipped removes the stored media and the story row when nothing else references the file
+    ○ skipped keeps the file when another row still references the same binary
+  StoriesService.feed
+    ○ skipped hides the story of somebody the viewer is not connected to
+    ○ skipped hides the story of a pending connection
+    ○ skipped shows the story of an accepted connection
+    ○ skipped puts the viewer's own stories first, even when already seen
+    ○ skipped ranks a match with unseen stories above one already seen in full
+  StoriesService.viewers
+    ○ skipped answers 404 for a story the caller does not own
+    ○ skipped answers 404 for an own story that belongs to another tenant
+    ○ skipped returns the viewers of an own story, most recent first
+
+Test Suites: 1 passed, 1 total
+Tests:       19 skipped, 1 passed, 20 total
+Snapshots:   0 total
+Time:        1.477 s
+Ran all test suites matching /src\/modules\/stories\/stories.service.spec.ts/i with tests matching "rejects an expired story without recording a view".
+Done in 2.17s.

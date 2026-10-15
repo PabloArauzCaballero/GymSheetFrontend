@@ -4,7 +4,9 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { useChatThread } from '@/features/chat/hooks/use-chat-thread';
+import { useStoryReplyTarget } from '@/features/chat/hooks/use-story-reply-target';
 import { dayDividerLabel } from '@/features/chat/lib/chat-time';
+import { canEditMessage } from '@/features/chat/lib/message-edit';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import {
   SkeletonPageHeader,
@@ -39,14 +41,45 @@ export function MessageThreadClient({
   conversationId,
   currentUserId,
   socketOrigin,
-}: Readonly<{ conversationId: string; currentUserId: string; socketOrigin: string }>) {
+  storyReplyMessageId,
+}: Readonly<{ conversationId: string; currentUserId: string; socketOrigin: string; storyReplyMessageId?: string }>) {
   const thread = useChatThread({ conversationId, socketOrigin });
+  const {
+    conversationUnavailable,
+    hasMoreOlder,
+    history,
+    isValidatingHistory,
+    loadOlderMessages,
+    loadingOlder,
+    messages,
+  } = thread;
   const bottomRef = useRef<HTMLDivElement>(null);
-  const [imageViewer, setImageViewer] = useState<string | null>(null);
+  const [imageViewer, setImageViewer] = useState<{ messageId: string; url: string } | null>(null);
+  if (
+    imageViewer &&
+    (
+      thread.conversationUnavailable ||
+      thread.isValidatingHistory ||
+      thread.isMessageDeleted(imageViewer.messageId)
+    )
+  ) {
+    setImageViewer(null);
+  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [thread.latestMessageId]);
+
+  const replyTargetStatus = useStoryReplyTarget({
+    storyReplyMessageId,
+    conversationUnavailable,
+    hasMoreOlder,
+    historyLoading: history.isLoading,
+    isValidatingHistory,
+    loadOlderMessages,
+    loadingOlder,
+    messages,
+  });
 
   if (thread.history.isLoading) {
     return (
@@ -56,13 +89,45 @@ export function MessageThreadClient({
       </SkeletonScreen>
     );
   }
+  if (thread.isValidatingHistory) {
+    return (
+      <div className="mx-auto grid w-full max-w-3xl gap-5">
+        <Link
+          className="inline-flex w-fit items-center gap-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
+          href="/chat"
+        >
+          <ArrowLeft aria-hidden className="size-4" />
+          Mensajes
+        </Link>
+        <p className="p-5 text-center text-sm text-[var(--text-muted)]" role="status">
+          Verificando disponibilidad de la conversación…
+        </p>
+      </div>
+    );
+  }
+  if (thread.conversationUnavailable) {
+    return (
+      <div className="mx-auto grid w-full max-w-3xl gap-5">
+        <Link
+          className="inline-flex w-fit items-center gap-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
+          href="/chat"
+        >
+          <ArrowLeft aria-hidden className="size-4" />
+          Mensajes
+        </Link>
+        <p className="rounded-[8px] border border-[var(--border-subtle)] p-5 text-center text-sm text-[var(--text-muted)]" role="alert">
+          Esta conversación ya no está disponible.
+        </p>
+      </div>
+    );
+  }
   if (thread.history.isError) {
     return (
       <ErrorPanel message={thread.history.error.message} onRetry={() => thread.history.refetch()} />
     );
   }
 
-  const canWrite = thread.conversation?.canWrite !== false;
+  const canWrite = thread.conversation?.canWrite !== false && !thread.conversationRevoked;
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-5">
@@ -91,6 +156,11 @@ export function MessageThreadClient({
         className="panel flex max-h-[60vh] flex-col overflow-y-auto p-4"
         role="log"
       >
+        {storyReplyMessageId && replyTargetStatus && !messages.some((message) => message.id === storyReplyMessageId) ? (
+          <p aria-live="polite" className="mb-2 text-center text-xs text-[var(--text-muted)]" role="status">
+            {replyTargetStatus}
+          </p>
+        ) : null}
         {thread.hasMoreOlder ? (
           <Button
             className="mb-2 self-center"
@@ -105,7 +175,9 @@ export function MessageThreadClient({
 
         {thread.messages.length === 0 ? (
           <p className="m-auto max-w-xs py-8 text-center text-sm leading-6 text-[var(--text-muted)]">
-            Aún no hay mensajes. Escribe el primero y empieza la conversación.
+            {thread.conversationRevoked
+              ? 'El historial y los archivos de esta conversación ya no están disponibles.'
+              : 'Aún no hay mensajes. Escribe el primero y empieza la conversación.'}
           </p>
         ) : null}
 
@@ -117,24 +189,41 @@ export function MessageThreadClient({
               <Fragment key={message.id}>
                 {startsDay ? <DayDivider iso={message.createdAt} /> : null}
                 <MessageBubble
-                  groupedWithPrevious={!startsDay && previous?.senderId === message.senderId}
+                  groupedWithPrevious={
+                    !startsDay && message.type !== 'system' && previous?.type !== 'system' && previous?.senderId === message.senderId
+                  }
                   message={message}
+                  focusedForStoryReply={storyReplyMessageId === message.id}
                   mine={message.senderId === currentUserId}
-                  onOpenImage={setImageViewer}
+                  canEdit={
+                    !thread.conversationRevoked &&
+                    thread.conversation?.canWrite !== false &&
+                    canEditMessage(message, currentUserId)
+                  }
+                  onEditMessage={(messageId, body) => thread.editMessage?.mutate({ messageId, body })}
+                  editPending={thread.editMessage?.isPending}
+                  onOpenImage={(url) => {
+                    if (!thread.isMessageDeleted(message.id)) setImageViewer({ messageId: message.id, url });
+                  }}
                   onRevealViewOnce={(messageId) =>
                     thread.revealViewOnce.mutate(messageId, {
                       // La foto revelada se abre en grande al momento: es de
                       // vista única, así que no habrá una segunda oportunidad
                       // de pulsarla.
                       onSuccess: (revealed) => {
-                        if (revealed.type === 'image' && revealed.mediaUrl) {
-                          setImageViewer(revealed.mediaUrl);
+                        if (
+                          revealed.type === 'image' &&
+                          revealed.mediaUrl &&
+                          !thread.isMessageDeleted(messageId)
+                        ) {
+                          setImageViewer({ messageId, url: revealed.mediaUrl });
                         }
                       },
                     })
                   }
                   otherLastDeliveredAt={thread.otherLastDeliveredAt}
                   otherLastReadAt={thread.otherLastReadAt}
+                  otherReadReceiptsSinceAt={thread.otherReadReceiptsSinceAt}
                   revealPending={thread.revealViewOnce.isPending}
                   revealedUrl={thread.revealedMedia[message.id] ?? null}
                 />
@@ -159,11 +248,14 @@ export function MessageThreadClient({
         </p>
       )}
 
-      <Dialog onOpenChange={(open) => !open && setImageViewer(null)} open={Boolean(imageViewer)}>
+      <Dialog
+        onOpenChange={(open) => !open && setImageViewer(null)}
+        open={Boolean(imageViewer && !thread.conversationRevoked && !thread.isMessageDeleted(imageViewer.messageId))}
+      >
         <DialogContent className="max-w-2xl" title="Foto">
-          {imageViewer ? (
+          {imageViewer && !thread.conversationRevoked && !thread.isMessageDeleted(imageViewer.messageId) ? (
             <div className="max-h-[70vh] overflow-hidden rounded-[var(--radius-lg)]">
-              <DomainImage alt="Foto del mensaje" className="object-contain" src={imageViewer} />
+              <DomainImage alt="Foto del mensaje" className="object-contain" src={imageViewer.url} />
             </div>
           ) : null}
         </DialogContent>

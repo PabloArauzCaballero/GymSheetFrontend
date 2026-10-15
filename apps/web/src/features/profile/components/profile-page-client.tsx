@@ -6,11 +6,13 @@ import { Ruler, Save, Scale, ShieldCheck, UserRound } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { notify } from '@/shared/notifications';
-import { z } from 'zod';
+import { goalLabels, profileFormSchema, type ProfileFormValues } from '@/features/profile/components/profile-form-schema';
 import { profileService } from '@/features/profile/services/profile-service';
 import * as birthDate from '@/features/profile/lib/birth-date';
 import { ProfilePhotoGallery } from '@/features/profile/components/profile-photo-gallery';
 import { SocialStatusCard } from '@/features/social/components/social-status-card';
+import { SocialDiscoverySettingsCard } from '@/features/social/components/social-discovery-settings-card';
+import { DiscoveryPreferencesCard } from '@/features/social/components/discovery-preferences-card';
 import { MembershipExperience } from '@/features/membership/components/membership-experience';
 import { ProfileMeasurements } from '@/features/profile/components/profile-measurements';
 import { GenderPreferenceField } from '@/features/progression/components/gender-preference-field';
@@ -33,23 +35,6 @@ import { Input } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
 import { formatDateTime } from '@/shared/lib/date';
 
-const schema = z.object({
-  fechaNacimiento: birthDate.birthDateInputSchema,
-  pesoKg: z.number().min(1).max(400),
-  estaturaCm: z.number().int().min(80).max(250),
-  objetivo: z.enum(trainingGoals),
-});
-type FormValues = z.infer<typeof schema>;
-
-const goalLabels: Record<FormValues['objetivo'], string> = {
-  HIPERTROFIA: 'Hipertrofia',
-  FUERZA: 'Fuerza',
-  RESISTENCIA: 'Resistencia',
-  PERDIDA_GRASA: 'Pérdida de grasa',
-  SALUD_GENERAL: 'Salud general',
-  REHABILITACION: 'Rehabilitación',
-};
-
 export function ProfilePageClient() {
   const queryClient = useQueryClient();
   const user = useQuery({ queryKey: ['user', 'me'], queryFn: profileService.getUser });
@@ -66,8 +51,8 @@ export function ProfilePageClient() {
     },
     retry: false,
   });
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
     defaultValues: { fechaNacimiento: '', pesoKg: 70, estaturaCm: 170, objetivo: 'SALUD_GENERAL' },
   });
   useEffect(() => {
@@ -80,7 +65,7 @@ export function ProfilePageClient() {
       });
   }, [form, profile.data]);
   const save = useMutation({
-    mutationFn: ({ fechaNacimiento, ...values }: FormValues) => {
+    mutationFn: ({ fechaNacimiento, ...values }: ProfileFormValues) => {
       const hadBirthDate = Boolean(profile.data?.fechaNacimiento);
       const input = { ...values, ...birthDate.birthDatePayload(fechaNacimiento, hadBirthDate) };
       return profile.data
@@ -232,6 +217,8 @@ export function ProfilePageClient() {
               stories y el directorio, que es la única pantalla de la parte social
               que no habla de uno mismo. El móvil ya lo tenía en Perfil. */}
           <SocialStatusCard />
+          <SocialDiscoverySettingsCard />
+          <DiscoveryPreferencesCard />
           <Card>
             <CardHeader title="Identidad" />
             <CardContent className="grid gap-4">

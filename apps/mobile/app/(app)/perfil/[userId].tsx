@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import type { EarnedBadge, ProgressionBadge } from '@gymsheet/schemas';
-import { chatService, profileViewsService, socialService } from '@/api/services';
+import { chatService, moderationService, profileViewsService, socialService } from '@/api/services';
+import { refreshSocialRelationship } from '@/api/social-cache';
 import { BackLink } from '@/components/nav';
 import { Card, Row, ScrollScreen, Section } from '@/components/layout';
 import { CountUpText } from '@/components/motion';
@@ -13,6 +14,7 @@ import { levelTitle } from '@/components/directory-card';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { BadgeTile } from '@/components/progression';
 import { Button } from '@/components/ui';
+import { CreateTrainingInviteModal } from '@/features/training-invitations/create-training-invite-modal';
 import { notify } from '@/notifications';
 import { initialsOf } from '@/lib/format';
 import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
@@ -55,6 +57,7 @@ export default function PerfilDetailScreen() {
   const queryClient = useQueryClient();
   const userId = params.userId;
   const recordedRef = useRef<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   /**
    * Registrar la visita una sola vez, sea cual sea la forma de llegar aquí.
@@ -99,11 +102,7 @@ export default function PerfilDetailScreen() {
 
   /** El perfil y el directorio cuentan lo mismo: se refrescan juntos. */
   async function refreshSocial() {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['social', 'member-profile', userId] }),
-      queryClient.invalidateQueries({ queryKey: ['social', 'directory'] }),
-      queryClient.invalidateQueries({ queryKey: ['social', 'connections'] }),
-    ]);
+    await refreshSocialRelationship(queryClient);
   }
 
   const connect = useMutation({
@@ -127,6 +126,28 @@ export default function PerfilDetailScreen() {
     onSuccess: async () => {
       await refreshSocial();
       notify.success('Solicitud retirada.');
+    },
+    onError: (error: Error) => notify.error(error.message),
+  });
+
+  const block = useMutation({
+    mutationFn: (targetUserId: string) => socialService.blockUser(targetUserId),
+    onSuccess: async () => {
+      await refreshSocial();
+      await queryClient.invalidateQueries({ queryKey: ['social', 'blocked-users'] });
+      notify.success('La persona quedó bloqueada.');
+      router.back();
+    },
+    onError: (error: Error) => notify.error(error.message),
+  });
+
+  const report = useMutation({
+    mutationFn: (reason: 'ACOSO' | 'PERFIL_FALSO' | 'SPAM' | 'OTRO') =>
+      moderationService.report('USER', userId, reason),
+    onSuccess: async () => {
+      await refreshSocial();
+      notify.success('Gracias por avisar. Revisaremos el perfil.');
+      router.back();
     },
     onError: (error: Error) => notify.error(error.message),
   });
@@ -259,12 +280,20 @@ export default function PerfilDetailScreen() {
           onPress={() => connect.mutate(entry.userId)}
         />
       ) : entry.connectionStatus === 'ACCEPTED' ? (
-        <Button
-          icon="chatbubble-outline"
-          label="Enviar mensaje"
-          loading={message.isPending}
-          onPress={() => message.mutate(entry.userId)}
-        />
+        <View style={{ gap: spacing.sm }}>
+          <Button
+            icon="chatbubble-outline"
+            label="Enviar mensaje"
+            loading={message.isPending}
+            onPress={() => message.mutate(entry.userId)}
+          />
+          <Button
+            icon="barbell-outline"
+            label="Entrenemos juntos"
+            onPress={() => setInviteOpen(true)}
+            variant="ghost"
+          />
+        </View>
       ) : entry.connectionStatus === 'PENDING_SENT' ? (
         <Button
           icon="close-circle-outline"
@@ -291,6 +320,50 @@ export default function PerfilDetailScreen() {
           </Text>
         </View>
       )}
+
+      {entry.connectionStatus === 'ACCEPTED' ? (
+        <CreateTrainingInviteModal
+          onClose={() => setInviteOpen(false)}
+          recipientId={entry.userId}
+          recipientName={entry.displayName}
+          visible={inviteOpen}
+        />
+      ) : null}
+
+      <Button
+        icon="ban-outline"
+        label="Bloquear persona"
+        loading={block.isPending}
+        onPress={() => Alert.alert(
+          '¿Bloquear a esta persona?',
+          'Se cerrará el chat y dejará de aparecer en tu comunidad y mapa. Puedes desbloquearla desde Personas bloqueadas.',
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Bloquear', style: 'destructive', onPress: () => block.mutate(entry.userId) },
+          ],
+        )}
+        variant="ghost"
+      />
+
+      <Button
+        accessibilityLabel="Reportar perfil"
+        disabled={report.isPending}
+        icon="flag-outline"
+        label="Reportar perfil"
+        loading={report.isPending}
+        onPress={() => Alert.alert(
+          'Reportar perfil',
+          'Elige el motivo. Tu identidad no se compartirá con esta persona.',
+          [
+            { text: 'Acoso', onPress: () => report.mutate('ACOSO') },
+            { text: 'Perfil falso', onPress: () => report.mutate('PERFIL_FALSO') },
+            { text: 'Spam', onPress: () => report.mutate('SPAM') },
+            { text: 'Otro', onPress: () => report.mutate('OTRO') },
+            { text: 'Cancelar', style: 'cancel' },
+          ],
+        )}
+        variant="ghost"
+      />
 
       <Section icon="ribbon-outline" title={`Insignias · ${entry.badges.length}`}>
         {entry.badges.length ? (
