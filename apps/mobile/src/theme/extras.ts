@@ -251,3 +251,24 @@ export const restRing = {
   track: alpha(ink.white, 0.08),
   glow: alpha(metricColors.rest.ink, 0.18),
 } as const;
+
+/* ─── Chat: tinta sobre la burbuja propia ────────────────────────────────── */
+
+/** Fijo — WhatsApp volvió «check azul» un color universal, ajeno a cualquier marca de gimnasio. */
+export const readReceiptTick = '#34b7f1';
+
+const bubbleInk = '#0b0f0d';
+/** Metadatos (hora, «editado») sobre la burbuja propia, que va en el color de acento. */
+export const bubbleInkMuted = alpha(bubbleInk, 0.65);
+export const bubbleInkFaint = alpha(bubbleInk, 0.55);
+
+/* ─── Mapa social ────────────────────────────────────────────────────────── */
+
+/** Marcadores y zonas del mapa; el color identifica la capa, no un rol del sistema. */
+export const socialMapColors = {
+  areaFill: 'rgba(200, 243, 29, 0.18)',
+  areaStroke: 'rgba(150, 190, 10, 0.8)',
+  peoplePin: '#9bc400',
+  gymPin: '#6256d9',
+  externalGymPin: '#e58b35',
+} as const;

@@ -13,7 +13,7 @@ import { Text } from '@/components/text';
 import { GOAL_LABEL } from '@/lib/format';
 import { RoutineCover } from '@/features/routine-catalog/routine-cover';
 import { MediaChip } from '@/features/routine-catalog/media-chip';
-import { alpha, cardPadding, colors, iconSizes, ink, radii, ratingStar, shadows, spacing } from '@/theme';
+import { alpha, cardPadding, colors, fontSizes, iconSizes, ink, radii, ratingStar, shadows, spacing } from '@/theme';
 
 const AVATAR = 36;
 
@@ -187,7 +187,7 @@ export function RoutineCardView({ card }: { card: RoutineCard }) {
         </Link.AppleZoom>
 
         <View style={{ paddingHorizontal: cardPadding, paddingTop: spacing.mdl, gap: spacing.md }}>
-          <Text numberOfLines={2} style={{ fontSize: 24, lineHeight: 29, letterSpacing: -0.4 }} variant="title">
+          <Text numberOfLines={2} style={{ fontSize: fontSizes.heading, lineHeight: 29, letterSpacing: -0.4 }} variant="title">
             {card.nombre}
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>

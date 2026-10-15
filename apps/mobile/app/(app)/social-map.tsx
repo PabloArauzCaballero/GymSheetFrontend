@@ -11,7 +11,7 @@ import { Card } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
-import { colors, radii, spacing } from '@/theme';
+import { colors, fontSizes, radii, socialMapColors, spacing } from '@/theme';
 
 type Layer = 'BOTH' | 'PEOPLE' | 'GYMS';
 
@@ -105,7 +105,7 @@ export default function SocialMapScreen() {
       <Stack.Screen options={{ title: 'Mapa de comunidad' }} />
       <ScrollView contentContainerStyle={{ gap: spacing.md, paddingBottom: insets.bottom + spacing.xl }}>
         <View style={{ gap: spacing.xs }}>
-          <Text style={{ color: colors.text, fontSize: 24, fontWeight: '700' }}>Personas y gimnasios cerca</Text>
+          <Text style={{ color: colors.text, fontSize: fontSizes.heading, fontWeight: '700' }}>Personas y gimnasios cerca</Text>
           <Text style={{ color: colors.textMuted, lineHeight: 21 }}>
             Mueve el mapa a otra zona y busca allí. Las personas aparecen agrupadas en áreas aproximadas de 2 km.
           </Text>
@@ -152,11 +152,11 @@ export default function SocialMapScreen() {
           >
             {layer !== 'GYMS' && (areas.data?.cells ?? []).map((cell) => (
               <Fragment key={cell.id}>
-                <Circle center={cell.center} radius={900} fillColor="rgba(200,243,29,0.18)" strokeColor="rgba(150,190,10,0.8)" />
+                <Circle center={cell.center} radius={900} fillColor={socialMapColors.areaFill} strokeColor={socialMapColors.areaStroke} />
                 <Marker
                   coordinate={cell.center}
                   onPress={() => setCellId(cell.id)}
-                  pinColor="#9bc400"
+                  pinColor={socialMapColors.peoplePin}
                   title={`${cell.count} ${cell.count === 1 ? 'persona' : 'personas'}`}
                   description="Toca para ver perfiles en esta zona"
                 />
@@ -168,13 +168,13 @@ export default function SocialMapScreen() {
                 coordinate={{ latitude: gym.latitud, longitude: gym.longitud }}
                 key={gym.id}
                 onPress={() => setSelectedGym(gym)}
-                pinColor="#6256d9"
+                pinColor={socialMapColors.gymPin}
                 title={gym.nombre}
                 description="Gimnasio registrado en GymSheet"
               />;
             })}
             {layer !== 'PEOPLE' && (externalGyms.data ?? []).map((gym) => (
-              <Marker coordinate={{ latitude: gym.latitude, longitude: gym.longitude }} key={gym.sourceId} onPress={() => setSelectedExternalGym(gym)} pinColor="#e58b35" title={gym.name} description="OpenStreetMap · gimnasio externo" />
+              <Marker coordinate={{ latitude: gym.latitude, longitude: gym.longitude }} key={gym.sourceId} onPress={() => setSelectedExternalGym(gym)} pinColor={socialMapColors.externalGymPin} title={gym.name} description="OpenStreetMap · gimnasio externo" />
             ))}
           </MapView>
         </View>
@@ -182,7 +182,7 @@ export default function SocialMapScreen() {
         {selectedGym ? (
           <Card>
             <View style={{ gap: spacing.sm }}>
-              <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>{selectedGym.nombre}</Text>
+              <Text style={{ color: colors.text, fontSize: fontSizes.subhead, fontWeight: '700' }}>{selectedGym.nombre}</Text>
               <Text style={{ color: colors.textMuted }}>Sede registrada en GymSheet</Text>
               <Button
                 label="Abrir navegación"
@@ -199,7 +199,7 @@ export default function SocialMapScreen() {
         {selectedExternalGym ? (
           <Card>
             <View style={{ gap: spacing.sm }}>
-              <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>{selectedExternalGym.name}</Text>
+              <Text style={{ color: colors.text, fontSize: fontSizes.subhead, fontWeight: '700' }}>{selectedExternalGym.name}</Text>
               <Text style={{ color: colors.textMuted }}>{selectedExternalGym.address ?? selectedExternalGym.city ?? 'Dirección no disponible'} · Directorio externo OpenStreetMap</Text>
               <Text accessibilityRole="link" onPress={() => { void Linking.openURL('https://www.openstreetmap.org/copyright'); }} style={{ color: colors.accentInk }}>© OpenStreetMap contributors · ODbL</Text>
               <Button label="Abrir navegación" onPress={() => {
@@ -231,7 +231,7 @@ export default function SocialMapScreen() {
           <Card>
             <View style={{ gap: spacing.md }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>Personas en esta zona</Text>
+                <Text style={{ color: colors.text, fontSize: fontSizes.subhead, fontWeight: '700' }}>Personas en esta zona</Text>
                 <Pressable accessibilityRole="button" onPress={() => setCellId(null)}><Text style={{ color: colors.accentInk }}>Cerrar</Text></Pressable>
               </View>
               {people.isLoading ? <ActivityIndicator color={colors.volt} /> : null}
@@ -239,7 +239,7 @@ export default function SocialMapScreen() {
               {(people.data ?? []).map((person) => (
                 <View key={person.userId} style={{ borderTopColor: colors.borderSubtle, borderTopWidth: 1, gap: spacing.xs, paddingTop: spacing.md }}>
                   <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/perfil/[userId]', params: { userId: person.userId } })}>
-                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>{person.displayName}</Text>
+                    <Text style={{ color: colors.text, fontSize: fontSizes.callout, fontWeight: '700' }}>{person.displayName}</Text>
                   </Pressable>
                   <Text style={{ color: colors.textMuted }}>{person.age ? `${person.age} años` : 'Edad no disponible'}{person.branchName ? ` · ${person.branchName}` : ''}</Text>
                   {person.connectionStatus === 'NONE' ? (
@@ -258,10 +258,10 @@ export default function SocialMapScreen() {
           </Card>
         ) : null}
 
-        <Text style={{ color: colors.textMuted, fontSize: 12 }}>
+        <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
           Gimnasios visibles: {visibleGyms.length} sedes registradas y {externalGyms.data?.length ?? 0} externos. Cobertura según los datos disponibles.
         </Text>
-        <Text accessibilityRole="link" onPress={() => { void Linking.openURL('https://www.openstreetmap.org/copyright'); }} style={{ color: colors.accentInk, fontSize: 12 }}>© OpenStreetMap contributors · Datos ODbL</Text>
+        <Text accessibilityRole="link" onPress={() => { void Linking.openURL('https://www.openstreetmap.org/copyright'); }} style={{ color: colors.accentInk, fontSize: fontSizes.xs }}>© OpenStreetMap contributors · Datos ODbL</Text>
         {layer !== 'PEOPLE' && (externalGyms.data ?? []).map((gym) => <Pressable accessibilityRole="button" key={`list-${gym.sourceId}`} onPress={() => { setSelectedExternalGym(gym); mapRef.current?.animateToRegion({ latitude: gym.latitude, longitude: gym.longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 }, 350); }} style={{ borderColor: colors.borderSubtle, borderRadius: radii.md, borderWidth: 1, padding: spacing.md }}><Text style={{ color: colors.text, fontWeight: '600' }}>{gym.name}</Text><Text style={{ color: colors.textMuted }}>{gym.address ?? gym.city ?? 'Dirección no disponible'} · OpenStreetMap</Text></Pressable>)}
         {layer !== 'PEOPLE' && visibleGyms.map((gym) => <Pressable accessibilityRole="button" key={`branch-${gym.id}`} onPress={() => {
           setSelectedGym(gym);

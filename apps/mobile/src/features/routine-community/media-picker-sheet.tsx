@@ -57,7 +57,7 @@ function EmojiPanel({ onEmoji }: { onEmoji: (emoji: string) => void }) {
               backgroundColor: c.key === category ? colors.surfaceHighest : 'transparent',
             }}
           >
-            <Text style={{ fontSize: 22 }}>{c.icon}</Text>
+            <Text style={{ fontSize: fontSizes.lg }}>{c.icon}</Text>
           </PressableScale>
         ))}
       </ScrollView>
@@ -71,7 +71,7 @@ function EmojiPanel({ onEmoji }: { onEmoji: (emoji: string) => void }) {
             scaleTo={0.8}
             style={{ width: `${100 / 8}%`, height: 46, alignItems: 'center', justifyContent: 'center' }}
           >
-            <Text style={{ fontSize: 28 }}>{emoji}</Text>
+            <Text style={{ fontSize: fontSizes.xl }}>{emoji}</Text>
           </PressableScale>
         ))}
       </ScrollView>

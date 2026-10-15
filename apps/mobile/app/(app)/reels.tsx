@@ -17,7 +17,7 @@ import { notify } from "@/notifications";
 import { env } from "@/config/env";
 import { secureStoreTokenProvider } from "@/storage/secure-store";
 import { useAuthStore } from "@/state/auth-store";
-import { colors, fontSizes, radii, semibold, spacing } from "@/theme";
+import { colors, fontSizes, ink, radii, semibold, spacing } from "@/theme";
 
 const tabs: ReadonlyArray<{ id: ReelFeedTab; label: string }> = [
   { id: "FOR_YOU", label: "Para ti" },
@@ -47,7 +47,7 @@ function ReelPlayer({ reel, token }: { reel: ReelDTO; token: string | null }) {
         aspectRatio: 9 / 16,
         overflow: "hidden",
         borderRadius: radii.lg,
-        backgroundColor: "#000",
+        backgroundColor: ink.black,
       }}
     >
       {token ? (

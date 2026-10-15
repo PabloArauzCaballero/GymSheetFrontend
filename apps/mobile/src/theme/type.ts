@@ -10,11 +10,19 @@ export const fontWeights = sharedFontWeights;
  * `2xl` 34 · `display` 34.
  */
 export const fontSizes = {
+  /** Metadato diminuto (texto «editado» y hora dentro de una burbuja). */
+  micro: 10,
   xs: 12,
   footnote: 13,
   sm: 15,
+  /** Etiqueta de lista y nombre de persona. */
+  callout: 16,
   md: 17,
+  /** Título de hoja o de tarjeta de mapa. */
+  subhead: 18,
   lg: 22,
+  /** Título de pantalla secundaria y de tarjeta de rutina. */
+  heading: 24,
   xl: 28,
   '2xl': 34,
   /** Títulos de pantalla. */

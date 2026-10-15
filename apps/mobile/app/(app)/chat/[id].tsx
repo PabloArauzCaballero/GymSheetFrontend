@@ -89,19 +89,22 @@ import {
   isMicrophonePermissionPermanentlyDenied,
 } from '@/lib/chat-audio';
 import {
+  bubbleInkFaint,
+  bubbleInkMuted,
   colors,
   fontSizes,
   iconSizes,
   maxContentWidth,
   maxWideContentWidth,
   minTouchTarget,
+  overlay,
   radii,
+  readReceiptTick,
   semibold,
   spacing,
 } from '@/theme';
 
-/** Fijo — WhatsApp volvió "check azul" un color universal, ajeno a cualquier marca de gimnasio. */
-const READ_TICK_COLOR = '#34b7f1';
+const READ_TICK_COLOR = readReceiptTick;
 
 /**
  * Mensajes por página. El backend admite hasta 100 y devuelve los más
@@ -990,7 +993,7 @@ export default function ChatThreadScreen() {
   /** Contenido de la burbuja según el tipo de mensaje — el marco (fondo, radios) es igual para todos. */
   function renderMessageContent(message: Message, mine: boolean) {
     const textColor = mine ? colors.background : colors.text;
-    const mutedOnBubble = mine ? 'rgba(11,15,13,0.65)' : colors.textMuted;
+    const mutedOnBubble = mine ? bubbleInkMuted : colors.textMuted;
 
     if (message.type === 'audio') {
       return message.mediaUrl
@@ -1116,7 +1119,7 @@ export default function ChatThreadScreen() {
       );
     }
     const mine = item.senderId === currentUserId;
-    const mutedOnBubble = mine ? 'rgba(11,15,13,0.65)' : colors.textMuted;
+    const mutedOnBubble = mine ? bubbleInkMuted : colors.textMuted;
     // Los datos van del más nuevo al más viejo: el anterior en el tiempo es el
     // siguiente del arreglo, y en pantalla queda justo encima de este.
     const previous = timeline[index + 1];
@@ -1159,7 +1162,7 @@ export default function ChatThreadScreen() {
         ) : null}
         {renderMessageContent(item, mine)}
         {item.editedAt ? (
-          <Text accessibilityLabel="Mensaje editado" style={{ color: mutedOnBubble, fontSize: 10, alignSelf: 'flex-end' }}>
+          <Text accessibilityLabel="Mensaje editado" style={{ color: mutedOnBubble, fontSize: fontSizes.micro, alignSelf: 'flex-end' }}>
             Editado
           </Text>
         ) : null}
@@ -1199,14 +1202,14 @@ export default function ChatThreadScreen() {
           </PressableScale>
         ) : null}
         <View style={{ flexDirection: 'row', alignSelf: 'flex-end', alignItems: 'center', gap: 3, marginTop: 2 }}>
-          <Text style={{ color: mine ? 'rgba(11,15,13,0.55)' : colors.textMuted, fontSize: 10 }}>
+          <Text style={{ color: mine ? bubbleInkFaint : colors.textMuted, fontSize: fontSizes.micro }}>
             {formatTimeOfDay(item.createdAt) ?? ''}
           </Text>
           {mine ? (
             <Ionicons
               color={isMessageReadByOther(item.createdAt, otherLastReadAt, otherReadReceiptsSince)
                 ? READ_TICK_COLOR
-                : 'rgba(11,15,13,0.55)'}
+                : bubbleInkFaint}
               name={
                 otherLastDeliveredAt && item.createdAt <= otherLastDeliveredAt ? 'checkmark-done' : 'checkmark'
               }
@@ -1634,7 +1637,7 @@ export default function ChatThreadScreen() {
           accessibilityLabel="Cerrar"
           accessibilityRole="button"
           onPress={() => setViewerUri(null)}
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', alignItems: 'center', justifyContent: 'center' }}
+          style={{ flex: 1, backgroundColor: overlay.scrimSolid, alignItems: 'center', justifyContent: 'center' }}
         >
           {visibleViewerUri ? (
             <Image
@@ -1660,7 +1663,7 @@ export default function ChatThreadScreen() {
         transparent
         visible={readReceiptMenuOpen}
       >
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.52)' }}>
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: overlay.scrimSheet }}>
           <Pressable
             accessibilityLabel="Cerrar opciones"
             onPress={() => setReadReceiptMenuOpen(false)}
@@ -1743,7 +1746,7 @@ export default function ChatThreadScreen() {
         transparent
         visible={readReceiptSelectionOpen}
       >
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.52)' }}>
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: overlay.scrimSheet }}>
           <Pressable
             accessibilityLabel="Cerrar selección"
             onPress={() => setReadReceiptSelectionOpen(false)}

@@ -20,6 +20,7 @@ import {
   fontFamilies,
   fontSizes,
   iconSizes,
+  ink,
   motion,
   muscleGradientDefault,
   muscleGradients,
@@ -348,7 +349,7 @@ function ExerciseGif({ exercise, gif }: {
           contentFit="contain"
           importantForAccessibility="no-hide-descendants"
           source={{ uri: gif.url }}
-          style={{ width: HERO_SIZE, height: HERO_SIZE, borderRadius: radii.lg, backgroundColor: '#ffffff' }}
+          style={{ width: HERO_SIZE, height: HERO_SIZE, borderRadius: radii.lg, backgroundColor: ink.white }}
         />
       ) : (
         <View style={{ width: HERO_SIZE, height: HERO_SIZE }}>
