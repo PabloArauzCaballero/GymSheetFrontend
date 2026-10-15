@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Dumbbell,
   Flame,
+  Film,
   Gauge,
   GraduationCap,
   IdCard,
@@ -57,6 +58,7 @@ export const primaryNavigation: NavigationItem[] = [
   { href: '/routines', label: 'Rutinas', icon: ClipboardList },
   { href: '/exercises', label: 'Ejercicios', icon: Dumbbell },
   { href: '/comunidad', label: 'Comunidad', icon: Users2 },
+  { href: '/reels', label: 'Reels', icon: Film },
   // La baraja es un destino y no una pestaña de Comunidad: se decide
   // arrastrando y ocupa el ancho entero. Va pegada a Comunidad porque se llega
   // desde allí con los filtros puestos, y aquí sin ellos.

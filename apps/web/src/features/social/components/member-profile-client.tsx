@@ -12,6 +12,7 @@ import { Skeleton, SkeletonScreen } from '@/shared/components/feedback/skeleton'
 import { ReportDialog } from '@/features/moderation/components/report-dialog';
 import { ConnectionActionButton, useConnectionActions } from './connection-actions';
 import { MemberProfileBody } from './member-profile-body';
+import { BlockMemberButton } from './block-member-button';
 import { CreateTrainingInviteDialog } from '@/features/training-invitations/components/create-training-invite-dialog';
 
 /**
@@ -75,6 +76,7 @@ export function MemberProfileClient({ userId }: Readonly<{ userId: string }>) {
           {profile.data.connectionStatus === 'ACCEPTED' ? (
             <CreateTrainingInviteDialog recipientId={userId} recipientName={profile.data.displayName} />
           ) : null}
+          <BlockMemberButton displayName={profile.data.displayName} onBlocked={() => window.location.assign('/comunidad')} userId={userId} />
           {/* Al final y discreto: denunciar es una salida de emergencia, no una
               acción que competir con conectar. Pero tiene que estar donde se
               mira a la persona, que es donde se decide usarla. */}

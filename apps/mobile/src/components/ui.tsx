@@ -177,6 +177,7 @@ export function Button({
   size = 'md',
   haptic,
   accessibilityHint,
+  accessibilityLabel,
   testID,
   style,
 }: {
@@ -190,6 +191,7 @@ export function Button({
   size?: ButtonSize;
   haptic?: 'none' | 'selection' | 'light';
   accessibilityHint?: string;
+  accessibilityLabel?: string;
   testID?: string;
   style?: StyleProp<ViewStyle>;
 }) {
@@ -244,7 +246,7 @@ export function Button({
   return (
     <AnimatedPressable
       accessibilityHint={accessibilityHint}
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}

@@ -18,11 +18,13 @@ export function CameraCapture({
   detectFace = false,
   onCapture,
   captureLabel = 'Capturar',
+  disabled = false,
 }: Readonly<{
   detectFace?: boolean;
   /** Recibe el fotograma y el último análisis de rostro, si la detección está activa. */
   onCapture: (frame: CapturedFrame, detection: FaceDetection | null) => void;
   captureLabel?: string;
+  disabled?: boolean;
 }>) {
   const [attachVideo, camera] = useCamera({ detectFace });
   const [capturing, setCapturing] = useState(false);
@@ -91,6 +93,7 @@ export function CameraCapture({
         {camera.active ? (
           <>
             <Button
+              disabled={disabled}
               loading={capturing}
               onClick={async () => {
                 setCapturing(true);
@@ -111,13 +114,14 @@ export function CameraCapture({
               <Camera className="size-4" />
               {captureLabel}
             </Button>
-            <Button onClick={camera.stop} type="button" variant="ghost">
+            <Button disabled={disabled} onClick={camera.stop} type="button" variant="ghost">
               <CameraOff className="size-4" />
               Apagar
             </Button>
           </>
         ) : (
           <Button
+            disabled={disabled}
             loading={camera.starting}
             onClick={() => camera.start(camera.deviceId ?? undefined)}
             type="button"
@@ -131,6 +135,7 @@ export function CameraCapture({
           <Select
             aria-label="Cámara"
             className="min-w-56"
+            disabled={disabled}
             onChange={(event) => void camera.selectDevice(event.target.value)}
             value={camera.deviceId ?? ''}
           >
@@ -144,6 +149,7 @@ export function CameraCapture({
         {camera.active ? (
           <Button
             aria-label="Reiniciar cámara"
+            disabled={disabled}
             onClick={() => camera.start(camera.deviceId ?? undefined)}
             size="icon"
             type="button"

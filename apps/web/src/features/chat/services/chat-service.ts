@@ -8,7 +8,9 @@ import type {
 } from '@/shared/api/schemas';
 import {
   conversationSummarySchema,
+  chatMessageSchema,
   messageSchema,
+  readReceiptSettingsSchema,
   socketTicketSchema,
   startConversationResponseSchema,
 } from '@/shared/api/schemas';
@@ -50,13 +52,19 @@ export const chatService = {
       z.array(messageSchema),
     ),
   sendMessage: (conversationId: string, body: string) =>
-    apiRequest<Message>(`/me/conversations/${conversationId}/messages`, messageSchema, {
+    apiRequest<Message>(`/me/conversations/${conversationId}/messages`, chatMessageSchema, {
       method: 'POST',
       body: { type: 'text', body },
     }),
+  editMessage: (conversationId: string, messageId: string, body: string) =>
+    apiRequest<Message>(
+      `/me/conversations/${conversationId}/messages/${messageId}`,
+      chatMessageSchema,
+      { method: 'PATCH', body: { body } },
+    ),
   /** Una ubicación es un mensaje más, no un adjunto: viaja por la misma ruta. */
   sendLocationMessage: (conversationId: string, location: { lat: number; lng: number }) =>
-    apiRequest<Message>(`/me/conversations/${conversationId}/messages`, messageSchema, {
+    apiRequest<Message>(`/me/conversations/${conversationId}/messages`, chatMessageSchema, {
       method: 'POST',
       body: { type: 'location', locationLat: location.lat, locationLng: location.lng },
     }),
@@ -77,7 +85,7 @@ export const chatService = {
     form.append('viewOnce', options.viewOnce ? 'true' : 'false');
     return apiUpload<Message>(
       `/me/conversations/${conversationId}/messages/media`,
-      messageSchema,
+      chatMessageSchema,
       form,
     );
   },
@@ -85,7 +93,7 @@ export const chatService = {
   viewMessage: (conversationId: string, messageId: string) =>
     apiRequest<Message>(
       `/me/conversations/${conversationId}/messages/${messageId}/view`,
-      messageSchema,
+      chatMessageSchema,
       { method: 'POST' },
     ),
   /** Apodo privado de esta conversación; `null` lo borra y vuelve al nombre real. */
@@ -97,6 +105,15 @@ export const chatService = {
   /** Adelanta el cursor de leído al abrir el hilo: es lo que pinta el doble check del otro lado. */
   markRead: (conversationId: string) =>
     apiRequest(`/me/conversations/${conversationId}/read`, readSchema, { method: 'POST' }),
+  getReadReceiptSettings: (conversationId?: string) =>
+    apiRequest(
+      `/me/chat/read-receipts${conversationId ? `?conversationId=${encodeURIComponent(conversationId)}` : ''}`,
+      readReceiptSettingsSchema,
+    ),
+  updateReadReceiptSettings: (input: {
+    scope: 'ALL' | 'CONVERSATION' | 'SELECTED'; enabled: boolean; expectedVersion: number;
+    conversationId?: string; conversationIds?: string[];
+  }) => apiRequest('/me/chat/read-receipts', readReceiptSettingsSchema, { method: 'PUT', body: input }),
   // Boleto de un solo uso para el handshake del socket — nunca el JWT real.
   issueSocketTicket: () =>
     apiRequest<SocketTicket>('/auth/socket-ticket', socketTicketSchema, { method: 'POST' }),

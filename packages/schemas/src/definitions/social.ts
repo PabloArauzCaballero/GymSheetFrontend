@@ -47,8 +47,57 @@ export const socialStatusSchema = z.object({
 });
 export type SocialStatusState = z.infer<typeof socialStatusSchema>;
 
+export const socialDiscoverySettingsSchema = z.object({
+  profileEnabled: z.boolean(),
+  crossGymEnabled: z.boolean(),
+  mapEnabled: z.boolean(),
+  version: z.number().int().nonnegative(),
+});
+export type SocialDiscoverySettings = z.infer<typeof socialDiscoverySettingsSchema>;
+
+export const updateSocialDiscoverySettingsSchema = z.object({
+  profileEnabled: z.boolean(),
+  crossGymEnabled: z.boolean(),
+  mapEnabled: z.boolean(),
+  expectedVersion: z.number().int().nonnegative(),
+}).refine(
+  (settings) => settings.profileEnabled || (!settings.crossGymEnabled && !settings.mapEnabled),
+  { message: 'El perfil social debe estar activo para habilitar otros espacios.' },
+);
+export type UpdateSocialDiscoverySettingsInput = z.infer<typeof updateSocialDiscoverySettingsSchema>;
+
+export const discoveryPreferencesSchema = z.discriminatedUnion('configured', [
+  z.object({ configured: z.literal(false), version: z.literal(0) }),
+  z.object({
+    configured: z.literal(true),
+    genders: z.array(z.enum(['MALE', 'FEMALE'])).min(1).max(2),
+    intents: z.array(z.enum(['TRAINING', 'FRIENDSHIP', 'DATING'])).min(1).max(3),
+    minAge: z.number().int().min(18).max(100),
+    maxAge: z.number().int().min(18).max(100),
+    radiusKm: z.number().min(1).max(500),
+    flexibleAge: z.boolean(),
+    flexibleDistance: z.boolean(),
+    version: z.number().int().positive(),
+  }).refine((value) => value.maxAge >= value.minAge),
+]);
+export type DiscoveryPreferences = z.infer<typeof discoveryPreferencesSchema>;
+
+export const updateDiscoveryPreferencesSchema = z.object({
+  genders: z.array(z.enum(['MALE', 'FEMALE'])).min(1).max(2),
+  intents: z.array(z.enum(['TRAINING', 'FRIENDSHIP', 'DATING'])).min(1).max(3),
+  minAge: z.number().int().min(18).max(100),
+  maxAge: z.number().int().min(18).max(100),
+  radiusKm: z.number().min(1).max(500),
+  flexibleAge: z.boolean(),
+  flexibleDistance: z.boolean(),
+  expectedVersion: z.number().int().nonnegative(),
+}).refine((value) => value.maxAge >= value.minAge);
+export type UpdateDiscoveryPreferencesInput = z.infer<typeof updateDiscoveryPreferencesSchema>;
+
 export const gymDirectoryEntrySchema = z.object({
   userId: z.string().uuid(),
+  /** Present only for cards issued by the discovery deck. */
+  impressionId: z.string().uuid().optional(),
   /** Nombre corto: "Ana P.", nunca el nombre completo del directorio. */
   displayName: z.string(),
   objetivo: z.string().nullable(),
@@ -146,10 +195,11 @@ export const conversationSummarySchema = z.object({
   /** Cursores del otro participante: comparar contra `createdAt` de los mensajes propios para pintar el check. */
   otherUserLastDeliveredAt: z.string().nullable(),
   otherUserLastReadAt: z.string().nullable(),
+  otherUserReadReceiptsSinceAt: z.string().nullable(),
 });
 export type ConversationSummary = z.infer<typeof conversationSummarySchema>;
 
-export const messageTypes = ['text', 'image', 'video', 'location'] as const;
+export const messageTypes = ['text', 'image', 'video', 'audio', 'location'] as const;
 export type MessageType = (typeof messageTypes)[number];
 
 export const chatMessageSchema = z.object({
@@ -158,6 +208,7 @@ export const chatMessageSchema = z.object({
   senderId: z.string().uuid(),
   body: z.string().nullable(),
   type: z.enum(messageTypes),
+  storyReference: z.object({ storyId: z.string().uuid(), available: z.boolean() }).nullable(),
   /** `null` si es vista única y todavía no se abre (o ya se abrió). */
   mediaUrl: z.string().nullable(),
   mediaMimeType: z.string().nullable(),
@@ -166,6 +217,8 @@ export const chatMessageSchema = z.object({
   locationLat: z.number().nullable(),
   locationLng: z.number().nullable(),
   createdAt: z.string(),
+  editedAt: z.string().nullable().optional(),
+  deletedAt: z.string().nullable().optional(),
 });
 
 export const trainingInviteAcceptedEventSchema = z.object({
@@ -175,7 +228,7 @@ export const trainingInviteAcceptedEventSchema = z.object({
   startsAt: z.string().datetime({ offset: true }),
   timeZone: z.string().min(1),
   placeLabel: z.string(),
-  cancelledAt: z.string().datetime({ offset: true }).nullable(),
+  cancelledAt: z.string().datetime({ offset: true }).nullable().optional(),
 });
 
 export const systemMessageSchema = z.object({
@@ -184,7 +237,10 @@ export const systemMessageSchema = z.object({
   senderId: z.null(),
   type: z.literal('system'),
   systemEvent: trainingInviteAcceptedEventSchema,
+  // Shared optional fields keep consumers able to inspect common message
+  // metadata before narrowing by `type`; the server omits them on system rows.
   body: z.null().optional(),
+  storyReference: z.null().optional(),
   mediaUrl: z.null().optional(),
   mediaMimeType: z.null().optional(),
   viewOnce: z.boolean().optional(),
@@ -192,12 +248,29 @@ export const systemMessageSchema = z.object({
   locationLat: z.null().optional(),
   locationLng: z.null().optional(),
   createdAt: z.string(),
+  editedAt: z.null().optional(),
+  deletedAt: z.null().optional(),
 });
 
-/** Mensaje normal o evento de sistema de solo lectura en el historial. */
+/** Un mensaje normal o un evento de sistema de solo lectura en el historial. */
 export const messageSchema = z.union([chatMessageSchema, systemMessageSchema]);
 export type Message = z.infer<typeof messageSchema>;
 export type ChatMessage = z.infer<typeof chatMessageSchema>;
+
+export const readReceiptSettingsSchema = z.object({
+  enabled: z.boolean(),
+  defaultEnabled: z.boolean(),
+  conversationOverride: z.boolean().nullable(),
+  version: z.number().int().nonnegative(),
+});
+export type ReadReceiptSettings = z.infer<typeof readReceiptSettingsSchema>;
+
+export const updateReadReceiptSettingsSchema = z.discriminatedUnion('scope', [
+  z.object({ scope: z.literal('ALL'), enabled: z.boolean(), expectedVersion: z.number().int().nonnegative() }),
+  z.object({ scope: z.literal('CONVERSATION'), conversationId: z.string().uuid(), enabled: z.boolean(), expectedVersion: z.number().int().nonnegative() }),
+  z.object({ scope: z.literal('SELECTED'), conversationIds: z.array(z.string().uuid()).min(1).max(100), enabled: z.boolean(), expectedVersion: z.number().int().nonnegative() }),
+]);
+export type UpdateReadReceiptSettingsInput = z.infer<typeof updateReadReceiptSettingsSchema>;
 
 export const startConversationResponseSchema = z.object({
   conversationId: z.string().uuid(),

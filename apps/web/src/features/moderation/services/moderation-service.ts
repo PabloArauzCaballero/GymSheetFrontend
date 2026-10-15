@@ -6,6 +6,7 @@ export const moderationTargetKinds = [
   'PROFILE_PHOTO',
   'CHAT_MESSAGE',
   'USER',
+  'REEL',
   'ROUTINE',
   'EXERCISE',
   'COMMENT',
@@ -28,6 +29,13 @@ export const moderationReasons = [
 ] as const;
 export type ModerationReason = (typeof moderationReasons)[number];
 
+const TRAINING_REASONS: ModerationReason[] = ['EJERCICIO_PELIGROSO', 'INFORMACION_ENGANOSA', 'PLAGIO'];
+export function reasonsFor(kind: ModerationTargetKind): ModerationReason[] {
+  return kind === 'ROUTINE' || kind === 'EXERCISE' || kind === 'COMMENT'
+    ? [...moderationReasons]
+    : moderationReasons.filter((reason) => !TRAINING_REASONS.includes(reason));
+}
+
 /** Cómo se dice cada motivo a una persona, no cómo lo guarda la base. */
 export const REASON_LABEL: Record<ModerationReason, string> = {
   CONTENIDO_SEXUAL: 'Contenido sexual',
@@ -44,31 +52,12 @@ export const REASON_LABEL: Record<ModerationReason, string> = {
   OTRO: 'Otro motivo',
 };
 
-const trainingContentKinds: readonly ModerationTargetKind[] = ['ROUTINE', 'EXERCISE', 'COMMENT'];
-const trainingOnlyReasons: readonly ModerationReason[] = [
-  'EJERCICIO_PELIGROSO',
-  'INFORMACION_ENGANOSA',
-  'PLAGIO',
-];
-
-/**
- * Los motivos que se ofrecen al denunciar cada tipo.
- *
- * «Ejercicio peligroso» no tiene sentido en una foto de perfil, y ofrecerlo ahí
- * sólo ensucia la cola con motivos que no se pueden atender. La cola, en
- * cambio, valida contra la lista completa: un caso viejo no debe romperla.
- */
-export function reasonsFor(targetKind: ModerationTargetKind): readonly ModerationReason[] {
-  return trainingContentKinds.includes(targetKind)
-    ? moderationReasons
-    : moderationReasons.filter((reason) => !trainingOnlyReasons.includes(reason));
-}
-
 export const TARGET_LABEL: Record<ModerationTargetKind, string> = {
   STORY: 'Story',
   PROFILE_PHOTO: 'Foto de perfil',
   CHAT_MESSAGE: 'Mensaje',
   USER: 'Perfil',
+  REEL: 'Reel',
   ROUTINE: 'Rutina',
   EXERCISE: 'Ejercicio',
   COMMENT: 'Comentario',
@@ -96,16 +85,7 @@ export const moderationCaseSchema = z.object({
   claimed_by_user_id: z.string().uuid().nullable(),
   claimed_by_name: z.string().nullable(),
   claimed_at: z.string().nullable(),
-  /**
-   * `null` cuando el contenido no está oculto y el tipo es uno de los nuevos:
-   * el `bool_or(...) OR bool_or(...)` de la consulta devuelve NULL, no false,
-   * si alguno de los `LEFT JOIN` no casó. Se lee como «visible» en vez de
-   * rechazar toda la cola por una columna que sólo dice que no hay nada oculto.
-   */
-  content_hidden: z
-    .boolean()
-    .nullable()
-    .transform((hidden) => hidden === true),
+  content_hidden: z.boolean().nullish().transform((value) => value ?? false),
 });
 
 export type ModerationCase = z.infer<typeof moderationCaseSchema>;
@@ -142,9 +122,7 @@ export type ModerationCaseDetail = z.infer<typeof moderationCaseDetailSchema>;
 const resolveResultSchema = z.object({
   resolved: z.boolean(),
   reportsClosed: z.number().int(),
-  sanction: z
-    .object({ kind: z.string(), days: z.number().int().nullable() })
-    .nullable(),
+  sanction: z.object({ kind: z.string(), days: z.number().int().nullable() }).nullable(),
   contentHidden: z.boolean(),
 });
 
@@ -179,11 +157,9 @@ export const moderationService = {
     ),
 
   release: (targetKind: ModerationTargetKind, targetId: string) =>
-    apiRequest(
-      `${casePath(targetKind, targetId)}/release`,
-      z.object({ released: z.boolean() }),
-      { method: 'POST' },
-    ),
+    apiRequest(`${casePath(targetKind, targetId)}/release`, z.object({ released: z.boolean() }), {
+      method: 'POST',
+    }),
 
   resolve: (
     targetKind: ModerationTargetKind,

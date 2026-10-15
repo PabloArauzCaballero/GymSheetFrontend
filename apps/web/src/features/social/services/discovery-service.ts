@@ -31,11 +31,20 @@ export const discoveryService = {
       `/me/discovery/deck?${directoryQueryString(filters)}`,
       z.array(gymDirectoryEntrySchema),
     ),
+  observeImpression: (impressionId: string) =>
+    apiRequest<{ observed: true }>(
+      '/me/discovery/impressions',
+      z.object({ observed: z.literal(true) }),
+      {
+        method: 'POST',
+        body: { impressionId },
+      },
+    ),
   /** «Me gusta» mutuo = match automático: la respuesta llega con `matched: true`. */
-  swipe: (targetId: string, direction: SwipeDirection) =>
+  swipe: (targetId: string, direction: SwipeDirection, impressionId?: string) =>
     apiRequest<SwipeResult>('/me/discovery/swipes', swipeResultSchema, {
       method: 'POST',
-      body: { targetId, direction },
+      body: { targetId, direction, impressionId },
     }),
   /** Deshace el último swipe. El backend responde 409 si el match ya tiene mensajes. */
   undoSwipe: () =>

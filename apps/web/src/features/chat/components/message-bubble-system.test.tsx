@@ -33,6 +33,9 @@ describe('training invitation chat events', () => {
         revealPending={false}
         otherLastDeliveredAt={null}
         otherLastReadAt={null}
+        otherReadReceiptsSinceAt={null}
+        canEdit={false}
+        onEditMessage={vi.fn()}
       />,
     );
 
@@ -71,6 +74,9 @@ describe('training invitation chat events', () => {
         revealPending={false}
         otherLastDeliveredAt={null}
         otherLastReadAt={null}
+        otherReadReceiptsSinceAt={null}
+        canEdit={false}
+        onEditMessage={vi.fn()}
       />,
     );
 

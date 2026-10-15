@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -20,7 +20,10 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import type { GymDirectoryEntry, SwipeDirection } from '@gymsheet/schemas';
+import { ApiError } from '@gymsheet/api-client';
 import { chatService, discoveryService, profilePhotosService } from '@/api/services';
+import { refreshSocialRelationship } from '@/api/social-cache';
+import { getH5S2M1FixtureSnapshot } from '@/api/client';
 import { AmbientBackground } from '@/components/ambient';
 import {
   DirectoryCardFace,
@@ -94,7 +97,7 @@ const DECIDE_SIZE = minTouchTarget + 24;
 /** Oscurecido del fondo del match: la foto tiene que quedar como ambiente, no como sujeto. */
 const MATCH_SCRIM = [overlay.scrimSoft, overlay.scrimStrong] as const;
 
-type Decision = { entry: GymDirectoryEntry; direction: SwipeDirection };
+type Decision = { entry: GymDirectoryEntry; direction: SwipeDirection; filterKey: string };
 
 /**
  * El sello que aparece bajo el dedo mientras se arrastra: la decisión se lee
@@ -374,6 +377,7 @@ export default function DescubrirScreen() {
   const { wide, width } = useResponsive();
   const reduceMotion = useReducedMotion();
   const principal = useAuthStore((state) => state.principal);
+  const h5S2M1Fixture = getH5S2M1FixtureSnapshot();
 
   // Los mismos filtros que quedaron aplicados en Comunidad: llegar a la baraja
   // no debería reabrir un gimnasio que la persona acaba de acotar.
@@ -455,9 +459,17 @@ export default function DescubrirScreen() {
 
   /** Identidad del reparto: si cambia, la mano que hay delante ya no vale. */
   const deckKey = `${params.objetivo ?? ''}|${params.sucursalId ?? ''}|${params.genero ?? ''}`;
+  const activeDeckKeyRef = useRef(deckKey);
+  const [cardsFilterKey, setCardsFilterKey] = useState(deckKey);
+
+  useLayoutEffect(() => {
+    activeDeckKeyRef.current = deckKey;
+  }, [deckKey]);
 
   useEffect(() => {
     acceptDealRef.current = true;
+    setMatchedEntry(null);
+    setDetailEntry(null);
   }, [deckKey]);
 
   useEffect(() => {
@@ -465,12 +477,15 @@ export default function DescubrirScreen() {
     if (!acceptDealRef.current) return;
     acceptDealRef.current = false;
     setCards(deck.data);
+    setCardsFilterKey(deckKey);
     // `decided` **no** se vacía aquí. El backend deshace su último swipe mire
     // la app la baraja que mire, así que borrar el historial local sólo logra
     // dejar «Deshacer» apagado sobre una decisión que el servidor aún acepta.
     // Lo que se deshace vuelve al frente de la mano actual, que es lo que la
     // persona está mirando.
-  }, [deck.data]);
+  }, [deck.data, deck.dataUpdatedAt, deckKey]);
+
+  const visibleCards = cardsFilterKey === deckKey ? cards : [];
 
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -483,38 +498,73 @@ export default function DescubrirScreen() {
   }, [translateX, translateY]);
 
   const swipe = useMutation({
-    mutationFn: ({ entry, direction }: Decision) => discoveryService.swipe(entry.userId, direction),
+    mutationFn: async ({ entry, direction }: Decision) => {
+      if (entry.impressionId) await discoveryService.observeImpression(entry.impressionId);
+      return discoveryService.swipe(entry.userId, direction, entry.impressionId);
+    },
     onSuccess: async (result, variables) => {
-      if (result.matched) setMatchedEntry(variables.entry);
+      if (variables.filterKey === activeDeckKeyRef.current && result.matched) setMatchedEntry(variables.entry);
       // El directorio y las solicitudes sí cambian con un «me gusta»; la baraja
       // no se invalida a propósito (ver el comentario de la pantalla).
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['social', 'directory'] }),
-        queryClient.invalidateQueries({ queryKey: ['social', 'connections'] }),
-      ]);
+      await refreshSocialRelationship(queryClient, { conversations: result.matched });
     },
-    onError: (error: Error, variables) => {
+    onError: async (error: Error, variables) => {
       notify.error(error.message);
+      if (variables.filterKey !== activeDeckKeyRef.current) {
+        setDecided((current) => current.filter((item) => item.entry.userId !== variables.entry.userId));
+        if (error instanceof ApiError && error.status === 409) {
+          acceptDealRef.current = true;
+          await Promise.all([
+            refetchDeck(),
+            refreshSocialRelationship(queryClient, { conversations: true }),
+          ]);
+        }
+        return;
+      }
+      if (error instanceof ApiError && error.status === 409) {
+        setDecided((current) => current.filter((item) => item.entry.userId !== variables.entry.userId));
+        acceptDealRef.current = true;
+        await Promise.all([
+          refetchDeck(),
+          refreshSocialRelationship(queryClient, { conversations: true }),
+        ]);
+        return;
+      }
       // La decisión no llegó al servidor: la carta vuelve a la mano en vez de
       // desaparecer sin haber contado.
-      setCards((current) => [variables.entry, ...current]);
+      setCards((current) =>
+        current.some((card) => card.userId === variables.entry.userId)
+          ? current
+          : [variables.entry, ...current],
+      );
+      setCardsFilterKey(variables.filterKey);
       setDecided((current) => current.filter((item) => item.entry.userId !== variables.entry.userId));
     },
   });
 
-  const undo = useMutation({
+  const undo = useMutation<Awaited<ReturnType<typeof discoveryService.undoSwipe>>, Error, { filterKey: string }>({
     mutationFn: () => discoveryService.undoSwipe(),
-    onSuccess: async (result) => {
+    onSuccess: async (result, variables) => {
+      if (variables.filterKey !== activeDeckKeyRef.current) {
+        setDecided((current) => current.filter((item) => item.entry.userId !== result.targetId));
+        acceptDealRef.current = true;
+        await Promise.all([
+          refetchDeck(),
+          refreshSocialRelationship(queryClient, { conversations: result.unmatched }),
+        ]);
+        return;
+      }
       // El backend deshace su último swipe, no uno concreto: se devuelve a la
       // baraja la carta que él nombra, no la que el móvil supone.
-      const restored = decided.find((item) => item.entry.userId === result.targetId);
+      const restored = decided.find((item) => item.entry.userId === result.targetId && item.filterKey === deckKey);
       setDecided((current) => current.filter((item) => item.entry.userId !== result.targetId));
       if (restored) setCards((current) => [restored.entry, ...current]);
+      else {
+        acceptDealRef.current = true;
+        await refetchDeck();
+      }
       resetCardPosition();
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['social', 'directory'] }),
-        queryClient.invalidateQueries({ queryKey: ['social', 'connections'] }),
-      ]);
+      await refreshSocialRelationship(queryClient, { conversations: result.unmatched });
       notify.success(result.unmatched ? 'Match deshecho.' : 'Última decisión deshecha.');
     },
     // 409 cuando el match ya tiene mensajes: el backend explica por qué, y esa
@@ -531,8 +581,8 @@ export default function DescubrirScreen() {
     onError: (error: Error) => notify.error(error.message),
   });
 
-  const topCard = cards[0] ?? null;
-  const nextCard = cards[1] ?? null;
+  const topCard = visibleCards[0] ?? null;
+  const nextCard = visibleCards[1] ?? null;
   const topCardId = topCard?.userId ?? null;
   const photoCount = topCard ? Math.max(topCard.photos.length, topCard.photoUrl ? 1 : 0) : 0;
 
@@ -561,8 +611,8 @@ export default function DescubrirScreen() {
   );
 
   const openDetail = useCallback(() => {
-    setDetailEntry(cards[0] ?? null);
-  }, [cards]);
+    setDetailEntry(visibleCards[0] ?? null);
+  }, [visibleCards]);
 
   /**
    * Pedir una baraja nueva a propósito.
@@ -588,8 +638,12 @@ export default function DescubrirScreen() {
    */
   const commit = useCallback(
     (direction: SwipeDirection) => {
-      const entry = cards[0];
+      const entry = visibleCards[0];
       resetCardPosition();
+      // La animación puede terminar después de cambiar el filtro. En ese caso
+      // su callback conserva la carta vieja y no debe decidirla ni quitar la
+      // primera carta de la baraja nueva.
+      if (deckKey !== activeDeckKeyRef.current || cardsFilterKey !== deckKey) return;
       if (!entry) return;
       // El pulso confirma lo que ya dice la pantalla, así que acompaña al mismo
       // ajuste que apaga el resto del movimiento: quien pide una interfaz más
@@ -602,10 +656,10 @@ export default function DescubrirScreen() {
         );
       }
       setCards((current) => current.slice(1));
-      setDecided((current) => [{ entry, direction }, ...current]);
-      swipe.mutate({ entry, direction });
+      setDecided((current) => [{ entry, direction, filterKey: deckKey }, ...current]);
+      swipe.mutate({ entry, direction, filterKey: deckKey });
     },
-    [cards, reduceMotion, resetCardPosition, swipe],
+    [cardsFilterKey, deckKey, reduceMotion, resetCardPosition, swipe, visibleCards],
   );
 
   const threshold = width * DECISION_RATIO;
@@ -798,6 +852,23 @@ export default function DescubrirScreen() {
             <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
               Arrastra a la derecha si te interesa, a la izquierda si no.
             </Text>
+            {h5S2M1Fixture.enabled ? (
+              <Text
+                accessibilityLabel={h5S2M1Fixture.requestCount === 0
+                  ? 'Fixture QA H5.S2.M1 activa'
+                  : h5S2M1Fixture.completed
+                    ? 'Prueba QA H5.S2.M1 correcta'
+                    : `Prueba QA H5.S2.M1: ${h5S2M1Fixture.phase}`}
+                testID="h5-s2-m1-fixture-status"
+                style={{ color: colors.textMuted, fontSize: fontSizes.xs }}
+              >
+                {h5S2M1Fixture.requestCount === 0
+                  ? 'Fixture QA H5.S2.M1 activa'
+                  : h5S2M1Fixture.completed
+                    ? 'Prueba QA H5.S2.M1 correcta'
+                    : `Prueba QA H5.S2.M1: ${h5S2M1Fixture.phase}`}
+              </Text>
+            ) : null}
           </View>
 
           <View
@@ -925,7 +996,7 @@ export default function DescubrirScreen() {
               <View style={{ gap: spacing.md }}>
                 <EmptyState
                   icon="albums-outline"
-                  message="Ya viste a todos los socios que encajan con tus filtros. Vuelve más tarde o cámbialos en Comunidad."
+                  message="No hay personas que coincidan con estos filtros por ahora. Vuelve más tarde o cámbialos en Comunidad."
                   title="No quedan cartas"
                 />
                 <Button
@@ -968,7 +1039,7 @@ export default function DescubrirScreen() {
               icon="arrow-undo-outline"
               label="Deshacer la última decisión"
               loading={undo.isPending}
-              onPress={() => undo.mutate()}
+              onPress={() => undo.mutate({ filterKey: deckKey })}
               size={minTouchTarget}
             />
             <DeckAction

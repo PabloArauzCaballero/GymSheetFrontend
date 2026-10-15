@@ -64,6 +64,7 @@ export default function AppLayout() {
         <Stack.Screen name="registrar-peso" />
         <Stack.Screen name="membership" />
         <Stack.Screen name="notifications" />
+        <Stack.Screen name="reels" />
         <Stack.Screen name="comunidad-mensajes" />
         <Stack.Screen name="training-invitations" />
         {/* La baraja de descubrimiento: se abre desde Comunidad y se cierra

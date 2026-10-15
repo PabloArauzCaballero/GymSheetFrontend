@@ -11,6 +11,8 @@ import { profileService } from '@/features/profile/services/profile-service';
 import * as birthDate from '@/features/profile/lib/birth-date';
 import { ProfilePhotoGallery } from '@/features/profile/components/profile-photo-gallery';
 import { SocialStatusCard } from '@/features/social/components/social-status-card';
+import { SocialDiscoverySettingsCard } from '@/features/social/components/social-discovery-settings-card';
+import { DiscoveryPreferencesCard } from '@/features/social/components/discovery-preferences-card';
 import { MembershipExperience } from '@/features/membership/components/membership-experience';
 import { ProfileMeasurements } from '@/features/profile/components/profile-measurements';
 import { GenderPreferenceField } from '@/features/progression/components/gender-preference-field';
@@ -47,6 +49,7 @@ const goalLabels: Record<FormValues['objetivo'], string> = {
   RESISTENCIA: 'Resistencia',
   PERDIDA_GRASA: 'Pérdida de grasa',
   SALUD_GENERAL: 'Salud general',
+  RENDIMIENTO_DEPORTIVO: 'Rendimiento deportivo',
   REHABILITACION: 'Rehabilitación',
 };
 
@@ -232,6 +235,8 @@ export function ProfilePageClient() {
               stories y el directorio, que es la única pantalla de la parte social
               que no habla de uno mismo. El móvil ya lo tenía en Perfil. */}
           <SocialStatusCard />
+          <SocialDiscoverySettingsCard />
+          <DiscoveryPreferencesCard />
           <Card>
             <CardHeader title="Identidad" />
             <CardContent className="grid gap-4">

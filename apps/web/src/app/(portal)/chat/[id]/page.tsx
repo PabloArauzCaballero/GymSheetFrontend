@@ -9,8 +9,12 @@ export const metadata: Metadata = { title: 'Conversación' };
 
 export default async function ConversationPage({
   params,
-}: Readonly<{ params: Promise<{ id: string }> }>) {
-  const [session, routeParams] = await Promise.all([requireSession(), params]);
+  searchParams,
+}: Readonly<{
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ storyReplyMessageId?: string }>;
+}>) {
+  const [session, routeParams, query] = await Promise.all([requireSession(), params, searchParams]);
   // Se resuelve aquí, en el servidor y en cada petición: cambiar el dominio del
   // backend es una variable de entorno y un reinicio, no una reconstrucción.
   const socketOrigin = resolveBackendOrigin({
@@ -22,6 +26,7 @@ export default async function ConversationPage({
       conversationId={routeParams.id}
       currentUserId={session.id}
       socketOrigin={socketOrigin}
+      storyReplyMessageId={query.storyReplyMessageId}
     />
   );
 }

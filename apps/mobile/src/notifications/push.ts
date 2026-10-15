@@ -15,17 +15,12 @@ import { deviceTokenService } from '@/api/services';
  * bloquear el login, solo significa que ese dispositivo no recibirá push.
  */
 Notifications.setNotificationHandler({
-  handleNotification: async (notification) => {
-    // El fin de descanso con la app delante ya lo dicen la pantalla y el
-    // háptico de éxito: el aviso local es para el teléfono bloqueado.
-    const restEnd = notification.request.content.data?.kind === 'rest-end';
-    return {
-      shouldPlaySound: !restEnd,
-      shouldSetBadge: false,
-      shouldShowBanner: !restEnd,
-      shouldShowList: !restEnd,
-    };
-  },
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
 });
 
 async function resolveProjectId(): Promise<string | undefined> {

@@ -12,3 +12,5 @@ export * from './week-plan';
 export * from './streak-location';
 export * from './session-insights';
 export * from './role-labels';
+export * from './read-receipt';
+export * from './training-event-message';
