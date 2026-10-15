@@ -2,16 +2,16 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import type { FormEvent } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { StoryFeedEntry } from '@/shared/api/schemas';
-import { DomainImage, mediaProxyUrl } from '@/shared/components/media/domain-image';
 import { confirmDelete, notify } from '@/shared/notifications';
 import { storiesService, storyKeys } from '@/features/stories/services/stories-service';
+import { useStoryReply } from '@/features/stories/hooks/use-story-reply';
 import { useStoryProgress } from '@/features/stories/hooks/use-story-progress';
 import { usePagePlaybackPause } from '@/features/stories/hooks/use-page-playback-pause';
 import { locateStoryInFeed } from '@/features/stories/lib/story-feed-location';
+import { StoryStage } from './story-stage';
+import { StoryReplyBar } from './story-reply-bar';
 import { ChromeButton, StoryOwnerBar, StoryTopBar } from './story-chrome';
 import { StoryViewersPanel } from './story-viewers-panel';
 
@@ -23,8 +23,6 @@ const IMAGE_DURATION_MS = 5_000;
  * clip que no declara duración, las dos plataformas enseñan el mismo tramo.
  */
 const VIDEO_FALLBACK_MS = 15_000;
-/** Por debajo de esto, el gesto fue un toque; por encima, fue mantener pulsado. */
-const TAP_MAX_MS = 250;
 
 /**
  * Visor de stories a pantalla completa.
@@ -46,7 +44,6 @@ export function StoryViewer({
   ownUserId: string;
   startUserId: string;
 }>) {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [userIndex, setUserIndex] = useState(() =>
     Math.max(
@@ -60,15 +57,11 @@ export function StoryViewer({
   const [muted, setMuted] = useState(true);
   const [showViewers, setShowViewers] = useState(false);
   const [replyOpen, setReplyOpen] = useState(false);
-  const [replyText, setReplyText] = useState('');
-  const replyRequestRef = useRef<{ storyId: string; text: string; requestId: string } | null>(null);
-  const replySubmittingRef = useRef(false);
   // La duración se guarda junto a la story que la produjo: así, al cambiar de
   // story, deja de aplicarse en el mismo render, sin un efecto que la limpie.
   const [videoDuration, setVideoDuration] = useState<{ storyId: string; ms: number } | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
-  const pressRef = useRef<{ at: number } | null>(null);
   const viewedRef = useRef(new Set<string>());
   const activeStoryIdRef = useRef<string | null>(null);
   const previousEntriesRef = useRef(entries);
@@ -152,34 +145,7 @@ export function StoryViewer({
     onError: (error: Error) => notify.error(error),
   });
 
-  const replyToStory = useMutation({
-    mutationFn: ({ storyId, text, requestId }: { storyId: string; text: string; requestId: string }) =>
-      storiesService.reply(storyId, text, requestId),
-    onSuccess: (message) => {
-      replySubmittingRef.current = false;
-      replyRequestRef.current = null;
-      onClose();
-      router.push(`/chat/${message.conversationId}?storyReplyMessageId=${message.id}`);
-    },
-    onError: (error: Error) => {
-      replySubmittingRef.current = false;
-      notify.error(error);
-    },
-  });
-
-  function submitStoryReply(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!story || isOwn || replyToStory.isPending || replySubmittingRef.current) return;
-    const text = replyText.trim();
-    if (!text) return;
-    let request = replyRequestRef.current;
-    if (!request || request.storyId !== story.id || request.text !== text) {
-      request = { storyId: story.id, text, requestId: crypto.randomUUID() };
-      replyRequestRef.current = request;
-    }
-    replySubmittingRef.current = true;
-    replyToStory.mutate(request);
-  }
+  const reply = useStoryReply({ story, isOwn, onClose });
 
   // Registrar la vista una sola vez por story y sesión de visor.
   useEffect(() => {
@@ -247,49 +213,16 @@ export function StoryViewer({
         ref={surfaceRef}
         tabIndex={-1}
       >
-        <div
-          className="absolute inset-0"
-          onPointerCancel={() => setHeld(false)}
-          onPointerDown={() => {
-            pressRef.current = { at: Date.now() };
-            setHeld(true);
-          }}
-          onPointerLeave={() => setHeld(false)}
-          onPointerUp={(event) => {
-            setHeld(false);
-            const press = pressRef.current;
-            pressRef.current = null;
-            if (!press || Date.now() - press.at >= TAP_MAX_MS) return;
-            const bounds = event.currentTarget.getBoundingClientRect();
-            if (event.clientX - bounds.left < bounds.width * 0.33) goPrevious();
-            else goNext();
-          }}
-        >
-          {story.mediaType === 'video' ? (
-            <video
-              aria-label={`Story de ${entry.fullName}`}
-              autoPlay
-              className="size-full object-contain"
-              muted={muted}
-              onEnded={goNext}
-              onLoadedMetadata={(event) => {
-                const seconds = event.currentTarget.duration;
-                if (Number.isFinite(seconds) && seconds > 0) {
-                  setVideoDuration({ storyId: story.id, ms: seconds * 1_000 });
-                }
-              }}
-              playsInline
-              ref={videoRef}
-              src={mediaProxyUrl(story.mediaUrl)}
-            />
-          ) : (
-            <DomainImage
-              alt={`Story de ${entry.fullName}`}
-              className="object-contain"
-              src={story.mediaUrl}
-            />
-          )}
-        </div>
+        <StoryStage
+          fullName={entry.fullName}
+          muted={muted}
+          onHold={setHeld}
+          onNext={goNext}
+          onPrevious={goPrevious}
+          onVideoDuration={(ms) => setVideoDuration({ storyId: story.id, ms })}
+          story={story}
+          videoRef={videoRef}
+        />
 
         <StoryTopBar
           createdAt={story.createdAt}
@@ -335,51 +268,16 @@ export function StoryViewer({
         ) : null}
 
         {!isOwn ? (
-          <div
-            className="absolute inset-x-3 bottom-3 z-20 rounded-[var(--radius-lg)] bg-[rgb(var(--scrim-channels)/0.72)] p-2"
-            onPointerDown={(event) => event.stopPropagation()}
-            onPointerUp={(event) => event.stopPropagation()}
-          >
-            {replyOpen ? (
-              <form className="flex items-center gap-2" onSubmit={submitStoryReply}>
-                <label className="sr-only" htmlFor="story-reply-text">Responder a la story de {entry.fullName}</label>
-                <input
-                  autoFocus
-                  className="min-w-0 flex-1 rounded-full border border-white/30 bg-black/30 px-4 py-2 text-sm text-white placeholder:text-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
-                  disabled={replyToStory.isPending}
-                  id="story-reply-text"
-                  maxLength={1000}
-                  onChange={(event) => setReplyText(event.target.value)}
-                  placeholder="Escribe una respuesta…"
-                  value={replyText}
-                />
-                <button
-                  className="tap rounded-full bg-[var(--volt)] px-4 py-2 text-sm font-semibold text-[var(--accent-contrast)] disabled:opacity-60"
-                  disabled={!replyText.trim() || replyToStory.isPending}
-                  type="submit"
-                >
-                  {replyToStory.isPending ? 'Enviando…' : 'Enviar'}
-                </button>
-                <button
-                  aria-label="Cancelar respuesta"
-                  className="tap size-10 rounded-full text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
-                  disabled={replyToStory.isPending}
-                  onClick={() => { setReplyOpen(false); setHeld(false); }}
-                  type="button"
-                >
-                  ×
-                </button>
-              </form>
-            ) : (
-              <button
-                className="tap w-full rounded-full border border-white/40 px-4 py-2 text-left text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
-                onClick={() => { setReplyOpen(true); setHeld(true); }}
-                type="button"
-              >
-                Responder a {entry.fullName}…
-              </button>
-            )}
-          </div>
+          <StoryReplyBar
+            fullName={entry.fullName}
+            onCancel={() => { setReplyOpen(false); setHeld(false); }}
+            onChangeText={reply.setReplyText}
+            onOpen={() => { setReplyOpen(true); setHeld(true); }}
+            onSubmit={reply.submitStoryReply}
+            open={replyOpen}
+            pending={reply.replyToStory.isPending}
+            text={reply.replyText}
+          />
         ) : null}
 
         {showViewers ? (

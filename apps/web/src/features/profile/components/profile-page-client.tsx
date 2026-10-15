@@ -6,7 +6,7 @@ import { Ruler, Save, Scale, ShieldCheck, UserRound } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { notify } from '@/shared/notifications';
-import { z } from 'zod';
+import { goalLabels, profileFormSchema, type ProfileFormValues } from '@/features/profile/components/profile-form-schema';
 import { profileService } from '@/features/profile/services/profile-service';
 import * as birthDate from '@/features/profile/lib/birth-date';
 import { ProfilePhotoGallery } from '@/features/profile/components/profile-photo-gallery';
@@ -35,24 +35,6 @@ import { Input } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
 import { formatDateTime } from '@/shared/lib/date';
 
-const schema = z.object({
-  fechaNacimiento: birthDate.birthDateInputSchema,
-  pesoKg: z.number().min(1).max(400),
-  estaturaCm: z.number().int().min(80).max(250),
-  objetivo: z.enum(trainingGoals),
-});
-type FormValues = z.infer<typeof schema>;
-
-const goalLabels: Record<FormValues['objetivo'], string> = {
-  HIPERTROFIA: 'Hipertrofia',
-  FUERZA: 'Fuerza',
-  RESISTENCIA: 'Resistencia',
-  PERDIDA_GRASA: 'Pérdida de grasa',
-  SALUD_GENERAL: 'Salud general',
-  RENDIMIENTO_DEPORTIVO: 'Rendimiento deportivo',
-  REHABILITACION: 'Rehabilitación',
-};
-
 export function ProfilePageClient() {
   const queryClient = useQueryClient();
   const user = useQuery({ queryKey: ['user', 'me'], queryFn: profileService.getUser });
@@ -69,8 +51,8 @@ export function ProfilePageClient() {
     },
     retry: false,
   });
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
     defaultValues: { fechaNacimiento: '', pesoKg: 70, estaturaCm: 170, objetivo: 'SALUD_GENERAL' },
   });
   useEffect(() => {
@@ -83,7 +65,7 @@ export function ProfilePageClient() {
       });
   }, [form, profile.data]);
   const save = useMutation({
-    mutationFn: ({ fechaNacimiento, ...values }: FormValues) => {
+    mutationFn: ({ fechaNacimiento, ...values }: ProfileFormValues) => {
       const hadBirthDate = Boolean(profile.data?.fechaNacimiento);
       const input = { ...values, ...birthDate.birthDatePayload(fechaNacimiento, hadBirthDate) };
       return profile.data
