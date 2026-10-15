@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter, type Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -342,7 +342,6 @@ function ConexionesTab() {
  * conexiones en un solo lugar, cambiando de pestaña sin salir de la pantalla.
  */
 export default function ComunidadMensajesScreen() {
-  const router = useRouter();
   const [tab, setTab] = useState<Tab>('general');
   const shownRef = useRef(false);
 
@@ -370,12 +369,6 @@ export default function ComunidadMensajesScreen() {
     <ScrollScreen>
       <BackLink />
       <ScreenHeader subtitle="Conversaciones, solicitudes y conexiones." title="Mensajes" />
-      <Button
-        icon="play-circle-outline"
-        label="Abrir reels"
-        onPress={() => router.push('/reels' as Href)}
-        variant="ghost"
-      />
 
       <View
         style={{

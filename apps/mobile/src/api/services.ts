@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { chatMessageSchema, readReceiptSettingsSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema } from '@gymsheet/schemas';
+import { chatMessageSchema, readReceiptSettingsSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema } from '@gymsheet/schemas';
 import type { RoutineVisibility } from '@gymsheet/types';
 import type { SocialMapBounds, SocialMapCoordinates } from '@gymsheet/schemas';
 import {
@@ -642,6 +642,8 @@ mapAreas: (bounds: SocialMapBounds) => {
   },
 mapPeople: (cellId: string) =>
     apiClient.request(`/me/social-map/cells/${encodeURIComponent(cellId)}/people`, socialMapPeopleSchema, { method: 'GET' }),
+mapNearby: (point: SocialMapCoordinates) =>
+    apiClient.request(`/me/social-map/nearby?latitude=${point.latitude}&longitude=${point.longitude}`, socialMapNearbySchema, { method: 'GET' }),
 mapGyms: (bounds: SocialMapBounds) => {
     const query = new URLSearchParams(Object.entries(bounds).map(([key, value]) => [key, String(value)]));
     return apiClient.request(`/me/social-map/gyms?${query.toString()}`, socialMapGymsSchema, { method: 'GET' });

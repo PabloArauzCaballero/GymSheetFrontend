@@ -5,7 +5,7 @@
  * «leído» de un chat). Viven aquí para que `check-theme` siga a cero fuera de
  * `src/theme/` y para que quien los cambie vea el resto de la paleta.
  */
-import { alpha, ink, metricInk } from './palette';
+import { alpha, brandNavy, ink, metricInk, reppJade } from './palette';
 
 /* ─── Podio (rank-badge) ─────────────────────────────────────────────────── */
 
@@ -266,9 +266,19 @@ export const bubbleInkFaint = alpha(bubbleInk, 0.55);
 
 /** Marcadores y zonas del mapa; el color identifica la capa, no un rol del sistema. */
 export const socialMapColors = {
-  areaFill: 'rgba(200, 243, 29, 0.18)',
-  areaStroke: 'rgba(150, 190, 10, 0.8)',
+  areaFill: alpha(reppJade, 0.16),
+  areaStroke: alpha(reppJade, 0.7),
   peoplePin: '#9bc400',
-  gymPin: '#6256d9',
-  externalGymPin: '#e58b35',
+  gymPin: reppJade,
+  externalGymPin: reppJade,
+  /** Glifo blanco sobre jade: 4,6:1. Aro blanco para separarlo del fondo del mapa. */
+  gymInk: ink.white,
+  ring: ink.white,
+  /** Burbuja de «N personas»: navy con cifra blanca (17:1). */
+  peopleBubble: brandNavy,
+  peopleInk: ink.white,
+  selected: '#f5b94a',
+  /** Vidrio de los controles que flotan sobre el mapa claro de Apple/Google. */
+  glass: alpha(brandNavy, 0.86),
+  glassBorder: alpha(ink.white, 0.12),
 } as const;
