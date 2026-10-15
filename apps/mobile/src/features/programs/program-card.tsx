@@ -16,6 +16,7 @@ import { Badge } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { Button } from '@/components/ui';
 import { dayLabel, MODE_BADGE } from '@/features/programs/labels';
+import { useStartRoutine } from '@/features/routine-detail/use-start-routine';
 import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, shadows, spacing } from '@/theme';
 
 /** El programa ya pasó su fecha fin: toca decidir qué sigue (RF-19). */
@@ -35,6 +36,7 @@ export function StrengthProgramCard({ program }: { program: Program }) {
     queryFn: () => routineService.get(program.rutinaId ?? ''),
     enabled: Boolean(program.rutinaId),
   });
+  const start = useStartRoutine(program.rutinaId ?? '');
   const next = routine.data ? nextSession(routine.data, isoWeekday(new Date())) : null;
   const over = isProgramOver(program);
   const nextText = next
@@ -74,6 +76,16 @@ export function StrengthProgramCard({ program }: { program: Program }) {
         {over ? 'Terminaste el programa. ¿Qué sigue?' : nextText}
         {!over && program.multiplicador > 1 ? ` · bono ${multiplierLabel(program.multiplicador)}` : ''}
       </Text>
+      {!over && next?.esHoy && program.rutinaId ? (
+        <Button
+          haptic="light"
+          icon="play"
+          label="Iniciar rutina de hoy"
+          loading={start.isPending}
+          onPress={() => start.mutate(next.routineDayId)}
+          testID="program-start-today"
+        />
+      ) : null}
       {over ? <Button label="Decidir qué sigue" onPress={() => router.push({ pathname: '/routines/program/close/[id]', params: { id: program.id } })} /> : null}
     </PressableScale>
   );

@@ -48,7 +48,7 @@ const EMPTY_COPY: Record<string, { title: string; message: string }> = {
     message: 'Prueba con otro objetivo o quita algún filtro.',
   },
   official: {
-    title: 'Aún no hay rutinas recomendadas',
+    title: 'Aún no hay rutinas destacadas',
     message: 'Las rutinas de REPP aparecerán aquí en cuanto se publiquen.',
   },
   created: {
