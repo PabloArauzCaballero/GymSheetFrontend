@@ -9,7 +9,7 @@ test("formats the agreed training using the event timezone and place without a p
     placeLabel: "Gimnasio Central",
   });
 
-  assert.match(line, /Coordinaron un entrenamiento para/);
+  assert.match(line, /Entrenamiento acordado para/);
   assert.match(line, /11 de octubre de 2026/);
   assert.match(line, /11:00/);
   assert.match(line, /Gimnasio Central\.$/);
@@ -23,6 +23,6 @@ test("falls back to device local formatting when the server timezone is invalid"
     placeLabel: "Gimnasio Central",
   });
 
-  assert.match(line, /Coordinaron un entrenamiento para/);
+  assert.match(line, /Entrenamiento acordado para/);
   assert.match(line, /Gimnasio Central\.$/);
 });

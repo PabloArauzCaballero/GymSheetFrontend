@@ -55,6 +55,7 @@ export const knownRoutes = new Set([
   'profile',
   // Programas de pesas y cardio activos (`/programs/:id`).
   'programs',
+  'reels',
   'routines',
   'settings',
   // Consola de plataforma (`SYSTEM_ADMIN`). Como el resto, tiene que figurar
