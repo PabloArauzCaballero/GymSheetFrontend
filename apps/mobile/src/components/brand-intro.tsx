@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AccessibilityInfo, StyleSheet, Text, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
 import Animated, {
   cancelAnimation,
   interpolate,
@@ -16,13 +15,11 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
+import { ReppIntro } from '@/components/brand/repp-intro';
 import { DURATION, PREMIUM_EASING } from '@/components/motion';
 import {
   accentContrast,
   accentGradient,
-  brandNavy,
-  onMedia,
-  reppJade,
   brandIntroSweep,
   colors,
   fontSizes,
@@ -335,6 +332,13 @@ const WORDMARK_TRACKING = 0.3;
 
 export function BrandIntro({ ready }: { ready: boolean }) {
   const tenant = useActiveTenant();
+  // REPP tiene su propia escena: arranca en el signo del splash nativo y lo
+  // transforma en el logotipo. El resto de marcas usan la cortinilla genérica.
+  return tenant.name === 'REPP' ? <ReppIntro onFinish={finish} ready={ready} /> : <TenantIntro ready={ready} />;
+}
+
+function TenantIntro({ ready }: { ready: boolean }) {
+  const tenant = useActiveTenant();
   const reduceMotion = useReducedMotion();
 
   /** 1. La luz que baja: `scaleY` desde el techo, más opacidad. */
@@ -546,49 +550,10 @@ export function BrandIntro({ ready }: { ready: boolean }) {
   const tint = colors.volt;
   const gradient = accentGradient();
   const ink = accentContrast();
-  const isRepp = tenant.name === 'REPP';
 
   const wordmarkSize = fontSizes.lg;
   const tracking = wordmarkSize * WORDMARK_TRACKING;
   const glyphs = [...tenant.wordmark];
-
-  if (isRepp) {
-    return (
-      <Animated.View
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        style={[
-          StyleSheet.absoluteFill,
-          { backgroundColor: brandNavy, alignItems: 'center', justifyContent: 'center' },
-          stageStyle,
-        ]}
-      >
-        <Animated.View style={[{ alignItems: 'center' }, cameraStyle]}>
-          <Animated.View style={emblemStyle}>
-            <Svg height={92} viewBox="0 0 700 230" width={280}>
-              <Path
-                d="M63 44 H139 C177 44 195 65 187 91 C182 109 167 120 147 126 L188 183 H142 L106 131 H83 L66 183 H22 L62 44 Z M91 76 L82 105 H121 C136 105 146 98 148 88 C150 80 143 76 131 76 Z"
-                fill={onMedia.text}
-              />
-              <Path d="M62 119 L101 77 L126 77 L78 135 L45 183 L20 183 Z" fill={reppJade} />
-              <Path
-                d="M213 44 H337 L327 76 H245 L237 99 H309 L300 128 H228 L220 151 H303 L293 183 H169 Z"
-                fill={onMedia.text}
-              />
-              <Path
-                d="M357 44 H438 C476 44 494 63 485 94 C476 124 451 140 415 140 H379 L366 183 H326 Z M387 76 L378 109 H412 C427 109 438 101 441 89 C444 80 438 76 424 76 Z"
-                fill={onMedia.text}
-              />
-              <Path
-                d="M505 44 H586 C624 44 642 63 633 94 C624 124 599 140 563 140 H527 L514 183 H474 Z M535 76 L526 109 H560 C575 109 586 101 589 89 C592 80 586 76 572 76 Z"
-                fill={onMedia.text}
-              />
-            </Svg>
-          </Animated.View>
-        </Animated.View>
-      </Animated.View>
-    );
-  }
 
   return (
     <Animated.View
