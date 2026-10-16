@@ -156,9 +156,12 @@ export function RoutineCardView({ card }: { card: RoutineCard }) {
             }}
           >
             <RoutineCover goal={card.objetivo} scrim="soft" style={{ aspectRatio: 1.85 }} uri={card.portadaUrl}>
-              {card.objetivo ? (
-                <View style={{ position: 'absolute', top: spacing.md, left: spacing.md }}>
-                  <MediaChip label={GOAL_LABEL[card.objetivo]} />
+              {card.esOficial || card.objetivo ? (
+                // REPP vive dentro de «Compartidas»: el sello es lo que separa
+                // una rutina del equipo de la de alguien de la comunidad.
+                <View style={{ position: 'absolute', top: spacing.md, left: spacing.md, flexDirection: 'row', gap: spacing.xs }}>
+                  {card.esOficial ? <MediaChip icon="sparkles" label="REPP" /> : null}
+                  {card.objetivo ? <MediaChip label={GOAL_LABEL[card.objetivo]} /> : null}
                 </View>
               ) : null}
               {showsCommunity ? (

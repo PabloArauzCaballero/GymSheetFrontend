@@ -6,9 +6,9 @@ import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing 
 
 /**
  * «Todas» junta lo público con lo tuyo (lo privado se marca en la tarjeta con
- * «Solo tú la ves»); «REPP» es el equipo; «Compartidas» lo que te enviaron.
- * Cada pestaña lleva icono y UNA palabra para que quepan a lo ancho. Los
- * ámbitos son los de `CATALOG_TABS`.
+ * «Solo tú la ves»); «Compartidas» reúne las del equipo REPP (con su sello) y
+ * lo que te enviaron. REPP ya no es pestaña propia (Pablo, 2026-10-15). Cada
+ * pestaña lleva icono y UNA palabra para que quepan a lo ancho.
  */
 const TABS: readonly {
   scope: CatalogTab;
@@ -17,7 +17,6 @@ const TABS: readonly {
   iconActive: keyof typeof Ionicons.glyphMap;
 }[] = [
   { scope: 'all', label: 'Todas', icon: 'grid-outline', iconActive: 'grid' },
-  { scope: 'official', label: 'REPP', icon: 'sparkles-outline', iconActive: 'sparkles' },
   { scope: 'shared', label: 'Compartidas', icon: 'people-outline', iconActive: 'people' },
 ];
 

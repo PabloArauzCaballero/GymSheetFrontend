@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { chatMessageSchema, readReceiptSettingsSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema } from '@gymsheet/schemas';
+import { chatMessageSchema, readReceiptSettingsSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema, musicPlaylistSchema, musicPlaylistPageSchema } from '@gymsheet/schemas';
 import type { RoutineVisibility } from '@gymsheet/types';
-import type { SocialMapBounds, SocialMapCoordinates } from '@gymsheet/schemas';
+import type { MusicVisibility, SocialMapBounds, SocialMapCoordinates } from '@gymsheet/schemas';
 import {
   activationRequestSchema,
   bodyMeasurementSchema,
@@ -905,6 +905,21 @@ export const deviceTokenService = {
       method: 'DELETE',
       body: { expoPushToken },
     }),
+};
+
+/** Música para entrenar: enlaces a Spotify de la comunidad (públicas) o tuyos (privadas). */
+export const musicService = {
+  list: (scope: 'public' | 'private', cursor?: string | null, limit = 20) =>
+    apiClient.request(
+      `/music/playlists?${new URLSearchParams({ scope, limit: String(limit), ...(cursor ? { cursor } : {}) })}`,
+      musicPlaylistPageSchema,
+      { method: 'GET' },
+    ),
+  create: (input: { url: string; visibilidad: MusicVisibility; titulo?: string }) =>
+    apiClient.request('/music/playlists', musicPlaylistSchema, { method: 'POST', body: input }),
+  update: (id: string, input: { visibilidad?: MusicVisibility; titulo?: string }) =>
+    apiClient.request(`/music/playlists/${id}`, musicPlaylistSchema, { method: 'PATCH', body: input }),
+  remove: (id: string) => apiClient.request(`/music/playlists/${id}`, deletedSchema, { method: 'DELETE' }),
 };
 
 export const moderationService = {

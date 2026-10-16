@@ -2,11 +2,13 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Text, View } from 'react-native';
 import type { MuscleExercise } from '@gymsheet/schemas';
 import { Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { EmptyState, ErrorState, RowsSkeleton } from '@/components/feedback';
 import { PressableScale } from '@/components/motion';
+import { Shimmer } from '@/components/shimmer';
 import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { titleCase } from '@/components/catalogue-grid';
@@ -16,6 +18,7 @@ import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing 
 import { routes } from '@/lib/routes';
 
 const PAGE_SIZE = 30;
+const THUMB = 64;
 
 /** Cómo trabaja el músculo en el ejercicio, en el orden en que se enseña. */
 const ROLES: readonly { role: MuscleExercise['rol']; title: string; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -27,41 +30,58 @@ const ROLES: readonly { role: MuscleExercise['rol']; title: string; icon: keyof 
 /**
  * Lámina del ejercicio sobre fondo claro, con el mismo tamaño y radio que las
  * filas del catálogo (`ExerciseImage` a 64 pt): dos listas de ejercicios que se
- * ven distintas parecen dos apps.
+ * ven distintas parecen dos apps. Mientras la imagen viaja, la franja de luz
+ * dice «está llegando»; sin imagen (o si falla), la lámina anatómica con este
+ * músculo encendido, nunca la pesa gris de antes.
  */
-function Thumb({ uri, label }: { uri: string | null; label: string }) {
+function Thumb({ uri, label, muscle }: { uri: string | null; label: string; muscle: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const showImage = uri !== null && !failed;
   return (
     <View
       style={{
-        width: 64,
-        height: 64,
+        width: THUMB,
+        height: THUMB,
         borderRadius: radii.lg,
+        borderCurve: 'continuous',
         overflow: 'hidden',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: uri ? colors.plate : colors.surfaceHigh,
-        borderWidth: uri ? 0 : 1,
-        borderColor: colors.border,
+        backgroundColor: showImage ? colors.plate : colors.surfaceLowest,
       }}
     >
-      {uri ? (
+      {showImage ? (
         <Image
           accessibilityIgnoresInvertColors
           accessibilityLabel={label}
           cachePolicy="memory-disk"
           contentFit="cover"
+          onError={() => setFailed(true)}
+          onLoad={() => setLoaded(true)}
+          recyclingKey={uri}
           source={{ uri }}
           style={{ width: '100%', height: '100%' }}
-          transition={120}
+          transition={160}
         />
       ) : (
-        <Ionicons color={colors.textDisabled} name="barbell-outline" size={iconSizes.lg} />
+        <MuscleHero codes={[muscle]} height={THUMB} padding={1.25} />
       )}
+      {showImage && !loaded ? <Shimmer /> : null}
     </View>
   );
 }
 
-function ExerciseRow({ exercise, onPress }: { exercise: MuscleExercise; onPress: () => void }) {
+function ExerciseRow({
+  exercise,
+  muscle,
+  onPress,
+}: {
+  exercise: MuscleExercise;
+  /** Código del músculo de la pantalla: la lámina de reserva lo enciende. */
+  muscle: string;
+  onPress: () => void;
+}) {
   return (
     <PressableScale
       accessibilityLabel={exercise.nombre}
@@ -74,7 +94,11 @@ function ExerciseRow({ exercise, onPress }: { exercise: MuscleExercise; onPress:
         paddingVertical: spacing.sm,
       }}
     >
-      <Thumb label={exercise.imagen?.textoAlternativo ?? exercise.nombre} uri={exercise.imagen?.url ?? null} />
+      <Thumb
+        label={exercise.imagen?.textoAlternativo ?? exercise.nombre}
+        muscle={muscle}
+        uri={exercise.imagen?.url ?? null}
+      />
       <Text numberOfLines={2} style={{ flex: 1, color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
         {titleCase(exercise.nombre)}
       </Text>
@@ -211,7 +235,7 @@ export default function MuscleScreen() {
                   {rows.map((exercise, rowIndex) => (
                     <View key={exercise.id}>
                       {rowIndex > 0 ? <Divider /> : null}
-                      <ExerciseRow exercise={exercise} onPress={() => open(exercise.id)} />
+                      <ExerciseRow exercise={exercise} muscle={code} onPress={() => open(exercise.id)} />
                     </View>
                   ))}
                 </Card>
