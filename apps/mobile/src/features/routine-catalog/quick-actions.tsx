@@ -14,7 +14,7 @@ export type QuickAction = {
 };
 
 /** Color de cada acceso: un tono por destino para reconocerlos sin leer. */
-const TONE: Record<string, MetricKey> = { create: 'rest', exercises: 'weight', cardio: 'volume' };
+const TONE: Record<string, MetricKey> = { create: 'rest', exercises: 'weight', cardio: 'volume', music: 'streak' };
 
 /**
  * Accesos de la cabecera de Rutinas: fichas iguales con su icono en una gota de
@@ -24,8 +24,11 @@ const TONE: Record<string, MetricKey> = { create: 'rest', exercises: 'weight', c
  * principal de la pantalla, que es elegir una rutina.
  */
 export function QuickActions({ actions }: { actions: readonly QuickAction[] }) {
+  // Con cuatro (Música, 2026-10-15) van todas a la vista en la misma fila:
+  // fichas más compactas y el texto a 13 pt, en dos líneas.
+  const compact = actions.length > 3;
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'stretch', gap: spacing.md }}>
+    <View style={{ flexDirection: 'row', alignItems: 'stretch', gap: compact ? spacing.sm : spacing.md }}>
       {actions.map((action, index) => {
         const tone = metricColors[TONE[action.key] ?? 'rest'];
         return (
@@ -35,8 +38,8 @@ export function QuickActions({ actions }: { actions: readonly QuickAction[] }) {
               onPress={action.onPress}
               scaleTo={0.95}
               style={{
-                height: 116,
-                padding: spacing.md,
+                height: compact ? 108 : 116,
+                padding: compact ? spacing.sm + 2 : spacing.md,
                 gap: spacing.sm,
                 justifyContent: 'space-between',
                 alignSelf: 'stretch',
@@ -59,8 +62,8 @@ export function QuickActions({ actions }: { actions: readonly QuickAction[] }) {
               />
               <View
                 style={{
-                  width: 40,
-                  height: 40,
+                  width: compact ? 36 : 40,
+                  height: compact ? 36 : 40,
                   borderRadius: radii.lg,
                   borderCurve: 'continuous',
                   alignItems: 'center',
@@ -68,9 +71,14 @@ export function QuickActions({ actions }: { actions: readonly QuickAction[] }) {
                   backgroundColor: tone.tint,
                 }}
               >
-                <Ionicons color={tone.ink} name={action.icon} size={iconSizes.md + 2} />
+                <Ionicons color={tone.ink} name={action.icon} size={compact ? iconSizes.md : iconSizes.md + 2} />
               </View>
-              <Text numberOfLines={2} strong style={{ minHeight: 36 }} variant="subhead">
+              <Text
+                numberOfLines={2}
+                strong
+                style={{ minHeight: 36 }}
+                variant={compact ? 'footnote' : 'subhead'}
+              >
                 {action.label}
               </Text>
             </PressableScale>

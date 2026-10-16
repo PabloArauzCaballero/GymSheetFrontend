@@ -32,7 +32,6 @@ import { SEARCH_HEIGHT, SearchField } from '@/features/routine-catalog/search-fi
 import { WeekPlan } from '@/components/week-plan';
 import { useActivePrograms } from '@/features/programs/use-active-programs';
 import { ActiveRoutineButton } from '@/features/programs/active-routine-button';
-import { MusicSection } from '@/features/music/music-section';
 import { CardioProgramCard } from '@/features/cardio/cardio-program-card';
 import { StrengthProgramCard } from '@/features/programs/program-card';
 import { CatalogFiltersSheet } from '@/features/routine-catalog/catalog-filters';
@@ -171,6 +170,13 @@ export function RoutinesCatalogScreen() {
                   },
                 ]
               : []),
+            {
+              key: 'music',
+              label: 'Música',
+              icon: 'musical-notes',
+              onPress: () => router.push('/routines/musica'),
+              testID: 'open-music',
+            },
           ]}
         />
       </TourTarget>
@@ -187,10 +193,6 @@ export function RoutinesCatalogScreen() {
           </TourTarget>
         </Section>
       ) : null}
-
-      {/* Música: enlaces de Spotify de la comunidad o tuyos. Va antes del
-          catálogo, que es una lista sin fin y la dejaría enterrada. */}
-      <MusicSection />
 
       {/* Explorar: pestañas, búsqueda y objetivo juntos, a 16 entre sí; antes
           iban a 32 como si fueran secciones distintas y la pantalla se partía. */}

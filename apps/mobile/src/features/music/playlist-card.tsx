@@ -10,8 +10,7 @@ import { Text } from '@/components/text';
 import { notify } from '@/notifications';
 import { alpha, colors, iconSizes, ink, muscleGradients, radii, spacing } from '@/theme';
 import { MUSIC_KIND_LABEL } from '@/features/music/use-music';
-
-export const PLAYLIST_CARD_WIDTH = 152;
+import { MediaChip } from '@/features/routine-catalog/media-chip';
 
 /** Abre el enlace: con Spotify instalado lo abre la app (enlace universal); si no, el navegador. */
 export async function openInSpotify(url: string) {
@@ -66,20 +65,36 @@ export function PlaylistCover({ playlist, size }: { playlist: MusicPlaylist; siz
   );
 }
 
-/** Tarjeta del carrusel: portada, título y de quién es. Tocar abre Spotify; «…» si es tuya. */
-export function PlaylistCard({ playlist, onManage }: { playlist: MusicPlaylist; onManage?: () => void }) {
+/**
+ * Tarjeta de la cuadrícula: portada, título y de quién es. Tocar abre Spotify;
+ * «…» si es tuya. Una privada lo dice con «Solo tú», como las rutinas.
+ */
+export function PlaylistCard({
+  playlist,
+  width,
+  onManage,
+}: {
+  playlist: MusicPlaylist;
+  width: number;
+  onManage?: () => void;
+}) {
   const who = playlist.esMia ? 'Tú' : playlist.autor.displayName;
   return (
     <PressableScale
       accessibilityHint="Abre en Spotify"
-      accessibilityLabel={`${playlist.titulo}. ${MUSIC_KIND_LABEL[playlist.tipo]} de ${who}`}
+      accessibilityLabel={`${playlist.titulo}. ${MUSIC_KIND_LABEL[playlist.tipo]} de ${who}${playlist.visibilidad === 'PRIVATE' ? '. Solo tú la ves' : ''}`}
       onPress={() => void openInSpotify(playlist.url)}
       scaleTo={0.97}
-      style={{ width: PLAYLIST_CARD_WIDTH, gap: spacing.sm }}
+      style={{ width, gap: spacing.sm }}
       testID={`playlist-${playlist.id}`}
     >
       <View>
-        <PlaylistCover playlist={playlist} size={PLAYLIST_CARD_WIDTH} />
+        <PlaylistCover playlist={playlist} size={width} />
+        {playlist.visibilidad === 'PRIVATE' ? (
+          <View style={{ position: 'absolute', left: spacing.sm, bottom: spacing.sm }}>
+            <MediaChip icon="lock-closed" label="Solo tú" />
+          </View>
+        ) : null}
         {playlist.esMia && onManage ? (
           <PressableScale
             accessibilityLabel={`Opciones de ${playlist.titulo}`}
@@ -117,18 +132,10 @@ export function PlaylistCard({ playlist, onManage }: { playlist: MusicPlaylist; 
 }
 
 /** Esqueleto con la forma de la tarjeta. */
-export function PlaylistCardSkeleton() {
+export function PlaylistCardSkeleton({ width }: { width: number }) {
   return (
-    <View style={{ width: PLAYLIST_CARD_WIDTH, gap: spacing.sm }}>
-      <View
-        style={{
-          width: PLAYLIST_CARD_WIDTH,
-          height: PLAYLIST_CARD_WIDTH,
-          borderRadius: radii.lg,
-          overflow: 'hidden',
-          backgroundColor: colors.surfaceHigh,
-        }}
-      >
+    <View style={{ width, gap: spacing.sm }}>
+      <View style={{ width, height: width, borderRadius: radii.lg, overflow: 'hidden', backgroundColor: colors.surfaceHigh }}>
         <Shimmer />
       </View>
       <View style={{ height: 14, width: '80%', borderRadius: radii.sm, backgroundColor: colors.surfaceHigh }} />
