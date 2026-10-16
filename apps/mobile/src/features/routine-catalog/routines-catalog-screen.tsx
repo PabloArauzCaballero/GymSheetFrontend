@@ -31,6 +31,8 @@ import { Button } from '@/components/ui';
 import { SEARCH_HEIGHT, SearchField } from '@/features/routine-catalog/search-field';
 import { WeekPlan } from '@/components/week-plan';
 import { useActivePrograms } from '@/features/programs/use-active-programs';
+import { ActiveRoutineButton } from '@/features/programs/active-routine-button';
+import { MusicSection } from '@/features/music/music-section';
 import { CardioProgramCard } from '@/features/cardio/cardio-program-card';
 import { StrengthProgramCard } from '@/features/programs/program-card';
 import { CatalogFiltersSheet } from '@/features/routine-catalog/catalog-filters';
@@ -46,13 +48,9 @@ const EMPTY_COPY: Record<string, { title: string; message: string }> = {
     title: 'Aún no hay rutinas con estos filtros',
     message: 'Prueba con otro objetivo, quita algún filtro o crea la tuya.',
   },
-  official: {
-    title: 'Aún no hay rutinas de REPP',
-    message: 'Las rutinas del equipo REPP aparecerán aquí en cuanto se publiquen.',
-  },
   shared: {
-    title: 'Nadie te ha compartido una rutina',
-    message: 'Cuando alguien te invite, la verás aquí.',
+    title: 'Aún no hay rutinas compartidas',
+    message: 'Aquí verás las rutinas del equipo REPP y las que te compartan.',
   },
 };
 
@@ -85,7 +83,11 @@ export function RoutinesCatalogScreen() {
     if (profileGoal && !touched.current) setFiltersState(initialCatalogFilters(profileGoal));
   }, [profileGoal]);
 
-  const catalog = useRoutineCatalog(tab, applied);
+  const own = useRoutineCatalog(tab, applied);
+  // «Compartidas» reúne las del equipo REPP (primero, con su sello) y las que
+  // te enviaron: REPP dejó de ser pestaña propia (2026-10-15).
+  const official = useRoutineCatalog('official', applied, { enabled: tab === 'shared' });
+  const withOfficial = tab === 'shared';
   const assignments = useQuery({
     queryKey: ['routines', 'assignments', 'me'],
     queryFn: () => routineService.myAssignments(),
@@ -98,7 +100,8 @@ export function RoutinesCatalogScreen() {
   const programs = useActivePrograms();
   const pull = usePullRefresh(() =>
     Promise.all([
-      catalog.refetch(),
+      own.refetch(),
+      withOfficial ? official.refetch() : Promise.resolve(),
       assignments.refetch(),
       invitations.refetch(),
       queryClient.invalidateQueries({ queryKey: ['programs'] }),
@@ -114,7 +117,22 @@ export function RoutinesCatalogScreen() {
   const strengthToday = Boolean(strengthRoutine.data?.dias.some((day) => day.diaSemana === todayIso));
   const assigned = assignments.data?.filter((item) => item.estado === 'ACTIVE') ?? [];
   const pending = invitations.data?.length ?? 0;
-  const cards = catalog.data?.pages.flatMap((page) => page.items) ?? [];
+  const officialCards = withOfficial ? (official.data?.pages.flatMap((page) => page.items) ?? []) : [];
+  const ownCards = own.data?.pages.flatMap((page) => page.items) ?? [];
+  const seen = new Set(officialCards.map((card) => card.id));
+  const cards = [...officialCards, ...ownCards.filter((card) => !seen.has(card.id))];
+  // Una sola vista de las dos consultas: se pagina primero REPP y luego lo tuyo.
+  const catalog = {
+    data: own.data || (withOfficial && official.data) ? true : undefined,
+    isPending: own.isPending || (withOfficial && official.isPending),
+    isError: own.isError || (withOfficial && official.isError),
+    error: own.error ?? (withOfficial ? official.error : null),
+    hasNextPage: own.hasNextPage || (withOfficial && official.hasNextPage),
+    isFetchingNextPage: own.isFetchingNextPage || official.isFetchingNextPage,
+    refetch: () => Promise.all([own.refetch(), withOfficial ? official.refetch() : null]),
+    fetchNextPage: () =>
+      withOfficial && official.hasNextPage ? official.fetchNextPage() : own.fetchNextPage(),
+  };
   const pendingCards = cards.filter(isPendingInvitation);
   const regularCards = cards.filter((card) => !isPendingInvitation(card));
   const count = activeFilterCount(filters);
@@ -125,7 +143,7 @@ export function RoutinesCatalogScreen() {
       onRefresh={pull.onRefresh}
       refreshing={pull.refreshing}
     >
-      <ScreenHeader title="Rutinas" tourKey="routines" />
+      <ScreenHeader action={<ActiveRoutineButton />} title="Rutinas" tourKey="routines" />
       {/* Cabecera: accesos en casillas iguales. */}
       <TourTarget id="routines.create">
         <QuickActions
@@ -169,6 +187,10 @@ export function RoutinesCatalogScreen() {
           </TourTarget>
         </Section>
       ) : null}
+
+      {/* Música: enlaces de Spotify de la comunidad o tuyos. Va antes del
+          catálogo, que es una lista sin fin y la dejaría enterrada. */}
+      <MusicSection />
 
       {/* Explorar: pestañas, búsqueda y objetivo juntos, a 16 entre sí; antes
           iban a 32 como si fueran secciones distintas y la pantalla se partía. */}

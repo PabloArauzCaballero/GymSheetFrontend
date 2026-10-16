@@ -12,8 +12,13 @@ export const catalogKey = (tab: CatalogTab, filters: CatalogFilterState) =>
  * pestaña, chip y filtros tiene su propia caché, así que volver a una pestaña no
  * pide nada de nuevo mientras los datos estén frescos.
  */
-export function useRoutineCatalog(tab: CatalogTab, filters: CatalogFilterState) {
+export function useRoutineCatalog(
+  tab: CatalogTab,
+  filters: CatalogFilterState,
+  { enabled = true }: { enabled?: boolean } = {},
+) {
   return useInfiniteQuery({
+    enabled,
     queryKey: catalogKey(tab, filters),
     initialPageParam: null as string | null,
     queryFn: ({ pageParam }) =>
