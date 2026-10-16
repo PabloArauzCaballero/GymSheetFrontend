@@ -18,6 +18,7 @@ import { homeWeekDots } from '@/features/home/home-week';
 import { MuscleSplit } from '@/features/home/muscle-split';
 import { ProgressStrip } from '@/features/home/progress-strip';
 import { TodayCard } from '@/features/home/today-card';
+import { notificationService } from '@/features/notifications/service';
 import { activeProgramsKey } from '@/features/programs/use-active-programs';
 import { WORKOUT_LABEL, WORKOUT_TONE, formatDuration, formatTimeOfDay, relativeDay, shortName } from '@/lib/format';
 import { useAuthStore } from '@/state/auth-store';
@@ -34,6 +35,11 @@ export default function HomeScreen() {
   const principal = useAuthStore((state) => state.principal);
   const router = useRouter();
   useScreenTour('home');
+  const unreadNotifications = useQuery({
+    queryKey: ['notifications', 'unread-count'],
+    queryFn: notificationService.unreadCount,
+    staleTime: 60_000,
+  });
 
   const [membership, workouts, assignments, progression, programs] = useQueries({
     queries: [
@@ -54,13 +60,19 @@ export default function HomeScreen() {
   });
 
   const refreshing =
-    membership.isFetching || workouts.isFetching || assignments.isFetching || progression.isFetching || programs.isFetching;
+    membership.isFetching ||
+    workouts.isFetching ||
+    assignments.isFetching ||
+    progression.isFetching ||
+    programs.isFetching ||
+    unreadNotifications.isFetching;
   const refresh = () => {
     void membership.refetch();
     void workouts.refetch();
     void assignments.refetch();
     void progression.refetch();
     void programs.refetch();
+    void unreadNotifications.refetch();
     if (strength?.rutinaId) void routine.refetch();
   };
 
@@ -97,6 +109,26 @@ export default function HomeScreen() {
         program={strength}
         routine={routine.data}
       />
+
+      <Section title="Avisos">
+        <Card list>
+          <NavRow
+            leading={<IconBadge icon="notifications-outline" size={36} tone="time" />}
+            meta={unreadNotifications.data?.count ? (
+              <Badge label={`${unreadNotifications.data.count} nuevos`} tone="success" />
+            ) : undefined}
+            onPress={() => router.push('/notifications-inbox')}
+            subtitle={
+              unreadNotifications.isError
+                ? 'Consulta los avisos de tu cuenta'
+                : unreadNotifications.data?.count
+                  ? 'Tienes avisos pendientes por leer'
+                  : 'Revisa tus mensajes y recordatorios'
+            }
+            title="Centro de avisos"
+          />
+        </Card>
+      </Section>
 
       <Section title="Tu semana">
         {workouts.isPending ? (

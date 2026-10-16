@@ -4,7 +4,7 @@ appId: app.gymsheet.mobile
 ---
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: '${TAB}', NAME: '${NAME}' }
+    env: { EMAIL: '${EMAIL}', TAB: '${TAB}', NAME: '${NAME}' }
 - tapOn: 'Vista Mes'
 - tapOn: 'Semana 1, ${DIA}.*'
 - extendedWaitUntil:
