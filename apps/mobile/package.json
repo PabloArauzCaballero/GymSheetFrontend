@@ -21,7 +21,9 @@
     "test:theme": "node --test --experimental-strip-types src/theme/contrast.test.ts",
     "test:chat-audio": "node --import ./scripts/register-ts-extension.mjs --test --experimental-strip-types src/lib/chat-audio.test.ts",
     "test:h5-s2-m1-fixture": "node --import ./scripts/register-ts-extension.mjs --test --experimental-strip-types src/api/h5-s2-m1-fixture.test.mjs",
-    "test:social-cache": "node --import ./scripts/register-ts-extension.mjs --test --experimental-strip-types src/api/social-cache.test.mjs"
+    "test:social-cache": "node --import ./scripts/register-ts-extension.mjs --test --experimental-strip-types src/api/social-cache.test.mjs",
+    "brand:assets": "bash scripts/generate-app-assets.sh",
+    "brand:video": "node --import ./scripts/register-ts-extension.mjs --experimental-strip-types scripts/render-brand-video.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/bricolage-grotesque": "^0.4.1",
