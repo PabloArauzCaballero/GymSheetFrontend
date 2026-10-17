@@ -9,6 +9,7 @@ export * from './definitions/social-map';
 export * from './definitions/stories';
 export * from './definitions/reels';
 export * from './definitions/public-facilities';
+export * from './definitions/music';
 export * from './forms';
 export * from './catalog';
 export * from './community';

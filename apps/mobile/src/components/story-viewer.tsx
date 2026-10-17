@@ -52,7 +52,7 @@ import { storyManualPauseAfterAppStateChange } from '@/lib/story-app-state';
 import { firstAvailableStoryId, reconcileStoryFeed } from '@/lib/story-feed-reconciliation';
 import { storyViewersPresentation } from '@/components/story-viewers-presentation';
 import { requestId } from '@/lib/request-id';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { alpha, colors, fontSizes, iconSizes, ink, minTouchTarget, onMedia, overlay, radii, semibold, spacing } from '@/theme';
 
 /** Lo que dura una foto en pantalla antes de pasar sola a la siguiente. */
 const IMAGE_DURATION_MS = 5000;
@@ -234,10 +234,10 @@ function ProgressSegment({
         height: 3,
         borderRadius: radii.full,
         overflow: 'hidden',
-        backgroundColor: 'rgba(255,255,255,0.28)',
+        backgroundColor: overlay.glassStrong,
       }}
     >
-      <Animated.View style={[{ height: '100%', borderRadius: radii.full, backgroundColor: '#fff' }, fill]} />
+      <Animated.View style={[{ height: '100%', borderRadius: radii.full, backgroundColor: ink.white }, fill]} />
     </View>
   );
 }
@@ -336,7 +336,7 @@ function ViewersSheet({
         accessibilityLabel="Cerrar"
         accessibilityRole="button"
         onPress={onClose}
-        style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.6)' }]}
+        style={[StyleSheet.absoluteFill, { backgroundColor: overlay.scrimSoft }]}
       />
       <Animated.View
         accessibilityViewIsModal
@@ -1007,7 +1007,7 @@ export function StoryViewer({
       {/* Dentro de un `Modal` los gestos necesitan su propia raíz: la del
           proveedor de la app no llega a esta ventana en Android. */}
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: '#000' }, backdropStyle]} />
+        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: ink.black }, backdropStyle]} />
 
         <GestureDetector gesture={pan}>
           <Animated.View style={[{ flex: 1, overflow: 'hidden', borderRadius: radii.xl }, contentStyle]}>
@@ -1107,10 +1107,10 @@ export function StoryViewer({
               >
                 {playerStatus === 'error' ? (
                   <>
-                    <Ionicons color="rgba(255,255,255,0.75)" name="cloud-offline-outline" size={40} />
+                    <Ionicons color={onMedia.textMuted} name="cloud-offline-outline" size={40} />
                     <Text
                       style={{
-                        color: 'rgba(255,255,255,0.75)',
+                        color: onMedia.textMuted,
                         fontSize: fontSizes.sm,
                         textAlign: 'center',
                         lineHeight: 20,
@@ -1120,7 +1120,7 @@ export function StoryViewer({
                     </Text>
                   </>
                 ) : (
-                  <ActivityIndicator color="#fff" size="small" />
+                  <ActivityIndicator color={ink.white} size="small" />
                 )}
               </View>
             ) : null}
@@ -1174,10 +1174,10 @@ export function StoryViewer({
               >
                 <SmallAvatar fullName={entry.fullName} photoUrl={entry.photoUrl} size={32} />
                 <View style={{ flex: 1 }}>
-                  <Text numberOfLines={1} style={{ color: '#fff', fontSize: fontSizes.sm, fontWeight: semibold }}>
+                  <Text numberOfLines={1} style={{ color: ink.white, fontSize: fontSizes.sm, fontWeight: semibold }}>
                     {entry.fullName}
                   </Text>
-                  <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: fontSizes.xs }}>
+                  <Text style={{ color: alpha(ink.white, 0.7), fontSize: fontSizes.xs }}>
                     {relativeTimeEs(story.createdAt)}
                   </Text>
                 </View>
@@ -1199,7 +1199,7 @@ export function StoryViewer({
                   >
                     <Animated.View entering={FadeIn.duration(DURATION.quick)} key={muted ? 'muted' : 'sound'}>
                       <Ionicons
-                        color="#fff"
+                        color={ink.white}
                         name={muted ? 'volume-mute-outline' : 'volume-high-outline'}
                         size={iconSizes.lg}
                       />
@@ -1221,7 +1221,7 @@ export function StoryViewer({
                       justifyContent: 'center',
                     }}
                   >
-                    <Ionicons color={busy ? colors.textDisabled : '#fff'} name="trash-outline" size={iconSizes.lg} />
+                    <Ionicons color={busy ? colors.textDisabled : ink.white} name="trash-outline" size={iconSizes.lg} />
                   </PressableScale>
                 ) : null}
                 <PressableScale
@@ -1236,7 +1236,7 @@ export function StoryViewer({
                     justifyContent: 'center',
                   }}
                 >
-                  <Ionicons color="#fff" name="close" size={iconSizes.lg} />
+                  <Ionicons color={ink.white} name="close" size={iconSizes.lg} />
                 </PressableScale>
               </View>
             </Animated.View>
@@ -1275,12 +1275,12 @@ export function StoryViewer({
                     gap: spacing.sm,
                     paddingHorizontal: spacing.md,
                     borderRadius: radii.full,
-                    backgroundColor: 'rgba(255,255,255,0.14)',
+                    backgroundColor: overlay.glass,
                     opacity: pressed ? 0.7 : 1,
                   })}
                 >
-                  <Ionicons color="#fff" name="eye-outline" size={iconSizes.md} />
-                  <Text style={{ color: '#fff', fontSize: fontSizes.sm, fontWeight: semibold }}>
+                  <Ionicons color={ink.white} name="eye-outline" size={iconSizes.md} />
+                  <Text style={{ color: ink.white, fontSize: fontSizes.sm, fontWeight: semibold }}>
                     {viewersPresentation.controlLabel}
                   </Text>
                 </Pressable>
@@ -1293,7 +1293,7 @@ export function StoryViewer({
                 style={{ position: 'absolute', left: 0, right: 0, bottom: insets.bottom + spacing.md, zIndex: 5 }}
               >
                 {replyOpen ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginHorizontal: spacing.md, padding: spacing.xs, borderRadius: radii.full, backgroundColor: 'rgba(0,0,0,0.72)' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginHorizontal: spacing.md, padding: spacing.xs, borderRadius: radii.full, backgroundColor: overlay.scrim }}>
                     <TextInput
                       accessibilityLabel={`Responder a la story de ${entry?.fullName ?? 'este usuario'}`}
                       autoFocus
@@ -1302,10 +1302,10 @@ export function StoryViewer({
                       onChangeText={setReplyDraft}
                       onSubmitEditing={() => void handleReply()}
                       placeholder="Escribe una respuesta…"
-                      placeholderTextColor="rgba(255,255,255,0.7)"
+                      placeholderTextColor={alpha(ink.white, 0.7)}
                       returnKeyType="send"
                       value={replyDraft}
-                      style={{ minHeight: minTouchTarget, flex: 1, color: '#fff', paddingHorizontal: spacing.md, fontSize: fontSizes.sm }}
+                      style={{ minHeight: minTouchTarget, flex: 1, color: ink.white, paddingHorizontal: spacing.md, fontSize: fontSizes.sm }}
                     />
                     <PressableScale
                       accessibilityLabel="Enviar respuesta"
@@ -1327,7 +1327,7 @@ export function StoryViewer({
                       onPress={() => { setReplyOpen(false); setReplyDraft(''); }}
                       style={{ width: minTouchTarget, height: minTouchTarget, alignItems: 'center', justifyContent: 'center' }}
                     >
-                      <Ionicons color="#fff" name="close" size={iconSizes.md} />
+                      <Ionicons color={ink.white} name="close" size={iconSizes.md} />
                     </PressableScale>
                   </View>
                 ) : (
@@ -1336,9 +1336,9 @@ export function StoryViewer({
                     accessibilityRole="button"
                     haptic="selection"
                     onPress={() => setReplyOpen(true)}
-                    style={{ minHeight: minTouchTarget, justifyContent: 'center', marginHorizontal: spacing.md, paddingHorizontal: spacing.lg, borderRadius: radii.full, borderWidth: 1, borderColor: 'rgba(255,255,255,0.55)', backgroundColor: 'rgba(0,0,0,0.55)' }}
+                    style={{ minHeight: minTouchTarget, justifyContent: 'center', marginHorizontal: spacing.md, paddingHorizontal: spacing.lg, borderRadius: radii.full, borderWidth: 1, borderColor: alpha(ink.white, 0.55), backgroundColor: alpha(ink.black, 0.55) }}
                   >
-                    <Text style={{ color: '#fff', fontSize: fontSizes.sm }}>Responder a {entry?.fullName ?? 'esta story'}…</Text>
+                    <Text style={{ color: ink.white, fontSize: fontSizes.sm }}>Responder a {entry?.fullName ?? 'esta story'}…</Text>
                   </PressableScale>
                 )}
               </KeyboardAvoidingView>

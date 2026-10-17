@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import type { ComponentProps } from 'react';
 import { ScrollView, View } from 'react-native';
 import { CountUpText } from '@/components/motion';
 import { Text } from '@/components/text';
+import { SessionMuscles } from '@/features/body-map/session-muscles';
 import { EnterUp } from '@/components/motion';
 import { colors, fontFamilies, fontSizes, gutter, iconSizes, metricColors, radii, spacing, tabularNums, type MetricKey } from '@/theme';
 
@@ -53,6 +55,7 @@ export function FinishPage({
   pending,
   skippedSets = 0,
   omitted = [],
+  muscles = [],
 }: {
   width: number;
   bottomSpace: number;
@@ -68,6 +71,8 @@ export function FinishPage({
   skippedSets?: number;
   /** Ejercicios omitidos, con su motivo: «Remo con barra · Equipo ocupado». */
   omitted?: readonly string[];
+  /** Los ejercicios con series hechas: de ellos sale el maniquí. */
+  muscles?: ComponentProps<typeof SessionMuscles>['exercises'];
 }) {
   return (
     <ScrollView
@@ -113,6 +118,10 @@ export function FinishPage({
           <Stat icon="time-outline" label="minutos" metric="time" value={minutes} />
         </View>
       </View>
+
+      <EnterUp index={1}>
+        <SessionMuscles exercises={muscles} />
+      </EnterUp>
 
       {skippedSets > 0 || omitted.length > 0 ? (
         <EnterUp index={1} style={{ gap: spacing.sm }}>

@@ -1,11 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
+import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
-import { View } from 'react-native';
+import { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
+import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { workoutService } from '@/api/services';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { colors, iconSizes, radii, shadows, spacing } from '@/theme';
+import { useReduceMotion } from '@/notifications/use-reduce-motion';
+import { accentContrast, alpha, colors, iconSizes, overlay, radii, shadows, spacing } from '@/theme';
 import { formatRestClock, useRestRemaining, useWorkoutStore, type ActiveWorkout } from '@/features/workout/workout-store';
 
 /** Alto de la mini-barra y su separación con las pestañas (las pantallas lo reservan). */
@@ -34,6 +38,38 @@ export function useActiveWorkout(): ActiveWorkout | null {
   return active;
 }
 
+const LIVE = 36;
+
+/**
+ * El «en vivo» del entreno: la ficha jade con una onda que sale de ella cada
+ * dos segundos, como el punto rojo de una grabación. Causa explícita (hay una
+ * sesión corriendo) y una sola por pantalla; con «Reducir movimiento», quieta.
+ */
+function LiveBadge({ resting }: { resting: boolean }) {
+  const reduceMotion = useReduceMotion();
+  const wave = useSharedValue(0);
+  useEffect(() => {
+    if (reduceMotion) return;
+    wave.value = 0;
+    wave.value = withRepeat(withTiming(1, { duration: 2000, easing: Easing.bezier(0.23, 1, 0.32, 1) }), -1, false);
+    return () => cancelAnimation(wave);
+  }, [reduceMotion, wave]);
+  const ring = useAnimatedStyle(() => ({ opacity: 0.55 * (1 - wave.value), transform: [{ scale: 1 + wave.value * 0.7 }] }));
+  return (
+    <View style={{ width: LIVE, height: LIVE, alignItems: 'center', justifyContent: 'center' }}>
+      {reduceMotion ? null : (
+        <Animated.View
+          pointerEvents="none"
+          style={[{ position: 'absolute', width: LIVE, height: LIVE, borderRadius: LIVE / 2, borderWidth: 2, borderColor: colors.accentInk }, ring]}
+        />
+      )}
+      <View style={{ width: LIVE, height: LIVE, borderRadius: LIVE / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.volt }}>
+        <Ionicons accessibilityElementsHidden color={accentContrast()} importantForAccessibility="no-hide-descendants" name={resting ? 'timer' : 'barbell'} size={iconSizes.sm} />
+      </View>
+    </View>
+  );
+}
+
 /**
  * Mini-barra persistente encima de las pestañas con un entreno abierto (C8.3
  * punto 9), como la de un reproductor: qué toca o cuánto queda de descanso, y
@@ -42,7 +78,8 @@ export function useActiveWorkout(): ActiveWorkout | null {
  */
 export function ActiveWorkoutBar({ active, bottom }: { active: ActiveWorkout; bottom: number }) {
   const router = useRouter();
-  const { remainingMs, running } = useRestRemaining();
+  const { remainingMs, totalMs, running } = useRestRemaining();
+  const restLeft = running && totalMs > 0 ? Math.max(0, Math.min(1, remainingMs / totalMs)) : 0;
   const title = running ? `Descanso ${formatRestClock(remainingMs)}` : 'Entreno en curso';
   const detail = [active.current, active.progress].filter(Boolean).join(' · ') || 'Toca para volver';
 
@@ -61,21 +98,21 @@ export function ActiveWorkoutBar({ active, bottom }: { active: ActiveWorkout; bo
           alignItems: 'center',
           gap: spacing.smd,
           height: ACTIVE_BAR_HEIGHT,
-          paddingHorizontal: spacing.md,
+          paddingLeft: spacing.smd,
+          paddingRight: spacing.md,
           borderRadius: radii.xl,
           borderCurve: 'continuous',
-          backgroundColor: colors.surfaceHighest,
+          overflow: 'hidden',
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: overlay.glass,
           boxShadow: shadows.e2,
         }}
         testID="active-workout-bar"
       >
-        <Ionicons
-          accessibilityElementsHidden
-          color={running ? colors.accentInk : colors.text}
-          importantForAccessibility="no-hide-descendants"
-          name={running ? 'timer-outline' : 'barbell-outline'}
-          size={iconSizes.md}
-        />
+        {/* Vidrio: el contenido pasa desenfocado por debajo. */}
+        <BlurView intensity={40} style={StyleSheet.absoluteFill} tint="dark" />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: alpha(colors.surfaceHighest, 0.72) }]} />
+        <LiveBadge resting={running} />
         <View style={{ flex: 1 }}>
           <Text numberOfLines={1} strong tabular variant="subhead">
             {title}
@@ -91,6 +128,12 @@ export function ActiveWorkoutBar({ active, bottom }: { active: ActiveWorkout; bo
           name="chevron-up"
           size={iconSizes.md}
         />
+        {/* Lo que queda de descanso, como la barra de un reproductor. */}
+        {running ? (
+          <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, backgroundColor: alpha(colors.accentInk, 0.15) }}>
+            <View style={{ width: `${restLeft * 100}%`, height: 3, backgroundColor: colors.accentInk }} />
+          </View>
+        ) : null}
       </PressableScale>
     </View>
   );

@@ -21,7 +21,7 @@ name: 13b · Confirmar publicación y bloqueo de duplicado
 # RF-09 · p03: una rutina idéntica a la de Leo se bloquea y ofrece verla.
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Torso idéntico' }
+    env: { TAB: 'Privadas', NAME: 'Torso idéntico' }
 - tapOn:
     id: 'routine-more'
 - tapOn: 'Publicar'

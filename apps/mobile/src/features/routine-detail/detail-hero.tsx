@@ -16,7 +16,7 @@ import { alpha, gutter, heroTopScrim, ink, spacing } from '@/theme';
 export function heroHeightFor(width: number, topInset: number): number {
   // ≈ 4:3 con tope: más alta, la lámina (850×567) se ampliaba más del doble a
   // 3× y se veía blanda; más baja, el título a tres líneas no cabe.
-  return Math.min(380, Math.max(288, Math.round(width * 0.74))) + topInset * 0.5;
+  return Math.min(440, Math.max(320, Math.round(width * 0.9))) + topInset * 0.5;
 }
 
 export type HeroContent = {

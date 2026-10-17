@@ -32,7 +32,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
-import { colors, glideSpring, popSpring, pressSpring, radii, settleSpring } from '@/theme';
+import { colors, glideSpring, popSpring, pressSpring, radii, releaseSpring, settleSpring } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -144,7 +144,7 @@ export function PressableScale({
 
   const animated = useAnimatedStyle(() => ({
     transform: [{ scale: reduceMotion ? 1 : 1 - pressed.value * (1 - scaleTo) }],
-    opacity: 1 - pressed.value * 0.12,
+    opacity: 1 - Math.max(0, pressed.value) * 0.12,
   }));
 
   return (
@@ -168,8 +168,10 @@ export function PressableScale({
         if (haptic !== 'none') HAPTICS[haptic]();
       }}
       onPressOut={() => {
-        // Release settles a touch slower than the press — follow-through.
-        pressed.value = withTiming(0, { duration: DURATION.quick, easing: PREMIUM_EASING });
+        // Al soltar vuelve con un rebote corto: el control devuelve el empujón.
+        pressed.value = reduceMotion
+          ? withTiming(0, { duration: DURATION.quick, easing: PREMIUM_EASING })
+          : withSpring(0, releaseSpring);
       }}
       style={[animated, style]}
       testID={testID}

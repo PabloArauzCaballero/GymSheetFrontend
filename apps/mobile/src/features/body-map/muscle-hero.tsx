@@ -45,20 +45,32 @@ function bestView(codes: readonly string[]): { tag: ImageTag; regions: BodyRegio
  * Si el código no tiene zona (el sistema cardiovascular, o uno desconocido) no
  * pinta nada en vez de enseñar un cuerpo sin resaltar que no significa nada.
  */
-export function MuscleHero({ code }: { code: string }) {
+export function MuscleHero({
+  code,
+  codes: many,
+  height: fixedHeight,
+  padding = PADDING,
+}: {
+  code?: string;
+  /** Varios músculos a la vez (una zona entera: «Piernas» = cuádriceps + isquios + glúteos…). */
+  codes?: readonly string[];
+  /** Alto fijo (tarjetas de zona): sin marco propio, lo pone la tarjeta. */
+  height?: number;
+  padding?: number;
+}) {
   const { width: windowWidth } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
   // Se estima antes de medir para reservar el alto desde el primer fotograma.
-  const [width, setWidth] = useState(windowWidth - spacing.lg * 2);
-  const height = Math.round(width * ASPECT);
-  const codes = AGGREGATES[code.toUpperCase()] ?? [code.toUpperCase()];
+  const [width, setWidth] = useState(fixedHeight ? Math.round(windowWidth / 2) : windowWidth - spacing.lg * 2);
+  const height = fixedHeight ?? Math.round(width * ASPECT);
+  const codes = (many ?? (code ? [code] : [])).flatMap((value) => AGGREGATES[value.toUpperCase()] ?? [value.toUpperCase()]);
   const view = useMemo(() => bestView(codes), [codes.join('|')]);
 
-  if (!view || !muscleInfo(code)) return null;
+  if (!view || view.regions.length === 0 || (code && !muscleInfo(code))) return null;
   const bounds = boundsOf(view.regions);
   const placement =
     bounds && width > 0
-      ? placeBounds(bounds, { width, height }, REGION_VIEWBOX, { padding: PADDING })
+      ? placeBounds(bounds, { width, height }, REGION_VIEWBOX, { padding })
       : null;
   const paths = view.regions.map((region) => toPathData(region.rings));
 
@@ -67,14 +79,18 @@ export function MuscleHero({ code }: { code: string }) {
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
       onLayout={(event: LayoutChangeEvent) => setWidth(Math.round(event.nativeEvent.layout.width))}
-      style={{
-        height,
-        borderRadius: radii.xl,
-        overflow: 'hidden',
-        backgroundColor: colors.surfaceLowest,
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: colors.border,
-      }}
+      style={
+        fixedHeight
+          ? { height, overflow: 'hidden', backgroundColor: colors.surfaceLowest }
+          : {
+              height,
+              borderRadius: radii.xl,
+              overflow: 'hidden',
+              backgroundColor: colors.surfaceLowest,
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: colors.border,
+            }
+      }
     >
       {placement ? (
         <View

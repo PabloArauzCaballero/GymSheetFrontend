@@ -13,7 +13,6 @@ import {
   ORDER_LABELS,
   type CatalogFilterState,
   type CatalogTab,
-  type MineChip,
 } from '@gymsheet/hooks';
 import { trainingGoals, type TrainingGoal } from '@gymsheet/types';
 import { ApiError } from '@gymsheet/api-client';
@@ -32,34 +31,25 @@ import { Button } from '@/components/ui';
 import { SEARCH_HEIGHT, SearchField } from '@/features/routine-catalog/search-field';
 import { WeekPlan } from '@/components/week-plan';
 import { useActivePrograms } from '@/features/programs/use-active-programs';
+import { ActiveRoutineButton } from '@/features/programs/active-routine-button';
 import { CardioProgramCard } from '@/features/cardio/cardio-program-card';
 import { StrengthProgramCard } from '@/features/programs/program-card';
 import { CatalogFiltersSheet } from '@/features/routine-catalog/catalog-filters';
-import { CatalogTabBar, MineChips, ResultCount } from '@/features/routine-catalog/catalog-tab-bar';
+import { CatalogTabBar, ResultCount } from '@/features/routine-catalog/catalog-tab-bar';
 import { InvitationCard } from '@/features/routine-catalog/invitation-card';
-import { ForYouBlock } from '@/features/routine-catalog/for-you-block';
 import { RoutineCardSkeleton, RoutineCardView } from '@/features/routine-catalog/routine-card';
-import { useRecommendedRoutines } from '@/features/routine-catalog/use-recommended-routines';
 import { useRoutineCatalog } from '@/features/routine-catalog/use-routine-catalog';
 import { GOAL_LABEL } from '@/lib/format';
 import { colors, fontSizes, gutter, iconSizes, radii, spacing } from '@/theme';
 
 const EMPTY_COPY: Record<string, { title: string; message: string }> = {
-  public: {
-    title: 'Aún no hay rutinas públicas con estos filtros',
-    message: 'Prueba con otro objetivo o quita algún filtro.',
-  },
-  official: {
-    title: 'Aún no hay rutinas recomendadas',
-    message: 'Las rutinas de REPP aparecerán aquí en cuanto se publiquen.',
-  },
-  created: {
-    title: 'No has creado rutinas',
-    message: 'Crea tu primera rutina por días y semanas.',
+  all: {
+    title: 'Aún no hay rutinas con estos filtros',
+    message: 'Prueba con otro objetivo, quita algún filtro o crea la tuya.',
   },
   shared: {
-    title: 'Nadie te ha compartido una rutina',
-    message: 'Cuando alguien te invite, la verás aquí.',
+    title: 'Aún no hay rutinas compartidas',
+    message: 'Aquí verás las rutinas del equipo REPP y las que te compartan.',
   },
 };
 
@@ -67,8 +57,7 @@ const EMPTY_COPY: Record<string, { title: string; message: string }> = {
 export function RoutinesCatalogScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<CatalogTab>('public');
-  const [chip, setChip] = useState<MineChip>('created');
+  const [tab, setTab] = useState<CatalogTab>('all');
   const [filters, setFiltersState] = useState<CatalogFilterState>(emptyCatalogFilters);
   // El objetivo del perfil precarga el filtro (C7) una sola vez y solo si la
   // persona no ha tocado los filtros: nunca se pisa una elección suya.
@@ -93,8 +82,11 @@ export function RoutinesCatalogScreen() {
     if (profileGoal && !touched.current) setFiltersState(initialCatalogFilters(profileGoal));
   }, [profileGoal]);
 
-  const forYou = useRecommendedRoutines();
-  const catalog = useRoutineCatalog(tab, chip, applied);
+  const own = useRoutineCatalog(tab, applied);
+  // «Compartidas» reúne las del equipo REPP (primero, con su sello) y las que
+  // te enviaron: REPP dejó de ser pestaña propia (2026-10-15).
+  const official = useRoutineCatalog('official', applied, { enabled: tab === 'shared' });
+  const withOfficial = tab === 'shared';
   const assignments = useQuery({
     queryKey: ['routines', 'assignments', 'me'],
     queryFn: () => routineService.myAssignments(),
@@ -107,8 +99,8 @@ export function RoutinesCatalogScreen() {
   const programs = useActivePrograms();
   const pull = usePullRefresh(() =>
     Promise.all([
-      catalog.refetch(),
-      forYou.refetch(),
+      own.refetch(),
+      withOfficial ? official.refetch() : Promise.resolve(),
       assignments.refetch(),
       invitations.refetch(),
       queryClient.invalidateQueries({ queryKey: ['programs'] }),
@@ -124,10 +116,24 @@ export function RoutinesCatalogScreen() {
   const strengthToday = Boolean(strengthRoutine.data?.dias.some((day) => day.diaSemana === todayIso));
   const assigned = assignments.data?.filter((item) => item.estado === 'ACTIVE') ?? [];
   const pending = invitations.data?.length ?? 0;
-  const cards = catalog.data?.pages.flatMap((page) => page.items) ?? [];
+  const officialCards = withOfficial ? (official.data?.pages.flatMap((page) => page.items) ?? []) : [];
+  const ownCards = own.data?.pages.flatMap((page) => page.items) ?? [];
+  const seen = new Set(officialCards.map((card) => card.id));
+  const cards = [...officialCards, ...ownCards.filter((card) => !seen.has(card.id))];
+  // Una sola vista de las dos consultas: se pagina primero REPP y luego lo tuyo.
+  const catalog = {
+    data: own.data || (withOfficial && official.data) ? true : undefined,
+    isPending: own.isPending || (withOfficial && official.isPending),
+    isError: own.isError || (withOfficial && official.isError),
+    error: own.error ?? (withOfficial ? official.error : null),
+    hasNextPage: own.hasNextPage || (withOfficial && official.hasNextPage),
+    isFetchingNextPage: own.isFetchingNextPage || official.isFetchingNextPage,
+    refetch: () => Promise.all([own.refetch(), withOfficial ? official.refetch() : null]),
+    fetchNextPage: () =>
+      withOfficial && official.hasNextPage ? official.fetchNextPage() : own.fetchNextPage(),
+  };
   const pendingCards = cards.filter(isPendingInvitation);
   const regularCards = cards.filter((card) => !isPendingInvitation(card));
-  const emptyKey = tab === 'mine' ? chip : tab;
   const count = activeFilterCount(filters);
   const open = (id: string) => router.push({ pathname: '/routines/[id]', params: { id } });
 
@@ -136,9 +142,8 @@ export function RoutinesCatalogScreen() {
       onRefresh={pull.onRefresh}
       refreshing={pull.refreshing}
     >
-      <ScreenHeader title="Rutinas" tourKey="routines" />
-      {/* Cabecera: accesos en casillas iguales. La acción principal de la
-          pantalla es elegir una rutina (la de «Para ti»), no crearla. */}
+      <ScreenHeader action={<ActiveRoutineButton />} title="Rutinas" tourKey="routines" />
+      {/* Cabecera: accesos en casillas iguales. */}
       <TourTarget id="routines.create">
         <QuickActions
           actions={[
@@ -165,6 +170,13 @@ export function RoutinesCatalogScreen() {
                   },
                 ]
               : []),
+            {
+              key: 'music',
+              label: 'Música',
+              icon: 'musical-notes',
+              onPress: () => router.push('/routines/musica'),
+              testID: 'open-music',
+            },
           ]}
         />
       </TourTarget>
@@ -182,18 +194,13 @@ export function RoutinesCatalogScreen() {
         </Section>
       ) : null}
 
-      <ForYouBlock state={forYou.state} />
-
       {/* Explorar: pestañas, búsqueda y objetivo juntos, a 16 entre sí; antes
           iban a 32 como si fueran secciones distintas y la pantalla se partía. */}
       <View style={{ gap: spacing.md }}>
         <AppText accessibilityRole="header" variant="title">
           Explorar
         </AppText>
-        <CatalogTabBar onChange={setTab} value={tab} />
-        {tab === 'mine' ? (
-          <MineChips onChange={setChip} pendingInvitations={pending} value={chip} />
-        ) : null}
+        <CatalogTabBar onChange={setTab} pendingInvitations={pending} value={tab} />
 
         <View
           style={{
@@ -203,7 +210,7 @@ export function RoutinesCatalogScreen() {
           }}
         >
           <SearchField onChangeText={setSearch} value={search} />
-          {tab === 'public' ? (
+          {tab === 'all' ? (
             <PressableScale
               accessibilityLabel={count > 0 ? `Filtros, ${count} aplicados` : 'Filtros'}
               haptic="selection"
@@ -250,7 +257,7 @@ export function RoutinesCatalogScreen() {
           ) : null}
         </View>
 
-        {tab === 'public' ? (
+        {tab === 'all' ? (
           <ScrollView
             // A sangre: los chips corren hasta el borde de la pantalla y el
             // primero arranca alineado con el margen.
@@ -300,10 +307,10 @@ export function RoutinesCatalogScreen() {
       ) : cards.length === 0 ? (
         <EmptyState
           icon="albums-outline"
-          message={EMPTY_COPY[emptyKey]?.message ?? ''}
-          title={EMPTY_COPY[emptyKey]?.title ?? 'Sin rutinas'}
+          message={EMPTY_COPY[tab]?.message ?? ''}
+          title={EMPTY_COPY[tab]?.title ?? 'Sin rutinas'}
         >
-          {tab === 'public' && hasActiveFilters(applied) ? (
+          {tab === 'all' && hasActiveFilters(applied) ? (
             <Button
               label="Limpiar filtros"
               onPress={() => {
@@ -313,7 +320,7 @@ export function RoutinesCatalogScreen() {
               variant="ghost"
             />
           ) : null}
-          {tab === 'mine' && chip === 'created' ? (
+          {tab === 'all' && !hasActiveFilters(applied) ? (
             <Button label="Crear rutina" onPress={() => router.push('/routines/new')} variant="secondary" />
           ) : null}
         </EmptyState>
@@ -330,7 +337,7 @@ export function RoutinesCatalogScreen() {
           ) : null}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
             <ResultCount hasMore={catalog.hasNextPage} shown={cards.length} />
-            {tab === 'public' ? (
+            {tab === 'all' ? (
               <Text numberOfLines={1} style={{ flexShrink: 1, color: colors.textMuted, fontSize: fontSizes.sm }}>
                 Orden: {ORDER_LABELS[filters.orden]}
                 {filters.deMiGimnasio ? ' · De mi gimnasio' : ''}

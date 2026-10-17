@@ -46,19 +46,18 @@ const card = (patch: Partial<RoutineCard> = {}): RoutineCard => ({
 });
 
 describe('catálogo: consulta', () => {
-  it('Públicas lleva filtros y orden; las otras pestañas no', () => {
+  it('Todas lleva filtros y orden; las otras pestañas no', () => {
     const state = { ...emptyCatalogFilters, objetivo: 'FUERZA' as const, diasPorSemana: 4, deMiGimnasio: true };
-    expect(toCatalogQuery('public', 'created', state)).toMatchObject({
-      scope: 'public', objetivo: 'FUERZA', diasPorSemana: 4, deMiGimnasio: true, orden: 'populares',
+    expect(toCatalogQuery('all', state)).toMatchObject({
+      scope: 'all', objetivo: 'FUERZA', diasPorSemana: 4, deMiGimnasio: true, orden: 'populares',
     });
-    const official = toCatalogQuery('official', 'created', state);
+    const official = toCatalogQuery('official', state);
     expect(official.scope).toBe('official');
     expect(official.objetivo).toBeUndefined();
     expect(official.orden).toBeUndefined();
   });
-  it('Mías usa mine o shared según el chip', () => {
-    expect(toCatalogQuery('mine', 'created', emptyCatalogFilters).scope).toBe('mine');
-    expect(toCatalogQuery('mine', 'shared', emptyCatalogFilters).scope).toBe('shared');
+  it('Compartidas pide shared', () => {
+    expect(toCatalogQuery('shared', emptyCatalogFilters).scope).toBe('shared');
   });
   it('cuenta los filtros aplicados, sin el buscador', () => {
     expect(activeFilterCount(emptyCatalogFilters)).toBe(0);
@@ -67,7 +66,7 @@ describe('catálogo: consulta', () => {
     expect(hasActiveFilters(emptyCatalogFilters)).toBe(false);
   });
   it('pasa el cursor tal cual', () => {
-    expect(toCatalogQuery('public', 'created', emptyCatalogFilters, 'abc').cursor).toBe('abc');
+    expect(toCatalogQuery('all', emptyCatalogFilters, 'abc').cursor).toBe('abc');
   });
 });
 

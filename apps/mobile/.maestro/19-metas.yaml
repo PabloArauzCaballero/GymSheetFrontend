@@ -10,7 +10,7 @@ env:
 - runFlow: login-as.subflow.yaml
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Empuje 4 días' }
+    env: { TAB: 'Privadas', NAME: 'Empuje 4 días' }
 - tapOn: 'Activar programa'
 - extendedWaitUntil:
     visible: 'Paso 1 de 3.*'
@@ -69,7 +69,7 @@ env:
 # RF-16 · p04: una serie con e1RM por encima de la meta la logra (125 × 3 ≈ 137,5 kg).
 - runFlow:
     file: start-day.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Empuje 4 días', DIA: 'lunes' }
+    env: { TAB: 'Privadas', NAME: 'Empuje 4 días', DIA: 'lunes' }
 - runScript:
     file: scripts-log-sets.js
     env:

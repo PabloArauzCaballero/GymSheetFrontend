@@ -48,7 +48,9 @@ export function LegacyRoutineDetailScreen() {
       // moment we navigate to it.
       await queryClient.invalidateQueries({ queryKey: ['workouts'] });
       notify.success('Sesión iniciada.');
-      router.replace({ pathname: '/workouts/[id]', params: { id: session.id } });
+      // `push`, no `replace`: reemplazar desde la pila de una pestaña
+      // sustituía la pila de pestañas entera y «Volver» quedaba sin destino.
+      router.push({ pathname: '/workouts/[id]', params: { id: session.id } });
     },
     onError: async (error: Error) => {
       // The backend allows one open session at a time. Hitting that is not a
@@ -59,7 +61,7 @@ export function LegacyRoutineDetailScreen() {
         const open = history?.items.find((item) => item.estado === 'EN_PROGRESO');
         if (open) {
           notify.info('Ya tienes una sesión en curso.');
-          router.replace({ pathname: '/workouts/[id]', params: { id: open.id } });
+          router.push({ pathname: '/workouts/[id]', params: { id: open.id } });
           return;
         }
       }

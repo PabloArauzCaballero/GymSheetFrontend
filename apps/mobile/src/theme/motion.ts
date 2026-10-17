@@ -15,12 +15,18 @@ export const motion = {
 /** Hundimiento al pulsar: superficies anchas, botones e iconos pequeños. */
 export const pressScale = {
   surface: 0.97,
-  button: 0.97,
-  icon: 0.94,
+  button: 0.955,
+  icon: 0.92,
 } as const;
 
 /** Muelle del toque (sin rebote). */
 export const pressSpring = { damping: 26, stiffness: 340, mass: 0.5, overshootClamping: true } as const;
+/**
+ * Soltar: el botón vuelve con un rebote corto (≈ 1,5 % de pasada). Es la
+ * respuesta física al dedo que se levanta; sin él, el control «se apaga» en vez
+ * de devolver el empujón. Solo en controles, no en superficies que viajan.
+ */
+export const releaseSpring = { damping: 13, stiffness: 420, mass: 0.6 } as const;
 /** Asentarse: entrada de hojas y paneles. */
 export const settleSpring = { damping: 24, stiffness: 220, mass: 0.7, overshootClamping: true } as const;
 /** Deslizar: indicadores de segmento, cambios de posición. */

@@ -4,6 +4,7 @@ import {
   commentLikeSchema,
   commentPageSchema,
   contentRatingSchema,
+  gifPageSchema,
   routineCommentSchema,
 } from '@gymsheet/schemas';
 import type { ContentKind, CreateCommentInput, ReportTargetKind } from '@gymsheet/types';
@@ -35,6 +36,12 @@ export function createCommunityServices(request: RequestFn) {
       ),
     comment: (kind: ContentKind, id: string, input: CreateCommentInput) =>
       request(`/comments/${kind}/${id}`, routineCommentSchema, { method: 'POST', body: input }),
+    gifs: (tipo: 'gifs' | 'stickers', q: string, pos = 0) =>
+      request(
+        `/comments/gifs?tipo=${tipo}&q=${encodeURIComponent(q)}&pos=${pos}`,
+        gifPageSchema,
+        { method: 'GET' },
+      ),
     likeComment: (commentId: string) =>
       request(`/comments/${commentId}/like`, commentLikeSchema, { method: 'PUT' }),
     unlikeComment: (commentId: string) =>

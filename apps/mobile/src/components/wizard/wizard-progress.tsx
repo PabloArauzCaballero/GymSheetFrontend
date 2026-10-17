@@ -1,78 +1,47 @@
-import { Text, View } from 'react-native';
-import { PressableScale } from '@/components/motion';
-import { colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { StepProgress, type FlowStep } from '@/components/step-flow';
 
 export type WizardProgressStep = {
   readonly id: string;
   readonly titulo: string;
 };
 
+type IconName = keyof typeof Ionicons.glyphMap;
+
 /**
- * Barra de progreso del asistente: «Paso 2 de 6 · Descripción» y un segmento
- * por paso. Los segmentos ya recorridos se pueden tocar para volver a ese paso;
- * los que faltan no, porque llegar a ellos sin pasar por los anteriores saltaría
- * sus validaciones.
- *
- * El segmento dibujado mide 6 pt, pero el área táctil mide `minTouchTarget`:
- * una barra de 6 pt no se acierta con el pulgar.
+ * Un icono por paso, con el significado de lo que se pide en él: lápiz para el
+ * nombre, calendario para los días, doble marca para revisar. Cubre el asistente
+ * de rutinas y el de activación; un paso desconocido cae en un punto.
+ */
+const STEP_ICON: Record<string, IconName> = {
+  nombre: 'pencil',
+  descripcion: 'document-text',
+  objetivo: 'flag',
+  duracion: 'hourglass',
+  dias: 'calendar',
+  revision: 'checkmark-done',
+  replace: 'swap-horizontal',
+  dates: 'calendar',
+  mode: 'options',
+  data: 'create',
+  summary: 'checkmark-done',
+};
+
+/**
+ * Riel de progreso del asistente, idéntico al del plan de cardio: barra que se
+ * va llenando y, debajo, el icono y el nombre de cada paso. Los pasos de aquí
+ * ya llevan su título en `WIZARD_STEPS`; el icono sale de `STEP_ICON`.
  */
 export function WizardProgress({
   pasos,
   actual,
-  onIr,
 }: {
   pasos: readonly WizardProgressStep[];
   actual: number;
-  onIr: (index: number) => void;
 }) {
-  const current = pasos[actual];
-  return (
-    <View style={{ gap: spacing.xs }}>
-      <Text
-        accessibilityLiveRegion="polite"
-        style={{
-          color: colors.textMuted,
-          fontSize: fontSizes.sm,
-          fontWeight: semibold,
-        }}
-      >
-        {`Paso ${actual + 1} de ${pasos.length}`}
-        {current ? ` · ${current.titulo}` : ''}
-      </Text>
-      <View accessibilityRole="progressbar" style={{ flexDirection: 'row', gap: spacing.xs }}>
-        {pasos.map((paso, index) => {
-          const reached = index <= actual;
-          const canGo = index < actual;
-          return (
-            <PressableScale
-              accessibilityLabel={`Paso ${index + 1}: ${paso.titulo}${index === actual ? ', actual' : reached ? ', completado' : ''}`}
-              accessibilityState={{
-                disabled: !canGo,
-                selected: index === actual,
-              }}
-              disabled={!canGo}
-              haptic="selection"
-              key={paso.id}
-              onPress={() => onIr(index)}
-              scaleTo={0.96}
-              style={{
-                flex: 1,
-                minHeight: minTouchTarget,
-                justifyContent: 'center',
-              }}
-            >
-              <View
-                style={{
-                  height: 6,
-                  borderRadius: radii.full,
-                  backgroundColor: reached ? colors.volt : colors.borderControl,
-                  opacity: index === actual || !reached ? 1 : 0.55,
-                }}
-              />
-            </PressableScale>
-          );
-        })}
-      </View>
-    </View>
-  );
+  const steps: FlowStep[] = pasos.map((paso) => ({
+    label: paso.titulo,
+    icon: STEP_ICON[paso.id] ?? 'ellipse',
+  }));
+  return <StepProgress current={actual} steps={steps} />;
 }

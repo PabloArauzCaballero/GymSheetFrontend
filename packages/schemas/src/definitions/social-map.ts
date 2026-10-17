@@ -18,6 +18,15 @@ export const socialMapAreasSchema = z.object({
 
 export const socialMapPeopleSchema = z.array(gymDirectoryEntrySchema);
 
+/** Grindr-style grid: a profile plus its approximate distance (km, from a public cell center). */
+export const socialMapNearbyPersonSchema = gymDirectoryEntrySchema.extend({
+  distanceKm: z.number().int().nonnegative().nullable(),
+});
+export const socialMapNearbySchema = z.object({
+  preferencesApplied: z.boolean(),
+  people: z.array(socialMapNearbyPersonSchema),
+}).strict();
+
 export const socialMapGymSchema = z.object({
   kind: z.literal('GYM'),
   source: z.literal('OPENSTREETMAP'),
@@ -49,3 +58,5 @@ export type SocialMapCell = z.infer<typeof socialMapCellSchema>;
 export type SocialMapPerson = z.infer<typeof gymDirectoryEntrySchema>;
 export type SocialMapGym = z.infer<typeof socialMapGymSchema>;
 export type SocialMapCity = z.infer<typeof socialMapCitySchema>;
+export type SocialMapNearbyPerson = z.infer<typeof socialMapNearbyPersonSchema>;
+export type SocialMapNearby = z.infer<typeof socialMapNearbySchema>;

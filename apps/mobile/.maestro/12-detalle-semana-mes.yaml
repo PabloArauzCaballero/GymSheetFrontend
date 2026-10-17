@@ -8,7 +8,7 @@ env:
 - runFlow: login-as.subflow.yaml
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Empuje 4 días' }
+    env: { TAB: 'Privadas', NAME: 'Empuje 4 días' }
 
 # RF-02 · p01: cabecera + vista Semana.
 - extendedWaitUntil:
@@ -60,7 +60,7 @@ env:
 # RF-02 · p06: rutina de «cualquier día».
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Borrador privado' }
+    env: { TAB: 'Privadas', NAME: 'Borrador privado' }
 - extendedWaitUntil:
     visible: 'Cualquier día · Día 1.*'
     timeout: 30000

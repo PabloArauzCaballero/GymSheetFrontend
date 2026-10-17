@@ -154,7 +154,7 @@ function ActivateBody({
     )}>
       <BackLink />
       <View style={{ gap: spacing.lg }}>
-        <WizardProgress actual={index} onIr={(i) => { const id = order[i]; if (id) state.setStep(id); }} pasos={steps} />
+        <WizardProgress actual={index} pasos={steps} />
         <ScreenHeader detail subtitle={routine.nombre} title="Activar rutina" />
       </View>
       {state.step === 'replace' && active ? (

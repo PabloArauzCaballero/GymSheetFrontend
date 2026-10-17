@@ -1,4 +1,4 @@
-# RF-13 p08: B rechaza la invitación. A comparte «Plan para compartir» con B; B la ve en Mías › Compartidas conmigo
+# RF-13 p08: B rechaza la invitación. A comparte «Plan para compartir» con B; B la ve en Privadas › Compartidas conmigo
 # y pulsa «Rechazar»; la tarjeta desaparece. (p03, la notificación push, no se puede capturar en el simulador:
 # ver DEFECTOS-PENDIENTES / el motivo declarado en pasos.)
 appId: app.gymsheet.mobile
@@ -23,7 +23,7 @@ env:
 - extendedWaitUntil:
     visible: 'Crear rutina'
     timeout: 60000
-- tapOn: 'Pestaña Mías'
+- tapOn: 'Pestaña Privadas'
 - tapOn:
     id: 'chip-shared'
 - extendedWaitUntil:
