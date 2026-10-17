@@ -6,8 +6,9 @@ import SocialMapScreen from '../../../app/(app)/social-map';
 
 type Props = { children?: ReactNode; onPress?: () => void; accessibilityLabel?: string };
 
-const { mapAreas, mapGyms, mapNearby, publicBranches, region, Box, Press } = vi.hoisted(() => ({
+const { mapAreas, mapGyms, mapNearby, publicBranches, getProfile, updateProfile, updateDiscoverySettings, region, Box, Press } = vi.hoisted(() => ({
   mapAreas: vi.fn(), mapGyms: vi.fn(), mapNearby: vi.fn(), publicBranches: vi.fn(),
+  getProfile: vi.fn(), updateProfile: vi.fn(), updateDiscoverySettings: vi.fn(),
   region: { latitude: -16.5, longitude: -68.13, latitudeDelta: 0.09, longitudeDelta: 0.09 },
   Box: ({ children }: Props) => <div>{children}</div>,
   Press: ({ children, onPress, accessibilityLabel }: Props) => <button aria-label={accessibilityLabel} onClick={onPress}>{children}</button>,
@@ -16,14 +17,16 @@ const { mapAreas, mapGyms, mapNearby, publicBranches, region, Box, Press } = vi.
 vi.mock('@/api/services', () => ({
   socialService: {
     mapAreas, mapGyms, mapNearby, searchMapCities: vi.fn(),
-    getDiscoverySettings: vi.fn().mockResolvedValue({ profileEnabled: true, crossGymEnabled: false, mapEnabled: true, version: 1 }),
-    saveMapLocation: vi.fn(), updateDiscoverySettings: vi.fn(),
+    getDiscoverySettings: vi.fn().mockResolvedValue({ profileEnabled: false, crossGymEnabled: false, mapEnabled: false, version: 1 }),
+    saveMapLocation: vi.fn().mockResolvedValue({ saved: true }), updateDiscoverySettings,
   },
+  profileService: { get: getProfile, update: updateProfile },
   facilitiesService: { publicBranches },
 }));
 vi.mock('expo-location', () => ({
   getForegroundPermissionsAsync: vi.fn().mockResolvedValue({ granted: false }),
-  requestForegroundPermissionsAsync: vi.fn(), getCurrentPositionAsync: vi.fn(), Accuracy: { Balanced: 3 },
+  requestForegroundPermissionsAsync: vi.fn().mockResolvedValue({ granted: true }),
+  getCurrentPositionAsync: vi.fn().mockResolvedValue({ coords: { latitude: -16.5, longitude: -68.13 } }), Accuracy: { Balanced: 3 },
 }));
 vi.mock('@/state/auth-store', () => ({ useAuthStore: () => 'viewer-1' }));
 vi.mock('@/theme', () => ({ colors: {}, radii: {}, spacing: {}, fontSizes: {}, iconSizes: {}, socialMapColors: {}, mediaChip: {}, heroScrim: {}, glideSpring: {}, shadows: {}, minTouchTarget: 44, semibold: '600', stagger: 45 }));
@@ -38,7 +41,13 @@ vi.mock('@/components/social-status-editor', () => ({ DiscoveryPreferencesEditor
 vi.mock('@/components/feedback', () => ({ ErrorState: () => <div>Error</div> }));
 vi.mock('@/components/media-image', () => ({ MediaImage: Box }));
 vi.mock('@/components/person-avatar', () => ({ PersonAvatar: () => null }));
-vi.mock('@/components/ui', () => ({ Button: ({ label, onPress }: { label: string; onPress: () => void }) => <button onClick={onPress}>{label}</button> }));
+vi.mock('@/components/ui', () => ({
+  Button: ({ label, onPress }: { label: string; onPress: () => void }) => <button onClick={onPress}>{label}</button>,
+  Input: ({ label, value, onChangeText }: { label: string; value: string; onChangeText: (text: string) => void }) => (
+    <input aria-label={label} onChange={(event) => onChangeText(event.target.value)} value={value} />
+  ),
+}));
+vi.mock('@/components/keyboard', () => ({ numericInputProps: {} }));
 vi.mock('react-native-reanimated', () => {
   const chain = { duration: () => chain, delay: () => chain, springify: () => chain, damping: () => chain, stiffness: () => chain };
   return { default: { View: Box }, FadeIn: chain, FadeOut: chain, SlideInDown: chain, SlideOutDown: chain };
@@ -76,8 +85,16 @@ function renderMap() {
   return render(<QueryClientProvider client={client}><SocialMapScreen /></QueryClientProvider>);
 }
 
+const savedProfile = {
+  id: '22222222-2222-4222-8222-222222222222', usuarioId: '33333333-3333-4333-8333-333333333333',
+  edad: null, fechaNacimiento: null, pesoKg: 80, estaturaCm: 178, objetivo: 'HIPERTROFIA',
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
+  getProfile.mockResolvedValue(savedProfile);
+  updateProfile.mockImplementation(async (input) => ({ ...savedProfile, ...input, edad: 30 }));
+  updateDiscoverySettings.mockResolvedValue({});
   Object.assign(region, { latitudeDelta: 0.09, longitudeDelta: 0.09 });
   mapGyms.mockResolvedValue([gym]);
   mapAreas.mockResolvedValue({ cells: [] });
@@ -109,5 +126,37 @@ describe('SocialMapScreen', () => {
     fireEvent.click(screen.getByText('Mover mapa'));
     expect(await screen.findByText('Acerca el mapa para ver los gimnasios')).toBeTruthy();
     expect(mapGyms).toHaveBeenCalledTimes(1);
+  });
+
+  it('no dibuja a las personas en el mapa: solo aparecen al tocar una zona', async () => {
+    mapAreas.mockResolvedValue({ cells: [{ id: 'c1', count: 3, center: { latitude: -16.5, longitude: -68.13 } }] });
+    renderMap();
+    await screen.findByLabelText('Gimnasio Sopocachi');
+    expect(mapAreas).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText(/personas en esta zona/)).toBeNull();
+    expect(screen.queryByText('Personas')).toBeNull();
+  });
+
+  it('pide solo la fecha de nacimiento, sin salir del mapa, y te hace aparecer', async () => {
+    renderMap();
+    fireEvent.click(await screen.findByText('Añadir fecha de nacimiento'));
+    fireEvent.change(screen.getByLabelText('Día'), { target: { value: '15' } });
+    fireEvent.change(screen.getByLabelText('Mes'), { target: { value: '3' } });
+    fireEvent.change(screen.getByLabelText('Año'), { target: { value: '1996' } });
+    fireEvent.click(screen.getByText('Guardar y aparecer en el mapa'));
+    await waitFor(() => expect(updateProfile).toHaveBeenCalledWith({ pesoKg: 80, estaturaCm: 178, objetivo: 'HIPERTROFIA', fechaNacimiento: '1996-03-15' }));
+    await waitFor(() => expect(updateDiscoverySettings).toHaveBeenCalledWith(expect.objectContaining({ profileEnabled: true, mapEnabled: true })));
+  });
+
+  it('no deja aparecer a un menor de edad', async () => {
+    renderMap();
+    fireEvent.click(await screen.findByText('Añadir fecha de nacimiento'));
+    const year = String(new Date().getFullYear() - 15);
+    fireEvent.change(screen.getByLabelText('Día'), { target: { value: '1' } });
+    fireEvent.change(screen.getByLabelText('Mes'), { target: { value: '1' } });
+    fireEvent.change(screen.getByLabelText('Año'), { target: { value: year } });
+    fireEvent.click(screen.getByText('Guardar y aparecer en el mapa'));
+    expect(await screen.findByText('El mapa es solo para mayores de 18 años.')).toBeTruthy();
+    expect(updateProfile).not.toHaveBeenCalled();
   });
 });

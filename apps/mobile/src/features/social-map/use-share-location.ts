@@ -71,8 +71,9 @@ export function useShareLocation() {
   }, []);
 
   const appear = useMutation({
-    mutationFn: async () => {
-      if (missingAge) throw new Error('Añade tu fecha de nacimiento en tu perfil para aparecer en el mapa.');
+    /** `ageJustSaved`: the birth date sheet saved it a moment ago, before `profile` refetched. */
+    mutationFn: async ({ ageJustSaved = false }: { ageJustSaved?: boolean } = {}) => {
+      if (missingAge && !ageJustSaved) throw new Error('Añade tu fecha de nacimiento en tu perfil para aparecer en el mapa.');
       const current = settings.data ?? (await socialService.getDiscoverySettings());
       const position = coords ?? (await locate());
       if (!position) throw new Error('Necesitamos tu ubicación para mostrarte en el mapa.');
@@ -93,5 +94,5 @@ export function useShareLocation() {
     onError: (error: Error) => notify.error(error.message || 'No se pudo activar el mapa. Intenta de nuevo.'),
   });
 
-  return { coords, sharing, settingsLoaded: settings.isSuccess, missingAge, notOnboarded, locate, appear };
+  return { coords, sharing, settingsLoaded: settings.isSuccess, missingAge, notOnboarded, profile: profile.data, locate, appear };
 }

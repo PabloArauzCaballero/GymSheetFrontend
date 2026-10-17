@@ -12,17 +12,19 @@ import { BottomSheet } from '@/components/bottom-sheet';
 import { PressableScale } from '@/components/motion';
 import { DiscoveryPreferencesEditor } from '@/components/social-status-editor';
 import { Button } from '@/components/ui';
+import { BirthDateSheet } from '@/features/social-map/birth-date-sheet';
 import { PlacePanel, type MapPlace } from '@/features/social-map/place-panel';
 import { useShareLocation } from '@/features/social-map/use-share-location';
 import { useAuthStore } from '@/state/auth-store';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, socialMapColors, spacing } from '@/theme';
-
-type Layer = 'ALL' | 'GYMS' | 'PEOPLE';
+import { colors, fontSizes, iconSizes, minTouchTarget, radii, socialMapColors, spacing } from '@/theme';
 
 const LA_PAZ: Region = { latitude: -16.5, longitude: -68.13, latitudeDelta: 0.09, longitudeDelta: 0.09 };
-/** Gyms are public places: a whole city at once. People cells only up close (≤ 100 cells of 2 km). */
+/**
+ * Gyms are public places: a whole city at once. People are never drawn on the
+ * map, not even as counts per zone — that told anyone where each person was.
+ * They only show up as the grid that opens when a zone or a gym is tapped.
+ */
 const MAX_GYM_DELTA = 2.8;
-const MAX_PEOPLE_DELTA = 0.16;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -64,11 +66,11 @@ export default function SocialMapScreen() {
   const mapRef = useRef<MapView>(null);
   const centeredRef = useRef(false);
   const [region, setRegion] = useState(LA_PAZ);
-  const [layer, setLayer] = useState<Layer>('ALL');
   const [place, setPlace] = useState<MapPlace | null>(null);
   const [cityText, setCityText] = useState('');
   const [citySearch, setCitySearch] = useState('');
   const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [birthDateOpen, setBirthDateOpen] = useState(false);
   const location = useShareLocation();
 
   useEffect(() => {
@@ -80,23 +82,14 @@ export default function SocialMapScreen() {
   const bounds = boundsForRegion(region);
   const boundsKey = Object.values(bounds).join(':');
   const gymsInRange = region.latitudeDelta <= MAX_GYM_DELTA && region.longitudeDelta <= MAX_GYM_DELTA;
-  const peopleInRange = region.latitudeDelta <= MAX_PEOPLE_DELTA && region.longitudeDelta <= MAX_PEOPLE_DELTA;
-  const showGyms = layer !== 'PEOPLE';
-  const showPeople = layer !== 'GYMS';
 
   const externalGyms = useQuery({
     queryKey: ['social-map', 'external-gyms', boundsKey],
     queryFn: () => socialService.mapGyms(bounds),
-    enabled: showGyms && gymsInRange,
+    enabled: gymsInRange,
     placeholderData: keepPreviousData,
   });
   const branches = useQuery({ queryKey: ['social-map', 'registered-gyms'], queryFn: facilitiesService.publicBranches });
-  const areas = useQuery({
-    queryKey: ['social-map', viewerId, 'areas', boundsKey],
-    queryFn: () => socialService.mapAreas(bounds),
-    enabled: showPeople && peopleInRange,
-    placeholderData: keepPreviousData,
-  });
   const cities = useQuery({
     queryKey: ['social-map', 'cities', citySearch],
     queryFn: () => socialService.searchMapCities(citySearch),
@@ -119,9 +112,9 @@ export default function SocialMapScreen() {
     }, 350);
   };
 
-  const status = !gymsInRange && showGyms
+  const status = !gymsInRange
     ? 'Acerca el mapa para ver los gimnasios'
-    : `${gymCount} ${gymCount === 1 ? 'gimnasio' : 'gimnasios'} en esta zona · toca uno para ver quién entrena ahí`;
+    : `${gymCount} ${gymCount === 1 ? 'gimnasio' : 'gimnasios'} en esta zona · toca cualquier zona o gimnasio para ver quién entrena por ahí`;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -140,21 +133,7 @@ export default function SocialMapScreen() {
         showsUserLocation={location.coords !== null}
         style={{ flex: 1 }}
       >
-        {showPeople && peopleInRange && (areas.data?.cells ?? []).map((cell) => (
-          <Marker
-            accessibilityLabel={`${cell.count} ${cell.count === 1 ? 'persona' : 'personas'} en esta zona`}
-            coordinate={cell.center}
-            key={`cell-${cell.id}`}
-            onPress={() => openPlace({ key: `cell-${cell.id}`, kind: 'POINT', title: `${cell.count} ${cell.count === 1 ? 'persona' : 'personas'} por aquí`, subtitle: 'Zona aproximada de 2 km', ...cell.center })}
-            tracksViewChanges={false}
-          >
-            <View style={{ minWidth: 34, height: 34, paddingHorizontal: spacing.sm, borderRadius: radii.full, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 3, backgroundColor: socialMapColors.peopleBubble, borderColor: socialMapColors.ring, borderWidth: 2 }}>
-              <Ionicons color={socialMapColors.peopleInk} name="person" size={iconSizes.xs} />
-              <Text style={{ color: socialMapColors.peopleInk, fontSize: fontSizes.footnote, fontWeight: semibold }}>{cell.count}</Text>
-            </View>
-          </Marker>
-        ))}
-        {showGyms && registeredGyms.map((gym) => (
+        {registeredGyms.map((gym) => (
           <Marker
             accessibilityLabel={gym.nombre}
             coordinate={{ latitude: gym.latitud as number, longitude: gym.longitud as number }}
@@ -165,7 +144,7 @@ export default function SocialMapScreen() {
             <GymMarkerView selected={place?.key === `branch-${gym.id}`} />
           </Marker>
         ))}
-        {showGyms && gymsInRange && (externalGyms.data ?? []).map((gym) => (
+        {gymsInRange && (externalGyms.data ?? []).map((gym) => (
           <Marker
             accessibilityLabel={gym.name}
             coordinate={{ latitude: gym.latitude, longitude: gym.longitude }}
@@ -213,19 +192,6 @@ export default function SocialMapScreen() {
         {citySearch.length >= 2 && cities.data?.length === 0 ? (
           <Text style={{ color: colors.text, fontSize: fontSizes.footnote, alignSelf: 'flex-start', backgroundColor: socialMapColors.glass, borderRadius: radii.full, overflow: 'hidden', paddingHorizontal: spacing.md, paddingVertical: spacing.xs }}>No encontramos esa ciudad</Text>
         ) : null}
-        <View style={{ flexDirection: 'row', gap: spacing.xs }}>
-          {([['ALL', 'Todo', 'layers-outline'], ['GYMS', 'Gimnasios', 'barbell-outline'], ['PEOPLE', 'Personas', 'people-outline']] as const).map(([value, label, icon]) => {
-            const active = layer === value;
-            return (
-              <PressableScale accessibilityLabel={label} accessibilityState={{ selected: active }} key={value} onPress={() => setLayer(value)}>
-                <View style={{ height: 36, flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingHorizontal: spacing.smd, borderRadius: radii.full, backgroundColor: active ? socialMapColors.gymPin : socialMapColors.glass, borderColor: socialMapColors.glassBorder, borderWidth: 1 }}>
-                  <Ionicons color={colors.text} name={icon} size={iconSizes.sm} />
-                  <Text style={{ color: colors.text, fontSize: fontSizes.footnote, fontWeight: active ? semibold : '500' }}>{label}</Text>
-                </View>
-              </PressableScale>
-            );
-          })}
-        </View>
       </View>
 
       {!place ? (
@@ -244,11 +210,16 @@ export default function SocialMapScreen() {
                 <Text style={{ color: colors.textSecondary, fontSize: fontSizes.footnote, lineHeight: 18 }}>
                   Para aparecer en el mapa necesitamos tu fecha de nacimiento: aquí solo se muestran mayores de edad.
                 </Text>
-                <Button icon="calendar-outline" label="Añadir fecha de nacimiento" onPress={() => router.push(location.notOnboarded ? '/onboarding' : '/profile-edit')} size="sm" />
+                {location.profile ? (
+                  <Button icon="calendar-outline" label="Añadir fecha de nacimiento" onPress={() => setBirthDateOpen(true)} size="sm" />
+                ) : (
+                  // Sin perfil no hay dónde guardar la fecha: el onboarding la pide junto al resto.
+                  <Button icon="person-outline" label="Completar mi perfil" onPress={() => router.push('/onboarding')} size="sm" />
+                )}
               </>
             ) : null}
             {!location.missingAge && location.settingsLoaded && !location.sharing ? (
-              <Button icon="eye-outline" label="Aparecer en el mapa" loading={location.appear.isPending} onPress={() => location.appear.mutate()} size="sm" />
+              <Button icon="eye-outline" label="Aparecer en el mapa" loading={location.appear.isPending} onPress={() => location.appear.mutate({})} size="sm" />
             ) : null}
             <Text accessibilityRole="link" onPress={() => { void Linking.openURL('https://www.openstreetmap.org/copyright'); }} style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
               Gimnasios © OpenStreetMap contributors · ODbL
@@ -258,6 +229,15 @@ export default function SocialMapScreen() {
       ) : null}
 
       {place ? <PlacePanel key={place.key} onClose={() => setPlace(null)} onEditPreferences={() => setPreferencesOpen(true)} place={place} /> : null}
+
+      {location.profile ? (
+        <BirthDateSheet
+          onClose={() => setBirthDateOpen(false)}
+          onSaved={() => { setBirthDateOpen(false); location.appear.mutate({ ageJustSaved: true }); }}
+          profile={location.profile}
+          visible={birthDateOpen}
+        />
+      ) : null}
 
       <BottomSheet
         onClose={() => {
