@@ -5,6 +5,7 @@ import {
   type ReelsFeed,
 } from "@gymsheet/schemas";
 import { apiClient } from "@/api/client";
+import { appendLocalFile, type LocalFile } from "@/api/local-file-part";
 
 export type ReelFeedTab = "MINE" | "FOR_YOU" | "CONNECTIONS";
 
@@ -84,13 +85,9 @@ export const reelsService = {
         body: { targetKind: "REEL", targetId: reelId, reason },
       },
     ),
-  upload: (file: { uri: string; name: string; mimeType: string }) => {
+  upload: async (file: LocalFile) => {
     const form = new FormData();
-    form.append("file", {
-      uri: file.uri,
-      name: file.name,
-      type: file.mimeType,
-    } as unknown as Blob);
+    await appendLocalFile(form, "file", file);
     return apiClient.upload("/me/reels", reelSchema, form);
   },
 };

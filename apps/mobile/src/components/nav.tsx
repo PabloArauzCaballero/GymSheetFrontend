@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { Text } from 'react-native';
 import { PressableScale } from '@/components/motion';
 import { accentPolicy, fontSizes, iconSizes, minTouchTarget, semibold, spacing } from '@/theme';
@@ -10,15 +10,20 @@ import { accentPolicy, fontSizes, iconSizes, minTouchTarget, semibold, spacing }
  * works for everyone — including screen reader users, for whom a swipe-only
  * path is no path at all.
  */
-export function BackLink({ label = 'Volver' }: { label?: string }) {
+export function BackLink({ label = 'Volver', fallbackHref = '/home' }: { label?: string; fallbackHref?: Href }) {
   const router = useRouter();
+  // `router.replace` hacia una pantalla de otro navegador (abrir un entreno
+  // desde una rutina o desde cardio) reemplaza la pila entera de pestañas: la
+  // pantalla queda sola y `router.back()` no tiene adónde ir, así que «Volver»
+  // no hacía nada. Sin historial, se vuelve al inicio.
+  const goBack = () => (router.canGoBack() ? router.back() : router.replace(fallbackHref));
   return (
     // Volver sólo navega: sin háptico (un golpe en cada «atrás» acaba siendo
     // ruido) y con el hundimiento compartido, que es lo que hace que responda.
     <PressableScale
       haptic="none"
       hitSlop={spacing.sm}
-      onPress={() => router.back()}
+      onPress={goBack}
       scaleTo={0.94}
       style={{
         flexDirection: 'row',
