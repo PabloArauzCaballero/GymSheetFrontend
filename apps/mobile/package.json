@@ -42,7 +42,9 @@
     "@sentry/react-native": "~7.11.0",
     "@tanstack/react-query": "^5.90.0",
     "expo": "~57.0.26",
+    "expo-audio": "~57.0.5",
     "expo-blur": "~57.0.3",
+    "expo-clipboard": "~57.0.2",
     "expo-constants": "~57.0.20",
     "expo-device": "~57.0.2",
     "expo-document-picker": "~57.0.3",
@@ -69,6 +71,7 @@
     "react-hook-form": "^7.62.0",
     "react-native": "0.86.3",
     "react-native-gesture-handler": "~2.32.0",
+    "react-native-maps": "1.27.2",
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
@@ -77,9 +80,7 @@
     "rn-emoji-keyboard": "^1.7.0",
     "socket.io-client": "^4.8.1",
     "zod": "^4.1.0",
-    "zustand": "^5.0.0",
-    "expo-audio": "~57.0.5",
-    "react-native-maps": "1.27.2"
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
     "@gymsheet/tsconfig": "*",

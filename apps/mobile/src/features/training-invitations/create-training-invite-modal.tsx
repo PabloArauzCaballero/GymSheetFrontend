@@ -1,20 +1,21 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useRef, useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { useMemo, useRef, useState } from "react";
+import { ScrollView, Text, View } from "react-native";
+import { BottomSheet } from "@/components/bottom-sheet";
+import { FilterChip } from "@/components/filter-chip";
 import { Button, Input } from "@/components/ui";
 import { requestId } from "@/lib/request-id";
 import { notify } from "@/notifications";
 import { colors, fontSizes, radii, semibold, spacing } from "@/theme";
 import { trainingInvitationsService } from "./training-invitations-service";
 import { localInviteTime } from "./training-invitations-contract";
+import {
+  DURATION_OPTIONS,
+  dayOptions,
+  durationLabel,
+  localDateValue,
+  timeOptions,
+} from "./invite-slots";
 import { routineService } from "@/api/services";
 
 export function CreateTrainingInviteModal({
@@ -28,9 +29,11 @@ export function CreateTrainingInviteModal({
   recipientName: string;
   visible: boolean;
 }>) {
-  const [date, setDate] = useState("");
+  const days = useMemo(() => dayOptions(new Date()), [visible]);
+  const [date, setDate] = useState(() => localDateValue(new Date()));
   const [time, setTime] = useState("");
-  const [durationMinutes, setDurationMinutes] = useState("60");
+  const [durationMinutes, setDurationMinutes] = useState(60);
+  const times = useMemo(() => timeOptions(date, new Date()), [date, visible]);
   const [placeLabel, setPlaceLabel] = useState("");
   const [note, setNote] = useState("");
   const [mode, setMode] = useState<"OWN_ROUTINES" | "SHARED_SESSION">(
@@ -46,9 +49,8 @@ export function CreateTrainingInviteModal({
     queryFn: routineService.list,
     enabled: visible && mode === "SHARED_SESSION",
   });
-  const duration = Number(durationMinutes);
-  const durationIsValid =
-    Number.isInteger(duration) && duration >= 15 && duration <= 360;
+  const duration = durationMinutes;
+  const day = days.find((option) => option.value === date) ?? { value: date, label: date, detail: date };
 
   const create = useMutation({
     mutationFn: () => {
@@ -84,9 +86,9 @@ export function CreateTrainingInviteModal({
 
   function close() {
     if (create.isPending) return;
-    setDate("");
+    setDate(localDateValue(new Date()));
     setTime("");
-    setDurationMinutes("60");
+    setDurationMinutes(60);
     setPlaceLabel("");
     setNote("");
     setMode("OWN_ROUTINES");
@@ -97,252 +99,212 @@ export function CreateTrainingInviteModal({
     onClose();
   }
 
+  const sectionLabel = {
+    color: colors.textMuted,
+    fontSize: fontSizes.xs,
+    fontWeight: semibold,
+    textTransform: "uppercase" as const,
+    letterSpacing: 0.4,
+  };
+  const ready =
+    Boolean(timeZone) &&
+    Boolean(time) &&
+    placeLabel.trim().length > 0 &&
+    (mode === "OWN_ROUTINES" || Boolean(routineSessionId));
+
   return (
-    <Modal
-      animationType="slide"
-      onRequestClose={close}
-      transparent
+    <BottomSheet
+      onClose={close}
+      subtitle={created ? undefined : `Propón a ${recipientName} cuándo y dónde.`}
+      title="Entrenemos juntos"
       visible={visible}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{
-          flex: 1,
-          justifyContent: "flex-end",
-          backgroundColor: colors.background,
-        }}
-      >
-        <Pressable
-          accessibilityLabel="Cerrar invitación"
-          accessibilityRole="button"
-          disabled={create.isPending}
-          onPress={close}
-          style={{ flex: 1 }}
-        />
-        <View
-          style={{
-            maxHeight: "88%",
-            borderTopLeftRadius: radii.xl,
-            borderTopRightRadius: radii.xl,
-            backgroundColor: colors.surface,
-            paddingTop: spacing.lg,
-            paddingHorizontal: spacing.lg,
-            paddingBottom: spacing.lg,
-          }}
-        >
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{
-              gap: spacing.md,
-              paddingBottom: spacing.sm,
-            }}
+      {created ? (
+        <View style={{ gap: spacing.md }}>
+          <Text
+            accessibilityLiveRegion="polite"
+            style={{ color: colors.success, fontSize: fontSizes.md }}
           >
-            <Text
-              accessibilityRole="header"
-              style={{
-                color: colors.text,
-                fontSize: fontSizes.lg,
-                fontWeight: semibold,
-              }}
-            >
-              Invitar a entrenar
-            </Text>
-            <Text
-              style={{
-                color: colors.textMuted,
-                fontSize: fontSizes.sm,
-                lineHeight: 21,
-              }}
-            >
-              Propón una sesión a {recipientName}. La invitación se envía solo
-              si la conexión sigue activa.
-            </Text>
-            {created ? (
-              <>
-                <Text
-                  accessibilityLiveRegion="polite"
-                  style={{ color: colors.success, fontSize: fontSizes.md }}
-                >
-                  Invitación enviada a {recipientName}.
-                </Text>
-                <Button label="Listo" onPress={close} />
-              </>
+            Invitación enviada a {recipientName}. Te avisamos cuando responda.
+          </Text>
+          <Button label="Listo" onPress={close} />
+        </View>
+      ) : (
+        <>
+          <View style={{ gap: spacing.sm }}>
+            <Text style={sectionLabel}>Día</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xs }}>
+              {days.map((option) => (
+                <FilterChip
+                  accessibilityLabel={option.label === option.detail ? option.label : `${option.label}, ${option.detail}`}
+                  key={option.value}
+                  label={option.label}
+                  onPress={() => {
+                    setDate(option.value);
+                    setTime("");
+                    changed();
+                  }}
+                  selected={date === option.value}
+                  testID={`training-invite-day-${option.value}`}
+                />
+              ))}
+            </ScrollView>
+          </View>
+
+          <View style={{ gap: spacing.sm }}>
+            <Text style={sectionLabel}>Hora</Text>
+            {times.length ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xs }}>
+                {times.map((slot) => (
+                  <FilterChip
+                    key={slot}
+                    label={slot}
+                    onPress={() => {
+                      setTime(slot);
+                      changed();
+                    }}
+                    selected={time === slot}
+                    testID={`training-invite-time-${slot}`}
+                  />
+                ))}
+              </ScrollView>
             ) : (
-              <>
-                <Input
-                  accessibilityLabel="Fecha (AAAA-MM-DD)"
-                  autoCapitalize="none"
-                  editable={!create.isPending}
-                  keyboardType="numbers-and-punctuation"
-                  label="Fecha (AAAA-MM-DD)"
-                  onChangeText={(value) => {
-                    setDate(value);
-                    changed();
-                  }}
-                  placeholder="2030-06-02"
-                  returnKeyType="next"
-                  value={date}
-                />
-                <Input
-                  accessibilityLabel="Hora local (HH:mm)"
-                  editable={!create.isPending}
-                  keyboardType="numbers-and-punctuation"
-                  label={`Hora local (HH:mm) · ${timeZone || "zona desconocida"}`}
-                  onChangeText={(value) => {
-                    setTime(value);
-                    changed();
-                  }}
-                  placeholder="14:30"
-                  returnKeyType="next"
-                  value={time}
-                />
-                <Input
-                  accessibilityLabel="Duración en minutos"
-                  editable={!create.isPending}
-                  keyboardType="number-pad"
-                  label="Duración en minutos (15–360)"
-                  onChangeText={(value) => {
-                    setDurationMinutes(value);
-                    changed();
-                  }}
-                  value={durationMinutes}
-                />
-                <Input
-                  accessibilityLabel="Lugar público"
-                  autoCapitalize="sentences"
-                  editable={!create.isPending}
-                  label="Lugar público"
-                  maxLength={180}
-                  onChangeText={(value) => {
-                    setPlaceLabel(value);
-                    changed();
-                  }}
-                  placeholder="Ej. Parque Central"
-                  value={placeLabel}
-                />
-                <Text
-                  style={{
-                    color: colors.text,
-                    fontSize: fontSizes.sm,
-                    fontWeight: semibold,
-                  }}
-                >
-                  Tipo de entrenamiento
-                </Text>
-                <Button
-                  label={
-                    mode === "OWN_ROUTINES"
-                      ? "Cada quien con su rutina · seleccionado"
-                      : "Cada quien con su rutina"
-                  }
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+                Ya es tarde para hoy. Elige mañana u otro día.
+              </Text>
+            )}
+          </View>
+
+          <View style={{ gap: spacing.sm }}>
+            <Text style={sectionLabel}>Duración</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.xs }}>
+              {DURATION_OPTIONS.map((minutes) => (
+                <FilterChip
+                  key={minutes}
+                  label={durationLabel(minutes)}
                   onPress={() => {
-                    setMode("OWN_ROUTINES");
-                    setRoutineSessionId(null);
+                    setDurationMinutes(minutes);
                     changed();
                   }}
-                  variant={mode === "OWN_ROUTINES" ? "primary" : "ghost"}
+                  selected={durationMinutes === minutes}
                 />
-                <Button
-                  label={
-                    mode === "SHARED_SESSION"
-                      ? "Compartir una rutina · seleccionado"
-                      : "Compartir una rutina"
-                  }
-                  onPress={() => {
-                    setMode("SHARED_SESSION");
-                    changed();
-                  }}
-                  variant={mode === "SHARED_SESSION" ? "primary" : "ghost"}
-                />
-                {mode === "SHARED_SESSION" ? (
-                  <View style={{ gap: spacing.sm }}>
-                    <Text
-                      style={{
-                        color: colors.textMuted,
-                        fontSize: fontSizes.sm,
-                      }}
-                    >
-                      Se compartirá solo la estructura acordada. Cada persona
-                      conserva sus propios pesos y progreso.
-                    </Text>
-                    {routines.isPending ? (
-                      <Text style={{ color: colors.textMuted }}>
-                        Cargando tus rutinas…
-                      </Text>
-                    ) : null}
-                    {routines.isError ? (
-                      <Text
-                        accessibilityRole="alert"
-                        style={{ color: colors.danger }}
-                      >
-                        No se pudieron cargar tus rutinas.
-                      </Text>
-                    ) : null}
-                    {routines.data?.items.map((routine) => (
-                      <Button
-                        key={routine.id}
-                        label={`${routine.nombre}${routineSessionId === routine.id ? " · seleccionada" : ""}`}
-                        onPress={() => {
-                          setRoutineSessionId(routine.id);
-                          changed();
-                        }}
-                        testID={`training-shared-routine-${routine.id}`}
-                        variant={
-                          routineSessionId === routine.id ? "primary" : "ghost"
-                        }
-                      />
-                    ))}
-                    {routines.isSuccess && routines.data.items.length === 0 ? (
-                      <Text style={{ color: colors.textMuted }}>
-                        Crea una rutina antes de compartirla.
-                      </Text>
-                    ) : null}
-                  </View>
+              ))}
+            </View>
+          </View>
+
+          <Input
+            autoCapitalize="sentences"
+            editable={!create.isPending}
+            icon="location-outline"
+            label="Dónde"
+            maxLength={180}
+            onChangeText={(value) => {
+              setPlaceLabel(value);
+              changed();
+            }}
+            placeholder="Tu gimnasio o un lugar público"
+            value={placeLabel}
+          />
+
+          <View style={{ gap: spacing.sm }}>
+            <Text style={sectionLabel}>Cómo</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.xs }}>
+              <FilterChip
+                label="Cada quien su rutina"
+                onPress={() => {
+                  setMode("OWN_ROUTINES");
+                  setRoutineSessionId(null);
+                  changed();
+                }}
+                selected={mode === "OWN_ROUTINES"}
+              />
+              <FilterChip
+                label="La misma rutina"
+                onPress={() => {
+                  setMode("SHARED_SESSION");
+                  changed();
+                }}
+                selected={mode === "SHARED_SESSION"}
+              />
+            </View>
+            {mode === "SHARED_SESSION" ? (
+              <View style={{ gap: spacing.xs }}>
+                {routines.isPending ? (
+                  <Text style={{ color: colors.textMuted }}>Cargando tus rutinas…</Text>
                 ) : null}
-                <Input
-                  accessibilityLabel="Nota opcional"
-                  editable={!create.isPending}
-                  label="Nota (opcional)"
-                  maxLength={1000}
-                  multiline
-                  onChangeText={(value) => {
-                    setNote(value);
-                    changed();
-                  }}
-                  placeholder="¿Qué te gustaría entrenar?"
-                  style={{ minHeight: 84, textAlignVertical: "top" }}
-                  value={note}
-                />
-                {error ? (
-                  <Text
-                    accessibilityLiveRegion="assertive"
-                    style={{ color: colors.danger, fontSize: fontSizes.sm }}
-                  >
-                    {error}
+                {routines.isError ? (
+                  <Text accessibilityRole="alert" style={{ color: colors.danger }}>
+                    No se pudieron cargar tus rutinas.
                   </Text>
                 ) : null}
-                <Button
-                  disabled={
-                    !timeZone ||
-                    !date ||
-                    !time ||
-                    !placeLabel.trim() ||
-                    !durationIsValid ||
-                    (mode === "SHARED_SESSION" && !routineSessionId)
-                  }
-                  label="Enviar invitación"
-                  loading={create.isPending}
-                  onPress={() => {
-                    setError(null);
-                    create.mutate();
-                  }}
-                />
-                <Button label="Cancelar" onPress={close} variant="ghost" />
-              </>
-            )}
-          </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.xs }}>
+                  {routines.data?.items.map((routine) => (
+                    <FilterChip
+                      key={routine.id}
+                      label={routine.nombre}
+                      onPress={() => {
+                        setRoutineSessionId(routine.id);
+                        changed();
+                      }}
+                      selected={routineSessionId === routine.id}
+                      testID={`training-shared-routine-${routine.id}`}
+                    />
+                  ))}
+                </View>
+                {routines.isSuccess && routines.data.items.length === 0 ? (
+                  <Text style={{ color: colors.textMuted }}>Crea una rutina antes de compartirla.</Text>
+                ) : null}
+              </View>
+            ) : null}
+          </View>
+
+          <Input
+            editable={!create.isPending}
+            label="Mensaje (opcional)"
+            maxLength={1000}
+            onChangeText={(value) => {
+              setNote(value);
+              changed();
+            }}
+            placeholder="¿Qué te gustaría entrenar?"
+            value={note}
+          />
+
+          {error ? (
+            <Text accessibilityLiveRegion="assertive" style={{ color: colors.danger, fontSize: fontSizes.sm }}>
+              {error}
+            </Text>
+          ) : null}
+          <View
+            style={{
+              gap: spacing.sm,
+              padding: spacing.md,
+              borderRadius: radii.md,
+              backgroundColor: colors.surfaceHigh,
+            }}
+          >
+            <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
+              {time
+                ? `${day.label === day.detail ? day.label : `${day.label} (${day.detail})`} · ${time} · ${durationLabel(duration)}`
+                : "Elige día y hora"}
+            </Text>
+            {placeLabel.trim() ? (
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{placeLabel.trim()}</Text>
+            ) : null}
+            <Button
+              disabled={!ready}
+              icon="barbell-outline"
+              label="Enviar invitación"
+              loading={create.isPending}
+              onPress={() => {
+                setError(null);
+                create.mutate();
+              }}
+              testID="training-invite-send"
+            />
+          </View>
+        </>
+      )}
+    </BottomSheet>
   );
 }
