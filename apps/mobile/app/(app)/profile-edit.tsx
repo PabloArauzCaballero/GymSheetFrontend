@@ -15,6 +15,7 @@ import { Card, ScreenHeader, ScrollScreen } from '@/components/layout';
 import { StepProgress, type FlowStep } from '@/components/step-flow';
 import { BackLink } from '@/components/nav';
 import { Button, Input } from '@/components/ui';
+import { BIRTH_DATE_PARTS, birthDateError, toIsoBirthDate } from '@/lib/birth-date';
 import { GOAL_LABEL } from '@/lib/format';
 import { notify } from '@/notifications';
 import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
@@ -26,38 +27,6 @@ import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing 
  */
 function toNumber(value: string): number {
   return Number(value.replace(',', '.'));
-}
-
-const MIN_AGE = 12;
-const MAX_AGE = 100;
-
-/**
- * Why a day/month/year triple is not a usable birth date, or `null` if it is
- * (all three empty counts as usable: the field is optional).
- *
- * Built from local calendar parts, not `new Date('1996-03-15')`, which is
- * parsed as UTC and can land on the previous day west of Greenwich.
- */
-function birthDateError(dia: string, mes: string, anio: string): string | null {
-  if (dia === '' && mes === '' && anio === '') return null;
-  if (dia === '' || mes === '' || anio === '') return 'Completa día, mes y año.';
-  if (![dia, mes, anio].every((part) => /^\d+$/.test(part))) return 'Usa solo números.';
-  if (anio.length !== 4) return 'Escribe el año con cuatro cifras, por ejemplo 1996.';
-  const day = Number(dia);
-  const month = Number(mes);
-  const year = Number(anio);
-  const date = new Date(year, month - 1, day);
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-    return 'Esa fecha no existe.';
-  }
-  const today = new Date();
-  if (date > today) return 'La fecha no puede ser futura.';
-  let age = today.getFullYear() - year;
-  if (today.getMonth() < month - 1 || (today.getMonth() === month - 1 && today.getDate() < day)) {
-    age -= 1;
-  }
-  if (age < MIN_AGE || age > MAX_AGE) return `Debes tener entre ${MIN_AGE} y ${MAX_AGE} años.`;
-  return null;
 }
 
 /** `1996-03-15` → the three fields the form edits. */
@@ -96,10 +65,8 @@ const profileFormSchema = z.object({
       const message = birthDateError(dia, mes, anio);
       if (message) ctx.addIssue({ code: 'custom', message });
     })
-    .transform(({ dia, mes, anio }) =>
-      dia === '' && mes === '' && anio === ''
-        ? null
-        : `${anio}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`,
+    .transform((parts) =>
+      parts.dia === '' && parts.mes === '' && parts.anio === '' ? null : toIsoBirthDate(parts),
     ),
   objetivo: z.enum(trainingGoals),
 });
@@ -165,12 +132,6 @@ const PROFILE_STEPS: readonly FlowStep[] = [
 
 /** The field validated before each step is allowed to advance. */
 const STEP_FIELD = ['pesoKg', 'estaturaCm', 'fechaNacimiento', 'objetivo'] as const;
-
-const BIRTH_DATE_PARTS = [
-  { key: 'dia', label: 'Día', placeholder: '15', maxLength: 2, flex: 1 },
-  { key: 'mes', label: 'Mes', placeholder: '03', maxLength: 2, flex: 1 },
-  { key: 'anio', label: 'Año', placeholder: '1996', maxLength: 4, flex: 1.6 },
-] as const;
 
 function StepHeading({
   icon,
