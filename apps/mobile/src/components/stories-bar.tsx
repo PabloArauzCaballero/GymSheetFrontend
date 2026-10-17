@@ -16,7 +16,7 @@ import { useAuthStore } from '@/state/auth-store';
 import { initialsOf } from '@/lib/format';
 import { requestId } from '@/lib/request-id';
 import { canSubmitStoryAudience, toggleStoryAudienceRecipient } from '@/lib/story-audience-selection';
-import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, spacing } from '@/theme';
 
 const AVATAR_SIZE = 60;
 /** Diámetro del botón «+» sobre el avatar propio. */
@@ -194,7 +194,7 @@ function StorySourceSheet({
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent transparent visible={visible}>
-      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0, 0, 0, 0.72)' }}>
+      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: overlay.scrim }}>
         <Pressable accessible={false} onPress={onClose} style={{ flex: 1 }} />
 
         <View

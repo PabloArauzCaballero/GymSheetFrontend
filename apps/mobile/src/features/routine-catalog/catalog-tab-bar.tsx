@@ -1,17 +1,23 @@
-import { ScrollView, Text, View } from 'react-native';
-import { type CatalogTab, type MineChip } from '@gymsheet/hooks';
+import { Ionicons } from '@expo/vector-icons';
+import { Text, View } from 'react-native';
+import { type CatalogTab } from '@gymsheet/hooks';
 import { SegmentLabel, SegmentedPill } from '@/components/motion';
-import { FilterChip } from '@/components/filter-chip';
-import { colors, fontSizes, gutter, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 /**
- * Orden y nombres del móvil (C8.3.4): lo propio primero, luego lo que REPP
- * recomienda y al final lo público. Los ámbitos son los de `CATALOG_TABS`.
+ * «Todas» junta lo público con lo tuyo (lo privado se marca en la tarjeta con
+ * «Solo tú la ves»); «Compartidas» reúne las del equipo REPP (con su sello) y
+ * lo que te enviaron. REPP ya no es pestaña propia (Pablo, 2026-10-15). Cada
+ * pestaña lleva icono y UNA palabra para que quepan a lo ancho.
  */
-const TABS: readonly { scope: CatalogTab; label: string }[] = [
-  { scope: 'mine', label: 'Mías' },
-  { scope: 'official', label: 'Recomendadas' },
-  { scope: 'public', label: 'Públicas' },
+const TABS: readonly {
+  scope: CatalogTab;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  iconActive: keyof typeof Ionicons.glyphMap;
+}[] = [
+  { scope: 'all', label: 'Todas', icon: 'grid-outline', iconActive: 'grid' },
+  { scope: 'shared', label: 'Compartidas', icon: 'people-outline', iconActive: 'people' },
 ];
 
 /**
@@ -21,9 +27,11 @@ const TABS: readonly { scope: CatalogTab; label: string }[] = [
 export function CatalogTabBar({
   value,
   onChange,
+  pendingInvitations = 0,
 }: {
   value: CatalogTab;
   onChange: (next: CatalogTab) => void;
+  pendingInvitations?: number;
 }) {
   return (
     <View accessibilityRole="tablist">
@@ -40,18 +48,31 @@ export function CatalogTabBar({
         onChange={onChange}
         options={TABS.map((tab) => ({
           value: tab.scope,
-          accessibilityLabel: `Pestaña ${tab.label}`,
+          accessibilityLabel:
+            tab.scope === 'shared' && pendingInvitations > 0
+              ? `Pestaña ${tab.label}, ${pendingInvitations} invitaciones pendientes`
+              : `Pestaña ${tab.label}`,
         }))}
         pillColor={colors.surfaceHighest}
-        renderItem={(option, active) => (
-          <SegmentLabel
-            active={active}
-            activeColor={colors.text}
-            inactiveColor={colors.textMuted}
-            label={TABS.find((tab) => tab.scope === option.value)?.label ?? ''}
-            style={{ fontSize: fontSizes.sm, fontWeight: semibold }}
-          />
-        )}
+        renderItem={(option, active) => {
+          const tab = TABS.find((item) => item.scope === option.value);
+          return (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+              <Ionicons
+                color={active ? colors.volt : colors.textMuted}
+                name={(active ? tab?.iconActive : tab?.icon) ?? 'ellipse-outline'}
+                size={iconSizes.sm}
+              />
+              <SegmentLabel
+                active={active}
+                activeColor={colors.text}
+                inactiveColor={colors.textMuted}
+                label={`${tab?.label ?? ''}${tab?.scope === 'shared' && pendingInvitations > 0 ? ` (${pendingInvitations})` : ''}`}
+                style={{ fontSize: fontSizes.sm, fontWeight: semibold }}
+              />
+            </View>
+          );
+        }}
         style={{
           alignSelf: 'stretch',
           borderRadius: radii.full,
@@ -61,46 +82,6 @@ export function CatalogTabBar({
         value={value}
       />
     </View>
-  );
-}
-
-/** Chips de «Mías»: Creadas por mí · Compartidas conmigo (n). */
-export function MineChips({
-  value,
-  onChange,
-  pendingInvitations,
-}: {
-  value: MineChip;
-  onChange: (next: MineChip) => void;
-  pendingInvitations: number;
-}) {
-  return (
-    // Desplazable y a sangre, como los chips de objetivo: con el margen de 24
-    // «Compartidas conmigo (n)» ya no cabe a lo ancho en un iPhone.
-    <ScrollView
-      contentContainerStyle={{ gap: spacing.sm, paddingHorizontal: gutter }}
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={{ marginHorizontal: -gutter }}
-    >
-      <FilterChip
-        label="Creadas por mí"
-        onPress={() => onChange('created')}
-        selected={value === 'created'}
-        testID="chip-created"
-      />
-      <FilterChip
-        accessibilityLabel={
-          pendingInvitations > 0
-            ? `Compartidas conmigo, ${pendingInvitations} invitaciones pendientes`
-            : 'Compartidas conmigo'
-        }
-        label={pendingInvitations > 0 ? `Compartidas conmigo (${pendingInvitations})` : 'Compartidas conmigo'}
-        onPress={() => onChange('shared')}
-        selected={value === 'shared'}
-        testID="chip-shared"
-      />
-    </ScrollView>
   );
 }
 

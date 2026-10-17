@@ -1,6 +1,6 @@
 import { Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { accentContrast, colors, fontFamilies, fontSizes } from '@/theme';
+import { brandNavy, colors, fontFamilies, fontSizes, onMedia, reppJade } from '@/theme';
 import { REPP_MARK_BODY, REPP_MARK_TICK, REPP_MARK_VIEWBOX } from './mark';
 
 /** El signo REPP. Por defecto, tinta clara con la raya en el acento. */
@@ -13,7 +13,7 @@ export function ReppMark({ size, ink, tick }: { size: number; ink?: string; tick
   );
 }
 
-/** El signo dentro de su ficha de acento: icono de la app, arranque y acceso. */
+/** El signo sobre su ficha navy, como en la identidad: icono, arranque y acceso. */
 export function ReppBadge({ size, style }: { size: number; style?: StyleProp<ViewStyle> }) {
   return (
     <View
@@ -25,12 +25,12 @@ export function ReppBadge({ size, style }: { size: number; style?: StyleProp<Vie
           borderCurve: 'continuous',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: colors.volt,
+          backgroundColor: brandNavy,
         },
         style,
       ]}
     >
-      <ReppMark ink={accentContrast()} size={size * 0.62} tick={accentContrast()} />
+      <ReppMark ink={onMedia.text} size={size * 0.72} tick={reppJade} />
     </View>
   );
 }

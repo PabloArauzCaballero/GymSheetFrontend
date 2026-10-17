@@ -1,15 +1,21 @@
-import { useState } from 'react';
-import { Pressable, Text } from 'react-native';
-import { PressableScale } from '@/components/motion';
-import { Card } from '@/components/layout';
-import { alpha, colors, fontSizes, radii, semibold, spacing } from '@/theme';
+import { useState } from "react";
+import { Pressable, Text } from "react-native";
+import { PressableScale } from "@/components/motion";
+import { Card } from "@/components/layout";
+import { alpha, colors, fontSizes, radii, semibold, spacing } from "@/theme";
 
 /**
  * Instruction steps arrive keyed by locale. `es-BO` first — the same order the
  * web app uses, so both clients show the identical copy.
  */
 export function stepsOf(steps: Record<string, string[]>): string[] {
-  return steps['es-BO'] ?? steps['es'] ?? steps['en'] ?? Object.values(steps)[0] ?? [];
+  return (
+    steps["es-BO"] ??
+    steps["es"] ??
+    steps["en"] ??
+    Object.values(steps)[0] ??
+    []
+  );
 }
 
 /** Músculo tocable: lleva a su pantalla, donde está la figura y sus ejercicios. */
@@ -33,8 +39,10 @@ export function MuscleChip({
         borderRadius: radii.full,
         borderWidth: 1,
         borderColor: primary ? colors.accentInk : colors.border,
-        backgroundColor: primary ? alpha(colors.volt, 0.08) : colors.surfaceHigh,
-        justifyContent: 'center',
+        backgroundColor: primary
+          ? alpha(colors.volt, 0.08)
+          : colors.surfaceHigh,
+        justifyContent: "center",
       }}
     >
       <Text
@@ -74,7 +82,7 @@ export function Description({ text }: { text: string }) {
             fontWeight: semibold,
           }}
         >
-          {expanded ? 'Ver menos' : 'Leer más'}
+          {expanded ? "Ver menos" : "Leer más"}
         </Text>
       </Pressable>
     </Card>

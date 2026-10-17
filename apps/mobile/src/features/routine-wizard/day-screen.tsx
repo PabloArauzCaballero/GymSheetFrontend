@@ -83,7 +83,7 @@ export function DayPickScreen({ dia }: { dia: DayTarget }) {
         <>
           <BackLink />
           <View style={{ gap: spacing.lg }}>
-            <WizardProgress actual={DAYS_STEP} onIr={goToWizardStep} pasos={WIZARD_STEPS} />
+            <WizardProgress actual={DAYS_STEP} pasos={WIZARD_STEPS} />
             <ScreenHeader
               detail
               subtitle={scope ? `${scope}. ${subtitle}` : subtitle}

@@ -481,9 +481,12 @@ export function ScreenHeader({
   subtitle,
   tourKey,
   detail = false,
+  action,
 }: {
   title: string;
   subtitle?: string;
+  /** Un atajo de la pantalla, a la derecha del título y antes de «?». */
+  action?: ReactNode;
   /**
    * Título de una pantalla de detalle (un músculo, un ejercicio). El tamaño de
    * display es para las secciones de la app; un nombre largo como «Flexores del
@@ -520,6 +523,7 @@ export function ScreenHeader({
       >
         {title}
       </Text>
+      {action}
       {tourKey ? <TourHelpButton tourKey={tourKey} /> : null}
       </View>
       {subtitle ? (
@@ -676,7 +680,8 @@ export function Row({
         minHeight: minTouchTarget,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1 }}>
+      {/* La etiqueta no cede: es el valor el que salta de línea («Secundar-ios» partía la palabra). */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 0, maxWidth: '45%' }}>
         {icon ? (
           <Ionicons
             accessibilityElementsHidden

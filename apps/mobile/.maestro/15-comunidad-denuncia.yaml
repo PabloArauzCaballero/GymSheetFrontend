@@ -10,7 +10,7 @@ env:
 # RF-12 · p02: la autora no puede valorar su propia rutina.
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Pierna 3 días' }
+    env: { TAB: 'Privadas', NAME: 'Pierna 3 días' }
 - scroll
 - extendedWaitUntil:
     visible: 'No puedes valorar tu rutina'

@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { useChatThread } from '@/features/chat/hooks/use-chat-thread';
+import { useStoryReplyTarget } from '@/features/chat/hooks/use-story-reply-target';
 import { dayDividerLabel } from '@/features/chat/lib/chat-time';
 import { canEditMessage } from '@/features/chat/lib/message-edit';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
@@ -53,8 +54,6 @@ export function MessageThreadClient({
     messages,
   } = thread;
   const bottomRef = useRef<HTMLDivElement>(null);
-  const replySearchRef = useRef<{ id: string; pages: number; before: string | null } | null>(null);
-  const [replyTargetStatus, setReplyTargetStatus] = useState('');
   const [imageViewer, setImageViewer] = useState<{ messageId: string; url: string } | null>(null);
   if (
     imageViewer &&
@@ -71,49 +70,16 @@ export function MessageThreadClient({
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [thread.latestMessageId]);
 
-  useEffect(() => {
-    if (!storyReplyMessageId) {
-      replySearchRef.current = null;
-      return;
-    }
-    let search = replySearchRef.current;
-    if (!search || search.id !== storyReplyMessageId) {
-      search = { id: storyReplyMessageId, pages: 0, before: null };
-      replySearchRef.current = search;
-      setReplyTargetStatus('Buscando la respuesta a la story…');
-    }
-    if (history.isLoading || isValidatingHistory || conversationUnavailable) return;
-
-    const target = messages.find((message) => message.id === storyReplyMessageId);
-    if (target) {
-      const element = document.getElementById(`message-${storyReplyMessageId}`);
-      if (!element) return;
-      replySearchRef.current = null;
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      element.focus({ preventScroll: true });
-      return;
-    }
-
-    if (loadingOlder) return;
-    const before = messages[0]?.createdAt ?? null;
-    if (!hasMoreOlder || !before || search.pages >= 20 || search.before === before) {
-      setReplyTargetStatus('No se encontró la respuesta a la story en las páginas de historial consultadas.');
-      return;
-    }
-    search.pages += 1;
-    search.before = before;
-    setReplyTargetStatus('Buscando la respuesta a la story en mensajes anteriores…');
-    void loadOlderMessages();
-  }, [
+  const replyTargetStatus = useStoryReplyTarget({
     storyReplyMessageId,
     conversationUnavailable,
     hasMoreOlder,
-    history.isLoading,
+    historyLoading: history.isLoading,
     isValidatingHistory,
     loadOlderMessages,
     loadingOlder,
     messages,
-  ]);
+  });
 
   if (thread.history.isLoading) {
     return (

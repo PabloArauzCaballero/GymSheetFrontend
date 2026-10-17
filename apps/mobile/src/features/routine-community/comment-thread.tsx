@@ -6,6 +6,7 @@ import type { RoutineComment } from '@gymsheet/types';
 import { BadgePop, Burst, Pop, PressableScale, useListMotion } from '@/components/motion';
 import { PersonAvatar } from '@/components/person-avatar';
 import { Text } from '@/components/text';
+import { AttachmentView } from '@/features/routine-community/attachment-view';
 import { relativeTimeEs } from '@/features/routine-community/relative-time';
 import { colors, iconSizes, likeHeart, minTouchTarget, radii, shadows, spacing, threadLine } from '@/theme';
 
@@ -67,7 +68,9 @@ function CommentBubble({
   handlers: CommentHandlers;
 }) {
   const [burst, setBurst] = useState(false);
-  const deleted = comment.texto === '';
+  const hasText = comment.texto !== '';
+  const deleted = !hasText && !comment.adjunto;
+  const stickerOnly = !hasText && comment.adjunto?.tipo === 'STICKER';
   const pending = comment.id.startsWith('temp-');
   const size = reply ? REPLY_AVATAR : AVATAR;
   const like = () => {
@@ -85,7 +88,7 @@ function CommentBubble({
         <View style={{ maxWidth: '100%' }}>
           <PressableScale
             accessibilityHint="Mantén pulsado para ver las opciones"
-            accessibilityLabel={`${comment.autor.nombre}: ${deleted ? 'comentario eliminado' : comment.texto}`}
+            accessibilityLabel={`${comment.autor.nombre}: ${deleted ? 'comentario eliminado' : hasText ? comment.texto : 'adjunto'}`}
             accessibilityRole="text"
             disabled={deleted || pending}
             haptic="none"
@@ -97,15 +100,22 @@ function CommentBubble({
               paddingVertical: spacing.sm + spacing.xxs,
               borderRadius: BUBBLE_RADIUS,
               borderCurve: 'continuous',
-              backgroundColor: colors.surfaceHigh,
+              backgroundColor: stickerOnly ? 'transparent' : colors.surfaceHigh,
             }}
           >
             <Text numberOfLines={1} strong variant="footnote">
               {comment.autor.nombre}
             </Text>
-            <Text style={deleted ? { fontStyle: 'italic' } : undefined} tone={deleted ? 'muted' : 'default'} variant="subhead">
-              {deleted ? 'Comentario eliminado' : comment.texto}
-            </Text>
+            {deleted || hasText ? (
+              <Text style={deleted ? { fontStyle: 'italic' } : undefined} tone={deleted ? 'muted' : 'default'} variant="subhead">
+                {deleted ? 'Comentario eliminado' : comment.texto}
+              </Text>
+            ) : null}
+            {comment.adjunto ? (
+              <View style={{ marginTop: hasText || stickerOnly ? spacing.xs : spacing.xxs, alignSelf: 'flex-start' }}>
+                <AttachmentView attachment={comment.adjunto} />
+              </View>
+            ) : null}
           </PressableScale>
           {comment.likes > 0 ? (
             <View

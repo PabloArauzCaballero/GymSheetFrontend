@@ -5,7 +5,8 @@ import { compactCount, ratingLabel, ratingValue } from '@gymsheet/hooks';
 import type { Routine } from '@gymsheet/types';
 import { PersonAvatar } from '@/components/person-avatar';
 import { Text } from '@/components/text';
-import { colors, iconSizes, ratingStar, spacing } from '@/theme';
+import { EnterUp } from '@/components/motion';
+import { colors, iconSizes, metricColors, radii, ratingStar, shadows, spacing, type MetricKey } from '@/theme';
 import { routineMinutes } from '@/features/routine-detail/routine-plan';
 
 type Cell = {
@@ -14,6 +15,8 @@ type Cell = {
   caption: string;
   accessibility: string;
   stars?: number | null;
+  icon?: keyof typeof Ionicons.glyphMap;
+  metric?: MetricKey;
 };
 
 /** Cinco estrellas pequeñas con medias: lo que la gente reconoce sin leer. */
@@ -44,10 +47,13 @@ function StatsStrip({ cells }: { cells: Cell[] }) {
       accessibilityLabel={cells.map((cell) => cell.accessibility).join('. ')}
       style={{
         flexDirection: 'row',
-        paddingVertical: spacing.md,
-        borderTopWidth: StyleSheet.hairlineWidth,
-        borderBottomWidth: StyleSheet.hairlineWidth,
+        paddingVertical: spacing.mdl,
+        borderRadius: radii.xxl,
+        borderCurve: 'continuous',
+        backgroundColor: colors.surfaceLow,
+        borderWidth: StyleSheet.hairlineWidth,
         borderColor: colors.border,
+        boxShadow: shadows.e2,
       }}
       testID="routine-stats"
     >
@@ -57,19 +63,35 @@ function StatsStrip({ cells }: { cells: Cell[] }) {
           style={{
             flex: 1,
             alignItems: 'center',
-            gap: spacing.xxs,
+            justifyContent: 'flex-start',
+            gap: spacing.xs,
             paddingHorizontal: spacing.xs,
             borderLeftWidth: index === 0 ? 0 : StyleSheet.hairlineWidth,
             borderLeftColor: colors.border,
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-            {cell.stars != null ? <Ionicons color={ratingStar} name="star" size={iconSizes.sm} /> : null}
-            <Text numberOfLines={1} style={{ color: colors.text }} variant="numeric">
-              {cell.value}
-            </Text>
+          {/* Misma estructura en todas las celdas: icono, cifra, palabra. Así las
+              cuatro cifras quedan en la misma línea. */}
+          <View
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: radii.full,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: cell.metric ? metricColors[cell.metric].tint : colors.surfaceHigh,
+            }}
+          >
+            <Ionicons
+              color={cell.metric ? metricColors[cell.metric].ink : cell.stars != null ? ratingStar : colors.accentInk}
+              name={cell.icon ?? 'star'}
+              size={iconSizes.sm}
+            />
           </View>
-          <Text numberOfLines={1} tone="muted" variant="caption">
+          <Text adjustsFontSizeToFit minimumFontScale={0.8} numberOfLines={1} style={{ color: colors.text }} variant="numeric">
+            {cell.value}
+          </Text>
+          <Text adjustsFontSizeToFit minimumFontScale={0.85} numberOfLines={1} tone="muted" variant="caption">
             {cell.caption}
           </Text>
         </View>
@@ -149,12 +171,14 @@ export function DetailHeader({ routine, actions }: { routine: Routine; actions?:
               : 'Sin reseñas',
             accessibility: ratingLabel(routine.valoracion).replace('★', 'Valoración'),
             stars: routine.valoracion.promedio,
+            icon: 'star' as const,
           },
           {
             key: 'downloads',
             value: compactCount(routine.copias),
             caption: routine.copias === 1 ? 'descarga' : 'descargas',
             accessibility: `${routine.copias} ${routine.copias === 1 ? 'descarga' : 'descargas'}`,
+            icon: 'download-outline' as const,
           },
         ]
       : []),
@@ -162,6 +186,8 @@ export function DetailHeader({ routine, actions }: { routine: Routine; actions?:
       key: 'days',
       value: String(days),
       caption: 'días/sem',
+      icon: 'calendar-outline' as const,
+      metric: 'reps' as const,
       accessibility: `${days} días por semana`,
     },
     ...(routine.duracionSemanas
@@ -170,6 +196,8 @@ export function DetailHeader({ routine, actions }: { routine: Routine; actions?:
             key: 'weeks',
             value: String(routine.duracionSemanas),
             caption: 'semanas',
+            icon: 'time-outline' as const,
+            metric: 'time' as const,
             accessibility: `${routine.duracionSemanas} semanas`,
           },
         ]
@@ -180,6 +208,8 @@ export function DetailHeader({ routine, actions }: { routine: Routine; actions?:
             key: 'min',
             value: `${minutes}`,
             caption: 'min/sesión',
+            icon: 'timer-outline' as const,
+            metric: 'rest' as const,
             accessibility: `unos ${minutes} minutos por sesión`,
           },
         ]
@@ -187,15 +217,21 @@ export function DetailHeader({ routine, actions }: { routine: Routine; actions?:
   ];
 
   return (
-    <View style={{ gap: spacing.lg }}>
-      <AuthorRow routine={routine} />
-      <StatsStrip cells={cells.slice(0, 4)} />
-      {actions}
+    <View style={{ gap: spacing.xl }}>
+      <EnterUp index={0}>
+        <AuthorRow routine={routine} />
+      </EnterUp>
+      <EnterUp index={1}>
+        <StatsStrip cells={cells.slice(0, 4)} />
+      </EnterUp>
       {routine.descripcion ? (
-        <Text selectable tone="secondary" variant="body">
-          {routine.descripcion}
-        </Text>
+        <EnterUp index={2}>
+          <Text selectable tone="secondary" variant="body">
+            {routine.descripcion}
+          </Text>
+        </EnterUp>
       ) : null}
+      <EnterUp index={3}>{actions}</EnterUp>
     </View>
   );
 }

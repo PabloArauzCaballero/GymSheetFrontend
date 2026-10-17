@@ -16,6 +16,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
+import { RestWave } from './rest-wave';
 import { ExerciseImage } from '@/components/media';
 import { Burst, Pop, PressableScale, PREMIUM_EASING } from '@/components/motion';
 import { Text } from '@/components/text';
@@ -35,6 +36,14 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const DIAL = 264;
 const STROKE = 10;
+/** Lienzo de la onda: sobresale del anillo por fuera. */
+const WAVE = DIAL + 76;
+/** Radio medio de la onda: por fuera del anillo, sin cruzarlo ni en la cresta más honda. */
+const WAVE_RADIUS = DIAL / 2 + 18;
+/** La cabeza del anillo: un punto de luz que marca dónde va el tiempo. */
+const HEAD = STROKE * 0.9;
+/** Margen del lienzo del anillo para que el halo de la cabeza no se recorte en el borde. */
+const PAD = 16;
 /** Cifra del reloj: la protagonista de la pantalla, fuera de la rampa a propósito. */
 const CLOCK_FONT = 72;
 /** Desde aquí el anillo vira de menta a ámbar: «se acaba». */
@@ -76,20 +85,33 @@ function RestDial({ endsAt, totalMs, ending }: { endsAt: number; totalMs: number
     strokeDashoffset: circumference * (1 - progress.value),
     stroke: interpolateColor(urgency.value, [0, 1], [restRing.calm, restRing.ending]),
   }));
+  // La cabeza viaja con el final del arco (el Svg está girado −90°: el ángulo 0 es arriba).
+  const headProps = useAnimatedProps(() => {
+    const angle = progress.value * 2 * Math.PI;
+    return {
+      cx: PAD + DIAL / 2 + radius * Math.cos(angle),
+      cy: PAD + DIAL / 2 + radius * Math.sin(angle),
+      fill: interpolateColor(urgency.value, [0, 1], [restRing.calm, restRing.ending]),
+      opacity: progress.value > 0.004 ? 1 : 0,
+    };
+  });
 
   return (
-    <Svg height={DIAL} style={{ transform: [{ rotate: '-90deg' }] }} width={DIAL}>
-      <Circle cx={DIAL / 2} cy={DIAL / 2} fill="none" r={radius} stroke={restRing.track} strokeWidth={STROKE} />
+    <Svg height={DIAL + PAD * 2} style={{ margin: -PAD, transform: [{ rotate: '-90deg' }] }} width={DIAL + PAD * 2}>
+      <Circle cx={PAD + DIAL / 2} cy={PAD + DIAL / 2} fill="none" r={radius} stroke={restRing.track} strokeWidth={STROKE} />
       <AnimatedCircle
         animatedProps={animatedProps}
-        cx={DIAL / 2}
-        cy={DIAL / 2}
+        cx={PAD + DIAL / 2}
+        cy={PAD + DIAL / 2}
         fill="none"
         r={radius}
         strokeDasharray={`${circumference} ${circumference}`}
         strokeLinecap="round"
         strokeWidth={STROKE}
       />
+      {/* Halo y núcleo de la cabeza. */}
+      <AnimatedCircle animatedProps={headProps} fillOpacity={0.25} r={HEAD * 1.9} />
+      <AnimatedCircle animatedProps={headProps} r={HEAD * 0.75} stroke={colors.text} strokeWidth={2} />
     </Svg>
   );
 }
@@ -226,18 +248,8 @@ export function RestOverlay({ kind, onChangeRest }: { kind: 'set' | 'between' | 
           style={{ alignItems: 'center', gap: spacing.lg }}
         >
           <View style={{ width: DIAL, height: DIAL, alignItems: 'center', justifyContent: 'center' }}>
-            {/* Halo quieto detrás del anillo: da volumen sin moverse solo. */}
-            <View
-              pointerEvents="none"
-              style={{
-                position: 'absolute',
-                width: DIAL - STROKE * 4,
-                height: DIAL - STROKE * 4,
-                borderRadius: radii.full,
-                backgroundColor: restRing.glow,
-                opacity: 0.35,
-              }}
-            />
+            {/* La onda que gira alrededor del reloj mientras el descanso corre. */}
+            <RestWave ending={ending} radius={WAVE_RADIUS} size={WAVE} />
             <View style={StyleSheet.absoluteFill}>
               <RestDial ending={ending} endsAt={endsAt} totalMs={totalMs} />
             </View>

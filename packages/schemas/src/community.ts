@@ -11,6 +11,31 @@ export const contentRatingSchema = z.object({
     .optional(),
 });
 
+export const commentAttachmentSchema = z.object({
+  tipo: z.enum(['GIF', 'STICKER', 'IMAGEN', 'VIDEO', 'ARCHIVO']),
+  url: z.string(),
+  mime: z.string().nullish(),
+  nombre: z.string().nullish(),
+  bytes: z.number().nullish(),
+  ancho: z.number().nullish(),
+  alto: z.number().nullish(),
+});
+
+export const gifPageSchema = z.object({
+  items: z.array(
+    z.object({
+      id: z.string(),
+      titulo: z.string(),
+      url: z.string(),
+      vistaPreviaUrl: z.string(),
+      ancho: z.number(),
+      alto: z.number(),
+    }),
+  ),
+  siguiente: z.number().nullable(),
+  disponible: z.boolean(),
+});
+
 export const routineCommentSchema: z.ZodType<RoutineComment, unknown> = z.lazy(() =>
   z.object({
     id: z.string(),
@@ -18,6 +43,7 @@ export const routineCommentSchema: z.ZodType<RoutineComment, unknown> = z.lazy((
     likes: z.number().int().default(0),
     meGusta: z.boolean().default(false),
     texto: z.string(),
+    adjunto: commentAttachmentSchema.nullish(),
     respuestaA: z.string().nullable(),
     creadoEn: z.string(),
     esMio: z.boolean(),

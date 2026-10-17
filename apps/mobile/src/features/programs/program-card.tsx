@@ -11,11 +11,12 @@ import {
   type Weekday,
 } from '@gymsheet/hooks';
 import type { Program } from '@gymsheet/types';
-import { routineService } from '@/api/services';
+import { routineService, workoutService } from '@/api/services';
 import { Badge } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { Button } from '@/components/ui';
 import { dayLabel, MODE_BADGE } from '@/features/programs/labels';
+import { useStartRoutine } from '@/features/routine-detail/use-start-routine';
 import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, shadows, spacing } from '@/theme';
 
 /** El programa ya pasó su fecha fin: toca decidir qué sigue (RF-19). */
@@ -35,6 +36,9 @@ export function StrengthProgramCard({ program }: { program: Program }) {
     queryFn: () => routineService.get(program.rutinaId ?? ''),
     enabled: Boolean(program.rutinaId),
   });
+  const start = useStartRoutine(program.rutinaId ?? '');
+  const recent = useQuery({ queryKey: ['workouts', 'recent'], queryFn: () => workoutService.list(40) });
+  const openSession = recent.data?.items.find((item) => item.estado === 'EN_PROGRESO');
   const next = routine.data ? nextSession(routine.data, isoWeekday(new Date())) : null;
   const over = isProgramOver(program);
   const nextText = next
@@ -74,6 +78,31 @@ export function StrengthProgramCard({ program }: { program: Program }) {
         {over ? 'Terminaste el programa. ¿Qué sigue?' : nextText}
         {!over && program.multiplicador > 1 ? ` · bono ${multiplierLabel(program.multiplicador)}` : ''}
       </Text>
+      {!over && program.rutinaId ? (
+        <View style={{ gap: spacing.sm }}>
+          {openSession || next?.esHoy ? (
+            <Button
+              haptic="light"
+              icon="play"
+              label={openSession ? 'Continuar rutina de hoy' : 'Iniciar rutina de hoy'}
+              loading={start.isPending}
+              onPress={() =>
+                openSession
+                  ? router.push({ pathname: '/workouts/[id]', params: { id: openSession.id } })
+                  : start.mutate(next?.routineDayId)
+              }
+              testID="program-start-today"
+            />
+          ) : null}
+          <Button
+            icon="list-outline"
+            label="Ver rutina completa"
+            onPress={() => router.push({ pathname: '/routines/[id]', params: { id: program.rutinaId ?? '' } })}
+            testID="program-view-full"
+            variant="secondary"
+          />
+        </View>
+      ) : null}
       {over ? <Button label="Decidir qué sigue" onPress={() => router.push({ pathname: '/routines/program/close/[id]', params: { id: program.id } })} /> : null}
     </PressableScale>
   );

@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { chatMessageSchema, readReceiptSettingsSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema } from '@gymsheet/schemas';
+import { chatMessageSchema, readReceiptSettingsSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema, musicPlaylistSchema, musicPlaylistPageSchema } from '@gymsheet/schemas';
 import type { RoutineVisibility } from '@gymsheet/types';
-import type { SocialMapBounds, SocialMapCoordinates } from '@gymsheet/schemas';
+import type { MusicVisibility, SocialMapBounds, SocialMapCoordinates } from '@gymsheet/schemas';
 import {
   activationRequestSchema,
   bodyMeasurementSchema,
@@ -51,6 +51,7 @@ import {
   restSettingsResultSchema,
   skippedSetSchema,
   workoutRoutineLinkSchema,
+  commentAttachmentSchema,
 } from '@gymsheet/schemas';
 import type {
   AddWorkoutExerciseInput,
@@ -70,7 +71,7 @@ import type {
   SocialStatusState,
   SwipeDirection,
 } from '@gymsheet/schemas';
-import type { UserGender } from '@gymsheet/types';
+import type { CommentAttachment, UserGender } from '@gymsheet/types';
 import {
   createCardioServices,
   createCatalogServices,
@@ -82,6 +83,7 @@ import {
   createSharingServices,
 } from '@gymsheet/api-client';
 import { apiClient } from '@/api/client';
+import { appendLocalFile, type LocalFile } from '@/api/local-file-part';
 
 /** Endpoints that answer with a free-form object we do not need to model. */
 const looseObject = z.record(z.string(), z.unknown());
@@ -177,14 +179,9 @@ export const onboardingService = {
 /** Galería de fotos de perfil. No es la mediateca administrada por el gimnasio. */
 export const profilePhotosService = {
   list: () => apiClient.request('/me/photos', z.array(profilePhotoSchema), { method: 'GET' }),
-  upload: (file: { uri: string; name: string; mimeType: string }) => {
+  upload: async (file: LocalFile) => {
     const form = new FormData();
-    // RN's FormData expects this exact shape for a file part, not a Blob.
-    form.append('file', {
-      uri: file.uri,
-      name: file.name,
-      type: file.mimeType,
-    } as unknown as Blob);
+    await appendLocalFile(form, 'file', file);
     return apiClient.upload('/me/photos', profilePhotoSchema, form);
   },
   remove: (photoId: string) =>
@@ -378,7 +375,20 @@ export const communityService = {
     id: string,
     texto: string,
     respuestaA?: string | null,
-  ) => communityApi.comment(kind, id, { texto, ...(respuestaA ? { respuestaA } : {}) }),
+    adjunto?: CommentAttachment | null,
+  ) =>
+    communityApi.comment(kind, id, {
+      texto,
+      ...(respuestaA ? { respuestaA } : {}),
+      ...(adjunto ? { adjunto } : {}),
+    }),
+  gifs: communityApi.gifs,
+  /** Sube la foto, video o archivo de un comentario; devuelve el adjunto para enviarlo. */
+  uploadAttachment: async (file: LocalFile) => {
+    const form = new FormData();
+    await appendLocalFile(form, 'file', file);
+    return apiClient.upload('/comments/media', commentAttachmentSchema, form, { timeoutMs: 120_000 });
+  },
   deleteComment: communityApi.removeComment,
   likeComment: communityApi.likeComment,
   unlikeComment: communityApi.unlikeComment,
@@ -628,6 +638,8 @@ mapAreas: (bounds: SocialMapBounds) => {
   },
 mapPeople: (cellId: string) =>
     apiClient.request(`/me/social-map/cells/${encodeURIComponent(cellId)}/people`, socialMapPeopleSchema, { method: 'GET' }),
+mapNearby: (point: SocialMapCoordinates) =>
+    apiClient.request(`/me/social-map/nearby?latitude=${point.latitude}&longitude=${point.longitude}`, socialMapNearbySchema, { method: 'GET' }),
 mapGyms: (bounds: SocialMapBounds) => {
     const query = new URLSearchParams(Object.entries(bounds).map(([key, value]) => [key, String(value)]));
     return apiClient.request(`/me/social-map/gyms?${query.toString()}`, socialMapGymsSchema, { method: 'GET' });
@@ -725,14 +737,13 @@ export const chatService = {
       body: { type: 'location', locationLat: location.lat, locationLng: location.lng },
     }),
   /** `file.mimeType` decide si el backend lo trata como imagen o video. */
-  sendMediaMessage: (
+  sendMediaMessage: async (
     conversationId: string,
-    file: { uri: string; name: string; mimeType: string },
+    file: LocalFile,
     options: { type: 'image' | 'video' | 'audio'; body?: string; viewOnce?: boolean },
   ) => {
     const form = new FormData();
-    // RN's FormData expects this exact shape for a file part, not a Blob.
-    form.append('file', { uri: file.uri, name: file.name, type: file.mimeType } as unknown as Blob);
+    await appendLocalFile(form, 'file', file);
     form.append('type', options.type);
     if (options.body) form.append('body', options.body);
     form.append('viewOnce', options.viewOnce ? 'true' : 'false');
@@ -760,7 +771,14 @@ export const chatService = {
   issueSocketTicket: () =>
     apiClient.request('/auth/socket-ticket', socketTicketSchema, { method: 'POST' }),
 
-editMessage: (conversationId: string, messageId: string, body: string) =>
+  /** «Eliminar para mí» oculta el mensaje solo en mi vista; «para todos» lo borra del hilo (60 h). */
+  deleteMessage: (conversationId: string, messageId: string, scope: 'ME' | 'EVERYONE') =>
+    apiClient.request(
+      `/me/conversations/${conversationId}/messages/${messageId}?scope=${scope}`,
+      z.object({ scope: z.enum(['ME', 'EVERYONE']) }).passthrough(),
+      { method: 'DELETE' },
+    ),
+  editMessage: (conversationId: string, messageId: string, body: string) =>
     apiClient.request(`/me/conversations/${conversationId}/messages/${messageId}`, chatMessageSchema, {
       method: 'PATCH',
       body: { body },
@@ -780,9 +798,9 @@ updateReadReceiptSettings: (input: {
 /** Stories efímeras (24h), visibles a todo el tenant — independientes de la galería de fotos. */
 export const storiesService = {
   feed: () => apiClient.request('/me/stories/feed', z.array(storyFeedEntrySchema), { method: 'GET' }),
-  upload: (file: { uri: string; name: string; mimeType: string }, audience?: { mode: 'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS'; recipientIds: string[]; requestId?: string }) => {
+  upload: async (file: LocalFile, audience?: { mode: 'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS'; recipientIds: string[]; requestId?: string }) => {
     const form = new FormData();
-    form.append('file', { uri: file.uri, name: file.name, type: file.mimeType } as unknown as Blob);
+    await appendLocalFile(form, 'file', file);
     if (audience) {
       form.append('audienceMode', audience.mode);
       form.append('recipientIds', JSON.stringify(audience.recipientIds));
@@ -889,6 +907,21 @@ export const deviceTokenService = {
       method: 'DELETE',
       body: { expoPushToken },
     }),
+};
+
+/** Música para entrenar: enlaces a Spotify de la comunidad (públicas) o tuyos (privadas). */
+export const musicService = {
+  list: (scope: 'public' | 'private', cursor?: string | null, limit = 20) =>
+    apiClient.request(
+      `/music/playlists?${new URLSearchParams({ scope, limit: String(limit), ...(cursor ? { cursor } : {}) })}`,
+      musicPlaylistPageSchema,
+      { method: 'GET' },
+    ),
+  create: (input: { url: string; visibilidad: MusicVisibility; titulo?: string }) =>
+    apiClient.request('/music/playlists', musicPlaylistSchema, { method: 'POST', body: input }),
+  update: (id: string, input: { visibilidad?: MusicVisibility; titulo?: string }) =>
+    apiClient.request(`/music/playlists/${id}`, musicPlaylistSchema, { method: 'PATCH', body: input }),
+  remove: (id: string) => apiClient.request(`/music/playlists/${id}`, deletedSchema, { method: 'DELETE' }),
 };
 
 export const moderationService = {

@@ -17,7 +17,9 @@ export function useStartRoutine(routineId: string) {
     onSuccess: async (session) => {
       await queryClient.invalidateQueries({ queryKey: ['workouts'] });
       notify.success('Sesión iniciada.');
-      router.replace({ pathname: '/workouts/[id]', params: { id: session.id } });
+      // `push`, no `replace`: el entreno vive en otro navegador y `replace`
+      // borraba la pila de pestañas, así que «Volver» no regresaba a la rutina.
+      router.push({ pathname: '/workouts/[id]', params: { id: session.id } });
     },
     onError: async (error: Error) => {
       if (error instanceof ApiError && error.kind === 'conflict') {
@@ -25,7 +27,7 @@ export function useStartRoutine(routineId: string) {
         const open = history?.items.find((item) => item.estado === 'EN_PROGRESO');
         if (open) {
           notify.info('Ya tienes una sesión en curso.');
-          router.replace({ pathname: '/workouts/[id]', params: { id: open.id } });
+          router.push({ pathname: '/workouts/[id]', params: { id: open.id } });
           return;
         }
       }

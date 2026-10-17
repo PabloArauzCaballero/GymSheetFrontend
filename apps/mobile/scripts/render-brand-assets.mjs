@@ -1,49 +1,60 @@
 #!/usr/bin/env node
 /**
  * Icono, icono adaptable, pantalla de arranque y favicon de REPP a partir del
- * signo vectorial (`src/components/brand/mark.ts`) y del acento del catálogo.
+ * signo vectorial (`src/components/brand/mark.ts`).
  *
- * Uso: `node --experimental-strip-types scripts/render-brand-assets.mjs` (necesita `rsvg-convert`).
+ * El signo se coloca **por su caja de tinta**, no por su lienzo de 120: el
+ * vector entregado tiene la tinta corrida 11,5 unidades a la izquierda y,
+ * colocado por el lienzo, el icono del teléfono salía descentrado.
+ *
+ * El splash usa `SPLASH_MARK_SCALE` de la coreografía: la cortinilla arranca
+ * con el signo exactamente donde lo dejó el splash nativo, sin salto.
+ *
+ * Uso: `yarn workspace @gymsheet/mobile brand:assets` (necesita `rsvg-convert`).
  */
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { gymsheetTenant } from '../../../packages/design-tokens/src/tenants.ts';
-import { REPP_MARK_BODY, REPP_MARK_TICK } from '../src/components/brand/mark.ts';
+import { REPP_MARK_BODY, REPP_MARK_BOX, REPP_MARK_CENTER, REPP_MARK_TICK } from '../src/components/brand/mark.ts';
+import { SPLASH_MARK_SCALE } from '../src/components/brand/intro-choreography.ts';
+
+const NAVY = '#0F172A';
+const JADE = '#2E8B7B';
+const WHITE = '#FFFFFF';
 
 const assets = join(dirname(fileURLToPath(import.meta.url)), '..', 'assets');
 const work = mkdtempSync(join(tmpdir(), 'repp-brand-'));
-const { accentGradient, accentContrast } = gymsheetTenant.colors;
-const STAGE = '#050505';
 
-/** El signo, centrado en un lienzo `size`, ocupando `ratio` de su lado. */
-function mark(size, ratio, ink) {
-  const side = size * ratio;
-  const scale = side / 100;
-  // El dibujo ocupa x 22–84, y 16–92 del lienzo de 100: se centra por su caja, no por el lienzo.
-  const dx = size / 2 - 53 * scale;
-  const dy = size / 2 - 54 * scale;
-  return `<g transform="translate(${dx} ${dy}) scale(${scale})"><path d="${REPP_MARK_BODY}" fill="${ink}" fill-rule="evenodd"/><path d="${REPP_MARK_TICK}" fill="${ink}"/></g>`;
+/** El signo con el centro de su tinta en el centro de un lienzo `size`, `unit` px por unidad. */
+function mark(size, unit) {
+  const dx = size / 2 - REPP_MARK_CENTER.x * unit;
+  const dy = size / 2 - REPP_MARK_CENTER.y * unit;
+  return `<g transform="translate(${dx} ${dy}) scale(${unit})"><path d="${REPP_MARK_BODY}" fill="${WHITE}" fill-rule="evenodd"/><path d="${REPP_MARK_TICK}" fill="${JADE}"/></g>`;
 }
-const gradient = `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${accentGradient[0]}"/><stop offset="1" stop-color="${accentGradient[1]}"/></linearGradient></defs>`;
-const svg = (size, body) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${body}</svg>`;
+/** Unidad para que la tinta mida `ratio` del alto del lienzo. */
+const byHeight = (size, ratio) => (size * ratio) / REPP_MARK_BOX.height;
+const svg = (size, body) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${body}</svg>`;
+const navy = (size) => `<rect width="${size}" height="${size}" fill="${NAVY}"/>`;
 
 const files = {
-  // iOS recorta la esquina: el relleno va a sangre.
-  'icon.png': svg(1024, `${gradient}<rect width="1024" height="1024" fill="url(#g)"/>${mark(1024, 0.6, accentContrast)}`),
-  // Android: primer plano transparente dentro de la zona segura (66 %); el fondo lo pone app.json.
-  'adaptive-icon.png': svg(1024, mark(1024, 0.42, accentContrast)),
-  // Arranque: la misma ficha que abre la cortinilla animada, sobre su mismo fondo.
-  'splash.png': svg(1024, `${gradient}<rect x="232" y="232" width="560" height="560" rx="146" fill="url(#g)"/>${mark(1024, 0.34, accentContrast)}`),
-  'favicon.png': svg(192, `${gradient}<rect width="192" height="192" rx="44" fill="url(#g)"/>${mark(192, 0.6, accentContrast)}`),
+  // iOS: opaco (la App Store rechaza alfa) y a sangre; el sistema redondea.
+  // La tinta al 50 % del alto deja el aire que tienen los iconos de sistema.
+  'icon.png': [1024, svg(1024, `${navy(1024)}${mark(1024, byHeight(1024, 0.5))}`)],
+  // Android: primer plano transparente; el lanzador recorta a un círculo del
+  // 61 % del lado. La diagonal de la tinta cabe dentro con margen.
+  'adaptive-icon.png': [1024, svg(1024, mark(1024, byHeight(1024, 0.36)))],
+  // Arranque: el lienzo de 120 de `app.json` (`imageWidth`), el signo a la
+  // escala que la cortinilla espera encontrar en su primer fotograma.
+  'splash.png': [2048, svg(120, mark(120, SPLASH_MARK_SCALE))],
+  'favicon.png': [48, svg(48, `${navy(48)}${mark(48, byHeight(48, 0.6))}`)],
 };
 
-for (const [name, source] of Object.entries(files)) {
+for (const [name, [pixels, source]] of Object.entries(files)) {
   const file = join(work, name.replace('.png', '.svg'));
   writeFileSync(file, source);
-  execFileSync('rsvg-convert', ['-o', join(assets, name), file]);
-  console.log(`assets/${name}`);
+  execFileSync('rsvg-convert', ['-w', String(pixels), '-h', String(pixels), '-o', join(assets, name), file]);
+  console.log(`assets/${name} ${pixels}×${pixels}`);
 }
-console.log(`fondo de arranque: ${STAGE} · fondo del icono adaptable: ${accentGradient[1]}`);

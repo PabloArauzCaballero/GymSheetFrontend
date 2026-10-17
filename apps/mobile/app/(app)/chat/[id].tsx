@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as Clipboard from 'expo-clipboard';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,7 +14,6 @@ import {
   Pressable,
   StatusBar,
   Text,
-  TextInput,
   View,
   type ListRenderItemInfo,
 } from 'react-native';
@@ -22,6 +22,7 @@ import { Image } from 'expo-image';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import * as Haptics from 'expo-haptics';
 import {
   getRecordingPermissionsAsync,
   requestRecordingPermissionsAsync,
@@ -34,6 +35,21 @@ import {
 } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { ChatComposer } from '@/features/chat/chat-composer';
+import {
+  AttachSheet,
+  ContactInfoSheet,
+  DeleteMessageSheet,
+  MessageActionsSheet,
+} from '@/features/chat/chat-sheets';
+import { MediaPreview, type PickedMedia } from '@/features/chat/media-preview';
+import {
+  canDeleteForEveryone,
+  isTombstone,
+  messageActions,
+  tombstoneLabel,
+  type MessageAction,
+} from '@/hooks/chat-message-actions';
 import EmojiPicker from 'rn-emoji-keyboard';
 import type { Message } from '@gymsheet/schemas';
 import { isMessageReadByOther, trainingInviteAcceptedMessage } from '@gymsheet/domain';
@@ -84,24 +100,26 @@ import {
   chatAudioFileForUpload,
   chatAudioPlayerAccessibilityLabel,
   chatAudioPlayerSource,
-  chatAudioRecordingDurationLabel,
   isChatAudioDurationValid,
   isMicrophonePermissionPermanentlyDenied,
 } from '@/lib/chat-audio';
 import {
+  bubbleInkFaint,
+  bubbleInkMuted,
   colors,
   fontSizes,
   iconSizes,
   maxContentWidth,
   maxWideContentWidth,
   minTouchTarget,
+  overlay,
   radii,
+  readReceiptTick,
   semibold,
   spacing,
 } from '@/theme';
 
-/** Fijo — WhatsApp volvió "check azul" un color universal, ajeno a cualquier marca de gimnasio. */
-const READ_TICK_COLOR = '#34b7f1';
+const READ_TICK_COLOR = readReceiptTick;
 
 /**
  * Mensajes por página. El backend admite hasta 100 y devuelve los más
@@ -132,12 +150,16 @@ function ChatVideo({ uri, token }: { uri: string; token: string | null }) {
   return <VideoView nativeControls player={player} style={{ width: 240, height: 220, borderRadius: radii.md }} />;
 }
 
-function ChatAudioMessage({ uri, token }: { uri: string; token: string | null }) {
+function ChatAudioMessage({ uri, token, mine }: { uri: string; token: string | null; mine: boolean }) {
   const source = token ? chatAudioPlayerSource(uri, env.apiUrl, token) : null;
   const player = useAudioPlayer(source, { updateInterval: 250 });
   const status = useAudioPlayerStatus(player);
   const unavailable = Boolean(status.error);
   const time = status.currentTime > 0 ? status.currentTime : status.duration;
+  // En la burbuja propia el fondo ya es el acento: el control va en tinta oscura.
+  const ink = mine ? colors.background : colors.volt;
+  const track = mine ? bubbleInkFaint : colors.surfaceHigh;
+  const label = mine ? bubbleInkMuted : colors.textMuted;
 
   if (!token) return <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Audio no disponible.</Text>;
   if (unavailable) return <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Este audio ya no está disponible.</Text>;
@@ -152,21 +174,32 @@ function ChatAudioMessage({ uri, token }: { uri: string; token: string | null })
         scaleTo={0.9}
         style={{ width: minTouchTarget, height: minTouchTarget, alignItems: 'center', justifyContent: 'center' }}
       >
-        <Ionicons color={colors.volt} name={status.playing ? 'pause' : 'play'} size={iconSizes.md} />
+        <Ionicons color={ink} name={status.playing ? 'pause' : 'play'} size={iconSizes.lg} />
       </PressableScale>
       <View style={{ flex: 1, gap: 4 }}>
-        <View style={{ height: 3, overflow: 'hidden', borderRadius: radii.full, backgroundColor: colors.surfaceHigh }}>
-          <View style={{ width: `${status.duration > 0 ? Math.min(100, (status.currentTime / status.duration) * 100) : 0}%`, height: 3, backgroundColor: colors.volt }} />
+        <View style={{ height: 3, overflow: 'hidden', borderRadius: radii.full, backgroundColor: track }}>
+          <View style={{ width: `${status.duration > 0 ? Math.min(100, (status.currentTime / status.duration) * 100) : 0}%`, height: 3, backgroundColor: ink }} />
         </View>
         <Text
           accessibilityLabel={chatAudioPlayerAccessibilityLabel(status.isLoaded, status.currentTime, status.duration)}
-          style={{ color: colors.textMuted, fontSize: fontSizes.xs }}
+          style={{ color: label, fontSize: fontSizes.xs }}
         >
           {status.isLoaded ? `${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, '0')}` : 'Audio'}
         </Text>
       </View>
     </View>
   );
+}
+
+/** El micrófono que no responde (sesión de audio ocupada) no debe dejar el redactor colgado. */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('El micrófono no respondió. Inténtalo de nuevo.')), ms);
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (error: unknown) => { clearTimeout(timer); reject(error instanceof Error ? error : new Error(String(error))); },
+    );
+  });
 }
 
 function mapsUrlFor(lat: number, lng: number): string {
@@ -249,11 +282,17 @@ export default function ChatThreadScreen() {
   const unavailableConversationRef = useRef<string | null>(null);
   const [historyAccessPending, setHistoryAccessPending] = useState(false);
   const resumeValidationRef = useRef<{ conversationId: string; dataUpdateCount: number } | null>(null);
-  const [editingNickname, setEditingNickname] = useState(false);
-  const [nicknameDraft, setNicknameDraft] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
-  const [viewOnceNext, setViewOnceNext] = useState(false);
   const [sendingMedia, setSendingMedia] = useState(false);
+  const [attachOpen, setAttachOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [pickedMedia, setPickedMedia] = useState<PickedMedia | null>(null);
+  const [actionMessage, setActionMessage] = useState<Message | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Message | null>(null);
+  const [hiddenMessageIds, setHiddenMessageIds] = useState<Set<string>>(() => new Set());
+  /** Se soltó el micrófono antes de que la grabación terminara de arrancar. */
+  const voiceStopRequestRef = useRef<boolean | null>(null);
+  const router = useRouter();
   const [focusedStoryReplyMessageId, setFocusedStoryReplyMessageId] = useState<string | null>(null);
   const [storyReplyNotFound, setStoryReplyNotFound] = useState(false);
   const storyReplySearchRef = useRef<{ id: string; pages: number; before: string | null } | null>(null);
@@ -266,7 +305,6 @@ export default function ChatThreadScreen() {
   // Vista única: la URL real solo llega una vez del backend — se guarda acá
   // para poder volver a mostrarla dentro de esta misma sesión de pantalla.
   const [revealedMedia, setRevealedMedia] = useState<Record<string, RevealedMedia>>({});
-  const [readReceiptMenuOpen, setReadReceiptMenuOpen] = useState(false);
   const [readReceiptSelectionOpen, setReadReceiptSelectionOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [selectedReceiptConversationIds, setSelectedReceiptConversationIds] = useState<string[]>([]);
@@ -371,7 +409,6 @@ export default function ChatThreadScreen() {
           queryClient.invalidateQueries({ queryKey: ['chat', 'conversations'] }),
         ]);
       }
-      setReadReceiptMenuOpen(false);
       setReadReceiptSelectionOpen(false);
       notify.success('Preferencia de lectura actualizada.');
     },
@@ -597,7 +634,10 @@ export default function ChatThreadScreen() {
     ]), historyAccessPending);
   }, [conversationId, conversationRevoked, deletedMessageIds, history.data, history.error, historyAccessPending, liveMessages, olderMessages]);
   /** La lista se pinta invertida, así que los datos van del más nuevo al más viejo. */
-  const timeline = useMemo(() => [...messages].reverse(), [messages]);
+  const timeline = useMemo(
+    () => [...messages].reverse().filter((message) => !hiddenMessageIds.has(message.id)),
+    [hiddenMessageIds, messages],
+  );
   const historyLoaded = !history.isPending;
   useEffect(() => {
     if (historyLoaded && newestAtOpen.current === null) {
@@ -734,15 +774,52 @@ export default function ChatThreadScreen() {
     otherConversation?.otherUserReadReceiptsSinceAt,
   );
 
-  function startEditingNickname() {
-    setNicknameDraft(otherConversation?.nickname ?? '');
-    setEditingNickname(true);
-  }
+  const deleteMessage = useMutation({
+    mutationFn: ({ message, scope }: { message: Message; scope: 'ME' | 'EVERYONE' }) =>
+      chatService.deleteMessage(conversationId, message.id, scope),
+    onSuccess: (_result, { message, scope }) => {
+      setDeleteTarget(null);
+      if (scope === 'ME') {
+        setHiddenMessageIds((current) => new Set(current).add(message.id));
+      } else {
+        const event = { conversationId, messageId: message.id, scope: 'EVERYONE' as const, deletedAt: new Date().toISOString() };
+        deletedMessageIdsRef.current.add(message.id);
+        setDeletedMessageIds((current) => new Set(current).add(message.id));
+        setLiveMessages((current) => applyMessageDeleted(current, event));
+        setOlderMessages((current) => applyMessageDeleted(current, event));
+      }
+      if (editingMessageId === message.id) {
+        setEditingMessageId(null);
+        setDraft('');
+      }
+      void queryClient.invalidateQueries({ queryKey: ['chat', 'messages', conversationId] });
+      void queryClient.invalidateQueries({ queryKey: ['chat', 'conversations'] });
+    },
+    onError: (error: Error) => notify.error(error.message),
+  });
 
-  function saveNickname() {
-    const trimmed = nicknameDraft.trim();
-    setNickname.mutate(trimmed.length ? trimmed : null);
-    setEditingNickname(false);
+  function handleMessageAction(message: Message, action: MessageAction) {
+    setActionMessage(null);
+    if (action === 'copy') {
+      void Clipboard.setStringAsync(message.body ?? '').then(() => notify.success('Mensaje copiado.'));
+    } else if (action === 'edit') {
+      beginMessageEdit(message);
+    } else if (action === 'delete') {
+      // La hoja de acciones se cierra antes de abrir la de eliminar: dos
+      // modales a la vez en iOS dejan el segundo sin presentar.
+      setTimeout(() => setDeleteTarget(message), 350);
+    } else {
+      setTimeout(() => Alert.alert(
+        'Reportar mensaje',
+        'Elige el motivo. Al reportarlo, este chat se cerrará para ambos.',
+        [
+          { text: 'Acoso', onPress: () => reportMessage.mutate({ messageId: message.id, reason: 'ACOSO' }) },
+          { text: 'Spam', onPress: () => reportMessage.mutate({ messageId: message.id, reason: 'SPAM' }) },
+          { text: 'Otro', onPress: () => reportMessage.mutate({ messageId: message.id, reason: 'OTRO' }) },
+          { text: 'Cancelar', style: 'cancel' },
+        ],
+      ), 350);
+    }
   }
 
   const viewOnceOpen = useMutation({
@@ -761,7 +838,8 @@ export default function ChatThreadScreen() {
     onError: (error: Error) => notify.error(error.message),
   });
 
-  const finishAudioRecording = useCallback(async () => {
+  /** Sube la nota de voz ya grabada, o la descarta si se canceló. */
+  const finishAudioRecording = useCallback(async (send: boolean) => {
     setRecordingAudio(false);
     try {
       const recorderStatus = await audioRecorder.getStatus();
@@ -769,8 +847,9 @@ export default function ChatThreadScreen() {
       if (audioRecorder.isRecording) await audioRecorder.stop();
       const uri = audioRecorder.uri;
       await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
+      if (!send) return;
       if (!isChatAudioDurationValid(durationMs)) {
-        notify.error('El mensaje de voz debe durar al menos 1 segundo y no más de 120 segundos.');
+        notify.info('Mantén pulsado el micrófono al menos un segundo para grabar.');
         return;
       }
       if (!uri) {
@@ -799,6 +878,7 @@ export default function ChatThreadScreen() {
     }
   }, [audioRecorder, canWrite, conversationId, showOwnMessage]);
 
+  // El grabador se detiene solo al llegar a los 2 minutos: se envía lo grabado.
   useEffect(() => {
     if (audioRecorderState.isRecording) {
       recordingWasActiveRef.current = true;
@@ -806,43 +886,44 @@ export default function ChatThreadScreen() {
     }
     if (!recordingAudio || !recordingWasActiveRef.current) return;
     recordingWasActiveRef.current = false;
-    void finishAudioRecording();
+    void finishAudioRecording(true);
   }, [audioRecorderState.isRecording, finishAudioRecording, recordingAudio]);
 
-  async function handleRecordAudio() {
-    if (!canWrite || sending || sendingMedia) return;
-    if (recordingAudio) {
-      await finishAudioRecording();
-      return;
-    }
-
+  /** Mantener pulsado el micrófono: pide permiso la primera vez y empieza a grabar. */
+  async function startVoiceNote() {
+    if (!canWrite || sending || sendingMedia || recordingAudio) return;
+    voiceStopRequestRef.current = null;
     try {
       const existing = await getRecordingPermissionsAsync();
-      const permission = existing.granted
-        ? existing
-        : existing.canAskAgain
-          ? await requestRecordingPermissionsAsync()
-          : existing;
-      if (!permission.granted) {
-        if (isMicrophonePermissionPermanentlyDenied(permission)) {
+      if (!existing.granted) {
+        // Con el diálogo del sistema delante el dedo ya se soltó: se pide el
+        // permiso y la próxima pulsación ya graba.
+        const permission = existing.canAskAgain ? await requestRecordingPermissionsAsync() : existing;
+        if (permission.granted) {
+          notify.info('Listo. Mantén pulsado el micrófono para grabar.');
+        } else if (isMicrophonePermissionPermanentlyDenied(permission)) {
           Alert.alert(
             'Permite el micrófono en Ajustes',
-            'Para grabar mensajes de voz, activa el micrófono para GymSheet en los ajustes del dispositivo. Puedes seguir escribiendo mensajes mientras tanto.',
+            'Para grabar notas de voz, activa el micrófono para REPP en los ajustes del dispositivo.',
             [
               { text: 'Ahora no', style: 'cancel' },
               { text: 'Abrir Ajustes', onPress: () => void Linking.openSettings() },
             ],
           );
         } else {
-          notify.error('No se otorgó permiso para el micrófono. Puedes seguir escribiendo mensajes.');
+          notify.error('Sin permiso de micrófono no se pueden grabar notas de voz.');
         }
         return;
       }
 
-      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
-      await audioRecorder.prepareToRecordAsync();
+      await withTimeout((async () => {
+        await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+        await audioRecorder.prepareToRecordAsync();
+      })(), 5_000);
       audioRecorder.record({ forDuration: 119 });
       setRecordingAudio(true);
+      const pendingStop = voiceStopRequestRef.current;
+      if (pendingStop !== null) void finishAudioRecording(pendingStop);
     } catch (error: unknown) {
       setRecordingAudio(false);
       recordingWasActiveRef.current = false;
@@ -851,37 +932,78 @@ export default function ChatThreadScreen() {
       } catch {
         // Keep the text composer available even if audio session cleanup fails.
       }
-      notify.error(error instanceof Error ? error.message : 'No se pudo iniciar la grabación. Puedes escribir un mensaje.');
+      voiceStopRequestRef.current = null;
+      notify.error(error instanceof Error ? error.message : 'No se pudo iniciar la grabación.');
     }
   }
 
-  async function handleAttach() {
+  function stopVoiceNote(send: boolean) {
+    if (!recordingAudio) {
+      // Todavía arrancando: se resuelve en cuanto empiece a grabar.
+      voiceStopRequestRef.current = send;
+      return;
+    }
+    void finishAudioRecording(send);
+  }
+
+  function pickedFrom(asset: ImagePicker.ImagePickerAsset): PickedMedia {
+    const isVideo = asset.type === 'video' || (asset.mimeType ?? '').startsWith('video/');
+    const mimeType = asset.mimeType ?? (isVideo ? 'video/mp4' : 'image/jpeg');
+    return {
+      uri: asset.uri,
+      name: asset.fileName ?? (isVideo ? 'video.mp4' : 'photo.jpg'),
+      mimeType,
+      kind: isVideo ? 'video' : 'image',
+    };
+  }
+
+  async function pickFromGallery() {
     if (!canWrite) return;
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      notify.error('Se necesita acceso a la galería para compartir fotos o video.');
+      notify.error('Se necesita acceso a la galería para compartir fotos o videos.');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images', 'videos'],
       quality: 0.85,
+      // HEIC no está entre los formatos que acepta el servidor: «compatible»
+      // hace que iOS entregue JPEG / MP4.
+      preferredAssetRepresentationMode: ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
+      videoMaxDuration: 120,
     });
     const asset = result.canceled ? null : result.assets?.[0];
-    if (!asset || !conversationId || !canWrite || unavailableConversationRef.current === conversationId) return;
+    if (asset) setPickedMedia(pickedFrom(asset));
+  }
 
-    const isVideo = asset.type === 'video' || (asset.mimeType ?? '').startsWith('video/');
-    const mimeType = asset.mimeType ?? (isVideo ? 'video/mp4' : 'image/jpeg');
-    const name = asset.fileName ?? (isVideo ? 'video.mp4' : 'photo.jpg');
+  async function pickFromCamera() {
+    if (!canWrite) return;
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      notify.error('Se necesita acceso a la cámara para hacer una foto.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images', 'videos'],
+      quality: 0.85,
+      videoMaxDuration: 120,
+    });
+    const asset = result.canceled ? null : result.assets?.[0];
+    if (asset) setPickedMedia(pickedFrom(asset));
+  }
 
+  async function sendPickedMedia({ caption, viewOnce }: { caption: string; viewOnce: boolean }) {
+    const media = pickedMedia;
+    if (!media || !conversationId || !canWrite || unavailableConversationRef.current === conversationId) return;
     setSendingMedia(true);
     try {
       const sent = await chatService.sendMediaMessage(
         conversationId,
-        { uri: asset.uri, name, mimeType },
-        { type: isVideo ? 'video' : 'image', viewOnce: viewOnceNext },
+        { uri: media.uri, name: media.name, mimeType: media.mimeType },
+        { type: media.kind, viewOnce, ...(caption ? { body: caption } : {}) },
       );
       showOwnMessage(sent);
-      setViewOnceNext(false);
+      setPickedMedia(null);
     } catch (error: unknown) {
       notify.error(error instanceof Error ? error.message : 'No se pudo enviar el archivo.');
     } finally {
@@ -988,13 +1110,22 @@ export default function ChatThreadScreen() {
   }
 
   /** Contenido de la burbuja según el tipo de mensaje — el marco (fondo, radios) es igual para todos. */
-  function renderMessageContent(message: Message, mine: boolean) {
+  function renderMessageContent(message: Message, mine: boolean, onLongPress: () => void) {
     const textColor = mine ? colors.background : colors.text;
-    const mutedOnBubble = mine ? 'rgba(11,15,13,0.65)' : colors.textMuted;
+    const mutedOnBubble = mine ? bubbleInkMuted : colors.textMuted;
+
+    if (isTombstone(message, deletedMessageIds)) {
+      return (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+          <Ionicons color={colors.textMuted} name="ban-outline" size={iconSizes.sm} />
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, fontStyle: 'italic' }}>{tombstoneLabel(mine)}</Text>
+        </View>
+      );
+    }
 
     if (message.type === 'audio') {
       return message.mediaUrl
-        ? <ChatAudioMessage token={mediaAccessToken} uri={message.mediaUrl} />
+        ? <ChatAudioMessage mine={mine} token={mediaAccessToken} uri={message.mediaUrl} />
         : <Text style={{ color: mutedOnBubble, fontSize: fontSizes.sm }}>Este audio ya no está disponible.</Text>;
     }
 
@@ -1002,6 +1133,7 @@ export default function ChatThreadScreen() {
       return (
         <PressableScale
           haptic="none"
+          onLongPress={onLongPress}
           onPress={() => void Linking.openURL(mapsUrlFor(message.locationLat as number, message.locationLng as number))}
           style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
         >
@@ -1047,6 +1179,7 @@ export default function ChatThreadScreen() {
           <PressableScale
             disabled={viewOnceOpen.isPending}
             haptic="none"
+            onLongPress={onLongPress}
             onPress={() => viewOnceOpen.mutate(message.id)}
             style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
           >
@@ -1068,7 +1201,7 @@ export default function ChatThreadScreen() {
       }
 
       return (
-        <PressableScale accessibilityLabel="Abrir foto" haptic="none" onPress={() => setViewerUri(url)} scaleTo={0.98}>
+        <PressableScale accessibilityLabel="Abrir foto" haptic="none" onLongPress={onLongPress} onPress={() => setViewerUri(url)} scaleTo={0.98}>
           <Image
             cachePolicy="none"
             contentFit="cover"
@@ -1116,13 +1249,19 @@ export default function ChatThreadScreen() {
       );
     }
     const mine = item.senderId === currentUserId;
-    const mutedOnBubble = mine ? 'rgba(11,15,13,0.65)' : colors.textMuted;
+    const mutedOnBubble = mine ? bubbleInkMuted : colors.textMuted;
     // Los datos van del más nuevo al más viejo: el anterior en el tiempo es el
     // siguiente del arreglo, y en pantalla queda justo encima de este.
     const previous = timeline[index + 1];
     const groupedWithPrevious = previous?.senderId === item.senderId;
     const baseline = newestAtOpen.current;
     const arrivedLater = baseline !== null && item.createdAt > baseline;
+    const tombstone = isTombstone(item, deletedMessageIds);
+    const openActions = () => {
+      if (!currentUserId) return;
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setActionMessage(item);
+    };
     return (
       <Animated.View
         entering={
@@ -1149,7 +1288,7 @@ export default function ChatThreadScreen() {
           borderColor: colors.volt,
           paddingHorizontal: spacing.md,
           paddingVertical: spacing.sm,
-          backgroundColor: mine ? colors.volt : colors.surfaceLow,
+          backgroundColor: tombstone ? colors.surfaceLow : mine ? colors.volt : colors.surfaceLow,
         }}
       >
         {item.storyReference ? (
@@ -1157,63 +1296,35 @@ export default function ChatThreadScreen() {
             {storyReferenceLabel(item.storyReference.available)}
           </Text>
         ) : null}
-        {renderMessageContent(item, mine)}
-        {item.editedAt ? (
-          <Text accessibilityLabel="Mensaje editado" style={{ color: mutedOnBubble, fontSize: 10, alignSelf: 'flex-end' }}>
-            Editado
-          </Text>
-        ) : null}
-        {!mine && !item.deletedAt ? (
-          <PressableScale
-            accessibilityLabel="Reportar mensaje"
-            disabled={reportMessage.isPending}
-            haptic="none"
-            onPress={() => Alert.alert(
-              'Reportar mensaje',
-              'Elige el motivo. Al reportarlo, este chat se cerrará para ambos.',
-              [
-                { text: 'Acoso', onPress: () => reportMessage.mutate({ messageId: item.id, reason: 'ACOSO' }) },
-                { text: 'Spam', onPress: () => reportMessage.mutate({ messageId: item.id, reason: 'SPAM' }) },
-                { text: 'Otro', onPress: () => reportMessage.mutate({ messageId: item.id, reason: 'OTRO' }) },
-                { text: 'Cancelar', style: 'cancel' },
-              ],
-            )}
-            scaleTo={0.97}
-            style={{ alignSelf: 'flex-start', marginTop: spacing.xs, minHeight: minTouchTarget, justifyContent: 'center' }}
-            testID={`chat-message-report-${item.id}`}
-          >
-            <Text style={{ color: mutedOnBubble, fontSize: fontSizes.xs, fontWeight: semibold }}>Reportar</Text>
-          </PressableScale>
-        ) : null}
-        {mine && currentUserId && canWrite && canEditMessage(item, currentUserId) && !deletedMessageIdsRef.current.has(item.id) ? (
-          <PressableScale
-            accessibilityLabel="Editar mensaje"
-            disabled={recordingAudio}
-            haptic="none"
-            onPress={() => beginMessageEdit(item)}
-            scaleTo={0.95}
-            style={{ alignSelf: 'flex-start', marginTop: spacing.xs }}
-            testID={`chat-message-edit-${item.id}`}
-          >
-            <Text style={{ color: mutedOnBubble, fontSize: fontSizes.xs, fontWeight: semibold }}>Editar</Text>
-          </PressableScale>
-        ) : null}
-        <View style={{ flexDirection: 'row', alignSelf: 'flex-end', alignItems: 'center', gap: 3, marginTop: 2 }}>
-          <Text style={{ color: mine ? 'rgba(11,15,13,0.55)' : colors.textMuted, fontSize: 10 }}>
-            {formatTimeOfDay(item.createdAt) ?? ''}
-          </Text>
-          {mine ? (
-            <Ionicons
-              color={isMessageReadByOther(item.createdAt, otherLastReadAt, otherReadReceiptsSince)
-                ? READ_TICK_COLOR
-                : 'rgba(11,15,13,0.55)'}
-              name={
-                otherLastDeliveredAt && item.createdAt <= otherLastDeliveredAt ? 'checkmark-done' : 'checkmark'
-              }
-              size={13}
-            />
-          ) : null}
-        </View>
+        <Pressable
+          accessibilityHint="Mantén pulsado para copiar, editar o eliminar"
+          delayLongPress={300}
+          onLongPress={openActions}
+          testID={`chat-message-${item.id}`}
+        >
+          {renderMessageContent(item, mine, openActions)}
+          <View style={{ flexDirection: 'row', alignSelf: 'flex-end', alignItems: 'center', gap: 3, marginTop: 2 }}>
+            {item.editedAt && !tombstone ? (
+              <Text accessibilityLabel="Mensaje editado" style={{ color: mine && !tombstone ? bubbleInkFaint : colors.textMuted, fontSize: fontSizes.micro }}>
+                Editado
+              </Text>
+            ) : null}
+            <Text style={{ color: mine && !tombstone ? bubbleInkFaint : colors.textMuted, fontSize: fontSizes.micro }}>
+              {formatTimeOfDay(item.createdAt) ?? ''}
+            </Text>
+            {mine && !tombstone ? (
+              <Ionicons
+                color={isMessageReadByOther(item.createdAt, otherLastReadAt, otherReadReceiptsSince)
+                  ? READ_TICK_COLOR
+                  : bubbleInkFaint}
+                name={
+                  otherLastDeliveredAt && item.createdAt <= otherLastDeliveredAt ? 'checkmark-done' : 'checkmark'
+                }
+                size={13}
+              />
+            ) : null}
+          </View>
+        </Pressable>
       </Animated.View>
     );
   }
@@ -1252,134 +1363,103 @@ export default function ChatThreadScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={{
             flex: 1,
-            paddingTop: topInset + spacing.xl,
+            paddingTop: topInset + spacing.sm,
             paddingBottom: insets.bottom + spacing.md,
             paddingLeft: gutter + insets.left,
             paddingRight: gutter + insets.right,
           }}
         >
-          <BackLink />
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md }}>
-            <View>
-              {otherPhotoUrl ? (
-                <Image
-                  contentFit="cover"
-                  source={{ uri: otherPhotoUrl }}
-                  style={{ width: 48, height: 48, borderRadius: radii.full, backgroundColor: colors.surfaceHigh }}
-                />
-              ) : (
-                <View
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: radii.full,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: colors.volt,
-                  }}
-                >
-                  <Text style={{ color: colors.background, fontSize: fontSizes.md, fontWeight: '700' }}>
-                    {initialsOf(otherName, undefined)}
-                  </Text>
-                </View>
-              )}
-              {otherOnline ? (
-                <View
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    right: 0,
-                    width: 13,
-                    height: 13,
-                    borderRadius: radii.full,
-                    backgroundColor: colors.success,
-                    borderWidth: 2,
-                    borderColor: colors.background,
-                  }}
-                />
-              ) : null}
-            </View>
-            <View style={{ flex: 1, gap: 1 }}>
-              {editingNickname ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-                  <TextInput
-                    autoFocus
-                    keyboardAppearance="dark"
-                    maxLength={60}
-                    onChangeText={setNicknameDraft}
-                    onSubmitEditing={saveNickname}
-                    placeholder={otherName}
-                    placeholderTextColor={colors.textDisabled}
-                    returnKeyType="done"
-                    style={{
-                      flex: 1,
-                      color: colors.text,
-                      fontSize: fontSizes.lg,
-                      fontWeight: semibold,
-                      borderBottomWidth: 1,
-                      borderColor: colors.border,
-                      paddingVertical: 2,
-                    }}
-                    value={nicknameDraft}
-                  />
-                  <PressableScale
-                    accessibilityLabel="Guardar apodo"
-                    hitSlop={spacing.sm}
-                    onPress={saveNickname}
-                    scaleTo={0.9}
-                  >
-                    <Ionicons color={colors.volt} name="checkmark" size={iconSizes.md} />
-                  </PressableScale>
-                  <PressableScale
-                    accessibilityLabel="Cancelar"
-                    haptic="none"
-                    hitSlop={spacing.sm}
-                    onPress={() => setEditingNickname(false)}
-                    scaleTo={0.9}
-                  >
-                    <Ionicons color={colors.textMuted} name="close" size={iconSizes.md} />
-                  </PressableScale>
-                </View>
-              ) : (
-                <PressableScale
-                  accessibilityHint="Ponerle un apodo privado a esta conversación"
-                  accessibilityLabel={`${displayName ?? 'Conversación'}, tocar para editar apodo`}
-                  haptic="none"
-                  onPress={startEditingNickname}
-                  scaleTo={0.98}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
-                >
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      flexShrink: 1,
-                      color: colors.text,
-                      fontSize: fontSizes.lg,
-                      fontWeight: semibold,
-                      letterSpacing: fontSizes.lg * -0.02,
-                    }}
-                  >
-                    {displayName ?? 'Conversación'}
-                  </Text>
-                  <Ionicons color={colors.textMuted} name="pencil-outline" size={fontSizes.sm} />
-                </PressableScale>
-              )}
-              <Text style={{ color: otherOnline ? colors.success : colors.textMuted, fontSize: fontSizes.xs }}>
-                {presenceLabel(otherOnline, otherLastSeenAt)}
-              </Text>
-            </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
             <PressableScale
-              accessibilityLabel="Más opciones de conversación"
+              accessibilityLabel="Volver"
+              haptic="none"
+              hitSlop={spacing.sm}
+              onPress={() => (router.canGoBack() ? router.back() : router.replace('/comunidad'))}
+              scaleTo={0.9}
+              style={{ width: 32, height: minTouchTarget, alignItems: 'flex-start', justifyContent: 'center' }}
+            >
+              <Ionicons color={colors.text} name="chevron-back" size={iconSizes.lg + 2} />
+            </PressableScale>
+            {/* Como en WhatsApp: tocar la persona abre su info (apodo, visto,
+                entrenar juntos). Antes el nombre se convertía en un campo de
+                texto al tocarlo, con un lápiz pegado. */}
+            <PressableScale
+              accessibilityHint="Abre la info del contacto: apodo y confirmación de lectura"
+              accessibilityLabel={`${displayName ?? 'Conversación'}, ${presenceLabel(otherOnline, otherLastSeenAt)}`}
+              haptic="none"
+              onPress={() => setContactOpen(true)}
+              scaleTo={0.98}
+              style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}
+              testID="chat-contact-header"
+            >
+              <View>
+                {otherPhotoUrl ? (
+                  <Image
+                    contentFit="cover"
+                    source={{ uri: otherPhotoUrl }}
+                    style={{ width: 40, height: 40, borderRadius: radii.full, backgroundColor: colors.surfaceHigh }}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: radii.full,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: colors.volt,
+                    }}
+                  >
+                    <Text style={{ color: colors.background, fontSize: fontSizes.sm, fontWeight: '700' }}>
+                      {initialsOf(otherName, undefined)}
+                    </Text>
+                  </View>
+                )}
+                {otherOnline ? (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      right: 0,
+                      width: 12,
+                      height: 12,
+                      borderRadius: radii.full,
+                      backgroundColor: colors.success,
+                      borderWidth: 2,
+                      borderColor: colors.background,
+                    }}
+                  />
+                ) : null}
+              </View>
+              <View style={{ flex: 1, gap: 1 }}>
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    color: colors.text,
+                    fontSize: fontSizes.callout,
+                    fontWeight: semibold,
+                    letterSpacing: fontSizes.callout * -0.01,
+                  }}
+                >
+                  {displayName ?? 'Conversación'}
+                </Text>
+                <Text numberOfLines={1} style={{ color: otherOnline ? colors.success : colors.textMuted, fontSize: fontSizes.xs }}>
+                  {presenceLabel(otherOnline, otherLastSeenAt)}
+                </Text>
+              </View>
+            </PressableScale>
+            <PressableScale
+              accessibilityLabel="Info. del contacto"
               accessibilityRole="button"
-              disabled={!readReceiptSettings.data}
-              onPress={() => setReadReceiptMenuOpen(true)}
+              haptic="none"
+              onPress={() => setContactOpen(true)}
+              scaleTo={0.9}
               style={{
                 width: minTouchTarget,
                 height: minTouchTarget,
                 borderRadius: radii.full,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: colors.surfaceHigh,
               }}
             >
               <Ionicons color={colors.text} name="ellipsis-vertical" size={iconSizes.md} />
@@ -1447,145 +1527,23 @@ export default function ChatThreadScreen() {
           />
 
           {canWrite ? (
-            <View style={{ gap: spacing.xs, paddingTop: spacing.sm }}>
-              {editingMessageId ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text style={{ color: colors.volt, fontSize: fontSizes.xs, fontWeight: semibold }}>Editando mensaje</Text>
-                  <PressableScale
-                    accessibilityLabel="Cancelar edición"
-                    haptic="none"
-                    onPress={cancelMessageEdit}
-                    style={{ paddingHorizontal: spacing.sm, paddingVertical: spacing.xs }}
-                  >
-                    <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>Cancelar</Text>
-                  </PressableScale>
-                </View>
-              ) : null}
-              {viewOnceNext ? (
-                <Text style={{ color: colors.volt, fontSize: fontSizes.xs, fontWeight: semibold }}>
-                  Vista única activada — se aplica a la próxima foto o video.
-                </Text>
-              ) : null}
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: spacing.xs,
-                  borderRadius: radii.lg,
-                  borderWidth: 1,
-                  borderColor: colors.borderSubtle,
-                  backgroundColor: colors.surface,
-                  padding: spacing.sm,
-                }}
-              >
-                {/* Los cuatro iconos del compositor: antes eran `Pressable` mudos
-                    de 24 px, que es justo el control que se toca muchas veces
-                    seguidas y del que más se espera respuesta. Hundimiento sin
-                    háptico —abren cosas, no confirman nada— y un área de toque
-                    ampliada hasta los 44 pt. */}
-                <PressableScale
-                  accessibilityLabel="Emojis"
-                  disabled={sendingMedia}
-                  haptic="none"
-                  hitSlop={spacing.sm}
-                  onPress={() => setEmojiOpen(true)}
-                  scaleTo={0.9}
-                  style={{ padding: 6 }}
-                >
-                  <Ionicons color={colors.textMuted} name="happy-outline" size={iconSizes.md} />
-                </PressableScale>
-                <PressableScale
-                  accessibilityLabel="Adjuntar foto o video"
-                  disabled={Boolean(editingMessageId) || sendingMedia}
-                  haptic="none"
-                  hitSlop={spacing.sm}
-                  onPress={() => void handleAttach()}
-                  scaleTo={0.9}
-                  style={{ padding: 6 }}
-                >
-                  <Ionicons color={colors.textMuted} name="image-outline" size={iconSizes.md} />
-                </PressableScale>
-                <PressableScale
-                  accessibilityLabel={recordingAudio ? 'Detener y enviar mensaje de voz' : 'Grabar mensaje de voz'}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: recordingAudio, disabled: Boolean(editingMessageId) || sending || sendingMedia }}
-                  disabled={Boolean(editingMessageId) || sending || sendingMedia}
-                  haptic="none"
-                  hitSlop={spacing.sm}
-                  onPress={() => void handleRecordAudio()}
-                  scaleTo={0.9}
-                  style={{ padding: 6 }}
-                >
-                  <Ionicons
-                    color={recordingAudio ? colors.volt : colors.textMuted}
-                    name={recordingAudio ? 'stop-circle' : 'mic-outline'}
-                    size={iconSizes.md}
-                  />
-                </PressableScale>
-                {recordingAudio ? (
-                  <Text
-                    accessibilityLabel={chatAudioRecordingDurationLabel(audioRecorderState.durationMillis)}
-                    style={{ color: colors.volt, fontSize: fontSizes.xs, fontVariant: ['tabular-nums'] }}
-                  >
-                    {Math.floor(audioRecorderState.durationMillis / 1_000)}s
-                  </Text>
-                ) : null}
-                <PressableScale
-                  accessibilityLabel="Compartir ubicación"
-                  disabled={Boolean(editingMessageId) || sendingMedia}
-                  haptic="none"
-                  hitSlop={spacing.sm}
-                  onPress={() => void handleShareLocation()}
-                  scaleTo={0.9}
-                  style={{ padding: 6 }}
-                >
-                  <Ionicons color={colors.textMuted} name="location-outline" size={iconSizes.md} />
-                </PressableScale>
-                <PressableScale
-                  accessibilityLabel="Vista única para la próxima foto o video"
-                  accessibilityState={{ selected: viewOnceNext, disabled: Boolean(editingMessageId) || sendingMedia }}
-                  disabled={Boolean(editingMessageId) || sendingMedia}
-                  haptic="selection"
-                  hitSlop={spacing.sm}
-                  onPress={() => setViewOnceNext((current) => !current)}
-                  scaleTo={0.9}
-                  style={{ padding: 6 }}
-                >
-                  {/* El interruptor cambia de icono Y de color: se desvanece de
-                      uno a otro en lugar de saltar, que es lo que dice «ahora
-                      está activo» sin que haga falta leer nada. */}
-                  <Animated.View entering={FadeIn.duration(DURATION.quick)} key={viewOnceNext ? 'on' : 'off'}>
-                    <Ionicons
-                      color={viewOnceNext ? colors.volt : colors.textMuted}
-                      name={viewOnceNext ? 'eye' : 'eye-outline'}
-                      size={iconSizes.md}
-                    />
-                  </Animated.View>
-                </PressableScale>
-                <TextInput
-                  accessibilityLabel={editingMessageId ? 'Editar mensaje actual' : 'Escribe un mensaje'}
-                  keyboardAppearance="dark"
-                  onChangeText={setDraft}
-                  placeholder={editingMessageId ? 'Edita tu mensaje…' : 'Escribe un mensaje…'}
-                  placeholderTextColor={colors.textDisabled}
-                  style={{
-                    flex: 1,
-                    minHeight: minTouchTarget,
-                    color: colors.text,
-                    fontSize: fontSizes.md,
-                    paddingHorizontal: spacing.sm,
-                  }}
-                  value={draft}
-                />
-                <Button
-                  accessibilityLabel={editingMessageId ? 'Guardar edición' : 'Enviar mensaje'}
-                  icon={editingMessageId ? 'checkmark' : 'send'}
-                  label=""
-                  loading={sending || sendingMedia || savingEdit}
-                  onPress={() => void (editingMessageId ? handleSaveMessageEdit() : handleSend())}
-                  style={{ paddingHorizontal: spacing.md }}
-                />
-              </View>
+            <View style={{ paddingTop: spacing.sm }}>
+              <ChatComposer
+                busy={sendingMedia}
+                draft={draft}
+                editing={editingMessageId ? { body: messages.find((message) => message.id === editingMessageId)?.body ?? '' } : null}
+                onCancelEdit={cancelMessageEdit}
+                onChangeDraft={setDraft}
+                onOpenAttach={() => setAttachOpen(true)}
+                onOpenCamera={() => void pickFromCamera()}
+                onOpenEmoji={() => setEmojiOpen(true)}
+                onSend={() => void (editingMessageId ? handleSaveMessageEdit() : handleSend())}
+                onVoiceStart={() => void startVoiceNote()}
+                onVoiceStop={stopVoiceNote}
+                recording={recordingAudio}
+                recordingMillis={audioRecorderState.durationMillis}
+                sending={sending || savingEdit}
+              />
             </View>
           ) : (
             <View
@@ -1634,7 +1592,7 @@ export default function ChatThreadScreen() {
           accessibilityLabel="Cerrar"
           accessibilityRole="button"
           onPress={() => setViewerUri(null)}
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', alignItems: 'center', justifyContent: 'center' }}
+          style={{ flex: 1, backgroundColor: overlay.scrimSolid, alignItems: 'center', justifyContent: 'center' }}
         >
           {visibleViewerUri ? (
             <Image
@@ -1654,96 +1612,104 @@ export default function ChatThreadScreen() {
         onEmojiSelected={(selection) => setDraft((current) => current + selection.emoji)}
         open={emojiOpen}
       />
-      <Modal
-        animationType="fade"
-        onRequestClose={() => setReadReceiptMenuOpen(false)}
-        transparent
-        visible={readReceiptMenuOpen}
-      >
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.52)' }}>
-          <Pressable
-            accessibilityLabel="Cerrar opciones"
-            onPress={() => setReadReceiptMenuOpen(false)}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-          />
-          <View
-            style={{
-              gap: spacing.sm,
-              padding: spacing.lg,
-              paddingBottom: Math.max(insets.bottom, spacing.lg),
-              borderTopLeftRadius: radii.xl,
-              borderTopRightRadius: radii.xl,
-              backgroundColor: colors.surface,
-              borderColor: colors.borderSubtle,
-              borderWidth: 1,
-            }}
-          >
-            <Text style={{ color: colors.text, fontSize: fontSizes.lg, fontWeight: semibold }}>
-              Confirmación de lectura
-            </Text>
-            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
-              El visto aparece solo si ambos lo permiten. Puedes cambiar este chat o aplicar el ajuste a todos.
-            </Text>
-            <PressableScale
-              accessibilityRole="button"
-              disabled={!readReceiptSettings.data || updateReadReceiptSettings.isPending}
-              onPress={() => {
-                const settings = readReceiptSettings.data;
-                if (!settings) return;
-                updateReadReceiptSettings.mutate({
-                  scope: 'CONVERSATION',
-                  conversationId,
-                  enabled: !settings.enabled,
-                  expectedVersion: settings.version,
-                });
-              }}
-              style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceHigh }}
-            >
-              <Text style={{ color: colors.text, fontSize: fontSizes.md }}>
-                {readReceiptSettings.data?.enabled ? 'Desactivar solo en este chat' : 'Activar solo en este chat'}
-              </Text>
-            </PressableScale>
-            <PressableScale
-              accessibilityRole="button"
-              disabled={!conversations.data?.length || !readReceiptSettings.data}
-              onPress={() => {
-                setSelectedReceiptConversationIds([conversationId]);
-                setReadReceiptMenuOpen(false);
-                setReadReceiptSelectionOpen(true);
-              }}
-              style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceHigh }}
-            >
-              <Text style={{ color: colors.text, fontSize: fontSizes.md }}>Elegir conversaciones…</Text>
-            </PressableScale>
-            <PressableScale
-              accessibilityRole="button"
-              disabled={!readReceiptSettings.data || updateReadReceiptSettings.isPending}
-              onPress={() => {
-                const settings = readReceiptSettings.data;
-                if (!settings) return;
-                updateReadReceiptSettings.mutate({
-                  scope: 'ALL',
-                  enabled: !settings.defaultEnabled,
-                  expectedVersion: settings.version,
-                });
-              }}
-              style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceHigh }}
-            >
-              <Text style={{ color: colors.text, fontSize: fontSizes.md }}>
-                {readReceiptSettings.data?.defaultEnabled ? 'Desactivar en todos los chats' : 'Activar en todos los chats'}
-              </Text>
-            </PressableScale>
-            <Button label="Cerrar" onPress={() => setReadReceiptMenuOpen(false)} variant="ghost" />
-          </View>
-        </View>
-      </Modal>
+      <AttachSheet
+        onCamera={() => void pickFromCamera()}
+        onClose={() => setAttachOpen(false)}
+        onGallery={() => void pickFromGallery()}
+        onLocation={() => void handleShareLocation()}
+        onTrainTogether={otherConversation?.systemKind === null && otherUserId ? () => setInviteModalOpen(true) : null}
+        visible={attachOpen}
+      />
+      <MediaPreview
+        media={pickedMedia}
+        onCancel={() => setPickedMedia(null)}
+        onSend={(options) => void sendPickedMedia(options)}
+        sending={sendingMedia}
+      />
+      <MessageActionsSheet
+        actions={actionMessage && currentUserId
+          ? messageActions(actionMessage, currentUserId, {
+            canWrite,
+            tombstone: isTombstone(actionMessage, deletedMessageIds),
+          })
+          : []}
+        onAction={(action) => actionMessage && handleMessageAction(actionMessage, action)}
+        onClose={() => setActionMessage(null)}
+        preview={actionMessage
+          ? isTombstone(actionMessage, deletedMessageIds)
+            ? tombstoneLabel(actionMessage.senderId === currentUserId)
+            : actionMessage.body ?? (actionMessage.type === 'audio' ? 'Nota de voz'
+              : actionMessage.type === 'location' ? 'Ubicación'
+                : actionMessage.type === 'video' ? 'Video' : 'Foto')
+          : ''}
+        visible={Boolean(actionMessage)}
+      />
+      <DeleteMessageSheet
+        canDeleteForEveryone={Boolean(
+          deleteTarget && currentUserId &&
+          !isTombstone(deleteTarget, deletedMessageIds) &&
+          canDeleteForEveryone(deleteTarget, currentUserId),
+        )}
+        onClose={() => setDeleteTarget(null)}
+        onDelete={(scope) => deleteTarget && deleteMessage.mutate({ message: deleteTarget, scope })}
+        pending={deleteMessage.isPending}
+        visible={Boolean(deleteTarget)}
+      />
+      <ContactInfoSheet
+        allChatsReceiptsEnabled={readReceiptSettings.data?.defaultEnabled}
+        name={otherName ?? 'Conversación'}
+        nickname={otherConversation?.nickname ?? null}
+        onClose={() => setContactOpen(false)}
+        onOpenProfile={otherUserId ? () => {
+          setContactOpen(false);
+          router.push({ pathname: '/perfil/[userId]', params: { userId: otherUserId } });
+        } : null}
+        onSaveNickname={(nickname) => setNickname.mutate(nickname, {
+          onSuccess: () => notify.success(nickname ? 'Apodo guardado.' : 'Apodo eliminado.'),
+        })}
+        onToggleAllChatsReceipts={() => {
+          const settings = readReceiptSettings.data;
+          if (!settings) return;
+          updateReadReceiptSettings.mutate({
+            scope: 'ALL',
+            enabled: !settings.defaultEnabled,
+            expectedVersion: settings.version,
+          });
+        }}
+        onChooseChats={() => {
+          setSelectedReceiptConversationIds([conversationId]);
+          setContactOpen(false);
+          setTimeout(() => setReadReceiptSelectionOpen(true), 350);
+        }}
+        onToggleReceipts={(enabled) => {
+          const settings = readReceiptSettings.data;
+          if (!settings) return;
+          updateReadReceiptSettings.mutate({
+            scope: 'CONVERSATION',
+            conversationId,
+            enabled,
+            expectedVersion: settings.version,
+          });
+        }}
+        onTrainTogether={otherConversation?.systemKind === null && canWrite && otherUserId ? () => {
+          setContactOpen(false);
+          setTimeout(() => setInviteModalOpen(true), 350);
+        } : null}
+        online={otherOnline}
+        photoUrl={otherPhotoUrl}
+        presence={presenceLabel(otherOnline, otherLastSeenAt)}
+        receiptsEnabled={readReceiptSettings.data?.enabled}
+        receiptsPending={updateReadReceiptSettings.isPending}
+        savingNickname={setNickname.isPending}
+        visible={contactOpen}
+      />
       <Modal
         animationType="slide"
         onRequestClose={() => setReadReceiptSelectionOpen(false)}
         transparent
         visible={readReceiptSelectionOpen}
       >
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.52)' }}>
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: overlay.scrimSheet }}>
           <Pressable
             accessibilityLabel="Cerrar selección"
             onPress={() => setReadReceiptSelectionOpen(false)}

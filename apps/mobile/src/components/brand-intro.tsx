@@ -1,4 +1,3 @@
-import { ReppMark } from '@/components/brand/repp-mark';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,6 +15,7 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
+import { ReppIntro } from '@/components/brand/repp-intro';
 import { DURATION, PREMIUM_EASING } from '@/components/motion';
 import {
   accentContrast,
@@ -146,7 +146,7 @@ const SWEEP_IN = DURATION.slow;
 const WORDMARK_AT = SWEEP_AT + 210;
 /**
  * Ventana total del escalonado, **repartida** entre las letras en vez de un
- * retardo fijo por letra. Con un retardo fijo, `GYMSHEET` (8) y `TOP FITNESS`
+ * retardo fijo por letra. Con un retardo fijo, `REPP` y `TOP FITNESS`
  * (11) tendrían revelados de duración distinta y la cortinilla duraría más en
  * un gimnasio que en otro. Así el acto dura lo mismo para cualquier marca.
  */
@@ -331,6 +331,13 @@ const WORDMARK_TRACKING = 0.3;
 /* -------------------------------------------------------------------------- */
 
 export function BrandIntro({ ready }: { ready: boolean }) {
+  const tenant = useActiveTenant();
+  // REPP tiene su propia escena: arranca en el signo del splash nativo y lo
+  // transforma en el logotipo. El resto de marcas usan la cortinilla genérica.
+  return tenant.name === 'REPP' ? <ReppIntro onFinish={finish} ready={ready} /> : <TenantIntro ready={ready} />;
+}
+
+function TenantIntro({ ready }: { ready: boolean }) {
   const tenant = useActiveTenant();
   const reduceMotion = useReducedMotion();
 
@@ -629,7 +636,7 @@ export function BrandIntro({ ready }: { ready: boolean }) {
               }}
             >
               {/* El relleno de marca, con su degradado declarado por inquilino:
-                  el lima de REPP o el rojo de TOP Fitness, sin una sola
+                  el jade de REPP o el rojo de TOP Fitness, sin una sola
                   línea que sepa cuál de los dos es. */}
               <LinearGradient
                 colors={gradient}
@@ -643,24 +650,19 @@ export function BrandIntro({ ready }: { ready: boolean }) {
                   Va en `accentContrast()` porque está *encima* del relleno, que
                   es exactamente el caso que ese token resuelve — el negro sobre
                   el lima y el blanco sobre el rojo. */}
-              {tenant.id === 'gymsheet' ? (
-                // REPP tiene signo propio (vectorial: aguanta el zoom igual que la tipografía).
-                <ReppMark ink={ink} size={EMBLEM * 0.6} tick={ink} />
-              ) : (
-                <Text
-                  style={{
-                    color: ink,
-                    fontSize: EMBLEM * 0.46,
-                    fontWeight: '800',
-                    // Tracking negativo: dos letras sueltas leen como dos letras;
-                    // apretadas leen como un monograma.
-                    letterSpacing: -EMBLEM * 0.02,
-                    includeFontPadding: false,
-                  }}
-                >
-                  {tenant.monogram}
-                </Text>
-              )}
+              <Text
+                style={{
+                  color: ink,
+                  fontSize: EMBLEM * 0.46,
+                  fontWeight: '800',
+                  // Tracking negativo: dos letras sueltas leen como dos letras;
+                  // apretadas leen como un monograma.
+                  letterSpacing: -EMBLEM * 0.02,
+                  includeFontPadding: false,
+                }}
+              >
+                {tenant.monogram}
+              </Text>
 
               {/* El destello que recorre el emblema. El momento reconocible. */}
               {reduceMotion ? null : (

@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { socialService } from '@/features/social/services/social-service';
 import { publicFacilitiesClient } from '@/features/public-facilities/services/public-facilities-client';
 import type { SocialMapBounds } from '@/shared/api/schemas';
+import { mapMarkerColors } from '@/shared/theme/map-marker-colors';
 
 type Layer = 'BOTH' | 'PEOPLE' | 'GYMS';
 const MAP_TILE_URL = process.env.NEXT_PUBLIC_MAP_TILE_URL ||
@@ -136,7 +137,7 @@ export function SocialMapClient({ viewerId }: Readonly<{ viewerId: string }>) {
                 center={[cell.center.latitude, cell.center.longitude]}
                 eventHandlers={{ click: () => setCellId(cell.id) }}
                 key={cell.id}
-                pathOptions={{ color: '#c8f31d', fillColor: '#c8f31d', fillOpacity: 0.72, weight: 2 }}
+                pathOptions={{ color: mapMarkerColors.people, fillColor: mapMarkerColors.people, fillOpacity: 0.72, weight: 2 }}
                 radius={Math.min(26, 9 + cell.count)}
               >
                 <Popup>{cell.count} {cell.count === 1 ? 'persona' : 'personas'} eligibles · zona aproximada</Popup>
@@ -146,14 +147,14 @@ export function SocialMapClient({ viewerId }: Readonly<{ viewerId: string }>) {
               <CircleMarker
                 center={[gym.latitud as number, gym.longitud as number]}
                 key={gym.id}
-                pathOptions={{ color: '#5b62ea', fillColor: '#5b62ea', fillOpacity: 0.9, weight: 2 }}
+                pathOptions={{ color: mapMarkerColors.registeredGym, fillColor: mapMarkerColors.registeredGym, fillOpacity: 0.9, weight: 2 }}
                 radius={8}
               >
                 <Popup><Link href={`/gimnasios/${gym.id}`}>{gym.nombre}</Link><br />Gimnasio registrado</Popup>
               </CircleMarker>
             ))}
             {layer !== 'PEOPLE' && (externalGyms.data ?? []).map((gym) => (
-              <CircleMarker center={[gym.latitude, gym.longitude]} key={gym.sourceId} pathOptions={{ color: '#ef8f35', fillColor: '#ef8f35', fillOpacity: 0.9, weight: 2 }} radius={7}>
+              <CircleMarker center={[gym.latitude, gym.longitude]} key={gym.sourceId} pathOptions={{ color: mapMarkerColors.externalGym, fillColor: mapMarkerColors.externalGym, fillOpacity: 0.9, weight: 2 }} radius={7}>
                 <Popup>
                   <strong>{gym.name}</strong><br />{gym.address ?? gym.city ?? 'Dirección no disponible'}<br />
                   OpenStreetMap · externo<br /><a href="https://www.openstreetmap.org/copyright" rel="noreferrer" target="_blank">© OpenStreetMap contributors</a>

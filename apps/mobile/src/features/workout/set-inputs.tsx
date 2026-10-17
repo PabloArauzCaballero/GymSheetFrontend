@@ -158,7 +158,7 @@ function StepperField({
             placeholder="0"
             placeholderTextColor={colors.textMuted}
             selectTextOnFocus
-            style={[{ minWidth: 48, padding: 0, color: colors.text, fontSize: 34, lineHeight: 40, fontWeight: '800', textAlign: 'center' }, tabularNums]}
+            style={[{ minWidth: 48, padding: 0, color: colors.text, fontSize: fontSizes['2xl'], lineHeight: 40, fontWeight: '800', textAlign: 'center' }, tabularNums]}
             testID={testID}
             value={value}
           />

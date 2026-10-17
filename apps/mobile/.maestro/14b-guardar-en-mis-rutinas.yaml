@@ -24,7 +24,7 @@ env:
 # RF-10 · p04: hay versión nueva en la copia preparada de «Pierna 3 días».
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Pierna 3 días' }
+    env: { TAB: 'Privadas', NAME: 'Pierna 3 días' }
 - extendedWaitUntil:
     visible: 'Hay una versión nueva de la original'
     timeout: 20000
@@ -48,6 +48,6 @@ env:
 # RF-10 · p06: una rutina hecha desde cero no lleva franja de atribución.
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Torso de Leo' }
+    env: { TAB: 'Privadas', NAME: 'Torso de Leo' }
 - assertNotVisible: 'Basada en.*'
 - takeScreenshot: RF-10_p06_sin-franja_ios_oscuro

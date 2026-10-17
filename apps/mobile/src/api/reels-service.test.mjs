@@ -2,8 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requestMock = vi.hoisted(() => vi.fn());
 const uploadMock = vi.hoisted(() => vi.fn());
+const appendLocalFileMock = vi.hoisted(() => vi.fn(async () => undefined));
 vi.mock("@/api/client", () => ({
   apiClient: { request: requestMock, upload: uploadMock },
+}));
+vi.mock("@/api/local-file-part", () => ({
+  appendLocalFile: appendLocalFileMock,
 }));
 
 import { reelSchema, reelsFeedSchema } from "@gymsheet/schemas";
@@ -58,12 +62,13 @@ describe("reelsService (mobile)", () => {
         reelSchema,
         expect.any(CapturedFormData),
       );
-      expect(appendMock).toHaveBeenCalledTimes(1);
-      expect(appendMock).toHaveBeenCalledWith("file", {
-        uri: file.uri,
-        name: file.name,
-        type: file.mimeType,
-      });
+      expect(appendLocalFileMock).toHaveBeenCalledTimes(1);
+      expect(appendLocalFileMock).toHaveBeenCalledWith(
+        expect.any(CapturedFormData),
+        "file",
+        file,
+      );
+      expect(appendMock).not.toHaveBeenCalled();
     } finally {
       vi.unstubAllGlobals();
     }

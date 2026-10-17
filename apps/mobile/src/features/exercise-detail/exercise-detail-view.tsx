@@ -1,27 +1,37 @@
-import { exerciseDisplayName } from '@gymsheet/hooks';
-import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
-import { bodyPartLabelEs, exerciseGroupLabelEs, muscleLabelEs } from '@gymsheet/domain';
+import { exerciseDisplayName } from "@gymsheet/hooks";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import { ScrollView, Text, View } from "react-native";
+import {
+  bodyPartLabelEs,
+  exerciseGroupLabelEs,
+  muscleLabelEs,
+} from "@gymsheet/domain";
 import {
   Badge,
-  Card,
-  Divider,
-  Row,
   ScrollScreen,
   ScreenHeader,
   Section,
-} from '@/components/layout';
-import { ErrorState, Skeleton } from '@/components/feedback';
-import { ExerciseDemo, ExerciseImage } from '@/components/media';
-import { PressableScale } from '@/components/motion';
-import { BackLink } from '@/components/nav';
-import { Button } from '@/components/ui';
-import { Description, MuscleChip, stepsOf } from '@/features/exercise-detail/detail-parts';
-import { ExerciseSocial } from '@/features/exercise-detail/exercise-social';
-import { accountService, exerciseService, muscleService } from '@/api/services';
-import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
-import { routes } from '@/lib/routes';
+} from "@/components/layout";
+import { ErrorState } from "@/components/feedback";
+import { ExerciseDemo, ExerciseImage } from "@/components/media";
+import { PressableScale } from "@/components/motion";
+import { BackLink } from "@/components/nav";
+import { Button } from "@/components/ui";
+import { Description, stepsOf } from "@/features/exercise-detail/detail-parts";
+import {
+  distinctLabels,
+  ExerciseDetailSkeleton,
+  FactGrid,
+  MuscleGroups,
+  StepsTimeline,
+  type Fact,
+  type MuscleGroup,
+} from "@/features/exercise-detail/detail-sections";
+import { ExerciseSocial } from "@/features/exercise-detail/exercise-social";
+import { accountService, exerciseService, muscleService } from "@/api/services";
+import { colors, fontSizes, radii, semibold, spacing } from "@/theme";
+import { routes } from "@/lib/routes";
 
 /** Alto reservado al final de la ficha para que el botón fijo no tape el contenido. */
 const PICK_BAR_CLEARANCE = 112;
@@ -33,13 +43,21 @@ const PICK_BAR_CLEARANCE = 112;
  */
 export type DetailPick = { added: boolean; onToggle: () => void };
 
-export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick }) {
+export function ExerciseDetailView({
+  id,
+  pick,
+}: {
+  id: string;
+  pick?: DetailPick;
+}) {
   const router = useRouter();
 
   const exercise = useQuery({
-    queryKey: ['exercise', id],
+    queryKey: ["exercise", id],
     queryFn: () => exerciseService.get(id),
     enabled: Boolean(id),
+    // Se guarda en disco: una ficha ya vista abre al instante y se revalida detrás.
+    staleTime: 10 * 60 * 1000,
   });
 
   /**
@@ -48,7 +66,7 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
    * en vez de pedir la cuenta otra vez.
    */
   const account = useQuery({
-    queryKey: ['user', 'me'],
+    queryKey: ["user", "me"],
     queryFn: () => accountService.getMe(),
   });
 
@@ -56,7 +74,7 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
   // consulta falla o aún no llega, la sección simplemente no aparece y quedan
   // los textos de «Objetivo técnico»; no se bloquea nada por ella.
   const muscles = useQuery({
-    queryKey: ['exercise', id, 'muscles'],
+    queryKey: ["exercise", id, "muscles"],
     queryFn: () => muscleService.forExercise(id),
     enabled: Boolean(id),
     staleTime: 30 * 60 * 1000,
@@ -66,7 +84,7 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
   // Same muscle group, minus this exercise: the natural "what else trains
   // this?" question, answered without leaving the screen.
   const similar = useQuery({
-    queryKey: ['exercises', 'similar', group],
+    queryKey: ["exercises", "similar", group],
     queryFn: () => exerciseService.list({ grupoMuscular: group, pageSize: 12 }),
     enabled: Boolean(group),
   });
@@ -82,10 +100,10 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
       }}
     >
       <Button
-        icon={pick.added ? 'checkmark' : 'add'}
-        label={pick.added ? 'Quitar de la rutina' : 'Añadir a la rutina'}
+        icon={pick.added ? "checkmark" : "add"}
+        label={pick.added ? "Quitar de la rutina" : "Añadir a la rutina"}
         onPress={pick.onToggle}
-        variant={pick.added ? 'ghost' : 'primary'}
+        variant={pick.added ? "ghost" : "primary"}
       />
     </View>
   ) : undefined;
@@ -94,8 +112,7 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
     return (
       <ScrollScreen overlay={pickBar}>
         <BackLink />
-        <Skeleton height={200} />
-        <Skeleton height={120} />
+        <ExerciseDetailSkeleton />
       </ScrollScreen>
     );
   }
@@ -104,14 +121,63 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
     return (
       <ScrollScreen overlay={pickBar}>
         <BackLink />
-        <ErrorState error={exercise.error} onRetry={() => void exercise.refetch()} />
+        <ErrorState
+          error={exercise.error}
+          onRetry={() => void exercise.refetch()}
+        />
       </ScrollScreen>
     );
   }
 
   const data = exercise.data;
   const steps = stepsOf(data.instructionSteps);
-  const others = (similar.data?.items ?? []).filter((item) => item.id !== data.id).slice(0, 10);
+  const others = (similar.data?.items ?? [])
+    .filter((item) => item.id !== data.id)
+    .slice(0, 10);
+
+  // Cada músculo se dice una sola vez: el objetivo no vuelve a salir como
+  // sinergista ni entre los secundarios (antes «Cuádriceps» aparecía tres veces).
+  const target = muscleLabelEs(data.targetMuscle);
+  const synergist = distinctLabels(
+    [exerciseGroupLabelEs(data.synergistMuscleGroup)],
+    [target],
+  );
+  const secondary = distinctLabels(data.secondaryMuscles.map(muscleLabelEs), [
+    target,
+    ...synergist,
+  ]);
+  const facts: Fact[] = [
+    { label: "Músculo objetivo", value: target },
+    { label: "Parte corporal", value: bodyPartLabelEs(data.bodyPart) },
+    { label: "Sinergista", value: synergist[0] ?? "" },
+    { label: "Secundarios", value: secondary.join(", ") },
+  ].filter((fact) => fact.value);
+
+  const taken: string[] = [];
+  const muscleGroups: MuscleGroup[] = (
+    [
+      ["Principales", muscles.data?.primarios ?? [], true],
+      ["Secundarios", muscles.data?.secundarios ?? [], false],
+      ["Estabilizadores", muscles.data?.estabilizadores ?? [], false],
+    ] as const
+  )
+    .map(([label, list, primary]) => {
+      const items = list.filter((muscle) => {
+        const name = muscle.nombre.trim().toLowerCase();
+        if (taken.includes(name)) return false;
+        taken.push(name);
+        return true;
+      });
+      return {
+        label,
+        primary,
+        items: items.map((muscle) => ({
+          code: muscle.code,
+          name: muscle.nombre,
+        })),
+      };
+    })
+    .filter((group) => group.items.length > 0);
 
   return (
     <ScrollScreen
@@ -123,83 +189,34 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
 
       <ExerciseDemo exercise={data} gender={account.data?.genero ?? null} />
 
-      <ScreenHeader subtitle={exerciseGroupLabelEs(data.grupoMuscular)} title={exerciseDisplayName(data)} />
+      <ScreenHeader
+        subtitle={exerciseGroupLabelEs(data.grupoMuscular)}
+        title={exerciseDisplayName(data)}
+      />
 
       <ExerciseSocial exercise={data} />
 
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-        {data.bodyPart ? <Badge label={bodyPartLabelEs(data.bodyPart)} tone="success" /> : null}
-        {data.tipoEjercicio === 'PERSONAL' ? <Badge label="Personal" tone="warning" /> : null}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.sm }}>
+        {data.bodyPart ? (
+          <Badge label={bodyPartLabelEs(data.bodyPart)} tone="success" />
+        ) : null}
+        {data.tipoEjercicio === "PERSONAL" ? (
+          <Badge label="Personal" tone="warning" />
+        ) : null}
       </View>
 
-      {/* Facts as rows, not prose: scannable in a second between sets. */}
-      <Section index={0} title="Objetivo técnico">
-        <Card>
-          <Row label="Músculo objetivo" value={muscleLabelEs(data.targetMuscle) || '—'} />
-          <Divider />
-          <Row label="Parte corporal" value={bodyPartLabelEs(data.bodyPart) || '—'} />
-          <Divider />
-          <Row label="Sinergista" value={exerciseGroupLabelEs(data.synergistMuscleGroup) || '—'} />
-          {data.secondaryMuscles.length > 0 ? (
-            <>
-              <Divider />
-              <Row label="Secundarios" value={data.secondaryMuscles.map(muscleLabelEs).filter(Boolean).join(', ')} />
-            </>
-          ) : null}
-        </Card>
-      </Section>
+      {facts.length > 0 ? (
+        <Section index={0} title="Objetivo técnico">
+          <FactGrid facts={facts} />
+        </Section>
+      ) : null}
 
-      {!pick &&
-      muscles.data &&
-      muscles.data.primarios.length +
-        muscles.data.secundarios.length +
-        muscles.data.estabilizadores.length >
-        0 ? (
+      {!pick && muscleGroups.length > 0 ? (
         <Section icon="body-outline" index={1} title="Músculos que trabaja">
-          <Card>
-            {(
-              [
-                ['Principales', muscles.data.primarios, true],
-                ['Secundarios', muscles.data.secundarios, false],
-                ['Estabilizadores', muscles.data.estabilizadores, false],
-              ] as const
-            )
-              .filter(([, list]) => list.length > 0)
-              .map(([label, list, primary], groupIndex) => (
-                <View key={label}>
-                  {groupIndex > 0 ? <Divider /> : null}
-                  <View style={{ gap: spacing.sm, paddingVertical: spacing.xs }}>
-                    <Text
-                      style={{
-                        color: colors.textMuted,
-                        fontSize: fontSizes.xs,
-                        fontWeight: semibold,
-                      }}
-                    >
-                      {label}
-                    </Text>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        flexWrap: 'wrap',
-                        gap: spacing.sm,
-                      }}
-                    >
-                      {list.map((muscle) => (
-                        <MuscleChip
-                          key={muscle.code}
-                          name={muscle.nombre}
-                          onPress={() =>
-                            router.push(routes.muscle(muscle.code))
-                          }
-                          primary={primary}
-                        />
-                      ))}
-                    </View>
-                  </View>
-                </View>
-              ))}
-          </Card>
+          <MuscleGroups
+            groups={muscleGroups}
+            onOpen={(code) => router.push(routes.muscle(code))}
+          />
         </Section>
       ) : null}
 
@@ -211,50 +228,7 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
 
       {steps.length > 0 ? (
         <Section index={2} title="Secuencia">
-          <Card>
-            {steps.map((step, index) => (
-              <View
-                key={`${index}-${step}`}
-                style={{
-                  flexDirection: 'row',
-                  gap: spacing.sm,
-                  alignItems: 'flex-start',
-                }}
-              >
-                <View
-                  style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: radii.sm,
-                    backgroundColor: colors.surfaceHigh,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: colors.volt,
-                      fontSize: fontSizes.xs,
-                      fontWeight: '700',
-                      fontVariant: ['tabular-nums'],
-                    }}
-                  >
-                    {index + 1}
-                  </Text>
-                </View>
-                <Text
-                  style={{
-                    color: colors.text,
-                    fontSize: fontSizes.sm,
-                    lineHeight: 22,
-                    flex: 1,
-                  }}
-                >
-                  {step}
-                </Text>
-              </View>
-            ))}
-          </Card>
+          <StepsTimeline steps={steps} />
         </Section>
       ) : null}
 
@@ -273,18 +247,27 @@ export function ExerciseDetailView({ id, pick }: { id: string; pick?: DetailPick
               <PressableScale
                 accessibilityLabel={item.nombre}
                 key={item.id}
-                onPress={() =>
-                  router.push(routes.exercise(item.id))
-                }
-                style={{ width: 132, gap: spacing.xs }}
+                onPress={() => router.push(routes.exercise(item.id))}
+                style={{
+                  width: 148,
+                  overflow: "hidden",
+                  borderRadius: radii.lg,
+                  borderCurve: "continuous",
+                  borderWidth: 1,
+                  borderColor: colors.borderSubtle,
+                  backgroundColor: colors.surfaceLow,
+                }}
               >
-                <ExerciseImage exercise={item} size={132} />
+                <ExerciseImage exercise={item} rounded={0} size={148} />
                 <Text
                   numberOfLines={2}
                   style={{
+                    minHeight: 52,
+                    padding: spacing.sm,
                     color: colors.text,
-                    fontSize: fontSizes.xs,
+                    fontSize: fontSizes.xs + 1,
                     fontWeight: semibold,
+                    lineHeight: 18,
                   }}
                 >
                   {item.nombre}

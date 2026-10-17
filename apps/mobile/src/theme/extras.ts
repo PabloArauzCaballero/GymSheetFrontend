@@ -5,7 +5,7 @@
  * «leído» de un chat). Viven aquí para que `check-theme` siga a cero fuera de
  * `src/theme/` y para que quien los cambie vea el resto de la paleta.
  */
-import { alpha, ink, metricInk } from './palette';
+import { alpha, brandNavy, ink, metricInk, reppJade } from './palette';
 
 /* ─── Podio (rank-badge) ─────────────────────────────────────────────────── */
 
@@ -67,7 +67,7 @@ export const celebrationPalette = {
  */
 export const stageBackground = {
   celebration: '#050507',
-  brandIntro: '#050505',
+  brandIntro: '#0F172A',
 } as const;
 
 /** Barrido de luz del emblema de arranque: blanco puro, transparente en los extremos. */
@@ -250,4 +250,35 @@ export const restRing = {
   ending: metricColors.effort.ink,
   track: alpha(ink.white, 0.08),
   glow: alpha(metricColors.rest.ink, 0.18),
+} as const;
+
+/* ─── Chat: tinta sobre la burbuja propia ────────────────────────────────── */
+
+/** Fijo — WhatsApp volvió «check azul» un color universal, ajeno a cualquier marca de gimnasio. */
+export const readReceiptTick = '#34b7f1';
+
+const bubbleInk = '#0b0f0d';
+/** Metadatos (hora, «editado») sobre la burbuja propia, que va en el color de acento. */
+export const bubbleInkMuted = alpha(bubbleInk, 0.65);
+export const bubbleInkFaint = alpha(bubbleInk, 0.55);
+
+/* ─── Mapa social ────────────────────────────────────────────────────────── */
+
+/** Marcadores y zonas del mapa; el color identifica la capa, no un rol del sistema. */
+export const socialMapColors = {
+  areaFill: alpha(reppJade, 0.16),
+  areaStroke: alpha(reppJade, 0.7),
+  peoplePin: '#9bc400',
+  gymPin: reppJade,
+  externalGymPin: reppJade,
+  /** Glifo blanco sobre jade: 4,6:1. Aro blanco para separarlo del fondo del mapa. */
+  gymInk: ink.white,
+  ring: ink.white,
+  /** Burbuja de «N personas»: navy con cifra blanca (17:1). */
+  peopleBubble: brandNavy,
+  peopleInk: ink.white,
+  selected: '#f5b94a',
+  /** Vidrio de los controles que flotan sobre el mapa claro de Apple/Google. */
+  glass: alpha(brandNavy, 0.86),
+  glassBorder: alpha(ink.white, 0.12),
 } as const;

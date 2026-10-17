@@ -11,7 +11,7 @@ env:
 - runFlow: login-as.subflow.yaml
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Empuje 4 días' }
+    env: { TAB: 'Privadas', NAME: 'Empuje 4 días' }
 - tapOn: 'Activar programa'
 - tapOn: 'Siguiente'
 - tapOn: 'Siguiente'
@@ -22,7 +22,7 @@ env:
     timeout: 60000
 - runFlow:
     file: start-day.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Empuje 4 días', DIA: 'lunes' }
+    env: { TAB: 'Privadas', NAME: 'Empuje 4 días', DIA: 'lunes' }
 # Cambia un peso (4 series a 65 kg) y añade un ejercicio que no estaba en el día.
 - runScript:
     file: scripts-log-sets.js
@@ -55,7 +55,7 @@ env:
     timeout: 30000
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Empuje 4 días' }
+    env: { TAB: 'Privadas', NAME: 'Empuje 4 días' }
 - tapOn: 'Vista Mes'
 - tapOn: 'Semana 1, lunes.*'
 - extendedWaitUntil:
@@ -67,7 +67,7 @@ env:
 # RF-20 · p03: «Solo esta vez» no toca la rutina: otra sesión con 70 kg, y el día sigue con 65 kg.
 - runFlow:
     file: start-day.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Empuje 4 días', DIA: 'lunes' }
+    env: { TAB: 'Privadas', NAME: 'Empuje 4 días', DIA: 'lunes' }
 - runScript:
     file: scripts-log-sets.js
     env:
@@ -86,7 +86,7 @@ env:
 - tapOn: 'Solo esta vez'
 - runFlow:
     file: open-routine.subflow.yaml
-    env: { TAB: 'Mías', NAME: 'Empuje 4 días' }
+    env: { TAB: 'Privadas', NAME: 'Empuje 4 días' }
 - tapOn: 'Vista Mes'
 - tapOn: 'Semana 1, lunes.*'
 - extendedWaitUntil:

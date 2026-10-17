@@ -11,7 +11,7 @@
   "scripts": {
     "type-check": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests && node --experimental-strip-types --test test/*.test.mjs",
     "test:read-receipts": "node --experimental-strip-types --test test/read-receipt.test.mjs"
   },
   "dependencies": {

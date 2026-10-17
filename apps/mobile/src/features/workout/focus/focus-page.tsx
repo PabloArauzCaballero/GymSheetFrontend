@@ -525,15 +525,27 @@ export function FocusPage({
   testID?: string;
 }) {
   const reduceMotion = useReduceMotion();
-  // Profundidad al pasar de página: la que se va se hunde y se apaga un poco, la
-  // que llega sube. Solo `transform` y `opacity`, en el hilo de UI.
+  // Profundidad al pasar de página: la que se va gira hacia dentro como la
+  // cara de un cubo, se hunde y se apaga; la que llega hace lo contrario. El
+  // título viaja más rápido que la página (paralaje): dos planos que se mueven
+  // a distinta velocidad es lo que da sensación de espacio. Solo `transform` y
+  // `opacity`, en el hilo de UI y atado al dedo.
   const depth = useAnimatedStyle(() => {
     if (reduceMotion) return {};
     const range = [(index - 1) * width, index * width, (index + 1) * width];
     return {
-      opacity: interpolate(scrollX.value, range, [0.45, 1, 0.45], Extrapolation.CLAMP),
-      transform: [{ scale: interpolate(scrollX.value, range, [0.94, 1, 0.94], Extrapolation.CLAMP) }],
+      opacity: interpolate(scrollX.value, range, [0.35, 1, 0.35], Extrapolation.CLAMP),
+      transform: [
+        { perspective: 1200 },
+        { rotateY: `${interpolate(scrollX.value, range, [-14, 0, 14], Extrapolation.CLAMP)}deg` },
+        { scale: interpolate(scrollX.value, range, [0.9, 1, 0.9], Extrapolation.CLAMP) },
+      ],
     };
+  });
+  const titleDrift = useAnimatedStyle(() => {
+    if (reduceMotion) return {};
+    const range = [(index - 1) * width, index * width, (index + 1) * width];
+    return { transform: [{ translateX: interpolate(scrollX.value, range, [width * 0.22, 0, -width * 0.22], Extrapolation.CLAMP) }] };
   });
   return (
     <Animated.View style={[{ width }, depth]}>
@@ -547,7 +559,7 @@ export function FocusPage({
     >
       {media}
       {groupSwitch}
-      <View style={{ gap: spacing.xs }}>
+      <Animated.View style={[{ gap: spacing.xs }, titleDrift]}>
         {eyebrow ? (
           <Text strong tabular tone="group" variant="footnote">
             {eyebrow}
@@ -569,7 +581,7 @@ export function FocusPage({
             {aside}
           </View>
         ) : null}
-      </View>
+      </Animated.View>
       {note ? (
         <View style={{ flexDirection: 'row', gap: spacing.sm, padding: spacing.smd, borderRadius: radii.lg, backgroundColor: colors.surfaceLow }}>
           <Ionicons color={colors.textSecondary} name="chatbubble-ellipses-outline" size={iconSizes.sm} />

@@ -301,10 +301,13 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
       {!bodyPart ? (
         <Section index={1} title="Por zona">
           {taxonomy.isPending ? (
-            <View style={{ gap: spacing.sm }}>
-              <Skeleton height={116} />
-              <Skeleton height={116} />
-            </View>
+            <Grid>
+              {[0, 1, 2, 3].map((slot) => (
+                <View key={slot} style={{ width: '48.5%' }}>
+                  <Skeleton height={218} />
+                </View>
+              ))}
+            </Grid>
           ) : taxonomy.isError ? (
             <ErrorState error={taxonomy.error} onRetry={() => void taxonomy.refetch()} />
           ) : (
@@ -318,6 +321,7 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
                   label={bodyPartLabelEs(group.bodyPart)}
                   onPress={() => setBodyPart(group.bodyPart)}
                   total={group.total}
+                  zone={group.bodyPart}
                 />
               ))}
             </Grid>
@@ -339,6 +343,7 @@ export function ExerciseBrowser(props: ExerciseBrowserProps) {
                 setView('search');
               }}
               total={entry.total}
+              zone={entry.targetMuscle}
             />
           ))}
         </Grid>
