@@ -150,12 +150,16 @@ function ChatVideo({ uri, token }: { uri: string; token: string | null }) {
   return <VideoView nativeControls player={player} style={{ width: 240, height: 220, borderRadius: radii.md }} />;
 }
 
-function ChatAudioMessage({ uri, token }: { uri: string; token: string | null }) {
+function ChatAudioMessage({ uri, token, mine }: { uri: string; token: string | null; mine: boolean }) {
   const source = token ? chatAudioPlayerSource(uri, env.apiUrl, token) : null;
   const player = useAudioPlayer(source, { updateInterval: 250 });
   const status = useAudioPlayerStatus(player);
   const unavailable = Boolean(status.error);
   const time = status.currentTime > 0 ? status.currentTime : status.duration;
+  // En la burbuja propia el fondo ya es el acento: el control va en tinta oscura.
+  const ink = mine ? colors.background : colors.volt;
+  const track = mine ? bubbleInkFaint : colors.surfaceHigh;
+  const label = mine ? bubbleInkMuted : colors.textMuted;
 
   if (!token) return <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Audio no disponible.</Text>;
   if (unavailable) return <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Este audio ya no está disponible.</Text>;
@@ -170,21 +174,32 @@ function ChatAudioMessage({ uri, token }: { uri: string; token: string | null })
         scaleTo={0.9}
         style={{ width: minTouchTarget, height: minTouchTarget, alignItems: 'center', justifyContent: 'center' }}
       >
-        <Ionicons color={colors.volt} name={status.playing ? 'pause' : 'play'} size={iconSizes.md} />
+        <Ionicons color={ink} name={status.playing ? 'pause' : 'play'} size={iconSizes.lg} />
       </PressableScale>
       <View style={{ flex: 1, gap: 4 }}>
-        <View style={{ height: 3, overflow: 'hidden', borderRadius: radii.full, backgroundColor: colors.surfaceHigh }}>
-          <View style={{ width: `${status.duration > 0 ? Math.min(100, (status.currentTime / status.duration) * 100) : 0}%`, height: 3, backgroundColor: colors.volt }} />
+        <View style={{ height: 3, overflow: 'hidden', borderRadius: radii.full, backgroundColor: track }}>
+          <View style={{ width: `${status.duration > 0 ? Math.min(100, (status.currentTime / status.duration) * 100) : 0}%`, height: 3, backgroundColor: ink }} />
         </View>
         <Text
           accessibilityLabel={chatAudioPlayerAccessibilityLabel(status.isLoaded, status.currentTime, status.duration)}
-          style={{ color: colors.textMuted, fontSize: fontSizes.xs }}
+          style={{ color: label, fontSize: fontSizes.xs }}
         >
           {status.isLoaded ? `${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, '0')}` : 'Audio'}
         </Text>
       </View>
     </View>
   );
+}
+
+/** El micrófono que no responde (sesión de audio ocupada) no debe dejar el redactor colgado. */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('El micrófono no respondió. Inténtalo de nuevo.')), ms);
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (error: unknown) => { clearTimeout(timer); reject(error instanceof Error ? error : new Error(String(error))); },
+    );
+  });
 }
 
 function mapsUrlFor(lat: number, lng: number): string {
@@ -901,8 +916,10 @@ export default function ChatThreadScreen() {
         return;
       }
 
-      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
-      await audioRecorder.prepareToRecordAsync();
+      await withTimeout((async () => {
+        await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+        await audioRecorder.prepareToRecordAsync();
+      })(), 5_000);
       audioRecorder.record({ forDuration: 119 });
       setRecordingAudio(true);
       const pendingStop = voiceStopRequestRef.current;
@@ -915,6 +932,7 @@ export default function ChatThreadScreen() {
       } catch {
         // Keep the text composer available even if audio session cleanup fails.
       }
+      voiceStopRequestRef.current = null;
       notify.error(error instanceof Error ? error.message : 'No se pudo iniciar la grabación.');
     }
   }
@@ -1107,7 +1125,7 @@ export default function ChatThreadScreen() {
 
     if (message.type === 'audio') {
       return message.mediaUrl
-        ? <ChatAudioMessage token={mediaAccessToken} uri={message.mediaUrl} />
+        ? <ChatAudioMessage mine={mine} token={mediaAccessToken} uri={message.mediaUrl} />
         : <Text style={{ color: mutedOnBubble, fontSize: fontSizes.sm }}>Este audio ya no está disponible.</Text>;
     }
 
@@ -1657,6 +1675,11 @@ export default function ChatThreadScreen() {
             enabled: !settings.defaultEnabled,
             expectedVersion: settings.version,
           });
+        }}
+        onChooseChats={() => {
+          setSelectedReceiptConversationIds([conversationId]);
+          setContactOpen(false);
+          setTimeout(() => setReadReceiptSelectionOpen(true), 350);
         }}
         onToggleReceipts={(enabled) => {
           const settings = readReceiptSettings.data;

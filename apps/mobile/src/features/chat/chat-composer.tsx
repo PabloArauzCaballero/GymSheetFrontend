@@ -146,6 +146,10 @@ export function ChatComposer({
 
   const stop = (send: boolean) => {
     setHolding(false);
+    // También si la grabación nunca llegó a arrancar: sin esto el modo fijo
+    // quedaba en pantalla para siempre.
+    setLocked(false);
+    lockedRef.current = false;
     dragX.value = withSpring(0);
     dragY.value = withSpring(0);
     onVoiceStop(send);

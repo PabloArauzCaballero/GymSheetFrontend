@@ -204,6 +204,7 @@ export function ContactInfoSheet({
   onToggleReceipts,
   allChatsReceiptsEnabled,
   onToggleAllChatsReceipts,
+  onChooseChats,
   onTrainTogether,
   onOpenProfile,
 }: {
@@ -221,6 +222,7 @@ export function ContactInfoSheet({
   onToggleReceipts: (enabled: boolean) => void;
   allChatsReceiptsEnabled: boolean | undefined;
   onToggleAllChatsReceipts: () => void;
+  onChooseChats: () => void;
   onTrainTogether: (() => void) | null;
   onOpenProfile: (() => void) | null;
 }) {
@@ -327,6 +329,13 @@ export function ContactInfoSheet({
           icon="chatbubbles-outline"
           label={allChatsReceiptsEnabled ? 'Desactivar en todos los chats' : 'Activar en todos los chats'}
           onPress={onToggleAllChatsReceipts}
+        />
+        <SheetRow
+          disabled={allChatsReceiptsEnabled === undefined}
+          hint="Activa o desactiva el visto en varios chats a la vez"
+          icon="list-outline"
+          label="Elegir chats…"
+          onPress={onChooseChats}
         />
         {onTrainTogether ? (
           <SheetRow icon="barbell-outline" label="Entrenemos juntos" onPress={onTrainTogether} />
