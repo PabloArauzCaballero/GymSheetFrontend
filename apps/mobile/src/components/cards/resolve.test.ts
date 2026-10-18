@@ -5,7 +5,7 @@ import { CARD_ART, ILLUSTRATION_KEYS, cardArtXml } from './art.ts';
 import { isVeiled, resolveIllustration } from './resolve.ts';
 
 test('cada clave del contrato tiene ilustración y SVG válido', () => {
-  assert.equal(ILLUSTRATION_KEYS.length, 33);
+  assert.equal(ILLUSTRATION_KEYS.length, 35);
   for (const key of ILLUSTRATION_KEYS) {
     assert.ok(CARD_ART[key], key);
     const xml = cardArtXml(key);
