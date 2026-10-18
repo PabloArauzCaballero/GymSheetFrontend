@@ -93,6 +93,7 @@ export function reactNativeMock() {
     TextInput: TextField,
     FlatList: List,
     Modal: ModalBox,
+    StyleSheet: { absoluteFill: {}, create: <T,>(styles: T) => styles },
     ActivityIndicator: () => createElement('span', { 'aria-label': 'Cargando' }),
     Switch: ({ value, onValueChange, accessibilityLabel }: { value: boolean; onValueChange: (next: boolean) => void; accessibilityLabel?: string }) =>
       createElement('input', { type: 'checkbox', checked: value, 'aria-label': accessibilityLabel, onChange: () => onValueChange(!value) }),
@@ -107,7 +108,8 @@ export function reactNativeMock() {
 }
 
 const anything = new Proxy({}, { get: () => 8 });
-const ink = new Proxy({}, { get: () => '#000' });
+const ink = new Proxy({}, { get: () => 'black' });
+const chatInk = new Proxy({}, { get: (_target, key) => (key === 'attach' ? ink : 'black') });
 
 export function themeMock() {
   return {
@@ -115,9 +117,14 @@ export function themeMock() {
     accentPolicy: ink,
     socialMapColors: ink,
     overlay: ink,
-    bubbleInkFaint: '#000',
-    bubbleInkMuted: '#000',
-    readReceiptTick: '#000',
+    chatColors: chatInk,
+    chatBubbleMine: () => 'black',
+    accentContrast: () => 'black',
+    shadows: ink,
+    settleSpring: {},
+    bubbleInkFaint: 'black',
+    bubbleInkMuted: 'black',
+    readReceiptTick: 'black',
     fontSizes: anything,
     iconSizes: anything,
     radii: anything,
@@ -127,4 +134,39 @@ export function themeMock() {
     minTouchTarget: 44,
     semibold: '600',
   };
+}
+
+/** Reanimated sin hilo de UI: las vistas son cajas y los valores animados, valores quietos. */
+export function reanimatedMock() {
+  const chain: Record<string, unknown> = {};
+  for (const key of ['duration', 'easing', 'withInitialValues', 'delay', 'springify']) chain[key] = () => chain;
+  return {
+    default: { View: Box, createAnimatedComponent: (component: unknown) => component },
+    FadeIn: chain,
+    FadeInDown: chain,
+    FadeOut: chain,
+    ZoomIn: chain,
+    ZoomOut: chain,
+    useSharedValue: (value: unknown) => ({ value }),
+    useAnimatedStyle: () => ({}),
+    withSpring: (value: unknown) => value,
+    withTiming: (value: unknown) => value,
+    withRepeat: (value: unknown) => value,
+    withSequence: (value: unknown) => value,
+    interpolate: () => 0,
+  };
+}
+
+/** Los gestos no corren en jsdom: el detector solo pinta a su hijo. */
+export function gestureHandlerMock() {
+  const gesture: Record<string, unknown> = new Proxy({}, { get: () => () => gesture });
+  return {
+    GestureDetector: ({ children }: { children?: ReactNode }) => children ?? null,
+    Gesture: { Pan: () => gesture, Tap: () => gesture, Race: () => gesture },
+  };
+}
+
+export function svgMock() {
+  const Nothing = () => null;
+  return { default: Nothing, Svg: Nothing, Path: Nothing, Circle: Nothing, G: Nothing, Defs: Nothing, Pattern: Nothing, Rect: Nothing };
 }

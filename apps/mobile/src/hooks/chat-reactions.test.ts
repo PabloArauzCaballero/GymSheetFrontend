@@ -43,6 +43,6 @@ test('a reaction event patches only its message', () => {
   };
   const list = [base];
   const patched = applyReactions(list, { messageId: base.id, reactions: [{ userId: other, emoji: '🔥' }] });
-  assert.deepEqual(patched[0]?.type !== 'system' && patched[0]?.reactions, [{ userId: other, emoji: '🔥' }]);
+  assert.deepEqual(patched[0]?.reactions, [{ userId: other, emoji: '🔥' }]);
   assert.equal(applyReactions(list, { messageId: 'nope', reactions: [] }), list);
 });

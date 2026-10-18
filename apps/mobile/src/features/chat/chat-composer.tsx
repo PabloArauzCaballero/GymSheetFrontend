@@ -6,6 +6,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
   FadeOut,
+  ZoomIn,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -16,7 +17,8 @@ import Animated, {
 import { PressableScale } from '@/components/motion';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
 import { notify } from '@/notifications';
-import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+import { accentContrast, chatColors, colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+import { ChatAttachMenu, type AttachKind } from './chat-attach-menu';
 
 /** Cuánto hay que arrastrar el micrófono para cancelar (izquierda) o fijar la grabación (arriba). */
 const CANCEL_DISTANCE = 110;
@@ -26,6 +28,8 @@ const HOLD_TO_RECORD_MS = 180;
 const ROUND_BUTTON = 44;
 
 export type ComposerEditing = { body: string };
+/** Respondiendo a un mensaje: quién lo escribió y una línea de él. */
+export type ComposerReplying = { author: string; preview: string; ownQuote: boolean };
 
 function formatClock(millis: number): string {
   const seconds = Math.floor(millis / 1000);
@@ -62,7 +66,7 @@ function RoundButton({
         opacity: disabled ? 0.5 : 1,
       }}
     >
-      <Ionicons color={colors.background} name={loading ? 'ellipsis-horizontal' : icon} size={iconSizes.md} />
+      <Ionicons color={accentContrast()} name={loading ? 'ellipsis-horizontal' : icon} size={iconSizes.md} />
     </PressableScale>
   );
 }
@@ -85,10 +89,10 @@ function RecordingDot() {
 /**
  * El redactor del chat, con la gramática de WhatsApp:
  *
- * - «+» abre el menú de adjuntos (fotos y videos, cámara, ubicación, entrenar
- *   juntos): ya no hay cinco iconos aplastando el campo de texto.
- * - El emoji vive dentro del campo; a la derecha, cámara y micrófono mientras
- *   el campo está vacío, y el botón de enviar en cuanto se escribe algo.
+ * - «+» despliega encima los cinco iconos (emoji, foto, cámara, ubicación y
+ *   vista única); fuera del desplegable solo queda el micrófono.
+ * - El micrófono se convierte en el botón de enviar en cuanto se escribe algo.
+ * - Al responder, la cita va dentro del campo, arriba, con una X para quitarla.
  * - Nota de voz: mantener pulsado el micrófono graba y soltar envía; deslizar a
  *   la izquierda cancela; deslizar hacia arriba la deja fija para grabar sin
  *   mantener el dedo, con papelera y enviar.
@@ -100,9 +104,11 @@ export function ChatComposer({
   sending,
   editing,
   onCancelEdit,
-  onOpenAttach,
-  onOpenCamera,
-  onOpenEmoji,
+  replying,
+  onCancelReply,
+  attachOpen,
+  onToggleAttach,
+  onAttach,
   recording,
   recordingMillis,
   onVoiceStart,
@@ -116,9 +122,12 @@ export function ChatComposer({
   sending: boolean;
   editing: ComposerEditing | null;
   onCancelEdit: () => void;
-  onOpenAttach: () => void;
-  onOpenCamera: () => void;
-  onOpenEmoji: () => void;
+  replying: ComposerReplying | null;
+  onCancelReply: () => void;
+  /** El desplegable del «+» está abierto. */
+  attachOpen: boolean;
+  onToggleAttach: () => void;
+  onAttach: (kind: AttachKind) => void;
   recording: boolean;
   recordingMillis: number;
   onVoiceStart: () => void;
@@ -135,6 +144,7 @@ export function ChatComposer({
   const dragX = useSharedValue(0);
   const dragY = useSharedValue(0);
   const inputRef = useRef<TextInput>(null);
+  const reduceMotion = useReduceMotion();
   const hasText = draft.trim().length > 0;
 
   useEffect(() => {
@@ -214,11 +224,10 @@ export function ChatComposer({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     minHeight: ROUND_BUTTON,
-    borderRadius: radii.xl,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    backgroundColor: colors.surface,
+    borderRadius: ROUND_BUTTON / 2,
+    backgroundColor: colors.surfaceHigh,
     paddingHorizontal: spacing.xs,
+    boxShadow: chatColors.bubbleShadow,
   };
 
   if (locked) {
@@ -245,35 +254,21 @@ export function ChatComposer({
     );
   }
 
+  const quote = editing
+    ? { title: 'Editar mensaje', line: editing.body, stripe: colors.volt, onClose: onCancelEdit, closeLabel: 'Cancelar edición' }
+    : replying
+      ? {
+        title: replying.author,
+        line: replying.preview,
+        stripe: replying.ownQuote ? chatColors.quoteMine : chatColors.quoteOther,
+        onClose: onCancelReply,
+        closeLabel: 'Cancelar respuesta',
+      }
+      : null;
+
   return (
-    <View style={{ gap: spacing.xs }}>
-      {editing ? (
-        <Animated.View
-          entering={FadeIn.duration(140)}
-          exiting={FadeOut.duration(120)}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.sm,
-            borderLeftWidth: 3,
-            borderLeftColor: colors.volt,
-            borderRadius: radii.sm,
-            backgroundColor: colors.surface,
-            paddingVertical: spacing.xs,
-            paddingHorizontal: spacing.sm,
-          }}
-        >
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: colors.volt, fontSize: fontSizes.xs, fontWeight: semibold }}>Editar mensaje</Text>
-            <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-              {editing.body}
-            </Text>
-          </View>
-          <PressableScale accessibilityLabel="Cancelar edición" haptic="none" hitSlop={spacing.sm} onPress={onCancelEdit} scaleTo={0.9}>
-            <Ionicons color={colors.textMuted} name="close" size={iconSizes.md} />
-          </PressableScale>
-        </Animated.View>
-      ) : null}
+    <View>
+      <ChatAttachMenu onPick={onAttach} open={attachOpen && !editing && !holding} reduceMotion={reduceMotion} />
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing.xs }}>
         {holding ? (
           <View style={[pill, { gap: spacing.sm, paddingHorizontal: spacing.md }]}>
@@ -290,44 +285,69 @@ export function ChatComposer({
           <>
             {!editing ? (
               <PressableScale
-                accessibilityLabel="Adjuntar"
-                accessibilityHint="Fotos y videos, cámara, ubicación o entrenar juntos"
+                accessibilityHint="Emoji, foto, cámara, ubicación o vista única"
+                accessibilityLabel={attachOpen ? 'Cerrar adjuntos' : 'Adjuntar'}
+                accessibilityState={{ expanded: attachOpen }}
                 disabled={busy}
                 haptic="light"
-                onPress={onOpenAttach}
+                onPress={onToggleAttach}
                 scaleTo={0.9}
-                style={{ width: ROUND_BUTTON - 4, height: ROUND_BUTTON, alignItems: 'center', justifyContent: 'center' }}
+                style={{
+                  width: ROUND_BUTTON,
+                  height: ROUND_BUTTON,
+                  borderRadius: radii.full,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: attachOpen ? colors.surfaceHighest : 'transparent',
+                }}
+                testID="chat-attach-toggle"
               >
-                <Ionicons color={colors.text} name="add" size={iconSizes.lg + 4} />
+                <Ionicons color={colors.text} name={attachOpen ? 'close' : 'add'} size={iconSizes.lg + 4} />
               </PressableScale>
             ) : null}
-            <View style={pill}>
-              <PressableScale
-                accessibilityLabel="Emojis"
-                haptic="none"
-                hitSlop={spacing.xs}
-                onPress={onOpenEmoji}
-                scaleTo={0.9}
-                style={{ padding: spacing.xs + 2 }}
-              >
-                <Ionicons color={colors.textMuted} name="happy-outline" size={iconSizes.md + 2} />
-              </PressableScale>
+            <View style={[pill, { flexDirection: 'column', alignItems: 'stretch', paddingHorizontal: 0 }]}>
+              {quote ? (
+                <Animated.View
+                  entering={reduceMotion ? undefined : FadeIn.duration(140)}
+                  exiting={reduceMotion ? undefined : FadeOut.duration(120)}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.sm,
+                    margin: 5,
+                    marginBottom: 0,
+                    overflow: 'hidden',
+                    borderRadius: radii.md,
+                    backgroundColor: chatColors.quoteFill,
+                  }}
+                  testID={editing ? 'chat-composer-editing' : 'chat-composer-replying'}
+                >
+                  <View style={{ alignSelf: 'stretch', width: 4, backgroundColor: quote.stripe }} />
+                  <View style={{ flex: 1, paddingVertical: 6 }}>
+                    <Text numberOfLines={1} style={{ color: quote.stripe, fontSize: fontSizes.xs, fontWeight: semibold }}>{quote.title}</Text>
+                    <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{quote.line}</Text>
+                  </View>
+                  <PressableScale accessibilityLabel={quote.closeLabel} haptic="none" hitSlop={spacing.sm} onPress={quote.onClose} scaleTo={0.9} style={{ padding: spacing.xs, marginRight: spacing.xs }}>
+                    <Ionicons color={colors.textMuted} name="close" size={iconSizes.md} />
+                  </PressableScale>
+                </Animated.View>
+              ) : null}
               <TextInput
                 accessibilityLabel={editing ? 'Editar mensaje actual' : 'Escribe un mensaje'}
                 keyboardAppearance="dark"
                 multiline
                 onChangeText={onChangeDraft}
+                onFocus={() => attachOpen && onToggleAttach()}
                 placeholder={editing ? 'Edita tu mensaje' : 'Mensaje'}
-                placeholderTextColor={colors.textDisabled}
+                placeholderTextColor={colors.textMuted}
                 ref={inputRef}
                 style={{
-                  flex: 1,
                   maxHeight: 120,
                   color: colors.text,
                   fontSize: fontSizes.md,
                   paddingTop: 11,
                   paddingBottom: 11,
-                  paddingRight: spacing.sm,
+                  paddingHorizontal: spacing.md,
                 }}
                 value={draft}
               />
@@ -335,27 +355,17 @@ export function ChatComposer({
           </>
         )}
         {hasText || editing ? (
-          <RoundButton
+          <Animated.View entering={reduceMotion ? undefined : ZoomIn.duration(160)} key="send">
+            <RoundButton
             disabled={!hasText}
             icon={editing ? 'checkmark' : 'send'}
             label={editing ? 'Guardar edición' : 'Enviar mensaje'}
             loading={sending}
             onPress={onSend}
-          />
+            />
+          </Animated.View>
         ) : (
           <>
-            {!holding ? (
-              <PressableScale
-                accessibilityLabel="Cámara"
-                disabled={busy}
-                haptic="none"
-                onPress={onOpenCamera}
-                scaleTo={0.9}
-                style={{ width: ROUND_BUTTON - 4, height: ROUND_BUTTON, alignItems: 'center', justifyContent: 'center' }}
-              >
-                <Ionicons color={colors.text} name="camera-outline" size={iconSizes.lg} />
-              </PressableScale>
-            ) : null}
             <View>
               {holding ? (
                 <Animated.View
@@ -395,7 +405,7 @@ export function ChatComposer({
                     micStyle,
                   ]}
                 >
-                  <Ionicons color={colors.background} name={busy ? 'ellipsis-horizontal' : 'mic'} size={iconSizes.md} />
+                  <Ionicons color={accentContrast()} name={busy ? 'ellipsis-horizontal' : 'mic'} size={iconSizes.md} />
                 </Animated.View>
               </GestureDetector>
             </View>

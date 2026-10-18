@@ -8,6 +8,7 @@ import { Button } from '@/components/ui';
 import { disappearingDurationLabel } from '@gymsheet/domain';
 import { disappearingDurations } from '@gymsheet/schemas';
 import type { MessageAction } from '@/hooks/chat-message-actions';
+import { QUICK_REACTIONS } from '@/hooks/chat-reactions';
 import { initialsOf } from '@/lib/format';
 import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
@@ -62,68 +63,106 @@ export function SheetRow({
   );
 }
 
-/** El menú del «+»: lo que antes eran cinco iconos sueltos junto al campo de texto. */
-export function AttachSheet({
-  visible,
-  onClose,
-  onGallery,
-  onCamera,
-  onLocation,
-  onTrainTogether,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  onGallery: () => void;
-  onCamera: () => void;
-  onLocation: () => void;
-  onTrainTogether: (() => void) | null;
-}) {
-  const pick = (action: () => void) => () => {
-    onClose();
-    // La hoja se cierra antes de que aparezca el selector del sistema: dos
-    // modales a la vez en iOS dejan el segundo sin presentar.
-    setTimeout(action, 350);
-  };
-  return (
-    <BottomSheet onClose={onClose} title="Compartir" visible={visible}>
-      <View style={{ gap: spacing.sm }}>
-        <SheetRow icon="images-outline" label="Fotos y videos" onPress={pick(onGallery)} testID="chat-attach-gallery" />
-        <SheetRow icon="camera-outline" label="Cámara" onPress={pick(onCamera)} testID="chat-attach-camera" />
-        <SheetRow icon="location-outline" label="Ubicación" hint="Dónde estás ahora o un lugar del mapa" onPress={pick(onLocation)} testID="chat-attach-location" />
-        {onTrainTogether ? (
-          <SheetRow icon="barbell-outline" label="Entrenemos juntos" hint="Propón día, hora y lugar" onPress={pick(onTrainTogether)} />
-        ) : null}
-      </View>
-    </BottomSheet>
-  );
-}
-
 const ACTION_ROWS: Record<MessageAction, { icon: IconName; label: string; destructive?: boolean }> = {
+  reply: { icon: 'arrow-undo-outline', label: 'Responder' },
+  forward: { icon: 'arrow-redo-outline', label: 'Reenviar' },
   copy: { icon: 'copy-outline', label: 'Copiar' },
   edit: { icon: 'pencil-outline', label: 'Editar' },
   delete: { icon: 'trash-outline', label: 'Eliminar', destructive: true },
   report: { icon: 'flag-outline', label: 'Reportar', destructive: true },
 };
 
-/** Mantener pulsado un mensaje — Copiar · Editar · Eliminar · Reportar, como en WhatsApp. */
+/**
+ * La barra de reacciones de WhatsApp: seis emojis y un «+» para el resto. La
+ * reacción que ya pusiste queda marcada; tocarla otra vez la quita.
+ */
+function ReactionBar({
+  current,
+  onReact,
+  onMore,
+}: {
+  current: string | null;
+  onReact: (emoji: string) => void;
+  onMore: () => void;
+}) {
+  return (
+    <View
+      accessibilityLabel="Reaccionar"
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: spacing.xs,
+        paddingVertical: spacing.xs,
+        borderRadius: radii.full,
+        backgroundColor: colors.surfaceHighest,
+      }}
+    >
+      {QUICK_REACTIONS.map((emoji) => {
+        const selected = current === emoji;
+        return (
+          <PressableScale
+            accessibilityLabel={selected ? `Quitar reacción ${emoji}` : `Reaccionar con ${emoji}`}
+            accessibilityState={{ selected }}
+            haptic="selection"
+            key={emoji}
+            onPress={() => onReact(emoji)}
+            scaleTo={0.85}
+            style={{
+              width: minTouchTarget,
+              height: minTouchTarget,
+              borderRadius: radii.full,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: selected ? colors.surfaceHigh : 'transparent',
+            }}
+            testID={`chat-react-${emoji}`}
+          >
+            <Text style={{ fontSize: fontSizes.lg }}>{emoji}</Text>
+          </PressableScale>
+        );
+      })}
+      <PressableScale
+        accessibilityLabel="Más emojis"
+        haptic="none"
+        onPress={onMore}
+        scaleTo={0.85}
+        style={{ width: minTouchTarget, height: minTouchTarget, borderRadius: radii.full, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceHigh }}
+        testID="chat-react-more"
+      >
+        <Ionicons color={colors.text} name="add" size={iconSizes.md + 2} />
+      </PressableScale>
+    </View>
+  );
+}
+
+/** Mantener pulsado un mensaje: reacciones arriba y debajo Responder · Reenviar · Copiar · Editar · Eliminar · Reportar. */
 export function MessageActionsSheet({
   visible,
   preview,
   actions,
+  reaction,
   onClose,
   onAction,
+  onReact,
+  onMoreReactions,
   onDismiss,
 }: {
   visible: boolean;
   preview: string;
   actions: MessageAction[];
+  /** `undefined` si no se puede reaccionar (eliminado, sistema, solo lectura). */
+  reaction: string | null | undefined;
   onClose: () => void;
   onAction: (action: MessageAction) => void;
+  onReact: (emoji: string) => void;
+  onMoreReactions: () => void;
   /** iOS: la hoja terminó de irse — el momento seguro para enfocar el campo o abrir otra hoja. */
   onDismiss?: () => void;
 }) {
   return (
     <BottomSheet onClose={onClose} onDismiss={onDismiss} title="Mensaje" subtitle={preview} visible={visible}>
+      {reaction !== undefined ? <ReactionBar current={reaction} onMore={onMoreReactions} onReact={onReact} /> : null}
       <View style={{ gap: spacing.sm }}>
         {actions.map((action) => {
           const row = ACTION_ROWS[action];
