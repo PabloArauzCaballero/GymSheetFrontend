@@ -1,8 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { View } from 'react-native';
 import { sessionInsights } from '@gymsheet/domain';
+import type { Routine } from '@gymsheet/types';
 import { workoutService } from '@/api/services';
 import { Skeleton } from '@/components/feedback';
 import { ScreenHeader, ScrollScreen } from '@/components/layout';
@@ -13,13 +14,16 @@ import { SessionCardioBlock } from '@/features/cardio/session-cardio-block';
 import { SessionProgramBlock } from '@/features/programs/session-program-block';
 import { SessionHero } from '@/features/session-summary/session-hero';
 import { SessionRecords } from '@/features/session-summary/session-records';
+import { sessionShareLines } from '@/features/session-summary/session-share';
+import { shareWithBrand } from '@/lib/share-brand';
 import { useSessionRewardStore } from '@/state/session-reward-store';
 import { spacing } from '@/theme';
 
 /**
- * «Sesión terminada» (C8.3.6): primero lo que movió la sesión (volumen y su
- * comparación), después los récords —con la única celebración que rebota— y
- * al final los puntos y los bloques del programa.
+ * «Sesión terminada» (C8.3.6, rediseño 2026-10-18): arriba, sin desplazarse, la
+ * portada que se captura —qué se terminó, el volumen, la comparación, los
+ * récords y los hechos— con «Compartir» como acción secundaria (#102, #93). Debajo,
+ * el detalle de los récords, los puntos y los bloques del programa.
  *
  * Reemplaza a la sesión en la pila, así que «atrás» no vuelve a una sesión ya
  * cerrada. Si la app se reinició aquí y la sesión ya no está en memoria, lo
@@ -50,6 +54,19 @@ export default function SessionSummaryScreen() {
 
   const goToList = () => router.replace('/workouts');
 
+  // El nombre del día o de la rutina, solo si ya está en caché (lo dejó el
+  // entreno o la ficha de la rutina): no se pide nada nuevo por un rótulo.
+  const queryClient = useQueryClient();
+  const rutinaId = session.data?.rutinaId ?? null;
+  const rutinaDiaId = session.data?.rutinaDiaId ?? null;
+  const title = useMemo(() => {
+    if (!last || !rutinaId) return null;
+    const routine = queryClient.getQueryData<Pick<Routine, 'nombre' | 'dias'>>(['routine', rutinaId]);
+    const dayName = routine?.dias.find((day) => day.id === rutinaDiaId)?.nombre?.trim();
+    const link = queryClient.getQueryData<{ nombre: string | null }>(['workout', last.sessionId, 'routine-link']);
+    return dayName || routine?.nombre || link?.nombre || null;
+  }, [last, queryClient, rutinaDiaId, rutinaId]);
+
   if (!last) {
     return (
       <ScrollScreen>
@@ -65,21 +82,51 @@ export default function SessionSummaryScreen() {
 
   const insights = session.data ? sessionInsights(session.data, history.data?.items ?? []) : null;
   const loadingInsights = session.isPending || (history.isPending && !history.isError);
+  const volumeKg = insights?.volumeKg ?? last.volumeKg;
+  const sets = insights?.sets ?? last.sets;
+  const comparison = insights?.comparison ?? null;
+  const records = insights?.records ?? [];
+
+  // Secundaria: la acción principal de la pantalla sigue siendo la de abajo.
+  const share = () =>
+    shareWithBrand(
+      sessionShareLines({
+        title,
+        volumeKg,
+        sets,
+        duration: last.duration,
+        comparison,
+        records,
+        pointsEarned: last.reward?.pointsEarned ?? null,
+      }),
+    );
 
   return (
     <ScrollScreen>
-      <ScreenHeader title="Sesión terminada" />
-
       {loadingInsights && !session.isError ? (
-        <Skeleton height={196} />
+        <Skeleton height={300} />
       ) : (
-        <SessionHero
-          comparison={insights?.comparison ?? null}
-          duration={last.duration}
-          exercises={session.data ? session.data.ejercicios.length : null}
-          sets={insights?.sets ?? last.sets}
-          volumeKg={insights?.volumeKg ?? last.volumeKg}
-        />
+        <View style={{ gap: spacing.smd }}>
+          <SessionHero
+            comparison={comparison}
+            duration={last.duration}
+            exercises={session.data ? session.data.ejercicios.length : null}
+            records={records.length}
+            sets={sets}
+            title={title}
+            volumeKg={volumeKg}
+          />
+          <Button
+            accessibilityLabel="Compartir la sesión"
+            icon="share-outline"
+            label="Compartir"
+            onPress={share}
+            size="sm"
+            style={{ alignSelf: 'flex-start' }}
+            testID="session-share"
+            variant="secondary"
+          />
+        </View>
       )}
 
       {insights ? <SessionRecords records={insights.records} /> : null}
