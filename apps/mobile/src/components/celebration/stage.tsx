@@ -30,6 +30,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 import { RewardCardBack, RewardCardFront } from '@/components/cards/reward-card';
 import { PREMIUM_EASING } from '@/components/motion';
+import { PrizeCode } from '@/components/progression/prize-code';
 import { Button } from '@/components/ui';
 import {
   alpha,
@@ -378,6 +379,7 @@ export function CardStage({
     title: scene.title,
     rarityLabel: scene.rarityLabel,
     points: scene.points,
+    code: scene.code,
   } as const;
 
   return (
@@ -492,6 +494,13 @@ export function CardStage({
                   {scene.flavor}
                 </Text>
               </Animated.View>
+              {scene.code ? (
+                // El premio es real: el código se enseña en recepción, así que va
+                // grande, seleccionable y con copiar. Llega con el texto, no antes.
+                <Animated.View style={[{ marginTop: spacing.sm, alignItems: 'center' }, flavorStyle]}>
+                  <PrizeCode code={scene.code} ink={material.label} />
+                </Animated.View>
+              ) : null}
             </View>
           </View>
 

@@ -13,6 +13,7 @@ import { GoalProgress } from '@/features/programs/goal-progress';
 import { MODE_BADGE } from '@/features/programs/labels';
 import { isProgramOver } from '@/features/programs/program-card';
 import { notify } from '@/notifications';
+import { modeTierName, shieldLabel } from '@gymsheet/domain';
 import { colors, fontSizes, semibold, spacing } from '@/theme';
 
 /** Progreso del programa (RF-14..16): semanas cumplidas, metas con su barra, detener y cerrar. */
@@ -72,7 +73,10 @@ export function ProgramDetailScreen() {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
         <Badge label={MODE_BADGE[programa.modo] ?? programa.modo} tone="info" />
         {programa.esDescarga ? <Badge label="Semana de descarga" tone="warning" /> : null}
-        {programa.multiplicador > 1 ? <Badge label={`Multiplicador ${multiplierLabel(programa.multiplicador)}`} tone="success" /> : null}
+        {programa.multiplicador > 1 ? (
+          <Badge label={`${modeTierName(programa)} · ${multiplierLabel(programa.multiplicador)}`} tone="success" />
+        ) : null}
+        {shieldLabel(programa.escudos) ? <Badge label={shieldLabel(programa.escudos) ?? ''} tone="info" /> : null}
       </View>
 
       {goals.length > 0 ? (
@@ -91,7 +95,7 @@ export function ProgramDetailScreen() {
         <Card list>
           {semanas.map((week) => (
             <View
-              accessibilityLabel={`Semana ${week.numero}${week.esDescarga ? ', descarga' : ''}. ${describeWeekSessions(week.sesionesHechas, week.sesionesPlan)}. ${week.cumplida === true ? 'Cumplida' : week.cumplida === false ? 'No cumplida' : 'Pendiente'}`}
+              accessibilityLabel={`Semana ${week.numero}${week.esDescarga ? ', descarga' : ''}. ${describeWeekSessions(week.sesionesHechas, week.sesionesPlan)}. ${week.cumplida === true ? 'Cumplida' : week.escudoUsado ? 'No cumplida; el escudo conservó tu multiplicador' : week.cumplida === false ? 'No cumplida' : 'Pendiente'}`}
               key={week.numero}
               style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm }}
               testID={`program-week-${week.numero}`}
@@ -100,8 +104,9 @@ export function ProgramDetailScreen() {
               <Text style={{ flex: 1, color: colors.textMuted, fontSize: fontSizes.sm }}>
                 {describeWeekSessions(week.sesionesHechas, week.sesionesPlan)}{week.esDescarga ? ' · Descarga' : ''}
               </Text>
-              <Text style={{ color: week.cumplida === true ? colors.success : week.cumplida === false ? colors.danger : colors.textMuted, fontSize: fontSizes.sm, fontWeight: semibold }}>
-                {week.cumplida === true ? '✓ Cumplida' : week.cumplida === false ? '✗ Sin cumplir' : '—'}
+              {/* Con escudo la semana no se pinta como fallo: el escudo hizo su trabajo. */}
+              <Text style={{ color: week.cumplida === true ? colors.success : week.escudoUsado ? colors.textSecondary : week.cumplida === false ? colors.danger : colors.textMuted, fontSize: fontSizes.sm, fontWeight: semibold }}>
+                {week.cumplida === true ? '✓ Cumplida' : week.escudoUsado ? 'Escudo usado' : week.cumplida === false ? '✗ Sin cumplir' : '—'}
               </Text>
             </View>
           ))}

@@ -2,7 +2,8 @@
 
 import { formatNumber } from '@/shared/lib/numbers';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, CircleDashed, X } from 'lucide-react';
+import { modeTierName, shieldLabel } from '@gymsheet/domain';
+import { Check, CircleDashed, Shield, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { Program } from '@gymsheet/types';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
@@ -152,6 +153,15 @@ export function ProgramView({ id }: Readonly<{ id: string }>) {
           <p className="text-3xl font-semibold tracking-[-0.03em] text-[var(--accent-ink)]" data-testid="multiplier">
             {multiplierLabel(program.multiplicador)}
           </p>
+          <p className="flex flex-wrap items-center gap-2 text-sm font-semibold" data-testid="multiplier-tier">
+            {modeTierName(program)}
+            {shieldLabel(program.escudos) ? (
+              <Badge latido={false} tone="info">
+                <Shield aria-hidden className="size-3.5" />
+                {shieldLabel(program.escudos)}
+              </Badge>
+            ) : null}
+          </p>
           <p className="text-xs text-[var(--text-muted)]">{active && !ended ? nextMultiplierHint(program) : 'El programa terminó.'}</p>
         </div>
         <div className="panel grid gap-1 p-5">
@@ -178,7 +188,7 @@ export function ProgramView({ id }: Readonly<{ id: string }>) {
         <ol className="list-none divide-y divide-[var(--border-subtle)]">
           {semanas.map((week) => {
             const state = weekState(week, program.semanaActual);
-            const Icon = state === 'cumplida' ? Check : state === 'incumplida' ? X : CircleDashed;
+            const Icon = state === 'cumplida' ? Check : state === 'incumplida' ? X : state === 'escudo' ? Shield : CircleDashed;
             return (
               <li className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm" data-testid={`week-${week.numero}`} key={week.numero}>
                 <span className="w-10 font-semibold">S{week.numero}</span>

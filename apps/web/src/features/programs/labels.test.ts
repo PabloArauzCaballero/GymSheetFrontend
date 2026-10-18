@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { hasMultiplier, modeLabel, multiplierLabel, nextMultiplierHint, programFraction, weekLabel } from './labels';
+import { hasMultiplier, modeLabel, multiplierLabel, nextMultiplierHint, programFraction, tierLabel, weekLabel } from './labels';
 
 describe('etiquetas de programas', () => {
+  it('nombra el escalón del multiplicador, con el nombre del servidor o deducido', () => {
+    expect(tierLabel({ multiplicador: 1.4, nivelMultiplicador: 'Encendido' })).toBe('Encendido · x1,4');
+    expect(tierLabel({ multiplicador: 2 })).toBe('Leyenda · x2,0');
+    expect(tierLabel({ multiplicador: 1 })).toBe('Arrancando · x1,0');
+  });
+
   it('escribe el multiplicador con coma decimal', () => {
     expect(multiplierLabel(1)).toBe('x1,0');
     expect(multiplierLabel(1.4)).toBe('x1,4');

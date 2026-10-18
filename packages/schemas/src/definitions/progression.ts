@@ -78,6 +78,14 @@ export const progressionBadgeSchema = z.object({
   secret: z.boolean().nullish(),
   criterion: z.string().nullish(),
   threshold: z.number().nullish(),
+  /**
+   * Contrato 12 (premios). La cadena agrupa las insignias del mismo criterio
+   * («Racha 7 → 30 → 90») para enseñarlas como una sola ficha «Nivel 2 de 4».
+   * Opcionales: sin ellas cada insignia es su propia cadena de un paso.
+   */
+  chain: z.string().nullish(),
+  chainStep: z.number().int().nullish(),
+  chainLength: z.number().int().nullish(),
 });
 
 export const progressionStatsSchema = z.object({
@@ -94,6 +102,121 @@ export const progressionStatsSchema = z.object({
   lastSessionOn: z.string().nullable(),
 });
 
+/* ─── Contrato 12: retos de la semana, premios y racha con comodines ───────── */
+
+export const challengeKinds = [
+  'SESSIONS',
+  'VOLUME_KG',
+  'SETS',
+  'NEW_EXERCISE',
+  'PERSONAL_RECORD',
+  'EARLY_SESSION',
+  'CARDIO_MINUTES',
+  'MUSCLE_GROUPS',
+  'GEO_SESSIONS',
+  'WEEKEND_SESSION',
+] as const;
+export type ChallengeKind = (typeof challengeKinds)[number];
+
+export const challengeDifficulties = ['FACIL', 'MEDIO', 'DIFICIL'] as const;
+export type ChallengeDifficulty = (typeof challengeDifficulties)[number];
+
+/**
+ * Un reto de la semana. `kind` va como texto libre validado contra la lista:
+ * un tipo nuevo del servidor no debe tumbar la senda entera de un cliente viejo.
+ */
+export const challengeSchema = z.object({
+  code: z.string(),
+  kind: z.string(),
+  difficulty: z.enum(challengeDifficulties),
+  title: z.string(),
+  description: z.string(),
+  /** Nombre de Ionicons. */
+  icon: z.string(),
+  target: z.number(),
+  /** Acotado a `target`. */
+  current: z.number(),
+  /** De 0 a 1. */
+  progress: z.number(),
+  progressLabel: z.string(),
+  pointsReward: z.number().int(),
+  completed: z.boolean(),
+  completedAt: z.string().nullable(),
+  /** Cumplido y aún sin celebrar; `acknowledge` lo limpia. */
+  isNew: z.boolean().default(false),
+});
+
+export const weeklyChallengesSchema = z.object({
+  /** Lunes local, `YYYY-MM-DD`. */
+  weekStart: z.string(),
+  /** ISO del próximo lunes a las 00:00 en la zona del negocio. */
+  endsAt: z.string(),
+  /** Siempre tres, en orden FACIL, MEDIO, DIFICIL. */
+  items: z.array(challengeSchema),
+  completedCount: z.number().int(),
+  /** Los tres cumplidos: «Semana redonda». */
+  perfect: z.boolean(),
+  perfectBonus: z.number().int(),
+  perfectIsNew: z.boolean().default(false),
+});
+
+export const prizeStatuses = ['DISPONIBLE', 'CANJEADO', 'CADUCADO'] as const;
+export type PrizeStatus = (typeof prizeStatuses)[number];
+
+export const prizeSourceKinds = ['BADGE', 'LEVEL', 'PERFECT_WEEK'] as const;
+export type PrizeSourceKind = (typeof prizeSourceKinds)[number];
+
+/** Un cupón del socio: algo real que da el gimnasio, con código para recepción. */
+export const prizeSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  instructions: z.string().nullable(),
+  /** Ionicons; por defecto `gift-outline`. */
+  icon: z.string().default('gift-outline'),
+  source: z.object({
+    kind: z.enum(prizeSourceKinds),
+    code: z.string(),
+    name: z.string(),
+  }),
+  /** Seis caracteres sin 0/O/1/I. */
+  code: z.string(),
+  status: z.enum(prizeStatuses),
+  awardedAt: z.string(),
+  expiresAt: z.string().nullable(),
+  redeemedAt: z.string().nullable(),
+  isNew: z.boolean().default(false),
+});
+
+export const prizeListSchema = z.array(prizeSchema);
+
+/** La racha diaria con los comodines ya aplicados. */
+export const progressionStreakSchema = z.object({
+  current: z.number().int(),
+  longest: z.number().int(),
+  /** Comodines guardados ahora (0..2). */
+  freezes: z.number().int(),
+  /** Comodines gastados en la racha vigente. */
+  freezesUsed: z.number().int(),
+  /** Siguiente de [3, 7, 14, 30, 60, 100, 200, 365]; nulo pasado el último. */
+  nextMilestone: z.number().int().nullable(),
+  weekly: z.number().int(),
+});
+
+/** La racha tras cerrar una sesión: lo que cambió en ella. */
+export const sessionStreakSchema = z.object({
+  current: z.number().int(),
+  freezes: z.number().int(),
+  freezeEarnedNow: z.boolean(),
+  milestoneNow: z.number().int().nullable(),
+});
+
+export type Challenge = z.infer<typeof challengeSchema>;
+export type WeeklyChallenges = z.infer<typeof weeklyChallengesSchema>;
+export type Prize = z.infer<typeof prizeSchema>;
+export type ProgressionStreak = z.infer<typeof progressionStreakSchema>;
+export type SessionStreak = z.infer<typeof sessionStreakSchema>;
+
 export const progressionSchema = z.object({
   points: z.number().int(),
   audience: z.enum(progressionAudiences),
@@ -107,6 +230,16 @@ export const progressionSchema = z.object({
   badges: z.array(progressionBadgeSchema),
   stats: progressionStatsSchema,
   unlockedNow: z.array(progressionBadgeSchema),
+  /**
+   * Contrato 12. Opcionales o con valor por defecto: un servidor anterior no
+   * los manda y la senda se pinta igual, sin esas secciones.
+   */
+  streak: progressionStreakSchema.optional(),
+  challenges: weeklyChallengesSchema.optional(),
+  /** Del más reciente al más antiguo. Vacío si el gimnasio no tiene premios. */
+  prizes: z.array(prizeSchema).default([]),
+  /** Hasta tres sin conseguir, sin secretas, por progreso descendente. */
+  nearest: z.array(progressionBadgeSchema).default([]),
 });
 
 export const leaderboardEntrySchema = z.object({
@@ -254,6 +387,8 @@ export const pointsBreakdownSchema = z.object({
   badges: z.number().int(),
   /** Bonos de programa con modo (multiplicador semanal y metas). Nunca bajan. Ausente en servidores antiguos. */
   modes: z.number().int().default(0),
+  /** Retos cumplidos y bonos de semana redonda. Ausente en servidores antiguos. */
+  challenges: z.number().int().default(0),
 });
 
 export const sessionRewardSchema = z.object({
@@ -269,6 +404,13 @@ export const sessionRewardSchema = z.object({
   levelProgressBefore: z.number(),
   levelProgress: z.number(),
   unlockedNow: z.array(progressionBadgeSchema),
+  /** Contrato 12: todo opcional para tolerar un servidor anterior. */
+  challenges: weeklyChallengesSchema.optional(),
+  challengesCompletedNow: z.array(challengeSchema).default([]),
+  perfectWeekNow: z.boolean().default(false),
+  prizesNow: z.array(prizeSchema).default([]),
+  streak: sessionStreakSchema.optional(),
+  nearest: z.array(progressionBadgeSchema).default([]),
 });
 
 /** Las reglas de puntos publicadas por el servidor; los clientes no las copian. */
@@ -277,6 +419,13 @@ export const pointRulesSchema = z.object({
   perSet: z.number().int(),
   perVolumeUnitKg: z.number().int(),
   perLongestStreakDay: z.number().int(),
+  /** Contrato 12. Opcionales: un servidor anterior no los publica. */
+  challengePoints: z
+    .object({ FACIL: z.number().int(), MEDIO: z.number().int(), DIFICIL: z.number().int() })
+    .optional(),
+  perfectWeekBonus: z.number().int().optional(),
+  freezeEveryDays: z.number().int().optional(),
+  maxFreezes: z.number().int().optional(),
 });
 export type PointsBreakdown = z.infer<typeof pointsBreakdownSchema>;
 export type SessionReward = z.infer<typeof sessionRewardSchema>;

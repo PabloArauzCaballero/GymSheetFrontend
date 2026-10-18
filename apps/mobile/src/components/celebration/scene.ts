@@ -1,20 +1,18 @@
 import type { Ionicons } from '@expo/vector-icons';
-import { CARD_RARITY_LABEL, seedFrom, tierFor, type CardTier } from '@gymsheet/domain';
-import type { ProgressionBadge, ProgressionLevel } from '@gymsheet/schemas';
+import {
+  CARD_RARITY_LABEL,
+  CHALLENGE_DIFFICULTY_LABEL,
+  prizeCodeGroups,
+  seedFrom,
+  tierFor,
+  type CardTier,
+} from '@gymsheet/domain';
 import type { IllustrationKey } from '@/components/cards/art';
 import { resolveIllustration } from '@/components/cards/resolve';
 import { accentPolicy, cardMaterials, colors, type CardMaterial, type CardRarityKey } from '@/theme';
+import { rarityOf, type CelebrationSubject } from './queue';
 
-/**
- * Lo que se celebra. Dos casos, y sólo dos.
- *
- * `fresh` distingue el premio recién ganado de la revisita: sólo lo nuevo lleva
- * sello y titular de «¡conseguida!». Volver a abrir una insignia de hace meses
- * con «¡NUEVA!» encima sería mentir.
- */
-export type CelebrationSubject =
-  | { kind: 'badge'; badge: ProgressionBadge; fresh?: boolean }
-  | { kind: 'level'; level: ProgressionLevel; fresh?: boolean };
+export { keyOf, type CelebrationSubject } from './queue';
 
 /** Todo lo que la carta pinta, resuelto una vez desde el sujeto. */
 export interface CardScene {
@@ -35,12 +33,16 @@ export interface CardScene {
   flavor: string;
   icon: keyof typeof Ionicons.glyphMap;
   points: number;
+  /** Código del premio, para enseñarlo en recepción. Solo en la carta de premio. */
+  code: string | null;
   seed: number;
   announcement: string;
 }
 
-export function keyOf(subject: CelebrationSubject): string {
-  return subject.kind === 'badge' ? `badge:${subject.badge.code}` : `level:${subject.level.code}`;
+/** La carta de un material fijo: rótulo, luz y tinta salen de la rareza, no del servidor. */
+function fixed(rarity: CardRarityKey) {
+  const material = cardMaterials[rarity];
+  return { tier: tierFor(rarity), rarity, material, tint: material.glow, ink: material.label } as const;
 }
 
 export function sceneOf(subject: CelebrationSubject): CardScene {
@@ -66,10 +68,85 @@ export function sceneOf(subject: CelebrationSubject): CardScene {
       flavor,
       icon: badge.icon as keyof typeof Ionicons.glyphMap,
       points,
+      code: null,
       seed: seedFrom(badge.code),
       announcement: `¡Insignia conseguida! ${badge.name}. Rareza: ${rarityLabel}.${
         points > 0 ? ` +${points} puntos.` : ''
       } ${flavor}`,
+    };
+  }
+
+  if (subject.kind === 'challenge') {
+    const { challenge } = subject;
+    const fresh = subject.fresh ?? challenge.isNew;
+    const label = `Reto ${CHALLENGE_DIFFICULTY_LABEL[challenge.difficulty].toLocaleLowerCase('es')}`;
+    return {
+      ...fixed(rarityOf(subject)),
+      art: 'target',
+      rarityLabel: label,
+      stamp: fresh ? '¡CUMPLIDO!' : null,
+      heading: fresh ? '¡Reto cumplido!' : 'Reto de la semana',
+      title: challenge.title,
+      flavor: challenge.description,
+      icon: challenge.icon as keyof typeof Ionicons.glyphMap,
+      points: challenge.pointsReward,
+      code: null,
+      seed: seedFrom(`challenge:${challenge.code}`),
+      announcement: `¡Reto cumplido! ${challenge.title}. +${challenge.pointsReward} puntos.`,
+    };
+  }
+
+  if (subject.kind === 'perfect') {
+    return {
+      ...fixed(rarityOf(subject)),
+      art: 'calendar-week',
+      rarityLabel: 'Tres de tres',
+      stamp: subject.fresh === false ? null : '¡REDONDA!',
+      heading: '¡Semana redonda!',
+      title: 'Semana redonda',
+      flavor: 'Los tres retos de la semana, cumplidos. El lunes llegan otros tres.',
+      icon: 'checkmark-done-circle',
+      points: subject.bonus,
+      code: null,
+      seed: seedFrom(`perfect:${subject.weekStart}`),
+      announcement: `¡Semana redonda! Los tres retos cumplidos. +${subject.bonus} puntos.`,
+    };
+  }
+
+  if (subject.kind === 'freeze') {
+    const days = `${subject.streakDays} ${subject.streakDays === 1 ? 'día' : 'días'}`;
+    return {
+      ...fixed(rarityOf(subject)),
+      art: 'snowflake',
+      rarityLabel: subject.freezes > 1 ? `Guardas ${subject.freezes}` : 'Racha',
+      stamp: subject.fresh === false ? null : '+1',
+      heading: '¡Comodín ganado!',
+      title: 'Comodín',
+      flavor: `${days} seguidos. Si un día no puedes venir, el comodín se gasta solo y tu racha sigue.`,
+      icon: 'snow',
+      points: 0,
+      code: null,
+      seed: seedFrom(`freeze:${subject.streakDays}`),
+      announcement: `¡Comodín ganado! Llevas ${days}. Si un día no puedes venir, tu racha sigue.`,
+    };
+  }
+
+  if (subject.kind === 'prize') {
+    const { prize } = subject;
+    const fresh = subject.fresh ?? prize.isNew;
+    return {
+      ...fixed(rarityOf(subject)),
+      art: 'gift',
+      rarityLabel: 'Premio',
+      stamp: fresh ? '¡ES TUYO!' : null,
+      heading: fresh ? '¡Premio desbloqueado!' : 'Tu premio',
+      title: prize.title,
+      flavor: prize.instructions ?? `Por ${prize.source.name}. Enséñalo en recepción.`,
+      icon: prize.icon as keyof typeof Ionicons.glyphMap,
+      points: 0,
+      code: prize.code,
+      seed: seedFrom(`prize:${prize.id}`),
+      announcement: `¡Premio desbloqueado! ${prize.title}. Tu código: ${prizeCodeGroups(prize.code).split('').join(' ')}.`,
     };
   }
 
@@ -92,6 +169,7 @@ export function sceneOf(subject: CelebrationSubject): CardScene {
     flavor: level.tagline,
     icon: level.icon as keyof typeof Ionicons.glyphMap,
     points: 0,
+    code: null,
     seed: seedFrom(level.code),
     announcement: fresh
       ? `¡Has subido de rango! Ahora eres ${level.name}. ${level.tagline}`
