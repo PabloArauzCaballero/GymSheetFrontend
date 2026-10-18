@@ -80,6 +80,34 @@ export function alpha(hex: string, opacity: number): string {
   return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}, ${opacity})`;
 }
 
+/**
+ * Mezcla dos `#rrggbb` (t = peso de `a`) y devuelve `#rrggbb` opaco: un tono
+ * de marca rebajado que no deja ver lo que hay detrás (p. ej. la trama del chat).
+ */
+export function mixHex(a: string, b: string, t: number): string {
+  const channels = (hex: string) => {
+    const clean = hex.replace('#', '');
+    const full = clean.length === 3 ? clean.replace(/(.)/g, '$1$1') : clean.slice(0, 6);
+    const value = Number.parseInt(full, 16);
+    return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+  };
+  const [ca, cb] = [channels(a), channels(b)];
+  return `#${ca.map((channel, index) => Math.round(channel * t + cb[index]! * (1 - t)).toString(16).padStart(2, '0')).join('')}`;
+}
+
+/**
+ * Chat. La burbuja propia es el acento de la marca mezclado al 55 % con el
+ * lienzo (REPP: jade → `#205757`, texto 7,7:1; TOP Fitness: rojo → `#82162c`,
+ * 9,4:1). Las citas usan un color por autor, como WhatsApp.
+ */
+export const chatInk = {
+  mineMix: 0.55,
+  /** Autor de una cita ajena: lavanda, 6,4:1 sobre la burbuja ajena. */
+  quoteOther: '#b79bff',
+  /** Autor de una cita propia sobre la burbuja propia: menta clara, 6,1:1. */
+  quoteMine: '#8ff0cf',
+} as const;
+
 /** Velos y realces sobre contenido o imágenes. */
 export const overlay = {
   /** Velo de hojas y modales. */
