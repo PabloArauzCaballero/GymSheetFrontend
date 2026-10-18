@@ -16,18 +16,24 @@ export function BottomSheet({
   title,
   subtitle,
   children,
+  footer,
   testID,
+  onDismiss,
 }: {
   visible: boolean;
   onClose: () => void;
+  /** iOS: la hoja terminó de irse. Para abrir otro Modal sin que iOS se trague el segundo. */
+  onDismiss?: () => void;
   title: string;
   subtitle?: string;
   children: ReactNode;
+  /** Acción principal fija bajo el scroll: no se pierde al final de un contenido largo. */
+  footer?: ReactNode;
   testID?: string;
 }) {
   const insets = useSafeAreaInsets();
   return (
-    <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
+    <Modal animationType="slide" onDismiss={onDismiss} onRequestClose={onClose} transparent visible={visible}>
       {/* Con el teclado abierto la hoja sube con él: el botón de abajo no queda tapado. */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -96,6 +102,11 @@ export function BottomSheet({
             </View>
             {children}
           </ScrollView>
+          {footer ? (
+            <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border }}>
+              {footer}
+            </View>
+          ) : null}
         </View>
       </KeyboardAvoidingView>
     </Modal>

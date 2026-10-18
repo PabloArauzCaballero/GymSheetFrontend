@@ -23,6 +23,7 @@ const LA_PAZ: Region = { latitude: -16.5, longitude: -68.13, latitudeDelta: 0.09
  * Gyms are public places: a whole city at once. People are never drawn on the
  * map, not even as counts per zone — that told anyone where each person was.
  * They only show up as the grid that opens when a zone or a gym is tapped.
+ * Nothing else floats over the map: visibility and birth date live in Preferences.
  */
 const MAX_GYM_DELTA = 2.8;
 
@@ -100,7 +101,6 @@ export default function SocialMapScreen() {
     gym.latitud !== null && gym.longitud !== null
     && gym.latitud >= bounds.south && gym.latitud <= bounds.north
     && gym.longitud >= bounds.west && gym.longitud <= bounds.east), [branches.data, bounds.south, bounds.north, bounds.west, bounds.east]);
-  const gymCount = registeredGyms.length + (externalGyms.data?.length ?? 0);
 
   const openPlace = (next: MapPlace) => {
     setPlace(next);
@@ -111,10 +111,6 @@ export default function SocialMapScreen() {
       longitudeDelta: Math.min(region.longitudeDelta, 0.05),
     }, 350);
   };
-
-  const status = !gymsInRange
-    ? 'Acerca el mapa para ver los gimnasios'
-    : `${gymCount} ${gymCount === 1 ? 'gimnasio' : 'gimnasios'} en esta zona · toca cualquier zona o gimnasio para ver quién entrena por ahí`;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -189,6 +185,9 @@ export default function SocialMapScreen() {
             ))}
           </Animated.View>
         ) : null}
+        {!gymsInRange ? (
+          <Text style={{ color: colors.text, fontSize: fontSizes.footnote, alignSelf: 'center', backgroundColor: socialMapColors.glass, borderRadius: radii.full, overflow: 'hidden', paddingHorizontal: spacing.md, paddingVertical: spacing.xs }}>Acerca el mapa para ver los gimnasios</Text>
+        ) : null}
         {citySearch.length >= 2 && cities.data?.length === 0 ? (
           <Text style={{ color: colors.text, fontSize: fontSizes.footnote, alignSelf: 'flex-start', backgroundColor: socialMapColors.glass, borderRadius: radii.full, overflow: 'hidden', paddingHorizontal: spacing.md, paddingVertical: spacing.xs }}>No encontramos esa ciudad</Text>
         ) : null}
@@ -203,28 +202,9 @@ export default function SocialMapScreen() {
               });
             }} />
           </View>
-          <View style={{ gap: spacing.sm, padding: spacing.md, borderRadius: radii.xl, backgroundColor: socialMapColors.glass, borderColor: socialMapColors.glassBorder, borderWidth: 1 }}>
-            <Text style={{ color: colors.text, fontSize: fontSizes.footnote }}>{status}</Text>
-            {location.missingAge ? (
-              <>
-                <Text style={{ color: colors.textSecondary, fontSize: fontSizes.footnote, lineHeight: 18 }}>
-                  Para aparecer en el mapa necesitamos tu fecha de nacimiento: aquí solo se muestran mayores de edad.
-                </Text>
-                {location.profile ? (
-                  <Button icon="calendar-outline" label="Añadir fecha de nacimiento" onPress={() => setBirthDateOpen(true)} size="sm" />
-                ) : (
-                  // Sin perfil no hay dónde guardar la fecha: el onboarding la pide junto al resto.
-                  <Button icon="person-outline" label="Completar mi perfil" onPress={() => router.push('/onboarding')} size="sm" />
-                )}
-              </>
-            ) : null}
-            {!location.missingAge && location.settingsLoaded && !location.sharing ? (
-              <Button icon="eye-outline" label="Aparecer en el mapa" loading={location.appear.isPending} onPress={() => location.appear.mutate({})} size="sm" />
-            ) : null}
-            <Text accessibilityRole="link" onPress={() => { void Linking.openURL('https://www.openstreetmap.org/copyright'); }} style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-              Gimnasios © OpenStreetMap contributors · ODbL
-            </Text>
-          </View>
+          <Text accessibilityRole="link" onPress={() => { void Linking.openURL('https://www.openstreetmap.org/copyright'); }} style={{ alignSelf: 'flex-end', color: colors.textMuted, fontSize: fontSizes.xs, backgroundColor: socialMapColors.glass, borderRadius: radii.full, overflow: 'hidden', paddingHorizontal: spacing.sm, paddingVertical: 2 }}>
+            © OpenStreetMap
+          </Text>
         </Animated.View>
       ) : null}
 
@@ -248,7 +228,24 @@ export default function SocialMapScreen() {
         title="Preferencias"
         visible={preferencesOpen}
       >
-        <DiscoveryPreferencesEditor />
+        <View style={{ gap: spacing.md }}>
+          {location.missingAge ? (
+            <View style={{ gap: spacing.sm }}>
+              <Text style={{ color: colors.textSecondary, fontSize: fontSizes.footnote, lineHeight: 18 }}>
+                Para que otros te vean en la cuadrícula necesitamos tu fecha de nacimiento: aquí solo hay mayores de edad.
+              </Text>
+              {location.profile ? (
+                <Button icon="calendar-outline" label="Añadir fecha de nacimiento" onPress={() => { setPreferencesOpen(false); setBirthDateOpen(true); }} size="sm" variant="secondary" />
+              ) : (
+                <Button icon="person-outline" label="Completar mi perfil" onPress={() => { setPreferencesOpen(false); router.push('/onboarding'); }} size="sm" variant="secondary" />
+              )}
+            </View>
+          ) : null}
+          {!location.missingAge && location.settingsLoaded && !location.sharing ? (
+            <Button icon="eye-outline" label="Aparecer en el mapa" loading={location.appear.isPending} onPress={() => location.appear.mutate({})} size="sm" variant="secondary" />
+          ) : null}
+          <DiscoveryPreferencesEditor />
+        </View>
       </BottomSheet>
     </View>
   );

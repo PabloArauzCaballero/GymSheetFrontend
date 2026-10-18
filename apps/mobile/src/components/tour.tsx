@@ -138,13 +138,13 @@ const SCREEN_TOURS: Record<Exclude<TourKey, 'welcome'>, readonly TourStep[]> = {
     {
       icon: 'calendar-outline',
       title: 'Tu semana',
-      body: 'Los días que entrenas, empezando en lunes. El día de hoy va marcado; toca cualquiera para abrir su rutina.',
+      body: 'Los días que entrenas, empezando en lunes: un punto por sesión, pesas y cardio con su color. Toca un día para elegir qué rutina abrir.',
       target: 'routines.week',
     },
     {
       icon: 'add-circle-outline',
-      title: 'Rutinas propias',
-      body: 'Además de las que te asigna tu entrenador, puedes crear las tuyas y programarlas en los días que quieras.',
+      title: 'Más opciones',
+      body: 'En este menú creas tus rutinas, exploras ejercicios, armas un plan de cardio, pones música y vuelves a ver esta guía.',
       target: 'routines.create',
     },
   ],

@@ -35,6 +35,8 @@ name: 02 · Navegación — las cuatro pestañas
     timeout: 60000
 - takeScreenshot: 05-rutinas
 # Ejercicios ya no es pestaña: se abre desde la cabecera de Rutinas.
+- tapOn:
+    id: 'routines-more'
 - tapOn: 'Explorar ejercicios'
 # El buscador estrena su tour (`exercises`) la primera vez que se abre.
 - runFlow: cerrar-tour.subflow.yaml

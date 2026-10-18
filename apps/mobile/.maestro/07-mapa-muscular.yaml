@@ -18,6 +18,8 @@ name: 07 · Mapa muscular — tocar la figura abre el músculo
 - runFlow: login.subflow.yaml
 - tapOn: 'Rutinas, tab.*'
 - runFlow: cerrar-tour.subflow.yaml
+- tapOn:
+    id: 'routines-more'
 - tapOn: 'Explorar ejercicios'
 - runFlow: cerrar-tour.subflow.yaml
 - extendedWaitUntil:

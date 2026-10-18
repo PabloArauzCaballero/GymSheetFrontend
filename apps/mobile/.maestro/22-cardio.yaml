@@ -12,8 +12,11 @@ env:
     env: { EMAIL: 'athlete.mock@gymsheet.local', ROUTINE_NAME: 'Empuje 4 días' }
 - openLink: gymsheet:///routines
 - extendedWaitUntil:
-    visible: 'Plan de cardio'
+    visible:
+      id: 'routines-more'
     timeout: 60000
+- tapOn:
+    id: 'routines-more'
 - tapOn: 'Plan de cardio'
 # RF-17 · p01: Bici, todos los días, 30 min, por zonas con FC 60/190 → zona 2 = 138–151 lpm.
 - extendedWaitUntil:

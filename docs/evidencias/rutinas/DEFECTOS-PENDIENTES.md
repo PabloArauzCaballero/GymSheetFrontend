@@ -2,6 +2,12 @@
 
 Hallados con Maestro en el simulador iPhone 17 Pro contra el backend local (:3011, base `gym_sheet`).
 
+## Actualización 2026-10-15
+
+- D7 tiene implementación local: bandeja móvil paginada, acción de marcar leído y total no leído enlazado desde Inicio, con `GET /notifications/me/unread-count` en backend. Falta aceptación en app y API activas.
+- D8 tiene implementación local: los consumidores conservan `TAB`/`NAME`, pero abren por ID profundo; el buscador y el desplazamiento de una lista larga ya no forman parte del flujo. Falta ejecutar Maestro en simulador.
+- Verificación: backend `yarn type-check` PASS; frontend móvil TypeScript PASS al excluir el archivo de pruebas sociales que no resuelve `vitest/globals` en esta instalación; `node --check` del helper y `git diff --check` PASS. No se hizo aceptación visual ni PAIR: Docker, API local y simuladores no están disponibles.
+
 | # | Estado | Cierre |
 |---|---|---|
 | D1 «+0 puntos» | CERRADO | `CountUpText` fija la cifra final con un `Text` al terminar la cuenta (`motion.tsx`). Evidencia: «+78/+77/+99/+65 puntos» en RF-18 p00, p00b, p01, p04 y RF-15 p04, p05. |
@@ -10,8 +16,8 @@ Hallados con Maestro en el simulador iPhone 17 Pro contra el backend local (:301
 | D4 «1 de 0» | CERRADO | `describeSessionCount` (misma prueba). Evidencia: RF-18 p00b «Esta sesión cuenta para tu programa (semana 1).». |
 | D5 «No pudimos cargar tus recomendaciones» | NO ES DEFECTO | el backend :3011 (`GymSheetBackend` e2244fd, `dist` anterior a 10a) no tiene `GET /routines/recommended`: la ruta cae en `/routines/:id` y responde 400 «El identificador debe ser un UUID válido». Con un backend con 10a desaparece. |
 | D6 aviso tapa «Volver» / accesible | CERRADO (parcial en la verificación) | tarjeta más baja y delgada, sin captura de toques si no tiene acción, y `announceForAccessibility`. Evidencia visual: RF-12 p04. Maestro/XCUITest sigue sin listar el aviso en el árbol, así que la lectura por VoiceOver no se pudo comprobar en el simulador. |
-| D7 sin bandeja de avisos | ABIERTO (propuesta) | ver abajo |
-| D8 fragilidad de open-routine | ABIERTO (propuesta) | ver abajo |
+| D7 sin bandeja de avisos | IMPLEMENTACIÓN LOCAL; falta QA móvil | Bandeja paginada, lectura individual y contador de no leídos en Inicio; backend añade `GET /notifications/me/unread-count`. |
+| D8 fragilidad de open-routine | IMPLEMENTACIÓN LOCAL; falta Maestro | `open-routine.subflow.yaml` conserva su interfaz y resuelve la rutina por ID antes de navegar; se elimina la búsqueda y el scroll frágil para todos sus consumidores. |
 
 Detalle histórico de los cerrados (pasos para reproducirlos antes del arreglo) más abajo.
 
@@ -53,16 +59,16 @@ Detalle histórico de los cerrados (pasos para reproducirlos antes del arreglo) 
   anuncia (`toast-host.tsx`: la tarjeta no es `accessible` / `accessibilityLiveRegion`).
 
 ## D7 · Los avisos del servidor no tienen dónde verse
-- **Propuesta:** bandeja «Avisos» (campana en Inicio) que lea `GET /notifications/me`, con badge de no leídos y marca de leído; es trabajo de producto, no de esta pasada.
+- La web ya tenía bandeja. La implementación móvil local añade la bandeja «Avisos» enlazada desde Inicio, consulta `GET /notifications/me`, muestra el total no leído y permite marcar cada mensaje como leído. Falta la aceptación con app y API activas.
 - `PROGRAM_FINISHED` (RF-19 p01), `PROGRAM_WEEK_CLOSED` y `ROUTINE_SHARE_INVITE` (RF-13 p03) se guardan como mensajes
-  `IN_APP` en `notifications.messages` (estado PENDING) pero ni el móvil ni la web tienen una bandeja que los muestre,
-  y el permiso de notificaciones de iOS no se concede por `simctl privacy` (`Operation not permitted`), por eso no hay
-  captura. Pasos: cerrar semanas con `run-23-racha.sh` y consultar
+  `IN_APP` en `notifications.messages` (estado PENDING). La captura histórica no pudo hacerse porque el permiso de
+  notificaciones de iOS no se concede por `simctl privacy` (`Operation not permitted`). Pasos: cerrar semanas con
+  `run-23-racha.sh` y consultar
   `select subject, body, status from notifications.messages order by created_at desc limit 2`.
 
 ## D8 · Fragilidad de `open-routine.subflow.yaml` con muchas rutinas
-- **Propuesta:** migrar los flujos 11, 17, 18, 19, 21 y 22 a `open-routine-by-id.subflow.yaml` y, en la app, que `scrollUntilVisible` no sea necesario dejando la lista de «Mías» con el contenido por encima de la barra de pestañas (inset inferior).
-- Con ~20 rutinas en «Mías» la tarjeta buscada queda bajo la barra de pestañas y `scrollUntilVisible` (que se desplaza
-  antes de mirar) la pasa de largo; el buscador no siempre filtra. Los flujos nuevos abren la rutina por enlace
-  (`open-routine-by-id.subflow.yaml`, `start-day-by-id.subflow.yaml`). Los flujos viejos (11, 17, 18, 19, 21, 22) siguen
-  usando el subflujo antiguo.
+- `open-routine.subflow.yaml` conserva el contrato `TAB`/`NAME`, pero delega ahora en `open-routine-by-id.subflow.yaml`; la rutina se resuelve por API y el flujo la abre por enlace, sin buscar ni desplazar una lista larga. Falta ejecutar los flujos Maestro en un simulador.
+- Hallazgo original: con ~20 rutinas en «Mías» la tarjeta podía quedar bajo la barra de pestañas y `scrollUntilVisible`
+  (que se desplaza antes de mirar) pasarla de largo; el buscador no siempre filtraba. Los flujos que llamaban al
+  subflujo antiguo ahora heredan la resolución por ID; falta confirmarlo en Maestro con una cuenta que tenga muchas
+  rutinas.
