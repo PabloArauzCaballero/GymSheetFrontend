@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { Challenge, Prize, ProgressionBadge, ProgressionLevel, SessionReward } from '@gymsheet/schemas';
-import { keyOf, orderCelebrations, progressionCelebrations, rarityOf, rewardCelebrations, subjectTitle, type CelebrationSubject } from './queue.ts';
+import { keyOf, MAX_CELEBRATIONS, orderCelebrations, progressionCelebrations, rarityOf, rewardCelebrations, subjectTitle, type CelebrationSubject } from './queue.ts';
 
 const badge = (code: string, rarity: ProgressionBadge['rarity'], extra: Partial<ProgressionBadge> = {}): ProgressionBadge => ({
   code,
@@ -68,6 +68,7 @@ const week = (items: Challenge[], perfect = false) => ({
   perfectIsNew: perfect,
 });
 
+// Ocho cartas justas: con una más entra el recorte (ver la prueba de la cola larga).
 test('pico-final: insignias por rareza, retos por dificultad, semana redonda, comodín, premios y rango al final', () => {
   const shuffled: CelebrationSubject[] = [
     { kind: 'level', level, fresh: true },
@@ -78,11 +79,9 @@ test('pico-final: insignias por rareza, retos por dificultad, semana redonda, co
     { kind: 'perfect', weekStart: '2026-10-12', bonus: 150 },
     { kind: 'challenge', challenge: challenge('EASY', 'FACIL') },
     { kind: 'badge', badge: badge('COM', 'COMUN') },
-    { kind: 'badge', badge: badge('RAR', 'RARA') },
   ];
   assert.deepEqual(orderCelebrations(shuffled).map(keyOf), [
     'badge:COM',
-    'badge:RAR',
     'badge:LEG',
     'challenge:EASY',
     'challenge:HARD',
@@ -154,4 +153,29 @@ test('la senda celebra lo que sigue sin ver', () => {
     level,
   );
   assert.deepEqual(subjects.map(keyOf), ['badge:OLD', 'badge:NOW', 'challenge:A', 'prize:nuevo', 'level:MAQUINA']);
+});
+
+test('una cola larga se recorta a las insignias más raras sin perder retos, premios ni rango', () => {
+  const many: CelebrationSubject[] = Array.from({ length: 14 }, (_, i) => ({
+    kind: 'badge',
+    badge: badge(`COMUN_${i}`, 'COMUN'),
+    fresh: true,
+  }));
+  many.push({ kind: 'badge', badge: badge('LEYENDA', 'LEGENDARIA'), fresh: true });
+  many.push({ kind: 'challenge', challenge: challenge('SESSIONS', 'FACIL'), fresh: true });
+  many.push({ kind: 'prize', prize: prize('p1'), fresh: true });
+  many.push({ kind: 'level', level, fresh: true });
+
+  const queue = orderCelebrations(many);
+  assert.equal(queue.length, MAX_CELEBRATIONS);
+  assert.deepEqual(
+    queue.slice(-3).map((subject) => subject.kind),
+    ['challenge', 'prize', 'level'],
+  );
+  assert.ok(queue.some((subject) => subject.kind === 'badge' && subject.badge.code === 'LEYENDA'));
+  // Las comunes que entran mantienen su orden original.
+  assert.deepEqual(
+    queue.filter((s) => s.kind === 'badge' && s.badge.rarity === 'COMUN').map((s) => (s.kind === 'badge' ? s.badge.code : '')),
+    ['COMUN_0', 'COMUN_1', 'COMUN_2', 'COMUN_3'],
+  );
 });
