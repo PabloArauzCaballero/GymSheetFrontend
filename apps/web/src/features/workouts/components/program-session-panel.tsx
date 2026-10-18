@@ -8,7 +8,8 @@ import { Button } from '@/shared/components/ui/button';
 import { notify } from '@/shared/notifications';
 import { programKeys, routineV2Keys } from '@/features/routines-v2/keys';
 import { programService } from '@/features/routines-v2/services';
-import { multiplierLabel } from '@/features/programs/labels';
+import { shieldLabel } from '@gymsheet/domain';
+import { multiplierLabel, tierLabel } from '@/features/programs/labels';
 import { queryKeys } from '@/shared/api/query-keys';
 import { routineBuilderService } from '@/features/routine-wizard/services';
 import { describeProposal } from './proposal-text';
@@ -87,9 +88,17 @@ export function ProgramSessionPanel({
               className="flex items-baseline justify-between gap-3 text-sm"
               data-testid="mode-bonus"
             >
-              <span className="text-[var(--text-muted)]">
-                Bono del modo ({multiplierLabel(programa.bonusModo.proximoMultiplicador)} si cumples
-                la semana)
+              <span className="grid gap-0.5 text-[var(--text-muted)]">
+                <span>
+                  Bono del modo ({multiplierLabel(programa.bonusModo.proximoMultiplicador)} si
+                  cumples la semana)
+                </span>
+                <span className="text-xs" data-testid="mode-tier">
+                  {`Vas en ${tierLabel({ multiplicador: programa.bonusModo.multiplicador, nivelMultiplicador: programa.nivelMultiplicador })}`}
+                  {shieldLabel(programa.escudos)
+                    ? ' · escudo listo: una semana floja no te baja'
+                    : ''}
+                </span>
               </span>
               <span className="font-semibold tabular-nums text-[var(--accent-ink)]">
                 +{programa.bonusModo.puntosPrevistos.toLocaleString('es')} pts previstos
