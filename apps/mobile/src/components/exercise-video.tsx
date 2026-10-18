@@ -3,7 +3,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEvent } from "expo";
 import { VideoView, useVideoPlayer } from "expo-video";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import { Shimmer } from "@/components/shimmer";
@@ -65,7 +65,8 @@ export function ExerciseVideo({
   const side = Math.min(width - spacing.lg * 2, VIDEO_MAX_SIDE);
   const [ready, setReady] = useState(false);
 
-  const player = useVideoPlayer({ uri }, (instance) => {
+  const source = useMemo(() => ({ uri }), [uri]);
+  const player = useVideoPlayer(source, (instance) => {
     instance.loop = true;
     instance.muted = true;
     // Un clip de 2 MB cabe entero: que el buffer no se quede corto y se pare.

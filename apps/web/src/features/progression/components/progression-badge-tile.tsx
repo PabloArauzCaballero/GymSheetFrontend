@@ -2,13 +2,16 @@ import { Sparkles } from 'lucide-react';
 import type { ProgressionBadge } from '@/shared/api/schemas';
 import { CountUp } from '@/shared/components/motion/count-up';
 import { cn } from '@/shared/lib/cn';
+import { isVeiled, MaterialCard, materialAccent } from './material-card';
 import { RARITY_LABEL, withAlpha } from './progression-colors';
-import { ProgressionIcon } from './progression-icon';
 import { ProgressTrack } from './progression-track';
 import { chipHeartbeat } from '@/shared/components/ui/badge';
 
 /**
  * Una insignia.
+ *
+ * Lleva el material de su rareza (jade, zafiro, amatista, oro), el mismo que su
+ * carta y que el móvil; el color propio de la insignia se queda para la escena.
  *
  * Conseguida: a todo color, con su línea de sabor —la frase es el premio tanto
  * como el icono—. Pendiente: apagada, pero con su barra y su cuenta exacta
@@ -32,27 +35,22 @@ export function BadgeTile({
     // Las pendientes se apagan sin desaparecer: siguen siendo el objetivo.
     badge.earned ? 'opacity-100' : 'opacity-70',
   );
+  const accent = materialAccent(badge.rarity);
+  const veiled = isVeiled(badge);
   const shellStyle = {
-    borderColor: badge.earned ? withAlpha(badge.color, 0.28) : 'var(--border-subtle)',
+    borderColor: badge.earned ? withAlpha(accent, 0.4) : 'var(--border-subtle)',
     backgroundColor: 'var(--surface-low)',
   };
 
   const body = (
     <>
       <div className="flex items-center gap-3">
-        <span
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border"
-          style={{
-            borderColor: badge.earned ? withAlpha(badge.color, 0.45) : 'var(--border-subtle)',
-            backgroundColor: badge.earned ? withAlpha(badge.color, 0.14) : 'var(--surface-high)',
-          }}
-        >
-          <ProgressionIcon
-            className="h-5 w-5"
-            name={badge.icon}
-            style={{ color: badge.earned ? badge.color : 'var(--text-disabled)' }}
-          />
-        </span>
+        <MaterialCard
+          icon={badge.icon}
+          rarity={badge.rarity}
+          size={32}
+          state={badge.earned ? 'earned' : veiled ? 'veiled' : 'pending'}
+        />
         <div className="grid min-w-0 flex-1 gap-0.5">
           <span
             className={cn(
@@ -78,7 +76,7 @@ export function BadgeTile({
         {badge.isNew ? (
           <span
             className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${chipHeartbeat}`}
-            style={{ backgroundColor: withAlpha(badge.color, 0.2), color: badge.color }}
+            style={{ backgroundColor: withAlpha(accent, 0.22), color: 'var(--text)' }}
           >
             NUEVA
           </span>
@@ -92,7 +90,7 @@ export function BadgeTile({
       {!badge.earned && badge.progress !== null ? (
         <div className="grid gap-1.5">
           <ProgressTrack
-            color="var(--text-disabled)"
+            color={accent}
             height={4}
             label={`Avance de la medalla ${badge.name}`}
             ratio={badge.progress}

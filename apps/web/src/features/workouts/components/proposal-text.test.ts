@@ -25,8 +25,12 @@ describe('lista de cambios de la rutina (RF-20)', () => {
   });
 
   it('sin nombres conocidos no inventa ninguno', () => {
-    expect(describeProposal({ cambios: [{ routineExerciseId: 'x', seriesObjetivo: 1 }], agregar: [], quitar: [] })).toEqual([
-      'un ejercicio: 1 serie',
-    ]);
+    expect(
+      describeProposal({
+        cambios: [{ routineExerciseId: 'x', seriesObjetivo: 1 }],
+        agregar: [],
+        quitar: [],
+      }),
+    ).toEqual(['un ejercicio: 1 serie']);
   });
 });

@@ -253,7 +253,9 @@ export function ContactInfoSheet({
       <View style={{ alignItems: 'center', gap: spacing.xs }}>
         {photoUrl ? (
           <Image
+            cachePolicy="memory-disk"
             contentFit="cover"
+            recyclingKey={photoUrl}
             source={{ uri: photoUrl }}
             style={{ width: 88, height: 88, borderRadius: radii.full, backgroundColor: colors.surfaceHigh }}
           />

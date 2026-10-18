@@ -48,6 +48,8 @@ const BY_ICON: Readonly<Record<string, IllustrationKey>> = {
   megaphone: 'megaphone',
   location: 'map-pin',
   hourglass: 'hourglass',
+  gift: 'gift',
+  snow: 'snowflake',
 };
 
 const BY_CATEGORY: Readonly<Record<string, IllustrationKey>> = {

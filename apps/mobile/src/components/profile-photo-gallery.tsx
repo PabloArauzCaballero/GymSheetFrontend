@@ -81,6 +81,8 @@ export function ProfilePhotoGallery() {
             {(photos.data ?? []).map((photo) => (
               <View key={photo.id} style={{ width: THUMB_SIZE, height: THUMB_SIZE }}>
                 <Image
+                  cachePolicy="memory-disk"
+                  recyclingKey={photo.url}
                   source={{ uri: photo.url }}
                   style={{
                     width: THUMB_SIZE,

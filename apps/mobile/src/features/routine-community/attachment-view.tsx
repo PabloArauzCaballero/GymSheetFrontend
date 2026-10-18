@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -19,8 +20,9 @@ function fit(attachment: CommentAttachment, fallback: number) {
   return { width: Math.round(w * scale), height: Math.round(h * scale) };
 }
 
-function CommentVideo({ attachment }: { attachment: CommentAttachment }) {
-  const player = useVideoPlayer({ uri: attachment.url }, (instance) => {
+const CommentVideo = memo(function CommentVideo({ attachment }: { attachment: CommentAttachment }) {
+  const source = useMemo(() => ({ uri: attachment.url }), [attachment.url]);
+  const player = useVideoPlayer(source, (instance) => {
     instance.loop = false;
     instance.muted = false;
   });
@@ -33,7 +35,7 @@ function CommentVideo({ attachment }: { attachment: CommentAttachment }) {
       style={{ ...size, borderRadius: radii.md, backgroundColor: colors.surfaceHighest }}
     />
   );
-}
+});
 
 /** El adjunto de un comentario: GIF, sticker, foto, video o archivo. */
 export function AttachmentView({ attachment }: { attachment: CommentAttachment }) {
@@ -41,7 +43,9 @@ export function AttachmentView({ attachment }: { attachment: CommentAttachment }
     return (
       <Image
         accessibilityLabel={attachment.nombre ?? 'Sticker'}
+        cachePolicy="memory-disk"
         contentFit="contain"
+        recyclingKey={attachment.url}
         source={{ uri: attachment.url }}
         style={{ ...fit(attachment, 160), maxWidth: 180 }}
       />
@@ -53,6 +57,7 @@ export function AttachmentView({ attachment }: { attachment: CommentAttachment }
         accessibilityLabel={attachment.nombre ?? (attachment.tipo === 'GIF' ? 'GIF' : 'Foto')}
         cachePolicy="memory-disk"
         contentFit="cover"
+        recyclingKey={attachment.url}
         source={{ uri: attachment.url }}
         style={{
           ...fit(attachment, 200),

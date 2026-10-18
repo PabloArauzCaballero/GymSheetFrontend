@@ -7,6 +7,8 @@
  * así una legendaria dura, tiembla y revienta igual en el teléfono y en la web.
  */
 
+import { CARD_MATERIAL_INKS } from './card-materials';
+
 export type CardRarity = 'COMUN' | 'RARA' | 'EPICA' | 'LEGENDARIA';
 
 export type CardHaptic = 'light' | 'medium' | 'heavy';
@@ -33,6 +35,12 @@ export type CardTier = Readonly<{
   haptic: CardHaptic;
 }>;
 
+/** Las tres primeras paradas del marco del material: la misma carta en web y móvil. */
+function frameOf(rarity: CardRarity): readonly [string, string, string] {
+  const [light, main, deep] = CARD_MATERIAL_INKS[rarity].frame;
+  return [light, main, deep];
+}
+
 /**
  * La escala de rareza. Sube en todos los ejes a la vez: la intensidad se percibe
  * como una sola cosa, y una legendaria que temblara más pero brillara igual se
@@ -42,8 +50,8 @@ export const CARD_TIERS: Readonly<Record<CardRarity, CardTier>> = {
   // Jade y no gris: la común es la carta que más se ve, y una primera
   // recompensa gris se lee como «no ha pasado nada».
   COMUN: {
-    frame: ['#E9FFF6', '#5FE3B5', '#149A78'],
-    glow: '#63F2C1',
+    frame: frameOf('COMUN'),
+    glow: CARD_MATERIAL_INKS.COMUN.glow,
     rays: 0.14,
     raysSpin: false,
     shake: 0,
@@ -54,8 +62,8 @@ export const CARD_TIERS: Readonly<Record<CardRarity, CardTier>> = {
     haptic: 'light',
   },
   RARA: {
-    frame: ['#BDE6FF', '#3D9BFF', '#1B3FA8'],
-    glow: '#5AB0FF',
+    frame: frameOf('RARA'),
+    glow: CARD_MATERIAL_INKS.RARA.glow,
     rays: 0.22,
     raysSpin: false,
     shake: 0,
@@ -66,8 +74,8 @@ export const CARD_TIERS: Readonly<Record<CardRarity, CardTier>> = {
     haptic: 'light',
   },
   EPICA: {
-    frame: ['#F0C8FF', '#A64DFF', '#4B1A9E'],
-    glow: '#C37BFF',
+    frame: frameOf('EPICA'),
+    glow: CARD_MATERIAL_INKS.EPICA.glow,
     rays: 0.34,
     raysSpin: true,
     shake: 3,
@@ -78,8 +86,8 @@ export const CARD_TIERS: Readonly<Record<CardRarity, CardTier>> = {
     haptic: 'medium',
   },
   LEGENDARIA: {
-    frame: ['#FFF6C2', '#F5C542', '#A8691A'],
-    glow: '#FFD86B',
+    frame: frameOf('LEGENDARIA'),
+    glow: CARD_MATERIAL_INKS.LEGENDARIA.glow,
     rays: 0.5,
     raysSpin: true,
     shake: 6,
@@ -322,11 +330,12 @@ export function pointRuleLines(rules: {
 }
 
 /** Etiquetas del desglose de una sesión, en el orden en que se leen. */
-export const BREAKDOWN_LABEL: Readonly<Record<PointRuleLine['key'] | 'modes', string>> = {
+export const BREAKDOWN_LABEL: Readonly<Record<PointRuleLine['key'] | 'modes' | 'challenges', string>> = {
   session: 'Por terminar la sesión',
   sets: 'Por las series',
   volume: 'Por los kilos levantados',
   streak: 'Por tu racha',
   badges: 'Por insignias nuevas',
   modes: 'Por tu programa (multiplicador)',
+  challenges: 'Por tus retos de la semana',
 };

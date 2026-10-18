@@ -1,4 +1,8 @@
-import { STREAK_LOCATION_TIMEOUT_MS, toStreakLocation, type StreakLocation } from '@gymsheet/domain';
+import {
+  STREAK_LOCATION_TIMEOUT_MS,
+  toStreakLocation,
+  type StreakLocation,
+} from '@gymsheet/domain';
 
 /** Pide una posición al navegador sin impedir que la sesión termine. */
 export function captureStreakLocation(): Promise<StreakLocation | null> {

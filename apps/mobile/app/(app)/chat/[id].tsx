@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -125,25 +125,29 @@ function resolveChatMediaUrl(path: string): string {
   return `${env.apiUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
 }
 
-function ChatVideo({ uri, token }: { uri: string; token: string | null }) {
-  const player = useVideoPlayer(token ? {
-    uri: resolveChatMediaUrl(uri),
-    headers: { Authorization: `Bearer ${token}` },
-    useCaching: false,
-  } : null, (videoPlayer) => videoPlayer.pause());
+const ChatVideo = memo(function ChatVideo({ uri, token }: { uri: string; token: string | null }) {
+  const source = useMemo(
+    () => (token ? {
+      uri: resolveChatMediaUrl(uri),
+      headers: { Authorization: `Bearer ${token}` },
+      useCaching: true,
+    } : null),
+    [token, uri],
+  );
+  const player = useVideoPlayer(source, (videoPlayer) => videoPlayer.pause());
 
   if (!token) return null;
   return <VideoView nativeControls player={player} style={{ width: 240, height: 220, borderRadius: radii.md }} />;
-}
+});
 
-function ChatAudioMessage({ uri, token, mine, onLoadError }: {
+const ChatAudioMessage = memo(function ChatAudioMessage({ uri, token, mine, onLoadError }: {
   uri: string;
   token: string | null;
   mine: boolean;
   /** No cargó: casi siempre el token de 15 min venció; la pantalla lo renueva y el reproductor se rehace. */
   onLoadError: () => void;
 }) {
-  const source = token ? chatAudioPlayerSource(uri, env.apiUrl, token) : null;
+  const source = useMemo(() => (token ? chatAudioPlayerSource(uri, env.apiUrl, token) : null), [token, uri]);
   const player = useAudioPlayer(source, { updateInterval: 250 });
   const status = useAudioPlayerStatus(player);
   const unavailable = Boolean(status.error);
@@ -184,7 +188,7 @@ function ChatAudioMessage({ uri, token, mine, onLoadError }: {
       </View>
     </View>
   );
-}
+});
 
 function mapsUrlFor(lat: number, lng: number): string {
   return `https://maps.google.com/?q=${lat},${lng}`;
@@ -1189,9 +1193,11 @@ export default function ChatThreadScreen() {
       return (
         <PressableScale accessibilityLabel="Abrir foto" haptic="none" onLongPress={onLongPress} onPress={() => setViewerUri(url)} scaleTo={0.98}>
           <Image
-            cachePolicy="none"
+            cachePolicy="memory-disk"
             contentFit="cover"
             onError={onMediaError}
+            priority="normal"
+            recyclingKey={url}
             source={{
               uri: resolveChatMediaUrl(url),
               ...(mediaAccessToken ? { headers: { Authorization: `Bearer ${mediaAccessToken}` } } : {}),
@@ -1356,7 +1362,7 @@ export default function ChatThreadScreen() {
   return (
     <>
       <View style={{ flex: 1, backgroundColor: colors.background }}>
-        <AmbientBackground />
+        <AmbientBackground waveform={false} />
         <KeyboardAvoidingView
           // Android reduce la ventana con el teclado abierto; iOS no, y sin esto
           // el redactor queda detrás del teclado justo mientras se escribe.
@@ -1395,7 +1401,9 @@ export default function ChatThreadScreen() {
               <View>
                 {otherPhotoUrl ? (
                   <Image
+                    cachePolicy="memory-disk"
                     contentFit="cover"
+                    recyclingKey={otherPhotoUrl}
                     source={{ uri: otherPhotoUrl }}
                     style={{ width: 40, height: 40, borderRadius: radii.full, backgroundColor: colors.surfaceHigh }}
                   />
@@ -1517,10 +1525,15 @@ export default function ChatThreadScreen() {
             // por el otro extremo) no mueve lo que se está mirando.
             contentContainerStyle={{ paddingVertical: spacing.xs }}
             data={timeline}
+            initialNumToRender={12}
             inverted
             keyboardDismissMode="interactive"
             keyboardShouldPersistTaps="handled"
             keyExtractor={(message) => message.id}
+            maxToRenderPerBatch={8}
+            removeClippedSubviews={Platform.OS === 'android'}
+            updateCellsBatchingPeriod={50}
+            windowSize={7}
             ListEmptyComponent={
               <EmptyState
                 icon="chatbubble-ellipses-outline"
@@ -1619,9 +1632,11 @@ export default function ChatThreadScreen() {
         >
           {visibleViewerUri ? (
             <Image
-              cachePolicy="none"
+              cachePolicy="memory-disk"
               contentFit="contain"
               onError={onMediaError}
+              priority="high"
+              recyclingKey={visibleViewerUri}
               source={{
                 uri: resolveChatMediaUrl(visibleViewerUri),
                 ...(mediaAccessToken ? { headers: { Authorization: `Bearer ${mediaAccessToken}` } } : {}),

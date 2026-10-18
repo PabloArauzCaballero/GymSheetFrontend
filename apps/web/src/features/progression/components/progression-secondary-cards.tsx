@@ -35,12 +35,12 @@ export function RestDaysCard({
             className={cn(
               'flex h-9 w-9 items-center justify-center rounded-full border text-sm font-semibold transition-colors',
               currentRestDays.includes(day.value)
-                // `--accent-contrast` (#000000 en ambos temas) es el token para texto
-                // encima del relleno de acento. Con `--background` la letra del día
-                // desaparecía en claro: #f3f4f0 sobre el volt #c3f400 son 1.17:1, así
-                // que no se veía QUÉ días estaban marcados. En oscuro `--background`
-                // es negro y por eso el fallo no se notaba al desarrollar.
-                ? 'border-[var(--volt)] bg-[var(--volt)] text-[var(--accent-contrast)]'
+                ? // `--accent-contrast` (#000000 en ambos temas) es el token para texto
+                  // encima del relleno de acento. Con `--background` la letra del día
+                  // desaparecía en claro: #f3f4f0 sobre el volt #c3f400 son 1.17:1, así
+                  // que no se veía QUÉ días estaban marcados. En oscuro `--background`
+                  // es negro y por eso el fallo no se notaba al desarrollar.
+                  'border-[var(--volt)] bg-[var(--volt)] text-[var(--accent-contrast)]'
                 : 'border-[var(--border-subtle)] text-[var(--text-muted)]',
             )}
             disabled={pending}

@@ -614,9 +614,10 @@ function DirectoryPersonRow({
         leading={
           entry.photoUrl ? (
             <Image
-              cachePolicy="disk"
+              cachePolicy="memory-disk"
               contentFit="cover"
               priority="low"
+              recyclingKey={entry.photoUrl}
               source={{ uri: entry.photoUrl }}
               style={{
                 width: ROW_AVATAR_SIZE,
@@ -624,7 +625,7 @@ function DirectoryPersonRow({
                 borderRadius: radii.full,
                 backgroundColor: colors.surfaceHigh,
               }}
-              transition={200}
+              transition={160}
             />
           ) : (
             <View

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { pointRuleLines, pointsFigures, type PointRuleLine } from '@gymsheet/domain';
+import { pointRuleLines, pointsFigures, rewardRuleLines, type PointRuleLine, type RewardRuleLine } from '@gymsheet/domain';
 import type { PointRules, ProgressionBadge, ProgressionStats } from '@gymsheet/schemas';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { PressableScale } from '@/components/motion';
@@ -35,6 +35,12 @@ const ICON: Record<PointRuleLine['key'], keyof typeof Ionicons.glyphMap> = {
   volume: 'barbell-outline',
   streak: 'flame-outline',
   badges: 'ribbon-outline',
+};
+
+const REWARD_ICON: Record<RewardRuleLine['key'], keyof typeof Ionicons.glyphMap> = {
+  challenges: 'flag-outline',
+  perfect: 'checkmark-done-circle-outline',
+  freezes: 'snow-outline',
 };
 
 function format(value: number): string {
@@ -155,6 +161,8 @@ function RuleList({
 }) {
   const figures = pointsFigures(rules, stats, badges);
   const lines = pointRuleLines(rules);
+  // Retos y comodines (contrato 12): solo si el servidor publica sus reglas.
+  const extra = rewardRuleLines(rules);
 
   return (
     <View style={{ gap: spacing.md }}>
@@ -204,6 +212,25 @@ function RuleList({
             </View>
           );
         })}
+        {extra.map((line) => (
+          <View
+            accessible
+            accessibilityLabel={`${line.label}: ${line.rate}.`}
+            key={line.key}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.md,
+              padding: spacing.md,
+              borderTopWidth: 1,
+              borderTopColor: colors.borderSubtle,
+            }}
+          >
+            <Ionicons color={accentPolicy.glyph} name={REWARD_ICON[line.key]} size={iconSizes.md} />
+            <Text style={{ flex: 1, color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>{line.label}</Text>
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, fontVariant: ['tabular-nums'] }}>{line.rate}</Text>
+          </View>
+        ))}
       </View>
 
       <View

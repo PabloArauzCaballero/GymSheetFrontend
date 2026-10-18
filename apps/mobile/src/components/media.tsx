@@ -284,6 +284,7 @@ export function ExerciseImage({
             // Foto: `cover`, que llene el cuadro sin bandas.
             contentFit={photo ? 'cover' : 'contain'}
             onLoad={() => setLoaded(true)}
+            recyclingKey={uri}
             source={{ uri }}
             style={{ width: '100%', height: '100%' }}
             transition={reduceMotion ? 0 : motion.enter}
@@ -345,9 +346,10 @@ function ExerciseGif({ exercise, gif }: {
       {playing ? (
         <Image
           accessibilityElementsHidden
-          cachePolicy="disk"
+          cachePolicy="memory-disk"
           contentFit="contain"
           importantForAccessibility="no-hide-descendants"
+          recyclingKey={gif.url}
           source={{ uri: gif.url }}
           style={{ width: HERO_SIZE, height: HERO_SIZE, borderRadius: radii.lg, backgroundColor: ink.white }}
         />

@@ -260,12 +260,17 @@ function Glow({ index, width, moving }: { index: number; width: number; moving: 
   const diameter = width * spec.size;
   const id = `ambient-glow-${index}`;
 
-  const animated = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: width * 0.18 * Math.sin(clockX.value * TAU) },
-      { translateY: width * 0.14 * Math.cos(clockY.value * TAU) },
-    ],
-  }));
+  const animated = useAnimatedStyle(() => {
+    if (!moving) {
+      return { transform: [{ translateX: 0 }, { translateY: 0 }] };
+    }
+    return {
+      transform: [
+        { translateX: width * 0.18 * Math.sin(clockX.value * TAU) },
+        { translateY: width * 0.14 * Math.cos(clockY.value * TAU) },
+      ],
+    };
+  });
 
   return (
     <Animated.View
@@ -307,12 +312,15 @@ function Glow({ index, width, moving }: { index: number; width: number; moving: 
 export function AmbientBackground({ waveform = true }: { waveform?: boolean } = {}) {
   const { width, height } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
-  const moving = !reduceMotion;
   const intensity = useAmbientStore((state) => state.intensity);
+  const isTraining = intensity === 'active';
+  // En pantallas con contenido estático (waveform=false), las luces se quedan fijas
+  // para que la GPU no trabaje en vano ni caliente el teléfono con BlurView encima.
+  const moving = !reduceMotion && (isTraining || waveform);
   // 1.0 while browsing, 1.9 during a live session. Chosen by eye: enough that
   // the room visibly changes when training starts, not so much that the wave
   // starts competing with the numbers the user is reading off the screen.
-  const energy = intensity === 'active' ? 1.9 : 1;
+  const energy = isTraining ? 1.9 : 1;
 
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>

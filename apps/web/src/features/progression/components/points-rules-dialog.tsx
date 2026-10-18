@@ -1,8 +1,25 @@
 'use client';
 
-import { pointRuleLines, pointsFigures, type PointRuleLine } from '@gymsheet/domain';
+import {
+  pointRuleLines,
+  pointsFigures,
+  rewardRuleLines,
+  type PointRuleLine,
+  type RewardRuleLine,
+} from '@gymsheet/domain';
 import { useQuery } from '@tanstack/react-query';
-import { Award, CheckCheck, Dumbbell, Flame, Layers, Zap, type LucideIcon } from 'lucide-react';
+import {
+  Award,
+  CheckCheck,
+  CircleCheckBig,
+  Dumbbell,
+  Flag,
+  Flame,
+  Layers,
+  Snowflake,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react';
 import type { ProgressionBadge, ProgressionStats } from '@/shared/api/schemas';
 import { progressionService } from '@/features/progression/services/progression-service';
 import { Button } from '@/shared/components/ui/button';
@@ -22,6 +39,12 @@ const ICON: Record<PointRuleLine['key'], LucideIcon> = {
   volume: Dumbbell,
   streak: Flame,
   badges: Award,
+};
+
+const REWARD_ICON: Record<RewardRuleLine['key'], LucideIcon> = {
+  challenges: Flag,
+  perfect: CircleCheckBig,
+  freezes: Snowflake,
 };
 
 function format(value: number): string {
@@ -54,7 +77,10 @@ export function PointsRulesDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent description="Cada regla con tus números al lado." title="Cómo se ganan los puntos">
+      <DialogContent
+        description="Cada regla con tus números al lado."
+        title="Cómo se ganan los puntos"
+      >
         <div className="grid gap-5">
           {rules.isPending ? (
             <div
@@ -67,12 +93,17 @@ export function PointsRulesDialog({
               <p className="text-sm text-[var(--text-muted)]">
                 No pudimos cargar las reglas. Vuelve a intentarlo en un momento.
               </p>
-              <Button className="justify-self-start" onClick={() => void rules.refetch()} variant="secondary">
+              <Button
+                className="justify-self-start"
+                onClick={() => void rules.refetch()}
+                variant="secondary"
+              >
                 Reintentar
               </Button>
             </div>
           ) : (
             <RuleList
+              extra={rewardRuleLines(rules.data)}
               figures={pointsFigures(rules.data, stats, badges)}
               lines={pointRuleLines(rules.data)}
               points={points}
@@ -91,10 +122,13 @@ export function PointsRulesDialog({
 
 function RuleList({
   lines,
+  extra,
   figures,
   points,
 }: Readonly<{
   lines: ReturnType<typeof pointRuleLines>;
+  /** Retos y comodines (contrato 12): solo si el servidor publica sus reglas. */
+  extra: readonly RewardRuleLine[];
   figures: ReturnType<typeof pointsFigures>;
   points: number;
 }>) {
@@ -123,16 +157,38 @@ function RuleList({
             </li>
           );
         })}
+        {extra.map((line) => {
+          const Icon = REWARD_ICON[line.key];
+          return (
+            <li
+              className="flex items-center gap-4 p-4"
+              data-testid={`rule-${line.key}`}
+              key={line.key}
+            >
+              <Icon aria-hidden className="size-5 shrink-0 text-[var(--text-muted)]" />
+              <span className="min-w-0 flex-1 text-sm font-semibold text-[var(--text)]">
+                {line.label}
+              </span>
+              <span className="text-xs tabular-nums text-[var(--text-muted)]">{line.rate}</span>
+            </li>
+          );
+        })}
         {modes > 0 ? (
           <li className="flex items-center gap-4 p-4" data-testid="rule-modes">
             <Zap aria-hidden className="size-5 shrink-0 text-[var(--text-muted)]" />
             <div className="grid min-w-0 flex-1 gap-0.5">
-              <span className="text-sm font-semibold text-[var(--text)]">Programas con modo</span>
+              <span className="text-sm font-semibold text-[var(--text)]">
+                {extra.length > 0 ? 'Retos y programas con modo' : 'Programas con modo'}
+              </span>
               <span className="text-xs text-[var(--text-muted)]">
-                Bono semanal por multiplicador, metas de marca y programas completados. Nunca baja.
+                {extra.length > 0
+                  ? 'Retos de la semana, semanas redondas, bono por multiplicador, metas de marca y programas completados. Nunca baja.'
+                  : 'Bono semanal por multiplicador, metas de marca y programas completados. Nunca baja.'}
               </span>
             </div>
-            <span className="text-base font-semibold tabular-nums text-[var(--text)]">{format(modes)}</span>
+            <span className="text-base font-semibold tabular-nums text-[var(--text)]">
+              {format(modes)}
+            </span>
           </li>
         ) : null}
       </ul>
@@ -143,8 +199,8 @@ function RuleList({
         </span>
       </p>
       <p className="text-xs leading-5 text-[var(--text-muted)]">
-        Los puntos nunca bajan. La racha cuenta la más larga que hayas hecho, así que descansar no te
-        quita nada.
+        Los puntos nunca bajan. La racha cuenta la más larga que hayas hecho, así que descansar no
+        te quita nada.
       </p>
     </div>
   );

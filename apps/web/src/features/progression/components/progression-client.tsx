@@ -2,8 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Info, Sparkles } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import type { LeaderboardSortBy, ProgressionBadge } from '@/shared/api/schemas';
+import { useState } from 'react';
+import type { Challenge, LeaderboardSortBy, Prize, ProgressionBadge } from '@/shared/api/schemas';
 import { progressionService } from '@/features/progression/services/progression-service';
 import {
   Skeleton,
@@ -14,24 +14,23 @@ import {
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
-import {
-  badgeSubject,
-  levelSubject,
-  ProgressionCelebration,
-  useLevelUpWatch,
-  useRewardQueue,
-} from './progression-celebration';
+import { ProgressionCelebration, useLevelUpWatch, useRewardQueue } from './progression-celebration';
+import { BadgeCollection } from './badge-collection';
+import { NearestBadges } from './nearest-badges';
+import { PrizesCard } from './prize-tickets';
 import { BadgeTile, PathNode, RankHero } from './progression-parts';
 import { LeaderboardCard, RestDaysCard } from './progression-secondary-cards';
 import { ProgressionStatsCard } from './progression-stats-card';
 import { PointsRulesDialog, usePointRules } from './points-rules-dialog';
-import { RarityLegend } from './rarity-legend';
+import { StreakCard } from './streak-card';
+import { ChallengesCard } from './weekly-challenges';
 
 /**
  * La senda en la web.
  *
- * Mismo relato y mismo orden que la pantalla del móvil —quién eres, lo recién
- * conseguido, el camino, lo que suma, las insignias y la clasificación—, porque
+ * Mismo relato y mismo orden que la pantalla del móvil, ordenado por urgencia
+ * —quién eres, los retos de esta semana, tus premios, la racha, lo que casi
+ * tienes, la colección, el camino y lo demás—, porque
  * las dos son la misma función del producto y quien use ambas no debería tener
  * que reaprenderla. Lo único que cambia es el aprovechamiento del ancho: en
  * escritorio el camino y las cifras van en dos columnas, donde el móvil apila.
@@ -72,16 +71,13 @@ export function ProgressionClient() {
   // alterar su orden entre estados de carga. Lo nuevo se abre solo una vez por
   // visita y se confirma al servidor; las revisitas, al tocar.
   const levelUp = useLevelUpWatch(progression.data?.level ?? null);
-  const rewards = useRewardQueue(data?.badges, levelUp, () => acknowledge.mutate());
-  const celebrateBadge = (earned: ProgressionBadge) => rewards.show([badgeSubject(earned, false)]);
+  const rewards = useRewardQueue(data, levelUp, () => acknowledge.mutate());
+  const celebrateBadge = (earned: ProgressionBadge) =>
+    rewards.show([{ kind: 'badge', badge: earned, fresh: false }]);
+  const openChallenge = (challenge: Challenge) =>
+    rewards.show([{ kind: 'challenge', challenge, fresh: false }]);
+  const openPrize = (prize: Prize) => rewards.show([{ kind: 'prize', prize, fresh: false }]);
   const unlockedNow = data?.unlockedNow ?? [];
-
-  // Conseguidas primero: el muro de trofeos es lo que da la sensación de
-  // avance. Dentro de cada mitad se respeta el orden del catálogo.
-  const badges = useMemo(() => {
-    const all = data?.badges ?? [];
-    return [...all.filter((badge) => badge.earned), ...all.filter((badge) => !badge.earned)];
-  }, [data?.badges]);
 
   if (progression.isLoading) {
     return (
@@ -113,7 +109,6 @@ export function ProgressionClient() {
 
   const stats = data.stats;
   const level = data.level;
-  const earnedCount = badges.filter((badge) => badge.earned).length;
   const currentRestDays = restDays.data?.weekdays ?? [];
 
   function toggleRestDay(day: number) {
@@ -164,7 +159,7 @@ export function ProgressionClient() {
         {level ? (
           <Button
             className="justify-self-start"
-            onClick={() => rewards.show([levelSubject(level)])}
+            onClick={() => rewards.show([{ kind: 'level', level }])}
             variant={levelUp ? 'primary' : 'secondary'}
           >
             <Sparkles aria-hidden className="size-4" />
@@ -187,6 +182,26 @@ export function ProgressionClient() {
         </Card>
       ) : null}
 
+      {data.challenges ? <ChallengesCard onOpen={openChallenge} week={data.challenges} /> : null}
+
+      <PrizesCard onOpen={openPrize} prizes={data.prizes} />
+
+      {data.streak || data.nearest.length > 0 ? (
+        <div className="grid gap-10 lg:grid-cols-2">
+          {data.streak ? <StreakCard rules={rules.data} streak={data.streak} /> : null}
+          {data.nearest.length > 0 ? (
+            <Card>
+              <CardHeader description="Las insignias que casi tienes." title="Lo más cerca" />
+              <CardContent>
+                <NearestBadges badges={data.nearest} />
+              </CardContent>
+            </Card>
+          ) : null}
+        </div>
+      ) : null}
+
+      <BadgeCollection badges={data.badges} onCelebrate={celebrateBadge} />
+
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Card data-tutorial-id="progression:path">
           <CardHeader
@@ -208,7 +223,11 @@ export function ProgressionClient() {
         </Card>
 
         <div className="grid content-start gap-10">
-          <ProgressionStatsCard rules={rules.data} stats={stats} />
+          <ProgressionStatsCard
+            rules={rules.data}
+            stats={stats}
+            streakShown={Boolean(data.streak)}
+          />
 
           <RestDaysCard
             currentRestDays={currentRestDays}
@@ -223,21 +242,6 @@ export function ProgressionClient() {
           />
         </div>
       </div>
-
-      <Card data-tutorial-id="progression:badges">
-        <CardHeader
-          description="Retos concretos que suman puntos extra. Las que faltan muestran cuánto te queda."
-          title={`Insignias · ${earnedCount}/${badges.length}`}
-        />
-        <div className="px-5 pt-5">
-          <RarityLegend />
-        </div>
-        <CardContent className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {badges.map((badge) => (
-            <BadgeTile badge={badge} key={badge.code} onCelebrate={celebrateBadge} />
-          ))}
-        </CardContent>
-      </Card>
 
       <PointsRulesDialog
         badges={data.badges}

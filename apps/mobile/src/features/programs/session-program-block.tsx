@@ -9,6 +9,7 @@ import { Card } from '@/components/layout';
 import { describeSessionCount, showsModeBonus } from '@/features/programs/session-block-copy';
 import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
+import { modeTierName, shieldLabel } from '@gymsheet/domain';
 import { colors, fontSizes, semibold, spacing } from '@/theme';
 
 /** «Subir» / «Bajar» / «Mantener» de una sugerencia de la sobrecarga. */
@@ -72,6 +73,13 @@ export function SessionProgramBlock({ workoutId, block }: { workoutId: string; b
           {showsModeBonus(block) && block.bonusModo ? (
             <Text style={{ color: colors.volt, fontSize: fontSizes.md, fontWeight: semibold }} testID="mode-bonus">
               +{block.bonusModo.puntosPrevistos} por {block.modo === 'STRENGTH_GOALS' ? 'metas' : 'sobrecarga'} ({multiplierLabel(block.bonusModo.proximoMultiplicador)} al cumplir la semana)
+            </Text>
+          ) : null}
+          {showsModeBonus(block) && block.bonusModo ? (
+            // El escalón con nombre: «x1,40» no se recuerda, «Encendido» sí.
+            <Text style={{ color: colors.textSecondary, fontSize: fontSizes.sm }} testID="mode-tier">
+              {`Vas en ${modeTierName({ multiplicador: block.bonusModo.multiplicador, nivelMultiplicador: block.nivelMultiplicador })} (${multiplierLabel(block.bonusModo.multiplicador)})`}
+              {shieldLabel(block.escudos) ? ' · escudo listo: una semana floja no te baja' : ''}
             </Text>
           ) : null}
           {block.sugerencias.map((hint) => (
