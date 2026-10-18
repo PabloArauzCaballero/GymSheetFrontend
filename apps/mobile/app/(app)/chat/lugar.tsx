@@ -23,7 +23,8 @@ import { colors, fontSizes, iconSizes, minTouchTarget, semibold, spacing } from 
  * dejaba el segundo sin presentar.
  */
 export default function ChatPlaceScreen() {
-  const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
+  /** `replyToId`: se abrió respondiendo a un mensaje; la ubicación sale citándolo. */
+  const { conversationId, replyToId } = useLocalSearchParams<{ conversationId: string; replyToId?: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
@@ -36,7 +37,8 @@ export default function ChatPlaceScreen() {
     if (!conversationId || sending) return;
     setSending(kind);
     try {
-      await chatService.sendLocationMessage(conversationId, location);
+      if (replyToId) await chatService.sendLocationMessage(conversationId, location, replyToId);
+      else await chatService.sendLocationMessage(conversationId, location);
       // El hilo lo recibe por el socket; si el socket no estaba, el historial lo trae.
       void queryClient.invalidateQueries({ queryKey: ['chat', 'messages', conversationId] });
       void queryClient.invalidateQueries({ queryKey: ['chat', 'conversations'] });

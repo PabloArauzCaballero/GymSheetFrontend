@@ -4,6 +4,7 @@ import test from 'node:test';
 import type { Message } from '@gymsheet/schemas';
 import {
   canDeleteForEveryone,
+  canForward,
   isTombstone,
   messageActions,
   tombstoneLabel,
@@ -33,18 +34,18 @@ const at = (iso: string) => new Date(iso);
 test('own text within 15 minutes: copy, edit and delete — never report', () => {
   assert.deepEqual(
     messageActions(message, me, { canWrite: true, tombstone: false, now: at('2026-10-09T10:14:00.000Z') }),
-    ['copy', 'edit', 'delete'],
+    ['reply', 'forward', 'copy', 'edit', 'delete'],
   );
 });
 
 test('edit disappears after 15 minutes and in read-only chats, like WhatsApp', () => {
   assert.deepEqual(
     messageActions(message, me, { canWrite: true, tombstone: false, now: at('2026-10-09T10:16:00.000Z') }),
-    ['copy', 'delete'],
+    ['reply', 'forward', 'copy', 'delete'],
   );
   assert.deepEqual(
     messageActions(message, me, { canWrite: false, tombstone: false, now: at('2026-10-09T10:01:00.000Z') }),
-    ['copy', 'delete'],
+    ['forward', 'copy', 'delete'],
   );
 });
 
@@ -52,7 +53,7 @@ test('media is never copied nor edited; the other person can report it', () => {
   const photo: Message = { ...message, senderId: other, type: 'image', body: null, mediaUrl: '/m/1' };
   assert.deepEqual(
     messageActions(photo, me, { canWrite: true, tombstone: false, now: at('2026-10-09T10:01:00.000Z') }),
-    ['delete', 'report'],
+    ['reply', 'forward', 'delete', 'report'],
   );
 });
 
@@ -73,4 +74,13 @@ test('delete for everyone lasts 60 hours and only for the sender', () => {
 test('tombstone wording follows WhatsApp', () => {
   assert.equal(tombstoneLabel(true), 'Eliminaste este mensaje');
   assert.equal(tombstoneLabel(false), 'Se eliminó este mensaje');
+});
+
+test('view-once and deleted messages cannot be forwarded; text, places and media can', () => {
+  const now = at('2026-10-09T10:01:00.000Z');
+  const viewOnce: Message = { ...message, type: 'image', body: null, viewOnce: true, mediaUrl: null };
+  assert.equal(messageActions(viewOnce, me, { canWrite: true, tombstone: false, now }).includes('forward'), false);
+  assert.equal(canForward({ ...message, deletedAt: '2026-10-09T10:00:30.000Z' }), false);
+  assert.equal(canForward({ ...message, type: 'location', body: null, locationLat: 1, locationLng: 2 }), true);
+  assert.equal(canForward({ ...message, type: 'audio', body: null, mediaUrl: '/m/2' }), true);
 });

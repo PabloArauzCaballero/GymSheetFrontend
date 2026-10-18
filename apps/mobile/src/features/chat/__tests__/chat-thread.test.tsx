@@ -22,10 +22,17 @@ const mocks = vi.hoisted(() => ({
     deleteMessage: vi.fn(),
     viewMessage: vi.fn(),
     updateReadReceiptSettings: vi.fn(),
+    setReaction: vi.fn(),
   },
   push: vi.fn(),
   notify: { info: vi.fn(), error: vi.fn(), success: vi.fn(), warning: vi.fn() },
-  socket: { onMessage: null as null | ((message: unknown) => void), onUpdated: null as null | ((message: unknown) => void) },
+  socket: {
+    onMessage: null as null | ((message: unknown) => void),
+    onUpdated: null as null | ((message: unknown) => void),
+    extras: null as null | { onReaction?: (update: unknown) => void; onTyping?: (update: unknown) => void },
+    sendMessage: vi.fn(),
+    sendTyping: vi.fn(),
+  },
   voice: {
     recording: false,
     elapsedMs: 0,
@@ -52,12 +59,10 @@ vi.mock('expo-haptics', () => ({
 vi.mock('expo-audio', () => ({ useAudioPlayer: () => ({}), useAudioPlayerStatus: () => ({ isLoaded: false, playing: false, currentTime: 0, duration: 0 }) }));
 vi.mock('@expo/vector-icons', () => ({ Ionicons: ({ accessibilityLabel }: { accessibilityLabel?: string }) => (accessibilityLabel ? <span aria-label={accessibilityLabel} /> : null) }));
 vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
-vi.mock('react-native-reanimated', async () => {
-  const { Box } = await import('./rn-dom');
-  const chain: Record<string, unknown> = {};
-  for (const key of ['duration', 'easing', 'withInitialValues', 'delay']) chain[key] = () => chain;
-  return { default: { View: Box }, FadeIn: chain, FadeInDown: chain };
-});
+vi.mock('react-native-reanimated', async () => (await import('./rn-dom')).reanimatedMock());
+vi.mock('react-native-gesture-handler', async () => (await import('./rn-dom')).gestureHandlerMock());
+vi.mock('react-native-svg', async () => (await import('./rn-dom')).svgMock());
+vi.mock('react-native-worklets', () => ({ scheduleOnRN: (fn: (...args: unknown[]) => void, ...args: unknown[]) => fn(...args) }));
 vi.mock('rn-emoji-keyboard', () => ({ default: () => null }));
 vi.mock('@/features/chat/media-preview', () => ({ MediaPreview: () => null }));
 vi.mock('@/features/training-invitations/create-training-invite-modal', () => ({ CreateTrainingInviteModal: () => null }));
@@ -73,6 +78,7 @@ vi.mock('@/components/bottom-sheet', async () => {
   };
 });
 vi.mock('@/components/motion', async () => ({ PressableScale: (await import('./rn-dom')).Press, DURATION: { quick: 140 }, PREMIUM_EASING: {} }));
+vi.mock('@/features/chat/chat-wallpaper', () => ({ ChatWallpaper: () => null }));
 vi.mock('@/components/ui', () => ({ Button: ({ label, onPress }: { label: string; onPress: () => void }) => <button onClick={onPress} type="button">{label}</button> }));
 vi.mock('@/components/nav', () => ({ BackLink: () => null }));
 vi.mock('@/components/ambient', () => ({ AmbientBackground: () => null }));
@@ -86,24 +92,33 @@ vi.mock('@/api/services', () => ({ chatService: mocks.chatService, moderationSer
 vi.mock('@/features/chat/use-media-access-token', () => ({ useMediaAccessToken: () => ({ token: 'token', onMediaError: vi.fn() }) }));
 vi.mock('@/features/chat/use-voice-note', () => ({ useVoiceNote: () => mocks.voice }));
 vi.mock('@/hooks/use-chat-socket', () => ({
-  useChatSocket: (onMessage: (message: unknown) => void, _p: unknown, _r: unknown, _d: unknown, onUpdated: (message: unknown) => void) => {
+  useChatSocket: (
+    onMessage: (message: unknown) => void, _p: unknown, _r: unknown, _d: unknown, onUpdated: (message: unknown) => void,
+    extras: typeof mocks.socket.extras,
+  ) => {
     mocks.socket.onMessage = onMessage;
     mocks.socket.onUpdated = onUpdated;
-    return { connectionState: 'connected', joinConversation: vi.fn().mockResolvedValue(true), leaveConversation: vi.fn(), sendMessage: vi.fn().mockResolvedValue({ ok: true }) };
+    mocks.socket.extras = extras;
+    return {
+      connectionState: 'connected', joinConversation: vi.fn().mockResolvedValue(true), leaveConversation: vi.fn(),
+      sendMessage: mocks.socket.sendMessage, sendTyping: mocks.socket.sendTyping,
+    };
   },
 }));
 vi.mock('@/features/chat/chat-composer', () => ({
   ChatComposer: (props: Record<string, unknown> & {
     draft: string; onChangeDraft: (value: string) => void; onSend: () => void; editing: { body: string } | null;
-    onOpenAttach: () => void; onVoiceStart: () => void; onVoiceStop: (send: boolean) => void;
+    replying: { author: string; preview: string } | null; onCancelReply: () => void;
+    onAttach: (kind: string) => void; onVoiceStart: () => void; onVoiceStop: (send: boolean) => void;
   }) => {
     mocks.composer.lastProps = props;
     return (
       <div data-testid="composer">
         {props.editing ? <span>Editar mensaje: {props.editing.body}</span> : null}
+        {props.replying ? <span>Respondiendo a {props.replying.author}: {props.replying.preview}</span> : null}
         <input aria-label="Mensaje" onChange={(event) => props.onChangeDraft(event.target.value)} value={props.draft} />
         <button onClick={props.onSend} type="button">{props.editing ? 'Guardar edición' : 'Enviar'}</button>
-        <button onClick={props.onOpenAttach} type="button">Adjuntar</button>
+        <button onClick={() => props.onAttach('location')} type="button">Ubicación</button>
         <button onClick={props.onVoiceStart} type="button">Grabar</button>
         <button onClick={() => props.onVoiceStop(true)} type="button">Soltar</button>
       </div>
@@ -140,6 +155,7 @@ beforeEach(() => {
   mocks.chatService.listConversations.mockResolvedValue([summary()]);
   mocks.chatService.getReadReceiptSettings.mockResolvedValue({ enabled: true, defaultEnabled: true, conversationOverride: null, version: 1 });
   mocks.chatService.markRead.mockResolvedValue({ read: true });
+  mocks.socket.sendMessage.mockResolvedValue({ ok: true });
 });
 afterEach(() => vi.useRealTimers());
 
@@ -245,13 +261,10 @@ describe('mensajes temporales', () => {
 });
 
 describe('ubicación', () => {
-  it('«Ubicación» abre la pantalla del mapa en vez de enviar directamente', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
+  it('«Ubicación» del desplegable abre la pantalla del mapa al momento (sin hoja intermedia)', async () => {
     mocks.chatService.listMessages.mockResolvedValue([]);
     renderScreen();
-    fireEvent.click(await screen.findByRole('button', { name: 'Adjuntar' }));
-    fireEvent.click(await screen.findByTestId('chat-attach-location'));
-    await act(async () => { vi.advanceTimersByTime(400); });
+    fireEvent.click(await screen.findByRole('button', { name: 'Ubicación' }));
     expect(mocks.push).toHaveBeenCalledWith({ pathname: '/chat/lugar', params: { conversationId: CONV } });
   });
 
@@ -293,5 +306,96 @@ describe('nota de voz', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Soltar' }));
     await waitFor(() => expect(mocks.notify.info).toHaveBeenCalledWith('Mantén pulsado el micrófono al menos un segundo para grabar.'));
     expect(mocks.chatService.sendMediaMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe('como WhatsApp: responder citando, reacciones, días y reenviar', () => {
+  it('«Responder» pone la cita en el redactor y el envío lleva replyToId', async () => {
+    const theirs = text('d1111111-1111-4111-8111-111111111111', '¿Pierna hoy?', 2, OTHER);
+    mocks.chatService.listMessages.mockResolvedValue([theirs]);
+    renderScreen();
+
+    fireEvent.contextMenu(await screen.findByText('¿Pierna hoy?'));
+    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Responder' }));
+    expect(await screen.findByText('Respondiendo a Ana Pérez: ¿Pierna hoy?')).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('Mensaje'), { target: { value: 'Sí, a las 7' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }));
+    await waitFor(() => expect(mocks.socket.sendMessage).toHaveBeenCalledWith(CONV, 'Sí, a las 7', theirs.id));
+    await waitFor(() => expect(screen.queryByText(/Respondiendo a/u)).toBeNull());
+  });
+
+  it('la respuesta muestra la cita dentro de la burbuja, con «Tú» si el original es mío', async () => {
+    const mine = text('d2222222-2222-4222-8222-222222222222', 'Llevo las bandas', 3);
+    const reply = {
+      ...text('d3333333-3333-4333-8333-333333333333', 'Perfecto', 1, OTHER),
+      replyTo: { messageId: mine.id, senderId: ME, type: 'text', body: 'Llevo las bandas', available: true },
+    };
+    mocks.chatService.listMessages.mockResolvedValue([mine, reply]);
+    renderScreen();
+    expect(await screen.findByLabelText('Respuesta a Tú: Llevo las bandas')).toBeTruthy();
+  });
+
+  it('reaccionar desde la barra pinta la reacción al instante y la guarda; el socket trae la del otro', async () => {
+    const theirs = text('d4444444-4444-4444-8444-444444444444', 'Nuevo PR', 1, OTHER);
+    mocks.chatService.listMessages.mockResolvedValue([theirs]);
+    mocks.chatService.setReaction.mockResolvedValue({ conversationId: CONV, messageId: theirs.id, reactions: [{ userId: ME, emoji: '💪' }] });
+    renderScreen();
+
+    fireEvent.contextMenu(await screen.findByText('Nuevo PR'));
+    fireEvent.click(within(await screen.findByRole('dialog')).getByTestId('chat-react-💪'));
+    expect(mocks.chatService.setReaction).toHaveBeenCalledWith(CONV, theirs.id, '💪');
+    expect(await screen.findByLabelText('Reacciones: 💪. Tu reacción: 💪')).toBeTruthy();
+
+    act(() => mocks.socket.extras?.onReaction?.({
+      conversationId: CONV, messageId: theirs.id, reactions: [{ userId: ME, emoji: '💪' }, { userId: OTHER, emoji: '💪' }],
+    }));
+    expect(await screen.findByLabelText('Reacciones: 💪 2. Tu reacción: 💪')).toBeTruthy();
+  });
+
+  it('si el servidor rechaza la reacción, vuelve la de antes y avisa', async () => {
+    const theirs = text('d5555555-5555-4555-8555-555555555555', 'Vamos', 1, OTHER);
+    mocks.chatService.listMessages.mockResolvedValue([theirs]);
+    mocks.chatService.setReaction.mockRejectedValue(new Error('Mensaje no encontrado.'));
+    renderScreen();
+    fireEvent.contextMenu(await screen.findByText('Vamos'));
+    fireEvent.click(within(await screen.findByRole('dialog')).getByTestId('chat-react-👍'));
+    await waitFor(() => expect(mocks.notify.error).toHaveBeenCalledWith('Mensaje no encontrado.'));
+    expect(screen.queryByTestId(`chat-reactions-${theirs.id}`)).toBeNull();
+  });
+
+  it('separa los días con «Ayer» y «Hoy»', async () => {
+    const yesterdayNoon = new Date();
+    yesterdayNoon.setDate(yesterdayNoon.getDate() - 1);
+    yesterdayNoon.setHours(12, 0, 0, 0);
+    mocks.chatService.listMessages.mockResolvedValue([
+      text('d6666666-6666-4666-8666-666666666666', 'De ayer', (Date.now() - yesterdayNoon.getTime()) / 60_000),
+      text('d7777777-7777-4777-8777-777777777777', 'De hoy', 0),
+    ]);
+    renderScreen();
+    expect(await screen.findByText('De hoy')).toBeTruthy();
+    expect(screen.getByText('Hoy')).toBeTruthy();
+    expect(screen.getByText('Ayer')).toBeTruthy();
+  });
+
+  it('«Reenviar» abre la pantalla de destinos cuando la hoja ya se fue', async () => {
+    const mine = text('d8888888-8888-4888-8888-888888888888', 'Rutina de hoy', 1);
+    mocks.chatService.listMessages.mockResolvedValue([mine]);
+    renderScreen();
+    fireEvent.contextMenu(await screen.findByText('Rutina de hoy'));
+    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Reenviar' }));
+    expect(mocks.push).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId('dismissed-Mensaje'));
+    expect(mocks.push).toHaveBeenCalledWith({ pathname: '/chat/reenviar', params: { fromConversationId: CONV, messageId: mine.id } });
+  });
+
+  it('«escribiendo…» del otro reemplaza al estado de la cabecera', async () => {
+    mocks.chatService.listMessages.mockResolvedValue([]);
+    renderScreen();
+    await screen.findByTestId('chat-contact-header');
+    act(() => mocks.socket.extras?.onTyping?.({ conversationId: CONV, userId: OTHER, typing: true }));
+    expect(await screen.findByText('escribiendo…')).toBeTruthy();
+    act(() => mocks.socket.extras?.onTyping?.({ conversationId: CONV, userId: OTHER, typing: false }));
+    await waitFor(() => expect(screen.queryByText('escribiendo…')).toBeNull());
   });
 });
