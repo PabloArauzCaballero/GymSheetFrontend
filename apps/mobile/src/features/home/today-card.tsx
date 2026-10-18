@@ -80,7 +80,7 @@ function ProgramToday({ program, routine }: { program: Program; routine: Routine
         <Text tone="muted" variant="subhead">
           Tu rutina no tiene días con ejercicios todavía.
         </Text>
-        <Button label="Abrir la rutina" onPress={() => router.push({ pathname: '/routines/[id]', params: { id: routine.id } })} variant="secondary" />
+        <Button icon="arrow-forward" iconPosition="end" label="Abrir la rutina" onPress={() => router.push({ pathname: '/routines/[id]', params: { id: routine.id } })} variant="secondary" />
       </TodaySurface>
     );
   }
@@ -102,13 +102,14 @@ function ProgramToday({ program, routine }: { program: Program; routine: Routine
         <View style={{ gap: spacing.sm }}>
           <Button
             haptic="light"
+            icon="play"
             label="Entrenar hoy"
             loading={start.isPending}
             onPress={() => start.mutate(day.id)}
             size="lg"
             testID="today-start"
           />
-          <Button label="Ver el día" onPress={openDay} size="sm" variant="ghost" />
+          <Button icon="arrow-forward" iconPosition="end" label="Ver el día" onPress={openDay} size="sm" variant="ghost" />
         </View>
       </TodaySurface>
     );
@@ -124,7 +125,7 @@ function ProgramToday({ program, routine }: { program: Program; routine: Routine
         {dayMeta(day)}
       </Text>
       <DayThumbs day={day} />
-      <Button label="Ver el próximo día" onPress={openDay} variant="secondary" />
+      <Button icon="arrow-forward" iconPosition="end" label="Ver el próximo día" onPress={openDay} variant="secondary" />
     </TodaySurface>
   );
 }
@@ -162,6 +163,7 @@ export function TodayCard({
           {`${openSession.ejercicios.length} ${openSession.ejercicios.length === 1 ? 'ejercicio' : 'ejercicios'} · sigue donde lo dejaste.`}
         </Text>
         <Button
+          icon="play"
           label="Continuar entrenamiento"
           onPress={() => router.push({ pathname: '/workouts/[id]', params: { id: openSession.id } })}
           size="lg"
@@ -189,6 +191,8 @@ export function TodayCard({
           </Text>
         ) : null}
         <Button
+          icon="arrow-forward"
+          iconPosition="end"
           label="Ver la rutina"
           onPress={() => router.push({ pathname: '/routines/[id]', params: { id: rutina.id } })}
           size="lg"
@@ -204,7 +208,7 @@ export function TodayCard({
       <Text tone="muted" variant="subhead">
         Te recomendamos una según tu objetivo y tus días. Al activarla, aquí verás qué toca cada día.
       </Text>
-      <Button label="Ver rutinas para ti" onPress={() => router.push('/routines')} size="lg" />
+      <Button icon="arrow-forward" iconPosition="end" label="Ver rutinas para ti" onPress={() => router.push('/routines')} size="lg" />
     </TodaySurface>
   );
 }
