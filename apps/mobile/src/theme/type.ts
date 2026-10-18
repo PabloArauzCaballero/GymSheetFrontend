@@ -27,6 +27,11 @@ export const fontSizes = {
   '2xl': 34,
   /** Títulos de pantalla. */
   display: 34,
+  /**
+   * Cifra protagonista de una superficie que se enseña (rediseño 2026-10-18):
+   * racha, volumen de la sesión, puntos del perfil. Una por pantalla.
+   */
+  hero: 52,
 } as const;
 
 /**
@@ -72,6 +77,13 @@ export const textVariants = {
   subhead: { fontSize: fontSizes.sm, lineHeight: 20 },
   footnote: { fontSize: fontSizes.footnote, lineHeight: 18 },
   caption: { fontSize: fontSizes.xs, lineHeight: 16 },
+  hero: {
+    fontFamily: fontFamilies.display,
+    fontSize: fontSizes.hero,
+    lineHeight: Math.round(fontSizes.hero * 1.04),
+    letterSpacing: fontSizes.hero * -0.035,
+    fontVariant: ['tabular-nums'],
+  },
   numeric: {
     fontFamily: fontFamilies.displaySemibold,
     fontSize: fontSizes.lg,

@@ -77,6 +77,19 @@ export const brandIntroSweep = [alpha(ink.white, 0), alpha(ink.white, 0.8), alph
 /** Cifra protagonista (cronómetro de cardio): fuera de la rampa a propósito. */
 export const heroNumberFontSize = 44;
 
+/**
+ * Superficie protagonista (`components/hero-surface.tsx`, rediseño
+ * 2026-10-18): el acento de la marca entra como luz desde una esquina y se
+ * apaga antes de la mitad, así el texto blanco queda sobre `surfaceRaised`
+ * (≥ 12:1) y no sobre el acento. Degradado estático: no se anima.
+ */
+export function heroGlow(accent: string): readonly [string, string, string] {
+  return [alpha(accent, 0.34), alpha(accent, 0.1), alpha(accent, 0)];
+}
+
+/** Isotipo de fondo de la superficie protagonista: marca de agua, no información. */
+export const heroWatermarkInk = alpha(ink.white, 0.05);
+
 /* ─── Historias ──────────────────────────────────────────────────────────── */
 
 export const storyChrome = {
