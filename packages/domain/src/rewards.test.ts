@@ -5,11 +5,13 @@ import {
   chainLevelLabel,
   challengesSummary,
   groupBadgeChains,
+  modeTierName,
   multiplierTier,
   nearestLabel,
   prizeCodeGroups,
   prizeDateLabel,
   rewardRuleLines,
+  shieldLabel,
   sortChainGroups,
   sortPrizes,
   streakMilestoneLabel,
@@ -37,6 +39,18 @@ describe('multiplierTier', () => {
     expect(multiplierTier(1.6)).toBe('En llamas');
     expect(multiplierTier(1.8)).toBe('Imparable');
     expect(multiplierTier(2)).toBe('Leyenda');
+  });
+});
+
+describe('escalón y escudo del modo', () => {
+  it('el nombre del servidor manda', () => {
+    expect(modeTierName({ multiplicador: 1.4, nivelMultiplicador: 'Encendido' })).toBe('Encendido');
+    expect(modeTierName({ multiplicador: 1.6 })).toBe('En llamas');
+  });
+  it('escudo solo si hay', () => {
+    expect(shieldLabel(1)).toBe('Escudo listo');
+    expect(shieldLabel(0)).toBeNull();
+    expect(shieldLabel(undefined)).toBeNull();
   });
 });
 

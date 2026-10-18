@@ -8,6 +8,7 @@ import type { Program } from '@gymsheet/types';
 import { programService } from '@/api/services';
 import { Badge } from '@/components/layout';
 import { Button } from '@/components/ui';
+import { modeTierName } from '@gymsheet/domain';
 import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
 
 /**
@@ -37,7 +38,7 @@ export function CardioProgramCard({ program, strengthToday }: { program: Program
         <Text numberOfLines={1} style={{ flex: 1, color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
           {plan ? `Cardio · ${cardioModalityLabels[plan.modalidad]}` : 'Plan de cardio'}
         </Text>
-        {program.multiplicador > 1 ? <Badge label={multiplierLabel(program.multiplicador)} tone="success" /> : null}
+        {program.multiplicador > 1 ? <Badge label={`${modeTierName(program)} · ${multiplierLabel(program.multiplicador)}`} tone="success" /> : null}
       </View>
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
         Semana {program.semanaActual ?? '—'} de {program.semanasTotales}

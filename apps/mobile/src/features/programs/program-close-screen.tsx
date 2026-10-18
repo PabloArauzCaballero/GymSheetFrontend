@@ -11,6 +11,7 @@ import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { GoalProgress } from '@/features/programs/goal-progress';
 import { notify } from '@/notifications';
+import { modeTierName } from '@gymsheet/domain';
 import { colors, fontSizes, spacing } from '@/theme';
 
 /**
@@ -73,7 +74,7 @@ export function ProgramCloseScreen() {
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
         <StatTile label="Semanas cumplidas" value={`${done} / ${semanas.length}`} />
         <StatTile label="Metas logradas" value={`${reached}`} />
-        <StatTile label="Multiplicador" value={multiplierLabel(programa.multiplicador)} />
+        <StatTile label={modeTierName(programa)} value={multiplierLabel(programa.multiplicador)} />
       </View>
       {goals.length > 0 ? (
         <Card>

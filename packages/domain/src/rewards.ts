@@ -35,6 +35,16 @@ export function multiplierTier(multiplier: number): string {
   return (MULTIPLIER_TIERS.find((tier) => value >= tier.min) ?? MULTIPLIER_TIERS[MULTIPLIER_TIERS.length - 1]!).name;
 }
 
+/** El escalón de un programa: el nombre del servidor o, si no llega, el deducido. */
+export function modeTierName(view: { multiplicador: number; nivelMultiplicador?: string | null }): string {
+  return view.nivelMultiplicador ?? multiplierTier(view.multiplicador);
+}
+
+/** «Escudo listo» si el programa guarda uno; nada si no (o si el servidor no lo manda). */
+export function shieldLabel(escudos: number | null | undefined): string | null {
+  return escudos && escudos > 0 ? 'Escudo listo' : null;
+}
+
 /* ─── Retos de la semana ─────────────────────────────────────────────────── */
 
 export type ChallengeDifficultyKey = 'FACIL' | 'MEDIO' | 'DIFICIL';
