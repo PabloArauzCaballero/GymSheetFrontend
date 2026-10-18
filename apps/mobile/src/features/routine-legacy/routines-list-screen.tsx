@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { Badge, Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { NavRow } from '@/components/list';
-import { WeekPlan } from '@/components/week-plan';
+import { assignmentSessions, WeekPlan } from '@/components/week-plan';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { routineService } from '@/api/services';
 import { ExploreExercisesButton } from '@/features/exercise-browser/explore-exercises-button';
@@ -47,10 +47,11 @@ export function LegacyRoutinesScreen() {
         <Section icon="calendar-outline" index={0} title="Tu semana">
           <TourTarget id="routines.week">
           <WeekPlan
-            assignments={assigned}
-            onPickRoutine={(routineId) =>
-              router.push({ pathname: '/routines/[id]', params: { id: routineId } })
-            }
+            onPickDay={(day) => {
+              const first = assigned.find((item) => item.diasSemana.includes(day))?.rutina;
+              if (first) router.push({ pathname: '/routines/[id]', params: { id: first.id } });
+            }}
+            sessions={assignmentSessions(assigned)}
           />
           </TourTarget>
         </Section>

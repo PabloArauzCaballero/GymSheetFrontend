@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { View } from 'react-native';
+import { useRef } from 'react';
+import { Platform, View } from 'react-native';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
@@ -10,6 +11,11 @@ export type MoreAction = {
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
   destructive?: boolean;
+  /**
+   * La acción abre otro Modal (la guía, una denuncia): espera a que la hoja se
+   * vaya. Dos Modales encadenados en iOS dejan el segundo sin presentarse.
+   */
+  afterClose?: boolean;
   onPress: () => void;
 };
 
@@ -25,8 +31,20 @@ export function MoreSheet({
   title: string;
   actions: readonly MoreAction[];
 }) {
+  const pending = useRef<(() => void) | null>(null);
+  const runPending = () => {
+    const run = pending.current;
+    pending.current = null;
+    run?.();
+  };
   return (
-    <BottomSheet onClose={onClose} testID="routine-more-sheet" title={title} visible={visible}>
+    <BottomSheet
+      onClose={onClose}
+      onDismiss={runPending}
+      testID="routine-more-sheet"
+      title={title}
+      visible={visible}
+    >
       <View>
         {actions.map((action) => (
           <PressableScale
@@ -35,7 +53,9 @@ export function MoreSheet({
             key={action.key}
             onPress={() => {
               onClose();
-              action.onPress();
+              // `onDismiss` solo existe en iOS; en Android el Modal se cierra sin esperar.
+              if (action.afterClose && Platform.OS === 'ios') pending.current = action.onPress;
+              else action.onPress();
             }}
             style={{
               flexDirection: 'row',
@@ -63,10 +83,18 @@ export function MoreSheet({
 }
 
 /** Botón ⋯ de la barra superior. */
-export function MoreButton({ onPress }: { onPress: () => void }) {
+export function MoreButton({
+  onPress,
+  testID = 'routine-more',
+  accessibilityLabel = 'Más acciones',
+}: {
+  onPress: () => void;
+  testID?: string;
+  accessibilityLabel?: string;
+}) {
   return (
     <PressableScale
-      accessibilityLabel="Más acciones"
+      accessibilityLabel={accessibilityLabel}
       haptic="none"
       onPress={onPress}
       scaleTo={0.94}
@@ -78,7 +106,7 @@ export function MoreButton({ onPress }: { onPress: () => void }) {
         justifyContent: 'center',
         backgroundColor: colors.surfaceHigh,
       }}
-      testID="routine-more"
+      testID={testID}
     >
       <Ionicons color={colors.text} name="ellipsis-horizontal" size={iconSizes.md} />
     </PressableScale>

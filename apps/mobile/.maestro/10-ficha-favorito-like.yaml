@@ -7,6 +7,8 @@ name: 10 · Ficha del ejercicio — favorito y me gusta
 # Desde C4 el buscador no es pestaña: Rutinas → «Explorar ejercicios».
 - tapOn: 'Rutinas, tab.*'
 - runFlow: cerrar-tour.subflow.yaml
+- tapOn:
+    id: 'routines-more'
 - tapOn: 'Explorar ejercicios'
 - runFlow: cerrar-tour.subflow.yaml
 # La figura muscular captura el desplazamiento dentro de su lienzo: se desliza por el

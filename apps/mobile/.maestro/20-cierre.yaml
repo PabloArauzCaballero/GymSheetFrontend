@@ -51,7 +51,8 @@ env:
     timeout: 30000
 - tapOn: 'Apagar'
 - extendedWaitUntil:
-    visible: 'Crear rutina'
+    visible:
+      id: 'routines-more'
     timeout: 60000
 - assertNotVisible:
     id: 'program-card-strength'
