@@ -10,10 +10,20 @@ import { BackLink } from '@/components/nav';
 import { Checkbox } from '@/components/checkbox';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { numericInputProps } from '@/components/keyboard';
-import { Card, ScreenHeader, ScrollScreen } from '@/components/layout';
+import { Card, ScrollScreen } from '@/components/layout';
+import { EnterUp } from '@/components/motion';
 import { StepProgress, type FlowStep } from '@/components/step-flow';
+import { Text as AppText } from '@/components/text';
 import { Button, Input } from '@/components/ui';
+import {
+  onboardingDone,
+  onboardingFinish,
+  onboardingFinishCta,
+  onboardingSteps,
+} from '@/features/first-impression/copy';
+import { shortName } from '@/lib/format';
 import { notify } from '@/notifications';
+import { useAuthStore } from '@/state/auth-store';
 import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 const STEPS: readonly FlowStep[] = [
@@ -103,6 +113,7 @@ function ChoiceGroup({
 export default function OnboardingScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const principal = useAuthStore((state) => state.principal);
   const state = useQuery({ queryKey: ['onboarding', 'me'], queryFn: () => onboardingService.get() });
 
   const [step, setStep] = useState(0);
@@ -182,7 +193,7 @@ export default function OnboardingScreen() {
       // esto «Para ti» seguía pidiendo «Cuéntanos tu objetivo» varios minutos.
       void queryClient.invalidateQueries({ queryKey: ['profile'] });
       void queryClient.invalidateQueries({ queryKey: ['routines'] });
-      notify.success('¡Listo! Ya puedes entrenar.');
+      notify.success(onboardingDone);
       router.replace('/home');
     },
     onError: (error: Error) => notify.error(error),
@@ -210,14 +221,43 @@ export default function OnboardingScreen() {
   const stepValid = step !== 1 || (weightValid && heightValid);
   const consentGiven = step !== 2 || (consentHealth && consentData);
 
+  // Un protagonista por paso: la pregunta. El último no pregunta, celebra, y
+  // apunta a lo que viene después —elegir la rutina del primer entreno—.
+  const heading =
+    onboardingSteps[step] ??
+    onboardingFinish(shortName(principal?.nombreCompleto, principal?.email), trainingLocation === 'GYM');
+
   return (
     <ScrollScreen>
       <BackLink />
-      <ScreenHeader
-        subtitle={`Paso ${step + 1} de 4 · Tu progreso se guarda en tu cuenta.`}
-        title="Personaliza tu experiencia"
-      />
       <StepProgress current={step} steps={STEPS} />
+
+      {/* `key` vuelve a montar la cabecera al cambiar de paso: la pregunta nueva
+          entra subiendo, que es lo que dice «has avanzado». Dos `EnterUp`. */}
+      <View key={step} style={{ gap: spacing.sm }}>
+        <EnterUp index={0}>
+          <AppText tone="muted" variant="footnote">
+            {`Paso ${step + 1} de 4 · Se guarda en tu cuenta`}
+          </AppText>
+        </EnterUp>
+        <EnterUp index={1} style={{ gap: spacing.sm }}>
+          {step === 3 ? (
+            <Ionicons
+              accessibilityElementsHidden
+              color={accentPolicy.ink}
+              importantForAccessibility="no-hide-descendants"
+              name="checkmark-circle"
+              size={iconSizes['2xl']}
+            />
+          ) : null}
+          <AppText accessibilityRole="header" variant="display">
+            {heading.title}
+          </AppText>
+          <AppText tone="secondary" variant="subhead">
+            {heading.subline}
+          </AppText>
+        </EnterUp>
+      </View>
 
       <Card style={{ gap: spacing.lg }}>
         {step === 0 ? (
@@ -299,7 +339,7 @@ export default function OnboardingScreen() {
         {step === 2 ? (
           <View style={{ gap: spacing.lg }}>
             <View style={{ gap: spacing.xs }}>
-              <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>Experiencia</Text>
+              <AppText strong variant="subhead">Experiencia</AppText>
               <View style={{ flexDirection: 'row', gap: spacing.xs }}>
                 {(['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as const).map((level) => (
                   <ToggleChip
@@ -320,7 +360,7 @@ export default function OnboardingScreen() {
               value={weeklyFrequency}
             />
             <View style={{ gap: spacing.xs }}>
-              <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>Lugar</Text>
+              <AppText strong variant="subhead">Lugar</AppText>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
                 {(['GYM', 'HOME', 'OUTDOORS', 'MIXED'] as const).map((location) => (
                   <ToggleChip
@@ -333,9 +373,9 @@ export default function OnboardingScreen() {
               </View>
             </View>
             <View style={{ gap: spacing.xs }}>
-              <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+              <AppText strong variant="subhead">
                 Algo que quieras añadir a tu objetivo (opcional)
-              </Text>
+              </AppText>
               <ChoiceGroup
                 onToggle={(value) =>
                   setPreferences((current) =>
@@ -368,14 +408,14 @@ export default function OnboardingScreen() {
 
         {step === 3 ? (
           trainingLocation === 'GYM' ? (
-            <Card>
+            <View style={{ gap: spacing.sm }}>
               <Text style={{ color: colors.text, fontSize: fontSizes.md }}>
                 Entrenas en un gimnasio. Tomaremos como disponibles el material habitual, incluido banco y peso corporal.
               </Text>
               <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
                 Cuando crees una rutina podrás cambiar cualquier ejercicio si tu sede no tiene algo concreto.
               </Text>
-            </Card>
+            </View>
           ) : (
             <View style={{ gap: spacing.md }}>
               <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
@@ -406,8 +446,9 @@ export default function OnboardingScreen() {
           />
         ) : (
           <Button
-            icon="checkmark"
-            label="Completar"
+            icon="arrow-forward"
+            iconPosition="end"
+            label={onboardingFinishCta}
             loading={save.isPending || complete.isPending}
             onPress={async () => {
               await save.mutateAsync();

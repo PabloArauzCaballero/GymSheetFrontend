@@ -47,8 +47,6 @@ export default function LoginScreen() {
 
   return (
     <AuthShell
-      description={authCopy.login.description}
-      eyebrow={authCopy.login.eyebrow}
       footer={
         <>
           <Link href="/(auth)/recover-password" style={textLinkStyle()}>
