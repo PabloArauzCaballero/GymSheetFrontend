@@ -20,6 +20,8 @@ export type ApiClientConfig = {
    * Intenta renovar la sesión tras un 401. Devuelve `true` si lo consiguió, y
    * entonces la petición que falló se reintenta **una** vez con el token nuevo;
    * `false` cae en `onUnauthorized`, que es el cierre de sesión.
+   * Si no se pudo ni preguntar (sin red, 5xx), debe **lanzar** un `ApiError`:
+   * la petición falla con ese error y la sesión se conserva.
    *
    * Es opcional porque la web no lo necesita: allí la sesión vive en una cookie
    * HttpOnly que renueva el BFF. Quien lo necesita es el móvil, que lleva un
@@ -84,7 +86,14 @@ export function createApiClient(config: ApiClientConfig) {
     if (!refreshInFlight) {
       const attempt = config.refreshSession();
       refreshInFlight = attempt
-        .catch(() => false)
+        // Un `ApiError` es «no se pudo preguntar» (sin red, 5xx, 429), no «el
+        // servidor rechazó la sesión»: se propaga como fallo de esta petición y
+        // **no** llega a `onUnauthorized`. Antes cualquier fallo valía `false`
+        // y quedarse sin cobertura con el access caducado cerraba la sesión.
+        .catch((error: unknown) => {
+          if (error instanceof ApiError) throw error;
+          return false;
+        })
         .finally(() => {
           refreshInFlight = null;
         });
