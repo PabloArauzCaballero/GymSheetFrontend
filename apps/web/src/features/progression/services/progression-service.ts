@@ -3,6 +3,7 @@ import {
   leaderboardSchema,
   muscleEquipmentInferenceSchema,
   pointRulesSchema,
+  prizeListSchema,
   progressionAcknowledgedSchema,
   progressionSchema,
   restDaysSchema,
@@ -12,6 +13,7 @@ import type {
   LeaderboardSortBy,
   MuscleEquipmentInference,
   PointRules,
+  Prize,
   Progression,
   RestDays,
 } from '@/shared/api/schemas';
@@ -29,6 +31,8 @@ export const progressionService = {
   rules: () => apiRequest<PointRules>('/me/progression/rules', pointRulesSchema),
   acknowledge: () =>
     apiRequest('/me/progression/acknowledge', progressionAcknowledgedSchema, { method: 'POST' }),
+  /** Los cupones del socio (los mismos que `prizes` de la senda). */
+  prizes: () => apiRequest<Prize[]>('/me/progression/prizes', prizeListSchema),
   leaderboard: (limit = 10, sortBy: LeaderboardSortBy = 'points') =>
     apiRequest<LeaderboardEntry[]>(
       `/me/progression/leaderboard?limit=${limit}&sortBy=${sortBy}`,

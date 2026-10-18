@@ -29,14 +29,19 @@ export function RarityLegend() {
       </summary>
       <ul className="grid gap-2 px-4 pb-4">
         {ORDER.map((rarity) => (
-          <li className="flex items-start gap-3 text-xs leading-5 text-[var(--text-muted)]" key={rarity}>
+          <li
+            className="flex items-start gap-3 text-xs leading-5 text-[var(--text-muted)]"
+            key={rarity}
+          >
             <span
               aria-hidden
               className="mt-1.5 size-2.5 shrink-0 rounded-full"
               style={{ backgroundColor: CARD_TIERS[rarity].frame[1] }}
             />
             <span>
-              <strong className="font-semibold text-[var(--text)]">{CARD_RARITY_LABEL[rarity]}.</strong>{' '}
+              <strong className="font-semibold text-[var(--text)]">
+                {CARD_RARITY_LABEL[rarity]}.
+              </strong>{' '}
               {CARD_RARITY_HINT[rarity]}
             </span>
           </li>

@@ -54,7 +54,10 @@ export function PointsRulesDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent description="Cada regla con tus números al lado." title="Cómo se ganan los puntos">
+      <DialogContent
+        description="Cada regla con tus números al lado."
+        title="Cómo se ganan los puntos"
+      >
         <div className="grid gap-5">
           {rules.isPending ? (
             <div
@@ -67,7 +70,11 @@ export function PointsRulesDialog({
               <p className="text-sm text-[var(--text-muted)]">
                 No pudimos cargar las reglas. Vuelve a intentarlo en un momento.
               </p>
-              <Button className="justify-self-start" onClick={() => void rules.refetch()} variant="secondary">
+              <Button
+                className="justify-self-start"
+                onClick={() => void rules.refetch()}
+                variant="secondary"
+              >
                 Reintentar
               </Button>
             </div>
@@ -132,7 +139,9 @@ function RuleList({
                 Bono semanal por multiplicador, metas de marca y programas completados. Nunca baja.
               </span>
             </div>
-            <span className="text-base font-semibold tabular-nums text-[var(--text)]">{format(modes)}</span>
+            <span className="text-base font-semibold tabular-nums text-[var(--text)]">
+              {format(modes)}
+            </span>
           </li>
         ) : null}
       </ul>
@@ -143,8 +152,8 @@ function RuleList({
         </span>
       </p>
       <p className="text-xs leading-5 text-[var(--text-muted)]">
-        Los puntos nunca bajan. La racha cuenta la más larga que hayas hecho, así que descansar no te
-        quita nada.
+        Los puntos nunca bajan. La racha cuenta la más larga que hayas hecho, así que descansar no
+        te quita nada.
       </p>
     </div>
   );

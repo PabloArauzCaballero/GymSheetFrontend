@@ -27,12 +27,21 @@ function days(count: number): string {
 export function ProgressionStatsCard({
   stats,
   rules,
-}: Readonly<{ stats: ProgressionStats; rules: PointRules | undefined }>) {
+  streakShown = false,
+}: Readonly<{
+  stats: ProgressionStats;
+  rules: PointRules | undefined;
+  /** La racha ya tiene su tarjeta arriba: aquí no se repite. */
+  streakShown?: boolean;
+}>) {
   const chips = rules ? pointRateChips(rules) : undefined;
 
   return (
     <Card>
-      <CardHeader description="Las cifras con tarifa son las que te dan puntos." title="Lo que suma" />
+      <CardHeader
+        description="Las cifras con tarifa son las que te dan puntos."
+        title="Lo que suma"
+      />
       <CardContent className="grid gap-4 sm:grid-cols-2">
         <MetricCard
           icon={<Dumbbell aria-hidden className="h-4 w-4" />}
@@ -58,11 +67,13 @@ export function ProgressionStatsCard({
           rate={chips?.streak}
           value={days(stats.longestStreakDays)}
         />
-        <MetricCard
-          icon={<Flame aria-hidden className="h-4 w-4" />}
-          label="Racha actual"
-          value={days(stats.currentStreakDays)}
-        />
+        {streakShown ? null : (
+          <MetricCard
+            icon={<Flame aria-hidden className="h-4 w-4" />}
+            label="Racha actual"
+            value={days(stats.currentStreakDays)}
+          />
+        )}
         <MetricCard
           icon={<CalendarDays aria-hidden className="h-4 w-4" />}
           label="Semanas seguidas"
@@ -78,7 +89,7 @@ export function ProgressionStatsCard({
           label="Grupos trabajados"
           value={`${stats.distinctMuscleGroups}`}
         />
-        {stats.currentStreakDays === 0 && stats.totalSessions > 0 ? (
+        {!streakShown && stats.currentStreakDays === 0 && stats.totalSessions > 0 ? (
           // Una racha rota es un hecho, no un reproche: el texto invita a
           // empezar otra hoy y no menciona el fallo.
           <p className="text-xs leading-5 text-[var(--text-muted)] sm:col-span-2">
