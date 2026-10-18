@@ -31,6 +31,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { AmbientBackground } from '@/components/ambient';
+import { credentialTextProps } from '@/lib/credential-input';
 import { DURATION, PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { accentContrast, accentGlow, accentGradient, accentPolicy, colors, comfortableTouchTarget, fontSizes, iconSizes, maxContentWidth, minTouchTarget, onMedia, overlay, pressScale, pressSpring, radii, releaseSpring, semibold, spacing, type TextVariant } from '@/theme';
@@ -460,8 +461,10 @@ export function Input({
           {...props}
           // Después de `props` a propósito: cuando el campo gestiona su propio
           // ojo, quien lo usa no debe poder fijar `secureTextEntry` por su
-          // cuenta y dejar el interruptor mintiendo.
-          {...(revealable ? { secureTextEntry: !revealed } : {})}
+          // cuenta y dejar el interruptor mintiendo. Por lo mismo, ni mayúscula
+          // automática ni autocorrector: revelado deja de ser un campo seguro y
+          // el teclado volvía a «arreglar» la contraseña (ver credential-input).
+          {...(revealable ? { secureTextEntry: !revealed, ...credentialTextProps } : {})}
         />
         {revealable ? (
           <PressableScale
