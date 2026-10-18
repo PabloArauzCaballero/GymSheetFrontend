@@ -29,8 +29,8 @@ import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, semi
 const STEPS: readonly FlowStep[] = [
   { label: 'Objetivo', icon: 'flag-outline' },
   { label: 'Medidas', icon: 'barbell-outline' },
-  { label: 'Cómo entrenas', icon: 'options-outline' },
-  { label: 'Lugar y material', icon: 'construct-outline' },
+  { label: 'Entreno', icon: 'options-outline' },
+  { label: 'Material', icon: 'construct-outline' },
 ];
 
 const preferenceAlreadyAsked: Partial<Record<FitnessGoal, string>> = {

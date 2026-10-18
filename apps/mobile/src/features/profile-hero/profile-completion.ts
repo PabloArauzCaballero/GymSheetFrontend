@@ -29,10 +29,10 @@ export function profileCompletion({
   return { items, missing, ratio };
 }
 
-/** «Te falta una foto y tu primer pesaje para un perfil completo.» */
+/** «Para un perfil completo: una foto y tu primer pesaje.» Sin verbo, así concuerda con uno o varios. */
 export function completionMessage(missing: readonly CompletionItem[]): string | null {
   if (!missing.length) return null;
   const labels = missing.map((item) => item.label);
   const list = labels.length === 1 ? labels[0] : `${labels.slice(0, -1).join(', ')} y ${labels[labels.length - 1]}`;
-  return `Te falta ${list} para un perfil completo.`;
+  return `Para un perfil completo: ${list}.`;
 }
