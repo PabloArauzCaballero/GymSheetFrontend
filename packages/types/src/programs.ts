@@ -39,6 +39,10 @@ export type Program = {
   semanasTotales: number;
   multiplicador: number;
   proximoMultiplicador: number;
+  /** Escudo del modo (0..1): una semana fallida lo gasta y conserva el multiplicador. Ausente en servidores antiguos. */
+  escudos?: number;
+  /** Nombre del escalón del multiplicador («Encendido»). Ausente en servidores antiguos. */
+  nivelMultiplicador?: string;
   sesionesHechasSemana: number;
   sesionesPlanSemana: number;
   esDescarga: boolean;
@@ -57,6 +61,8 @@ export type ProgramWeekProgress = {
   /** Nulo mientras la semana no se cierra. */
   cumplida: boolean | null;
   multiplicador: number | null;
+  /** La semana fallida gastó el escudo y conservó el multiplicador. */
+  escudoUsado?: boolean;
 };
 
 export type ProgramProgress = { programa: Program; semanas: ProgramWeekProgress[] };
@@ -158,6 +164,8 @@ export type ProgramSessionExtras = {
   motivoNoCuenta: string | null;
   sesionesHechasSemana: number;
   sesionesPlanSemana: number;
+  escudos?: number;
+  nivelMultiplicador?: string;
   bonusModo: { multiplicador: number; proximoMultiplicador: number; puntosPrevistos: number } | null;
   sugerencias: ProgramSuggestion[];
   cambiosRespectoRutina: boolean;

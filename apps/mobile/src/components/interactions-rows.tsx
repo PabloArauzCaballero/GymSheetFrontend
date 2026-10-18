@@ -57,7 +57,9 @@ function Avatar({ name, photoUrl }: { name: string; photoUrl: string | null }) {
   if (photoUrl) {
     return (
       <Image
+        cachePolicy="memory-disk"
         contentFit="cover"
+        recyclingKey={photoUrl}
         source={{ uri: photoUrl }}
         style={{
           width: AVATAR_SIZE,
@@ -65,7 +67,7 @@ function Avatar({ name, photoUrl }: { name: string; photoUrl: string | null }) {
           borderRadius: radii.full,
           backgroundColor: colors.surfaceHigh,
         }}
-        transition={200}
+        transition={160}
       />
     );
   }

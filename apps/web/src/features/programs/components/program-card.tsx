@@ -2,7 +2,8 @@ import { Dumbbell, HeartPulse } from 'lucide-react';
 import Link from 'next/link';
 import type { CardioPlan, Program } from '@gymsheet/types';
 import { Badge } from '@/shared/components/ui/badge';
-import { hasMultiplier, modeLabel, multiplierLabel, nextMultiplierHint, programFraction, weekLabel } from '../labels';
+import { modeTierName, shieldLabel } from '@gymsheet/domain';
+import { hasMultiplier, modeLabel, multiplierLabel, nextMultiplierHint, programFraction, tierLabel, weekLabel } from '../labels';
 
 /**
  * El programa activo en lo alto de Rutinas (RF-14): qué es, en qué semana va,
@@ -37,11 +38,11 @@ export function ProgramCard({
           </Badge>
         ) : null}
         {hasMultiplier(program) ? (
-          <span
-            aria-label={`Multiplicador ${multiplierLabel(program.multiplicador)}`}
-            className="ml-auto text-2xl font-semibold tracking-[-0.03em] text-[var(--accent-ink)]"
-          >
-            {multiplierLabel(program.multiplicador)}
+          <span aria-label={`Multiplicador ${tierLabel(program)}`} className="ml-auto grid justify-items-end">
+            <span className="text-2xl font-semibold tracking-[-0.03em] text-[var(--accent-ink)]">
+              {multiplierLabel(program.multiplicador)}
+            </span>
+            <span className="text-xs font-semibold text-[var(--text-muted)]">{modeTierName(program)}</span>
           </span>
         ) : null}
       </div>
@@ -66,7 +67,10 @@ export function ProgramCard({
         />
       </div>
       {hasMultiplier(program) ? (
-        <p className="text-xs text-[var(--text-muted)]">{nextMultiplierHint(program)}</p>
+        <p className="text-xs text-[var(--text-muted)]">
+          {nextMultiplierHint(program)}
+          {shieldLabel(program.escudos) ? ` ${shieldLabel(program.escudos)}: una semana floja no te baja.` : ''}
+        </p>
       ) : null}
     </Link>
   );

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableScale } from '@/components/motion';
@@ -10,7 +10,8 @@ import { colors, fontSizes, iconSizes, overlay, radii, semibold, spacing } from 
 export type PickedMedia = { uri: string; name: string; mimeType: string; kind: 'image' | 'video' };
 
 function PreviewVideo({ uri }: { uri: string }) {
-  const player = useVideoPlayer({ uri }, (videoPlayer) => {
+  const source = useMemo(() => ({ uri }), [uri]);
+  const player = useVideoPlayer(source, (videoPlayer) => {
     videoPlayer.loop = true;
     videoPlayer.play();
   });
@@ -65,7 +66,7 @@ export function MediaPreview({
           {media?.kind === 'video' ? (
             <PreviewVideo uri={media.uri} />
           ) : media ? (
-            <Image contentFit="contain" source={{ uri: media.uri }} style={{ flex: 1 }} />
+            <Image cachePolicy="memory-disk" contentFit="contain" recyclingKey={media.uri} source={{ uri: media.uri }} style={{ flex: 1 }} />
           ) : null}
         </View>
         {viewOnce ? (

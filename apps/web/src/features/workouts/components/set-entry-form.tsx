@@ -25,10 +25,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 /** Un ajuste de un toque. No es un botón: son modificadores del formulario, no la acción. */
-function QuickChip({
-  label,
-  onClick,
-}: Readonly<{ label: string; onClick: () => void }>) {
+function QuickChip({ label, onClick }: Readonly<{ label: string; onClick: () => void }>) {
   return (
     <button
       className={cn(
@@ -122,11 +119,7 @@ export function SetEntryForm({
             {...form.register('numeroSerie', { valueAsNumber: true })}
           />
         </Field>
-        <Field
-          error={form.formState.errors.pesoKg?.message}
-          htmlFor={`${fieldId}-peso`}
-          label="KG"
-        >
+        <Field error={form.formState.errors.pesoKg?.message} htmlFor={`${fieldId}-peso`} label="KG">
           <Input
             id={`${fieldId}-peso`}
             inputMode="decimal"
@@ -149,11 +142,7 @@ export function SetEntryForm({
             {...form.register('repeticiones', { valueAsNumber: true })}
           />
         </Field>
-        <Field
-          error={form.formState.errors.rir?.message}
-          htmlFor={`${fieldId}-rir`}
-          label="RIR"
-        >
+        <Field error={form.formState.errors.rir?.message} htmlFor={`${fieldId}-rir`} label="RIR">
           <Input
             id={`${fieldId}-rir`}
             inputMode="numeric"

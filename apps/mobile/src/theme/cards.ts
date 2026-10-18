@@ -11,6 +11,8 @@
  * Todo lo que es texto va sobre `face` (casi negro) o sobre el pie: los pares
  * están medidos en `contrast.test.ts`.
  */
+// Ruta directa (sin el barril): este archivo lo cargan también scripts de Node sin resolutor.
+import { CARD_MATERIAL_INKS } from '@gymsheet/domain/card-materials';
 import { alpha, ink } from './palette.ts';
 
 export type CardRarityKey = 'COMUN' | 'RARA' | 'EPICA' | 'LEGENDARIA';
@@ -36,48 +38,38 @@ export type CardMaterial = Readonly<{
 
 const clear = alpha(ink.white, 0);
 
+/**
+ * Las tintas por rareza viven en `@gymsheet/domain` (`CARD_MATERIAL_INKS`) para
+ * que la web pinte la misma carta; aquí solo se componen las transparencias.
+ */
+const inks = CARD_MATERIAL_INKS;
+
 export const cardMaterials: Readonly<Record<CardRarityKey, CardMaterial>> = {
   /** Jade: fresca y viva, nunca gris. */
   COMUN: {
-    frame: ['#E9FFF6', '#5FE3B5', '#149A78', '#0A4A3D'],
-    art: ['#0E5C4C', '#0A3A33', '#081B1A'],
-    glow: '#63F2C1',
-    label: '#8DF5D2', // 13,9:1 sobre face
-    pattern: alpha('#8DF5D2', 0.1),
-    shadow: '#19C79A',
+    ...inks.COMUN,
+    pattern: alpha(inks.COMUN.label, 0.1),
     foil: [clear, alpha(ink.white, 0.34), clear],
     gems: 1,
   },
   /** Zafiro. */
   RARA: {
-    frame: ['#E6F4FF', '#62B4FF', '#2166E0', '#102A7A'],
-    art: ['#1B4FB8', '#102F7C', '#0A1433'],
-    glow: '#6CBBFF',
-    label: '#A9D6FF', // 12,4:1
-    pattern: alpha('#A9D6FF', 0.11),
-    shadow: '#2F86FF',
+    ...inks.RARA,
+    pattern: alpha(inks.RARA.label, 0.11),
     foil: [clear, alpha('#BFE3FF', 0.3), alpha(ink.white, 0.5), alpha('#BFE3FF', 0.3), clear],
     gems: 2,
   },
   /** Amatista con vetas magenta. */
   EPICA: {
-    frame: ['#FBE9FF', '#D07BFF', '#8A36E8', '#3C1380'],
-    art: ['#7B2BD6', '#48189A', '#170A38'],
-    glow: '#D592FF',
-    label: '#E7C2FF', // 12,1:1
+    ...inks.EPICA,
     pattern: alpha('#F2B6FF', 0.12),
-    shadow: '#A64DFF',
     foil: [clear, alpha('#FF8AD8', 0.3), alpha(ink.white, 0.55), alpha('#9D8CFF', 0.34), clear],
     gems: 3,
   },
   /** Oro con foil arcoíris. */
   LEGENDARIA: {
-    frame: ['#FFFBE0', '#FFD86B', '#E79A1C', '#7A4208'],
-    art: ['#C97A10', '#7C3F0A', '#241204'],
-    glow: '#FFE08A',
-    label: '#FFE7A3', // 15,6:1
-    pattern: alpha('#FFE7A3', 0.14),
-    shadow: '#FFB02E',
+    ...inks.LEGENDARIA,
+    pattern: alpha(inks.LEGENDARIA.label, 0.14),
     foil: [
       clear,
       alpha('#FF7AB6', 0.34),

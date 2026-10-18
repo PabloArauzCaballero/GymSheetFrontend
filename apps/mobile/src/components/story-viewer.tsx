@@ -295,7 +295,9 @@ function SmallAvatar({ photoUrl, fullName, size }: { photoUrl: string | null; fu
   if (photoUrl) {
     return (
       <Image
+        cachePolicy="memory-disk"
         contentFit="cover"
+        recyclingKey={photoUrl}
         source={{ uri: photoUrl }}
         style={{ width: size, height: size, borderRadius: radii.full, backgroundColor: colors.surfaceHigh }}
       />
@@ -571,16 +573,21 @@ export function StoryViewer({
    * crear, cuando la variable de estado de este render todavía no existía.
    */
   const mutedRef = useRef(muted);
+  const videoSource = useMemo(
+    () =>
+      isVideo && storyMediaUri && storyAccessToken
+        // `useCaching`: volver atrás a un vídeo ya visto no lo descarga otra vez.
+        ? { uri: storyMediaUri, headers: { Authorization: `Bearer ${storyAccessToken}` }, useCaching: true }
+        : null,
+    [isVideo, storyMediaUri, storyAccessToken],
+  );
   const player = useVideoPlayer(
-    isVideo && storyMediaUri && storyAccessToken
-      // `useCaching`: volver atrás a un vídeo ya visto no lo descarga otra vez.
-      ? { uri: storyMediaUri, headers: { Authorization: `Bearer ${storyAccessToken}` }, useCaching: true }
-      : null,
+    videoSource,
     (instance) => {
-    instance.muted = mutedRef.current;
-    instance.loop = false;
-    // Una story no sigue sonando con el teléfono bloqueado ni con la app detrás.
-    instance.staysActiveInBackground = false;
+      instance.muted = mutedRef.current;
+      instance.loop = false;
+      // Una story no sigue sonando con el teléfono bloqueado ni con la app detrás.
+      instance.staysActiveInBackground = false;
     },
   );
 
@@ -1177,7 +1184,9 @@ export function StoryViewer({
                 />
               ) : (
                 <Image
+                  cachePolicy="memory-disk"
                   contentFit="contain"
+                  recyclingKey={storyMediaUri ?? undefined}
                   source={
                     storyMediaUri && storyAccessToken
                       ? { uri: storyMediaUri, headers: { Authorization: `Bearer ${storyAccessToken}` } }

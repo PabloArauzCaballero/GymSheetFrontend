@@ -1,3 +1,4 @@
+import { prizeCodeGroups } from '@gymsheet/domain';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -145,6 +146,8 @@ export type RewardCardContent = Readonly<{
   title: string;
   rarityLabel: string | null;
   points: number;
+  /** Código del premio: sustituye a los puntos en el pie, como un ticket. */
+  code?: string | null;
 }>;
 
 /** Cara de la carta. */
@@ -236,7 +239,20 @@ export function RewardCardFront({
         >
           {content.title}
         </Text>
-        {content.points > 0 ? (
+        {content.code ? (
+          <Text
+            allowFontScaling={false}
+            style={{
+              color: material.label,
+              fontSize: fontSizes.sm,
+              fontWeight: semibold,
+              fontVariant: ['tabular-nums'],
+              letterSpacing: fontSizes.sm * 0.18,
+            }}
+          >
+            {prizeCodeGroups(content.code)}
+          </Text>
+        ) : content.points > 0 ? (
           <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
             <CountUpText
               delayMs={pointsDelayMs}

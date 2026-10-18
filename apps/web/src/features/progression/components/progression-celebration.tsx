@@ -2,26 +2,20 @@
 
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { RotateCcw, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import type { ProgressionBadge, ProgressionLevel } from '@/shared/api/schemas';
+import { useEffect, useMemo, useState } from 'react';
+import type { Progression, ProgressionLevel } from '@/shared/api/schemas';
 import { Button } from '@/shared/components/ui/button';
 import { Dialog } from '@/shared/components/ui/dialog';
 import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
 import {
-  badgeSubject,
-  CelebrationStage,
-  levelSubject,
-  celebrationAnnouncement,
-  celebrationHeading,
+  keyOf,
+  progressionCelebrations,
   type CelebrationSubject,
-} from './progression-celebration-stage';
+} from './celebration/celebration-queue';
+import { sceneOf } from './celebration/celebration-scene';
+import { CelebrationStage } from './progression-celebration-stage';
 
-export {
-  badgeSubject,
-  levelSubject,
-  sessionRewardSubjects,
-  type CelebrationSubject,
-} from './progression-celebration-stage';
+export { rewardCelebrations, type CelebrationSubject } from './celebration/celebration-queue';
 
 /**
  * La recompensa: una cola de cartas a pantalla completa.
@@ -39,7 +33,7 @@ export function ProgressionCelebration({
   onClose,
 }: Readonly<{ subjects: readonly CelebrationSubject[]; onClose: () => void }>) {
   if (subjects.length === 0) return null;
-  const queueKey = subjects.map((subject) => `${subject.kind}:${subject.name}`).join('|');
+  const queueKey = subjects.map(keyOf).join('|');
   return (
     <Dialog onOpenChange={(open) => !open && onClose()} open>
       <CelebrationQueue key={queueKey} onClose={onClose} subjects={subjects} />
@@ -60,6 +54,7 @@ function CelebrationQueue({
   // Cada repetición remonta el escenario, que es lo que rebobina el guion.
   const [take, setTake] = useState(0);
   const subject = subjects[Math.min(index, subjects.length - 1)] as CelebrationSubject;
+  const scene = useMemo(() => sceneOf(subject), [subject]);
   const hasNext = index < subjects.length - 1;
 
   return (
@@ -75,14 +70,14 @@ function CelebrationQueue({
             'radial-gradient(ellipse 70% 60% at 50% 42%, rgb(var(--sheen-channels) / 0.06), transparent 70%)',
         }}
       >
-        <DialogPrimitive.Title className="sr-only">{celebrationHeading(subject)}</DialogPrimitive.Title>
+        <DialogPrimitive.Title className="sr-only">{scene.heading}</DialogPrimitive.Title>
         <DialogPrimitive.Description className="sr-only">
           {subjects.length > 1
             ? `Recompensa ${index + 1} de ${subjects.length}.`
             : 'Tu recompensa.'}
         </DialogPrimitive.Description>
         <p aria-live="polite" className="sr-only" key={`${index}`} role="status">
-          {celebrationAnnouncement(subject)}
+          {scene.announcement}
         </p>
 
         <div className="flex items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6">
@@ -95,7 +90,7 @@ function CelebrationQueue({
         </div>
 
         <div className="flex flex-1 items-center justify-center px-4 py-8">
-          <CelebrationStage key={`${index}-${take}`} still={still} subject={subject} />
+          <CelebrationStage key={`${index}-${take}`} scene={scene} still={still} />
         </div>
 
         <div className="mx-auto grid w-full max-w-sm gap-2 px-4 pb-[max(2rem,env(safe-area-inset-bottom))]">
@@ -107,7 +102,11 @@ function CelebrationQueue({
             {hasNext ? 'Siguiente' : 'Seguir'}
           </Button>
           {still ? null : (
-            <button className={STAGE_GHOST} onClick={() => setTake((value) => value + 1)} type="button">
+            <button
+              className={STAGE_GHOST}
+              onClick={() => setTake((value) => value + 1)}
+              type="button"
+            >
               <RotateCcw aria-hidden className="size-4" />
               Volver a verla
             </button>
@@ -135,18 +134,16 @@ function CelebrationQueue({
  * render (react-query), así que el efecto depende solo de que haya novedades.
  */
 export function useRewardQueue(
-  badges: readonly ProgressionBadge[] | undefined,
+  data: Progression | undefined,
   levelUp: ProgressionLevel | null,
   onAcknowledge: () => void,
 ) {
   const [manual, setManual] = useState<readonly CelebrationSubject[] | null>(null);
   const [auto, setAuto] = useState<readonly CelebrationSubject[] | null>(null);
-  const fresh = (badges ?? []).filter((badge) => badge.earned && badge.isNew);
-  if (auto === null && (fresh.length > 0 || levelUp)) {
-    setAuto([
-      ...fresh.map((badge) => badgeSubject(badge, true)),
-      ...(levelUp ? [levelSubject(levelUp, true)] : []),
-    ]);
+  if (auto === null && data) {
+    // `unlockedNow` fuera: en la senda llega vacío o repetido en `badges` con `isNew`.
+    const pending = progressionCelebrations({ ...data, unlockedNow: [] }, levelUp);
+    if (pending.length > 0) setAuto(pending);
   }
 
   const autoCount = auto?.length ?? 0;

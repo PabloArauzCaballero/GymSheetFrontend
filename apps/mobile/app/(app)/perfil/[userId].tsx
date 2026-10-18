@@ -181,7 +181,9 @@ export default function PerfilDetailScreen() {
       <View style={{ alignItems: 'center', gap: spacing.md, paddingVertical: spacing.lg }}>
         {entry.photoUrl ? (
           <Image
+            cachePolicy="memory-disk"
             contentFit="cover"
+            recyclingKey={entry.photoUrl}
             source={{ uri: entry.photoUrl }}
             style={{
               width: AVATAR_SIZE,
@@ -189,7 +191,7 @@ export default function PerfilDetailScreen() {
               borderRadius: radii.full,
               backgroundColor: colors.surfaceHigh,
             }}
-            transition={200}
+            transition={160}
           />
         ) : (
           <View

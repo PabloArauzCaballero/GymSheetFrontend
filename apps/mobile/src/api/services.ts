@@ -29,6 +29,7 @@ import {
   pointRulesSchema,
   progressionAcknowledgedSchema,
   progressionSchema,
+  prizeListSchema,
   publicBranchSummarySchema,
   restDaysSchema,
   membershipProjectionSchema,
@@ -518,6 +519,8 @@ export const progressionService = {
       leaderboardSchema,
       { method: 'GET' },
     ),
+  /** Los cupones del socio (= `progression.prizes`), del más reciente al más antiguo. */
+  prizes: () => apiClient.request('/me/progression/prizes', prizeListSchema, { method: 'GET' }),
   getRestDays: () =>
     apiClient.request('/me/progression/rest-days', restDaysSchema, { method: 'GET' }),
   setRestDays: (weekdays: number[]) =>

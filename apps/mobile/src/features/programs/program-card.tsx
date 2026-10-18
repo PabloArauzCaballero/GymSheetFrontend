@@ -17,6 +17,7 @@ import { PressableScale } from '@/components/motion';
 import { Button } from '@/components/ui';
 import { dayLabel, MODE_BADGE } from '@/features/programs/labels';
 import { useStartRoutine } from '@/features/routine-detail/use-start-routine';
+import { modeTierName, shieldLabel } from '@gymsheet/domain';
 import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, shadows, spacing } from '@/theme';
 
 /** El programa ya pasó su fecha fin: toca decidir qué sigue (RF-19). */
@@ -76,7 +77,8 @@ export function StrengthProgramCard({ program }: { program: Program }) {
       </Text>
       <Text style={{ color: colors.text, fontSize: fontSizes.sm }}>
         {over ? 'Terminaste el programa. ¿Qué sigue?' : nextText}
-        {!over && program.multiplicador > 1 ? ` · bono ${multiplierLabel(program.multiplicador)}` : ''}
+        {!over && program.multiplicador > 1 ? ` · bono ${multiplierLabel(program.multiplicador)} (${modeTierName(program)})` : ''}
+        {!over && shieldLabel(program.escudos) ? ' · escudo listo' : ''}
       </Text>
       {!over && program.rutinaId ? (
         <View style={{ gap: spacing.sm }}>

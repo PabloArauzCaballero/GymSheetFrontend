@@ -12,8 +12,13 @@ import { programService } from '@/features/routines-v2/services';
  */
 export function SuggestedLoad({ exerciseId }: Readonly<{ exerciseId: string | undefined }>) {
   const enabled = publicEnv.routinesV2 && exerciseId !== undefined;
-  const active = useQuery({ queryKey: programKeys.active, queryFn: programService.active, enabled });
-  const programId = active.data?.fuerza && active.data.fuerza.modo !== 'NONE' ? active.data.fuerza.id : null;
+  const active = useQuery({
+    queryKey: programKeys.active,
+    queryFn: programService.active,
+    enabled,
+  });
+  const programId =
+    active.data?.fuerza && active.data.fuerza.modo !== 'NONE' ? active.data.fuerza.id : null;
   const loads = useQuery({
     queryKey: programKeys.nextLoads(programId ?? ''),
     queryFn: () => programService.nextLoads(programId ?? ''),
@@ -24,7 +29,9 @@ export function SuggestedLoad({ exerciseId }: Readonly<{ exerciseId: string | un
   return (
     <p className="text-sm font-semibold text-[var(--accent-ink)]" data-testid="suggested-load">
       Sugerido: {item.pesoSugeridoKg.toLocaleString('es')} kg × {item.repsMin}–{item.repsMax}
-      {item.mensaje ? <span className="block text-xs font-normal text-[var(--text-muted)]">{item.mensaje}</span> : null}
+      {item.mensaje ? (
+        <span className="block text-xs font-normal text-[var(--text-muted)]">{item.mensaje}</span>
+      ) : null}
     </p>
   );
 }
