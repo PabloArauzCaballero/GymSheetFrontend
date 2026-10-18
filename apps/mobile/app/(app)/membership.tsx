@@ -365,6 +365,8 @@ export default function MembershipScreen() {
               )}
               <Button
                 disabled={!renewablePlan}
+                icon="arrow-forward"
+                iconPosition="end"
                 label="Continuar"
                 onPress={() => setStep(1)}
               />
@@ -403,13 +405,14 @@ export default function MembershipScreen() {
                 actual.
               </Text>
               <Button
+                icon="qr-code-outline"
                 label="Confirmar y pagar"
                 loading={renewal.isPending}
                 onPress={() => {
                   if (renewablePlan) renewal.mutate(renewablePlan);
                 }}
               />
-              <Button label="Volver" onPress={() => setStep(0)} variant="ghost" />
+              <Button icon="arrow-back" label="Volver" onPress={() => setStep(0)} variant="ghost" />
             </>
           ) : null}
 
@@ -450,6 +453,7 @@ export default function MembershipScreen() {
               </Text>
               {intent ? (
                 <Button
+                  icon="logo-whatsapp"
                   label="Enviar comprobante por WhatsApp"
                   onPress={() => void Linking.openURL(intent.whatsappUrl)}
                   variant="ghost"
@@ -592,6 +596,7 @@ export default function MembershipScreen() {
                     </Text>
                   ) : offered && renewalActions.length > 0 ? (
                     <Button
+                      icon="logo-whatsapp"
                       label="Consultar"
                       onPress={() => void openWhatsApp(renewalActions[0]!)}
                       style={{ minHeight: minTouchTarget }}

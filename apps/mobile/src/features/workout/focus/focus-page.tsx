@@ -386,7 +386,7 @@ export function DoneCard({
           </Text>
         </View>
       </View>
-      <Button label="Hacer una serie extra" onPress={onExtra} testID="extra-set" variant="ghost" />
+      <Button icon="add" label="Hacer una serie extra" onPress={onExtra} testID="extra-set" variant="ghost" />
     </Animated.View>
   );
 }

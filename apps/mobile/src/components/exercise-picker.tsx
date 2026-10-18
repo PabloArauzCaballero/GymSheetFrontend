@@ -108,6 +108,7 @@ export function ExercisePicker({
                 // Una lista vacía sin salida deja la sesión a medias: el
                 // ejercicio que falta se puede crear sin abandonarla.
                 <Button
+                  icon="add"
                   label="Crear ejercicio"
                   onPress={() => {
                     onClose();

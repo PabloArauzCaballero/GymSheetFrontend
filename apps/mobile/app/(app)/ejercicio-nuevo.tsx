@@ -278,7 +278,7 @@ export default function NuevoEjercicioScreen() {
         </Section>
       )}
 
-      <Button label="Crear ejercicio" loading={create.isPending} onPress={submit} />
+      <Button icon="add" label="Crear ejercicio" loading={create.isPending} onPress={submit} />
     </ScrollScreen>
   );
 }

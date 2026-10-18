@@ -239,7 +239,7 @@ export function RestSheet({
               title="A todos los que quedan hoy"
             />
           ) : null}
-          <Button label="Cambiar el tiempo" onPress={() => setAsking(false)} variant="ghost" />
+          <Button icon="timer-outline" label="Cambiar el tiempo" onPress={() => setAsking(false)} variant="ghost" />
         </View>
       ) : (
         <View style={{ gap: spacing.lg }}>
@@ -309,7 +309,7 @@ export function RestSheet({
               value={work}
             />
           ) : null}
-          <Button label="Aceptar" onPress={accept} size="lg" testID="rest-accept" />
+          <Button icon="checkmark" label="Aceptar" onPress={accept} size="lg" testID="rest-accept" />
         </View>
       )}
     </BottomSheet>

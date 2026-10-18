@@ -9,13 +9,14 @@ import {
   ScreenHeader,
   Section,
 } from '@/components/layout';
+import { IconButton } from '@/components/icon-button';
 import { Button } from '@/components/ui';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { BackLink } from '@/components/nav';
 import { Text } from '@/components/text';
 import { notificationService } from '@/features/notifications/service';
 import { notify } from '@/notifications';
-import { colors, spacing } from '@/theme';
+import { spacing } from '@/theme';
 
 const notificationsKey = ['notifications'] as const;
 const DATE_TIME = new Intl.DateTimeFormat('es-ES', {
@@ -76,6 +77,14 @@ export default function NotificationInboxScreen() {
     >
       <BackLink />
       <ScreenHeader
+        action={
+          <IconButton
+            icon="settings-outline"
+            label="Preferencias de avisos"
+            onPress={() => router.push('/notifications')}
+            testID="inbox-preferences"
+          />
+        }
         subtitle="Mensajes importantes de tu gimnasio y tus programas."
         title="Bandeja de avisos"
       />
@@ -108,6 +117,7 @@ export default function NotificationInboxScreen() {
                   {!item.leidoEn ? (
                     <Button
                       disabled={read.isPending}
+                      icon="checkmark-done-outline"
                       label="Marcar como leído"
                       loading={read.isPending && read.variables === item.id}
                       onPress={() => read.mutate(item.id)}
@@ -138,6 +148,7 @@ export default function NotificationInboxScreen() {
         >
           <Button
             disabled={page <= 1 || notifications.isFetching}
+            icon="chevron-back"
             label="Anterior"
             onPress={() => setPage((current) => Math.max(1, current - 1))}
             size="sm"
@@ -150,6 +161,8 @@ export default function NotificationInboxScreen() {
             disabled={
               page >= notifications.data.totalPages || notifications.isFetching
             }
+            icon="chevron-forward"
+            iconPosition="end"
             label="Siguiente"
             onPress={() =>
               setPage((current) =>
@@ -161,13 +174,6 @@ export default function NotificationInboxScreen() {
           />
         </View>
       ) : null}
-      <Button
-        label="Preferencias de avisos"
-        onPress={() => router.push('/notifications')}
-        size="sm"
-        style={{ alignSelf: 'flex-start', borderColor: colors.borderControl }}
-        variant="ghost"
-      />
     </ScrollScreen>
   );
 }

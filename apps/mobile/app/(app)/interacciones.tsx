@@ -602,9 +602,9 @@ export default function InteraccionesScreen() {
         <Segmented
           onChange={setTab}
           options={[
-            { value: 'likes', label: 'Te gustan' },
-            { value: 'visitas', label: 'Visitas' },
-            { value: 'nexts', label: 'Nexts' },
+            { value: 'likes', label: 'Te gustan', icon: 'heart-outline' },
+            { value: 'visitas', label: 'Visitas', icon: 'eye-outline' },
+            { value: 'nexts', label: 'Nexts', icon: 'play-skip-forward-outline' },
           ]}
           value={tab}
         />

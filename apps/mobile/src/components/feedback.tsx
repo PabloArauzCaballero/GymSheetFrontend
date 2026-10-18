@@ -218,7 +218,7 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry: () => 
   return (
     <CenteredState icon="cloud-offline-outline" message={resolved.message} title={resolved.title}>
       {/* Secundario: reintentar no es la acción principal de la pantalla. */}
-      <Button label="Reintentar" onPress={onRetry} size="sm" style={{ marginTop: spacing.xs }} variant="secondary" />
+      <Button icon="refresh-outline" label="Reintentar" onPress={onRetry} size="sm" style={{ marginTop: spacing.xs }} variant="secondary" />
     </CenteredState>
   );
 }
