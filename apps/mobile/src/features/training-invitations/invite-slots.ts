@@ -55,7 +55,7 @@ export const HOUR_RANGE = { first: FIRST_HOUR, last: LAST_HOUR } as const;
 
 /** Franjas rápidas: un toque deja una hora razonable que luego se afina. */
 export const DAY_PERIODS = [
-  { key: 'morning', label: 'Mañana', icon: 'sunny-outline', time: '07:00' },
+  { key: 'morning', label: 'Temprano', icon: 'sunny-outline', time: '07:00' },
   { key: 'noon', label: 'Mediodía', icon: 'partly-sunny-outline', time: '12:30' },
   { key: 'afternoon', label: 'Tarde', icon: 'cloudy-night-outline', time: '18:00' },
   { key: 'night', label: 'Noche', icon: 'moon-outline', time: '20:30' },
@@ -83,4 +83,11 @@ export function firstAvailableTime(dateValue: string, now: Date): string | null 
     }
   }
   return null;
+}
+
+/** Hora con la que abre el selector: la primera libre, pero no antes de las 07:00. */
+export function suggestedTime(dateValue: string, now: Date): string | null {
+  const first = firstAvailableTime(dateValue, now);
+  if (!first) return null;
+  return first < '07:00' ? '07:00' : first;
 }

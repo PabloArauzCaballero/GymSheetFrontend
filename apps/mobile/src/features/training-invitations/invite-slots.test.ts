@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { dayOptions, durationLabel, firstAvailableTime, isTimeAvailable, timeOptions } from './invite-slots.ts';
+import { dayOptions, durationLabel, firstAvailableTime, isTimeAvailable, suggestedTime, timeOptions } from './invite-slots.ts';
 
 const friday = new Date(2026, 9, 16, 17, 20);
 
@@ -50,4 +50,9 @@ test('the first free time steps by quarter hours and runs out late at night', ()
   assert.equal(firstAvailableTime('2026-10-16', friday), '17:45');
   assert.equal(firstAvailableTime('2026-10-17', friday), '05:00');
   assert.equal(firstAvailableTime('2026-10-16', new Date(2026, 9, 16, 22, 50)), null);
+});
+
+test('the picker opens at a sensible hour, never before 07:00', () => {
+  assert.equal(suggestedTime('2026-10-17', friday), '07:00');
+  assert.equal(suggestedTime('2026-10-16', friday), '17:45');
 });

@@ -40,9 +40,16 @@ function distance(a: { latitude: number; longitude: number }, b: { latitude: num
   return Math.sqrt(dLat * dLat + dLon * dLon);
 }
 
+/** Distancia aproximada para distinguir dos sedes con el mismo nombre. */
+function kmLabel(degrees: number): string {
+  const km = degrees * 111;
+  return km < 1 ? `${Math.round(km * 1000 / 50) * 50} m` : `${km.toFixed(1).replace('.', ',')} km`;
+}
+
 /** «Gimnasio X · Calle Y», recortado a lo que acepta el backend. */
 export function placeLabel(place: PickedPlace): string {
-  const full = place.detail && place.kind !== 'TEXT' ? `${place.label} · ${place.detail}` : place.label;
+  const generic = !place.detail || place.detail === 'Gimnasio' || place.detail === 'Gimnasio en REPP';
+  const full = !generic && place.kind !== 'TEXT' ? `${place.label} · ${place.detail}` : place.label;
   return full.trim().slice(0, MAX_LABEL);
 }
 
@@ -74,6 +81,7 @@ export function PlacePicker({
 }) {
   const mapRef = useRef<MapView>(null);
   const centeredRef = useRef(false);
+  const [here, setHere] = useState<{ latitude: number; longitude: number } | null>(null);
   const [region, setRegion] = useState<Region>(
     value?.latitude !== undefined && value.longitude !== undefined
       ? { latitude: value.latitude, longitude: value.longitude, latitudeDelta: 0.03, longitudeDelta: 0.03 }
@@ -89,6 +97,7 @@ export function PlacePicker({
       if (!permission.granted || centeredRef.current) return;
       const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       centeredRef.current = true;
+      setHere({ latitude: position.coords.latitude, longitude: position.coords.longitude });
       mapRef.current?.animateToRegion({ latitude: position.coords.latitude, longitude: position.coords.longitude, latitudeDelta: 0.04, longitudeDelta: 0.04 }, 400);
     }).catch(() => undefined);
     // Solo al abrir: después el mapa es de quien lo mueve.
@@ -112,7 +121,13 @@ export function PlacePicker({
     const osm = inRange
       ? (external.data ?? []).map((gym) => ({ key: `osm-${gym.sourceId}`, name: gym.name, detail: gym.address ?? gym.city ?? 'Gimnasio', latitude: gym.latitude, longitude: gym.longitude }))
       : [];
-    return [...registered, ...osm];
+    // OpenStreetMap repite a veces la misma sede (punto y edificio): mismo nombre a < ~150 m es una sola.
+    const unique: GymOption[] = [];
+    for (const gym of [...registered, ...osm]) {
+      const name = gym.name.toLocaleLowerCase('es');
+      if (!unique.some((kept) => kept.name.toLocaleLowerCase('es') === name && distance(kept, gym) < 0.0015)) unique.push(gym);
+    }
+    return unique;
   }, [branches.data, external.data, inRange]);
 
   const visible = useMemo(() => gyms.filter((gym) =>
@@ -138,6 +153,9 @@ export function PlacePicker({
     void describePoint(latitude, longitude).then((found) => onChange({ kind: 'POINT', key, ...found, latitude, longitude }));
   };
 
+  const searching = search.trim().length > 0;
+  // Distancias desde la persona si compartió ubicación; si no, desde el centro del mapa.
+  const origin = here ?? region;
   const pinned = value && value.latitude !== undefined && value.longitude !== undefined ? value : null;
 
   return (
@@ -160,6 +178,25 @@ export function PlacePicker({
           </PressableScale>
         ) : null}
       </View>
+
+      {searching ? (
+        <View style={{ borderRadius: radii.lg, overflow: 'hidden', backgroundColor: colors.surfaceHigh }}>
+          {nearby.slice(0, 5).map((gym, index) => (
+            <PressableScale accessibilityLabel={gym.name} haptic="selection" key={gym.key} onPress={() => { setSearch(''); pickGym(gym); }} scaleTo={0.98}>
+              <View style={{ minHeight: minTouchTarget + spacing.sm, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, borderTopWidth: index ? 1 : 0, borderTopColor: colors.border }}>
+                <Ionicons color={socialMapColors.gymPin} name="barbell" size={iconSizes.sm} />
+                <View style={{ flex: 1 }}>
+                  <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>{gym.name}</Text>
+                  <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>{`${kmLabel(distance(gym, origin))} · ${gym.detail}`}</Text>
+                </View>
+              </View>
+            </PressableScale>
+          ))}
+          {nearby.length === 0 ? (
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, padding: spacing.md }}>Ningún gimnasio con ese nombre por aquí. Mueve el mapa a su zona o escríbelo abajo.</Text>
+          ) : null}
+        </View>
+      ) : null}
 
       <View style={{ height, borderRadius: radii.lg, overflow: 'hidden', borderColor: colors.border, borderWidth: 1 }}>
         <MapView
@@ -202,7 +239,7 @@ export function PlacePicker({
         </View>
       </View>
 
-      {nearby.length ? (
+      {!searching && nearby.length ? (
         <ScrollView contentContainerStyle={{ gap: spacing.xs }} horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false}>
           {nearby.map((gym) => {
             const selected = value?.key === gym.key;
@@ -214,15 +251,13 @@ export function PlacePicker({
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>{gym.name}</Text>
-                    <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>{gym.detail}</Text>
+                    <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>{`${kmLabel(distance(gym, origin))} · ${gym.detail}`}</Text>
                   </View>
                 </View>
               </PressableScale>
             );
           })}
         </ScrollView>
-      ) : search.trim() ? (
-        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Ningún gimnasio con ese nombre en el mapa. Muévete a su zona o escríbelo abajo.</Text>
       ) : null}
 
       {typing ? (

@@ -19,6 +19,7 @@ import {
   dayOptions,
   durationLabel,
   firstAvailableTime,
+  suggestedTime,
   isTimeAvailable,
   localDateValue,
 } from "./invite-slots";
@@ -86,7 +87,7 @@ export function CreateTrainingInviteModal({
   const days = useMemo(() => bookableDays(now), [now]);
   const [step, setStep] = useState(0);
   const [date, setDate] = useState(() => days[0]?.value ?? localDateValue(now));
-  const [time, setTime] = useState(() => firstAvailableTime(days[0]?.value ?? localDateValue(now), now) ?? "07:00");
+  const [time, setTime] = useState(() => suggestedTime(days[0]?.value ?? localDateValue(now), now) ?? "07:00");
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [place, setPlace] = useState<PickedPlace | null>(null);
   const [note, setNote] = useState("");
@@ -140,7 +141,7 @@ export function CreateTrainingInviteModal({
     const first = days[0]?.value ?? localDateValue(new Date());
     setStep(0);
     setDate(first);
-    setTime(firstAvailableTime(first, new Date()) ?? "07:00");
+    setTime(suggestedTime(first, new Date()) ?? "07:00");
     setDurationMinutes(60);
     setPlace(null);
     setNote("");
@@ -229,7 +230,7 @@ export function CreateTrainingInviteModal({
                         key={option.value}
                         onPress={() => {
                           setDate(option.value);
-                          if (!isTimeAvailable(option.value, time, new Date())) setTime(firstAvailableTime(option.value, new Date()) ?? time);
+                          if (!isTimeAvailable(option.value, time, new Date())) setTime(suggestedTime(option.value, new Date()) ?? time);
                           changed();
                         }}
                         scaleTo={0.96}
@@ -254,18 +255,29 @@ export function CreateTrainingInviteModal({
 
               <View style={{ gap: spacing.sm }}>
                 <SectionTitle icon="hourglass-outline">Duración</SectionTitle>
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.xs }}>
-                  {DURATION_OPTIONS.map((minutes) => (
-                    <FilterChip
-                      key={minutes}
-                      label={durationLabel(minutes)}
-                      onPress={() => {
-                        setDurationMinutes(minutes);
-                        changed();
-                      }}
-                      selected={durationMinutes === minutes}
-                    />
-                  ))}
+                <View accessibilityRole="radiogroup" style={{ flexDirection: "row", gap: spacing.xs }}>
+                  {DURATION_OPTIONS.map((minutes) => {
+                    const selected = durationMinutes === minutes;
+                    return (
+                      <PressableScale
+                        accessibilityLabel={durationLabel(minutes)}
+                        accessibilityRole="radio"
+                        accessibilityState={{ selected }}
+                        haptic="selection"
+                        key={minutes}
+                        onPress={() => {
+                          setDurationMinutes(minutes);
+                          changed();
+                        }}
+                        scaleTo={0.96}
+                        style={{ flex: 1 }}
+                      >
+                        <View style={{ minHeight: minTouchTarget, alignItems: "center", justifyContent: "center", borderRadius: radii.md, backgroundColor: selected ? colors.text : colors.surfaceHigh }}>
+                          <Text numberOfLines={1} style={{ color: selected ? colors.background : colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>{durationLabel(minutes)}</Text>
+                        </View>
+                      </PressableScale>
+                    );
+                  })}
                 </View>
               </View>
             </>
