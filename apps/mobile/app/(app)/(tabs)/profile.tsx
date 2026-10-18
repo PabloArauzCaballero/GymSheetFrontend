@@ -136,10 +136,12 @@ export default function ProfileScreen() {
           {avatarUrl ? (
             <Image
               accessibilityIgnoresInvertColors
+              cachePolicy="memory-disk"
               contentFit="cover"
+              recyclingKey={avatarUrl}
               source={{ uri: avatarUrl }}
               style={{ width: AVATAR, height: AVATAR, borderRadius: radii.full, backgroundColor: colors.surfaceHigh }}
-              transition={200}
+              transition={160}
             />
           ) : (
             <View

@@ -1401,7 +1401,9 @@ export default function ChatThreadScreen() {
               <View>
                 {otherPhotoUrl ? (
                   <Image
+                    cachePolicy="memory-disk"
                     contentFit="cover"
+                    recyclingKey={otherPhotoUrl}
                     source={{ uri: otherPhotoUrl }}
                     style={{ width: 40, height: 40, borderRadius: radii.full, backgroundColor: colors.surfaceHigh }}
                   />
