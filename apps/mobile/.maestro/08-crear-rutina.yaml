@@ -10,6 +10,8 @@ name: 08 · Crear rutina — asistente por pasos
 - runFlow: login.subflow.yaml
 - tapOn: 'Rutinas, tab.*'
 - runFlow: cerrar-tour.subflow.yaml
+- tapOn:
+    id: 'routines-more'
 - tapOn: 'Crear rutina'
 - extendedWaitUntil:
     visible: 'Paso 1 de 6.*'

@@ -1,8 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 import type { RoutineAssignment } from '@gymsheet/types';
+import { BottomSheet } from '@/components/bottom-sheet';
 import { PressableScale } from '@/components/motion';
-import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+import { Text as AppText } from '@/components/text';
+import {
+  colors,
+  comfortableTouchTarget,
+  fontSizes,
+  iconSizes,
+  metricColors,
+  radii,
+  semibold,
+  spacing,
+} from '@/theme';
 
 /**
  * Weekday initials, indexed the way `Date.getDay()` indexes them — 0 is Sunday.
@@ -33,6 +44,45 @@ const DAY_NAME = [
   'sábado',
 ] as const;
 
+export type WeekSessionKind = 'strength' | 'cardio' | 'assigned';
+
+/**
+ * Una sesión de la semana: el día de una rutina de pesas, el cardio de ese día
+ * o una rutina asignada. `day` va como `Date.getDay()` (0 = domingo).
+ */
+export type WeekSession = {
+  key: string;
+  day: number;
+  kind: WeekSessionKind;
+  title: string;
+  /** «Día A», «Carrera»: lo que distingue la sesión dentro de su rutina. */
+  detail?: string | null;
+};
+
+/**
+ * Un color por tipo para que, con pesas y cardio el mismo día, los dos puntos
+ * se distingan sin leer nada. Nunca volt: el acento es la acción principal.
+ */
+const KIND_STYLE: Record<WeekSessionKind, { ink: string; tint: string; icon: keyof typeof Ionicons.glyphMap; label: string }> = {
+  strength: { ink: metricColors.weight.ink, tint: metricColors.weight.tint, icon: 'barbell-outline', label: 'Pesas' },
+  cardio: { ink: metricColors.volume.ink, tint: metricColors.volume.tint, icon: 'pulse-outline', label: 'Cardio' },
+  assigned: { ink: metricColors.reps.ink, tint: metricColors.reps.tint, icon: 'person-outline', label: 'Asignada' },
+};
+
+/** Las rutinas asignadas como sesiones de la semana. */
+export function assignmentSessions(assignments: readonly RoutineAssignment[]): WeekSession[] {
+  return assignments
+    .filter((item) => item.estado === 'ACTIVE' && item.rutina)
+    .flatMap((item) =>
+      item.diasSemana.map((day) => ({
+        key: `assigned-${item.id}-${day}`,
+        day,
+        kind: 'assigned' as const,
+        title: shortRoutineName(item.rutina?.nombre ?? 'Rutina'),
+      })),
+    );
+}
+
 /**
  * The training week at a glance.
  *
@@ -42,43 +92,41 @@ const DAY_NAME = [
  * turns a catalogue into a plan: the split becomes visible as a shape — push on
  * Monday, pull on Wednesday — and rest days become visible as gaps, which are
  * just as much a part of a programme as the sessions.
+ *
+ * Un punto por sesión (pesas, cardio, asignada): con fuerza y cardio el mismo
+ * día salen dos. Tocar un día con sesiones llama a `onPickDay`; quien pinta la
+ * tira decide si abre la rutina directa o deja elegir entre varias.
  */
 export function WeekPlan({
-  assignments,
-  onPickRoutine,
+  sessions,
+  onPickDay,
 }: {
-  assignments: readonly RoutineAssignment[];
-  onPickRoutine: (routineId: string) => void;
+  sessions: readonly WeekSession[];
+  onPickDay: (day: number) => void;
 }) {
   const today = new Date().getDay();
-
-  const todayPlans = assignments.filter(
-    (item) => item.estado === 'ACTIVE' && item.diasSemana.includes(today),
-  );
+  const todaySessions = sessions.filter((session) => session.day === today);
 
   return (
     <View style={{ gap: spacing.sm }}>
       <View style={{ flexDirection: 'row', gap: spacing.xs }}>
       {DISPLAY_ORDER.map((day) => {
         const initial = DAY_INITIAL[day];
-        const forDay = assignments.filter(
-          (item) => item.estado === 'ACTIVE' && item.diasSemana.includes(day),
-        );
+        const forDay = sessions.filter((session) => session.day === day);
         const isToday = day === today;
-        const first = forDay[0];
 
         return (
           <PressableScale
+            accessibilityHint={forDay.length ? 'Elige qué rutina abrir' : undefined}
             accessibilityLabel={
               forDay.length
-                ? `${DAY_NAME[day]}: ${forDay.map((item) => item.rutina?.nombre ?? 'rutina').join(', ')}`
+                ? `${DAY_NAME[day]}: ${forDay.map((session) => session.title).join(', ')}`
                 : `${DAY_NAME[day]}: descanso`
             }
-            disabled={!first?.rutina}
+            disabled={forDay.length === 0}
+            haptic="selection"
             key={day}
-            onPress={() => {
-              if (first?.rutina) onPickRoutine(first.rutina.id);
-            }}
+            onPress={() => onPickDay(day)}
             style={{
               flex: 1,
               gap: spacing.xs,
@@ -92,6 +140,7 @@ export function WeekPlan({
               borderColor: isToday ? colors.volt : colors.borderSubtle,
               backgroundColor: forDay.length ? colors.surface : colors.surfaceLowest,
             }}
+            testID={`week-day-${day}`}
           >
             <Text
               style={{
@@ -104,24 +153,21 @@ export function WeekPlan({
             </Text>
 
             {forDay.length ? (
-              <>
-                {/* The dot column reads as intensity: three dots is a heavy day
-                    even before you read a single routine name. */}
-                <View style={{ flexDirection: 'row', gap: 2 }}>
-                  {forDay.slice(0, 3).map((item) => (
-                    <View
-                      key={item.id}
-                      style={{
-                        width: 5,
-                        height: 5,
-                        borderRadius: radii.full,
-                        backgroundColor: colors.volt,
-                      }}
-                    />
-                  ))}
-                </View>
-
-              </>
+              // The dot row reads as intensity: three dots is a heavy day even
+              // before you read a single routine name.
+              <View style={{ flexDirection: 'row', gap: 3, height: iconSizes.sm, alignItems: 'center' }}>
+                {forDay.slice(0, 3).map((session) => (
+                  <View
+                    key={session.key}
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: radii.full,
+                      backgroundColor: KIND_STYLE[session.kind].ink,
+                    }}
+                  />
+                ))}
+              </View>
             ) : (
               // Una luna en vez de la palabra: «descanso» a 9 pt no cabía en
               // una columna de un séptimo de pantalla y se partía en «descans /
@@ -142,12 +188,12 @@ export function WeekPlan({
           "what do I do now". Cramming the routine name into a 50px column
           shredded it into unreadable fragments — the name belongs where there
           is room for it, and the columns keep only the shape of the week. */}
-      <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-        {todayPlans.length ? (
+      <Text numberOfLines={2} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+        {todaySessions.length ? (
           <>
             {'Hoy · '}
             <Text style={{ color: colors.text, fontWeight: '700' }}>
-              {todayPlans.map((item) => shortRoutineName(item.rutina?.nombre ?? '')).join(' + ')}
+              {todaySessions.map(sessionLabel).join(' + ')}
             </Text>
           </>
         ) : (
@@ -156,6 +202,87 @@ export function WeekPlan({
       </Text>
     </View>
   );
+}
+
+/**
+ * «Elige qué rutina»: las sesiones de un día. Con pesas y cardio el mismo día
+ * no hay una sola rutina que abrir, así que se pregunta en vez de adivinar.
+ */
+export function WeekDaySheet<S extends WeekSession>({
+  day,
+  sessions,
+  onClose,
+  onPick,
+}: {
+  /** `null` = cerrada. */
+  day: number | null;
+  sessions: readonly S[];
+  onClose: () => void;
+  onPick: (session: S) => void;
+}) {
+  const forDay = day === null ? [] : sessions.filter((session) => session.day === day);
+  const name = day === null ? '' : DAY_NAME[day];
+  return (
+    <BottomSheet
+      onClose={onClose}
+      subtitle="Elige qué rutina abrir."
+      testID="week-day-sheet"
+      title={name ? name[0]?.toUpperCase() + name.slice(1) : ''}
+      visible={day !== null}
+    >
+      <View style={{ gap: spacing.xs }}>
+        {forDay.map((session) => {
+          const kind = KIND_STYLE[session.kind];
+          return (
+            <PressableScale
+              accessibilityLabel={`${kind.label}: ${sessionLabel(session)}`}
+              haptic="selection"
+              key={session.key}
+              onPress={() => {
+                onClose();
+                onPick(session);
+              }}
+              scaleTo={0.98}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.smd,
+                minHeight: comfortableTouchTarget + spacing.sm,
+              }}
+              testID={`week-session-${session.key}`}
+            >
+              <View
+                style={{
+                  width: comfortableTouchTarget - spacing.xs,
+                  height: comfortableTouchTarget - spacing.xs,
+                  borderRadius: radii.md,
+                  borderCurve: 'continuous',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: kind.tint,
+                }}
+              >
+                <Ionicons color={kind.ink} name={kind.icon} size={iconSizes.md} />
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <AppText numberOfLines={1} strong variant="body">
+                  {session.title}
+                </AppText>
+                <AppText numberOfLines={1} tone="muted" variant="caption">
+                  {session.detail ? `${kind.label} · ${session.detail}` : kind.label}
+                </AppText>
+              </View>
+              <Ionicons color={colors.textMuted} name="chevron-forward" size={iconSizes.sm} />
+            </PressableScale>
+          );
+        })}
+      </View>
+    </BottomSheet>
+  );
+}
+
+function sessionLabel(session: WeekSession): string {
+  return session.detail ? `${session.title} · ${session.detail}` : session.title;
 }
 
 /**

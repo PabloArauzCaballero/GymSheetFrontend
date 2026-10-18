@@ -10,6 +10,8 @@ env:
 - runFlow: login-as.subflow.yaml
 - tapOn: 'Rutinas, tab.*'
 - runFlow: cerrar-tour.subflow.yaml
+- tapOn:
+    id: 'routines-more'
 - tapOn: 'Crear rutina'
 - extendedWaitUntil:
     visible: 'Paso 1 de 6.*'
@@ -40,6 +42,8 @@ env:
 - runFlow: cerrar-tour.subflow.yaml
 - tapOn: 'Rutinas, tab.*'
 - runFlow: cerrar-tour.subflow.yaml
+- tapOn:
+    id: 'routines-more'
 - tapOn: 'Crear rutina'
 - extendedWaitUntil:
     visible: 'Tienes un borrador sin terminar'

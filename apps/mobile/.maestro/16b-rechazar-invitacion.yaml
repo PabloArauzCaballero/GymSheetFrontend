@@ -21,7 +21,8 @@ env:
 - openLink: gymsheet:///routines
 - runFlow: cerrar-tour.subflow.yaml
 - extendedWaitUntil:
-    visible: 'Crear rutina'
+    visible:
+      id: 'routines-more'
     timeout: 60000
 - tapOn: 'Pestaña Privadas'
 - tapOn:

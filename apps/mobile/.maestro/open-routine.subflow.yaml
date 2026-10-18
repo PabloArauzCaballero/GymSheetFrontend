@@ -16,7 +16,8 @@ appId: app.gymsheet.mobile
           direction: DOWN
           duration: 200
 - extendedWaitUntil:
-    visible: 'Crear rutina'
+    visible:
+      id: 'routines-more'
     timeout: 60000
 - tapOn: 'Pestaña ${TAB}'
 - tapOn:
