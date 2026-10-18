@@ -25,6 +25,7 @@ import {
   useInteractionCounts,
 } from '@/components/interactions-counts';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import { useReduceMotion } from '@/notifications/use-reduce-motion';
 import { notify } from '@/notifications';
 import { initialsOf } from '@/lib/format';
 import { colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, semibold, spacing } from '@/theme';
@@ -469,9 +470,10 @@ function DirectoryPersonCard({
   messaging: boolean;
   withdrawing: boolean;
 }) {
+  const reduceMotion = useReduceMotion();
   return (
     <Animated.View
-      entering={FadeInDown.duration(320)
+      entering={reduceMotion ? undefined : FadeInDown.duration(320)
         .delay(Math.min(index, 6) * 60)
         .easing(Easing.out(Easing.cubic))}
       style={{
@@ -604,9 +606,10 @@ function DirectoryPersonRow({
       .filter(Boolean)
       .join(' · ') || undefined;
 
+  const reduceMotion = useReduceMotion();
   return (
     <Animated.View
-      entering={FadeInDown.duration(280)
+      entering={reduceMotion ? undefined : FadeInDown.duration(280)
         .delay(Math.min(index, 8) * 40)
         .easing(Easing.out(Easing.cubic))}
     >

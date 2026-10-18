@@ -111,7 +111,10 @@ export function ProgressTrack({
     // Un tramo recién empezado debe verse empezado: sin este mínimo, el
     // 1 % es un pixel y la barra parece vacía justo cuando más importa
     // confirmar que el primer entrenamiento contó.
-    return { width: `${Math.max(value * 100, value > 0.001 ? 3 : 0)}%` };
+    const ratio = Math.max(value, value > 0.001 ? 0.03 : 0);
+    return {
+      transform: [{ scaleX: Math.max(0, Math.min(1, ratio)) }],
+    };
   });
 
   return (
@@ -127,7 +130,16 @@ export function ProgressTrack({
       }}
     >
       <Animated.View
-        style={[{ height: '100%', borderRadius: radii.full, backgroundColor: color }, fillStyle]}
+        style={[
+          {
+            height: '100%',
+            width: '100%',
+            transformOrigin: 'left',
+            borderRadius: radii.full,
+            backgroundColor: color,
+          },
+          fillStyle,
+        ]}
       />
     </View>
   );

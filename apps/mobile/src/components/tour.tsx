@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import Animated, {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -512,6 +513,13 @@ function Spotlight({
     present.value = reduceMotion
       ? 1
       : withTiming(1, { duration: DURATION.standard, easing: PREMIUM_EASING });
+    return () => {
+      cancelAnimation(x);
+      cancelAnimation(y);
+      cancelAnimation(w);
+      cancelAnimation(h);
+      cancelAnimation(present);
+    };
   }, [h, holeH, holeW, holeX, holeY, present, reduceMotion, w, x, y]);
 
   const dim = overlay.scrimStrong;
