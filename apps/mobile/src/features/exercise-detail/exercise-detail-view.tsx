@@ -29,6 +29,7 @@ import {
   type MuscleGroup,
 } from "@/features/exercise-detail/detail-sections";
 import { ExerciseSocial } from "@/features/exercise-detail/exercise-social";
+import { ExerciseCommentsSection } from "@/features/exercise-comments/exercise-comments-section";
 import { accountService, exerciseService, muscleService } from "@/api/services";
 import { colors, fontSizes, radii, semibold, spacing } from "@/theme";
 import { routes } from "@/lib/routes";
@@ -231,6 +232,10 @@ export function ExerciseDetailView({
           <StepsTimeline steps={steps} />
         </Section>
       ) : null}
+
+      {/* Consejos y dudas de otras personas. No en el asistente de rutinas:
+          ahí la ficha solo sirve para decidir si el ejercicio entra en el día. */}
+      {!pick ? <ExerciseCommentsSection exerciseId={data.id} /> : null}
 
       {!pick && others.length > 0 ? (
         <Section index={4} title="Ejercicios similares">

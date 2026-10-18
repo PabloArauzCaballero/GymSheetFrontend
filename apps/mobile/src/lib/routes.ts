@@ -24,6 +24,17 @@ export const routes = {
   exercise(id: string): Href {
     return { pathname: '/ejercicios/[id]', params: { id } };
   },
+  /** Los comentarios de un ejercicio a pantalla completa; `escribir` abre el teclado. */
+  exerciseComments(id: string, options?: { escribir?: boolean; responder?: string }): Href {
+    return {
+      pathname: '/ejercicios/[id]/comentarios',
+      params: {
+        id,
+        ...(options?.escribir ? { escribir: '1' } : {}),
+        ...(options?.responder ? { responder: options.responder } : {}),
+      },
+    };
+  },
   /** Todos los músculos en lista: la alternativa accesible a la figura. */
   muscles(): Href {
     return '/ejercicios/muscles';
