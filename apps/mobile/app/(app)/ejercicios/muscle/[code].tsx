@@ -244,6 +244,7 @@ export default function MuscleScreen() {
           })}
           {exercises.hasNextPage ? (
             <Button
+              icon="chevron-down"
               label="Ver más ejercicios"
               loading={exercises.isFetchingNextPage}
               onPress={() => void exercises.fetchNextPage()}
