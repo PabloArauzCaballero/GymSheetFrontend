@@ -214,7 +214,7 @@ export function useForegroundTick(): number {
   return tick;
 }
 
-/** Milisegundos que quedan del descanso, refrescados 4 veces por segundo mientras corre. */
+/** Milisegundos que quedan del descanso, refrescados una vez por segundo mientras corre. */
 export function useRestRemaining(): { remainingMs: number; totalMs: number; running: boolean; finished: boolean } {
   const endsAt = useWorkoutStore((state) => state.restEndsAt);
   const totalMs = useWorkoutStore((state) => state.restTotalMs);
@@ -224,7 +224,7 @@ export function useRestRemaining(): { remainingMs: number; totalMs: number; runn
   useEffect(() => {
     if (endsAt === null) return;
     setNow(Date.now());
-    const id = setInterval(() => setNow(Date.now()), 250);
+    const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, [endsAt, foreground]);
   const remainingMs = endsAt === null ? 0 : Math.max(0, endsAt - now);

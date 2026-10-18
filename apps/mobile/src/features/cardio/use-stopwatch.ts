@@ -5,16 +5,20 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * sigue exacto aunque la app pase un rato en segundo plano o JavaScript se retrase.
  */
 export function useStopwatch() {
-  const [elapsedMs, setElapsedMs] = useState(0);
+  const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
   const startedAt = useRef<number | null>(null);
   const base = useRef(0);
 
   useEffect(() => {
     if (!running) return undefined;
-    const timer = setInterval(() => {
-      if (startedAt.current !== null) setElapsedMs(base.current + (Date.now() - startedAt.current));
-    }, 250);
+    const tick = () => {
+      if (startedAt.current !== null) {
+        const nextSec = Math.floor((base.current + (Date.now() - startedAt.current)) / 1000);
+        setSeconds((prev) => (prev !== nextSec ? nextSec : prev));
+      }
+    };
+    const timer = setInterval(tick, 500);
     return () => clearInterval(timer);
   }, [running]);
 
@@ -25,22 +29,23 @@ export function useStopwatch() {
   const pause = useCallback(() => {
     if (startedAt.current !== null) base.current += Date.now() - startedAt.current;
     startedAt.current = null;
-    setElapsedMs(base.current);
+    const finalSec = Math.floor(base.current / 1000);
+    setSeconds(finalSec);
     setRunning(false);
   }, []);
   const reset = useCallback(() => {
     startedAt.current = null;
     base.current = 0;
-    setElapsedMs(0);
+    setSeconds(0);
     setRunning(false);
   }, []);
   /** Minutos escritos a mano: sustituyen lo medido (quien olvidó darle a iniciar). */
-  const setManualSeconds = useCallback((seconds: number) => {
+  const setManualSeconds = useCallback((newSec: number) => {
     startedAt.current = null;
-    base.current = seconds * 1000;
-    setElapsedMs(base.current);
+    base.current = newSec * 1000;
+    setSeconds(newSec);
     setRunning(false);
   }, []);
 
-  return { seconds: Math.floor(elapsedMs / 1000), running, start, pause, reset, setManualSeconds };
+  return { seconds, running, start, pause, reset, setManualSeconds };
 }
