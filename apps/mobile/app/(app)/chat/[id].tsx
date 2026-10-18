@@ -21,18 +21,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import * as ImagePicker from 'expo-image-picker';
-import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
-import {
-  getRecordingPermissionsAsync,
-  requestRecordingPermissionsAsync,
-  RecordingPresets,
-  setAudioModeAsync,
-  useAudioPlayer,
-  useAudioPlayerStatus,
-  useAudioRecorder,
-  useAudioRecorderState,
-} from 'expo-audio';
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { ChatComposer } from '@/features/chat/chat-composer';
@@ -41,7 +31,10 @@ import {
   ContactInfoSheet,
   DeleteMessageSheet,
   MessageActionsSheet,
+  disappearingModeLabel,
 } from '@/features/chat/chat-sheets';
+import { useMediaAccessToken } from '@/features/chat/use-media-access-token';
+import { useVoiceNote } from '@/features/chat/use-voice-note';
 import { MediaPreview, type PickedMedia } from '@/features/chat/media-preview';
 import {
   canDeleteForEveryone,
@@ -51,8 +44,8 @@ import {
   type MessageAction,
 } from '@/hooks/chat-message-actions';
 import EmojiPicker from 'rn-emoji-keyboard';
-import type { Message } from '@gymsheet/schemas';
-import { isMessageReadByOther, trainingInviteAcceptedMessage } from '@gymsheet/domain';
+import type { ConversationSummary, Message } from '@gymsheet/schemas';
+import { chatSystemEventMessage, isMessageReadByOther } from '@gymsheet/domain';
 import {
   applyMessageDeleted,
   mergeIncomingMessage,
@@ -82,7 +75,6 @@ import {
 } from '@/hooks/chat-history-recovery';
 import { chatService, moderationService } from '@/api/services';
 import { env } from '@/config/env';
-import { secureStoreTokenProvider } from '@/storage/secure-store';
 import { useChatSocket, type PresenceUpdate } from '@/hooks/use-chat-socket';
 import { BackLink } from '@/components/nav';
 import { AmbientBackground } from '@/components/ambient';
@@ -96,13 +88,7 @@ import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { formatTimeOfDay, initialsOf, presenceLabel } from '@/lib/format';
 import { storyReferenceLabel } from '@/lib/story-reference-presentation';
-import {
-  chatAudioFileForUpload,
-  chatAudioPlayerAccessibilityLabel,
-  chatAudioPlayerSource,
-  isChatAudioDurationValid,
-  isMicrophonePermissionPermanentlyDenied,
-} from '@/lib/chat-audio';
+import { chatAudioPlayerAccessibilityLabel, chatAudioPlayerSource } from '@/lib/chat-audio';
 import {
   bubbleInkFaint,
   bubbleInkMuted,
@@ -154,11 +140,20 @@ const ChatVideo = memo(function ChatVideo({ uri, token }: { uri: string; token: 
   return <VideoView nativeControls player={player} style={{ width: 240, height: 220, borderRadius: radii.md }} />;
 });
 
-const ChatAudioMessage = memo(function ChatAudioMessage({ uri, token, mine }: { uri: string; token: string | null; mine: boolean }) {
+const ChatAudioMessage = memo(function ChatAudioMessage({ uri, token, mine, onLoadError }: {
+  uri: string;
+  token: string | null;
+  mine: boolean;
+  /** No cargó: casi siempre el token de 15 min venció; la pantalla lo renueva y el reproductor se rehace. */
+  onLoadError: () => void;
+}) {
   const source = useMemo(() => (token ? chatAudioPlayerSource(uri, env.apiUrl, token) : null), [token, uri]);
   const player = useAudioPlayer(source, { updateInterval: 250 });
   const status = useAudioPlayerStatus(player);
   const unavailable = Boolean(status.error);
+  useEffect(() => {
+    if (status.error) onLoadError();
+  }, [onLoadError, status.error]);
   const time = status.currentTime > 0 ? status.currentTime : status.duration;
   // En la burbuja propia el fondo ya es el acento: el control va en tinta oscura.
   const ink = mine ? colors.background : colors.volt;
@@ -194,17 +189,6 @@ const ChatAudioMessage = memo(function ChatAudioMessage({ uri, token, mine }: { 
     </View>
   );
 });
-
-/** El micrófono que no responde (sesión de audio ocupada) no debe dejar el redactor colgado. */
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('El micrófono no respondió. Inténtalo de nuevo.')), ms);
-    promise.then(
-      (value) => { clearTimeout(timer); resolve(value); },
-      (error: unknown) => { clearTimeout(timer); reject(error instanceof Error ? error : new Error(String(error))); },
-    );
-  });
-}
 
 function mapsUrlFor(lat: number, lng: number): string {
   return `https://maps.google.com/?q=${lat},${lng}`;
@@ -294,18 +278,22 @@ export default function ChatThreadScreen() {
   const [actionMessage, setActionMessage] = useState<Message | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Message | null>(null);
   const [hiddenMessageIds, setHiddenMessageIds] = useState<Set<string>>(() => new Set());
-  /** Se soltó el micrófono antes de que la grabación terminara de arrancar. */
-  const voiceStopRequestRef = useRef<boolean | null>(null);
   const router = useRouter();
   const [focusedStoryReplyMessageId, setFocusedStoryReplyMessageId] = useState<string | null>(null);
   const [storyReplyNotFound, setStoryReplyNotFound] = useState(false);
   const storyReplySearchRef = useRef<{ id: string; pages: number; before: string | null } | null>(null);
-  const [recordingAudio, setRecordingAudio] = useState(false);
-  const recordingWasActiveRef = useRef(false);
-  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-  const audioRecorderState = useAudioRecorderState(audioRecorder, 250);
+  /** El límite de 2 minutos para la nota de voz y la envía; se asigna más abajo. */
+  const voiceLimitRef = useRef<() => void>(() => undefined);
+  const voice = useVoiceNote({ onLimitReached: () => voiceLimitRef.current() });
+  const finishingVoiceRef = useRef(false);
+  const { token: mediaAccessToken, onMediaError } = useMediaAccessToken();
+  /** Pide al redactor enfocar el campo (abrir el teclado) — al entrar a editar. */
+  const [composerFocusRequest, setComposerFocusRequest] = useState(0);
+  /** Lo que se hace cuando la hoja de acciones termina de irse (iOS no presenta dos hojas a la vez). */
+  const afterActionsRef = useRef<(() => void) | null>(null);
+  /** Reloj para esconder los mensajes temporales que caducan con el chat abierto. */
+  const [expiryClock, setExpiryClock] = useState(() => Date.now());
   const [viewerUri, setViewerUri] = useState<string | null>(null);
-  const [mediaAccessToken, setMediaAccessToken] = useState<string | null>(null);
   // Vista única: la URL real solo llega una vez del backend — se guarda acá
   // para poder volver a mostrarla dentro de esta misma sesión de pantalla.
   const [revealedMedia, setRevealedMedia] = useState<Record<string, RevealedMedia>>({});
@@ -359,13 +347,6 @@ export default function ChatThreadScreen() {
     ));
   }
 
-  useEffect(() => {
-    let mounted = true;
-    void secureStoreTokenProvider.getAccessToken().then((token) => {
-      if (mounted) setMediaAccessToken(token);
-    });
-    return () => { mounted = false; };
-  }, [conversationId]);
   const otherName = otherConversation?.otherUserName;
   const otherPhotoUrl = otherConversation?.otherUserPhotoUrl ?? null;
   const otherUserId = otherConversation?.otherUserId;
@@ -376,6 +357,8 @@ export default function ChatThreadScreen() {
     historyAccessPending,
   );
   const displayName = otherConversation?.nickname ?? otherName;
+  /** `undefined` mientras la lista de conversaciones carga; un servidor viejo sin el campo cuenta como desactivado. */
+  const disappearingSeconds = conversations.data ? (otherConversation?.disappearingSeconds ?? null) : undefined;
 
   const setNickname = useMutation({
     mutationFn: (nickname: string | null) => chatService.setNickname(conversationId, nickname),
@@ -388,6 +371,25 @@ export default function ChatThreadScreen() {
     mutationFn: ({ messageId, reason }: { messageId: string; reason: 'ACOSO' | 'SPAM' | 'OTRO' }) =>
       moderationService.report('CHAT_MESSAGE', messageId, reason),
     onSuccess: () => notify.success('Gracias por avisar. Este chat ya no estará disponible.'),
+    onError: (error: Error) => notify.error(error.message),
+  });
+  /** El modo de mensajes temporales en la lista de conversaciones (de ahí lo leen la cabecera y la ficha). */
+  function patchDisappearing(seconds: number | null) {
+    queryClient.setQueryData<ConversationSummary[]>(['chat', 'conversations'], (current) =>
+      current?.map((conversation) => conversation.conversationId === conversationId
+        ? { ...conversation, disappearingSeconds: seconds }
+        : conversation),
+    );
+  }
+  const setDisappearing = useMutation({
+    mutationFn: (seconds: number | null) => chatService.setDisappearing(conversationId, seconds),
+    onSuccess: (result) => {
+      patchDisappearing(result.disappearingSeconds);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // El aviso llega por el socket; si el socket no estaba, el historial lo trae.
+      void queryClient.invalidateQueries({ queryKey: ['chat', 'messages', conversationId] });
+      void queryClient.invalidateQueries({ queryKey: ['chat', 'conversations'] });
+    },
     onError: (error: Error) => notify.error(error.message),
   });
   const updateReadReceiptSettings = useMutation({
@@ -426,6 +428,10 @@ export default function ChatThreadScreen() {
     (incoming) => {
       if (incoming.conversationId !== conversationId || unavailableConversationRef.current === conversationId) return;
       setLiveMessages((current) => mergeIncomingMessage(current, incoming, deletedMessageIdsRef.current));
+      if (incoming.type === 'system' && incoming.systemEvent.kind === 'DISAPPEARING_MESSAGES_CHANGED') {
+        // El otro cambió los mensajes temporales: la cabecera y la ficha lo reflejan al momento.
+        patchDisappearing(incoming.systemEvent.seconds);
+      }
     },
     (presence) => {
       if (presence.userId !== otherUserId) return;
@@ -639,9 +645,18 @@ export default function ChatThreadScreen() {
   }, [conversationId, conversationRevoked, deletedMessageIds, history.data, history.error, historyAccessPending, liveMessages, olderMessages]);
   /** La lista se pinta invertida, así que los datos van del más nuevo al más viejo. */
   const timeline = useMemo(
-    () => [...messages].reverse().filter((message) => !hiddenMessageIds.has(message.id)),
-    [hiddenMessageIds, messages],
+    () => [...messages].reverse().filter((message) =>
+      !hiddenMessageIds.has(message.id) &&
+      // Un mensaje temporal que caduca con el chat abierto desaparece aquí también.
+      !(message.expiresAt && Date.parse(message.expiresAt) <= expiryClock)),
+    [expiryClock, hiddenMessageIds, messages],
   );
+  const hasTemporaryMessages = messages.some((message) => Boolean(message.expiresAt));
+  useEffect(() => {
+    if (!hasTemporaryMessages) return;
+    const tick = setInterval(() => setExpiryClock(Date.now()), 30_000);
+    return () => clearInterval(tick);
+  }, [hasTemporaryMessages]);
   const historyLoaded = !history.isPending;
   useEffect(() => {
     if (historyLoaded && newestAtOpen.current === null) {
@@ -802,18 +817,33 @@ export default function ChatThreadScreen() {
     onError: (error: Error) => notify.error(error.message),
   });
 
+  /**
+   * Lo siguiente a la hoja de acciones (enfocar el campo para editar, abrir la
+   * hoja de eliminar, el diálogo de reportar) se hace cuando la hoja ya se fue:
+   * en un iPhone real un temporizador fijo no siempre basta y iOS no presenta
+   * ni enfoca nada mientras otro Modal se está cerrando. `onDismiss` es de iOS;
+   * el temporizador queda de respaldo y lo que se ejecuta, se ejecuta una vez.
+   */
+  function afterActionsSheet(next: () => void) {
+    afterActionsRef.current = next;
+    setTimeout(runAfterActionsSheet, Platform.OS === 'ios' ? 700 : 350);
+  }
+  function runAfterActionsSheet() {
+    const next = afterActionsRef.current;
+    afterActionsRef.current = null;
+    next?.();
+  }
+
   function handleMessageAction(message: Message, action: MessageAction) {
     setActionMessage(null);
     if (action === 'copy') {
       void Clipboard.setStringAsync(message.body ?? '').then(() => notify.success('Mensaje copiado.'));
     } else if (action === 'edit') {
-      beginMessageEdit(message);
+      if (beginMessageEdit(message)) afterActionsSheet(() => setComposerFocusRequest((count) => count + 1));
     } else if (action === 'delete') {
-      // La hoja de acciones se cierra antes de abrir la de eliminar: dos
-      // modales a la vez en iOS dejan el segundo sin presentar.
-      setTimeout(() => setDeleteTarget(message), 350);
+      afterActionsSheet(() => setDeleteTarget(message));
     } else {
-      setTimeout(() => Alert.alert(
+      afterActionsSheet(() => Alert.alert(
         'Reportar mensaje',
         'Elige el motivo. Al reportarlo, este chat se cerrará para ambos.',
         [
@@ -822,7 +852,7 @@ export default function ChatThreadScreen() {
           { text: 'Otro', onPress: () => reportMessage.mutate({ messageId: message.id, reason: 'OTRO' }) },
           { text: 'Cancelar', style: 'cancel' },
         ],
-      ), 350);
+      ));
     }
   }
 
@@ -842,113 +872,57 @@ export default function ChatThreadScreen() {
     onError: (error: Error) => notify.error(error.message),
   });
 
-  /** Sube la nota de voz ya grabada, o la descarta si se canceló. */
-  const finishAudioRecording = useCallback(async (send: boolean) => {
-    setRecordingAudio(false);
+  /** Mantener pulsado el micrófono: pide permiso la primera vez y empieza a grabar. */
+  async function startVoiceNote() {
+    if (!canWrite || sending || sendingMedia || voice.recording) return;
     try {
-      const recorderStatus = await audioRecorder.getStatus();
-      const durationMs = Math.max(audioRecorder.currentTime * 1_000, recorderStatus.durationMillis);
-      if (audioRecorder.isRecording) await audioRecorder.stop();
-      const uri = audioRecorder.uri;
-      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
-      if (!send) return;
-      if (!isChatAudioDurationValid(durationMs)) {
+      const result = await voice.start();
+      if (result === 'permission-granted') {
+        notify.info('Listo. Mantén pulsado el micrófono para grabar.');
+      } else if (result === 'permission-blocked') {
+        Alert.alert(
+          'Permite el micrófono en Ajustes',
+          'Para grabar notas de voz, activa el micrófono para REPP en los ajustes del dispositivo.',
+          [
+            { text: 'Ahora no', style: 'cancel' },
+            { text: 'Abrir Ajustes', onPress: () => void Linking.openSettings() },
+          ],
+        );
+      } else if (result === 'permission-denied') {
+        notify.error('Sin permiso de micrófono no se pueden grabar notas de voz.');
+      }
+    } catch (error: unknown) {
+      notify.error(error instanceof Error ? error.message : 'No se pudo iniciar la grabación.');
+    }
+  }
+
+  /**
+   * Soltar, enviar, papelera o el límite de 2 minutos: para la grabación (si
+   * todavía estaba arrancando, espera a que arranque), espera a que el archivo
+   * quede cerrado y lo sube. Una sola vez aunque lleguen dos órdenes juntas.
+   */
+  async function finishVoiceNote(send: boolean) {
+    if (finishingVoiceRef.current) return;
+    finishingVoiceRef.current = true;
+    if (send) setSendingMedia(true);
+    try {
+      const result = await voice.stop(send);
+      if (result.kind === 'too-short') {
         notify.info('Mantén pulsado el micrófono al menos un segundo para grabar.');
         return;
       }
-      if (!uri) {
-        notify.error('No se pudo guardar la grabación. Inténtalo de nuevo.');
-        return;
-      }
+      if (result.kind !== 'ready') return;
       if (!conversationId || !canWrite || unavailableConversationRef.current === conversationId) return;
-
-      setSendingMedia(true);
-      const sent = await chatService.sendMediaMessage(
-        conversationId,
-        chatAudioFileForUpload(uri),
-        { type: 'audio', viewOnce: false },
-      );
+      const sent = await chatService.sendMediaMessage(conversationId, result.file, { type: 'audio', viewOnce: false });
       showOwnMessage(sent);
     } catch (error: unknown) {
       notify.error(error instanceof Error ? error.message : 'No se pudo enviar el mensaje de voz.');
     } finally {
       setSendingMedia(false);
-      recordingWasActiveRef.current = false;
-      try {
-        await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
-      } catch {
-        // Audio mode cleanup should not block text chat if the device audio session resets.
-      }
-    }
-  }, [audioRecorder, canWrite, conversationId, showOwnMessage]);
-
-  // El grabador se detiene solo al llegar a los 2 minutos: se envía lo grabado.
-  useEffect(() => {
-    if (audioRecorderState.isRecording) {
-      recordingWasActiveRef.current = true;
-      return;
-    }
-    if (!recordingAudio || !recordingWasActiveRef.current) return;
-    recordingWasActiveRef.current = false;
-    void finishAudioRecording(true);
-  }, [audioRecorderState.isRecording, finishAudioRecording, recordingAudio]);
-
-  /** Mantener pulsado el micrófono: pide permiso la primera vez y empieza a grabar. */
-  async function startVoiceNote() {
-    if (!canWrite || sending || sendingMedia || recordingAudio) return;
-    voiceStopRequestRef.current = null;
-    try {
-      const existing = await getRecordingPermissionsAsync();
-      if (!existing.granted) {
-        // Con el diálogo del sistema delante el dedo ya se soltó: se pide el
-        // permiso y la próxima pulsación ya graba.
-        const permission = existing.canAskAgain ? await requestRecordingPermissionsAsync() : existing;
-        if (permission.granted) {
-          notify.info('Listo. Mantén pulsado el micrófono para grabar.');
-        } else if (isMicrophonePermissionPermanentlyDenied(permission)) {
-          Alert.alert(
-            'Permite el micrófono en Ajustes',
-            'Para grabar notas de voz, activa el micrófono para REPP en los ajustes del dispositivo.',
-            [
-              { text: 'Ahora no', style: 'cancel' },
-              { text: 'Abrir Ajustes', onPress: () => void Linking.openSettings() },
-            ],
-          );
-        } else {
-          notify.error('Sin permiso de micrófono no se pueden grabar notas de voz.');
-        }
-        return;
-      }
-
-      await withTimeout((async () => {
-        await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
-        await audioRecorder.prepareToRecordAsync();
-      })(), 5_000);
-      audioRecorder.record({ forDuration: 119 });
-      setRecordingAudio(true);
-      const pendingStop = voiceStopRequestRef.current;
-      if (pendingStop !== null) void finishAudioRecording(pendingStop);
-    } catch (error: unknown) {
-      setRecordingAudio(false);
-      recordingWasActiveRef.current = false;
-      try {
-        await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
-      } catch {
-        // Keep the text composer available even if audio session cleanup fails.
-      }
-      voiceStopRequestRef.current = null;
-      notify.error(error instanceof Error ? error.message : 'No se pudo iniciar la grabación.');
+      finishingVoiceRef.current = false;
     }
   }
-
-  function stopVoiceNote(send: boolean) {
-    if (!recordingAudio) {
-      // Todavía arrancando: se resuelve en cuanto empiece a grabar.
-      voiceStopRequestRef.current = send;
-      return;
-    }
-    void finishAudioRecording(send);
-  }
+  voiceLimitRef.current = () => void finishVoiceNote(true);
 
   function pickedFrom(asset: ImagePicker.ImagePickerAsset): PickedMedia {
     const isVideo = asset.type === 'video' || (asset.mimeType ?? '').startsWith('video/');
@@ -1015,27 +989,10 @@ export default function ChatThreadScreen() {
     }
   }
 
-  async function handleShareLocation() {
+  /** «Ubicación»: una pantalla con «mi ubicación actual» y el mapa para elegir un lugar. */
+  function openPlacePicker() {
     if (!conversationId || !canWrite) return;
-    const permission = await Location.requestForegroundPermissionsAsync();
-    if (!permission.granted) {
-      notify.error('Se necesita acceso a tu ubicación para compartirla.');
-      return;
-    }
-    setSendingMedia(true);
-    try {
-      const position = await Location.getCurrentPositionAsync({});
-      if (!canWrite || unavailableConversationRef.current === conversationId) return;
-      const sent = await chatService.sendLocationMessage(conversationId, {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-      });
-      showOwnMessage(sent);
-    } catch {
-      notify.error('No se pudo obtener tu ubicación.');
-    } finally {
-      setSendingMedia(false);
-    }
+    router.push({ pathname: '/chat/lugar', params: { conversationId } });
   }
 
   async function handleSend() {
@@ -1060,10 +1017,32 @@ export default function ChatThreadScreen() {
     }
   }
 
-  function beginMessageEdit(message: Message) {
-    if (!currentUserId || !canWrite || !canEditMessage(message, currentUserId)) return;
+  function beginMessageEdit(message: Message): boolean {
+    if (!currentUserId || !canWrite) return false;
+    if (!canEditMessage(message, currentUserId)) {
+      notify.info('Solo puedes editar tus mensajes de texto durante 15 minutos.');
+      return false;
+    }
     setEditingMessageId(message.id);
     setDraft(message.body ?? '');
+    return true;
+  }
+
+  /** Pinta una versión del mensaje en las tres fuentes del hilo (páginas viejas, historial y socket). */
+  function applyLocalMessageVersion(targetConversationId: string, version: Message) {
+    updatedMessagesRef.current.set(version.id, version);
+    setLiveMessages((current) => applyMessageUpdated(current, version, targetConversationId, deletedMessageIdsRef.current));
+    setOlderMessages((current) => applyMessageUpdated(current, version, targetConversationId, deletedMessageIdsRef.current));
+    void patchChatMessageCache({
+      queryClient,
+      conversationId: targetConversationId,
+      updated: version,
+      isCurrent: () =>
+        currentConversationRef.current === targetConversationId &&
+        unavailableConversationRef.current !== targetConversationId &&
+        !deletedMessageIdsRef.current.has(version.id),
+      getDeletedMessageIds: () => deletedMessageIdsRef.current,
+    });
   }
 
   function cancelMessageEdit() {
@@ -1077,11 +1056,25 @@ export default function ChatThreadScreen() {
     const targetMessageId = editingMessageId;
     if (!body || !targetConversationId || !targetMessageId || !canWrite || !currentUserId) return;
     const original = messages.find((message) => message.id === targetMessageId);
-    if (!original || !canEditMessage(original, currentUserId) || deletedMessageIdsRef.current.has(targetMessageId)) {
+    if (!original || original.type === 'system' || deletedMessageIdsRef.current.has(targetMessageId)) {
+      cancelMessageEdit();
+      return;
+    }
+    if (!canEditMessage(original, currentUserId)) {
+      // Antes se cancelaba en silencio: el texto escrito desaparecía sin explicación.
+      notify.info('Pasaron los 15 minutos: este mensaje ya no se puede editar.');
+      cancelMessageEdit();
+      return;
+    }
+    if (body === original.body) {
       cancelMessageEdit();
       return;
     }
 
+    // Como WhatsApp: el texto nuevo se ve al instante y vuelve atrás si el servidor lo rechaza.
+    applyLocalMessageVersion(targetConversationId, { ...original, body, editedAt: new Date().toISOString() });
+    setEditingMessageId(null);
+    setDraft('');
     setSavingEdit(true);
     try {
       const updated = await chatService.editMessage(targetConversationId, targetMessageId, body);
@@ -1090,23 +1083,14 @@ export default function ChatThreadScreen() {
         unavailableConversationRef.current === targetConversationId ||
         deletedMessageIdsRef.current.has(targetMessageId)
       ) return;
-      updatedMessagesRef.current.set(updated.id, updated);
-      setLiveMessages((current) => applyMessageUpdated(current, updated, targetConversationId, deletedMessageIdsRef.current));
-      setOlderMessages((current) => applyMessageUpdated(current, updated, targetConversationId, deletedMessageIdsRef.current));
-      void patchChatMessageCache({
-        queryClient,
-        conversationId: targetConversationId,
-        updated,
-        isCurrent: () =>
-          currentConversationRef.current === targetConversationId &&
-          unavailableConversationRef.current !== targetConversationId &&
-          !deletedMessageIdsRef.current.has(targetMessageId),
-        getDeletedMessageIds: () => deletedMessageIdsRef.current,
-      });
-      setEditingMessageId(null);
-      setDraft('');
+      applyLocalMessageVersion(targetConversationId, updated);
       void queryClient.invalidateQueries({ queryKey: ['chat', 'conversations'] });
     } catch (error: unknown) {
+      if (currentConversationRef.current === targetConversationId) {
+        applyLocalMessageVersion(targetConversationId, original);
+        setEditingMessageId(targetMessageId);
+        setDraft(body);
+      }
       notify.error(error instanceof Error ? error.message : 'No se pudo editar el mensaje.');
     } finally {
       setSavingEdit(false);
@@ -1129,7 +1113,7 @@ export default function ChatThreadScreen() {
 
     if (message.type === 'audio') {
       return message.mediaUrl
-        ? <ChatAudioMessage mine={mine} token={mediaAccessToken} uri={message.mediaUrl} />
+        ? <ChatAudioMessage mine={mine} onLoadError={onMediaError} token={mediaAccessToken} uri={message.mediaUrl} />
         : <Text style={{ color: mutedOnBubble, fontSize: fontSizes.sm }}>Este audio ya no está disponible.</Text>;
     }
 
@@ -1142,8 +1126,10 @@ export default function ChatThreadScreen() {
           style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
         >
           <Ionicons color={textColor} name="location" size={iconSizes.md} />
-          <View>
-            <Text style={{ color: textColor, fontSize: fontSizes.sm, fontWeight: semibold }}>Ubicación compartida</Text>
+          <View style={{ flexShrink: 1 }}>
+            <Text numberOfLines={2} style={{ color: textColor, fontSize: fontSizes.sm, fontWeight: semibold }}>
+              {message.locationLabel ?? 'Ubicación compartida'}
+            </Text>
             <Text style={{ color: mutedOnBubble, fontSize: fontSizes.xs }}>Toca para abrir en el mapa</Text>
           </View>
         </PressableScale>
@@ -1209,6 +1195,7 @@ export default function ChatThreadScreen() {
           <Image
             cachePolicy="memory-disk"
             contentFit="cover"
+            onError={onMediaError}
             priority="normal"
             recyclingKey={url}
             source={{
@@ -1233,21 +1220,26 @@ export default function ChatThreadScreen() {
 
   function renderMessage({ item, index }: ListRenderItemInfo<Message>) {
     if (item.type === 'system') {
-      const line = trainingInviteAcceptedMessage(item.systemEvent);
+      const line = chatSystemEventMessage(item.systemEvent, currentUserId, displayName);
+      const timer = item.systemEvent.kind === 'DISAPPEARING_MESSAGES_CHANGED';
       return (
         <Animated.View
           style={{
             alignSelf: 'stretch',
+            flexDirection: 'row',
+            justifyContent: 'center',
             alignItems: 'center',
+            gap: spacing.xs,
             marginVertical: spacing.sm,
             paddingHorizontal: spacing.md,
           }}
         >
+          {timer ? <Ionicons color={colors.textMuted} name="timer-outline" size={iconSizes.sm} /> : null}
           <Text
             accessibilityLabel={line}
             accessibilityLiveRegion="polite"
             accessibilityRole="text"
-            style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: fontSizes.xs * 1.5, textAlign: 'center' }}
+            style={{ flexShrink: 1, color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: fontSizes.xs * 1.5, textAlign: 'center' }}
           >
             {line}
           </Text>
@@ -1310,6 +1302,14 @@ export default function ChatThreadScreen() {
         >
           {renderMessageContent(item, mine, openActions)}
           <View style={{ flexDirection: 'row', alignSelf: 'flex-end', alignItems: 'center', gap: 3, marginTop: 2 }}>
+            {item.expiresAt && !tombstone ? (
+              <Ionicons
+                accessibilityLabel="Mensaje temporal"
+                color={mine ? bubbleInkFaint : colors.textMuted}
+                name="timer-outline"
+                size={12}
+              />
+            ) : null}
             {item.editedAt && !tombstone ? (
               <Text accessibilityLabel="Mensaje editado" style={{ color: mine && !tombstone ? bubbleInkFaint : colors.textMuted, fontSize: fontSizes.micro }}>
                 Editado
@@ -1423,6 +1423,27 @@ export default function ChatThreadScreen() {
                     </Text>
                   </View>
                 )}
+                {disappearingSeconds ? (
+                  <View
+                    accessibilityLabel={`Mensajes temporales: ${disappearingModeLabel(disappearingSeconds)}`}
+                    style={{
+                      position: 'absolute',
+                      bottom: -2,
+                      left: -2,
+                      width: 18,
+                      height: 18,
+                      borderRadius: radii.full,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: colors.surfaceHigh,
+                      borderWidth: 2,
+                      borderColor: colors.background,
+                    }}
+                    testID="chat-header-disappearing"
+                  >
+                    <Ionicons color={colors.text} name="timer-outline" size={11} />
+                  </View>
+                ) : null}
                 {otherOnline ? (
                   <View
                     style={{
@@ -1453,6 +1474,7 @@ export default function ChatThreadScreen() {
                 </Text>
                 <Text numberOfLines={1} style={{ color: otherOnline ? colors.success : colors.textMuted, fontSize: fontSizes.xs }}>
                   {presenceLabel(otherOnline, otherLastSeenAt)}
+                  {disappearingSeconds ? ` · Temporales: ${disappearingModeLabel(disappearingSeconds)}` : ''}
                 </Text>
               </View>
             </PressableScale>
@@ -1551,10 +1573,11 @@ export default function ChatThreadScreen() {
                 onOpenCamera={() => void pickFromCamera()}
                 onOpenEmoji={() => setEmojiOpen(true)}
                 onSend={() => void (editingMessageId ? handleSaveMessageEdit() : handleSend())}
+                focusRequest={composerFocusRequest}
                 onVoiceStart={() => void startVoiceNote()}
-                onVoiceStop={stopVoiceNote}
-                recording={recordingAudio}
-                recordingMillis={audioRecorderState.durationMillis}
+                onVoiceStop={(send) => void finishVoiceNote(send)}
+                recording={voice.recording}
+                recordingMillis={voice.elapsedMs}
                 sending={sending || savingEdit}
               />
             </View>
@@ -1611,6 +1634,7 @@ export default function ChatThreadScreen() {
             <Image
               cachePolicy="memory-disk"
               contentFit="contain"
+              onError={onMediaError}
               priority="high"
               recyclingKey={visibleViewerUri}
               source={{
@@ -1631,7 +1655,7 @@ export default function ChatThreadScreen() {
         onCamera={() => void pickFromCamera()}
         onClose={() => setAttachOpen(false)}
         onGallery={() => void pickFromGallery()}
-        onLocation={() => void handleShareLocation()}
+        onLocation={openPlacePicker}
         onTrainTogether={otherConversation?.systemKind === null && otherUserId ? () => setInviteModalOpen(true) : null}
         visible={attachOpen}
       />
@@ -1650,11 +1674,12 @@ export default function ChatThreadScreen() {
           : []}
         onAction={(action) => actionMessage && handleMessageAction(actionMessage, action)}
         onClose={() => setActionMessage(null)}
+        onDismiss={runAfterActionsSheet}
         preview={actionMessage
           ? isTombstone(actionMessage, deletedMessageIds)
             ? tombstoneLabel(actionMessage.senderId === currentUserId)
             : actionMessage.body ?? (actionMessage.type === 'audio' ? 'Nota de voz'
-              : actionMessage.type === 'location' ? 'Ubicación'
+              : actionMessage.type === 'location' ? (actionMessage.locationLabel ?? 'Ubicación')
                 : actionMessage.type === 'video' ? 'Video' : 'Foto')
           : ''}
         visible={Boolean(actionMessage)}
@@ -1715,6 +1740,11 @@ export default function ChatThreadScreen() {
         presence={presenceLabel(otherOnline, otherLastSeenAt)}
         receiptsEnabled={readReceiptSettings.data?.enabled}
         receiptsPending={updateReadReceiptSettings.isPending}
+        disappearingPending={setDisappearing.isPending}
+        disappearingSeconds={disappearingSeconds}
+        onChangeDisappearing={canWrite && otherConversation?.systemKind === null
+          ? (seconds) => setDisappearing.mutate(seconds)
+          : null}
         savingNickname={setNickname.isPending}
         visible={contactOpen}
       />

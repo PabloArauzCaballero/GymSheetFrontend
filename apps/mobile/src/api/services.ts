@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { chatMessageSchema, readReceiptSettingsSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema, musicPlaylistSchema, musicPlaylistPageSchema } from '@gymsheet/schemas';
+import { chatMessageSchema, readReceiptSettingsSchema, setDisappearingMessagesResponseSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema, musicPlaylistSchema, musicPlaylistPageSchema } from '@gymsheet/schemas';
 import type { RoutineVisibility } from '@gymsheet/types';
 import type { MusicVisibility, SocialMapBounds, SocialMapCoordinates } from '@gymsheet/schemas';
 import {
@@ -738,10 +738,22 @@ export const chatService = {
       method: 'POST',
       body: { type: 'text', body },
     }),
-  sendLocationMessage: (conversationId: string, location: { lat: number; lng: number }) =>
+  /** `label` es el nombre del lugar elegido en el mapa; sin él, es «mi ubicación actual». */
+  sendLocationMessage: (conversationId: string, location: { lat: number; lng: number; label?: string }) =>
     apiClient.request(`/me/conversations/${conversationId}/messages`, messageSchema, {
       method: 'POST',
-      body: { type: 'location', locationLat: location.lat, locationLng: location.lng },
+      body: {
+        type: 'location',
+        locationLat: location.lat,
+        locationLng: location.lng,
+        ...(location.label ? { locationLabel: location.label } : {}),
+      },
+    }),
+  /** Mensajes temporales de la conversación: `null` los desactiva; si no, 24 h, 7 días o 90 días en segundos. */
+  setDisappearing: (conversationId: string, seconds: number | null) =>
+    apiClient.request(`/me/conversations/${conversationId}/disappearing`, setDisappearingMessagesResponseSchema, {
+      method: 'PUT',
+      body: { seconds },
     }),
   /** `file.mimeType` decide si el backend lo trata como imagen o video. */
   sendMediaMessage: async (

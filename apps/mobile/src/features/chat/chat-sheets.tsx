@@ -5,9 +5,11 @@ import { ActivityIndicator, Switch, Text, TextInput, View } from 'react-native';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { PressableScale } from '@/components/motion';
 import { Button } from '@/components/ui';
+import { disappearingDurationLabel } from '@gymsheet/domain';
+import { disappearingDurations } from '@gymsheet/schemas';
 import type { MessageAction } from '@/hooks/chat-message-actions';
 import { initialsOf } from '@/lib/format';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -87,7 +89,7 @@ export function AttachSheet({
       <View style={{ gap: spacing.sm }}>
         <SheetRow icon="images-outline" label="Fotos y videos" onPress={pick(onGallery)} testID="chat-attach-gallery" />
         <SheetRow icon="camera-outline" label="Cámara" onPress={pick(onCamera)} testID="chat-attach-camera" />
-        <SheetRow icon="location-outline" label="Ubicación" hint="Envía dónde estás ahora" onPress={pick(onLocation)} />
+        <SheetRow icon="location-outline" label="Ubicación" hint="Dónde estás ahora o un lugar del mapa" onPress={pick(onLocation)} testID="chat-attach-location" />
         {onTrainTogether ? (
           <SheetRow icon="barbell-outline" label="Entrenemos juntos" hint="Propón día, hora y lugar" onPress={pick(onTrainTogether)} />
         ) : null}
@@ -110,15 +112,18 @@ export function MessageActionsSheet({
   actions,
   onClose,
   onAction,
+  onDismiss,
 }: {
   visible: boolean;
   preview: string;
   actions: MessageAction[];
   onClose: () => void;
   onAction: (action: MessageAction) => void;
+  /** iOS: la hoja terminó de irse — el momento seguro para enfocar el campo o abrir otra hoja. */
+  onDismiss?: () => void;
 }) {
   return (
-    <BottomSheet onClose={onClose} title="Mensaje" subtitle={preview} visible={visible}>
+    <BottomSheet onClose={onClose} onDismiss={onDismiss} title="Mensaje" subtitle={preview} visible={visible}>
       <View style={{ gap: spacing.sm }}>
         {actions.map((action) => {
           const row = ACTION_ROWS[action];
@@ -207,6 +212,9 @@ export function ContactInfoSheet({
   onChooseChats,
   onTrainTogether,
   onOpenProfile,
+  disappearingSeconds,
+  disappearingPending,
+  onChangeDisappearing,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -225,10 +233,17 @@ export function ContactInfoSheet({
   onChooseChats: () => void;
   onTrainTogether: (() => void) | null;
   onOpenProfile: (() => void) | null;
+  /** Mensajes temporales vigentes (segundos) o `null`; `undefined` mientras carga. */
+  disappearingSeconds: number | null | undefined;
+  disappearingPending: boolean;
+  /** `null` cuando no se puede cambiar (chat de solo lectura). */
+  onChangeDisappearing: ((seconds: number | null) => void) | null;
 }) {
   const [draft, setDraft] = useState(nickname ?? '');
+  const [timerOpen, setTimerOpen] = useState(false);
   useEffect(() => {
     if (visible) setDraft(nickname ?? '');
+    if (!visible) setTimerOpen(false);
   }, [nickname, visible]);
   const trimmed = draft.trim();
   const nicknameChanged = trimmed !== (nickname ?? '');
@@ -300,6 +315,14 @@ export function ContactInfoSheet({
         </View>
       </View>
 
+      <DisappearingMessagesRows
+        expanded={timerOpen}
+        onChange={onChangeDisappearing}
+        onToggle={() => setTimerOpen((open) => !open)}
+        pending={disappearingPending}
+        seconds={disappearingSeconds}
+      />
+
       <View style={{ gap: spacing.sm }}>
         <SheetRow
           hint={
@@ -345,5 +368,90 @@ export function ContactInfoSheet({
         {onOpenProfile ? <SheetRow icon="person-circle-outline" label="Ver perfil" onPress={onOpenProfile} /> : null}
       </View>
     </BottomSheet>
+  );
+}
+
+/** «Desactivados», «24 horas», «7 días», «90 días». */
+export function disappearingModeLabel(seconds: number | null | undefined): string {
+  return seconds ? disappearingDurationLabel(seconds) : 'Desactivados';
+}
+
+/**
+ * Mensajes temporales, dentro de la misma hoja del contacto: las opciones se
+ * despliegan en la propia hoja en vez de abrir otra encima (en iOS una segunda
+ * hoja encadenada se queda sin presentar).
+ */
+function DisappearingMessagesRows({
+  seconds,
+  pending,
+  expanded,
+  onToggle,
+  onChange,
+}: {
+  seconds: number | null | undefined;
+  pending: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+  onChange: ((seconds: number | null) => void) | null;
+}) {
+  const options: Array<number | null> = [null, ...disappearingDurations];
+  return (
+    <View style={{ gap: spacing.xs }}>
+      <SheetRow
+        disabled={!onChange || seconds === undefined}
+        hint={seconds
+          ? 'Los mensajes nuevos desaparecen para los dos.'
+          : 'Haz que los mensajes nuevos desaparezcan solos.'}
+        icon="timer-outline"
+        label="Mensajes temporales"
+        onPress={onChange ? onToggle : undefined}
+        testID="chat-contact-disappearing"
+        trailing={pending || seconds === undefined ? (
+          <ActivityIndicator color={colors.volt} />
+        ) : (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{disappearingModeLabel(seconds)}</Text>
+            {onChange ? (
+              <Ionicons color={colors.textMuted} name={expanded ? 'chevron-up' : 'chevron-down'} size={iconSizes.sm} />
+            ) : null}
+          </View>
+        )}
+      />
+      {expanded && onChange ? (
+        <View
+          accessibilityRole="radiogroup"
+          style={{ overflow: 'hidden', borderRadius: radii.md, backgroundColor: colors.surfaceHigh }}
+        >
+          {options.map((option, index) => {
+            const selected = (seconds ?? null) === option;
+            return (
+              <PressableScale
+                accessibilityLabel={disappearingModeLabel(option)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected, disabled: pending }}
+                disabled={pending}
+                haptic="selection"
+                key={option ?? 'off'}
+                onPress={() => !selected && onChange(option)}
+                scaleTo={0.98}
+                style={{
+                  minHeight: minTouchTarget + 4,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing.md,
+                  paddingHorizontal: spacing.md,
+                  borderTopWidth: index ? 1 : 0,
+                  borderTopColor: colors.borderSubtle,
+                }}
+                testID={`chat-disappearing-${option ?? 'off'}`}
+              >
+                <Text style={{ flex: 1, color: colors.text, fontSize: fontSizes.md }}>{disappearingModeLabel(option)}</Text>
+                {selected ? <Ionicons color={accentPolicy.ink} name="checkmark" size={iconSizes.md} /> : null}
+              </PressableScale>
+            );
+          })}
+        </View>
+      ) : null}
+    </View>
   );
 }

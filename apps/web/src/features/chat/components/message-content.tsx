@@ -26,11 +26,7 @@ export function MessageContent({
 }>) {
   const mutedClass = mine ? 'opacity-75' : 'text-[var(--text-muted)]';
 
-  if (
-    message.type === 'location' &&
-    message.locationLat !== null &&
-    message.locationLng !== null
-  ) {
+  if (message.type === 'location' && message.locationLat !== null && message.locationLng !== null) {
     return (
       <a
         className="flex items-center gap-2 underline-offset-2 hover:underline"
@@ -40,7 +36,9 @@ export function MessageContent({
       >
         <MapPin aria-hidden className="size-5 shrink-0" />
         <span className="grid">
-          <span className="text-sm font-semibold">Ubicación compartida</span>
+          <span className="text-sm font-semibold">
+            {message.locationLabel ?? 'Ubicación compartida'}
+          </span>
           <span className={cn('text-xs', mutedClass)}>Ábrela en el mapa</span>
         </span>
       </a>
@@ -56,7 +54,8 @@ export function MessageContent({
     }
 
     if (message.viewOnce && !url) {
-      if (mine) return <span className={cn('text-sm', mutedClass)}>Audio enviado — vista única</span>;
+      if (mine)
+        return <span className={cn('text-sm', mutedClass)}>Audio enviado — vista única</span>;
       return (
         <button
           className="flex items-center gap-2 text-sm font-semibold underline-offset-2 hover:underline disabled:opacity-60"
