@@ -1040,7 +1040,9 @@ export function StoryViewer({
                 />
               ) : (
                 <Image
+                  cachePolicy="memory-disk"
                   contentFit="contain"
+                  recyclingKey={storyMediaUri ?? undefined}
                   source={
                     storyMediaUri && storyAccessToken
                       ? { uri: storyMediaUri, headers: { Authorization: `Bearer ${storyAccessToken}` } }
