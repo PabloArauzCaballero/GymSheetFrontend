@@ -186,16 +186,22 @@ const SCREEN_TOURS: Record<Exclude<TourKey, 'welcome'>, readonly TourStep[]> = {
       target: 'trayectoria.rank',
     },
     {
+      icon: 'flag-outline',
+      title: 'Retos de la semana',
+      body: 'Cada lunes, tres retos hechos a tu medida: fácil, medio y difícil. Cumple los tres y la semana es redonda, con puntos extra.',
+      target: 'trayectoria.challenges',
+    },
+    {
+      icon: 'ribbon-outline',
+      title: 'Tu colección',
+      body: 'Las insignias van en cadenas: cada ficha dice en qué nivel vas y cuál es la siguiente. Toca una para ver sus pasos y sus cartas.',
+      target: 'trayectoria.badges',
+    },
+    {
       icon: 'trail-sign-outline',
       title: 'El camino',
       body: 'Todos los rangos, también los que te quedan. Cada uno pide más puntos que el anterior.',
       target: 'trayectoria.path',
-    },
-    {
-      icon: 'ribbon-outline',
-      title: 'Insignias',
-      body: 'Retos concretos que suman puntos extra. Toca una conseguida para ver su carta. La rareza dice lo difícil que es.',
-      target: 'trayectoria.badges',
     },
   ],
   comunidad: [
