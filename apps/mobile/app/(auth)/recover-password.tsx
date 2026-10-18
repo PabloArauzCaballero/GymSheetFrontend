@@ -12,6 +12,7 @@ import { apiClient } from '@/api/client';
 import { notify } from '@/notifications';
 import { spacing } from '@/theme';
 import { numericInputProps } from '@/components/keyboard';
+import { accountEmailTextProps } from '@/lib/credential-input';
 
 const requestSchema = z.object({
   email: z.string().trim().email('Ingresa un correo válido.'),
@@ -130,10 +131,8 @@ export default function RecoverPasswordScreen() {
                 name="email"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <Input
-                    autoCapitalize="none"
-                    autoComplete="email"
+                    {...accountEmailTextProps}
                     error={requestForm.formState.errors.email?.message}
-                    keyboardType="email-address"
                     label="Correo electrónico"
                     onBlur={onBlur}
                     onChangeText={onChange}
@@ -144,7 +143,6 @@ export default function RecoverPasswordScreen() {
                     // existir.
                     onSubmitEditing={() => void onRequest()}
                     returnKeyType="send"
-                    textContentType="emailAddress"
                     value={value}
                   />
                 )}

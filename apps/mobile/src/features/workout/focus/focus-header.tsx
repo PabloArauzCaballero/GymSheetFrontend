@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { AppState, View } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
@@ -12,8 +12,31 @@ import { colors, glideSpring, gutter, iconSizes, metricColors, minTouchTarget, r
 function SessionClock({ startIso }: { startIso: string }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
+    let id: ReturnType<typeof setInterval> | null = null;
+    const start = () => {
+      if (!id) {
+        setNow(Date.now());
+        id = setInterval(() => setNow(Date.now()), 1000);
+      }
+    };
+    const stop = () => {
+      if (id) {
+        clearInterval(id);
+        id = null;
+      }
+    };
+    start();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        start();
+      } else {
+        stop();
+      }
+    });
+    return () => {
+      stop();
+      sub.remove();
+    };
   }, []);
   return (
     <Text accessibilityLabel={`Tiempo de sesión ${sessionClock(startIso, now)}`} tabular testID="session-clock" tone="secondary" variant="footnote">
