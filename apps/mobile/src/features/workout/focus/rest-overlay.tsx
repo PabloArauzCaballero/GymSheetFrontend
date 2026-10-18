@@ -26,7 +26,9 @@ import {
   formatRestClock,
   speakRest,
   useForegroundTick,
+  useRestBelow,
   useRestRemaining,
+  useRestStatus,
   useWorkoutStore,
 } from '@/features/workout/workout-store';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
@@ -156,6 +158,32 @@ function Adjust({
   );
 }
 
+/**
+ * La cifra del descanso. Aislada: su tic (uno por segundo, alineado con el
+ * cambio de la cifra) repinta solo este texto, no la pantalla con su desenfoque.
+ */
+function RestClock({ ending }: { ending: boolean }) {
+  const { remainingMs } = useRestRemaining();
+  const secondsLeft = Math.ceil(remainingMs / 1000);
+  return (
+    // Los tres últimos segundos laten: uno por segundo, con causa (se acaba).
+    <Pop trigger={secondsLeft <= PULSE_FROM_SEC ? secondsLeft : 'calm'}>
+      <Text
+        accessibilityLabel={speakRest(remainingMs)}
+        accessibilityLiveRegion="polite"
+        maxFontSizeMultiplier={1.1}
+        style={[
+          { fontFamily: fontFamilies.display, fontSize: CLOCK_FONT, lineHeight: CLOCK_FONT + 12, color: ending ? restRing.ending : colors.text },
+          tabularNums,
+        ]}
+        testID="rest-bar-clock"
+      >
+        {formatRestClock(remainingMs)}
+      </Text>
+    </Pop>
+  );
+}
+
 const TIPS: Record<'set' | 'between' | 'round' | 'none', string> = {
   set: 'Respira hondo y suelta los hombros.',
   between: 'Cambia de sitio con calma: ya casi.',
@@ -173,8 +201,10 @@ const TIPS: Record<'set' | 'between' | 'round' | 'none', string> = {
 export function RestOverlay({ kind, onChangeRest }: { kind: 'set' | 'between' | 'round' | 'none'; onChangeRest?: () => void }) {
   const insets = useSafeAreaInsets();
   const reduceMotion = useReduceMotion();
-  const { remainingMs, totalMs, running } = useRestRemaining();
-  const endsAt = useWorkoutStore((state) => state.restEndsAt);
+  // Sin tic aquí: esta pantalla (con BlurView) solo se repinta al empezar,
+  // ajustar o acabar el descanso, y una vez al entrar en los diez últimos segundos.
+  const { endsAt, totalMs, running } = useRestStatus();
+  const ending = useRestBelow(endsAt, ENDING_MS);
   const next = useWorkoutStore((state) => state.restNextDetail);
   const adjust = useWorkoutStore((state) => state.adjustRest);
   const skip = useWorkoutStore((state) => state.skipRest);
@@ -182,8 +212,6 @@ export function RestOverlay({ kind, onChangeRest }: { kind: 'set' | 'between' | 
   if (!running || endsAt === null) return null;
 
   const title = kind === 'between' ? 'Cambio de ejercicio' : kind === 'round' ? 'Descanso de la vuelta' : 'Descanso';
-  const ending = remainingMs <= ENDING_MS;
-  const secondsLeft = Math.ceil(remainingMs / 1000);
 
   return (
     <Animated.View
@@ -253,21 +281,7 @@ export function RestOverlay({ kind, onChangeRest }: { kind: 'set' | 'between' | 
             <View style={StyleSheet.absoluteFill}>
               <RestDial ending={ending} endsAt={endsAt} totalMs={totalMs} />
             </View>
-            {/* Los tres últimos segundos laten: uno por segundo, con causa (se acaba). */}
-            <Pop trigger={secondsLeft <= PULSE_FROM_SEC ? secondsLeft : 'calm'}>
-              <Text
-                accessibilityLabel={speakRest(remainingMs)}
-                accessibilityLiveRegion="polite"
-                maxFontSizeMultiplier={1.1}
-                style={[
-                  { fontFamily: fontFamilies.display, fontSize: CLOCK_FONT, lineHeight: CLOCK_FONT + 12, color: ending ? restRing.ending : colors.text },
-                  tabularNums,
-                ]}
-                testID="rest-bar-clock"
-              >
-                {formatRestClock(remainingMs)}
-              </Text>
-            </Pop>
+            <RestClock ending={ending} />
             <Text tabular tone="muted" variant="footnote">
               {`de ${formatRestClock(totalMs)}`}
             </Text>

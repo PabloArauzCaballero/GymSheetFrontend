@@ -10,7 +10,14 @@ import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
 import { accentContrast, alpha, colors, iconSizes, overlay, radii, shadows, spacing } from '@/theme';
-import { formatRestClock, useRestRemaining, useWorkoutStore, type ActiveWorkout } from '@/features/workout/workout-store';
+import {
+  formatRestClock,
+  useForegroundTick,
+  useRestRemaining,
+  useRestStatus,
+  useWorkoutStore,
+  type ActiveWorkout,
+} from '@/features/workout/workout-store';
 
 /** Alto de la mini-barra y su separación con las pestañas (las pantallas lo reservan). */
 export const ACTIVE_BAR_HEIGHT = 56;
@@ -70,6 +77,41 @@ function LiveBadge({ resting }: { resting: boolean }) {
   );
 }
 
+/** «Descanso 1:20». Aislado: su tic de un segundo repinta este texto, no la barra con su desenfoque. */
+function RestTitle() {
+  const { remainingMs } = useRestRemaining();
+  return (
+    <Text numberOfLines={1} strong tabular variant="subhead">
+      {`Descanso ${formatRestClock(remainingMs)}`}
+    </Text>
+  );
+}
+
+/**
+ * Lo que queda de descanso, como la barra de un reproductor: una sola
+ * animación lineal en el hilo de UI hasta el fin, que se rearma al ajustar el
+ * descanso o al volver de segundo plano (como el anillo de la pantalla del
+ * descanso). Con «Reducir movimiento» no viaja: el reloj ya dice cuánto queda.
+ */
+function RestProgress({ endsAt, totalMs }: { endsAt: number; totalMs: number }) {
+  const reduceMotion = useReduceMotion();
+  const foreground = useForegroundTick();
+  const left = useSharedValue(1);
+  useEffect(() => {
+    const remaining = Math.max(0, endsAt - Date.now());
+    cancelAnimation(left);
+    left.value = totalMs > 0 ? Math.min(1, remaining / totalMs) : 0;
+    if (!reduceMotion) left.value = withTiming(0, { duration: remaining, easing: Easing.linear });
+    return () => cancelAnimation(left);
+  }, [endsAt, totalMs, reduceMotion, left, foreground]);
+  const fill = useAnimatedStyle(() => ({ transform: [{ scaleX: left.value }] }));
+  return (
+    <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, backgroundColor: alpha(colors.accentInk, 0.15) }}>
+      <Animated.View style={[{ width: '100%', height: 3, backgroundColor: colors.accentInk, transformOrigin: 'left' }, fill]} />
+    </View>
+  );
+}
+
 /**
  * Mini-barra persistente encima de las pestañas con un entreno abierto (C8.3
  * punto 9), como la de un reproductor: qué toca o cuánto queda de descanso, y
@@ -78,9 +120,10 @@ function LiveBadge({ resting }: { resting: boolean }) {
  */
 export function ActiveWorkoutBar({ active, bottom }: { active: ActiveWorkout; bottom: number }) {
   const router = useRouter();
-  const { remainingMs, totalMs, running } = useRestRemaining();
-  const restLeft = running && totalMs > 0 ? Math.max(0, Math.min(1, remainingMs / totalMs)) : 0;
-  const title = running ? `Descanso ${formatRestClock(remainingMs)}` : 'Entreno en curso';
+  // Sin tic aquí: la barra (con BlurView) solo se repinta al empezar, ajustar
+  // o acabar el descanso; la cifra y la barra de progreso van por su cuenta.
+  const { endsAt, totalMs, running } = useRestStatus();
+  const title = running ? 'Descanso en curso' : 'Entreno en curso';
   const detail = [active.current, active.progress].filter(Boolean).join(' · ') || 'Toca para volver';
 
   return (
@@ -114,9 +157,13 @@ export function ActiveWorkoutBar({ active, bottom }: { active: ActiveWorkout; bo
         <View style={[StyleSheet.absoluteFill, { backgroundColor: alpha(colors.surfaceHighest, 0.72) }]} />
         <LiveBadge resting={running} />
         <View style={{ flex: 1 }}>
-          <Text numberOfLines={1} strong tabular variant="subhead">
-            {title}
-          </Text>
+          {running ? (
+            <RestTitle />
+          ) : (
+            <Text numberOfLines={1} strong tabular variant="subhead">
+              {title}
+            </Text>
+          )}
           <Text numberOfLines={1} tone="secondary" variant="footnote">
             {detail}
           </Text>
@@ -129,11 +176,7 @@ export function ActiveWorkoutBar({ active, bottom }: { active: ActiveWorkout; bo
           size={iconSizes.md}
         />
         {/* Lo que queda de descanso, como la barra de un reproductor. */}
-        {running ? (
-          <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, backgroundColor: alpha(colors.accentInk, 0.15) }}>
-            <View style={{ width: `${restLeft * 100}%`, height: 3, backgroundColor: colors.accentInk }} />
-          </View>
-        ) : null}
+        {running && endsAt !== null ? <RestProgress endsAt={endsAt} totalMs={totalMs} /> : null}
       </PressableScale>
     </View>
   );
