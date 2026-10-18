@@ -54,6 +54,8 @@ export const routineCommentSchema: z.ZodType<RoutineComment, unknown> = z.lazy((
 export const commentPageSchema = z.object({
   items: z.array(routineCommentSchema),
   siguienteCursor: z.string().nullable(),
+  /** Comentarios visibles con sus respuestas; ausente en servidores anteriores al contador. */
+  total: z.number().int().nonnegative().optional(),
 });
 
 export const commentLikeSchema = z.object({ likes: z.number().int(), meGusta: z.boolean() });

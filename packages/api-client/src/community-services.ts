@@ -7,7 +7,7 @@ import {
   gifPageSchema,
   routineCommentSchema,
 } from '@gymsheet/schemas';
-import type { ContentKind, CreateCommentInput, ReportTargetKind } from '@gymsheet/types';
+import type { CommentOrder, ContentKind, CreateCommentInput, ReportTargetKind } from '@gymsheet/types';
 import type { RequestFn } from './routine-services';
 
 const reportResultSchema = z.object({
@@ -28,12 +28,13 @@ export function createCommunityServices(request: RequestFn) {
       }),
     removeRating: (kind: ContentKind, id: string) =>
       request(`/ratings/${kind}/${id}`, contentRatingSchema, { method: 'DELETE' }),
-    comments: (kind: ContentKind, id: string, cursor?: string) =>
-      request(
-        `/comments/${kind}/${id}${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`,
-        commentPageSchema,
-        { method: 'GET' },
-      ),
+    comments: (kind: ContentKind, id: string, cursor?: string, orden?: CommentOrder) => {
+      const params = new URLSearchParams();
+      if (cursor) params.set('cursor', cursor);
+      if (orden && orden !== 'recientes') params.set('orden', orden);
+      const query = params.toString();
+      return request(`/comments/${kind}/${id}${query ? `?${query}` : ''}`, commentPageSchema, { method: 'GET' });
+    },
     comment: (kind: ContentKind, id: string, input: CreateCommentInput) =>
       request(`/comments/${kind}/${id}`, routineCommentSchema, { method: 'POST', body: input }),
     gifs: (tipo: 'gifs' | 'stickers', q: string, pos = 0) =>

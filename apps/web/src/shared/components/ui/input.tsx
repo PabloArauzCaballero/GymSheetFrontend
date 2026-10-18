@@ -98,6 +98,13 @@ export const PasswordInput = forwardRef<
         id={inputId}
         type={visible ? 'text' : 'password'}
         {...props}
+        // Tras `props`: una contraseña viaja tal cual se tecleó. Al revelarla el
+        // campo pasa a `type="text"` y los teclados móviles vuelven a poner
+        // mayúscula inicial y autocorregir, así que la que se guardaba en el
+        // alta no era la que luego se escribía, oculta, al entrar.
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
       />
       <button
         // `aria-pressed` y no un texto que cambie a secas: el botón es un
