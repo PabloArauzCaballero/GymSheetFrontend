@@ -2,7 +2,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Text, View } from 'react-native';
 import type { MuscleExercise } from '@gymsheet/schemas';
 import { Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
@@ -34,7 +34,7 @@ const ROLES: readonly { role: MuscleExercise['rol']; title: string; icon: keyof 
  * dice «está llegando»; sin imagen (o si falla), la lámina anatómica con este
  * músculo encendido, nunca la pesa gris de antes.
  */
-function Thumb({ uri, label, muscle }: { uri: string | null; label: string; muscle: string }) {
+const Thumb = memo(function Thumb({ uri, label, muscle }: { uri: string | null; label: string; muscle: string }) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const showImage = uri !== null && !failed;
@@ -70,9 +70,9 @@ function Thumb({ uri, label, muscle }: { uri: string | null; label: string; musc
       {showImage && !loaded ? <Shimmer /> : null}
     </View>
   );
-}
+});
 
-function ExerciseRow({
+const ExerciseRow = memo(function ExerciseRow({
   exercise,
   muscle,
   onPress,
@@ -111,7 +111,7 @@ function ExerciseRow({
       />
     </PressableScale>
   );
-}
+});
 
 /**
  * Pantalla de un músculo: es adonde lleva tocar la figura.
