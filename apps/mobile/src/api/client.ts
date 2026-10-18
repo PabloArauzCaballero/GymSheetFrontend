@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createApiClient } from '@gymsheet/api-client';
+import { ApiError, classifyStatus, createApiClient } from '@gymsheet/api-client';
 import { env, loopbackRewrite } from '@/config/env';
 import { notify } from '@/notifications';
 import { secureStoreAuthStorage, secureStoreTokenProvider } from '@/storage/secure-store';
@@ -56,31 +56,65 @@ async function refreshSession(): Promise<boolean> {
   const refreshToken = await secureStoreAuthStorage.getRefreshToken();
   if (!refreshToken) return false;
 
+  let response: Response;
   try {
-    const response = await fetch(`${env.apiUrl}/auth/refresh`, {
+    response = await fetch(`${env.apiUrl}/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ refreshToken }),
     });
-    if (!response.ok) return false;
-
-    const body: unknown = await response.json();
-    const envelope = z.object({ data: refreshPayloadSchema }).safeParse(body);
-    if (!envelope.success) return false;
-
-    // Los dos, no sólo el de acceso: el servidor **rota** el refresh en cada uso
-    // y revoca el anterior, así que guardar sólo el nuevo access dejaría en el
-    // Llavero un refresh ya muerto y la siguiente renovación fallaría.
-    await secureStoreAuthStorage.saveTokens(
-      envelope.data.data.accessToken,
-      envelope.data.data.refreshToken,
-    );
-    return true;
   } catch {
-    // Sin red no hay renovación, pero tampoco hay motivo para cerrar la sesión:
-    // devolver `false` deja que el 401 original siga su curso.
-    return false;
+    // Sin red no hay renovación, pero tampoco motivo para cerrar la sesión.
+    // Antes esto devolvía `false` y el cliente lo trataba como un rechazo:
+    // abrir la app sin cobertura con el access caducado borraba los tokens.
+    // Un `ApiError` le dice al cliente «no se pudo preguntar»: la petición
+    // falla y la sesión sigue ahí para el siguiente intento.
+    throw new ApiError({ message: 'No se pudo conectar con el servicio.', status: 0, kind: 'network' });
   }
+
+  // Sólo un rechazo explícito del refresh significa sesión perdida: 401
+  // (revocado, caducado, reutilizado) o 400 (token con forma imposible). Un
+  // 5xx o un 429 es el servidor que no puede contestar ahora.
+  if (response.status === 401 || response.status === 400) return false;
+  if (!response.ok) {
+    throw new ApiError({
+      message: 'No se pudo renovar la sesión ahora.',
+      status: response.status,
+      kind: classifyStatus(response.status),
+    });
+  }
+
+  const body: unknown = await response.json().catch(() => null);
+  const envelope = z.object({ data: refreshPayloadSchema }).safeParse(body);
+  if (!envelope.success) {
+    throw new ApiError({ message: 'Respuesta de renovación inválida.', status: 502, kind: 'contract' });
+  }
+
+  // Los dos, no sólo el de acceso: el servidor **rota** el refresh en cada uso
+  // y revoca el anterior, así que guardar sólo el nuevo access dejaría en el
+  // Llavero un refresh ya muerto y la siguiente renovación fallaría.
+  await secureStoreAuthStorage.saveTokens(
+    envelope.data.data.accessToken,
+    envelope.data.data.refreshToken,
+  );
+  return true;
+}
+
+/**
+ * Revoca el refresh en el servidor al cerrar sesión.
+ *
+ * `fetch` directo, sin bearer y fuera de `apiClient`, por la misma razón que
+ * `refreshSession`: `POST /auth/logout` es público —lo autoriza el refresh, no
+ * el access, que puede estar ya caducado— y pasar por el cliente haría que un
+ * 401 intentara **renovar** justo la sesión que se está cerrando, rotando el
+ * refresh y dejando vivo el nuevo. Responde 204 sin cuerpo.
+ */
+export async function revokeRefreshToken(refreshToken: string): Promise<void> {
+  await fetch(`${env.apiUrl}/auth/logout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ refreshToken }),
+  });
 }
 
 /**
