@@ -107,7 +107,9 @@ describe('SocialMapScreen', () => {
     renderMap();
     expect(await screen.findByLabelText('Gimnasio Sopocachi')).toBeTruthy();
     expect(mapGyms).toHaveBeenCalledTimes(1);
-    expect(screen.getByText(/1 gimnasio en esta zona/)).toBeTruthy();
+    // Sobre el mapa no flota ninguna tarjeta: ni el conteo ni el aviso de la fecha.
+    expect(screen.queryByText(/en esta zona/)).toBeNull();
+    expect(screen.queryByText('Añadir fecha de nacimiento')).toBeNull();
   });
 
   it('al tocar un gimnasio muestra la cuadrícula de personas cercanas según preferencias', async () => {
@@ -137,8 +139,9 @@ describe('SocialMapScreen', () => {
     expect(screen.queryByText('Personas')).toBeNull();
   });
 
-  it('pide solo la fecha de nacimiento, sin salir del mapa, y te hace aparecer', async () => {
+  it('desde Preferencias pide solo la fecha de nacimiento y te hace aparecer', async () => {
     renderMap();
+    fireEvent.click(await screen.findByLabelText('Preferencias'));
     fireEvent.click(await screen.findByText('Añadir fecha de nacimiento'));
     fireEvent.change(screen.getByLabelText('Día'), { target: { value: '15' } });
     fireEvent.change(screen.getByLabelText('Mes'), { target: { value: '3' } });
@@ -150,6 +153,7 @@ describe('SocialMapScreen', () => {
 
   it('no deja aparecer a un menor de edad', async () => {
     renderMap();
+    fireEvent.click(await screen.findByLabelText('Preferencias'));
     fireEvent.click(await screen.findByText('Añadir fecha de nacimiento'));
     const year = String(new Date().getFullYear() - 15);
     fireEvent.change(screen.getByLabelText('Día'), { target: { value: '1' } });

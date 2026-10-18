@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { dayOptions, durationLabel, timeOptions } from './invite-slots.ts';
+import { dayOptions, durationLabel, firstAvailableTime, isTimeAvailable, timeOptions } from './invite-slots.ts';
 
 const friday = new Date(2026, 9, 16, 17, 20);
 
@@ -36,4 +36,18 @@ test('durations are short and readable', () => {
   assert.equal(durationLabel(45), '45 min');
   assert.equal(durationLabel(60), '1 h');
   assert.equal(durationLabel(90), '1 h 30');
+});
+
+test('a time today needs 15 minutes of margin; other days only the 05:00–23:00 window', () => {
+  assert.equal(isTimeAvailable('2026-10-16', '17:30', friday), false);
+  assert.equal(isTimeAvailable('2026-10-16', '17:45', friday), true);
+  assert.equal(isTimeAvailable('2026-10-17', '04:45', friday), false);
+  assert.equal(isTimeAvailable('2026-10-17', '23:15', friday), false);
+  assert.equal(isTimeAvailable('2026-10-17', '06:15', friday), true);
+});
+
+test('the first free time steps by quarter hours and runs out late at night', () => {
+  assert.equal(firstAvailableTime('2026-10-16', friday), '17:45');
+  assert.equal(firstAvailableTime('2026-10-17', friday), '05:00');
+  assert.equal(firstAvailableTime('2026-10-16', new Date(2026, 9, 16, 22, 50)), null);
 });

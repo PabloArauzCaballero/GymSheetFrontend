@@ -16,6 +16,7 @@ export function BottomSheet({
   title,
   subtitle,
   children,
+  footer,
   testID,
 }: {
   visible: boolean;
@@ -23,6 +24,8 @@ export function BottomSheet({
   title: string;
   subtitle?: string;
   children: ReactNode;
+  /** Acción principal fija bajo el scroll: no se pierde al final de un contenido largo. */
+  footer?: ReactNode;
   testID?: string;
 }) {
   const insets = useSafeAreaInsets();
@@ -96,6 +99,11 @@ export function BottomSheet({
             </View>
             {children}
           </ScrollView>
+          {footer ? (
+            <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border }}>
+              {footer}
+            </View>
+          ) : null}
         </View>
       </KeyboardAvoidingView>
     </Modal>
