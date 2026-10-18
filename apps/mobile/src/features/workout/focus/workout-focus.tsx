@@ -170,9 +170,9 @@ function StaleGate({
         </Text>
       </View>
       <View style={{ gap: spacing.smd }}>
-        <Button label="Seguir entrenando" onPress={onResume} size="lg" testID="stale-resume" />
-        {sets > 0 ? <Button disabled={busy} label="Finalizar y guardar" onPress={onFinish} size="lg" testID="stale-finish" variant="secondary" /> : null}
-        <Button disabled={busy} label="Descartar sesión" onPress={onCancel} size="lg" testID="stale-cancel" variant="ghost" />
+        <Button icon="play" label="Seguir entrenando" onPress={onResume} size="lg" testID="stale-resume" />
+        {sets > 0 ? <Button disabled={busy} icon="flag" label="Finalizar y guardar" onPress={onFinish} size="lg" testID="stale-finish" variant="secondary" /> : null}
+        <Button disabled={busy} icon="trash-outline" label="Descartar sesión" onPress={onCancel} size="lg" testID="stale-cancel" variant="ghost" />
       </View>
     </View>
   );
@@ -1032,7 +1032,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
                       {`Tu ${failed.label} sigue aquí. Revisa la conexión y vuelve a intentarlo.`}
                     </Text>
                   </View>
-                  <Button label="Reintentar" loading={session.addSet.isPending} onPress={logSet} testID="set-retry" variant="secondary" />
+                  <Button icon="refresh-outline" label="Reintentar" loading={session.addSet.isPending} onPress={logSet} testID="set-retry" variant="secondary" />
                 </Animated.View>
               ) : null}
               {omitted ? (
