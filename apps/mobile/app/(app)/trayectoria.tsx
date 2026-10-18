@@ -288,7 +288,7 @@ export default function TrayectoriaScreen() {
           </Section>
         </TourTarget>
 
-        <StatsSection rules={rules.data} stats={data.stats} />
+        <StatsSection rules={rules.data} stats={data.stats} streakShown={Boolean(data.streak)} />
 
         <LeaderboardSection />
       </ScrollScreen>

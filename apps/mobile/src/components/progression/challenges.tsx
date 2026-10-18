@@ -36,7 +36,7 @@ export function ChallengesHeader({ week, now }: { week: WeeklyChallenges; now?: 
       </Text>
       {week.perfect ? null : (
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.footnote }}>
-          {`· los tres: +${week.perfectBonus}`}
+          {`· los tres, +${week.perfectBonus} extra`}
         </Text>
       )}
     </View>

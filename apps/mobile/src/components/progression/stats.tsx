@@ -5,7 +5,16 @@ import { Section, StatTile } from '@/components/layout';
 import { colors, fontSizes, spacing } from '@/theme';
 
 /** «Lo que suma»: las cifras que mueven los puntos, cada una con su tarifa. */
-export function StatsSection({ stats, rules }: { stats: ProgressionStats; rules?: PointRules }) {
+export function StatsSection({
+  stats,
+  rules,
+  streakShown = false,
+}: {
+  stats: ProgressionStats;
+  rules?: PointRules;
+  /** La racha ya tiene su tarjeta arriba: aquí no se repite. */
+  streakShown?: boolean;
+}) {
   const chips = rules ? pointRateChips(rules) : undefined;
   return (
     <Section icon="stats-chart-outline" title="Lo que suma">
@@ -54,16 +63,18 @@ export function StatsSection({ stats, rules }: { stats: ProgressionStats; rules?
           />
         </View>
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-          <StatTile
-            icon="flame-outline"
-            tone="streak"
-            label="Racha actual"
-            value={
-              stats.currentStreakDays > 0
-                ? `${stats.currentStreakDays} ${stats.currentStreakDays === 1 ? 'día' : 'días'}`
-                : '—'
-            }
-          />
+          {streakShown ? null : (
+            <StatTile
+              icon="flame-outline"
+              tone="streak"
+              label="Racha actual"
+              value={
+                stats.currentStreakDays > 0
+                  ? `${stats.currentStreakDays} ${stats.currentStreakDays === 1 ? 'día' : 'días'}`
+                  : '—'
+              }
+            />
+          )}
           <StatTile
             icon="calendar-outline"
             tone="time"
@@ -86,7 +97,7 @@ export function StatsSection({ stats, rules }: { stats: ProgressionStats; rules?
           />
         </View>
       </View>
-      {stats.currentStreakDays === 0 && stats.totalSessions > 0 ? (
+      {!streakShown && stats.currentStreakDays === 0 && stats.totalSessions > 0 ? (
         // Una racha rota es un hecho, no un reproche: el texto invita a
         // empezar otra hoy y no menciona el fallo.
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
