@@ -14,13 +14,7 @@ import {
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
-import {
-  badgeSubject,
-  levelSubject,
-  ProgressionCelebration,
-  useLevelUpWatch,
-  useRewardQueue,
-} from './progression-celebration';
+import { ProgressionCelebration, useLevelUpWatch, useRewardQueue } from './progression-celebration';
 import { BadgeTile, PathNode, RankHero } from './progression-parts';
 import { LeaderboardCard, RestDaysCard } from './progression-secondary-cards';
 import { ProgressionStatsCard } from './progression-stats-card';
@@ -72,8 +66,9 @@ export function ProgressionClient() {
   // alterar su orden entre estados de carga. Lo nuevo se abre solo una vez por
   // visita y se confirma al servidor; las revisitas, al tocar.
   const levelUp = useLevelUpWatch(progression.data?.level ?? null);
-  const rewards = useRewardQueue(data?.badges, levelUp, () => acknowledge.mutate());
-  const celebrateBadge = (earned: ProgressionBadge) => rewards.show([badgeSubject(earned, false)]);
+  const rewards = useRewardQueue(data, levelUp, () => acknowledge.mutate());
+  const celebrateBadge = (earned: ProgressionBadge) =>
+    rewards.show([{ kind: 'badge', badge: earned, fresh: false }]);
   const unlockedNow = data?.unlockedNow ?? [];
 
   // Conseguidas primero: el muro de trofeos es lo que da la sensación de
@@ -164,7 +159,7 @@ export function ProgressionClient() {
         {level ? (
           <Button
             className="justify-self-start"
-            onClick={() => rewards.show([levelSubject(level)])}
+            onClick={() => rewards.show([{ kind: 'level', level }])}
             variant={levelUp ? 'primary' : 'secondary'}
           >
             <Sparkles aria-hidden className="size-4" />
