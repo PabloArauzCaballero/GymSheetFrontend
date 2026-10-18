@@ -158,8 +158,8 @@ export function RoutinesCatalogScreen() {
             key: `cardio-${plan.id}-${day}`,
             day: day % 7,
             kind: 'cardio' as const,
-            title: 'Cardio',
-            detail: cardioModalityLabels[plan.modalidad],
+            title: `Cardio · ${cardioModalityLabels[plan.modalidad]}`,
+            detail: `${plan.minutosObjetivo} min`,
             open: () => router.push({ pathname: '/routines/activa', params: { tipo: 'cardio' } }),
           }))
         : [];
