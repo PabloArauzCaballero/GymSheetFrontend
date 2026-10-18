@@ -18,6 +18,11 @@ import { CountUp } from '@/shared/components/motion/count-up';
 import { Button } from '@/shared/components/ui/button';
 import { Dialog } from '@/shared/components/ui/dialog';
 import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
+import {
+  PendingCardsLine,
+  SessionRewardSections,
+  SessionStreakLine,
+} from './session-summary-rewards';
 
 /**
  * «Sesión terminada»: el momento en que la app enseña causa y efecto.
@@ -29,12 +34,13 @@ import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
  */
 
 const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
-const BREAKDOWN_ORDER: ReadonlyArray<PointRuleLine['key']> = [
+const BREAKDOWN_ORDER: ReadonlyArray<PointRuleLine['key'] | 'challenges'> = [
   'session',
   'sets',
   'volume',
   'streak',
   'badges',
+  'challenges',
 ];
 /** Pausa tras la última cifra antes de abrir las cartas solas. */
 const AUTO_OPEN_PAUSE_MS = 600;
@@ -224,12 +230,17 @@ export function SessionSummary({
                     {`¡Has subido a ${reward.levelAfter.name}!`}
                   </p>
                 ) : null}
+                <SessionStreakLine streak={reward.streak} />
                 <p className="text-xs text-[var(--text-muted)]">
                   {reward.nextLevel && reward.pointsToNextLevel !== null
                     ? `Te faltan ${reward.pointsToNextLevel.toLocaleString('es-ES')} puntos para ${reward.nextLevel.name}.`
                     : 'Has llegado al final de la senda. Ahora se trata de mantenerlo.'}
                 </p>
               </section>
+
+              <SessionRewardSections reward={reward} />
+
+              <PendingCardsLine subjects={subjects} />
 
               <div className="grid gap-2">
                 {subjects.length > 0 ? (

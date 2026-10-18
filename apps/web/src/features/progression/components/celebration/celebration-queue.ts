@@ -186,3 +186,21 @@ export function progressionCelebrations(
   if (level) subjects.push({ kind: 'level', level, fresh: true });
   return orderCelebrations(subjects);
 }
+
+/** Una línea para listar la cola («Batido gratis · Rango Máquina»). */
+export function subjectTitle(subject: CelebrationSubject): string {
+  switch (subject.kind) {
+    case 'badge':
+      return subject.badge.name;
+    case 'level':
+      return `Rango ${subject.level.name}`;
+    case 'challenge':
+      return subject.challenge.title;
+    case 'perfect':
+      return 'Semana redonda';
+    case 'freeze':
+      return 'Comodín';
+    case 'prize':
+      return subject.prize.title;
+  }
+}
