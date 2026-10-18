@@ -18,7 +18,7 @@ import {
   toPathData,
   type BodyRegion,
 } from '@gymsheet/anatomy';
-import { IMAGES, type ImageTag } from './images';
+import { anatomyImage, type ImageTag } from './images';
 
 /** Proporción de la cabecera (alto / ancho): apaisada, como una lámina. */
 const ASPECT = 3 / 4;
@@ -73,6 +73,8 @@ export function MuscleHero({
       ? placeBounds(bounds, { width, height }, REGION_VIEWBOX, { padding })
       : null;
   const paths = view.regions.map((region) => toPathData(region.rings));
+  // La pequeña basta en miniaturas y tarjetas; un recorte muy acercado pide la grande.
+  const image = placement ? anatomyImage(view.tag, placement.width) : null;
 
   return (
     <View
@@ -92,7 +94,7 @@ export function MuscleHero({
             }
       }
     >
-      {placement ? (
+      {placement && image ? (
         <View
           style={{
             position: 'absolute',
@@ -106,7 +108,8 @@ export function MuscleHero({
             accessibilityIgnoresInvertColors
             cachePolicy="memory-disk"
             contentFit="fill"
-            source={IMAGES[view.tag]}
+            recyclingKey={image.recyclingKey}
+            source={image.source}
             style={{ width: '100%', height: '100%' }}
             transition={120}
           />

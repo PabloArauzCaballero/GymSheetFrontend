@@ -10,6 +10,9 @@ import {
   chatAudioRecordingDurationLabel,
   isChatAudioDurationValid,
   isMicrophonePermissionPermanentlyDenied,
+  createSerialQueue,
+  voiceNoteDurationMs,
+  waitForFinishedRecording,
 } from './chat-audio.ts';
 
 test('chat audio accepts only recordings from one through 120 seconds', () => {
@@ -70,4 +73,35 @@ test('message schema accepts backend audio messages', () => {
     createdAt: '2026-10-09T00:00:00.000Z',
   });
   assert.equal(parsed.success, true);
+});
+
+test('voice note duration trusts the wall clock when the native recorder clock is stuck at 0 (real iPhone)', () => {
+  assert.equal(voiceNoteDurationMs(10_000, 13_500, 0, 0), 3_500);
+  assert.equal(voiceNoteDurationMs(10_000, 13_500, 3_900), 3_900);
+  assert.equal(voiceNoteDurationMs(null, 13_500, Number.NaN), 0);
+});
+
+test('a recording is uploaded only once its file is non-trivial and stopped growing', async () => {
+  const sizes = [null, 0, 600, 4_000, 9_000, 9_000];
+  let call = 0;
+  const size = await waitForFinishedRecording(() => sizes[Math.min(call++, sizes.length - 1)] ?? null, { sleep: async () => undefined });
+  assert.equal(size, 9_000);
+  assert.equal(await waitForFinishedRecording(() => 0, { sleep: async () => undefined, timeoutMs: 500 }), null);
+  assert.equal(await waitForFinishedRecording(() => null, { sleep: async () => undefined, timeoutMs: 500 }), null);
+});
+
+test('audio session operations never overlap and a failure does not block the next one', async () => {
+  const enqueue = createSerialQueue();
+  const order: string[] = [];
+  let release: () => void = () => undefined;
+  const first = enqueue(() => new Promise<void>((resolve) => { order.push('start-1'); release = () => { order.push('end-1'); resolve(); }; }));
+  const second = enqueue(async () => { order.push('run-2'); throw new Error('falla'); });
+  const third = enqueue(async () => { order.push('run-3'); return 3; });
+  await Promise.resolve();
+  assert.deepEqual(order, ['start-1']);
+  release();
+  await first;
+  await assert.rejects(second);
+  assert.equal(await third, 3);
+  assert.deepEqual(order, ['start-1', 'end-1', 'run-2', 'run-3']);
 });

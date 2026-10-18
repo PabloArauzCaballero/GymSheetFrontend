@@ -1,18 +1,18 @@
 'use client';
 
-import {
-  Check,
-  CheckCheck,
-  Flag,
-  MoreHorizontal,
-} from 'lucide-react';
+import { Check, CheckCheck, Flag, MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import type { Message } from '@/shared/api/schemas';
-import { isMessageReadByOther, trainingInviteAcceptedMessage } from '@gymsheet/domain';
+import { chatSystemEventMessage, isMessageReadByOther } from '@gymsheet/domain';
 import { cn } from '@/shared/lib/cn';
 import { formatTimeOfDay } from '@/features/chat/lib/chat-time';
 import { ReportDialog } from '@/features/moderation/components/report-dialog';
 import { MessageContent, mapsUrlFor } from '@/features/chat/components/message-content';
+import {
+  MessageForwarded,
+  MessageQuote,
+  MessageReactions,
+} from '@/features/chat/components/message-extras';
 
 export { mapsUrlFor };
 
@@ -43,6 +43,8 @@ export function MessageBubble({
   onEditMessage,
   editPending,
   focusedForStoryReply = false,
+  viewerId,
+  otherName,
 }: Readonly<{
   groupedWithPrevious: boolean;
   message: Message;
@@ -58,25 +60,31 @@ export function MessageBubble({
   onEditMessage: (messageId: string, body: string) => void;
   editPending?: boolean;
   focusedForStoryReply?: boolean;
+  /** Quien mira: decide «Activaste…» frente a «Tu contacto activó…» en los avisos. */
+  viewerId?: string;
+  /** Nombre de la otra persona, para el autor de una cita. */
+  otherName?: string;
 }>) {
   const [editMenuOpen, setEditMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(message.body ?? '');
-  const read = mine && isMessageReadByOther(message.createdAt, otherLastReadAt, otherReadReceiptsSinceAt);
+  const read =
+    mine && isMessageReadByOther(message.createdAt, otherLastReadAt, otherReadReceiptsSinceAt);
   const delivered =
     mine && otherLastDeliveredAt !== null && message.createdAt <= otherLastDeliveredAt;
   const TickIcon = delivered ? CheckCheck : Check;
 
   if (message.type === 'system') {
+    const line = chatSystemEventMessage(message.systemEvent, viewerId);
     return (
       <li
-        aria-label={trainingInviteAcceptedMessage(message.systemEvent)}
+        aria-label={line}
         className="my-3 flex w-full justify-center px-2 text-center text-xs leading-5 text-[var(--text-muted)]"
         id={`message-${message.id}`}
         role="status"
         tabIndex={-1}
       >
-        {trainingInviteAcceptedMessage(message.systemEvent)}
+        {line}
       </li>
     );
   }
@@ -96,6 +104,8 @@ export function MessageBubble({
       id={`message-${message.id}`}
       tabIndex={-1}
     >
+      <MessageForwarded message={message} />
+      <MessageQuote message={message} otherName={otherName} viewerId={viewerId} />
       {message.storyReference ? (
         <span aria-label="Referencia a una story" className="text-xs font-medium opacity-75">
           {message.storyReference.available ? 'Respuesta a una story' : 'Historia no disponible'}
@@ -126,12 +136,16 @@ export function MessageBubble({
               disabled={editPending}
               onClick={() => setEditing(false)}
               type="button"
-            >Cancelar</button>
+            >
+              Cancelar
+            </button>
             <button
               className="rounded px-2 py-1 text-xs font-semibold underline-offset-2 hover:underline disabled:opacity-60"
               disabled={editPending || !draft.trim() || draft.trim() === message.body}
               type="submit"
-            >Guardar edición</button>
+            >
+              Guardar edición
+            </button>
           </span>
         </form>
       ) : (
@@ -173,7 +187,9 @@ export function MessageBubble({
                     setEditMenuOpen(false);
                   }}
                   type="button"
-                >Editar</button>
+                >
+                  Editar
+                </button>
               </span>
             ) : null}
           </span>
@@ -206,6 +222,7 @@ export function MessageBubble({
           }
         />
       ) : null}
+      <MessageReactions message={message} viewerId={viewerId} />
     </li>
   );
 }

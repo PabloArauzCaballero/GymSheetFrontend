@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect } from "expo-router";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
@@ -11,19 +12,78 @@ import {
 } from "@/api/reels-service";
 import { BackLink } from "@/components/nav";
 import { Card, ScrollScreen, ScreenHeader, Section } from "@/components/layout";
+import { PressableScale } from "@/components/motion";
 import { Button } from "@/components/ui";
 import { ErrorState, Skeleton } from "@/components/feedback";
 import { notify } from "@/notifications";
 import { env } from "@/config/env";
 import { secureStoreTokenProvider } from "@/storage/secure-store";
 import { useAuthStore } from "@/state/auth-store";
-import { colors, fontSizes, ink, radii, semibold, spacing } from "@/theme";
+import { colors, fontSizes, iconSizes, ink, likeHeart, minTouchTarget, radii, semibold, spacing } from "@/theme";
 
 const tabs: ReadonlyArray<{ id: ReelFeedTab; label: string }> = [
   { id: "FOR_YOU", label: "Para ti" },
   { id: "CONNECTIONS", label: "Conexiones" },
   { id: "MINE", label: "Mis reels" },
 ];
+
+/**
+ * Acción del reel como en cualquier red social: el glifo (corazón, guardar,
+ * repost, comentar, reportar) y, si lo hay, su contador. Sin texto visible, así
+ * que la etiqueta accesible dice la acción y el estado.
+ */
+function ReelAction({
+  icon,
+  label,
+  onPress,
+  count,
+  tint = colors.text,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+  count?: number;
+  tint?: string;
+}) {
+  return (
+    <PressableScale
+      accessibilityLabel={label}
+      haptic="selection"
+      onPress={onPress}
+      scaleTo={0.94}
+      style={{
+        minWidth: minTouchTarget,
+        height: minTouchTarget,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: spacing.xs,
+        paddingHorizontal: spacing.sm,
+        borderRadius: radii.full,
+      }}
+    >
+      <Ionicons
+        accessibilityElementsHidden
+        color={tint}
+        importantForAccessibility="no-hide-descendants"
+        name={icon}
+        size={iconSizes.lg}
+      />
+      {count !== undefined && count > 0 ? (
+        <Text
+          style={{
+            color: colors.textSecondary,
+            fontSize: fontSizes.sm,
+            fontWeight: semibold,
+            fontVariant: ["tabular-nums"],
+          }}
+        >
+          {count.toLocaleString("es-ES")}
+        </Text>
+      ) : null}
+    </PressableScale>
+  );
+}
 
 const ReelPlayer = memo(function ReelPlayer({ reel, token }: { reel: ReelDTO; token: string | null }) {
   const uri = `${env.apiUrl.replace(/\/+$/, "")}/${reel.mediaUrl.replace(/^\/+/, "")}`;
@@ -233,12 +293,14 @@ export default function ReelsScreen() {
             style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.sm }}
           >
             <Button
+              icon="videocam-outline"
               label="Grabar video"
               loading={upload.isPending}
               onPress={() => void chooseVideo("camera")}
               variant="ghost"
             />
             <Button
+              icon="images-outline"
               label="Elegir video"
               loading={upload.isPending}
               onPress={() => void chooseVideo("library")}
@@ -305,25 +367,27 @@ export default function ReelsScreen() {
             <View
               style={{
                 flexDirection: "row",
-                flexWrap: "wrap",
-                gap: spacing.sm,
+                alignItems: "center",
+                gap: spacing.xxs,
               }}
             >
-              <Button
+              <ReelAction
+                count={reel.likesCount}
+                icon={reel.likedByMe ? "heart" : "heart-outline"}
                 label={reel.likedByMe ? "Quitar me gusta" : "Me gusta"}
                 onPress={() =>
                   interaction.mutate({ action: "like", value: !reel.likedByMe })
                 }
-                variant="ghost"
+                tint={reel.likedByMe ? likeHeart : colors.text}
               />
-              <Button
-                label={reel.savedByMe ? "Quitar guardado" : "Guardar"}
-                onPress={() =>
-                  interaction.mutate({ action: "save", value: !reel.savedByMe })
-                }
-                variant="ghost"
+              <ReelAction
+                count={reel.commentsCount}
+                icon={commentsOpen ? "chatbubble" : "chatbubble-outline"}
+                label={`Comentarios, ${reel.commentsCount ?? 0}`}
+                onPress={() => setCommentsOpen((open) => !open)}
               />
-              <Button
+              <ReelAction
+                icon="repeat"
                 label={reel.repostedByMe ? "Deshacer repost" : "Repostear"}
                 onPress={() =>
                   interaction.mutate({
@@ -331,14 +395,18 @@ export default function ReelsScreen() {
                     value: !reel.repostedByMe,
                   })
                 }
-                variant="ghost"
+                tint={reel.repostedByMe ? colors.accentInk : colors.text}
               />
-              <Button
-                label={`Comentarios (${reel.commentsCount ?? 0})`}
-                onPress={() => setCommentsOpen((open) => !open)}
-                variant="ghost"
+              <ReelAction
+                icon={reel.savedByMe ? "bookmark" : "bookmark-outline"}
+                label={reel.savedByMe ? "Quitar guardado" : "Guardar"}
+                onPress={() =>
+                  interaction.mutate({ action: "save", value: !reel.savedByMe })
+                }
               />
-              <Button
+              <View style={{ flex: 1 }} />
+              <ReelAction
+                icon="flag-outline"
                 label="Reportar"
                 onPress={() =>
                   Alert.alert("Reportar reel", "Elige el motivo", [
@@ -352,7 +420,7 @@ export default function ReelsScreen() {
                     { text: "Cancelar", style: "cancel" },
                   ])
                 }
-                variant="ghost"
+                tint={colors.textMuted}
               />
             </View>
           ) : null}
@@ -375,6 +443,7 @@ export default function ReelsScreen() {
                   </Text>
                   {!item.parentCommentId && item.body ? (
                     <Button
+                      icon="arrow-undo-outline"
                       label="Responder"
                       onPress={() => setReplyTo(item.id)}
                       variant="ghost"
@@ -384,6 +453,7 @@ export default function ReelsScreen() {
                   (item.userId === userId || reel.userId === userId) ? (
                     <Button
                       disabled={deleteComment.isPending}
+                      icon="trash-outline"
                       label="Eliminar comentario"
                       loading={
                         deleteComment.isPending &&
@@ -434,6 +504,7 @@ export default function ReelsScreen() {
                   <View style={{ flexDirection: "row", gap: spacing.sm }}>
                     <Button
                       disabled={!commentText.trim() || comment.isPending}
+                      icon="send"
                       label={replyTo ? "Responder" : "Comentar"}
                       loading={comment.isPending}
                       onPress={() =>
@@ -446,6 +517,7 @@ export default function ReelsScreen() {
                     />
                     {replyTo ? (
                       <Button
+                        icon="close"
                         label="Cancelar respuesta"
                         onPress={() => setReplyTo(null)}
                         variant="ghost"

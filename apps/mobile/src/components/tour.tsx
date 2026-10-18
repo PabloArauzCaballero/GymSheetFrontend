@@ -959,7 +959,12 @@ export function TourOverlay() {
       </ScrollView>
 
       <View style={{ width: '100%', gap: spacing.sm }}>
-        <Button label={frame?.last ? 'Entendido' : 'Siguiente'} onPress={advance} />
+        <Button
+          icon={frame?.last ? 'checkmark' : 'arrow-forward'}
+          iconPosition={frame?.last ? 'start' : 'end'}
+          label={frame?.last ? 'Entendido' : 'Siguiente'}
+          onPress={advance}
+        />
         {!frame?.last ? (
           <PressableScale
             accessibilityLabel="Saltar tutorial"

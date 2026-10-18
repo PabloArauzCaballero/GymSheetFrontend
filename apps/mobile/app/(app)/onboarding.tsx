@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import type { FitnessGoal } from '@gymsheet/types';
+import { Ionicons } from '@expo/vector-icons';
 import { equipmentOptions, goalOptions, preferenceOptions } from '@gymsheet/domain';
 import { onboardingService } from '@/api/services';
 import { BackLink } from '@/components/nav';
@@ -13,7 +14,7 @@ import { Card, ScreenHeader, ScrollScreen } from '@/components/layout';
 import { StepProgress, type FlowStep } from '@/components/step-flow';
 import { Button, Input } from '@/components/ui';
 import { notify } from '@/notifications';
-import { colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 const STEPS: readonly FlowStep[] = [
   { label: 'Objetivo', icon: 'flag-outline' },
@@ -28,6 +29,17 @@ const preferenceAlreadyAsked: Partial<Record<FitnessGoal, string>> = {
 };
 
 const today = new Date().toISOString().slice(0, 10);
+
+/** Un glifo por objetivo, los mismos que usa el directorio de Comunidad. */
+const GOAL_ICON: Record<FitnessGoal, keyof typeof Ionicons.glyphMap> = {
+  GAIN_MUSCLE: 'barbell-outline',
+  LOSE_FAT: 'flame-outline',
+  IMPROVE_STRENGTH: 'flash-outline',
+  IMPROVE_ENDURANCE: 'infinite-outline',
+  MAINTAIN_FITNESS: 'fitness-outline',
+  GENERAL_HEALTH: 'heart-outline',
+  SPORT_PERFORMANCE: 'trophy-outline',
+};
 
 /** Chip de un toque, para elegir entre un puñado de opciones excluyentes ("KG" vs "LB"). */
 function ToggleChip({
@@ -212,9 +224,15 @@ export default function OnboardingScreen() {
           <View style={{ gap: spacing.sm }}>
             {goalOptions.map((option) => (
               <Pressable
+                accessibilityLabel={`${option.label}. ${option.description}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected: goal === option.value }}
                 key={option.value}
                 onPress={() => setGoal(option.value)}
                 style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing.md,
                   padding: spacing.md,
                   borderRadius: radii.md,
                   borderWidth: 1,
@@ -223,12 +241,21 @@ export default function OnboardingScreen() {
                   opacity: pressed ? 0.6 : 1,
                 })}
               >
-                <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
-                  {option.label}
-                </Text>
-                <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, marginTop: 2 }}>
-                  {option.description}
-                </Text>
+                <Ionicons
+                  accessibilityElementsHidden
+                  color={goal === option.value ? accentPolicy.ink : accentPolicy.glyph}
+                  importantForAccessibility="no-hide-descendants"
+                  name={GOAL_ICON[option.value]}
+                  size={iconSizes.lg}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
+                    {option.label}
+                  </Text>
+                  <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, marginTop: 2 }}>
+                    {option.description}
+                  </Text>
+                </View>
               </Pressable>
             ))}
           </View>
@@ -241,6 +268,7 @@ export default function OnboardingScreen() {
                 error={!weightValid && weight.length > 0 ? 'Ingresa un peso válido.' : undefined}
                 keyboardType="decimal-pad"
                 {...numericInputProps}
+                icon="barbell-outline"
                 label="Peso actual"
                 onChangeText={setWeight}
                 value={weight}
@@ -255,6 +283,7 @@ export default function OnboardingScreen() {
                 error={!heightValid && height.length > 0 ? 'Ingresa una estatura válida.' : undefined}
                 keyboardType="decimal-pad"
                 {...numericInputProps}
+                icon="resize-outline"
                 label="Altura"
                 onChangeText={setHeight}
                 value={height}
@@ -285,6 +314,7 @@ export default function OnboardingScreen() {
             <Input
               keyboardType="number-pad"
               {...numericInputProps}
+              icon="calendar-outline"
               label="Días por semana"
               onChangeText={setFrequency}
               value={weeklyFrequency}
@@ -368,12 +398,15 @@ export default function OnboardingScreen() {
         {step < 3 ? (
           <Button
             disabled={!stepValid || !consentGiven}
+            icon="arrow-forward"
+            iconPosition="end"
             label="Guardar y continuar"
             loading={save.isPending}
             onPress={() => save.mutate()}
           />
         ) : (
           <Button
+            icon="checkmark"
             label="Completar"
             loading={save.isPending || complete.isPending}
             onPress={async () => {
@@ -384,6 +417,7 @@ export default function OnboardingScreen() {
         )}
         {step > 0 ? (
           <Button
+            icon="arrow-back"
             label="Atrás"
             onPress={() => setStep((current) => Math.max(0, current - 1))}
             variant="ghost"

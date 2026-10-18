@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { ApiError } from '@gymsheet/api-client';
+import { workoutExerciseSchema, workoutSetSchema } from '@gymsheet/schemas';
 import type { RestSettingChange, SkipReason, SkippedSet, TimedWorkoutSetInput, Workout, WorkoutSetInput } from '@gymsheet/types';
 import { accountService, workoutService } from '@/api/services';
 import { hydrateSessionMarks, mergeMarks, useSessionMarks } from '@/features/workout/session-marks-store';
@@ -9,6 +10,7 @@ import { notify } from '@/notifications';
 import { formatDuration } from '@/lib/format';
 import { useSessionRewardStore } from '@/state/session-reward-store';
 import { useWorkoutStore } from '@/features/workout/workout-store';
+import { withExercise, withoutSet, withoutSkippedSet, withSavedSet, withSkippedSet } from '@/features/workout/workout-cache';
 
 /**
  * ¿El fallo es de los que NO deben bloquear el entreno? La ruta aún no existe
@@ -26,8 +28,14 @@ export function isNetworkFailure(error: unknown): boolean {
 
 /**
  * Datos y escrituras de una sesión: la sesión, la cuenta (incremento de peso),
- * el historial reciente (para «Última vez») y las mutaciones. Cada escritura
- * refresca la sesión y las listas que la resumen.
+ * el historial reciente (para «Última vez») y las mutaciones.
+ *
+ * Durante la sesión cada escritura se aplica sobre la sesión en caché con lo
+ * que devuelve el servidor (la serie, la saltada, el ejercicio): registrar una
+ * serie ya no vuelve a pedir la sesión ni el historial. Las listas de sesiones
+ * solo se marcan como viejas (se piden al volver a mirarlas) y se refrescan de
+ * verdad al terminar o cancelar, que es cuando cambian para la barra de sesión
+ * activa y el historial.
  */
 export function useWorkoutSession(id: string) {
   const router = useRouter();
@@ -48,16 +56,49 @@ export function useWorkoutSession(id: string) {
    */
   const history = useQuery({ queryKey: ['workouts', 'recent'], queryFn: () => workoutService.list(40) });
 
+  /** Al cerrar (terminar o cancelar): la sesión y todas las listas, de verdad. */
   const refreshAll = async () => {
     await queryClient.invalidateQueries({ queryKey: ['workout', id] });
     void queryClient.invalidateQueries({ queryKey: ['workouts'] });
+  };
+  /** En plena sesión: las listas quedan viejas, sin pedirlas ahora (nadie las mira). */
+  const markListsStale = () => {
+    void queryClient.invalidateQueries({ queryKey: ['workouts'], refetchType: 'none' });
+  };
+  /** Pide la sesión otra vez: solo si la respuesta no se pudo aplicar en local. */
+  const refetchSession = () => queryClient.invalidateQueries({ queryKey: ['workout', id], exact: true });
+  /** Aplica un cambio sobre la sesión en caché y marca las listas. */
+  const patchSession = (change: (session: Workout) => Workout) => {
+    queryClient.setQueryData<Workout>(['workout', id], (old) => (old ? change(old) : old));
+    markListsStale();
+  };
+  /** La serie que devuelve el servidor, o `null` si no tiene la forma esperada. */
+  const savedSet = async (sessionExerciseId: string, response: unknown) => {
+    const parsed = workoutSetSchema.safeParse(response);
+    if (parsed.success) {
+      patchSession((session) => withSavedSet(session, sessionExerciseId, parsed.data));
+      return;
+    }
+    markListsStale();
+    await refetchSession();
+  };
+  /** El ejercicio entero que devuelve el servidor (omitido o recuperado). */
+  const savedExercise = async (response: unknown) => {
+    const parsed = workoutExerciseSchema.safeParse(response);
+    if (parsed.success && parsed.data.ejercicio) {
+      const exercise = parsed.data;
+      patchSession((session) => withExercise(session, exercise));
+      return;
+    }
+    markListsStale();
+    await refetchSession();
   };
 
   // Quien registra decide qué enseñar si falla (aviso en la página con «Reintentar»).
   const addSet = useMutation({
     mutationFn: (input: { sessionExerciseId: string; set: WorkoutSetInput | TimedWorkoutSetInput }) =>
       workoutService.addSet(input.sessionExerciseId, input.set),
-    onSuccess: refreshAll,
+    onSuccess: (response, input) => savedSet(input.sessionExerciseId, response),
   });
 
   /* ── D1 · saltar una serie, omitir un ejercicio ────────────────────────── */
@@ -81,8 +122,8 @@ export function useWorkoutSession(id: string) {
       };
       marksStore.getState().addSkip(id, input.exerciseId, local);
     },
-    onSuccess: async (_saved, input) => {
-      await refreshAll();
+    onSuccess: (saved, input) => {
+      patchSession((session) => withSkippedSet(session, input.exerciseId, saved));
       marksStore.getState().removeSkip(id, input.exerciseId, input.numeroSerie);
     },
     onError: (error: Error, input) => {
@@ -98,7 +139,7 @@ export function useWorkoutSession(id: string) {
       return workoutService.unskipSet(input.skip.id);
     },
     onMutate: (input) => marksStore.getState().removeSkip(id, input.exerciseId, input.skip.numeroSerie),
-    onSuccess: refreshAll,
+    onSuccess: (_deleted, input) => patchSession((session) => withoutSkippedSet(session, input.exerciseId, input.skip.id)),
     onError: (error: Error) => notify.error(error),
   });
 
@@ -107,8 +148,8 @@ export function useWorkoutSession(id: string) {
       workoutService.omitExercise(input.exerciseId, { motivo: input.motivo, nota: input.nota }),
     onMutate: (input) =>
       marksStore.getState().omit(id, input.exerciseId, { motivo: input.motivo, nota: input.nota, fecha: new Date().toISOString() }),
-    onSuccess: async (_saved, input) => {
-      await refreshAll();
+    onSuccess: async (saved, input) => {
+      await savedExercise(saved);
       marksStore.getState().unomit(id, input.exerciseId);
     },
     onError: (error: Error, input) => {
@@ -122,7 +163,7 @@ export function useWorkoutSession(id: string) {
     mutationFn: async (input: { exerciseId: string; onServer: boolean }) =>
       input.onServer ? workoutService.unomitExercise(input.exerciseId) : null,
     onMutate: (input) => marksStore.getState().unomit(id, input.exerciseId),
-    onSuccess: refreshAll,
+    onSuccess: (saved) => (saved ? savedExercise(saved) : undefined),
     onError: (error: Error) => {
       if (!keepsLocal(error)) notify.error(error);
     },
@@ -169,8 +210,8 @@ export function useWorkoutSession(id: string) {
   const addCardioSet = useMutation({
     mutationFn: (input: { sessionExerciseId: string; set: Parameters<typeof workoutService.addSet>[1] }) =>
       workoutService.addSet(input.sessionExerciseId, input.set),
-    onSuccess: async () => {
-      await refreshAll();
+    onSuccess: async (response, input) => {
+      await savedSet(input.sessionExerciseId, response);
       notify.success('Cardio registrado.');
     },
     onError: (error: Error) => notify.error(error),
@@ -178,8 +219,8 @@ export function useWorkoutSession(id: string) {
 
   const removeSet = useMutation({
     mutationFn: (setId: string) => workoutService.removeSet(setId),
-    onSuccess: async () => {
-      await refreshAll();
+    onSuccess: (_deleted, setId) => {
+      patchSession((session) => withoutSet(session, setId));
       notify.success('Serie deshecha.');
     },
     onError: (error: Error) => notify.error(error),
@@ -193,7 +234,9 @@ export function useWorkoutSession(id: string) {
         orden: (workout.data?.ejercicios.length ?? 0) + 1,
       }),
     onSuccess: async () => {
-      await refreshAll();
+      // La respuesta no trae la ficha del ejercicio (nombre, foto): se pide la sesión.
+      markListsStale();
+      await refetchSession();
       notify.success('Ejercicio añadido.');
     },
     onError: (error: Error) => notify.error(error),

@@ -208,6 +208,7 @@ export default function RecordWeightScreen() {
                 error={errors.weight?.message}
                 keyboardType="decimal-pad"
                 {...numericInputProps}
+                icon="scale-outline"
                 label="Peso"
                 onBlur={onBlur}
                 onChangeText={onChange}
@@ -244,6 +245,7 @@ export default function RecordWeightScreen() {
                 error={errors.measuredOn?.message}
                 keyboardType="numbers-and-punctuation"
                 {...numericInputProps}
+                icon="calendar-outline"
                 label="Fecha del pesaje (AAAA-MM-DD)"
                 onBlur={onBlur}
                 onChangeText={onChange}
@@ -270,7 +272,7 @@ export default function RecordWeightScreen() {
         />
 
         <View style={{ gap: spacing.xs }}>
-          <Button label="Guardar pesaje" loading={record.isPending} onPress={onSubmit} />
+          <Button icon="checkmark" label="Guardar pesaje" loading={record.isPending} onPress={onSubmit} />
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
             Cada pesaje queda en tu histórico; no reemplaza al anterior.
           </Text>

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { chatMessageSchema, readReceiptSettingsSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema, musicPlaylistSchema, musicPlaylistPageSchema } from '@gymsheet/schemas';
+import { chatMessageSchema, readReceiptSettingsSchema, setDisappearingMessagesResponseSchema, setMessageReactionResponseSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema, musicPlaylistSchema, musicPlaylistPageSchema } from '@gymsheet/schemas';
 import type { RoutineVisibility } from '@gymsheet/types';
 import type { MusicVisibility, SocialMapBounds, SocialMapCoordinates } from '@gymsheet/schemas';
 import {
@@ -733,27 +733,59 @@ export const chatService = {
       z.array(messageSchema),
       { method: 'GET' },
     ),
-  sendMessage: (conversationId: string, body: string) =>
+  /** `replyToId`: el mensaje que se cita al responder (deslizar la burbuja a la derecha). */
+  sendMessage: (conversationId: string, body: string, replyToId?: string) =>
     apiClient.request(`/me/conversations/${conversationId}/messages`, messageSchema, {
       method: 'POST',
-      body: { type: 'text', body },
+      body: { type: 'text', body, ...(replyToId ? { replyToId } : {}) },
     }),
-  sendLocationMessage: (conversationId: string, location: { lat: number; lng: number }) =>
+  /** `label` es el nombre del lugar elegido en el mapa; sin él, es «mi ubicación actual». */
+  sendLocationMessage: (
+    conversationId: string,
+    location: { lat: number; lng: number; label?: string },
+    replyToId?: string,
+  ) =>
     apiClient.request(`/me/conversations/${conversationId}/messages`, messageSchema, {
       method: 'POST',
-      body: { type: 'location', locationLat: location.lat, locationLng: location.lng },
+      body: {
+        type: 'location',
+        locationLat: location.lat,
+        locationLng: location.lng,
+        ...(location.label ? { locationLabel: location.label } : {}),
+        ...(replyToId ? { replyToId } : {}),
+      },
+    }),
+  /** Una reacción por persona y mensaje; `null` la quita. Devuelve las reacciones vigentes del mensaje. */
+  setReaction: (conversationId: string, messageId: string, emoji: string | null) =>
+    apiClient.request(
+      `/me/conversations/${conversationId}/messages/${messageId}/reaction`,
+      setMessageReactionResponseSchema,
+      { method: 'PUT', body: { emoji } },
+    ),
+  /** Reenvía un mensaje de otra conversación a esta; el servidor copia el archivo si lo hay. */
+  forwardMessage: (conversationId: string, fromConversationId: string, messageId: string) =>
+    apiClient.request(`/me/conversations/${conversationId}/messages/forward`, messageSchema, {
+      method: 'POST',
+      body: { fromConversationId, messageId },
+    }),
+  /** Mensajes temporales de la conversación: `null` los desactiva; si no, 24 h, 7 días o 90 días en segundos. */
+  setDisappearing: (conversationId: string, seconds: number | null) =>
+    apiClient.request(`/me/conversations/${conversationId}/disappearing`, setDisappearingMessagesResponseSchema, {
+      method: 'PUT',
+      body: { seconds },
     }),
   /** `file.mimeType` decide si el backend lo trata como imagen o video. */
   sendMediaMessage: async (
     conversationId: string,
     file: LocalFile,
-    options: { type: 'image' | 'video' | 'audio'; body?: string; viewOnce?: boolean },
+    options: { type: 'image' | 'video' | 'audio'; body?: string; viewOnce?: boolean; replyToId?: string },
   ) => {
     const form = new FormData();
     await appendLocalFile(form, 'file', file);
     form.append('type', options.type);
     if (options.body) form.append('body', options.body);
     form.append('viewOnce', options.viewOnce ? 'true' : 'false');
+    if (options.replyToId) form.append('replyToId', options.replyToId);
     return apiClient.upload(`/me/conversations/${conversationId}/messages/media`, messageSchema, form);
   },
   /** Revela la URL real de un mensaje de vista única — una sola vez por mensaje, para quien sea. */
@@ -805,9 +837,14 @@ updateReadReceiptSettings: (input: {
 /** Stories efímeras (24h), visibles a todo el tenant — independientes de la galería de fotos. */
 export const storiesService = {
   feed: () => apiClient.request('/me/stories/feed', z.array(storyFeedEntrySchema), { method: 'GET' }),
-  upload: async (file: LocalFile, audience?: { mode: 'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS'; recipientIds: string[]; requestId?: string }) => {
+  upload: async (
+    file: LocalFile,
+    audience?: { mode: 'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS'; recipientIds: string[]; requestId?: string },
+    caption?: string | null,
+  ) => {
     const form = new FormData();
     await appendLocalFile(form, 'file', file);
+    if (caption) form.append('caption', caption);
     if (audience) {
       form.append('audienceMode', audience.mode);
       form.append('recipientIds', JSON.stringify(audience.recipientIds));
@@ -821,8 +858,13 @@ export const storiesService = {
   viewers: (storyId: string) =>
     apiClient.request(`/me/stories/${storyId}/viewers`, storyViewersResponseSchema, { method: 'GET' }),
   remove: (storyId: string) => apiClient.request(`/me/stories/${storyId}`, deletedSchema, { method: 'DELETE' }),
-
-reply: (storyId: string, text: string, requestId: string) =>
+  /** Reacción rápida: el backend la entrega en el chat como un mensaje con el emoji. */
+  react: (storyId: string, emoji: string, requestId: string) =>
+    apiClient.request(`/me/stories/${storyId}/reactions`, chatMessageSchema, {
+      method: 'POST',
+      body: { emoji, requestId },
+    }),
+  reply: (storyId: string, text: string, requestId: string) =>
     apiClient.request(`/me/stories/${storyId}/replies`, chatMessageSchema, {
       method: 'POST',
       body: { text, requestId },

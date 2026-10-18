@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import type { ReactElement, ReactNode } from 'react';
 import { ActivityIndicator, FlatList, StatusBar, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +8,7 @@ import { PressableScale } from '@/components/motion';
 import {
   colors,
   fontSizes,
+  iconSizes,
   maxContentWidth,
   maxWideContentWidth,
   minTouchTarget,
@@ -31,7 +33,8 @@ export function Segmented<T extends string>({
   value,
   onChange,
 }: {
-  options: readonly { value: T; label: string; count?: number }[];
+  /** `icon`: glifo decorativo antes de la etiqueta; la etiqueta sigue nombrando el segmento. */
+  options: readonly { value: T; label: string; count?: number; icon?: keyof typeof Ionicons.glyphMap }[];
   value: T;
   onChange: (value: T) => void;
 }) {
@@ -72,6 +75,15 @@ export function Segmented<T extends string>({
               backgroundColor: active ? colors.surfaceHighest : 'transparent',
             }}
           >
+            {option.icon ? (
+              <Ionicons
+                accessibilityElementsHidden
+                color={active ? colors.text : colors.textMuted}
+                importantForAccessibility="no-hide-descendants"
+                name={option.icon}
+                size={iconSizes.sm}
+              />
+            ) : null}
             <Text
               numberOfLines={1}
               style={{

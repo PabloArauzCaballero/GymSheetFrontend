@@ -108,7 +108,7 @@ export default function LoginScreen() {
 
       {failure ? <AuthAlert message={failure} /> : null}
 
-      <Button label={authCopy.login.submit} loading={isSubmitting} onPress={onSubmit} />
+      <Button icon="log-in-outline" label={authCopy.login.submit} loading={isSubmitting} onPress={onSubmit} />
     </AuthShell>
   );
 }

@@ -57,8 +57,8 @@ export default function SessionSummaryScreen() {
         <Text tone="secondary" variant="body">
           Tu sesión se guardó y sus puntos ya están en tu senda.
         </Text>
-        <Button label="Ver mi senda" onPress={() => router.replace('/trayectoria')} />
-        <Button label="Seguir" onPress={goToList} variant="ghost" />
+        <Button icon="trail-sign-outline" label="Ver mi senda" onPress={() => router.replace('/trayectoria')} />
+        <Button icon="arrow-forward" iconPosition="end" label="Seguir" onPress={goToList} variant="ghost" />
       </ScrollScreen>
     );
   }
@@ -88,7 +88,7 @@ export default function SessionSummaryScreen() {
         {last.reward ? <SessionSummary onContinue={goToList} session={{ ...last, reward: last.reward }} /> : null}
         {last.programa ? <SessionProgramBlock block={last.programa} workoutId={last.sessionId} /> : null}
         {last.cardio ? <SessionCardioBlock block={last.cardio} /> : null}
-        {!last.reward ? <Button label="Seguir" onPress={goToList} /> : null}
+        {!last.reward ? <Button icon="arrow-forward" iconPosition="end" label="Seguir" onPress={goToList} /> : null}
       </View>
     </ScrollScreen>
   );

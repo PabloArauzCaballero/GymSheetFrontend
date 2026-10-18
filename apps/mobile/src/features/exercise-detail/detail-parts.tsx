@@ -1,8 +1,9 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Pressable, Text } from "react-native";
 import { PressableScale } from "@/components/motion";
 import { Card } from "@/components/layout";
-import { alpha, colors, fontSizes, radii, semibold, spacing } from "@/theme";
+import { alpha, colors, fontSizes, iconSizes, radii, semibold, spacing } from "@/theme";
 
 /**
  * Instruction steps arrive keyed by locale. `es-BO` first — the same order the
@@ -71,19 +72,34 @@ export function Description({ text }: { text: string }) {
       </Text>
       <Pressable
         accessibilityRole="button"
+        accessibilityState={{ expanded }}
         hitSlop={spacing.sm}
         onPress={() => setExpanded((value) => !value)}
-        style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+        style={({ pressed }) => ({
+          flexDirection: "row",
+          alignItems: "center",
+          alignSelf: "flex-start",
+          gap: spacing.xs,
+          opacity: pressed ? 0.6 : 1,
+        })}
       >
         <Text
           style={{
-            color: colors.volt,
+            color: colors.accentInk,
             fontSize: fontSizes.sm,
             fontWeight: semibold,
           }}
         >
           {expanded ? "Ver menos" : "Leer más"}
         </Text>
+        {/* El chevrón dice hacia dónde se mueve el texto: abre o pliega. */}
+        <Ionicons
+          accessibilityElementsHidden
+          color={colors.accentInk}
+          importantForAccessibility="no-hide-descendants"
+          name={expanded ? "chevron-up" : "chevron-down"}
+          size={iconSizes.sm}
+        />
       </Pressable>
     </Card>
   );

@@ -176,6 +176,7 @@ export function Button({
   label,
   onPress,
   icon,
+  iconPosition = 'start',
   loading = false,
   disabled = false,
   variant = 'primary',
@@ -190,6 +191,11 @@ export function Button({
   onPress: () => void;
   /** Glifo antes de la etiqueta; decorativo (la etiqueta nombra la acción). */
   icon?: keyof typeof Ionicons.glyphMap;
+  /**
+   * `end` para acciones que avanzan («Continuar», «Siguiente», «Ver todos»):
+   * la flecha apunta hacia donde se va, después de la palabra.
+   */
+  iconPosition?: 'start' | 'end';
   loading?: boolean;
   disabled?: boolean;
   variant?: ButtonVariant;
@@ -221,9 +227,15 @@ export function Button({
   );
   const glow = useAnimatedStyle(() => ({ opacity: Math.max(0, pressed.value) * 0.16 }));
   const labelStyle = useAnimatedStyle(() => (reduceMotion ? {} : { transform: [{ translateY: Math.max(0, pressed.value) }] }));
-  // El glifo se adelanta y gira un poco al tocar: el botón «arranca».
+  // El glifo se adelanta y gira un poco al tocar: el botón «arranca». Una
+  // flecha final solo avanza: girarla la haría apuntar a otra parte.
+  const trailing = iconPosition === 'end';
   const iconStyle = useAnimatedStyle(() =>
-    reduceMotion ? {} : { transform: [{ translateX: pressed.value * 3 }, { rotate: `${pressed.value * -8}deg` }] },
+    reduceMotion
+      ? {}
+      : trailing
+        ? { transform: [{ translateX: pressed.value * 3 }] }
+        : { transform: [{ translateX: pressed.value * 3 }, { rotate: `${pressed.value * -8}deg` }] },
   );
   const sweep = useAnimatedStyle(() => {
     const band = Math.max(64, buttonWidth * 0.35);
@@ -244,7 +256,9 @@ export function Button({
   const content = loading ? (
     <ActivityIndicator color={tone.ink} />
   ) : (
-    <Animated.View style={[{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }, labelStyle]}>
+    <Animated.View
+      style={[{ flexDirection: trailing ? 'row-reverse' : 'row', alignItems: 'center', gap: spacing.sm }, labelStyle]}
+    >
       {icon ? (
         <Animated.View style={iconStyle}>
           <Ionicons

@@ -1,4 +1,5 @@
 import { IconBadge } from '@/components/icon-badge';
+import { IconButton } from '@/components/icon-button';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
@@ -129,7 +130,11 @@ export default function ProfileScreen() {
       }}
       refreshing={profile.isFetching || membership.isFetching || photos.isFetching || progression.isFetching}
     >
-      <ScreenHeader title="Perfil" tourKey="profile" />
+      <ScreenHeader
+        action={<IconButton icon="settings-outline" label="Ajustes" onPress={() => router.push('/settings')} testID="profile-settings" />}
+        title="Perfil"
+        tourKey="profile"
+      />
 
       <TourTarget id="profile.identity">
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
@@ -245,7 +250,7 @@ export default function ProfileScreen() {
           ]}
         </RowGroup>
         {missingProfile ? (
-          <Button label="Completar mi perfil" onPress={() => router.push('/onboarding')} size="sm" style={{ alignSelf: 'flex-start' }} />
+          <Button icon="create-outline" label="Completar mi perfil" onPress={() => router.push('/onboarding')} size="sm" style={{ alignSelf: 'flex-start' }} />
         ) : null}
       </Section>
 
@@ -274,14 +279,15 @@ export default function ProfileScreen() {
       <Section title="La app">
         <RowGroup>
           {[
-            <NavRow key="notif" onPress={() => router.push('/notifications')} subtitle="Qué avisos quieres recibir" title="Notificaciones" />,
+            <NavRow key="notif" leading={<IconBadge icon="notifications-outline" tone="time" />} onPress={() => router.push('/notifications')} subtitle="Qué avisos quieres recibir" title="Notificaciones" />,
             <NavRow
               key="tour"
+              leading={<IconBadge icon="help-buoy-outline" tone="reps" />}
               onPress={() => void resetTour()}
               subtitle="Vuelve a ver la bienvenida y los avisos de cada pantalla"
               title="Ver tutorial"
             />,
-            <NavRow key="ajustes" onPress={() => router.push('/settings')} subtitle="Cuenta, versión y cierre de sesión" title="Ajustes" />,
+            <NavRow key="ajustes" leading={<IconBadge icon="settings-outline" tone="skipped" />} onPress={() => router.push('/settings')} subtitle="Cuenta, versión y cierre de sesión" title="Ajustes" />,
           ]}
         </RowGroup>
       </Section>

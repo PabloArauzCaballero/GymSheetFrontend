@@ -226,6 +226,7 @@ function SolicitudesTab() {
                     {connection.otherUserName}
                   </Text>
                   <Button
+                    icon="close-circle-outline"
                     label="Retirar"
                     loading={withdraw.isPending && withdraw.variables === connection.id}
                     onPress={() => withdraw.mutate(connection.id)}

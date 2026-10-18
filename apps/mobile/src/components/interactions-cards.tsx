@@ -131,12 +131,13 @@ export function LikeReceivedCard({
             loading={openingChat}
             onPress={onOpenChat}
           />
-          <Button label="Listo" onPress={onDismissMatch} variant="ghost" />
+          <Button icon="checkmark" label="Listo" onPress={onDismissMatch} variant="ghost" />
         </EnterUp>
       ) : (
         <>
           <TimeCaption text={timeLabel} />
           <Button
+            icon="person-add-outline"
             label="Conectar"
             loading={accepting}
             onPress={onAccept}
@@ -147,6 +148,7 @@ export function LikeReceivedCard({
           />
           <Button
             disabled={accepting}
+            icon="close"
             label="Descartar"
             loading={rejecting}
             onPress={onReject}
@@ -178,6 +180,7 @@ export function LikeSentCard({
     <GridCardShell entry={entry} index={index} onOpenProfile={onOpenProfile}>
       <TimeCaption text={timeLabel} />
       <Button
+        icon="close-circle-outline"
         label="Retirar"
         loading={withdrawing}
         onPress={onWithdraw}

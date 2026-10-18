@@ -362,12 +362,12 @@ function ProfileForm({
       ) : null}
 
       {step < PROFILE_STEPS.length - 1 ? (
-        <Button label="Continuar" onPress={() => void goNext()} />
+        <Button icon="arrow-forward" iconPosition="end" label="Continuar" onPress={() => void goNext()} />
       ) : (
-        <Button label="Guardar cambios" loading={save.isPending} onPress={onSubmit} />
+        <Button icon="checkmark" label="Guardar cambios" loading={save.isPending} onPress={onSubmit} />
       )}
       {step > 0 ? (
-        <Button label="Volver" onPress={() => setStep((current) => current - 1)} variant="ghost" />
+        <Button icon="arrow-back" label="Volver" onPress={() => setStep((current) => current - 1)} variant="ghost" />
       ) : null}
     </Card>
   );

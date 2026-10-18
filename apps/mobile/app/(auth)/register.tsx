@@ -197,7 +197,7 @@ export default function RegisterScreen() {
 
       {failure ? <AuthAlert message={failure} /> : null}
 
-      <Button label={authCopy.register.submit} loading={isSubmitting} onPress={onSubmit} />
+      <Button icon="person-add-outline" label={authCopy.register.submit} loading={isSubmitting} onPress={onSubmit} />
     </AuthShell>
   );
 }
