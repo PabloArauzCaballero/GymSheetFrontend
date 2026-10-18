@@ -1,17 +1,19 @@
 import type { Program, ProgramWeekProgress } from '@gymsheet/types';
 
 /** Estado de una semana del programa para mostrarlo sin depender solo del color. */
-export type WeekState = 'cumplida' | 'incumplida' | 'actual' | 'pendiente';
+export type WeekState = 'cumplida' | 'incumplida' | 'escudo' | 'actual' | 'pendiente';
 
 export function weekState(week: ProgramWeekProgress, currentWeek: number | null): WeekState {
   if (week.cumplida === true) return 'cumplida';
-  if (week.cumplida === false) return 'incumplida';
+  // Con escudo la semana no se pinta como fallo: el escudo hizo su trabajo.
+  if (week.cumplida === false) return week.escudoUsado ? 'escudo' : 'incumplida';
   return currentWeek === week.numero ? 'actual' : 'pendiente';
 }
 
 export const WEEK_STATE_LABEL: Record<WeekState, string> = {
   cumplida: 'Cumplida',
   incumplida: 'No cumplida',
+  escudo: 'Escudo usado',
   actual: 'En curso',
   pendiente: 'Por venir',
 };

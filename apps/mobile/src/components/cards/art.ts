@@ -5,7 +5,7 @@
  * con `SvgXml` y se rasterizan con `rsvg-convert` para revisarlas en una hoja de
  * contactos (`scripts/render-card-art.mjs`). Lienzo 120 × 120.
  *
- * Un solo estilo para las 33: masas planas con una sombra propia y un brillo,
+ * Un solo estilo para las 35: masas planas con una sombra propia y un brillo,
  * sin contornos; dos tintas por motivo (`a` domina, `b` acompaña) y el lima de
  * la marca (`V`) como detalle. El color sale de `@/theme` (`artHues`).
  */
@@ -17,6 +17,8 @@ export const ILLUSTRATION_KEYS = [
   'sunrise', 'moon', 'weekend', 'trending-up', 'lightning', 'target', 'heart-pulse', 'runner',
   'stopwatch', 'plank', 'hourglass', 'map-pin', 'chat-bubble', 'star', 'heart', 'download',
   'megaphone', 'pencil', 'calendar-week', 'crown',
+  // Contrato 12: el premio del gimnasio y el comodín de racha.
+  'gift', 'snowflake',
 ] as const;
 export type IllustrationKey = (typeof ILLUSTRATION_KEYS)[number];
 
@@ -213,6 +215,29 @@ export const CARD_ART: Readonly<Record<IllustrationKey, Art>> = {
     hues: ['sun', 'rose'],
     draw: (a, b) =>
       `${grad('k', a.main, a.deep)}${ground(34, 108)}<path d="M22 82L14 36L40 56L60 22L80 56L106 36L98 82Z" fill="url(#k)" stroke="${a.main}" stroke-width="4" stroke-linejoin="round"/><path d="M60 22L80 56L106 36L98 82H60Z" fill="${a.deep}" opacity="0.45"/><rect x="20" y="80" width="80" height="16" rx="5" fill="${a.deep}"/><rect x="20" y="80" width="80" height="6" rx="3" fill="${a.light}" opacity="0.7"/><circle cx="14" cy="36" r="7" fill="${b.main}"/><circle cx="106" cy="36" r="7" fill="${b.main}"/><circle cx="60" cy="22" r="8" fill="${b.main}"/><circle cx="58" cy="20" r="2.5" fill="${W}"/><circle cx="60" cy="89" r="5" fill="${b.main}"/><circle cx="38" cy="89" r="3.5" fill="${V}"/><circle cx="82" cy="89" r="3.5" fill="${V}"/>${spark(96, 12, 6)}`,
+  },
+  gift: {
+    hues: ['rose', 'sun'],
+    draw: (a, b) =>
+      `${grad('g', a.main, a.deep)}${ground(38, 106)}<rect x="20" y="52" width="80" height="50" rx="8" fill="${a.deep}"/><rect x="20" y="48" width="80" height="50" rx="8" fill="url(#g)"/><rect x="14" y="34" width="92" height="20" rx="7" fill="${a.main}"/><rect x="14" y="34" width="92" height="7" rx="3.5" fill="${a.light}" opacity="0.7"/><rect x="53" y="34" width="14" height="64" fill="${b.main}"/><rect x="53" y="54" width="14" height="44" fill="${b.deep}" opacity="0.45"/><path d="M60 34C50 16 28 14 31 28C32 35 46 37 60 34Z" fill="${b.main}"/><path d="M60 34C70 16 92 14 89 28C88 35 74 37 60 34Z" fill="${b.deep}"/><circle cx="60" cy="33" r="7" fill="${b.light}"/>${spark(100, 16, 7)}${spark(16, 72, 5, V)}`,
+  },
+  snowflake: {
+    hues: ['sky', 'cream'],
+    draw: (a, b) =>
+      `${ground(26, 110)}` +
+      [0, 60, 120]
+        .map(
+          (turn) =>
+            `<g transform="rotate(${turn} 60 58)"><rect x="55" y="15" width="10" height="92" rx="5" fill="${a.deep}"/></g>`,
+        )
+        .join('') +
+      [0, 60, 120]
+        .map(
+          (turn) =>
+            `<g transform="rotate(${turn} 60 58)"><rect x="55" y="12" width="10" height="92" rx="5" fill="${a.main}"/><path d="M60 28L48 17M60 28L72 17M60 88L48 99M60 88L72 99" fill="none" stroke="${a.light}" stroke-width="6" stroke-linecap="round"/></g>`,
+        )
+        .join('') +
+      `<polygon points="72.1,51 72.1,65 60,72 47.9,65 47.9,51 60,44" fill="${b.main}"/><circle cx="60" cy="58" r="5" fill="${W}"/>${spark(100, 22, 7)}${spark(18, 92, 5, V)}`,
   },
 };
 

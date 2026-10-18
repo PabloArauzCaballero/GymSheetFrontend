@@ -14,3 +14,5 @@ export * from './session-insights';
 export * from './role-labels';
 export * from './read-receipt';
 export * from './training-event-message';
+export * from './card-materials';
+export * from './rewards';

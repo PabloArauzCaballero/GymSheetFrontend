@@ -1,3 +1,4 @@
+import { modeTierName } from '@gymsheet/domain';
 import type { Program, ProgramMode } from '@gymsheet/types';
 
 /** «x1,4»: el multiplicador semanal con coma decimal, como lo ve la persona. */
@@ -40,4 +41,12 @@ export function programFraction(program: Pick<Program, 'semanaActual' | 'semanas
 export function nextMultiplierHint(program: Pick<Program, 'multiplicador' | 'proximoMultiplicador'>): string {
   if (program.multiplicador >= 2) return 'Estás en el máximo: x2,0.';
   return `Cumple esta semana para llegar a ${multiplierLabel(program.proximoMultiplicador)}.`;
+}
+
+/**
+ * «Encendido · x1,4»: el escalón del multiplicador con su nombre (contrato 12,
+ * P4). El nombre llega del servidor; si no, se deduce del valor.
+ */
+export function tierLabel(program: { multiplicador: number; nivelMultiplicador?: string | null }): string {
+  return `${modeTierName(program)} · ${multiplierLabel(program.multiplicador)}`;
 }

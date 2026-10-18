@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { BREAKDOWN_LABEL, countUpDuration } from '@gymsheet/domain';
+import { BREAKDOWN_LABEL, countUpDuration, streakSummary } from '@gymsheet/domain';
 import type { PointsBreakdown, SessionReward } from '@gymsheet/schemas';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
@@ -16,10 +16,15 @@ import { progressionService } from '@/api/services';
 import {
   CelebrationModal,
   markLevelSeen,
+  rarityOf,
+  rewardCelebrations,
+  subjectTitle,
   type CelebrationSubject,
 } from '@/components/celebration';
 import { RewardCardBack } from '@/components/cards/reward-card';
 import { Card } from '@/components/layout';
+import { ChallengesList } from '@/components/progression/challenges';
+import { NearestList } from '@/components/progression/nearest';
 import { CountUpText, DURATION, EnterUp, PREMIUM_EASING } from '@/components/motion';
 import { Text as UIText } from '@/components/text';
 import { Button } from '@/components/ui';
@@ -49,7 +54,7 @@ import {
 
 /** Escalonado del desglose: una fila cada 90 ms mientras la cifra cuenta. */
 const ROW_STEP = 90;
-const BREAKDOWN_ORDER: readonly (keyof PointsBreakdown)[] = ['session', 'sets', 'volume', 'streak', 'badges', 'modes'];
+const BREAKDOWN_ORDER: readonly (keyof PointsBreakdown)[] = ['session', 'sets', 'volume', 'streak', 'challenges', 'badges', 'modes'];
 
 /** De dónde sale cada partida: un glifo y el color de su magnitud, los mismos que en el entreno. */
 const BREAKDOWN_GLYPH: Readonly<
@@ -61,6 +66,7 @@ const BREAKDOWN_GLYPH: Readonly<
   streak: { icon: 'flame', metric: 'streak' },
   badges: { icon: 'ribbon', metric: 'record' },
   modes: { icon: 'flash', metric: 'effort' },
+  challenges: { icon: 'flag', metric: 'time' },
 };
 
 /** Las cartas que esperan, bocabajo y en abanico: se ve cuántas y de qué rareza, no cuáles. */
@@ -83,7 +89,7 @@ function RewardFan({ subjects }: { subjects: readonly CelebrationSubject[] }) {
             transform: [{ rotate: `${(index - spread / 2) * 9}deg` }],
           }}
         >
-          <RewardCardBack height={height} rarity={item.kind === 'badge' ? item.badge.rarity : 'LEGENDARIA'} width={width} />
+          <RewardCardBack height={height} rarity={rarityOf(item)} width={width} />
         </View>
       ))}
     </View>
@@ -178,14 +184,9 @@ export function SessionSummary({
   const totalAt = reduceMotion ? 0 : rowsAt + rows.length * ROW_STEP + 240;
   const totalMs = reduceMotion ? 0 : countUpDuration(reward.pointsBefore, reward.pointsAfter);
 
-  const subjects = useMemo<CelebrationSubject[]>(() => {
-    const cards: CelebrationSubject[] = reward.unlockedNow.map((badge) => ({ kind: 'badge', badge, fresh: true }));
-    // El rango va el último: es lo más grande y cierra la cola.
-    if (reward.leveledUp && reward.levelAfter) {
-      cards.push({ kind: 'level', level: reward.levelAfter, fresh: true });
-    }
-    return cards;
-  }, [reward]);
+  // Pico-final: insignias → retos → semana redonda → comodín → premios → rango.
+  const subjects = useMemo<CelebrationSubject[]>(() => rewardCelebrations(reward), [reward]);
+  const doneNow = useMemo(() => new Set(reward.challengesCompletedNow.map((item) => item.code)), [reward]);
 
   const [queue, setQueue] = useState<CelebrationSubject[]>([]);
   const autoOpened = useRef(false);
@@ -352,6 +353,16 @@ export function SessionSummary({
           to={reward.levelProgress}
         />
         <Text style={{ color: colors.textSecondary, fontSize: fontSizes.sm }}>{distance}</Text>
+        {reward.streak && reward.streak.current > 0 ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <Ionicons color={metricColors.streak.ink} name="flame" size={iconSizes.sm} />
+            <Text style={{ color: colors.textSecondary, fontSize: fontSizes.sm, fontVariant: ['tabular-nums'] }}>
+              {reward.streak.milestoneNow
+                ? `${streakSummary(reward.streak)} · ¡hito de ${reward.streak.milestoneNow}!`
+                : streakSummary(reward.streak)}
+            </Text>
+          </View>
+        ) : null}
         {session.geoVerified ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
             <Ionicons color={colors.success} name="location" size={iconSizes.sm} />
@@ -359,6 +370,26 @@ export function SessionSummary({
           </View>
         ) : null}
       </Card>
+
+      {reward.challenges && reward.challenges.items.length > 0 ? (
+        // Zeigarnik: la barra a medio llenar es lo que trae de vuelta. Lo
+        // cumplido en esta sesión se marca «¡Hecho ahora!».
+        <Card>
+          <UIText accessibilityRole="header" variant="headline">
+            Retos de la semana
+          </UIText>
+          <ChallengesList baseDelayMs={totalAt} highlight={doneNow} week={reward.challenges} />
+        </Card>
+      ) : null}
+
+      {reward.nearest.some((badge) => !badge.earned) ? (
+        <Card>
+          <UIText accessibilityRole="header" variant="headline">
+            Lo más cerca
+          </UIText>
+          <NearestList badges={reward.nearest} delayMs={totalAt} limit={2} />
+        </Card>
+      ) : null}
 
       {subjects.length > 0 ? (
         <Card>
@@ -369,7 +400,7 @@ export function SessionSummary({
                 {subjects.length === 1 ? 'Te espera una carta' : `Te esperan ${subjects.length} cartas`}
               </Text>
               <Text numberOfLines={2} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-                {subjects.map((item) => (item.kind === 'badge' ? item.badge.name : `Rango ${item.level.name}`)).join(' · ')}
+                {subjects.map(subjectTitle).join(' · ')}
               </Text>
             </View>
           </View>

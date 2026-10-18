@@ -32,6 +32,9 @@ export const programSchema = z.object({
   semanasTotales: z.number().int(),
   multiplicador: z.number(),
   proximoMultiplicador: z.number(),
+  /** Contrato 12 (P4). Opcionales: un servidor anterior no los manda. */
+  escudos: z.number().int().optional(),
+  nivelMultiplicador: z.string().optional(),
   sesionesHechasSemana: z.number().int(),
   sesionesPlanSemana: z.number().int(),
   esDescarga: z.boolean(),
@@ -55,6 +58,8 @@ export const programProgressSchema = z.object({
       minutosCardio: z.number(),
       cumplida: z.boolean().nullable(),
       multiplicador: z.number().nullable(),
+      /** La semana fallida que consumió el escudo y conservó el multiplicador. */
+      escudoUsado: z.boolean().optional(),
     }),
   ),
 });
@@ -116,6 +121,9 @@ export const programSessionExtrasSchema = z.object({
   motivoNoCuenta: z.string().nullable(),
   sesionesHechasSemana: z.number().int(),
   sesionesPlanSemana: z.number().int(),
+  /** Contrato 12 (P4). Opcionales: un servidor anterior no los manda. */
+  escudos: z.number().int().optional(),
+  nivelMultiplicador: z.string().optional(),
   bonusModo: z
     .object({
       multiplicador: z.number(),

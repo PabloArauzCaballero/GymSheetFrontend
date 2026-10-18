@@ -14,7 +14,9 @@ import { CardioSetRow } from './cardio-set-row';
 import { SET_GRID_COLS } from './set-grid';
 
 /** Una serie de cardio no tiene peso, repeticiones ni RIR: se lee como «32 min · 8 km». */
-export function WorkoutSetRow(props: Readonly<{ workoutId: string; set: WorkoutSet; editable: boolean }>) {
+export function WorkoutSetRow(
+  props: Readonly<{ workoutId: string; set: WorkoutSet; editable: boolean }>,
+) {
   return props.set.tipoSerie === 'CARDIO' ? (
     <CardioSetRow {...props} />
   ) : (

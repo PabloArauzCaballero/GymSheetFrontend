@@ -1,15 +1,15 @@
 import type { TutorialDefinition } from '../../model/types';
 
 /**
- * La senda explicada en tres pasos: quién eres, hacia dónde vas y qué retos
- * suman extra. Las anclas viven en `progression-client.tsx`; si un paso no
+ * La senda explicada paso a paso: quién eres, los retos de la semana, la
+ * colección en cadenas y hacia dónde vas (mismo orden que el tour del móvil). Las anclas viven en `progression-client.tsx`; si un paso no
  * encuentra la suya —una cuenta sin rango todavía— se salta en vez de fallar.
  */
 export const sendaOverview: TutorialDefinition = {
   id: 'senda-overview',
-  version: '1.0.0',
+  version: '1.1.0',
   title: 'Tu senda',
-  description: 'Cómo ganas puntos, cómo subes de rango y qué son las insignias.',
+  description: 'Cómo ganas puntos, los retos de la semana, tus insignias y cómo subes de rango.',
   category: 'PROGRESSION',
   difficulty: 'BEGINNER',
   estimatedMinutes: 2,
@@ -35,21 +35,32 @@ export const sendaOverview: TutorialDefinition = {
       optional: true,
     },
     {
-      id: 'path',
-      title: 'El camino',
-      description: 'Todos los rangos, también los que te quedan. Cada uno pide más puntos que el anterior.',
+      id: 'challenges',
+      title: 'Retos de la semana',
+      description:
+        'Cada lunes, tres retos hechos a tu medida: fácil, medio y difícil. Cumple los tres y la semana es redonda, con puntos extra.',
       route: '/trayectoria',
-      target: 'progression:path',
-      placement: 'right',
+      target: 'progression:challenges',
+      placement: 'bottom',
+      optional: true,
     },
     {
       id: 'badges',
-      title: 'Insignias',
+      title: 'Tu colección',
       description:
-        'Retos concretos que suman puntos extra. La rareza dice lo difícil que es cada una.',
+        'Las insignias van en cadenas: cada ficha dice en qué nivel vas y cuál es la siguiente. Ábrela para ver sus pasos.',
       route: '/trayectoria',
       target: 'progression:badges',
       placement: 'top',
+    },
+    {
+      id: 'path',
+      title: 'El camino',
+      description:
+        'Todos los rangos, también los que te quedan. Cada uno pide más puntos que el anterior.',
+      route: '/trayectoria',
+      target: 'progression:path',
+      placement: 'right',
     },
   ],
 };

@@ -72,7 +72,11 @@ export function CelebrationFlash({ timeline }: Readonly<{ timeline: CardTimeline
           'radial-gradient(circle, rgb(var(--sheen-channels) / 1) 0%, rgb(var(--sheen-channels) / 0.6) 22%, rgb(var(--sheen-channels) / 0) 60%)',
         willChange: 'transform, opacity',
       }}
-      transition={{ delay: s(timeline.burst.at), duration: s(timeline.burst.dur * 2.2), ease: 'easeOut' }}
+      transition={{
+        delay: s(timeline.burst.at),
+        duration: s(timeline.burst.dur * 2.2),
+        ease: 'easeOut',
+      }}
     />
   );
 }

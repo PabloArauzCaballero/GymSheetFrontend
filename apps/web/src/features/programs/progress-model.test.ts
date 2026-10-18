@@ -21,6 +21,10 @@ describe('avance del programa', () => {
     expect(weekState(week(3, null), 2)).toBe('pendiente');
   });
 
+  it('una semana fallida que gastó el escudo se lee «Escudo usado», no como fallo', () => {
+    expect(weekState({ ...week(1, false), escudoUsado: true }, 2)).toBe('escudo');
+  });
+
   it('resume solo lo cerrado', () => {
     const total = summarizeWeeks([week(1, true, 3), week(2, false, 1), week(3, null, 2)]);
     expect(total).toEqual({ cumplidas: 1, cerradas: 2, sesionesHechas: 6, sesionesPlan: 9, minutosCardio: 0 });
