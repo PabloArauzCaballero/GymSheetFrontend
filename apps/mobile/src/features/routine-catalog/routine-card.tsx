@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 import type { ReactNode } from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
-import { authorLabel, cardSubtitle, compactCount, downloadsLabel, ratingLabel, ratingValue } from '@gymsheet/hooks';
+import { authorLabel, cardSubtitle, downloadsLabel, ratingLabel, ratingValue } from '@gymsheet/hooks';
 import type { RoutineCard } from '@gymsheet/types';
 import { routineService } from '@/api/services';
 import { Skeleton } from '@/components/feedback';
@@ -13,9 +13,20 @@ import { Text } from '@/components/text';
 import { GOAL_LABEL } from '@/lib/format';
 import { RoutineCover } from '@/features/routine-catalog/routine-cover';
 import { MediaChip } from '@/features/routine-catalog/media-chip';
-import { alpha, cardPadding, colors, fontSizes, iconSizes, ink, radii, ratingStar, shadows, spacing } from '@/theme';
+import { cardPadding, colors, fontSizes, iconSizes, onMedia, radii, ratingStar, shadows, spacing } from '@/theme';
 
-const AVATAR = 36;
+const AVATAR = 28;
+/** 3:2, la proporción de las láminas (850×567): a 3× en un iPhone ancho apenas se amplían. */
+const COVER_RATIO = 1.5;
+/**
+ * Nombre de portada: más grande que un título de tarjeta, con el tracking
+ * cerrado de la display. El color es el del tono por defecto de `Text`.
+ */
+const TITLE = {
+  fontSize: fontSizes.xl,
+  lineHeight: Math.round(fontSizes.xl * 1.1),
+  letterSpacing: fontSizes.xl * -0.02,
+} as const;
 
 /** «3 días · 8 semanas»: lo que dura, en una línea sobre la portada. */
 export function planLine(card: Pick<RoutineCard, 'diasPorSemana' | 'duracionSemanas'>): string {
@@ -25,39 +36,6 @@ export function planLine(card: Pick<RoutineCard, 'diasPorSemana' | 'duracionSema
   ]
     .filter(Boolean)
     .join(' · ');
-}
-
-/** Lo que la comunidad ha hecho con ella: «12 descargas · 4 reseñas». */
-function socialLine(card: RoutineCard): string {
-  const reviews = card.valoracion.total;
-  return [
-    card.copias > 0 ? downloadsLabel(card.copias) : 'Estrénala tú',
-    reviews > 0 ? `${compactCount(reviews)} ${reviews === 1 ? 'reseña' : 'reseñas'}` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-}
-
-/** Dato corto con icono: «3 días/sem». */
-function MetaPill({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.xs,
-        paddingHorizontal: spacing.smd,
-        paddingVertical: spacing.xs,
-        borderRadius: radii.full,
-        backgroundColor: colors.surfaceHigh,
-      }}
-    >
-      <Ionicons color={colors.volt} name={icon} size={iconSizes.xs} />
-      <Text strong tabular variant="footnote">
-        {label}
-      </Text>
-    </View>
-  );
 }
 
 /**
@@ -106,19 +84,61 @@ export function RoutineLink({
 }
 
 /**
- * Tarjeta del catálogo (tercera pasada, 2026-10-12). Una foto, un nombre y una
- * persona: la portada a 3:2 (la proporción real de las láminas, así no se
- * amplían), con un único chip —el objetivo— y el nombre sobre el velo; debajo,
- * quién la hizo con su cara en grande y qué ha hecho la gente con ella, y a la
- * derecha la nota. Nada más: los días y las semanas van en una línea sobre la
- * foto, no en otro chip.
+ * Prueba social de una rutina en UNA fila callada: la nota (si la hay) y lo
+ * que la gente ha hecho con ella. Solo datos reales del DTO; sin reseñas ni
+ * descargas, «Nueva». La comparten la tarjeta y la portada del detalle.
+ */
+export function SocialProof({
+  valoracion,
+  copias,
+  overMedia = false,
+}: {
+  valoracion: RoutineCard['valoracion'];
+  copias: number;
+  /** Encima de una foto con velo: texto blanco en vez de los tonos de superficie. */
+  overMedia?: boolean;
+}) {
+  const rating = ratingValue(valoracion);
+  const strong = overMedia ? { color: onMedia.text } : undefined;
+  const quiet = overMedia ? { color: onMedia.textMuted } : undefined;
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexShrink: 0 }}>
+      {rating ? (
+        <>
+          <Ionicons color={ratingStar} name="star" size={iconSizes.xs} />
+          <Text strong style={strong} tabular variant="footnote">
+            {rating}
+          </Text>
+        </>
+      ) : null}
+      {copias > 0 ? (
+        <Text numberOfLines={1} style={quiet} tabular tone="muted" variant="footnote">
+          {rating ? `· ${downloadsLabel(copias)}` : downloadsLabel(copias)}
+        </Text>
+      ) : null}
+      {!rating && copias === 0 ? (
+        <Text style={quiet} tone="muted" variant="footnote">
+          Nueva
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * Tarjeta del catálogo (cuarta pasada, 2026-10-18 · #98 template marketing):
+ * la rutina compartida es la plantilla y se vende como una portada. La foto a
+ * 3:2 (la proporción real de las láminas, así no se amplían) con el objetivo
+ * arriba y el nombre en grande abajo, fundida con la tarjeta; debajo, una sola
+ * fila callada de prueba social: quién la hizo, la nota y las descargas. Sin
+ * chips repetidos: los días van en la línea bajo el título y el sello de REPP
+ * es el propio avatar oficial con «Equipo REPP».
  *
  * Al tocarla, la portada CRECE hasta ser la del detalle (transición de zoom de
  * iOS 18, interrumpible y con gesto de vuelta); en el resto es el empuje normal.
  */
 export function RoutineCardView({ card }: { card: RoutineCard }) {
   const author = authorLabel(card);
-  const rating = ratingValue(card.valoracion);
   const showsCommunity = card.visibilidad === 'PUBLIC' || card.esOficial;
   const who = card.esOficial ? 'Equipo REPP' : card.esMia ? 'Tú' : author;
   const label = [
@@ -146,105 +166,75 @@ export function RoutineCardView({ card }: { card: RoutineCard }) {
       }}
       testID={`routine-card-${card.id}`}
     >
-        <Link.AppleZoom>
-          <View
-            style={{
-              borderTopLeftRadius: radii.xxl,
-              borderTopRightRadius: radii.xxl,
-              borderCurve: 'continuous',
-              overflow: 'hidden',
-            }}
-          >
-            <RoutineCover goal={card.objetivo} scrim="soft" style={{ aspectRatio: 1.85 }} uri={card.portadaUrl}>
-              {card.esOficial || card.objetivo ? (
-                // REPP vive dentro de «Compartidas»: el sello es lo que separa
-                // una rutina del equipo de la de alguien de la comunidad.
-                <View style={{ position: 'absolute', top: spacing.md, left: spacing.md, flexDirection: 'row', gap: spacing.xs }}>
-                  {card.esOficial ? <MediaChip icon="sparkles" label="REPP" /> : null}
-                  {card.objetivo ? <MediaChip label={GOAL_LABEL[card.objetivo]} /> : null}
-                </View>
-              ) : null}
-              {showsCommunity ? (
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: spacing.md,
-                    right: spacing.md,
-                    minHeight: 32,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: spacing.xs,
-                    paddingHorizontal: spacing.smd,
-                    borderRadius: radii.full,
-                    backgroundColor: alpha(ink.black, 0.5),
-                  }}
-                >
-                  <Ionicons color={rating ? ratingStar : ink.white} name={rating ? 'star' : 'sparkles'} size={iconSizes.xs} />
-                  <Text strong style={{ color: ink.white }} tabular variant="footnote">
-                    {rating ?? 'Nueva'}
-                  </Text>
-                </View>
-              ) : null}
-            </RoutineCover>
-          </View>
-        </Link.AppleZoom>
-
-        <View style={{ paddingHorizontal: cardPadding, paddingTop: spacing.mdl, gap: spacing.md }}>
-          <Text numberOfLines={2} style={{ fontSize: fontSizes.heading, lineHeight: 29, letterSpacing: -0.4 }} variant="title">
-            {card.nombre}
-          </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-            <MetaPill icon="calendar-outline" label={`${card.diasPorSemana} ${card.diasPorSemana === 1 ? 'día' : 'días'}/sem`} />
-            {card.duracionSemanas ? <MetaPill icon="time-outline" label={`${card.duracionSemanas} semanas`} /> : null}
-                      </View>
-        </View>
-
+      <Link.AppleZoom>
         <View
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.smd,
-            minHeight: 44 + spacing.lg,
-            marginTop: spacing.md,
-            marginHorizontal: cardPadding,
-            paddingVertical: spacing.md,
-            borderTopWidth: 1,
-            borderTopColor: colors.borderSubtle,
+            borderTopLeftRadius: radii.xxl,
+            borderTopRightRadius: radii.xxl,
+            borderCurve: 'continuous',
+            overflow: 'hidden',
           }}
         >
-          <PersonAvatar
-            id={card.autor.id}
-            name={card.autor.nombre}
-            official={card.esOficial}
-            photoUrl={card.autor.fotoUrl}
-            size={AVATAR}
-          />
-          <View style={{ flex: 1, gap: spacing.xxs }}>
-            <Text numberOfLines={1} strong variant="subhead">
-              {who}
-            </Text>
-            <Text numberOfLines={1} tabular tone="muted" variant="footnote">
-              {showsCommunity ? socialLine(card) : card.visibilidad === 'PUBLIC' ? 'Pública' : 'Solo tú la ves'}
-            </Text>
-          </View>
-          <View
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: radii.full,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: colors.surfaceHigh,
-            }}
-          >
-            <Ionicons color={colors.textSecondary} name="chevron-forward" size={iconSizes.sm - 2} />
-          </View>
+          <RoutineCover goal={card.objetivo} scrim="card" style={{ aspectRatio: COVER_RATIO }} uri={card.portadaUrl}>
+            {card.objetivo ? (
+              <View style={{ position: 'absolute', top: spacing.md, left: spacing.md }}>
+                <MediaChip label={GOAL_LABEL[card.objetivo]} />
+              </View>
+            ) : null}
+            <View
+              style={{
+                position: 'absolute',
+                left: cardPadding,
+                right: cardPadding,
+                bottom: spacing.sm,
+                gap: spacing.xs,
+              }}
+            >
+              <Text numberOfLines={2} style={TITLE} variant="title">
+                {card.nombre}
+              </Text>
+              <Text numberOfLines={1} tabular tone="secondary" variant="subhead">
+                {planLine(card)}
+              </Text>
+            </View>
+          </RoutineCover>
         </View>
+      </Link.AppleZoom>
+
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.sm,
+          minHeight: 44,
+          paddingHorizontal: cardPadding,
+          paddingTop: spacing.xs,
+          paddingBottom: spacing.md,
+        }}
+      >
+        <PersonAvatar
+          id={card.autor.id}
+          name={card.autor.nombre}
+          official={card.esOficial}
+          photoUrl={card.autor.fotoUrl}
+          size={AVATAR}
+        />
+        <Text numberOfLines={1} strong style={{ flex: 1 }} tone="secondary" variant="subhead">
+          {who}
+        </Text>
+        {showsCommunity ? (
+          <SocialProof copias={card.copias} valoracion={card.valoracion} />
+        ) : (
+          <Text numberOfLines={1} tone="muted" variant="footnote">
+            {card.visibilidad === 'PUBLIC' ? 'Pública' : 'Solo tú la ves'}
+          </Text>
+        )}
+      </View>
     </RoutineLink>
   );
 }
 
-/** Esqueleto con la forma de la tarjeta: portada, autor y nota. */
+/** Esqueleto con la forma de la tarjeta: portada y la fila de autor y nota. */
 export function RoutineCardSkeleton() {
   return (
     <View
@@ -257,24 +247,23 @@ export function RoutineCardSkeleton() {
         overflow: 'hidden',
       }}
     >
-      <View style={{ aspectRatio: 1.85 }}>
+      <View style={{ aspectRatio: COVER_RATIO }}>
         <Skeleton height="100%" radius={0} />
       </View>
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          gap: spacing.smd,
+          gap: spacing.sm,
           paddingHorizontal: cardPadding,
           paddingVertical: spacing.md,
         }}
       >
         <Skeleton height={AVATAR} radius={radii.full} width={AVATAR} />
-        <View style={{ flex: 1, gap: spacing.xs }}>
+        <View style={{ flex: 1 }}>
           <Skeleton height={14} radius={radii.xs} width="45%" />
-          <Skeleton height={12} radius={radii.xs} width="60%" />
         </View>
-        <Skeleton height={14} radius={radii.xs} width={40} />
+        <Skeleton height={14} radius={radii.xs} width={72} />
       </View>
     </View>
   );
