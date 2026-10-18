@@ -42,7 +42,9 @@ function AttachmentPreview({ attachment }: { attachment: PendingAttachment }) {
   }
   return (
     <Image
+      cachePolicy="memory-disk"
       contentFit={preview.tipo === 'STICKER' ? 'contain' : 'cover'}
+      recyclingKey={preview.url}
       source={{ uri: preview.url }}
       style={{ width: 96, height: 96, borderRadius: radii.md, backgroundColor: colors.surfaceHigh }}
     />
