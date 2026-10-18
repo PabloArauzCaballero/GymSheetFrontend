@@ -982,7 +982,11 @@ export default function ComunidadScreen() {
       }
       itemGap={viewMode === 'cards' ? spacing.md : 0}
       keyExtractor={(entry) => entry.userId}
-      onRefresh={() => void directory.refetch()}
+      onRefresh={() => {
+        void directory.refetch();
+        // Las historias ya no se sondean: refrescar la pantalla también las trae.
+        void queryClient.invalidateQueries({ queryKey: ['stories', 'feed'] });
+      }}
       refreshing={directory.isFetching}
       renderItem={renderPerson}
     />

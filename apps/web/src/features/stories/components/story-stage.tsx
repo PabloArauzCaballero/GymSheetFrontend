@@ -70,12 +70,13 @@ export function StoryStage({
           src={mediaProxyUrl(story.mediaUrl)}
         />
       ) : (
-        <DomainImage
-          alt={`Story de ${fullName}`}
-          className="object-contain"
-          src={story.mediaUrl}
-        />
+        <DomainImage alt={`Story de ${fullName}`} className="object-contain" src={story.mediaUrl} />
       )}
+      {story.caption ? (
+        <p className="pointer-events-none absolute inset-x-6 bottom-28 mx-auto w-fit max-w-full whitespace-pre-line rounded-[var(--radius-lg)] bg-[rgb(var(--scrim-channels)/0.6)] px-4 py-2 text-center text-base font-semibold text-white">
+          {story.caption}
+        </p>
+      ) : null}
     </div>
   );
 }

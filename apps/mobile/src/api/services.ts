@@ -798,9 +798,14 @@ updateReadReceiptSettings: (input: {
 /** Stories efímeras (24h), visibles a todo el tenant — independientes de la galería de fotos. */
 export const storiesService = {
   feed: () => apiClient.request('/me/stories/feed', z.array(storyFeedEntrySchema), { method: 'GET' }),
-  upload: async (file: LocalFile, audience?: { mode: 'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS'; recipientIds: string[]; requestId?: string }) => {
+  upload: async (
+    file: LocalFile,
+    audience?: { mode: 'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS'; recipientIds: string[]; requestId?: string },
+    caption?: string | null,
+  ) => {
     const form = new FormData();
     await appendLocalFile(form, 'file', file);
+    if (caption) form.append('caption', caption);
     if (audience) {
       form.append('audienceMode', audience.mode);
       form.append('recipientIds', JSON.stringify(audience.recipientIds));
@@ -814,8 +819,13 @@ export const storiesService = {
   viewers: (storyId: string) =>
     apiClient.request(`/me/stories/${storyId}/viewers`, storyViewersResponseSchema, { method: 'GET' }),
   remove: (storyId: string) => apiClient.request(`/me/stories/${storyId}`, deletedSchema, { method: 'DELETE' }),
-
-reply: (storyId: string, text: string, requestId: string) =>
+  /** Reacción rápida: el backend la entrega en el chat como un mensaje con el emoji. */
+  react: (storyId: string, emoji: string, requestId: string) =>
+    apiClient.request(`/me/stories/${storyId}/reactions`, chatMessageSchema, {
+      method: 'POST',
+      body: { emoji, requestId },
+    }),
+  reply: (storyId: string, text: string, requestId: string) =>
     apiClient.request(`/me/stories/${storyId}/replies`, chatMessageSchema, {
       method: 'POST',
       body: { text, requestId },

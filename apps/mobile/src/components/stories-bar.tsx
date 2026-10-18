@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { profilePhotosService, socialService, storiesService } from '@/api/services';
 import { PressableScale } from '@/components/motion';
 import { StoryViewer } from '@/components/story-viewer';
+import { StoryComposer } from '@/components/story-composer';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
@@ -367,6 +368,14 @@ export function StoriesBar() {
     requestId: string;
     mode: 'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS';
     recipients: string[];
+    caption: string | null;
+  } | null>(null);
+  /** Lo elegido en cámara o carrete, esperando el «Compartir» de la vista previa. */
+  const [draft, setDraft] = useState<{
+    file: { uri: string; name: string; mimeType: string };
+    isVideo: boolean;
+    mode: 'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS';
+    recipients: string[];
   } | null>(null);
   const [uploadFailed, setUploadFailed] = useState(false);
 
@@ -374,8 +383,9 @@ export function StoriesBar() {
     queryKey: ['stories', 'feed'],
     queryFn: () => storiesService.feed(),
     staleTime: 30_000,
-    refetchInterval: openUserId ? 5_000 : false,
-    refetchIntervalInBackground: false,
+    // Sin sondeo con el visor abierto: cada respuesta nueva re-renderizaba el
+    // visor entero en mitad de un vídeo. El feed se refresca al cerrar el visor,
+    // al publicar o borrar, y con el gesto de refrescar de Comunidad.
   });
   const myPhotos = useQuery({
     queryKey: ['profile', 'photos'],
@@ -391,7 +401,7 @@ export function StoriesBar() {
       mode: attempt.mode,
       recipientIds: attempt.recipients,
       requestId: attempt.requestId,
-    }),
+    }, attempt.caption),
     onSuccess: async () => {
       uploadAttemptRef.current = null;
       setUploadFailed(false);
@@ -420,12 +430,25 @@ export function StoriesBar() {
   function submitPicked(result: ImagePicker.ImagePickerResult) {
     const asset = result.canceled ? null : result.assets?.[0];
     if (!asset) return;
-    const attempt = {
-      file: fileFromAsset(asset),
-      requestId: requestId(),
+    const file = fileFromAsset(asset);
+    setDraft({
+      file,
+      isVideo: file.mimeType.startsWith('video/'),
       mode: audienceMode,
       recipients: [...recipientIds],
+    });
+  }
+
+  function publishDraft(caption: string | null) {
+    if (!draft) return;
+    const attempt = {
+      file: draft.file,
+      requestId: requestId(),
+      mode: draft.mode,
+      recipients: draft.recipients,
+      caption,
     };
+    setDraft(null);
     uploadAttemptRef.current = attempt;
     setUploadFailed(false);
     upload.mutate(attempt);
@@ -512,8 +535,12 @@ export function StoriesBar() {
                 state={!myEntry ? 'none' : myEntry.hasUnviewed ? 'unviewed' : 'viewed'}
               />
             </PressableScale>
-            <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.xs, maxWidth: COLUMN_WIDTH }}>
-              Tu historia
+            <Text
+              accessibilityLiveRegion="polite"
+              numberOfLines={1}
+              style={{ color: colors.textMuted, fontSize: fontSizes.xs, maxWidth: COLUMN_WIDTH }}
+            >
+              {upload.isPending ? 'Publicando…' : 'Tu historia'}
             </Text>
             {uploadFailed ? (
               <Pressable accessibilityRole="button" onPress={retryUpload}>
@@ -587,6 +614,17 @@ export function StoriesBar() {
         recipientIds={recipientIds}
         visible={sourceVisible}
       />
+
+      {draft ? (
+        <StoryComposer
+          audienceLabel={draft.mode === 'ALL_CONNECTIONS'
+            ? 'Todas tus conexiones'
+            : draft.recipients.length === 1 ? '1 persona' : `${draft.recipients.length} personas`}
+          draft={{ uri: draft.file.uri, isVideo: draft.isVideo }}
+          onCancel={() => setDraft(null)}
+          onPublish={publishDraft}
+        />
+      ) : null}
 
       {/* El visor recibe el feed entero y por quién empezar, no una entrada
           suelta: sin el resto no podría pasar a la siguiente persona al acabar

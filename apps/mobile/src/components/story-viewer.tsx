@@ -40,6 +40,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import type { StoryFeedEntry } from '@gymsheet/schemas';
+import { StoryCaption } from '@/components/story-caption';
 import { storiesService } from '@/api/services';
 import { DURATION, PREMIUM_EASING, PressableScale } from '@/components/motion';
 import { confirmDelete, notify } from '@/notifications';
@@ -50,6 +51,8 @@ import { resolveStoryMediaSource } from '@/components/story-media-source';
 import { initialsOf } from '@/lib/format';
 import { storyManualPauseAfterAppStateChange } from '@/lib/story-app-state';
 import { firstAvailableStoryId, reconcileStoryFeed } from '@/lib/story-feed-reconciliation';
+import { adjacentPersonStep, nextStoryStep, previousStoryStep, storiesToPreload } from '@/lib/story-navigation';
+import { storyTimeLeftLabel } from '@/lib/story-text';
 import { storyViewersPresentation } from '@/components/story-viewers-presentation';
 import { requestId } from '@/lib/request-id';
 import { alpha, colors, fontSizes, iconSizes, ink, minTouchTarget, onMedia, overlay, radii, semibold, spacing } from '@/theme';
@@ -101,6 +104,15 @@ const PAUSE_ACTION = 'gymsheet.togglePause';
 const DISMISS_DISTANCE = 140;
 /** Un lanzamiento rápido hacia abajo cierra aunque no se llegue a la distancia. */
 const DISMISS_VELOCITY = 900;
+
+/** Deslizar en horizontal a partir de esto cambia de persona. */
+const PERSON_SWIPE_DISTANCE = 80;
+const PERSON_SWIPE_VELOCITY = 800;
+/** Cuánto entra de lado la persona nueva: una pista de dirección, no un carrusel. */
+const PERSON_ENTER_OFFSET = 48;
+
+/** Reacción rápida: un solo toque, como el corazón de Instagram. */
+const QUICK_REACTION = '❤️';
 
 /** Vuelta al sitio: firme, sin rebote — el visor no es un juguete elástico. */
 const RETURN_SPRING = { damping: 26, stiffness: 320, mass: 0.6, overshootClamping: true } as const;
@@ -498,6 +510,12 @@ export function StoryViewer({
   const [viewersOpen, setViewersOpen] = useState(false);
   const [appActive, setAppActive] = useState(true);
   const [headerHeight, setHeaderHeight] = useState(DEFAULT_HEADER_HEIGHT);
+  /** La foto de esta story ya está pintada (o falló): hasta entonces el reloj no corre. */
+  const [loadedStoryId, setLoadedStoryId] = useState<string | null>(null);
+  const [failedStoryId, setFailedStoryId] = useState<string | null>(null);
+  /** Stories a las que ya reaccioné en esta apertura: el corazón queda lleno. */
+  const [reactedStoryIds, setReactedStoryIds] = useState<ReadonlySet<string>>(() => new Set());
+  const [reactBusy, setReactBusy] = useState(false);
   const [footerHeight, setFooterHeight] = useState(DEFAULT_FOOTER_HEIGHT);
 
   /*
@@ -542,15 +560,6 @@ export function StoryViewer({
   const isVideo = story?.mediaType === 'video';
   /** La medida sólo vale para la story que la produjo; para el resto, `null`. */
   const measuredMs = videoDuration && videoDuration.storyId === storyId ? videoDuration.ms : null;
-  const durationMs = segmentDurationMs(story?.mediaType ?? 'image', measuredMs);
-
-  /**
-   * Todas las razones para parar el reloj, en una sola expresión: el dedo
-   * apoyado, la pausa del lector de pantalla, el arrastre de cierre, el diálogo
-   * de borrado, la hoja de espectadores abierta y la aplicación en segundo
-   * plano. Ninguna de esas situaciones es «el usuario está mirando la story».
-   */
-  const paused = held || manualPaused || dragging || closing || busy || viewersOpen || replyOpen || !appActive || !mediaReady;
 
   /**
    * El reproductor del vídeo en curso.
@@ -564,7 +573,8 @@ export function StoryViewer({
   const mutedRef = useRef(muted);
   const player = useVideoPlayer(
     isVideo && storyMediaUri && storyAccessToken
-      ? { uri: storyMediaUri, headers: { Authorization: `Bearer ${storyAccessToken}` } }
+      // `useCaching`: volver atrás a un vídeo ya visto no lo descarga otra vez.
+      ? { uri: storyMediaUri, headers: { Authorization: `Bearer ${storyAccessToken}` }, useCaching: true }
       : null,
     (instance) => {
     instance.muted = mutedRef.current;
@@ -582,19 +592,6 @@ export function StoryViewer({
     player.muted = muted;
   }, [muted, player]);
 
-  /*
-   * Reproducir es lo contrario de pausar, y «pausar» aquí es la misma palabra
-   * para todo: mantener pulsado, la pausa del lector de pantalla, el arrastre,
-   * la hoja de espectadores, el borrado y la app en segundo plano. Mantener
-   * pulsado detiene el VÍDEO, no sólo la barra — que era justo la diferencia
-   * entre pausar y disimular. Autoplay al entrar sale gratis de aquí: al
-   * cambiar de vídeo `player` es otro y el efecto vuelve a correr.
-   */
-  useEffect(() => {
-    if (!isVideo) return;
-    if (paused) player.pause();
-    else player.play();
-  }, [isVideo, paused, player]);
 
   /*
    * La duración de verdad.
@@ -629,6 +626,45 @@ export function StoryViewer({
     setPlayerStatus(player.status);
   }, [player]);
   useEventListener(player, 'statusChange', ({ status }) => setPlayerStatus(status));
+
+  /*
+   * ¿Se ve ya la story? Una foto, cuando `expo-image` avisa de que la pintó; un
+   * vídeo, cuando el reproductor está listo. Antes el reloj arrancaba con la
+   * petición en vuelo: con mala red una foto podía pasar sin haberse visto y
+   * aun así quedar marcada como vista.
+   *
+   * Si falla, el reloj sí corre (con el tramo de una foto) para que el visor no
+   * se quede atascado en un error; lo que no se hace es marcarla como vista.
+   */
+  const contentFailed = Boolean(storyId) && (
+    mediaAccessFailed || failedStoryId === storyId || (isVideo && playerStatus === 'error')
+  );
+  const contentReady = mediaReady && (isVideo ? playerStatus === 'readyToPlay' : loadedStoryId === storyId);
+  const durationMs = contentFailed
+    ? IMAGE_DURATION_MS
+    : segmentDurationMs(story?.mediaType ?? 'image', measuredMs);
+
+  /**
+   * Todas las razones para parar el reloj, en una sola expresión: el dedo
+   * apoyado, la pausa del lector de pantalla, el arrastre, el borrado, las
+   * hojas abiertas, la app en segundo plano y la story todavía sin pintar.
+   */
+  const paused = held || manualPaused || dragging || closing || busy || viewersOpen || replyOpen || !appActive
+    || !(contentReady || contentFailed);
+
+  /*
+   * Reproducir es lo contrario de pausar, y «pausar» aquí es la misma palabra
+   * para todo: mantener pulsado, la pausa del lector de pantalla, el arrastre,
+   * la hoja de espectadores, el borrado y la app en segundo plano. Mantener
+   * pulsado detiene el VÍDEO, no sólo la barra — que era justo la diferencia
+   * entre pausar y disimular. Autoplay al entrar sale gratis de aquí: al
+   * cambiar de vídeo `player` es otro y el efecto vuelve a correr.
+   */
+  useEffect(() => {
+    if (!isVideo) return;
+    if (paused) player.pause();
+    else player.play();
+  }, [isVideo, paused, player]);
 
   /** Lo que le queda a la story actual; sobrevive a las pausas. */
   const remainingRef = useRef(durationMs);
@@ -678,12 +714,34 @@ export function StoryViewer({
   // `Set` evita repetir dentro de esta apertura, y `viewedByMe` evita repetir
   // entre aperturas — reabrir el visor no vuelve a anunciar como nueva una
   // story que el backend ya tiene registrada.
+  //
+  // Y sólo cuando de verdad se ve (`contentReady`): una story que no llegó a
+  // cargar no cuenta como vista ni para el anillo ni para la lista del autor.
   useEffect(() => {
-    if (!storyId || viewedRef.current.has(storyId)) return;
+    if (!storyId || !contentReady || viewedRef.current.has(storyId)) return;
     viewedRef.current.add(storyId);
     if (storyViewedByMe) return;
     void storiesService.view(storyId).catch(() => {});
-  }, [storyId, storyViewedByMe]);
+  }, [contentReady, storyId, storyViewedByMe]);
+
+  /*
+   * Precarga: la siguiente story y la primera de la siguiente persona se piden
+   * mientras se mira la actual, con el mismo token, a la caché de `expo-image`.
+   * Así tocar «siguiente» enseña la foto al instante en vez de un spinner. El
+   * backend la sirve con `Cache-Control: private` y ETag, de modo que no se
+   * descarga dos veces. Los vídeos no se precargan aquí: `expo-video` no tiene
+   * precarga sin reproductor; con `useCaching` al menos no se repiten.
+   */
+  useEffect(() => {
+    if (!cursor || !storyAccessToken) return;
+    const headers = { Authorization: `Bearer ${storyAccessToken}` };
+    const uris = storiesToPreload(feed, cursor)
+      .filter((item) => item.mediaType === 'image')
+      .map((item) => resolveStoryMediaSource(item.mediaUrl, env.apiUrl))
+      .filter((uri): uri is string => uri !== null);
+    if (uris.length === 0) return;
+    void Image.prefetch(uris, { headers, cachePolicy: 'memory-disk' }).catch(() => false);
+  }, [cursor, feed, storyAccessToken]);
 
   /*
    * Reconciliación del cursor con el feed que acaba de llegar.
@@ -753,48 +811,60 @@ export function StoryViewer({
     setCursor((previous) => (previous ? { userId, storyId, run: previous.run + 1 } : previous));
   }, []);
 
+  /**
+   * Desplazamiento horizontal del contenido: sigue al dedo al deslizar entre
+   * personas y, al cambiar de persona, la nueva entra desde su lado. Es la
+   * respuesta a «¿de dónde salió esto?», no un adorno: con Reduce Motion no se
+   * mueve nada y el cambio es instantáneo.
+   */
+  const translateX = useSharedValue(0);
+  const enterFrom = useCallback((direction: 1 | -1) => {
+    if (reduceMotion) return;
+    cancelAnimation(translateX);
+    translateX.value = direction * PERSON_ENTER_OFFSET;
+    translateX.value = withSpring(0, RETURN_SPRING);
+  }, [reduceMotion, translateX]);
+
+  /** Aplica un paso de navegación; cambiar de persona lleva háptico y entrada lateral. */
+  const applyStep = useCallback((step: { userId: string; storyId: string; changedPerson: boolean }, direction: 1 | -1) => {
+    if (step.changedPerson) {
+      jumpFeedback();
+      enterFrom(direction);
+    }
+    moveTo(step.userId, step.storyId);
+  }, [enterFrom, jumpFeedback, moveTo]);
+
   const goNext = useCallback(() => {
-    if (!entry || storyIndex === -1) return;
-    const nextOwn = entry.stories[storyIndex + 1];
-    if (nextOwn) {
-      moveTo(entry.userId, nextOwn.id);
-      return;
-    }
-    // Se busca en bucle y no con `feed[personIndex + 1]`: una entrada sin
-    // stories no es un final de feed, es una entrada que hay que saltarse.
-    for (let index = personIndex + 1; index < feed.length; index += 1) {
-      const candidate = feed[index];
-      const target = firstAvailableStoryId(candidate);
-      if (candidate && target) {
-        jumpFeedback();
-        moveTo(candidate.userId, target);
-        return;
-      }
-    }
-    closeRef.current();
-  }, [entry, feed, jumpFeedback, moveTo, personIndex, storyIndex]);
+    // Sin ancla válida no se decide nada: lo resuelve la reconciliación.
+    if (!cursor || storyIndex === -1) return;
+    const step = nextStoryStep(feed, cursor);
+    if (step) applyStep(step, 1);
+    else closeRef.current();
+  }, [applyStep, cursor, feed, storyIndex]);
 
   const goPrevious = useCallback(() => {
-    if (!entry || !cursor || storyIndex === -1) return;
-    const previousOwn = storyIndex > 0 ? entry.stories[storyIndex - 1] : undefined;
-    if (previousOwn) {
-      moveTo(entry.userId, previousOwn.id);
+    if (!cursor || storyIndex === -1) return;
+    const step = previousStoryStep(feed, cursor);
+    // Primera del todo: se reinicia la actual, como hace Instagram.
+    if (step) applyStep(step, -1);
+    else moveTo(cursor.userId, cursor.storyId);
+  }, [applyStep, cursor, feed, moveTo, storyIndex]);
+
+  /**
+   * Deslizar en horizontal salta de persona entera. Hacia delante desde la
+   * última persona cierra (no queda nadie); hacia atrás desde la primera, el
+   * contenido vuelve a su sitio.
+   */
+  const goPerson = useCallback((direction: 1 | -1) => {
+    if (!cursor) return;
+    const step = adjacentPersonStep(feed, cursor.userId, direction);
+    if (step) {
+      applyStep(step, direction);
       return;
     }
-    for (let index = personIndex - 1; index >= 0; index -= 1) {
-      const candidate = feed[index];
-      // Hacia atrás se entra por la ÚLTIMA story de esa persona: es la que se
-      // acababa de ver antes de saltar hacia delante.
-      const target = candidate?.stories[candidate.stories.length - 1];
-      if (candidate && target) {
-        jumpFeedback();
-        moveTo(candidate.userId, target.id);
-        return;
-      }
-    }
-    // Primera del todo: se reinicia la actual, como hace Instagram.
-    moveTo(cursor.userId, cursor.storyId);
-  }, [cursor, entry, feed, jumpFeedback, moveTo, personIndex, storyIndex]);
+    if (direction === 1) closeRef.current();
+    else translateX.value = reduceMotion ? 0 : withSpring(0, RETURN_SPRING);
+  }, [applyStep, cursor, feed, reduceMotion, translateX]);
 
   useEffect(() => {
     advanceRef.current = goNext;
@@ -898,10 +968,48 @@ export function StoryViewer({
     [finishClose, reduceMotion, screenHeight, translateY],
   );
 
+  /**
+   * Deslizar en horizontal pasa a la persona siguiente o anterior, como en
+   * Instagram. Convive con el arrastre vertical por los umbrales cruzados (cada
+   * uno falla en el eje del otro) y con los toques porque no se activa hasta
+   * moverse 20pt. El contenido sigue al dedo a medias: se nota que se puede
+   * soltar sin comprometerse.
+   */
+  const personPan = useMemo(
+    () =>
+      Gesture.Pan()
+        .activeOffsetX([-20, 20])
+        .failOffsetY([-20, 20])
+        .onStart(() => {
+          runOnJS(setDragging)(true);
+        })
+        .onUpdate((event) => {
+          translateX.value = reduceMotion ? 0 : event.translationX * 0.5;
+        })
+        .onEnd((event) => {
+          const forward = event.translationX < -PERSON_SWIPE_DISTANCE || event.velocityX < -PERSON_SWIPE_VELOCITY;
+          const backward = event.translationX > PERSON_SWIPE_DISTANCE || event.velocityX > PERSON_SWIPE_VELOCITY;
+          if (forward || backward) {
+            runOnJS(goPerson)(forward ? 1 : -1);
+            return;
+          }
+          translateX.value = reduceMotion ? 0 : withSpring(0, RETURN_SPRING);
+        })
+        .onFinalize(() => {
+          runOnJS(setDragging)(false);
+        }),
+    [goPerson, reduceMotion, translateX],
+  );
+  const gestures = useMemo(() => Gesture.Race(pan, personPan), [pan, personPan]);
+
   const contentStyle = useAnimatedStyle(() => {
     const progress = Math.min(1, translateY.value / screenHeight);
     return {
-      transform: [{ translateY: translateY.value }, { scale: 1 - progress * 0.12 }],
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+        { scale: 1 - progress * 0.12 },
+      ],
     };
   });
 
@@ -946,13 +1054,42 @@ export function StoryViewer({
       });
       if (!result.confirmed) return;
       await storiesService.remove(activeStoryId);
-      await queryClient.invalidateQueries({ queryKey: ['stories', 'feed'] });
+      // Se sigue en la siguiente story propia (o en la anterior) en vez de
+      // cerrar: borrar una de tres no significa haber terminado de mirar.
+      const ownerId = entry?.userId;
+      const remaining = entry?.stories.filter((item) => item.id !== activeStoryId) ?? [];
+      const target = entry?.stories[storyIndex + 1] ?? entry?.stories[storyIndex - 1];
+      // El ancla se mueve ANTES de quitar la story de la caché: así la
+      // reconciliación encuentra el cursor ya en la siguiente y no salta.
+      if (ownerId && target && remaining.length > 0) moveTo(ownerId, target.id);
+      queryClient.setQueryData<StoryFeedEntry[]>(['stories', 'feed'], (current) => current
+        ?.map((item) => (item.userId === ownerId
+          ? { ...item, stories: item.stories.filter((candidate) => candidate.id !== activeStoryId) }
+          : item))
+        .filter((item) => item.stories.length > 0));
+      void queryClient.invalidateQueries({ queryKey: ['stories', 'feed'] });
       notify.success('Story eliminada.');
-      closeRef.current();
+      if (!(ownerId && target && remaining.length > 0)) closeRef.current();
     } catch (error) {
       notify.error(error instanceof Error ? error.message : 'No se pudo eliminar la story.');
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleReact() {
+    if (!story || isMine || reactBusy || reactedStoryIds.has(story.id)) return;
+    const reactedId = story.id;
+    setReactBusy(true);
+    try {
+      await storiesService.react(reactedId, QUICK_REACTION, requestId());
+      setReactedStoryIds((current) => new Set(current).add(reactedId));
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      AccessibilityInfo.announceForAccessibility('Reacción enviada');
+    } catch (error) {
+      notify.error(error instanceof Error ? error.message : 'No se pudo enviar la reacción.');
+    } finally {
+      setReactBusy(false);
     }
   }
 
@@ -1009,7 +1146,7 @@ export function StoryViewer({
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: ink.black }, backdropStyle]} />
 
-        <GestureDetector gesture={pan}>
+        <GestureDetector gesture={gestures}>
           <Animated.View style={[{ flex: 1, overflow: 'hidden', borderRadius: radii.xl }, contentStyle]}>
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
               {!mediaReady ? (
@@ -1046,6 +1183,9 @@ export function StoryViewer({
                       ? { uri: storyMediaUri, headers: { Authorization: `Bearer ${storyAccessToken}` } }
                       : null
                   }
+                  cachePolicy="memory-disk"
+                  onError={() => setFailedStoryId(activeStoryId)}
+                  onLoad={() => setLoadedStoryId(activeStoryId)}
                   style={{ width: '100%', height: '100%' }}
                   transition={reduceMotion ? 0 : 160}
                 />
@@ -1089,6 +1229,35 @@ export function StoryViewer({
                 rectángulo negro con la barra corriendo por encima, y eso se lee
                 como una app rota. `pointerEvents="none"`: es un cartel, no un
                 control — los toques siguen llegando a las zonas de avance. */}
+            {!isVideo && mediaReady && !contentReady ? (
+              <View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  top: headerHeight,
+                  left: 0,
+                  right: 0,
+                  bottom: tapZoneBottom,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: spacing.sm,
+                  paddingHorizontal: spacing.xl,
+                  zIndex: 3,
+                }}
+              >
+                {contentFailed ? (
+                  <>
+                    <Ionicons color={onMedia.textMuted} name="cloud-offline-outline" size={40} />
+                    <Text style={{ color: onMedia.textMuted, fontSize: fontSizes.sm, textAlign: 'center', lineHeight: 20 }}>
+                      Esta foto no se pudo cargar.
+                    </Text>
+                  </>
+                ) : (
+                  <ActivityIndicator accessibilityLabel="Cargando story" color={ink.white} size="small" />
+                )}
+              </View>
+            ) : null}
+
             {isVideo && playerStatus !== 'readyToPlay' ? (
               <View
                 pointerEvents="none"
@@ -1123,6 +1292,15 @@ export function StoryViewer({
                   <ActivityIndicator color={ink.white} size="small" />
                 )}
               </View>
+            ) : null}
+
+            {story.caption ? (
+              <Animated.View
+                pointerEvents="none"
+                style={[StyleSheet.absoluteFill, { zIndex: 3 }, overlayStyle]}
+              >
+                <StoryCaption bottom={tapZoneBottom + spacing.lg} text={story.caption} />
+              </Animated.View>
             ) : null}
 
             {/* Cabecera: barras y autor. Se mide a sí misma para que las zonas
@@ -1178,7 +1356,9 @@ export function StoryViewer({
                     {entry.fullName}
                   </Text>
                   <Text style={{ color: alpha(ink.white, 0.7), fontSize: fontSizes.xs }}>
-                    {relativeTimeEs(story.createdAt)}
+                    {[relativeTimeEs(story.createdAt), isMine ? storyTimeLeftLabel(story.expiresAt) : null]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </Text>
                 </View>
                 {/* El sonido sólo aparece cuando hay sonido que gobernar. Es un
@@ -1331,15 +1511,35 @@ export function StoryViewer({
                     </PressableScale>
                   </View>
                 ) : (
-                  <PressableScale
-                    accessibilityLabel={`Responder a la story de ${entry?.fullName ?? 'este usuario'}`}
-                    accessibilityRole="button"
-                    haptic="selection"
-                    onPress={() => setReplyOpen(true)}
-                    style={{ minHeight: minTouchTarget, justifyContent: 'center', marginHorizontal: spacing.md, paddingHorizontal: spacing.lg, borderRadius: radii.full, borderWidth: 1, borderColor: alpha(ink.white, 0.55), backgroundColor: alpha(ink.black, 0.55) }}
-                  >
-                    <Text style={{ color: ink.white, fontSize: fontSizes.sm }}>Responder a {entry?.fullName ?? 'esta story'}…</Text>
-                  </PressableScale>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginHorizontal: spacing.md }}>
+                    <PressableScale
+                      accessibilityLabel={`Responder a la story de ${entry?.fullName ?? 'este usuario'}`}
+                      accessibilityRole="button"
+                      haptic="selection"
+                      onPress={() => setReplyOpen(true)}
+                      style={{ flex: 1, minHeight: minTouchTarget, justifyContent: 'center', paddingHorizontal: spacing.lg, borderRadius: radii.full, borderWidth: 1, borderColor: alpha(ink.white, 0.55), backgroundColor: alpha(ink.black, 0.55) }}
+                    >
+                      <Text numberOfLines={1} style={{ color: ink.white, fontSize: fontSizes.sm }}>Responder a {entry?.fullName ?? 'esta story'}…</Text>
+                    </PressableScale>
+                    {/* Reacción de un toque: llega al chat de esa persona como un
+                        corazón. Lleno = ya enviada; no se manda dos veces. */}
+                    <PressableScale
+                      accessibilityLabel={reactedStoryIds.has(activeStoryId) ? 'Reacción enviada' : 'Reaccionar con un corazón'}
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: reactBusy || reactedStoryIds.has(activeStoryId), busy: reactBusy }}
+                      disabled={reactBusy || reactedStoryIds.has(activeStoryId)}
+                      haptic="none"
+                      onPress={() => void handleReact()}
+                      scaleTo={0.88}
+                      style={{ width: minTouchTarget, height: minTouchTarget, alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <Ionicons
+                        color={ink.white}
+                        name={reactedStoryIds.has(activeStoryId) ? 'heart' : 'heart-outline'}
+                        size={iconSizes.lg}
+                      />
+                    </PressableScale>
+                  </View>
                 )}
               </KeyboardAvoidingView>
             ) : null}
