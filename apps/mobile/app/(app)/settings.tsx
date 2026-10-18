@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Linking, Text } from 'react-native';
 import { Card, Divider, Row, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui';
 import { confirm, notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { env } from '@/config/env';
-import { colors, fontSizes, semibold, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, semibold, spacing } from '@/theme';
 
 const ENVIRONMENT_LABEL: Record<string, string> = {
   development: 'Desarrollo',
@@ -81,19 +82,22 @@ export default function SettingsScreen() {
             onPress={() => void Linking.openURL(Z_ANATOMY_URL)}
             style={{ color: colors.accentInk, fontSize: fontSizes.sm, fontWeight: semibold, paddingVertical: spacing.xs }}
           >
-            Z-Anatomy en GitHub
+            {'Z-Anatomy en GitHub '}
+            <Ionicons color={colors.accentInk} name="open-outline" size={iconSizes.sm} />
           </Text>
           <Text
             accessibilityRole="link"
             onPress={() => void Linking.openURL(CC_BY_SA_URL)}
             style={{ color: colors.accentInk, fontSize: fontSizes.sm, fontWeight: semibold, paddingVertical: spacing.xs }}
           >
-            Licencia CC BY-SA 4.0
+            {'Licencia CC BY-SA 4.0 '}
+            <Ionicons color={colors.accentInk} name="open-outline" size={iconSizes.sm} />
           </Text>
         </Card>
       </Section>
 
       <Button
+        icon="log-out-outline"
         label="Cerrar sesión"
         loading={signingOut}
         onPress={() => void onLogout()}
