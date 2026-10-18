@@ -161,6 +161,10 @@ function tabIcon(screen: keyof typeof ICONS) {
   };
 }
 
+function TabBarBackground() {
+  return <BlurView intensity={60} style={StyleSheet.absoluteFill} tint="systemChromeMaterialDark" />;
+}
+
 /**
  * La barra de pestañas con la mini-barra del entreno abierto encima (C8.3.9).
  * Intercepta el alto que la barra comunica al navegador y le suma el de la
@@ -284,9 +288,7 @@ export default function TabsLayout() {
           borderTopWidth: StyleSheet.hairlineWidth,
           elevation: 0,
         },
-        tabBarBackground: () => (
-          <BlurView intensity={60} style={StyleSheet.absoluteFill} tint="systemChromeMaterialDark" />
-        ),
+        tabBarBackground: TabBarBackground,
       }}
     >
       <Tabs.Screen name="home" options={{ title: 'Inicio', tabBarIcon: tabIcon('home') }} />
