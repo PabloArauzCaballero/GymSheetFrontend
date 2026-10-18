@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { useChatThread } from '@/features/chat/hooks/use-chat-thread';
 import { useStoryReplyTarget } from '@/features/chat/hooks/use-story-reply-target';
-import { dayDividerLabel } from '@/features/chat/lib/chat-time';
 import { canEditMessage } from '@/features/chat/lib/message-edit';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import {
@@ -16,13 +15,10 @@ import {
 import { DomainImage } from '@/shared/components/media/domain-image';
 import { Button } from '@/shared/components/ui/button';
 import { Dialog, DialogContent } from '@/shared/components/ui/dialog';
+import { DayDivider, sameDay } from './day-divider';
 import { MessageBubble } from './message-bubble';
 import { MessageComposer } from './message-composer';
 import { ThreadHeader } from './thread-header';
-
-function sameDay(a: string, b: string): boolean {
-  return a.slice(0, 10) === b.slice(0, 10);
-}
 
 /**
  * Un hilo de chat.
@@ -42,7 +38,12 @@ export function MessageThreadClient({
   currentUserId,
   socketOrigin,
   storyReplyMessageId,
-}: Readonly<{ conversationId: string; currentUserId: string; socketOrigin: string; storyReplyMessageId?: string }>) {
+}: Readonly<{
+  conversationId: string;
+  currentUserId: string;
+  socketOrigin: string;
+  storyReplyMessageId?: string;
+}>) {
   const thread = useChatThread({ conversationId, socketOrigin });
   const {
     conversationUnavailable,
@@ -57,11 +58,9 @@ export function MessageThreadClient({
   const [imageViewer, setImageViewer] = useState<{ messageId: string; url: string } | null>(null);
   if (
     imageViewer &&
-    (
-      thread.conversationUnavailable ||
+    (thread.conversationUnavailable ||
       thread.isValidatingHistory ||
-      thread.isMessageDeleted(imageViewer.messageId)
-    )
+      thread.isMessageDeleted(imageViewer.messageId))
   ) {
     setImageViewer(null);
   }
@@ -115,7 +114,10 @@ export function MessageThreadClient({
           <ArrowLeft aria-hidden className="size-4" />
           Mensajes
         </Link>
-        <p className="rounded-[8px] border border-[var(--border-subtle)] p-5 text-center text-sm text-[var(--text-muted)]" role="alert">
+        <p
+          className="rounded-[8px] border border-[var(--border-subtle)] p-5 text-center text-sm text-[var(--text-muted)]"
+          role="alert"
+        >
           Esta conversación ya no está disponible.
         </p>
       </div>
@@ -156,8 +158,14 @@ export function MessageThreadClient({
         className="panel flex max-h-[60vh] flex-col overflow-y-auto p-4"
         role="log"
       >
-        {storyReplyMessageId && replyTargetStatus && !messages.some((message) => message.id === storyReplyMessageId) ? (
-          <p aria-live="polite" className="mb-2 text-center text-xs text-[var(--text-muted)]" role="status">
+        {storyReplyMessageId &&
+        replyTargetStatus &&
+        !messages.some((message) => message.id === storyReplyMessageId) ? (
+          <p
+            aria-live="polite"
+            className="mb-2 text-center text-xs text-[var(--text-muted)]"
+            role="status"
+          >
             {replyTargetStatus}
           </p>
         ) : null}
@@ -190,7 +198,10 @@ export function MessageThreadClient({
                 {startsDay ? <DayDivider iso={message.createdAt} /> : null}
                 <MessageBubble
                   groupedWithPrevious={
-                    !startsDay && message.type !== 'system' && previous?.type !== 'system' && previous?.senderId === message.senderId
+                    !startsDay &&
+                    message.type !== 'system' &&
+                    previous?.type !== 'system' &&
+                    previous?.senderId === message.senderId
                   }
                   message={message}
                   focusedForStoryReply={storyReplyMessageId === message.id}
@@ -200,10 +211,13 @@ export function MessageThreadClient({
                     thread.conversation?.canWrite !== false &&
                     canEditMessage(message, currentUserId)
                   }
-                  onEditMessage={(messageId, body) => thread.editMessage?.mutate({ messageId, body })}
+                  onEditMessage={(messageId, body) =>
+                    thread.editMessage?.mutate({ messageId, body })
+                  }
                   editPending={thread.editMessage?.isPending}
                   onOpenImage={(url) => {
-                    if (!thread.isMessageDeleted(message.id)) setImageViewer({ messageId: message.id, url });
+                    if (!thread.isMessageDeleted(message.id))
+                      setImageViewer({ messageId: message.id, url });
                   }}
                   onRevealViewOnce={(messageId) =>
                     thread.revealViewOnce.mutate(messageId, {
@@ -226,6 +240,8 @@ export function MessageThreadClient({
                   otherReadReceiptsSinceAt={thread.otherReadReceiptsSinceAt}
                   revealPending={thread.revealViewOnce.isPending}
                   revealedUrl={thread.revealedMedia[message.id] ?? null}
+                  viewerId={currentUserId}
+                  otherName={thread.conversation?.nickname ?? thread.conversation?.otherUserName}
                 />
               </Fragment>
             );
@@ -250,26 +266,26 @@ export function MessageThreadClient({
 
       <Dialog
         onOpenChange={(open) => !open && setImageViewer(null)}
-        open={Boolean(imageViewer && !thread.conversationRevoked && !thread.isMessageDeleted(imageViewer.messageId))}
+        open={Boolean(
+          imageViewer &&
+          !thread.conversationRevoked &&
+          !thread.isMessageDeleted(imageViewer.messageId),
+        )}
       >
         <DialogContent className="max-w-2xl" title="Foto">
-          {imageViewer && !thread.conversationRevoked && !thread.isMessageDeleted(imageViewer.messageId) ? (
+          {imageViewer &&
+          !thread.conversationRevoked &&
+          !thread.isMessageDeleted(imageViewer.messageId) ? (
             <div className="max-h-[70vh] overflow-hidden rounded-[var(--radius-lg)]">
-              <DomainImage alt="Foto del mensaje" className="object-contain" src={imageViewer.url} />
+              <DomainImage
+                alt="Foto del mensaje"
+                className="object-contain"
+                src={imageViewer.url}
+              />
             </div>
           ) : null}
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-function DayDivider({ iso }: Readonly<{ iso: string }>) {
-  return (
-    <li className="my-4 flex items-center gap-3 self-stretch text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
-      <span aria-hidden className="h-px flex-1 bg-[var(--border-subtle)]" />
-      {dayDividerLabel(iso)}
-      <span aria-hidden className="h-px flex-1 bg-[var(--border-subtle)]" />
-    </li>
   );
 }

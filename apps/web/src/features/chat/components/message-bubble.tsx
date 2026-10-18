@@ -8,6 +8,11 @@ import { cn } from '@/shared/lib/cn';
 import { formatTimeOfDay } from '@/features/chat/lib/chat-time';
 import { ReportDialog } from '@/features/moderation/components/report-dialog';
 import { MessageContent, mapsUrlFor } from '@/features/chat/components/message-content';
+import {
+  MessageForwarded,
+  MessageQuote,
+  MessageReactions,
+} from '@/features/chat/components/message-extras';
 
 export { mapsUrlFor };
 
@@ -39,6 +44,7 @@ export function MessageBubble({
   editPending,
   focusedForStoryReply = false,
   viewerId,
+  otherName,
 }: Readonly<{
   groupedWithPrevious: boolean;
   message: Message;
@@ -56,6 +62,8 @@ export function MessageBubble({
   focusedForStoryReply?: boolean;
   /** Quien mira: decide «Activaste…» frente a «Tu contacto activó…» en los avisos. */
   viewerId?: string;
+  /** Nombre de la otra persona, para el autor de una cita. */
+  otherName?: string;
 }>) {
   const [editMenuOpen, setEditMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -96,6 +104,8 @@ export function MessageBubble({
       id={`message-${message.id}`}
       tabIndex={-1}
     >
+      <MessageForwarded message={message} />
+      <MessageQuote message={message} otherName={otherName} viewerId={viewerId} />
       {message.storyReference ? (
         <span aria-label="Referencia a una story" className="text-xs font-medium opacity-75">
           {message.storyReference.available ? 'Respuesta a una story' : 'Historia no disponible'}
@@ -212,6 +222,7 @@ export function MessageBubble({
           }
         />
       ) : null}
+      <MessageReactions message={message} viewerId={viewerId} />
     </li>
   );
 }
