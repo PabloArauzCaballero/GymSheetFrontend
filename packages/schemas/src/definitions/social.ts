@@ -214,6 +214,34 @@ export type SetDisappearingMessagesResponse = z.infer<typeof setDisappearingMess
 export const messageTypes = ['text', 'image', 'video', 'audio', 'location'] as const;
 export type MessageType = (typeof messageTypes)[number];
 
+/**
+ * La cita de una respuesta («responder citando»): una foto fija del original
+ * que el servidor arma al leer. `available: false` si el original se eliminó
+ * para todos, caducó o lo ocultaste: la burbuja dice que ya no está.
+ */
+export const messageReplySchema = z.object({
+  messageId: z.string().uuid(),
+  senderId: z.string().uuid(),
+  type: z.string(),
+  body: z.string().nullable(),
+  available: z.boolean(),
+});
+export type MessageReply = z.infer<typeof messageReplySchema>;
+
+/** Una reacción por persona y mensaje, como WhatsApp. */
+export const messageReactionSchema = z.object({
+  userId: z.string().uuid(),
+  emoji: z.string().min(1).max(16),
+});
+export type MessageReaction = z.infer<typeof messageReactionSchema>;
+
+export const setMessageReactionResponseSchema = z.object({
+  conversationId: z.string().uuid(),
+  messageId: z.string().uuid(),
+  reactions: z.array(messageReactionSchema),
+});
+export type MessageReactionsUpdate = z.infer<typeof setMessageReactionResponseSchema>;
+
 export const chatMessageSchema = z.object({
   id: z.string().uuid(),
   conversationId: z.string().uuid(),
@@ -235,6 +263,10 @@ export const chatMessageSchema = z.object({
   createdAt: z.string(),
   editedAt: z.string().nullable().optional(),
   deletedAt: z.string().nullable().optional(),
+  /** Opcionales: un servidor anterior no los manda. */
+  replyTo: messageReplySchema.nullable().optional(),
+  reactions: z.array(messageReactionSchema).optional(),
+  forwarded: z.boolean().optional(),
 });
 
 export const trainingInviteAcceptedEventSchema = z.object({
@@ -281,6 +313,9 @@ export const systemMessageSchema = z.object({
   createdAt: z.string(),
   editedAt: z.null().optional(),
   deletedAt: z.null().optional(),
+  replyTo: z.null().optional(),
+  reactions: z.array(messageReactionSchema).optional(),
+  forwarded: z.boolean().optional(),
 });
 
 /** Un mensaje normal o un evento de sistema de solo lectura en el historial. */
