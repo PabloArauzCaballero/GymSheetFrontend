@@ -215,7 +215,9 @@ export function MessageBubble({
   );
   // Hueco invisible al final del texto, del ancho de la hora: así la hora cabe
   // en la última línea cuando hay sitio y baja a una línea propia cuando no.
-  const spacer = `\u2003${edited ? 'Editado ' : ''}${temporary ? '\u2003' : ''}${time}${showReceipt ? '\u2003' : ''}`;
+  // Un espacio de m\u00e1s al principio: con \u00abEditado\u00bb el hueco medido quedaba justo
+  // y la \u00faltima palabra tocaba la hora.
+  const spacer = `\u2003\u2003${edited ? 'Editado\u2002' : ''}${temporary ? '\u2003' : ''}${time}${showReceipt ? '\u2003\u2002' : ''}`;
 
   return (
     <Animated.View
