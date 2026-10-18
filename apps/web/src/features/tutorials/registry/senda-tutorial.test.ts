@@ -23,3 +23,13 @@ describe('senda-overview tutorial', () => {
     }
   });
 });
+
+describe('senda-overview con retos', () => {
+  it('explica los retos antes que la colección, y el camino al final', () => {
+    const ids = sendaOverview.steps.map((step) => step.id);
+    expect(ids).toEqual(['rank', 'rules', 'challenges', 'badges', 'path']);
+    const challenges = sendaOverview.steps.find((step) => step.id === 'challenges');
+    // Un servidor sin retos no pinta la tarjeta: el paso se salta en vez de fallar.
+    expect(challenges?.optional).toBe(true);
+  });
+});
