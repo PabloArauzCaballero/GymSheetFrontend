@@ -1192,7 +1192,6 @@ export function StoryViewer({
                       ? { uri: storyMediaUri, headers: { Authorization: `Bearer ${storyAccessToken}` } }
                       : null
                   }
-                  cachePolicy="memory-disk"
                   onError={() => setFailedStoryId(activeStoryId)}
                   onLoad={() => setLoadedStoryId(activeStoryId)}
                   style={{ width: '100%', height: '100%' }}
