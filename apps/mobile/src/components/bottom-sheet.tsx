@@ -17,9 +17,12 @@ export function BottomSheet({
   subtitle,
   children,
   testID,
+  onDismiss,
 }: {
   visible: boolean;
   onClose: () => void;
+  /** iOS: la hoja terminó de irse. Para abrir otro Modal sin que iOS se trague el segundo. */
+  onDismiss?: () => void;
   title: string;
   subtitle?: string;
   children: ReactNode;
@@ -27,7 +30,7 @@ export function BottomSheet({
 }) {
   const insets = useSafeAreaInsets();
   return (
-    <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
+    <Modal animationType="slide" onDismiss={onDismiss} onRequestClose={onClose} transparent visible={visible}>
       {/* Con el teclado abierto la hoja sube con él: el botón de abajo no queda tapado. */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

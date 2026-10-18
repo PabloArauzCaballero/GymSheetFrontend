@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { cardioModalityLabels } from '@gymsheet/hooks';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
@@ -8,7 +9,6 @@ import {
   emptyCatalogFilters,
   hasActiveFilters,
   initialCatalogFilters,
-  isoWeekday,
   isPendingInvitation,
   ORDER_LABELS,
   type CatalogFilterState,
@@ -16,7 +16,7 @@ import {
 } from '@gymsheet/hooks';
 import { trainingGoals, type TrainingGoal } from '@gymsheet/types';
 import { ApiError } from '@gymsheet/api-client';
-import { profileService, routineService, routineSharingService } from '@/api/services';
+import { profileService, programService, routineService, routineSharingService } from '@/api/services';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { usePullRefresh } from '@/hooks/use-pull-refresh';
 import { EmptyState, ErrorState } from '@/components/feedback';
@@ -25,15 +25,14 @@ import { ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { BadgePop, EnterUp, PressableScale } from '@/components/motion';
 import { Text as AppText } from '@/components/text';
 import { TourTarget, useScreenTour } from '@/components/tour';
-import { QuickActions } from '@/features/routine-catalog/quick-actions';
+import { useTourStore } from '@/state/tour-store';
 import { routes } from '@/lib/routes';
 import { Button } from '@/components/ui';
 import { SEARCH_HEIGHT, SearchField } from '@/features/routine-catalog/search-field';
-import { WeekPlan } from '@/components/week-plan';
+import { WeekDaySheet, WeekPlan, type WeekSession } from '@/components/week-plan';
 import { useActivePrograms } from '@/features/programs/use-active-programs';
-import { ActiveRoutineButton } from '@/features/programs/active-routine-button';
-import { CardioProgramCard } from '@/features/cardio/cardio-program-card';
-import { StrengthProgramCard } from '@/features/programs/program-card';
+import { ActiveProgramsCompact } from '@/features/programs/active-programs-compact';
+import { MoreButton, MoreSheet, type MoreAction } from '@/features/routine-detail/more-sheet';
 import { CatalogFiltersSheet } from '@/features/routine-catalog/catalog-filters';
 import { CatalogTabBar, ResultCount } from '@/features/routine-catalog/catalog-tab-bar';
 import { InvitationCard } from '@/features/routine-catalog/invitation-card';
@@ -41,6 +40,9 @@ import { RoutineCardSkeleton, RoutineCardView } from '@/features/routine-catalog
 import { useRoutineCatalog } from '@/features/routine-catalog/use-routine-catalog';
 import { GOAL_LABEL } from '@/lib/format';
 import { colors, fontSizes, gutter, iconSizes, radii, spacing } from '@/theme';
+
+/** Una sesión de «Tu semana» con su destino: la hoja del día la abre al elegirla. */
+type PickableSession = WeekSession & { open: () => void };
 
 const EMPTY_COPY: Record<string, { title: string; message: string }> = {
   all: {
@@ -68,6 +70,9 @@ export function RoutinesCatalogScreen() {
   };
   const [search, setSearch] = useState('');
   const [sheet, setSheet] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [pickedDay, setPickedDay] = useState<number | null>(null);
+  const openTour = useTourStore((state) => state.open);
   const debounced = useDebouncedValue(search, 350);
   const applied = useMemo(() => ({ ...filters, q: debounced }), [filters, debounced]);
   useScreenTour('routines');
@@ -106,16 +111,84 @@ export function RoutinesCatalogScreen() {
       queryClient.invalidateQueries({ queryKey: ['programs'] }),
     ]),
   );
-  // ¿Hoy toca pesas? Con el plan de cardio el mismo día se avisa «Haz primero las pesas».
+  const strengthProgram = programs.data?.fuerza ?? null;
+  const cardioProgram = programs.data?.cardio ?? null;
   const strengthRoutine = useQuery({
-    queryKey: ['routine', programs.data?.fuerza?.rutinaId],
-    queryFn: () => routineService.get(programs.data?.fuerza?.rutinaId ?? ''),
-    enabled: Boolean(programs.data?.fuerza?.rutinaId),
+    queryKey: ['routine', strengthProgram?.rutinaId],
+    queryFn: () => routineService.get(strengthProgram?.rutinaId ?? ''),
+    enabled: Boolean(strengthProgram?.rutinaId),
   });
-  const todayIso = isoWeekday(new Date());
-  const strengthToday = Boolean(strengthRoutine.data?.dias.some((day) => day.diaSemana === todayIso));
+  const cardioPlans = useQuery({
+    queryKey: ['cardio-plans'],
+    queryFn: () => programService.cardioPlans(),
+    enabled: Boolean(cardioProgram),
+  });
   const assigned = assignments.data?.filter((item) => item.estado === 'ACTIVE') ?? [];
   const pending = invitations.data?.length ?? 0;
+  const open = (id: string) => router.push({ pathname: '/routines/[id]', params: { id } });
+
+  // «Tu semana» junta lo que convive: el día de pesas, el cardio y las
+  // asignadas, un punto por sesión. Los días de la rutina van 1 (lunes) a 7
+  // (domingo); la tira usa `getDay()`, de ahí el `% 7`.
+  const weekSessions: PickableSession[] = [
+    ...(strengthProgram && strengthRoutine.data
+      ? strengthRoutine.data.dias.flatMap((day) =>
+          day.diaSemana === null
+            ? []
+            : [
+                {
+                  key: `strength-${day.id}`,
+                  day: day.diaSemana % 7,
+                  kind: 'strength' as const,
+                  title: strengthRoutine.data.nombre,
+                  detail: day.nombre,
+                  open: () =>
+                    router.push({
+                      pathname: '/routines/[id]/dia/[diaId]',
+                      params: { id: strengthRoutine.data.id, diaId: day.id },
+                    }),
+                },
+              ],
+        )
+      : []),
+    ...(() => {
+      const plan = cardioPlans.data?.find((candidate) => candidate.id === cardioProgram?.cardioPlanId);
+      return plan
+        ? plan.diasSemana.map((day) => ({
+            key: `cardio-${plan.id}-${day}`,
+            day: day % 7,
+            kind: 'cardio' as const,
+            title: 'Cardio',
+            detail: cardioModalityLabels[plan.modalidad],
+            open: () => router.push({ pathname: '/routines/activa', params: { tipo: 'cardio' } }),
+          }))
+        : [];
+    })(),
+    ...assigned
+      // La rutina activada también puede venir asignada: no se pinta dos veces.
+      .filter((item) => item.rutina && item.rutina.id !== strengthProgram?.rutinaId)
+      .flatMap((item) =>
+        item.diasSemana.map((day) => ({
+          key: `assigned-${item.id}-${day}`,
+          day,
+          kind: 'assigned' as const,
+          title: item.rutina?.nombre.split('—').pop()?.trim() ?? 'Rutina',
+          open: () => open(item.rutina?.id ?? ''),
+        })),
+      ),
+  ];
+
+  // Lo poco frecuente de la cabecera va al menú ⋯ (2026-10-18): las cuatro
+  // fichas y el «?» ocupaban la mitad de arriba, que ahora es de la semana.
+  const menu: MoreAction[] = [
+    { key: 'create', label: 'Crear rutina', icon: 'add-circle-outline', onPress: () => router.push('/routines/new') },
+    { key: 'exercises', label: 'Explorar ejercicios', icon: 'search-outline', onPress: () => router.push(routes.exercises()) },
+    ...(programs.data && !programs.data.cardio
+      ? [{ key: 'cardio', label: 'Plan de cardio', icon: 'pulse-outline' as const, onPress: () => router.push('/routines/cardio/new') }]
+      : []),
+    { key: 'music', label: 'Música', icon: 'musical-notes-outline', onPress: () => router.push('/routines/musica') },
+    { key: 'guide', label: 'Ver la guía de esta pantalla', icon: 'help-circle-outline', afterClose: true, onPress: () => openTour('routines') },
+  ];
   const officialCards = withOfficial ? (official.data?.pages.flatMap((page) => page.items) ?? []) : [];
   const ownCards = own.data?.pages.flatMap((page) => page.items) ?? [];
   const seen = new Set(officialCards.map((card) => card.id));
@@ -135,64 +208,41 @@ export function RoutinesCatalogScreen() {
   const pendingCards = cards.filter(isPendingInvitation);
   const regularCards = cards.filter((card) => !isPendingInvitation(card));
   const count = activeFilterCount(filters);
-  const open = (id: string) => router.push({ pathname: '/routines/[id]', params: { id } });
 
   return (
     <ScrollScreen
       onRefresh={pull.onRefresh}
       refreshing={pull.refreshing}
     >
-      <ScreenHeader action={<ActiveRoutineButton />} title="Rutinas" tourKey="routines" />
-      {/* Cabecera: accesos en casillas iguales. */}
-      <TourTarget id="routines.create">
-        <QuickActions
-          actions={[
-            {
-              key: 'create',
-              label: 'Crear rutina',
-              icon: 'add',
-              onPress: () => router.push('/routines/new'),
-              testID: 'create-routine',
-            },
-            {
-              key: 'exercises',
-              label: 'Explorar ejercicios',
-              icon: 'search-outline',
-              onPress: () => router.push(routes.exercises()),
-            },
-            ...(programs.data && !programs.data.cardio
-              ? [
-                  {
-                    key: 'cardio',
-                    label: 'Plan de cardio',
-                    icon: 'pulse-outline' as const,
-                    onPress: () => router.push('/routines/cardio/new'),
-                  },
-                ]
-              : []),
-            {
-              key: 'music',
-              label: 'Música',
-              icon: 'musical-notes',
-              onPress: () => router.push('/routines/musica'),
-              testID: 'open-music',
-            },
-          ]}
-        />
-      </TourTarget>
+      <ScreenHeader
+        action={
+          <TourTarget id="routines.create">
+            <MoreButton
+              accessibilityLabel="Más: crear rutina, ejercicios, cardio, música y guía"
+              onPress={() => setMenuOpen(true)}
+              testID="routines-more"
+            />
+          </TourTarget>
+        }
+        title="Rutinas"
+      />
+      <MoreSheet actions={menu} onClose={() => setMenuOpen(false)} title="Rutinas" visible={menuOpen} />
 
-      {programs.data?.fuerza ? <StrengthProgramCard program={programs.data.fuerza} /> : null}
-      {programs.data?.cardio ? (
-        <CardioProgramCard program={programs.data.cardio} strengthToday={strengthToday} />
-      ) : null}
-
-      {assigned.length > 0 ? (
+      {weekSessions.length > 0 ? (
         <Section index={0} title="Tu semana">
           <TourTarget id="routines.week">
-            <WeekPlan assignments={assigned} onPickRoutine={open} />
+            <WeekPlan onPickDay={setPickedDay} sessions={weekSessions} />
           </TourTarget>
         </Section>
       ) : null}
+      <WeekDaySheet
+        day={pickedDay}
+        onClose={() => setPickedDay(null)}
+        onPick={(session) => session.open()}
+        sessions={weekSessions}
+      />
+
+      <ActiveProgramsCompact cardio={cardioProgram} strength={strengthProgram} />
 
       {/* Explorar: pestañas, búsqueda y objetivo juntos, a 16 entre sí; antes
           iban a 32 como si fueran secciones distintas y la pantalla se partía. */}

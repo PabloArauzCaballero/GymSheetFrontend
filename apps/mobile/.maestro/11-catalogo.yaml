@@ -10,7 +10,8 @@ env:
 - tapOn: 'Rutinas, tab.*'
 - runFlow: cerrar-tour.subflow.yaml
 - extendedWaitUntil:
-    visible: 'Crear rutina'
+    visible:
+      id: 'routines-more'
     timeout: 60000
 - assertVisible: 'Pestaña Públicas'
 - assertNotVisible: 'Error'

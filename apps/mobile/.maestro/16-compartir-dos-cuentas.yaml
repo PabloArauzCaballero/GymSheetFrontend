@@ -39,7 +39,8 @@ env:
 # RF-13 · p04: B ve la invitación sin ejercicios.
 - tapOn: 'Rutinas, tab.*'
 - extendedWaitUntil:
-    visible: 'Crear rutina'
+    visible:
+      id: 'routines-more'
     timeout: 60000
 - tapOn: 'Pestaña Privadas'
 - tapOn:

@@ -24,9 +24,9 @@ const KINDS: readonly { value: ActiveKind; label: string; icon: keyof typeof Ion
 ];
 
 /**
- * «Mi rutina» (Pablo, 2026-10-15): el atajo de la cabecera de Rutinas lleva
- * aquí. Arriba eliges Gym o Cardio; abre en la que tienes activada. Debajo, lo
- * que toca: iniciar el día de hoy y los días de la rutina, o el plan de cardio.
+ * «Mi rutina» (Pablo, 2026-10-15): se llega desde la fila de cardio de Rutinas
+ * (el atajo de la cabecera se quitó el 2026-10-18). Arriba eliges Gym o Cardio;
+ * abre en la que tienes activada. Debajo, lo que toca: iniciar el día de hoy y los días de la rutina, o el plan de cardio.
  */
 export function ActiveRoutineScreen() {
   const router = useRouter();
