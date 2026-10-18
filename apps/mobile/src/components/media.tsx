@@ -348,9 +348,10 @@ function ExerciseGif({ exercise, gif }: {
       {playing ? (
         <Image
           accessibilityElementsHidden
-          cachePolicy="disk"
+          cachePolicy="memory-disk"
           contentFit="contain"
           importantForAccessibility="no-hide-descendants"
+          recyclingKey={gif.url}
           source={{ uri: gif.url }}
           style={{ width: HERO_SIZE, height: HERO_SIZE, borderRadius: radii.lg, backgroundColor: ink.white }}
         />

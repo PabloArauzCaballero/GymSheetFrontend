@@ -202,7 +202,9 @@ function Avatar({ name, photoUrl, size }: { name: string; photoUrl: string | nul
   if (photoUrl) {
     return (
       <Image
+        cachePolicy="memory-disk"
         contentFit="cover"
+        recyclingKey={photoUrl}
         source={{ uri: photoUrl }}
         style={{
           width: size,
@@ -280,10 +282,12 @@ function MatchModal({
             // Desenfocada y oscurecida: la foto está aquí para dar contexto y
             // color, no para volver a mirarse — eso ya se hizo en la carta.
             blurRadius={40}
+            cachePolicy="memory-disk"
             contentFit="cover"
+            recyclingKey={matchedEntry.photoUrl}
             source={{ uri: matchedEntry.photoUrl }}
             style={StyleSheet.absoluteFill}
-            transition={200}
+            transition={160}
           />
         ) : null}
         <LinearGradient colors={MATCH_SCRIM} style={StyleSheet.absoluteFill} />

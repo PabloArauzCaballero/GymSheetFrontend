@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { badge, challenge, level, prize, sessionReward, week } from '../../testing/fixtures';
 import {
   keyOf,
+  MAX_CELEBRATIONS,
   orderCelebrations,
   progressionCelebrations,
   rarityOf,
@@ -13,7 +14,7 @@ import { sceneOf } from './celebration-scene';
 describe('cola de celebración (pico-final, igual que el móvil)', () => {
   it('insignias común→legendaria, retos fácil→difícil, semana redonda, comodín, premios y rango al final', () => {
     const reward = sessionReward({
-      unlockedNow: [badge('LEG', 'LEGENDARIA'), badge('COM', 'COMUN'), badge('RAR', 'RARA')],
+      unlockedNow: [badge('LEG', 'LEGENDARIA'), badge('COM', 'COMUN')],
       challengesCompletedNow: [
         challenge('D', 'DIFICIL'),
         challenge('F', 'FACIL'),
@@ -27,8 +28,6 @@ describe('cola de celebración (pico-final, igual que el móvil)', () => {
       levelAfter: level(),
     });
     expect(rewardCelebrations(reward).map(keyOf)).toEqual([
-      'badge:COM',
-      'badge:RAR',
       'badge:LEG',
       'challenge:F',
       'challenge:M',
@@ -38,6 +37,20 @@ describe('cola de celebración (pico-final, igual que el móvil)', () => {
       'prize:p1',
       'level:MAQUINA',
     ]);
+  });
+
+  it('una cola larga se queda en 8: entran las insignias más raras y nunca se pierden premios ni rango', () => {
+    const commons = Array.from({ length: 12 }, (_, i) => badge(`C${i}`, 'COMUN'));
+    const reward = sessionReward({
+      unlockedNow: [...commons, badge('LEG', 'LEGENDARIA')],
+      prizesNow: [prize('p1')],
+      leveledUp: true,
+      levelAfter: level(),
+    });
+    const queue = rewardCelebrations(reward).map(keyOf);
+    expect(queue).toHaveLength(MAX_CELEBRATIONS);
+    expect(queue.slice(-3)).toEqual(['badge:LEG', 'prize:p1', 'level:MAQUINA']);
+    expect(queue.slice(0, 5)).toEqual(['badge:C0', 'badge:C1', 'badge:C2', 'badge:C3', 'badge:C4']);
   });
 
   it('sin nada nuevo, la cola está vacía', () => {

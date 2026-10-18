@@ -122,7 +122,9 @@ function StoryRing({
         {/* Capa 3 — la foto. */}
         {photoUrl ? (
           <Image
+            cachePolicy="memory-disk"
             contentFit="cover"
+            recyclingKey={photoUrl}
             source={{ uri: photoUrl }}
             style={{
               width: AVATAR_SIZE,

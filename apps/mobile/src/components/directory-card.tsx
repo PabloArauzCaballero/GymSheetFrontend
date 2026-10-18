@@ -161,9 +161,10 @@ export function DirectoryCardFace({
     >
       {current ? (
         <Image
-          cachePolicy="disk"
+          cachePolicy="memory-disk"
           contentFit="cover"
           priority="low"
+          recyclingKey={current.url}
           source={{ uri: current.url }}
           style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
           // Entre fotos de la misma persona el cruce es corto: es navegación

@@ -117,7 +117,34 @@ function intensity(subject: CelebrationSubject): number {
   return 0;
 }
 
-/** Ordena por pico-final (estable dentro de cada grupo) y quita duplicados. */
+/**
+ * Cuántas cartas se abren seguidas como mucho. Veinte cartas una tras otra (un
+ * socio que vuelve tras meses con insignias nuevas por todas partes) dejan de
+ * ser una celebración y pasan a ser un trámite.
+ */
+export const MAX_CELEBRATIONS = 8;
+
+/**
+ * Recorta la cola sin perder lo que importa: retos, semana redonda, comodín,
+ * premios y rango se quedan siempre; con el hueco que sobra entran las
+ * insignias más raras. Las que no caben siguen en la colección.
+ */
+function capCelebrations(subjects: readonly CelebrationSubject[]): readonly CelebrationSubject[] {
+  if (subjects.length <= MAX_CELEBRATIONS) return subjects;
+  const others = subjects.filter((subject) => subject.kind !== 'badge');
+  const room = Math.max(MAX_CELEBRATIONS - others.length, 0);
+  const keptBadges = new Set(
+    subjects
+      .filter((subject) => subject.kind === 'badge')
+      .map((subject, index) => ({ subject, index }))
+      .sort((a, b) => intensity(b.subject) - intensity(a.subject) || a.index - b.index)
+      .slice(0, room)
+      .map(({ subject }) => subject),
+  );
+  return subjects.filter((subject) => subject.kind !== 'badge' || keptBadges.has(subject));
+}
+
+/** Ordena por pico-final (estable dentro de cada grupo), quita duplicados y recorta. */
 export function orderCelebrations(subjects: readonly CelebrationSubject[]): CelebrationSubject[] {
   const seen = new Set<string>();
   const unique = subjects.filter((subject) => {
@@ -126,7 +153,7 @@ export function orderCelebrations(subjects: readonly CelebrationSubject[]): Cele
     seen.add(key);
     return true;
   });
-  return unique
+  return capCelebrations(unique)
     .map((subject, index) => ({ subject, index }))
     .sort(
       (a, b) =>

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { Alert, Pressable, Text, TextInput, View } from "react-native";
@@ -25,16 +25,21 @@ const tabs: ReadonlyArray<{ id: ReelFeedTab; label: string }> = [
   { id: "MINE", label: "Mis reels" },
 ];
 
-function ReelPlayer({ reel, token }: { reel: ReelDTO; token: string | null }) {
+const ReelPlayer = memo(function ReelPlayer({ reel, token }: { reel: ReelDTO; token: string | null }) {
   const uri = `${env.apiUrl.replace(/\/+$/, "")}/${reel.mediaUrl.replace(/^\/+/, "")}`;
+  const source = useMemo(
+    () =>
+      token
+        ? {
+            uri,
+            headers: { Authorization: `Bearer ${token}` },
+            useCaching: false,
+          }
+        : null,
+    [token, uri],
+  );
   const player = useVideoPlayer(
-    token
-      ? {
-          uri,
-          headers: { Authorization: `Bearer ${token}` },
-          useCaching: false,
-        }
-      : null,
+    source,
     (instance) => {
       instance.loop = true;
     },
@@ -65,7 +70,7 @@ function ReelPlayer({ reel, token }: { reel: ReelDTO; token: string | null }) {
       )}
     </View>
   );
-}
+});
 
 export default function ReelsScreen() {
   const queryClient = useQueryClient();

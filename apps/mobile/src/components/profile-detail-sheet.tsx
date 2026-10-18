@@ -328,7 +328,9 @@ export function ProfileDetailSheet({
                 <Fragment key={photo.id}>
                   <Image
                     accessibilityLabel={`Foto ${position + 1} de ${photos.length}`}
+                    cachePolicy="memory-disk"
                     contentFit="cover"
+                    recyclingKey={photo.url}
                     source={{ uri: photo.url }}
                     style={{
                       width: '100%',
@@ -336,7 +338,7 @@ export function ProfileDetailSheet({
                       borderRadius: radii.lg,
                       backgroundColor: colors.surfaceHigh,
                     }}
-                    transition={200}
+                    transition={160}
                   />
                   {section ? <SectionBlock index={position} section={section} /> : null}
                 </Fragment>
