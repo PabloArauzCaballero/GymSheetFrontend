@@ -108,6 +108,7 @@ export function ChatComposer({
   onVoiceStart,
   onVoiceStop,
   busy,
+  focusRequest = 0,
 }: {
   draft: string;
   onChangeDraft: (value: string) => void;
@@ -124,6 +125,8 @@ export function ChatComposer({
   onVoiceStop: (send: boolean) => void;
   /** Subiendo una foto, un audio o una ubicación. */
   busy: boolean;
+  /** Cambiarlo enfoca el campo y abre el teclado (p. ej. al elegir «Editar», como WhatsApp). */
+  focusRequest?: number;
 }) {
   const [holding, setHolding] = useState(false);
   const [locked, setLocked] = useState(false);
@@ -131,7 +134,12 @@ export function ChatComposer({
   const lockedRef = useRef(false);
   const dragX = useSharedValue(0);
   const dragY = useSharedValue(0);
+  const inputRef = useRef<TextInput>(null);
   const hasText = draft.trim().length > 0;
+
+  useEffect(() => {
+    if (focusRequest > 0) inputRef.current?.focus();
+  }, [focusRequest]);
 
   // Si la grabación termina sola (límite de 2 minutos) o desde la pantalla, el
   // redactor vuelve a su estado normal.
@@ -311,6 +319,7 @@ export function ChatComposer({
                 onChangeText={onChangeDraft}
                 placeholder={editing ? 'Edita tu mensaje' : 'Mensaje'}
                 placeholderTextColor={colors.textDisabled}
+                ref={inputRef}
                 style={{
                   flex: 1,
                   maxHeight: 120,
