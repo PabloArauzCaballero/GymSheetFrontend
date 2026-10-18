@@ -297,9 +297,7 @@ export default function ChatThreadScreen() {
   // Vista única: la URL real solo llega una vez del backend — se guarda acá
   // para poder volver a mostrarla dentro de esta misma sesión de pantalla.
   const [revealedMedia, setRevealedMedia] = useState<Record<string, RevealedMedia>>({});
-  const [readReceiptSelectionOpen, setReadReceiptSelectionOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [selectedReceiptConversationIds, setSelectedReceiptConversationIds] = useState<string[]>([]);
 
   const otherConversation = conversations.data?.find(
     (conversation) => conversation.conversationId === conversationId,
@@ -415,7 +413,6 @@ export default function ChatThreadScreen() {
           queryClient.invalidateQueries({ queryKey: ['chat', 'conversations'] }),
         ]);
       }
-      setReadReceiptSelectionOpen(false);
       notify.success('Preferencia de lectura actualizada.');
     },
     onError: async (error: Error) => {
@@ -1696,7 +1693,6 @@ export default function ChatThreadScreen() {
         visible={Boolean(deleteTarget)}
       />
       <ContactInfoSheet
-        allChatsReceiptsEnabled={readReceiptSettings.data?.defaultEnabled}
         name={otherName ?? 'Conversación'}
         nickname={otherConversation?.nickname ?? null}
         onClose={() => setContactOpen(false)}
@@ -1707,20 +1703,6 @@ export default function ChatThreadScreen() {
         onSaveNickname={(nickname) => setNickname.mutate(nickname, {
           onSuccess: () => notify.success(nickname ? 'Apodo guardado.' : 'Apodo eliminado.'),
         })}
-        onToggleAllChatsReceipts={() => {
-          const settings = readReceiptSettings.data;
-          if (!settings) return;
-          updateReadReceiptSettings.mutate({
-            scope: 'ALL',
-            enabled: !settings.defaultEnabled,
-            expectedVersion: settings.version,
-          });
-        }}
-        onChooseChats={() => {
-          setSelectedReceiptConversationIds([conversationId]);
-          setContactOpen(false);
-          setTimeout(() => setReadReceiptSelectionOpen(true), 350);
-        }}
         onToggleReceipts={(enabled) => {
           const settings = readReceiptSettings.data;
           if (!settings) return;
@@ -1748,63 +1730,6 @@ export default function ChatThreadScreen() {
         savingNickname={setNickname.isPending}
         visible={contactOpen}
       />
-      <Modal
-        animationType="slide"
-        onRequestClose={() => setReadReceiptSelectionOpen(false)}
-        transparent
-        visible={readReceiptSelectionOpen}
-      >
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: overlay.scrimSheet }}>
-          <Pressable
-            accessibilityLabel="Cerrar selección"
-            onPress={() => setReadReceiptSelectionOpen(false)}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-          />
-          <View style={{ maxHeight: '78%', gap: spacing.sm, padding: spacing.lg, paddingBottom: Math.max(insets.bottom, spacing.lg), borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, backgroundColor: colors.surface }}>
-            <Text style={{ color: colors.text, fontSize: fontSizes.lg, fontWeight: semibold }}>Elegir conversaciones</Text>
-            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Selecciona los chats donde quieres cambiar el visto.</Text>
-            <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>Puedes seleccionar hasta 100 conversaciones.</Text>
-            <FlatList
-              data={(conversations.data ?? []).filter((item) => item.systemKind === null && item.canWrite)}
-              keyExtractor={(item) => item.conversationId}
-              renderItem={({ item }) => {
-                const selected = selectedReceiptConversationIds.includes(item.conversationId);
-                return (
-                  <Pressable
-                    accessibilityHint={selected ? 'Seleccionada' : 'Toca para seleccionar'}
-                    accessibilityLabel={item.nickname ?? item.otherUserName}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: selected, disabled: !selected && selectedReceiptConversationIds.length >= 100 }}
-                    disabled={!selected && selectedReceiptConversationIds.length >= 100}
-                    onPress={() => setSelectedReceiptConversationIds((current) => selected
-                      ? current.filter((id) => id !== item.conversationId)
-                      : current.length < 100 ? [...current, item.conversationId] : current)}
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.sm }}
-                  >
-                    <Ionicons color={colors.text} name={selected ? 'checkbox' : 'square-outline'} size={22} />
-                    <Text numberOfLines={1} style={{ flex: 1, color: colors.text, fontSize: fontSizes.md }}>{item.nickname ?? item.otherUserName}</Text>
-                  </Pressable>
-                );
-              }}
-            />
-            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <Button
-                disabled={!readReceiptSettings.data || !selectedReceiptConversationIds.length || updateReadReceiptSettings.isPending}
-                label="Desactivar"
-                onPress={() => updateReadReceiptSettings.mutate({ scope: 'SELECTED', conversationIds: selectedReceiptConversationIds, enabled: false, expectedVersion: readReceiptSettings.data!.version })}
-                variant="ghost"
-              />
-              <Button
-                disabled={!readReceiptSettings.data || !selectedReceiptConversationIds.length || updateReadReceiptSettings.isPending}
-                label="Activar"
-                onPress={() => updateReadReceiptSettings.mutate({ scope: 'SELECTED', conversationIds: selectedReceiptConversationIds, enabled: true, expectedVersion: readReceiptSettings.data!.version })}
-                variant="primary"
-              />
-            </View>
-            <Button label="Cancelar" onPress={() => setReadReceiptSelectionOpen(false)} variant="ghost" />
-          </View>
-        </View>
-      </Modal>
     </>
   );
 }

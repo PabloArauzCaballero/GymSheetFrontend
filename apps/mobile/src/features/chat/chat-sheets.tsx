@@ -192,7 +192,8 @@ export function DeleteMessageSheet({
 /**
  * Info. del contacto: lo que antes era un lápiz pegado al nombre que convertía
  * la cabecera en un campo de texto. Aquí se cambia el apodo con su botón de
- * guardar y se decide, solo para esta persona, si se envían los vistos.
+ * guardar y se decide, solo para esta persona, si se envían los vistos. Lo que
+ * afecta a todos los chats vive en Ajustes, no en la ficha de una persona.
  */
 export function ContactInfoSheet({
   visible,
@@ -207,9 +208,6 @@ export function ContactInfoSheet({
   receiptsEnabled,
   receiptsPending,
   onToggleReceipts,
-  allChatsReceiptsEnabled,
-  onToggleAllChatsReceipts,
-  onChooseChats,
   onTrainTogether,
   onOpenProfile,
   disappearingSeconds,
@@ -228,9 +226,6 @@ export function ContactInfoSheet({
   receiptsEnabled: boolean | undefined;
   receiptsPending: boolean;
   onToggleReceipts: (enabled: boolean) => void;
-  allChatsReceiptsEnabled: boolean | undefined;
-  onToggleAllChatsReceipts: () => void;
-  onChooseChats: () => void;
   onTrainTogether: (() => void) | null;
   onOpenProfile: (() => void) | null;
   /** Mensajes temporales vigentes (segundos) o `null`; `undefined` mientras carga. */
@@ -348,24 +343,92 @@ export function ContactInfoSheet({
             )
           }
         />
-        <SheetRow
-          disabled={allChatsReceiptsEnabled === undefined || receiptsPending}
-          hint="Cambia el visto en todas tus conversaciones"
-          icon="chatbubbles-outline"
-          label={allChatsReceiptsEnabled ? 'Desactivar en todos los chats' : 'Activar en todos los chats'}
-          onPress={onToggleAllChatsReceipts}
-        />
-        <SheetRow
-          disabled={allChatsReceiptsEnabled === undefined}
-          hint="Activa o desactiva el visto en varios chats a la vez"
-          icon="list-outline"
-          label="Elegir chats…"
-          onPress={onChooseChats}
-        />
         {onTrainTogether ? (
           <SheetRow icon="barbell-outline" label="Entrenemos juntos" onPress={onTrainTogether} />
         ) : null}
         {onOpenProfile ? <SheetRow icon="person-circle-outline" label="Ver perfil" onPress={onOpenProfile} /> : null}
+      </View>
+    </BottomSheet>
+  );
+}
+
+/**
+ * Elegir varios chats y activar o desactivar el visto en todos a la vez. Vive en
+ * Ajustes: es una preferencia general, no algo de una conversación concreta.
+ */
+export function ReadReceiptChatsSheet({
+  visible,
+  onClose,
+  chats,
+  pending,
+  disabled,
+  onApply,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  chats: { conversationId: string; name: string }[];
+  pending: boolean;
+  disabled: boolean;
+  onApply: (conversationIds: string[], enabled: boolean) => void;
+}) {
+  const [selected, setSelected] = useState<string[]>([]);
+  useEffect(() => {
+    if (visible) setSelected([]);
+  }, [visible]);
+  const full = selected.length >= 100;
+
+  return (
+    <BottomSheet
+      onClose={onClose}
+      subtitle="Selecciona los chats donde quieres cambiar el visto (hasta 100)."
+      title="Elegir chats"
+      visible={visible}
+    >
+      {chats.length ? (
+        <View>
+          {chats.map((chat) => {
+            const checked = selected.includes(chat.conversationId);
+            return (
+              <PressableScale
+                accessibilityLabel={chat.name}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked, disabled: !checked && full }}
+                disabled={!checked && full}
+                haptic="none"
+                key={chat.conversationId}
+                onPress={() => setSelected((current) => checked
+                  ? current.filter((id) => id !== chat.conversationId)
+                  : current.length < 100 ? [...current, chat.conversationId] : current)}
+                scaleTo={0.98}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: minTouchTarget }}
+              >
+                <Ionicons color={colors.text} name={checked ? 'checkbox' : 'square-outline'} size={22} />
+                <Text numberOfLines={1} style={{ flex: 1, color: colors.text, fontSize: fontSizes.md }}>{chat.name}</Text>
+              </PressableScale>
+            );
+          })}
+        </View>
+      ) : (
+        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Todavía no tienes conversaciones.</Text>
+      )}
+      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+        <View style={{ flex: 1 }}>
+          <Button
+            disabled={disabled || pending || !selected.length}
+            label="Desactivar"
+            onPress={() => onApply(selected, false)}
+            variant="ghost"
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Button
+            disabled={disabled || pending || !selected.length}
+            label="Activar"
+            loading={pending}
+            onPress={() => onApply(selected, true)}
+            variant="primary"
+          />
+        </View>
       </View>
     </BottomSheet>
   );
