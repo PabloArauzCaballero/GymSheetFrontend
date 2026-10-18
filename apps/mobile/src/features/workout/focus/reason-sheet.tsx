@@ -86,12 +86,13 @@ export function ReasonSheet({
             value={note}
           />
           <Button
+            icon="play-skip-forward-outline"
             label={isSet ? 'Saltar serie' : 'Omitir ejercicio'}
             onPress={() => onChoose('OTRO', note.trim() === '' ? null : note.trim())}
             size="lg"
             testID="reason-confirm"
           />
-          <Button label="Volver a los motivos" onPress={() => setOther(false)} variant="ghost" />
+          <Button icon="arrow-back" label="Volver a los motivos" onPress={() => setOther(false)} variant="ghost" />
         </View>
       ) : (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>

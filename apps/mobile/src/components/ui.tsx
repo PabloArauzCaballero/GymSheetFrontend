@@ -31,6 +31,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { AmbientBackground } from '@/components/ambient';
+import { credentialTextProps } from '@/lib/credential-input';
 import { DURATION, PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { accentContrast, accentGlow, accentGradient, accentPolicy, colors, comfortableTouchTarget, fontSizes, iconSizes, maxContentWidth, minTouchTarget, onMedia, overlay, pressScale, pressSpring, radii, releaseSpring, semibold, spacing, type TextVariant } from '@/theme';
@@ -175,6 +176,7 @@ export function Button({
   label,
   onPress,
   icon,
+  iconPosition = 'start',
   loading = false,
   disabled = false,
   variant = 'primary',
@@ -189,6 +191,11 @@ export function Button({
   onPress: () => void;
   /** Glifo antes de la etiqueta; decorativo (la etiqueta nombra la acción). */
   icon?: keyof typeof Ionicons.glyphMap;
+  /**
+   * `end` para acciones que avanzan («Continuar», «Siguiente», «Ver todos»):
+   * la flecha apunta hacia donde se va, después de la palabra.
+   */
+  iconPosition?: 'start' | 'end';
   loading?: boolean;
   disabled?: boolean;
   variant?: ButtonVariant;
@@ -220,9 +227,15 @@ export function Button({
   );
   const glow = useAnimatedStyle(() => ({ opacity: Math.max(0, pressed.value) * 0.16 }));
   const labelStyle = useAnimatedStyle(() => (reduceMotion ? {} : { transform: [{ translateY: Math.max(0, pressed.value) }] }));
-  // El glifo se adelanta y gira un poco al tocar: el botón «arranca».
+  // El glifo se adelanta y gira un poco al tocar: el botón «arranca». Una
+  // flecha final solo avanza: girarla la haría apuntar a otra parte.
+  const trailing = iconPosition === 'end';
   const iconStyle = useAnimatedStyle(() =>
-    reduceMotion ? {} : { transform: [{ translateX: pressed.value * 3 }, { rotate: `${pressed.value * -8}deg` }] },
+    reduceMotion
+      ? {}
+      : trailing
+        ? { transform: [{ translateX: pressed.value * 3 }] }
+        : { transform: [{ translateX: pressed.value * 3 }, { rotate: `${pressed.value * -8}deg` }] },
   );
   const sweep = useAnimatedStyle(() => {
     const band = Math.max(64, buttonWidth * 0.35);
@@ -243,7 +256,9 @@ export function Button({
   const content = loading ? (
     <ActivityIndicator color={tone.ink} />
   ) : (
-    <Animated.View style={[{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }, labelStyle]}>
+    <Animated.View
+      style={[{ flexDirection: trailing ? 'row-reverse' : 'row', alignItems: 'center', gap: spacing.sm }, labelStyle]}
+    >
       {icon ? (
         <Animated.View style={iconStyle}>
           <Ionicons
@@ -446,8 +461,10 @@ export function Input({
           {...props}
           // Después de `props` a propósito: cuando el campo gestiona su propio
           // ojo, quien lo usa no debe poder fijar `secureTextEntry` por su
-          // cuenta y dejar el interruptor mintiendo.
-          {...(revealable ? { secureTextEntry: !revealed } : {})}
+          // cuenta y dejar el interruptor mintiendo. Por lo mismo, ni mayúscula
+          // automática ni autocorrector: revelado deja de ser un campo seguro y
+          // el teclado volvía a «arreglar» la contraseña (ver credential-input).
+          {...(revealable ? { secureTextEntry: !revealed, ...credentialTextProps } : {})}
         />
         {revealable ? (
           <PressableScale

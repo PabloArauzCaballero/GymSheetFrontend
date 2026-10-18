@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 import { create } from 'zustand';
 import type { Exercise } from '@gymsheet/types';
+import { msToNextSecond } from './rest-clock';
 import { cancelRestEnd, scheduleRestEnd } from './rest-notification';
 
 /** Presets de la hoja de descanso (C8.3.3, anti-patrón «solo de 15 en 15»). */
@@ -214,21 +215,61 @@ export function useForegroundTick(): number {
   return tick;
 }
 
-/** Milisegundos que quedan del descanso, refrescados una vez por segundo mientras corre. */
-export function useRestRemaining(): { remainingMs: number; totalMs: number; running: boolean; finished: boolean } {
+/** El descanso sin reloj: solo cambia al empezar, ajustar o terminar (no repinta cada segundo). */
+export function useRestStatus(): { endsAt: number | null; totalMs: number; running: boolean; finished: boolean } {
   const endsAt = useWorkoutStore((state) => state.restEndsAt);
   const totalMs = useWorkoutStore((state) => state.restTotalMs);
-  const finishedAt = useWorkoutStore((state) => state.restFinishedAt);
+  const finished = useWorkoutStore((state) => state.restFinishedAt !== null);
+  return { endsAt, totalMs, running: endsAt !== null, finished };
+}
+
+/**
+ * Milisegundos que quedan del descanso, refrescados una vez por segundo justo
+ * cuando cambia la cifra (antes, cuatro veces por segundo). Úsalo en un
+ * componente pequeño que solo pinte el reloj: cada tic repinta a quien lo llame.
+ * El fin del descanso (háptico, aviso) no depende de esto: lo dispara el store.
+ */
+export function useRestRemaining(): { remainingMs: number; totalMs: number; running: boolean; finished: boolean } {
+  const { endsAt, totalMs, running, finished } = useRestStatus();
   const [now, setNow] = useState(() => Date.now());
   const foreground = useForegroundTick();
   useEffect(() => {
     if (endsAt === null) return;
-    setNow(Date.now());
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
+    let id: ReturnType<typeof setTimeout> | null = null;
+    const tick = () => {
+      const at = Date.now();
+      setNow(at);
+      const left = endsAt - at;
+      if (left > 0) id = setTimeout(tick, msToNextSecond(left));
+    };
+    tick();
+    return () => {
+      if (id) clearTimeout(id);
+    };
   }, [endsAt, foreground]);
   const remainingMs = endsAt === null ? 0 : Math.max(0, endsAt - now);
-  return { remainingMs, totalMs, running: endsAt !== null, finished: finishedAt !== null };
+  return { remainingMs, totalMs, running, finished };
+}
+
+/**
+ * ¿Quedan `thresholdMs` o menos de descanso? Cambia una sola vez (un
+ * temporizador hasta ese instante), sin tic: para el «se acaba» del anillo.
+ */
+export function useRestBelow(endsAt: number | null, thresholdMs: number): boolean {
+  const foreground = useForegroundTick();
+  const [below, setBelow] = useState(() => endsAt !== null && endsAt - Date.now() <= thresholdMs);
+  useEffect(() => {
+    if (endsAt === null) {
+      setBelow(false);
+      return;
+    }
+    const until = endsAt - thresholdMs - Date.now();
+    setBelow(until <= 0);
+    if (until <= 0) return;
+    const id = setTimeout(() => setBelow(true), until);
+    return () => clearTimeout(id);
+  }, [endsAt, thresholdMs, foreground]);
+  return below;
 }
 
 /** `M:SS`, redondeado hacia arriba: el último segundo visible es un segundo entero. */

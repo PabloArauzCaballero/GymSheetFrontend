@@ -196,11 +196,51 @@ export const conversationSummarySchema = z.object({
   otherUserLastDeliveredAt: z.string().nullable(),
   otherUserLastReadAt: z.string().nullable(),
   otherUserReadReceiptsSinceAt: z.string().nullable(),
+  /** Mensajes temporales vigentes, en segundos; `null` = desactivados. Opcional para servidores anteriores. */
+  disappearingSeconds: z.number().int().positive().nullable().optional(),
 });
 export type ConversationSummary = z.infer<typeof conversationSummarySchema>;
 
+/** Duraciones de los mensajes temporales, como en WhatsApp: 24 h, 7 días y 90 días (en segundos). */
+export const disappearingDurations = [86_400, 604_800, 7_776_000] as const;
+export type DisappearingDuration = (typeof disappearingDurations)[number];
+
+export const setDisappearingMessagesResponseSchema = z.object({
+  conversationId: z.string().uuid(),
+  disappearingSeconds: z.number().int().positive().nullable(),
+});
+export type SetDisappearingMessagesResponse = z.infer<typeof setDisappearingMessagesResponseSchema>;
+
 export const messageTypes = ['text', 'image', 'video', 'audio', 'location'] as const;
 export type MessageType = (typeof messageTypes)[number];
+
+/**
+ * La cita de una respuesta («responder citando»): una foto fija del original
+ * que el servidor arma al leer. `available: false` si el original se eliminó
+ * para todos, caducó o lo ocultaste: la burbuja dice que ya no está.
+ */
+export const messageReplySchema = z.object({
+  messageId: z.string().uuid(),
+  senderId: z.string().uuid(),
+  type: z.string(),
+  body: z.string().nullable(),
+  available: z.boolean(),
+});
+export type MessageReply = z.infer<typeof messageReplySchema>;
+
+/** Una reacción por persona y mensaje, como WhatsApp. */
+export const messageReactionSchema = z.object({
+  userId: z.string().uuid(),
+  emoji: z.string().min(1).max(16),
+});
+export type MessageReaction = z.infer<typeof messageReactionSchema>;
+
+export const setMessageReactionResponseSchema = z.object({
+  conversationId: z.string().uuid(),
+  messageId: z.string().uuid(),
+  reactions: z.array(messageReactionSchema),
+});
+export type MessageReactionsUpdate = z.infer<typeof setMessageReactionResponseSchema>;
 
 export const chatMessageSchema = z.object({
   id: z.string().uuid(),
@@ -216,9 +256,17 @@ export const chatMessageSchema = z.object({
   viewed: z.boolean(),
   locationLat: z.number().nullable(),
   locationLng: z.number().nullable(),
+  /** Nombre del lugar elegido en el mapa; `null`/ausente para «mi ubicación actual». */
+  locationLabel: z.string().nullable().optional(),
+  /** Mensaje temporal: a esta hora deja de verse para ambos. */
+  expiresAt: z.string().nullable().optional(),
   createdAt: z.string(),
   editedAt: z.string().nullable().optional(),
   deletedAt: z.string().nullable().optional(),
+  /** Opcionales: un servidor anterior no los manda. */
+  replyTo: messageReplySchema.nullable().optional(),
+  reactions: z.array(messageReactionSchema).optional(),
+  forwarded: z.boolean().optional(),
 });
 
 export const trainingInviteAcceptedEventSchema = z.object({
@@ -231,12 +279,25 @@ export const trainingInviteAcceptedEventSchema = z.object({
   cancelledAt: z.string().datetime({ offset: true }).nullable().optional(),
 });
 
+/** «X activó los mensajes temporales» (`seconds`) o «los desactivó» (`seconds: null`). */
+export const disappearingMessagesChangedEventSchema = z.object({
+  kind: z.literal('DISAPPEARING_MESSAGES_CHANGED'),
+  seconds: z.number().int().positive().nullable(),
+  changedByUserId: z.string().uuid().nullable(),
+});
+
+export const chatSystemEventSchema = z.discriminatedUnion('kind', [
+  trainingInviteAcceptedEventSchema,
+  disappearingMessagesChangedEventSchema,
+]);
+export type ChatSystemEvent = z.infer<typeof chatSystemEventSchema>;
+
 export const systemMessageSchema = z.object({
   id: z.string().uuid(),
   conversationId: z.string().uuid(),
   senderId: z.null(),
   type: z.literal('system'),
-  systemEvent: trainingInviteAcceptedEventSchema,
+  systemEvent: chatSystemEventSchema,
   // Shared optional fields keep consumers able to inspect common message
   // metadata before narrowing by `type`; the server omits them on system rows.
   body: z.null().optional(),
@@ -247,9 +308,14 @@ export const systemMessageSchema = z.object({
   viewed: z.boolean().optional(),
   locationLat: z.null().optional(),
   locationLng: z.null().optional(),
+  locationLabel: z.null().optional(),
+  expiresAt: z.null().optional(),
   createdAt: z.string(),
   editedAt: z.null().optional(),
   deletedAt: z.null().optional(),
+  replyTo: z.null().optional(),
+  reactions: z.array(messageReactionSchema).optional(),
+  forwarded: z.boolean().optional(),
 });
 
 /** Un mensaje normal o un evento de sistema de solo lectura en el historial. */

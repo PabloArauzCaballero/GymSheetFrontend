@@ -140,7 +140,7 @@ export function PointsRulesSheet({
               <RuleList badges={badges} points={points} rules={rules.data} stats={stats} />
             )}
 
-            <Button label="Entendido" onPress={onClose} />
+            <Button icon="checkmark" label="Entendido" onPress={onClose} />
           </ScrollView>
         </View>
       </View>

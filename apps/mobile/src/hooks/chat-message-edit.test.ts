@@ -29,6 +29,9 @@ test('allows only own undeleted text messages within the backend edit window', (
   assert.equal(canEditMessage({ ...message, type: 'audio' }, message.senderId, now), false);
   assert.equal(canEditMessage({ ...message, deletedAt: '2026-10-09T10:01:00.000Z' }, message.senderId, now), false);
   assert.equal(canEditMessage(message, message.senderId, new Date('2026-10-09T10:15:00.001Z')), false);
+  // Teléfono con el reloj 30 s atrasado respecto del servidor: el mensaje recién enviado se puede editar.
+  assert.equal(canEditMessage(message, message.senderId, new Date('2026-10-09T09:59:30.000Z')), true);
+  assert.equal(canEditMessage(message, message.senderId, new Date('2026-10-09T09:57:00.000Z')), false);
 });
 
 test('keeps training system events outside edit and update actions', () => {

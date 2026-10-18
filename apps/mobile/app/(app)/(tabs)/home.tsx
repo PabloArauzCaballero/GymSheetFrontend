@@ -241,6 +241,8 @@ export default function HomeScreen() {
         )}
         {sessions.length > 3 ? (
           <Button
+            icon="arrow-forward"
+            iconPosition="end"
             label="Ver todos mis entrenos"
             onPress={() => router.push('/workouts')}
             size="sm"
@@ -253,6 +255,7 @@ export default function HomeScreen() {
       {membershipData?.vigenteHoy ? (
         <Card list>
           <NavRow
+            leading={<IconBadge icon="card-outline" size={36} tone="record" />}
             onPress={() => router.push('/membership')}
             subtitle={`${membershipData.diasRestantes} ${membershipData.diasRestantes === 1 ? 'día restante' : 'días restantes'}`}
             title={membershipData.plan?.nombre ?? 'Tu membresía'}

@@ -21,6 +21,7 @@ import { Button, Input, textLinkStyle } from '@/components/ui';
 import { AuthAlert, AuthShell } from '@/components/auth-shell';
 import { Checkbox } from '@/components/checkbox';
 import { Select } from '@/components/select';
+import { accountEmailTextProps } from '@/lib/credential-input';
 import { useAuthStore } from '@/state/auth-store';
 import { colors, fontSizes, spacing } from '@/theme';
 
@@ -94,16 +95,13 @@ export default function RegisterScreen() {
         name="email"
         render={({ field: { onChange, onBlur, value } }) => (
           <Input
-            autoCapitalize="none"
-            autoComplete="email"
+            {...accountEmailTextProps}
             error={errors.email?.message}
             icon="mail-outline"
-            keyboardType="email-address"
             label={authCopy.fields.email.label}
             onBlur={onBlur}
             onChangeText={onChange}
             placeholder={authCopy.fields.email.placeholder}
-            textContentType="emailAddress"
             value={value}
           />
         )}
@@ -199,7 +197,7 @@ export default function RegisterScreen() {
 
       {failure ? <AuthAlert message={failure} /> : null}
 
-      <Button label={authCopy.register.submit} loading={isSubmitting} onPress={onSubmit} />
+      <Button icon="person-add-outline" label={authCopy.register.submit} loading={isSubmitting} onPress={onSubmit} />
     </AuthShell>
   );
 }

@@ -51,7 +51,10 @@ export type RoutineComment = {
   respuestas: RoutineComment[];
 };
 
-export type CommentPage = { items: RoutineComment[]; siguienteCursor: string | null };
+export type CommentPage = { items: RoutineComment[]; siguienteCursor: string | null; total?: number };
+
+/** Orden de `GET /comments/:kind/:id`: los más nuevos o los de más «me gusta». */
+export type CommentOrder = 'recientes' | 'utiles';
 
 /** `PUT/DELETE /comments/:commentId/like`. */
 export type CommentLikeState = { likes: number; meGusta: boolean };

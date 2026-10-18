@@ -408,7 +408,7 @@ export function SessionSummary({
         </Card>
       ) : null}
 
-      <Button label="Seguir" onPress={goOn} variant={subjects.length > 0 ? 'ghost' : 'primary'} />
+      <Button icon="arrow-forward" iconPosition="end" label="Seguir" onPress={goOn} variant={subjects.length > 0 ? 'ghost' : 'primary'} />
 
       <CelebrationModal onClose={() => setQueue([])} subjects={queue} />
     </View>

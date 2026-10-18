@@ -513,10 +513,12 @@ export function CardStage({
             ]}
           >
             <Button
+              icon={hasNext || total <= 1 ? 'arrow-forward' : 'checkmark'}
+              iconPosition={hasNext || total <= 1 ? 'end' : 'start'}
               label={hasNext ? `Siguiente · ${position} de ${total}` : total > 1 ? 'Listo' : 'Seguir'}
               onPress={leave}
             />
-            {reduceMotion ? null : <Button label="Volver a verla" onPress={replay} variant="ghost" />}
+            {reduceMotion ? null : <Button icon="reload-outline" label="Volver a verla" onPress={replay} variant="ghost" />}
           </Animated.View>
         </Animated.View>
 

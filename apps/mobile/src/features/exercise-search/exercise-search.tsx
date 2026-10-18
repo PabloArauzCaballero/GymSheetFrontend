@@ -375,7 +375,7 @@ export function ExerciseSearch({
       title={filters.favoritos && !searching ? 'Aún no tienes favoritos' : 'Sin resultados'}
     >
       {filterCount > 0 || scope ? (
-        <Button label="Borrar filtros" onPress={clearAll} size="sm" variant="secondary" />
+        <Button icon="close-circle-outline" label="Borrar filtros" onPress={clearAll} size="sm" variant="secondary" />
       ) : null}
       {emptyAction}
     </EmptyState>

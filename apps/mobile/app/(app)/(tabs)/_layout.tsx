@@ -234,6 +234,10 @@ export default function TabsLayout() {
       tabBar={(props) => <TabBarWithWorkout {...props} />}
       screenOptions={{
         headerShown: false,
+        // Una pestaña que no se ve no se vuelve a pintar (sus consultas siguen
+        // llegando a la caché y se pintan al volver). Lo que corre en segundo
+        // plano —el descanso, su háptico y su aviso— vive en el store, no aquí.
+        freezeOnBlur: true,
         animation: 'shift',
         sceneStyleInterpolator,
         transitionSpec: {

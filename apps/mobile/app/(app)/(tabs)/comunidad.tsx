@@ -433,7 +433,7 @@ function SearchPreferencesSheet({
           </Section>
 
           <Button icon="shield-outline" label="Personas bloqueadas" onPress={onOpenBlocked} variant="ghost" />
-          <Button label="Listo" onPress={onClose} />
+          <Button icon="checkmark" label="Listo" onPress={onClose} />
         </View>
       </View>
     </Modal>
@@ -900,7 +900,9 @@ export default function ComunidadScreen() {
             <Input
               autoCapitalize="none"
               autoCorrect={false}
+              icon="search-outline"
               label="Buscar"
+              labelHidden
               onChangeText={setQ}
               placeholder="Nombre de un socio…"
               returnKeyType="search"
@@ -983,7 +985,11 @@ export default function ComunidadScreen() {
       }
       itemGap={viewMode === 'cards' ? spacing.md : 0}
       keyExtractor={(entry) => entry.userId}
-      onRefresh={() => void directory.refetch()}
+      onRefresh={() => {
+        void directory.refetch();
+        // Las historias ya no se sondean: refrescar la pantalla también las trae.
+        void queryClient.invalidateQueries({ queryKey: ['stories', 'feed'] });
+      }}
       refreshing={directory.isFetching}
       renderItem={renderPerson}
     />

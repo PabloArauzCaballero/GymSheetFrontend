@@ -5,7 +5,8 @@
  * «leído» de un chat). Viven aquí para que `check-theme` siga a cero fuera de
  * `src/theme/` y para que quien los cambie vea el resto de la paleta.
  */
-import { alpha, brandNavy, ink, metricInk, reppJade } from './palette';
+import { colors } from './colors';
+import { alpha, brandNavy, chatInk, ink, metricInk, mixHex, neutral, reppJade } from './palette';
 
 /* ─── Podio (rank-badge) ─────────────────────────────────────────────────── */
 
@@ -83,14 +84,6 @@ export const storyChrome = {
   backdrop: ink.black,
 } as const;
 
-/* ─── Chat ───────────────────────────────────────────────────────────────── */
-
-export const chatColors = {
-  /** «Leído»: WhatsApp volvió el check azul un color universal, ajeno a la marca. */
-  readTick: '#34b7f1',
-  // Los metadatos de la burbuja propia salen de `alpha(accentContrast(), n)`
-  // en la pantalla: la tinta depende de la marca.
-} as const;
 
 /* ─── Fondo ambiente ─────────────────────────────────────────────────────── */
 
@@ -261,6 +254,48 @@ const bubbleInk = '#0b0f0d';
 /** Metadatos (hora, «editado») sobre la burbuja propia, que va en el color de acento. */
 export const bubbleInkMuted = alpha(bubbleInk, 0.65);
 export const bubbleInkFaint = alpha(bubbleInk, 0.55);
+
+/**
+ * Burbuja propia: el acento de la marca activa rebajado sobre el lienzo. Es una
+ * función (no una constante) porque `colors.volt` cambia al resolver la sesión.
+ */
+export function chatBubbleMine(): string {
+  return mixHex(colors.volt, neutral.background, chatInk.mineMix);
+}
+
+/** El resto del chat al estilo WhatsApp: hilo con trama, burbujas con colita, citas y reacciones. */
+export const chatColors = {
+  /** «Leído»: WhatsApp volvió el check azul un color universal, ajeno a la marca. */
+  readTick: readReceiptTick,
+  /** Burbuja ajena. `text` 13,8:1 y `textMuted` 7,1:1 encima. */
+  bubbleTheirs: neutral.surfaceHigh,
+  /** Hora, «Editado» y checks sobre la burbuja propia (≈ 5,3:1). */
+  metaOnMine: alpha(neutral.text, 0.72),
+  /** Fondo de la cita dentro de una burbuja: un pozo un poco más oscuro. */
+  quoteFill: alpha(ink.black, 0.24),
+  quoteMine: chatInk.quoteMine,
+  quoteOther: chatInk.quoteOther,
+  /** Sombra mínima para que la burbuja se lea como objeto sobre la trama. */
+  bubbleShadow: `0 1px 1.5px ${alpha(ink.black, 0.38)}`,
+  /** Glifos de la trama del fondo: casi invisibles, solo textura. */
+  wallpaperGlyph: alpha(ink.white, 0.035),
+  /** Píldora de fecha y botón «bajar al último», sobre la trama. */
+  floatingChip: alpha(neutral.surfaceHighest, 0.94),
+  /** El icono de responder que asoma al deslizar una burbuja. */
+  replyHint: alpha(ink.white, 0.14),
+  /** Resalte breve del mensaje al que se salta desde una cita. */
+  focusFlash: alpha(reppJade, 0.28),
+  /** Fondo de cada icono del menú «+» (tinta propia por acción, como WhatsApp). */
+  attach: {
+    emoji: metricInk.record,
+    photo: metricInk.weight,
+    camera: metricInk.volume,
+    location: metricInk.rest,
+    viewOnce: metricInk.reps,
+  },
+  /** Glifo encima de esas tintas claras: 8:1 o más. */
+  attachGlyph: neutral.background,
+} as const;
 
 /* ─── Mapa social ────────────────────────────────────────────────────────── */
 

@@ -7,7 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableScale } from '@/components/motion';
 import { colors, fontSizes, iconSizes, overlay, radii, semibold, spacing } from '@/theme';
 
-export type PickedMedia = { uri: string; name: string; mimeType: string; kind: 'image' | 'video' };
+/** `viewOnce`: se eligió desde «Vista única» y la vista previa ya sale con el «1» activado. */
+export type PickedMedia = { uri: string; name: string; mimeType: string; kind: 'image' | 'video'; viewOnce?: boolean };
 
 function PreviewVideo({ uri }: { uri: string }) {
   const source = useMemo(() => ({ uri }), [uri]);
@@ -40,8 +41,8 @@ export function MediaPreview({
   const [viewOnce, setViewOnce] = useState(false);
   useEffect(() => {
     setCaption('');
-    setViewOnce(false);
-  }, [media?.uri]);
+    setViewOnce(Boolean(media?.viewOnce));
+  }, [media?.uri, media?.viewOnce]);
 
   return (
     <Modal animationType="slide" onRequestClose={onCancel} visible={Boolean(media)}>

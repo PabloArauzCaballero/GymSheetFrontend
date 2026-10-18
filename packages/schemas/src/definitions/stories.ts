@@ -14,6 +14,8 @@ export const storySchema = z.object({
   id: z.string().uuid(),
   mediaUrl: z.string(),
   mediaType: z.enum(storyMediaTypes),
+  /** Pie de foto opcional. `nullish` para convivir con un backend anterior que no lo manda. */
+  caption: z.string().nullish(),
   createdAt: z.string(),
   expiresAt: z.string(),
 });
@@ -30,7 +32,10 @@ export const storyFeedEntrySchema = z.object({
       id: z.string().uuid(),
       mediaUrl: z.string(),
       mediaType: z.enum(storyMediaTypes),
+      caption: z.string().nullish(),
       createdAt: z.string(),
+      /** Cuándo caduca; opcional para convivir con un backend anterior. */
+      expiresAt: z.string().optional(),
       viewedByMe: z.boolean(),
     }),
   ),

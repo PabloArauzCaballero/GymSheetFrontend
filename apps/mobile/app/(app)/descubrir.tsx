@@ -353,7 +353,7 @@ function MatchModal({
               loading={messaging}
               onPress={onMessage}
             />
-            <Button label="Seguir descubriendo" onPress={onClose} variant="ghost" />
+            <Button icon="flame-outline" label="Seguir descubriendo" onPress={onClose} variant="ghost" />
           </View>
         </View>
       </View>
