@@ -6,7 +6,7 @@ import Svg, { Path } from 'react-native-svg';
 import { AGGREGATES, HIGHLIGHT, IMAGE_ASPECT, REGIONS, REGION_VIEWBOX, toPathData } from '@gymsheet/anatomy';
 import { Text } from '@/components/text';
 import { colors, radii, spacing } from '@/theme';
-import { IMAGES } from './images';
+import { anatomyImage } from './images';
 import { zoneMuscles } from './zones';
 
 type MuscleSource = {
@@ -31,11 +31,19 @@ export function sessionMuscleCodes(exercises: readonly MuscleSource[]): string[]
 function Figure({ tag, codes, width, label }: { tag: 'surface-front' | 'surface-back'; codes: readonly string[]; width: number; label: string }) {
   const reduceMotion = useReducedMotion();
   const height = Math.round(width / IMAGE_ASPECT);
+  const image = anatomyImage(tag, width);
   const paths = (REGIONS[tag] ?? []).filter((region) => codes.includes(region.code)).map((region) => toPathData(region.rings));
   return (
     <View style={{ width, alignItems: 'center', gap: spacing.xs }}>
       <View style={{ width, height }}>
-        <Image accessibilityIgnoresInvertColors contentFit="fill" source={IMAGES[tag]} style={{ width, height }} />
+        <Image
+          accessibilityIgnoresInvertColors
+          cachePolicy="memory-disk"
+          contentFit="fill"
+          recyclingKey={image.recyclingKey}
+          source={image.source}
+          style={{ width, height }}
+        />
         <Animated.View entering={reduceMotion ? undefined : FadeIn.duration(HIGHLIGHT.fadeMs * 3)} style={StyleSheet.absoluteFill}>
           <Svg height={height} pointerEvents="none" viewBox={`0 0 ${REGION_VIEWBOX.width} ${REGION_VIEWBOX.height}`} width={width}>
             {paths.map((d, index) => (

@@ -284,6 +284,9 @@ export function ExerciseImage({
             // Foto: `cover`, que llene el cuadro sin bandas.
             contentFit={photo ? 'cover' : 'contain'}
             onLoad={() => setLoaded(true)}
+            // En listas recicladas: sin esto, una fila reutilizada enseña un
+            // instante la lámina de la fila anterior.
+            recyclingKey={uri}
             source={{ uri }}
             style={{ width: '100%', height: '100%' }}
             transition={reduceMotion ? 0 : motion.enter}

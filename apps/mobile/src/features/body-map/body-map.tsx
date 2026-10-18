@@ -446,7 +446,7 @@ export function BodyMap({
               <Animated.View
                 entering={reduceMotion ? undefined : FadeIn.duration(motion.enter)}
                 // La lámina anterior se desmonta antes de decodificar la nueva:
-                // cada WebP mide 1536×3072 y mantener ambas durante el fundido
+                // cada WebP mide 1536×3072 (≈19 MB decodificada) y mantener ambas durante el fundido
                 // disparaba el pico de memoria al cambiar de cara o capa.
                 key={tag}
                 style={{ position: 'absolute', left: frame.x, top: frame.y, width: frame.width, height: frame.height }}

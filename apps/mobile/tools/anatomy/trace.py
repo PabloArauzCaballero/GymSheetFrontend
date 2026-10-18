@@ -7,7 +7,8 @@ Entrada (la deja `render.py`): `<capa>-<vista>-ids.png`, `-beauty.png`,
 `palette.json`, `meta.json`.
 
 Salida:
-  * `assets/anatomy/<capa>-<vista>.webp`   imagen fotorrealista con alfa.
+  * `assets/anatomy/<capa>-<vista>.webp`   imagen fotorrealista con alfa (1536×3072).
+  * `assets/anatomy/small/<capa>-<vista>.webp`   la misma a 512×1024 (miniaturas).
   * `regions.generated.ts`                 contornos por músculo en un viewBox
                                            fijo de 1000 x 2000.
   * `coverage.json`                        área por músculo y vista, y los
@@ -86,6 +87,8 @@ def main():
     ap.add_argument("--assets", required=True)
     ap.add_argument("--ts", required=True)
     ap.add_argument("--webp-quality", type=int, default=88)
+    ap.add_argument("--width", type=int, default=1536)
+    ap.add_argument("--small-width", type=int, default=512)
     args = ap.parse_args()
 
     palette = json.load(open(os.path.join(args.src, "palette.json")))
@@ -123,9 +126,15 @@ def main():
             regions[tag] = entries
             if os.path.exists(beauty_path):
                 img = Image.open(beauty_path).convert("RGBA")
-                out = os.path.join(args.assets, f"{tag}.webp")
-                img.save(out, "WEBP", quality=args.webp_quality, method=6, alpha_quality=95)
-                print(f"{tag}: {len(entries)} músculos tocables, {os.path.getsize(out)/1024:.0f} KB")
+                # La app pinta la figura a ~400 pt: 1536 px de ancho bastan (el
+                # render puede salir mayor). La pequeña es para miniaturas.
+                # Misma proporción 1:2 que el viewBox de las zonas: cuadran igual.
+                for width, folder in ((args.width, args.assets), (args.small_width, os.path.join(args.assets, "small"))):
+                    os.makedirs(folder, exist_ok=True)
+                    sized = img.resize((width, width * 2), Image.LANCZOS) if img.width != width else img
+                    out = os.path.join(folder, f"{tag}.webp")
+                    sized.save(out, "WEBP", quality=args.webp_quality, method=6, alpha_quality=95)
+                    print(f"{tag} ({width} px): {len(entries)} músculos tocables, {os.path.getsize(out)/1024:.0f} KB")
 
     missing = [c for c in codes if not any(coverage.get(c, {}).values())]
     json.dump({"coverage": coverage, "missing": missing}, open(os.path.join(args.src, "coverage.json"), "w"), indent=2)
