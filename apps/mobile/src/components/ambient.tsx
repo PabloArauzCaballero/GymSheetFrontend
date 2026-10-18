@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useCallback, useContext, useEffect, useSyncExternalStore } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { NavigationContext } from 'expo-router/build/react-navigation/core';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import Animated, {
   Easing,
@@ -8,6 +9,7 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
   withRepeat,
+  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 import { ambientColors, getActiveTenant } from '@/theme';
@@ -29,10 +31,35 @@ import { useAmbientStore } from '@/state/ambient-store';
  * the identity now comes from the wave, not from them.
  *
  * Everything animates `transform` and `opacity` only, so a permanently running
- * background costs no layout work. It stops completely under Reduce Motion.
+ * background costs no layout work. It stops completely under Reduce Motion, and
+ * pauses while its screen is not the one on top: Reanimated runs on the UI
+ * thread, so a screen hidden under a push (or frozen with `freezeOnBlur`) kept
+ * its loops animating for nobody, one set per screen in the stack.
  */
 
 const TAU = Math.PI * 2;
+
+/**
+ * ¿Es esta pantalla la que se ve? Fuera de un navegador (no debería pasar, pero
+ * el fondo también se monta en pantallas sueltas) se da por visible.
+ */
+function useScreenFocused(): boolean {
+  const navigation = useContext(NavigationContext);
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      if (!navigation) return () => undefined;
+      const offFocus = navigation.addListener('focus', onChange);
+      const offBlur = navigation.addListener('blur', onChange);
+      return () => {
+        offFocus();
+        offBlur();
+      };
+    },
+    [navigation],
+  );
+  const read = () => (navigation ? navigation.isFocused() : true);
+  return useSyncExternalStore(subscribe, read, read);
+}
 
 /** A clock that runs 0→1 forever at a fixed rate. */
 function useClock(periodMs: number, enabled: boolean) {
@@ -45,16 +72,20 @@ function useClock(periodMs: number, enabled: boolean) {
     // false, este efecto se iba sin tocar nada y la onda seguía animándose
     // indefinidamente. Justo la persona que pidió que parara era la única a la
     // que no le paraba.
+    //
+    // Pausado se queda donde estaba (no vuelve a 0): al volver a la pantalla la
+    // onda sigue desde la misma pose, sin salto.
     if (!enabled) {
       cancelAnimation(value);
-      value.value = 0;
       return;
     }
-    value.value = 0;
-    value.value = withRepeat(
-      withTiming(1, { duration: periodMs, easing: Easing.linear }),
-      -1,
-      false,
+    // Termina la vuelta en curso y sigue en bucle. 1 y 0 son la misma fase
+    // (todo se lee con sin/cos de `value * TAU`), así que el salto no se ve.
+    const from = value.value % 1;
+    value.value = withSequence(
+      withTiming(1, { duration: Math.max(1, Math.round(periodMs * (1 - from))), easing: Easing.linear }),
+      withTiming(0, { duration: 0 }),
+      withRepeat(withTiming(1, { duration: periodMs, easing: Easing.linear }), -1, false),
     );
     // Y al desmontar, también: este fondo se monta en cada pantalla, así que
     // sin esto cada navegación deja atrás un puñado de bucles vivos.
@@ -312,11 +343,12 @@ function Glow({ index, width, moving }: { index: number; width: number; moving: 
 export function AmbientBackground({ waveform = true }: { waveform?: boolean } = {}) {
   const { width, height } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
+  const focused = useScreenFocused();
   const intensity = useAmbientStore((state) => state.intensity);
   const isTraining = intensity === 'active';
   // En pantallas con contenido estático (waveform=false), las luces se quedan fijas
   // para que la GPU no trabaje en vano ni caliente el teléfono con BlurView encima.
-  const moving = !reduceMotion && (isTraining || waveform);
+  const moving = !reduceMotion && focused && (isTraining || waveform);
   // 1.0 while browsing, 1.9 during a live session. Chosen by eye: enough that
   // the room visibly changes when training starts, not so much that the wave
   // starts competing with the numbers the user is reading off the screen.
