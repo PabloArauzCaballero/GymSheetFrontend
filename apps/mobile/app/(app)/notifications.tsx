@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Switch, Text, View } from 'react-native';
@@ -11,7 +12,7 @@ import * as Haptics from 'expo-haptics';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { formatDate } from '@/lib/format';
 import { notify } from '@/notifications';
-import { colors, fontSizes, minTouchTarget, semibold, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, semibold, spacing } from '@/theme';
 
 const PREFERENCES_PATH = '/notifications/preferences/me';
 const PREFERENCES_KEY = ['notifications', 'preferences'] as const;
@@ -55,6 +56,7 @@ const QUIET_HOURS = { start: '22:00', end: '07:00' } as const;
  * so a screen reader never announces a bare "activado".
  */
 function PreferenceSwitch({
+  icon,
   label,
   description,
   accessibilityLabel,
@@ -62,6 +64,8 @@ function PreferenceSwitch({
   disabled,
   onChange,
 }: {
+  /** Ancla de la fila, como en `Row`: decorativo, la etiqueta nombra el ajuste. */
+  icon: keyof typeof Ionicons.glyphMap;
   label: string;
   description: string;
   accessibilityLabel: string;
@@ -79,6 +83,13 @@ function PreferenceSwitch({
         paddingVertical: spacing.xs,
       }}
     >
+      <Ionicons
+        accessibilityElementsHidden
+        color={accentPolicy.glyph}
+        importantForAccessibility="no-hide-descendants"
+        name={icon}
+        size={iconSizes.md}
+      />
       <View style={{ flex: 1, gap: spacing.xs }}>
         <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
           {label}
@@ -194,6 +205,7 @@ export default function NotificationsScreen() {
             checked={current.recordatoriosVencimiento}
             description="Permite generar avisos según la configuración del plan."
             disabled={saving}
+            icon="alarm-outline"
             label="Recordatorios de vencimiento"
             onChange={(value) => apply({ recordatoriosVencimiento: value })}
           />
@@ -208,6 +220,7 @@ export default function NotificationsScreen() {
             checked={externalChannel}
             description="Al activarlo autorizas el envío fuera de la aplicación; al desactivarlo se revoca ese consentimiento."
             disabled={saving}
+            icon="paper-plane-outline"
             label="Canal externo HTTP"
             onChange={(value) =>
               apply(
@@ -232,6 +245,7 @@ export default function NotificationsScreen() {
             <>
               <Divider />
               <Row
+                icon="shield-checkmark-outline"
                 label="Consentimiento"
                 value={
                   current.consentimientoExternoEn
@@ -239,12 +253,12 @@ export default function NotificationsScreen() {
                     : 'Pendiente'
                 }
               />
-              <Row label="Versión" value={current.versionConsentimiento ?? '—'} />
+              <Row icon="document-text-outline" label="Versión" value={current.versionConsentimiento ?? '—'} />
             </>
           ) : (
             <>
               <Divider />
-              <Row label="Canal actual" value="Dentro de la aplicación" />
+              <Row icon="phone-portrait-outline" label="Canal actual" value="Dentro de la aplicación" />
             </>
           )}
         </Card>
@@ -258,6 +272,7 @@ export default function NotificationsScreen() {
             checked={quietHours}
             description={`No recibirás avisos entre las ${QUIET_HOURS.start} y las ${QUIET_HOURS.end}.`}
             disabled={saving}
+            icon="moon-outline"
             label="Silenciar de noche"
             onChange={(value) =>
               apply(
@@ -271,6 +286,7 @@ export default function NotificationsScreen() {
             <>
               <Divider />
               <Row
+                icon="time-outline"
                 label="Silencio"
                 value={`${current.horaSilencioInicio ?? '—'} – ${current.horaSilencioFin ?? '—'}`}
               />
