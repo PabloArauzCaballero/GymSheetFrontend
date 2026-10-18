@@ -26,4 +26,12 @@ export const detailStackOptions: NativeStackNavigationOptions = {
   // on: dragging back plays the same curve in reverse, under the finger.
   gestureEnabled: true,
   gestureDirection: 'horizontal',
+  // La pantalla tapada por un push deja de volver a pintarse hasta que se
+  // vuelve a ella (react-native-screens la «congela»). Antes cada pantalla de
+  // la pila seguía repintándose con cada consulta que llegaba. Lo que debe
+  // seguir vivo detrás —el descanso del entreno, su háptico y su notificación—
+  // vive en `workout-store` (temporizador de módulo), no en un componente, así
+  // que no se congela. Las animaciones de Reanimated no se paran solas: el
+  // fondo animado se pausa a mano al perder el foco (`ambient.tsx`).
+  freezeOnBlur: true,
 };
