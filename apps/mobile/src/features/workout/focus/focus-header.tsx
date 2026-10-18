@@ -67,12 +67,12 @@ function RoundButton({ icon, label, onPress, testID }: { icon: keyof typeof Ioni
   );
 }
 
-/** Un tramo de la barra de progreso: el relleno es absoluto y sin hijos, así que animar su ancho no recoloca nada. */
+/** Un tramo de la barra de progreso: transform scaleX con transformOrigin left corre en el compositor sin pases de layout. */
 function Segment({ fill, current, state }: { fill: number; current: boolean; state: BlockState }) {
   const reduceMotion = useReduceMotion();
   const animated = useAnimatedStyle(() => {
-    const width = `${Math.round(Math.min(1, Math.max(0, fill)) * 100)}%` as const;
-    return { width: reduceMotion ? width : withSpring(width, glideSpring) };
+    const clamped = Math.min(1, Math.max(0, fill));
+    return { transform: [{ scaleX: reduceMotion ? clamped : withSpring(clamped, glideSpring) }] };
   }, [fill, reduceMotion]);
   // El tramo donde estás engorda: el «aquí» se ve sin contar rayas.
   const lift = useAnimatedStyle(() => {
@@ -99,6 +99,8 @@ function Segment({ fill, current, state }: { fill: number; current: boolean; sta
             left: 0,
             top: 0,
             bottom: 0,
+            width: '100%',
+            transformOrigin: 'left',
             borderRadius: radii.full,
             // Omitido: el tramo se cierra en gris (no es trabajo hecho). Hecho: verde de «listo».
             backgroundColor: state === 'omitted' ? metricColors.skipped.ink : state === 'done' ? colors.success : colors.text,

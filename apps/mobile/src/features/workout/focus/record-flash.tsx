@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect } from 'react';
 import { View } from 'react-native';
-import Animated, { FadeInDown, FadeOutUp, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { cancelAnimation, FadeInDown, FadeOutUp, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Burst } from '@/components/motion';
 import { Text } from '@/components/text';
@@ -22,6 +22,9 @@ export function RecordFlash({ flash }: { flash: { key: number; label: string } |
     if (!flash || reduceMotion) return;
     glow.value = 0;
     glow.value = withRepeat(withSequence(withTiming(1, { duration: 420 }), withTiming(0.35, { duration: 420 })), 2, false);
+    return () => {
+      cancelAnimation(glow);
+    };
   }, [flash, glow, reduceMotion]);
 
   const halo = useAnimatedStyle(() => ({ opacity: 0.35 + glow.value * 0.65 }));

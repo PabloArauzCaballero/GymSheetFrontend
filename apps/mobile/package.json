@@ -12,7 +12,7 @@
     "type-check": "tsc --noEmit",
     "lint": "expo lint && node scripts/check-theme.mjs",
     "test": "node --import ./scripts/register-ts-extension.mjs --test --experimental-strip-types \"src/**/*.test.ts\"",
-    "test:unit": "node --test \"src/**/*.test.ts\"",
+    "test:unit": "node --import ./scripts/register-ts-extension.mjs --test --experimental-strip-types \"src/**/*.test.ts\"",
     "test:stories": "node --test --experimental-strip-types src/components/story-viewers-presentation.test.ts",
     "test:tour": "node --test --experimental-strip-types src/state/tour-queue.test.ts",
     "eas-build-pre-install": "node scripts/ensure-install.mjs && node scripts/check-api-url.mjs",

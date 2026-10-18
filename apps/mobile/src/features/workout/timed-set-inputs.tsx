@@ -82,10 +82,12 @@ export function TimedSetInputs({
   const [loaded, setLoaded] = useState(() => value.pesoKg.trim() !== '' && Number(value.pesoKg.replace(',', '.')) > 0);
   const reached = targetSeconds !== null && clock.seconds >= targetSeconds;
   const fraction = targetSeconds ? Math.min(1, clock.seconds / targetSeconds) : 0;
-  // El relleno es absoluto y sin hijos: animar su ancho no recoloca nada.
+  // Escala en vez de ancho: al correr el cronómetro avanza segundo a segundo
+  // y animar el ancho forzaría recalcular layout. Con `scaleX` y `transformOrigin: 'left'`
+  // la interpolación ocurre en el compositor de GPU.
   const fill = useAnimatedStyle(() => {
-    const width = `${Math.round(fraction * 100)}%` as const;
-    return { width: reduceMotion ? width : withTiming(width, { duration: 900 }) };
+    const ratio = Math.min(1, Math.max(0, fraction));
+    return { transform: [{ scaleX: reduceMotion ? ratio : withTiming(ratio, { duration: 900 }) }] };
   }, [fraction, reduceMotion]);
 
   return (
@@ -122,7 +124,15 @@ export function TimedSetInputs({
           <Animated.View
             pointerEvents="none"
             style={[
-              { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: reached ? metricColors.rest.tint : metricColors.time.tint },
+              {
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: '100%',
+                transformOrigin: 'left',
+                backgroundColor: reached ? metricColors.rest.tint : metricColors.time.tint,
+              },
               fill,
             ]}
           />

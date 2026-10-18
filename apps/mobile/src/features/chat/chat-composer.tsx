@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  cancelAnimation,
   FadeIn,
   FadeOut,
   ZoomIn,
@@ -77,6 +78,9 @@ function RecordingDot() {
   useEffect(() => {
     if (reduceMotion) return;
     opacity.value = withRepeat(withSequence(withTiming(0.25, { duration: 500 }), withTiming(1, { duration: 500 })), -1);
+    return () => {
+      cancelAnimation(opacity);
+    };
   }, [opacity, reduceMotion]);
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
   return (

@@ -501,6 +501,13 @@ export default function DescubrirScreen() {
     translateY.value = 0;
   }, [translateX, translateY]);
 
+  useEffect(() => {
+    return () => {
+      cancelAnimation(translateX);
+      cancelAnimation(translateY);
+    };
+  }, [translateX, translateY]);
+
   const swipe = useMutation({
     mutationFn: async ({ entry, direction }: Decision) => {
       if (entry.impressionId) await discoveryService.observeImpression(entry.impressionId);

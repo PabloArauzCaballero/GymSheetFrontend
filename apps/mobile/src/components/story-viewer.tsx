@@ -235,8 +235,11 @@ function ProgressSegment({
     return undefined;
   }, [animated, durationMs, paused, progress, remainingMsRef, runToken, status]);
 
+  // Escala en vez de ancho: la barra avanza a 60-120 fps durante 15 s y un
+  // cambio de ancho forzaría un pase de layout en cada fotograma. Con `scaleX` y
+  // `transformOrigin: 'left'` la interpolación ocurre en el compositor de GPU.
   const fill = useAnimatedStyle(() => ({
-    width: `${progress.value * 100}%` as `${number}%`,
+    transform: [{ scaleX: Math.max(0, Math.min(1, progress.value)) }],
   }));
 
   return (
@@ -249,7 +252,18 @@ function ProgressSegment({
         backgroundColor: overlay.glassStrong,
       }}
     >
-      <Animated.View style={[{ height: '100%', borderRadius: radii.full, backgroundColor: ink.white }, fill]} />
+      <Animated.View
+        style={[
+          {
+            height: '100%',
+            width: '100%',
+            transformOrigin: 'left',
+            borderRadius: radii.full,
+            backgroundColor: ink.white,
+          },
+          fill,
+        ]}
+      />
     </View>
   );
 }
