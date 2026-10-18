@@ -49,7 +49,7 @@ import {
 
 /** Escalonado del desglose: una fila cada 90 ms mientras la cifra cuenta. */
 const ROW_STEP = 90;
-const BREAKDOWN_ORDER: readonly (keyof PointsBreakdown)[] = ['session', 'sets', 'volume', 'streak', 'badges', 'modes'];
+const BREAKDOWN_ORDER: readonly (keyof PointsBreakdown)[] = ['session', 'sets', 'volume', 'streak', 'challenges', 'badges', 'modes'];
 
 /** De dónde sale cada partida: un glifo y el color de su magnitud, los mismos que en el entreno. */
 const BREAKDOWN_GLYPH: Readonly<
@@ -61,6 +61,7 @@ const BREAKDOWN_GLYPH: Readonly<
   streak: { icon: 'flame', metric: 'streak' },
   badges: { icon: 'ribbon', metric: 'record' },
   modes: { icon: 'flash', metric: 'effort' },
+  challenges: { icon: 'flag', metric: 'time' },
 };
 
 /** Las cartas que esperan, bocabajo y en abanico: se ve cuántas y de qué rareza, no cuáles. */
