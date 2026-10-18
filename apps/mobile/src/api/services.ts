@@ -368,8 +368,12 @@ export const communityService = {
   ratingSummary: communityApi.rating,
   rate: communityApi.rate,
   removeRating: communityApi.removeRating,
-  comments: (kind: Parameters<typeof communityApi.comments>[0], id: string, cursor?: string | null) =>
-    communityApi.comments(kind, id, cursor ?? undefined),
+  comments: (
+    kind: Parameters<typeof communityApi.comments>[0],
+    id: string,
+    cursor?: string | null,
+    orden?: Parameters<typeof communityApi.comments>[3],
+  ) => communityApi.comments(kind, id, cursor ?? undefined, orden),
   comment: (
     kind: Parameters<typeof communityApi.comment>[0],
     id: string,
