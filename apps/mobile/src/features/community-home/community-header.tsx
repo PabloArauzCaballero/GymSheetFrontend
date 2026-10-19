@@ -1,14 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, type Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { socialService } from '@/api/services';
 import { TourHelpButton } from '@/components/layout';
 import { TourTarget } from '@/components/tour';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { InteractionsBadge, interactionsAlertTotal, useInteractionCounts } from '@/components/interactions-counts';
-import { accentPolicy, colors, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { accentPolicy, colors, gutter, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
 
 /** Acceso rápido con texto: se lee sin adivinar qué hace un icono. */
 function QuickChip({
@@ -17,12 +17,15 @@ function QuickChip({
   accessibilityLabel,
   onPress,
   badge,
+  prominent = false,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   accessibilityLabel?: string;
   onPress: () => void;
   badge?: React.ReactNode;
+  /** La acción que más se usa: relleno más alto y texto principal. */
+  prominent?: boolean;
 }) {
   return (
     <PressableScale
@@ -37,17 +40,17 @@ function QuickChip({
         paddingHorizontal: spacing.md,
         borderRadius: radii.full,
         borderCurve: 'continuous',
-        backgroundColor: colors.surfaceLow,
+        backgroundColor: prominent ? colors.surfaceHighest : colors.surfaceLow,
       }}
     >
       <Ionicons
         accessibilityElementsHidden
-        color={accentPolicy.glyph}
+        color={prominent ? colors.text : accentPolicy.glyph}
         importantForAccessibility="no-hide-descendants"
         name={icon}
         size={iconSizes.sm}
       />
-      <Text strong tone="secondary" variant="subhead">
+      <Text strong tone={prominent ? 'default' : 'secondary'} variant="subhead">
         {label}
       </Text>
       {badge}
@@ -75,51 +78,31 @@ export function CommunityHeader({ onDiscover }: { onDiscover: () => void }) {
   return (
     <View style={{ gap: spacing.md }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }}>
-        <Text accessibilityRole="header" numberOfLines={1} style={{ flex: 1 }} variant="display">
+        <Text accessibilityRole="header" adjustsFontSizeToFit minimumFontScale={0.8} numberOfLines={1} style={{ flex: 1 }} variant="display">
           Comunidad
         </Text>
         <TourHelpButton tourKey="comunidad" />
-        <PressableScale
-          accessibilityLabel="Mensajes y solicitudes"
-          onPress={() => router.push('/comunidad-mensajes')}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.xs + 2,
-            height: minTouchTarget,
-            paddingHorizontal: spacing.md,
-            borderRadius: radii.full,
-            borderCurve: 'continuous',
-            backgroundColor: colors.surfaceHighest,
-          }}
-        >
-          <Ionicons color={colors.text} name="chatbubbles" size={iconSizes.md} />
-          <Text strong variant="subhead">
-            Mensajes
-          </Text>
-          {hasPendingReceived ? (
-            <View
-              style={{
-                position: 'absolute',
-                top: 4,
-                right: 4,
-                width: 12,
-                height: 12,
-                borderRadius: radii.full,
-                backgroundColor: colors.volt,
-                borderWidth: 2,
-                borderColor: colors.background,
-              }}
-            />
-          ) : null}
-        </PressableScale>
       </View>
 
       <Text tone="muted" variant="subhead">
         Socios de tu gimnasio, filtrados por lo que buscas.
       </Text>
 
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+      <ScrollView
+        contentContainerStyle={{ gap: spacing.sm, paddingRight: gutter }}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ marginHorizontal: -gutter }}
+      >
+        <View style={{ width: gutter - spacing.sm }} />
+        <QuickChip
+          accessibilityLabel="Mensajes y solicitudes"
+          badge={hasPendingReceived ? <PendingDot /> : undefined}
+          icon="chatbubbles"
+          label="Mensajes"
+          onPress={() => router.push('/comunidad-mensajes')}
+          prominent
+        />
         <QuickChip
           accessibilityLabel="Explorar personas y gimnasios en el mapa"
           icon="map-outline"
@@ -145,9 +128,14 @@ export function CommunityHeader({ onDiscover }: { onDiscover: () => void }) {
             onPress={onDiscover}
           />
         </TourTarget>
-      </View>
+      </ScrollView>
     </View>
   );
+}
+
+/** Punto de «tienes solicitudes» dentro del chip de Mensajes. */
+function PendingDot() {
+  return <View style={{ width: 10, height: 10, borderRadius: radii.full, backgroundColor: colors.volt }} />;
 }
 
 /** El contador, dentro del chip: el badge de la esquina del icono no cabe en una píldora. */

@@ -48,7 +48,7 @@ function PodiumPlace({ entry, index, first }: { entry: LeaderboardEntry; index: 
           ...tabularNums,
           color: first && medal ? medal : colors.textSecondary,
           fontFamily: fontFamilies.display,
-          fontSize: first ? fontSizes.xl : fontSizes.md,
+          fontSize: first ? fontSizes.lg : fontSizes.md,
         }}
         suffix=" pts"
         value={entry.points}
