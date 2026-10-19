@@ -15,7 +15,9 @@ import { SessionProgramBlock } from '@/features/programs/session-program-block';
 import { SessionHero } from '@/features/session-summary/session-hero';
 import { SessionRecords } from '@/features/session-summary/session-records';
 import { sessionShareLines } from '@/features/session-summary/session-share';
-import { shareWithBrand } from '@/lib/share-brand';
+import { useShareCard } from '@/features/share-card/use-share-card';
+import { shareCardFromSession } from '@/features/session-summary/session-share-card';
+import { useAuthStore } from '@/state/auth-store';
 import { useSessionRewardStore } from '@/state/session-reward-store';
 import { spacing } from '@/theme';
 
@@ -32,6 +34,8 @@ import { spacing } from '@/theme';
 export default function SessionSummaryScreen() {
   const router = useRouter();
   const last = useSessionRewardStore((state) => state.last);
+  const shareCard = useShareCard();
+  const principal = useAuthStore((state) => state.principal);
   const clear = useSessionRewardStore((state) => state.clear);
 
   // Se vacía al salir, no al pulsar: vaciarlo antes de navegar pintaría un
@@ -89,8 +93,18 @@ export default function SessionSummaryScreen() {
 
   // Secundaria: la acción principal de la pantalla sigue siendo la de abajo.
   const share = () =>
-    shareWithBrand(
-      sessionShareLines({
+    shareCard.share({
+      card: shareCardFromSession({
+        title,
+        volumeKg,
+        sets,
+        exercises: session.data ? session.data.ejercicios.length : null,
+        duration: last.duration,
+        comparison,
+        records,
+        author: principal?.nombreCompleto ?? null,
+      }),
+      fallback: sessionShareLines({
         title,
         volumeKg,
         sets,
@@ -99,10 +113,11 @@ export default function SessionSummaryScreen() {
         records,
         pointsEarned: last.reward?.pointsEarned ?? null,
       }),
-    );
+    });
 
   return (
     <ScrollScreen>
+      {shareCard.element}
       {loadingInsights && !session.isError ? (
         <Skeleton height={300} />
       ) : (
@@ -123,6 +138,7 @@ export default function SessionSummaryScreen() {
             onPress={share}
             size="sm"
             style={{ alignSelf: 'flex-start' }}
+            loading={shareCard.sharing}
             testID="session-share"
             variant="secondary"
           />

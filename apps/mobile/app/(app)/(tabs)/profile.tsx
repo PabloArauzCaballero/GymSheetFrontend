@@ -20,7 +20,8 @@ import { Button } from '@/components/ui';
 import { WeightIncrementPreference } from '@/components/weight-increment-preference';
 import { completionMessage, profileCompletion } from '@/features/profile-hero/profile-completion';
 import { HeroStats, ProfileHero, plural } from '@/features/profile-hero/profile-hero';
-import { proudStat, shareMyProfile } from '@/features/profile-hero/profile-share';
+import { profileDeepLink, proudStat } from '@/features/profile-hero/profile-share';
+import { useShareCard } from '@/features/share-card/use-share-card';
 import { confirm, notify } from '@/notifications';
 import { membershipService, profilePhotosService, profileService, progressionService } from '@/api/services';
 import { GOAL_LABEL, MEMBERSHIP_LABEL, MEMBERSHIP_TONE, formatDate, initialsOf, shortName } from '@/lib/format';
@@ -72,6 +73,7 @@ function RowGroup({ children }: { children: ReactNode[] }) {
  */
 export default function ProfileScreen() {
   const principal = useAuthStore((state) => state.principal);
+  const shareCard = useShareCard();
   const logout = useAuthStore((state) => state.logout);
   const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
@@ -213,7 +215,25 @@ export default function ProfileScreen() {
               haptic="light"
               icon="share-outline"
               label="Compartir mi perfil"
-              onPress={() => shareMyProfile({ userId: principal.id, rank, stat: proudStat({ streak, sessions, points }) })}
+              onPress={() => {
+                const stat = proudStat({ streak, sessions, points });
+                shareCard.share({
+                  card: {
+                    kicker: 'Mi perfil',
+                    hero: points.toLocaleString('es-ES'),
+                    heroUnit: 'puntos',
+                    highlight: `Rango ${rank}`,
+                    stats: [
+                      { value: String(streak), label: streak === 1 ? 'día de racha' : 'días de racha' },
+                      { value: String(sessions), label: sessions === 1 ? 'sesión' : 'sesiones' },
+                      { value: String(earned), label: earned === 1 ? 'insignia' : 'insignias' },
+                    ],
+                    author: displayName,
+                  },
+                  fallback: [`Rango ${rank} · ${stat}.`, 'Entrena conmigo:'],
+                  link: profileDeepLink(principal.id),
+                });
+              }}
               size="sm"
               style={{ alignSelf: 'flex-start' }}
               testID="profile-share"
