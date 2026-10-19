@@ -54,7 +54,18 @@ import {
 
 /** Escalonado del desglose: una fila cada 90 ms mientras la cifra cuenta. */
 const ROW_STEP = 90;
-const BREAKDOWN_ORDER: readonly (keyof PointsBreakdown)[] = ['session', 'sets', 'volume', 'streak', 'challenges', 'badges', 'modes'];
+const BREAKDOWN_ORDER: readonly (keyof PointsBreakdown)[] = [
+  'session',
+  'sets',
+  'volume',
+  'streak',
+  'progress',
+  'challenges',
+  'badges',
+  'modes',
+  'penalties',
+  'strikePurchases',
+];
 
 /** De dónde sale cada partida: un glifo y el color de su magnitud, los mismos que en el entreno. */
 const BREAKDOWN_GLYPH: Readonly<
@@ -64,9 +75,12 @@ const BREAKDOWN_GLYPH: Readonly<
   sets: { icon: 'layers', metric: 'reps' },
   volume: { icon: 'barbell', metric: 'weight' },
   streak: { icon: 'flame', metric: 'streak' },
+  progress: { icon: 'trending-up', metric: 'record' },
   badges: { icon: 'ribbon', metric: 'record' },
   modes: { icon: 'flash', metric: 'effort' },
   challenges: { icon: 'flag', metric: 'time' },
+  penalties: { icon: 'alert-circle', metric: 'skipped' },
+  strikePurchases: { icon: 'shield', metric: 'effort' },
 };
 
 /** Las cartas que esperan, bocabajo y en abanico: se ve cuántas y de qué rareza, no cuáles. */

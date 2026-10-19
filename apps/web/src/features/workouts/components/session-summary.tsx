@@ -34,11 +34,12 @@ import {
  */
 
 const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
-const BREAKDOWN_ORDER: ReadonlyArray<PointRuleLine['key'] | 'challenges'> = [
+const BREAKDOWN_ORDER: ReadonlyArray<PointRuleLine['key'] | 'challenges' | 'progress'> = [
   'session',
   'sets',
   'volume',
   'streak',
+  'progress',
   'badges',
   'challenges',
 ];

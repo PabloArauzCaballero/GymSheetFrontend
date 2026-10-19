@@ -1,6 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { pointRuleLines, pointsFigures, rewardRuleLines, type PointRuleLine, type RewardRuleLine } from '@gymsheet/domain';
+import {
+  pointRuleLines,
+  pointsFigures,
+  rewardRuleLines,
+  strikeAndPenaltyRuleLines,
+  type PointRuleLine,
+  type RewardRuleLine,
+  type StrikeAndPenaltyRuleLine,
+} from '@gymsheet/domain';
 import type { PointRules, ProgressionBadge, ProgressionStats } from '@gymsheet/schemas';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { PressableScale } from '@/components/motion';
@@ -41,6 +49,13 @@ const REWARD_ICON: Record<RewardRuleLine['key'], keyof typeof Ionicons.glyphMap>
   challenges: 'flag-outline',
   perfect: 'checkmark-done-circle-outline',
   freezes: 'snow-outline',
+};
+
+const STRIKE_PENALTY_ICON: Record<StrikeAndPenaltyRuleLine['key'], keyof typeof Ionicons.glyphMap> = {
+  progress: 'trending-up-outline',
+  strikes: 'shield-checkmark-outline',
+  penalties: 'alert-circle-outline',
+  strikeCost: 'swap-horizontal-outline',
 };
 
 function format(value: number): string {
@@ -163,6 +178,8 @@ function RuleList({
   const lines = pointRuleLines(rules);
   // Retos y comodines (contrato 12): solo si el servidor publica sus reglas.
   const extra = rewardRuleLines(rules);
+  // Strikes, penalizaciones y progreso (contrato 13).
+  const strikesAndPenalties = strikeAndPenaltyRuleLines(rules);
 
   return (
     <View style={{ gap: spacing.md }}>
@@ -231,6 +248,25 @@ function RuleList({
             <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, fontVariant: ['tabular-nums'] }}>{line.rate}</Text>
           </View>
         ))}
+        {strikesAndPenalties.map((line) => (
+          <View
+            accessible
+            accessibilityLabel={`${line.label}: ${line.rate}.`}
+            key={line.key}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.md,
+              padding: spacing.md,
+              borderTopWidth: 1,
+              borderTopColor: colors.borderSubtle,
+            }}
+          >
+            <Ionicons color={accentPolicy.glyph} name={STRIKE_PENALTY_ICON[line.key]} size={iconSizes.md} />
+            <Text style={{ flex: 1, color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>{line.label}</Text>
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, fontVariant: ['tabular-nums'] }}>{line.rate}</Text>
+          </View>
+        ))}
       </View>
 
       <View
@@ -255,8 +291,7 @@ function RuleList({
       </View>
 
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
-        Los puntos nunca bajan. La racha cuenta la más larga que hayas hecho, así que descansar no te
-        quita nada.
+        Cumplir con tu plan mantiene tu racha viva. Tienes 3 strikes mensuales para protegerla si faltas; si no repones en la semana o agotas tus strikes se penalizan puntos. Podés canjear puntos para recuperar strikes.
       </Text>
     </View>
   );

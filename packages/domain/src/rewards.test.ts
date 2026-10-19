@@ -16,6 +16,7 @@ import {
   sortPrizes,
   streakMilestoneLabel,
   streakSummary,
+  strikeAndPenaltyRuleLines,
   weekCountdownLabel,
 } from "./rewards";
 
@@ -262,4 +263,21 @@ describe("reglas nuevas", () => {
       "1 comodín (máx. 2)",
     ]);
   });
+
+  it("reglas de strikes, penalizaciones y progreso", () => {
+    expect(strikeAndPenaltyRuleLines({})).toEqual([]);
+    const lines = strikeAndPenaltyRuleLines({
+      perPersonalRecord: 25,
+      monthlyStrikes: 3,
+      penaltyMissedSession: 50,
+      strikeCost: 150,
+    });
+    expect(lines).toEqual([
+      { key: "progress", label: "Récord personal (PR) y progreso", rate: "+25 pts" },
+      { key: "strikes", label: "Strikes mensuales para tu racha", rate: "3 strikes/mes" },
+      { key: "penalties", label: "Falta sin reponer en la semana", rate: "-50 pts" },
+      { key: "strikeCost", label: "Intercambiar puntos por strike", rate: "150 pts / strike" },
+    ]);
+  });
 });
+

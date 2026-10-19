@@ -380,3 +380,49 @@ export function rewardRuleLines(rules: {
   }
   return lines;
 }
+
+export type StrikeAndPenaltyRuleLine = Readonly<{
+  key: "progress" | "penalties" | "strikes" | "strikeCost";
+  label: string;
+  rate: string;
+}>;
+
+/** Las líneas de progresión, penalizaciones y strikes mensuales para la hoja de reglas. */
+export function strikeAndPenaltyRuleLines(rules: {
+  perPersonalRecord?: number;
+  penaltyMissedSession?: number;
+  strikeCost?: number;
+  monthlyStrikes?: number;
+}): StrikeAndPenaltyRuleLine[] {
+  const lines: StrikeAndPenaltyRuleLine[] = [];
+  if (rules.perPersonalRecord) {
+    lines.push({
+      key: "progress",
+      label: "Récord personal (PR) y progreso",
+      rate: `+${rules.perPersonalRecord} pts`,
+    });
+  }
+  if (rules.monthlyStrikes) {
+    lines.push({
+      key: "strikes",
+      label: "Strikes mensuales para tu racha",
+      rate: `${rules.monthlyStrikes} strikes/mes`,
+    });
+  }
+  if (rules.penaltyMissedSession) {
+    lines.push({
+      key: "penalties",
+      label: "Falta sin reponer en la semana",
+      rate: `-${rules.penaltyMissedSession} pts`,
+    });
+  }
+  if (rules.strikeCost) {
+    lines.push({
+      key: "strikeCost",
+      label: "Intercambiar puntos por strike",
+      rate: `${rules.strikeCost} pts / strike`,
+    });
+  }
+  return lines;
+}
+
