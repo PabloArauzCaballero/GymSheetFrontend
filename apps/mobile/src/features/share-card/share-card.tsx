@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 import { ReppLogo, ReppMark } from '@/components/brand/repp-mark';
 import { Text } from '@/components/text';
-import { colors, heroGlow, heroWatermarkInk, metricColors, radii, spacing, useActiveTenant } from '@/theme';
+import { colors, heroGlow, heroWatermarkInk, metricColors, radii, shareCardHeroFontSize, spacing, useActiveTenant } from '@/theme';
 
 /** Tamaño en puntos; se captura a 1080 × 1920 (formato historia, 9:16). */
 export const SHARE_CARD_WIDTH = 360;
@@ -61,7 +61,13 @@ export function ShareCard({ data }: { data: ShareCardData }) {
           {data.kicker}
         </Text>
         <View style={{ gap: spacing.xxs }}>
-          <Text adjustsFontSizeToFit minimumFontScale={0.6} numberOfLines={1} variant="hero">
+          <Text
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
+            numberOfLines={1}
+            style={{ fontSize: shareCardHeroFontSize, lineHeight: Math.round(shareCardHeroFontSize * 1.02) }}
+            variant="hero"
+          >
             {data.hero}
           </Text>
           {data.heroUnit ? (

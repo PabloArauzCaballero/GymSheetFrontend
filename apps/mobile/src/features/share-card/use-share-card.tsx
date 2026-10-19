@@ -41,10 +41,11 @@ export function useShareCard(): {
     try {
       // Un fotograma para que se pinte el degradado y la tipografía.
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      const uri = await captureRef(ref, { format: 'png', result: 'tmpfile', width: 1080, height: 1920 });
+      const uri = await captureRef(ref, { format: 'jpg', quality: 0.92, result: 'tmpfile', width: 1080, height: 1920 });
       if (!(await Sharing.isAvailableAsync())) throw new Error('sharing-unavailable');
-      await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png', dialogTitle: pending.card.kicker });
-    } catch {
+      await Sharing.shareAsync(uri, { mimeType: 'image/jpeg', UTI: 'public.jpeg', dialogTitle: pending.card.kicker });
+    } catch (error) {
+      if (__DEV__) console.warn('share-card: se comparte el texto porque falló la imagen', error);
       shareWithBrand(pending.fallback, pending.link);
     } finally {
       capturing.current = false;

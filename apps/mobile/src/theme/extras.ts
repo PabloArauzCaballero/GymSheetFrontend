@@ -87,6 +87,9 @@ export function heroGlow(accent: string): readonly [string, string, string] {
   return [alpha(accent, 0.34), alpha(accent, 0.1), alpha(accent, 0)];
 }
 
+/** Cifra protagonista de la tarjeta 9:16 que se comparte: a pantalla de historia puede ser enorme. */
+export const shareCardHeroFontSize = 104;
+
 /** Isotipo de fondo de la superficie protagonista: marca de agua, no información. */
 export const heroWatermarkInk = alpha(ink.white, 0.05);
 

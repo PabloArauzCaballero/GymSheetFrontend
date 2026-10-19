@@ -163,6 +163,7 @@ export default function ProfileScreen() {
       }}
       refreshing={profile.isFetching || membership.isFetching || photos.isFetching || progression.isFetching}
     >
+      {shareCard.element}
       <ScreenHeader
         action={<IconButton icon="settings-outline" label="Ajustes" onPress={() => router.push('/settings')} testID="profile-settings" />}
         title="Perfil"
