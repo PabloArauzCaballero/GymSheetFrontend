@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { View } from 'react-native';
 import { trainingGoals, type TrainingGoal } from '@gymsheet/types';
 import { routineService } from '@/api/services';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
+import { FilterChip } from '@/components/filter-chip';
 import { Card, Divider, ScreenHeader, ScrollScreen, Section } from '@/components/layout';
 import { NavRow } from '@/components/list';
 import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { GOAL_LABEL } from '@/lib/format';
-import { colors, fontSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { spacing } from '@/theme';
 
 export default function ExploreRoutinesScreen() {
   const router = useRouter();
@@ -28,23 +29,13 @@ export default function ExploreRoutinesScreen() {
       <Section title="Objetivo">
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
           {([undefined, ...trainingGoals] as Array<TrainingGoal | undefined>).map((item) => (
-            <Pressable
+            // Neutro, nunca en acento: elegir un objetivo es filtrar, no la acción principal.
+            <FilterChip
               key={item ?? 'all'}
-              accessibilityRole="button"
-              accessibilityState={{ selected: goal === item }}
+              label={item ? GOAL_LABEL[item] : 'Todas'}
               onPress={() => { setGoal(item); setPage(1); }}
-              style={{
-                minHeight: minTouchTarget,
-                justifyContent: 'center',
-                paddingHorizontal: spacing.md,
-                borderRadius: radii.full,
-                backgroundColor: goal === item ? colors.volt : colors.surfaceHigh,
-              }}
-            >
-              <Text style={{ color: goal === item ? colors.background : colors.text, fontSize: fontSizes.sm }}>
-                {item ? GOAL_LABEL[item] : 'Todas'}
-              </Text>
-            </Pressable>
+              selected={goal === item}
+            />
           ))}
         </View>
       </Section>

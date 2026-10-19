@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BREAKDOWN_LABEL, countUpDuration, streakSummary } from '@gymsheet/domain';
 import type { PointsBreakdown, SessionReward } from '@gymsheet/schemas';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -250,13 +250,15 @@ export function SessionSummary({
   };
 
   return (
-    <View style={{ gap: spacing.lg }}>
+    <View style={{ gap: spacing.md }}>
+      {/* Una sola tarjeta para causa y efecto: lo ganado, de dónde sale y cómo
+          mueve tu rango. Antes eran dos tarjetas del mismo peso. */}
       <Card>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
           <View
             style={{
-              width: 52,
-              height: 52,
+              width: 44,
+              height: 44,
               borderRadius: radii.full,
               alignItems: 'center',
               justifyContent: 'center',
@@ -265,7 +267,7 @@ export function SessionSummary({
               borderColor: metricColors.record.edge,
             }}
           >
-            <Ionicons color={metricColors.record.ink} name="sparkles" size={iconSizes.lg} />
+            <Ionicons color={metricColors.record.ink} name="sparkles" size={iconSizes.md} />
           </View>
           <View style={{ flex: 1 }}>
             <UIText accessibilityRole="header" tone="secondary" variant="subhead">
@@ -296,79 +298,91 @@ export function SessionSummary({
           </View>
         </View>
 
-        <View style={{ gap: spacing.sm }}>
-          {rows.map((key, index) => {
-            const glyph = BREAKDOWN_GLYPH[key];
-            const tone = metricColors[glyph.metric];
-            return (
-              // Entran en cascada mientras la cifra cuenta: «de aquí sale».
-              <EnterUp index={index} key={key}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 36 }}>
-                  <View
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: radii.md,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: tone.tint,
-                    }}
-                  >
-                    <Ionicons color={tone.ink} name={glyph.icon} size={iconSizes.sm} />
+        {rows.length > 0 ? (
+          <View style={{ gap: spacing.xs }}>
+            {rows.map((key, index) => {
+              const glyph = BREAKDOWN_GLYPH[key];
+              const tone = metricColors[glyph.metric];
+              return (
+                // Entran en cascada mientras la cifra cuenta: «de aquí sale».
+                <EnterUp index={index} key={key}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd, minHeight: 36 }}>
+                    <View
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: radii.md,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: tone.tint,
+                      }}
+                    >
+                      <Ionicons color={tone.ink} name={glyph.icon} size={iconSizes.sm} />
+                    </View>
+                    <UIText style={{ flex: 1 }} tone="secondary" variant="subhead">
+                      {BREAKDOWN_LABEL[key]}
+                    </UIText>
+                    <UIText strong tabular variant="body">
+                      {`+${reward.breakdown[key].toLocaleString('es-ES')}`}
+                    </UIText>
                   </View>
-                  <Text style={{ color: colors.textSecondary, fontSize: fontSizes.sm, flex: 1 }}>{BREAKDOWN_LABEL[key]}</Text>
-                  <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold, fontVariant: ['tabular-nums'] }}>
-                    {`+${reward.breakdown[key].toLocaleString('es-ES')}`}
-                  </Text>
-                </View>
-              </EnterUp>
-            );
-          })}
-        </View>
-      </Card>
+                </EnterUp>
+              );
+            })}
+          </View>
+        ) : null}
 
-      <Card>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: spacing.md }}>
-          <View style={{ flex: 1, gap: 2 }}>
-            <Text style={{ color: colors.textMuted, fontSize: fontSizes.footnote }}>Tu rango</Text>
-            <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSizes.lg, fontWeight: semibold }}>
-              {levelName ?? 'Tu total'}
-            </Text>
+        <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border }} />
+
+        <View style={{ gap: spacing.sm }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: spacing.md }}>
+            <View style={{ flex: 1, gap: spacing.xxs }}>
+              <UIText tone="muted" variant="footnote">
+                Tu rango
+              </UIText>
+              <UIText numberOfLines={1} variant="title">
+                {levelName ?? 'Tu total'}
+              </UIText>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs }}>
+              <CountUpText
+                delayMs={totalAt}
+                from={reward.pointsBefore}
+                style={{ color: metricColors.record.ink, fontSize: fontSizes.xl, fontWeight: semibold, fontVariant: ['tabular-nums'] }}
+                value={reward.pointsAfter}
+              />
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>pts</Text>
+            </View>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs }}>
-            <CountUpText
-              delayMs={totalAt}
-              from={reward.pointsBefore}
-              style={{ color: metricColors.record.ink, fontSize: fontSizes.xl, fontWeight: semibold, fontVariant: ['tabular-nums'] }}
-              value={reward.pointsAfter}
-            />
-            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>pts</Text>
-          </View>
+          <RewardTrack
+            color={trackColor}
+            delayMs={totalAt}
+            from={reward.levelProgressBefore}
+            leveledUp={reward.leveledUp}
+            to={reward.levelProgress}
+          />
+          <UIText tone="secondary" variant="subhead">
+            {distance}
+          </UIText>
+          {reward.streak && reward.streak.current > 0 ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+              <Ionicons color={metricColors.streak.ink} name="flame" size={iconSizes.sm} />
+              <UIText style={{ flex: 1 }} tabular tone="secondary" variant="subhead">
+                {reward.streak.milestoneNow
+                  ? `${streakSummary(reward.streak)} · ¡hito de ${reward.streak.milestoneNow}!`
+                  : streakSummary(reward.streak)}
+              </UIText>
+            </View>
+          ) : null}
+          {session.geoVerified ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+              <Ionicons color={colors.success} name="location" size={iconSizes.sm} />
+              <UIText style={{ flex: 1 }} tone="muted" variant="subhead">
+                Racha verificada en tu sede.
+              </UIText>
+            </View>
+          ) : null}
         </View>
-        <RewardTrack
-          color={trackColor}
-          delayMs={totalAt}
-          from={reward.levelProgressBefore}
-          leveledUp={reward.leveledUp}
-          to={reward.levelProgress}
-        />
-        <Text style={{ color: colors.textSecondary, fontSize: fontSizes.sm }}>{distance}</Text>
-        {reward.streak && reward.streak.current > 0 ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-            <Ionicons color={metricColors.streak.ink} name="flame" size={iconSizes.sm} />
-            <Text style={{ color: colors.textSecondary, fontSize: fontSizes.sm, fontVariant: ['tabular-nums'] }}>
-              {reward.streak.milestoneNow
-                ? `${streakSummary(reward.streak)} · ¡hito de ${reward.streak.milestoneNow}!`
-                : streakSummary(reward.streak)}
-            </Text>
-          </View>
-        ) : null}
-        {session.geoVerified ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-            <Ionicons color={colors.success} name="location" size={iconSizes.sm} />
-            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Racha verificada en tu sede.</Text>
-          </View>
-        ) : null}
       </Card>
 
       {reward.challenges && reward.challenges.items.length > 0 ? (
@@ -395,13 +409,13 @@ export function SessionSummary({
         <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
             <RewardFan subjects={subjects} />
-            <View style={{ flex: 1, gap: 2 }}>
-              <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
+            <View style={{ flex: 1, gap: spacing.xxs }}>
+              <UIText variant="headline">
                 {subjects.length === 1 ? 'Te espera una carta' : `Te esperan ${subjects.length} cartas`}
-              </Text>
-              <Text numberOfLines={2} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+              </UIText>
+              <UIText numberOfLines={2} tone="muted" variant="subhead">
                 {subjects.map(subjectTitle).join(' · ')}
-              </Text>
+              </UIText>
             </View>
           </View>
           <Button icon="sparkles" label={subjects.length === 1 ? 'Abrir carta' : 'Abrir cartas'} onPress={openRewards} />

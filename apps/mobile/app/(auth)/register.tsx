@@ -21,6 +21,7 @@ import { Button, Input, textLinkStyle } from '@/components/ui';
 import { AuthAlert, AuthShell } from '@/components/auth-shell';
 import { Checkbox } from '@/components/checkbox';
 import { Select } from '@/components/select';
+import { registerBenefits, registerFormTitle } from '@/features/first-impression/copy';
 import { accountEmailTextProps } from '@/lib/credential-input';
 import { useAuthStore } from '@/state/auth-store';
 import { colors, fontSizes, spacing } from '@/theme';
@@ -59,8 +60,7 @@ export default function RegisterScreen() {
 
   return (
     <AuthShell
-      description={authCopy.register.description}
-      eyebrow={authCopy.register.eyebrow}
+      benefits={registerBenefits}
       footer={
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
@@ -71,7 +71,7 @@ export default function RegisterScreen() {
           </Link>
         </View>
       }
-      title={authCopy.register.title}
+      title={registerFormTitle}
     >
       <Controller
         control={control}

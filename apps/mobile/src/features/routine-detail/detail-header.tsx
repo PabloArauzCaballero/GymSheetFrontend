@@ -1,12 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { compactCount, ratingLabel, ratingValue } from '@gymsheet/hooks';
 import type { Routine } from '@gymsheet/types';
 import { PersonAvatar } from '@/components/person-avatar';
 import { Text } from '@/components/text';
 import { EnterUp } from '@/components/motion';
-import { colors, iconSizes, metricColors, radii, ratingStar, shadows, spacing, type MetricKey } from '@/theme';
+import { colors, iconSizes, metricColors, radii, ratingStar, spacing, type MetricKey } from '@/theme';
 import { routineMinutes } from '@/features/routine-detail/routine-plan';
 
 type Cell = {
@@ -14,7 +13,6 @@ type Cell = {
   value: string;
   caption: string;
   accessibility: string;
-  stars?: number | null;
   icon?: keyof typeof Ionicons.glyphMap;
   metric?: MetricKey;
 };
@@ -37,8 +35,9 @@ export function RatingStars({ value, size = iconSizes.xs }: { value: number; siz
 
 /**
  * Franja de cifras como la de una tienda de apps: cada celda es un número
- * grande y una palabra, separadas por un filo. Sin tarjeta: va directa sobre el
- * lienzo, entre dos filos (una caja más aquí competía con el botón de abajo).
+ * grande y una palabra, separadas por un filo. Sin tarjeta ni sombra
+ * (2026-10-18): va directa sobre el lienzo, entre dos filos, y se lee como la
+ * continuación de la portada, no como otra caja que compite con el botón.
  */
 function StatsStrip({ cells }: { cells: Cell[] }) {
   return (
@@ -47,13 +46,10 @@ function StatsStrip({ cells }: { cells: Cell[] }) {
       accessibilityLabel={cells.map((cell) => cell.accessibility).join('. ')}
       style={{
         flexDirection: 'row',
-        paddingVertical: spacing.mdl,
-        borderRadius: radii.xxl,
-        borderCurve: 'continuous',
-        backgroundColor: colors.surfaceLow,
-        borderWidth: StyleSheet.hairlineWidth,
+        paddingVertical: spacing.md,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderBottomWidth: StyleSheet.hairlineWidth,
         borderColor: colors.border,
-        boxShadow: shadows.e2,
       }}
       testID="routine-stats"
     >
@@ -83,7 +79,7 @@ function StatsStrip({ cells }: { cells: Cell[] }) {
             }}
           >
             <Ionicons
-              color={cell.metric ? metricColors[cell.metric].ink : cell.stars != null ? ratingStar : colors.accentInk}
+              color={cell.metric ? metricColors[cell.metric].ink : colors.accentInk}
               name={cell.icon ?? 'star'}
               size={iconSizes.sm}
             />
@@ -100,88 +96,39 @@ function StatsStrip({ cells }: { cells: Cell[] }) {
   );
 }
 
-/** Quién hizo la rutina: su foto (o iniciales) y su nombre. */
-function AuthorRow({ routine }: { routine: Routine }) {
-  if (routine.esOficial) {
-    return (
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
-        <PersonAvatar id="repp" name="REPP" official size={44} />
-        <View style={{ flex: 1 }}>
-          <Text tone="muted" variant="footnote">
-            Rutina oficial
-          </Text>
-          <Text variant="headline">Equipo REPP</Text>
-        </View>
-      </View>
-    );
-  }
-  if (routine.atribucion) {
-    return (
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
-        <PersonAvatar
-          id={routine.atribucion.authorId ?? routine.atribucion.authorName}
-          name={routine.atribucion.authorName}
-          size={44}
-        />
-        <Text style={{ flex: 1 }} testID="attribution" tone="secondary" variant="subhead">
-          Basada en{' '}
-          <Text strong variant="subhead">
-            {routine.atribucion.routineName}
-          </Text>{' '}
-          de {routine.atribucion.authorName}
-        </Text>
-      </View>
-    );
-  }
-  if (routine.esMia || !routine.autor) return null;
+/**
+ * De dónde sale una copia: «Basada en X de Ana». Quién la hizo, la nota y las
+ * descargas ya van en la portada (`DetailHero`); aquí no se repiten.
+ */
+function AttributionRow({ routine }: { routine: Routine }) {
+  if (!routine.atribucion) return null;
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }} testID="routine-author">
-      <PersonAvatar id={routine.autor.id} name={routine.autor.nombre} photoUrl={routine.autor.fotoUrl} size={48} />
-      <View style={{ flex: 1, gap: spacing.xxs }}>
-        <Text numberOfLines={1} variant="headline">
-          {routine.autor.nombre}
-        </Text>
-        <Text numberOfLines={1} tabular tone="muted" variant="footnote">
-          {routine.copias > 0
-            ? `Creó esta rutina · ${compactCount(routine.copias)} ${routine.copias === 1 ? 'persona la guardó' : 'personas la guardaron'}`
-            : 'Creó esta rutina'}
-        </Text>
-      </View>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
+      <PersonAvatar
+        id={routine.atribucion.authorId ?? routine.atribucion.authorName}
+        name={routine.atribucion.authorName}
+        size={36}
+      />
+      <Text style={{ flex: 1 }} testID="attribution" tone="secondary" variant="subhead">
+        Basada en{' '}
+        <Text strong variant="subhead">
+          {routine.atribucion.routineName}
+        </Text>{' '}
+        de {routine.atribucion.authorName}
+      </Text>
     </View>
   );
 }
 
 /**
- * Lo que va bajo la portada: autor, cifras y descripción. El título y el
- * objetivo ya van sobre la imagen; aquí no se repiten.
+ * Lo que va bajo la portada: qué es (días, semanas, minutos), de dónde sale si
+ * es una copia y la descripción. El título, el objetivo y la prueba social
+ * (autor, ★ y descargas) ya van sobre la imagen; aquí no se repiten.
  */
 export function DetailHeader({ routine, actions }: { routine: Routine; actions?: ReactNode }) {
   const days = routine.dias.length;
   const minutes = routineMinutes(routine);
-  const community = routine.visibilidad === 'PUBLIC' || routine.esOficial || routine.copias > 0;
-  const rating = ratingValue(routine.valoracion);
   const cells: Cell[] = [
-    ...(community
-      ? [
-          {
-            key: 'rating',
-            value: rating ?? 'Nueva',
-            caption: rating
-              ? `${routine.valoracion.total} ${routine.valoracion.total === 1 ? 'reseña' : 'reseñas'}`
-              : 'Sin reseñas',
-            accessibility: ratingLabel(routine.valoracion).replace('★', 'Valoración'),
-            stars: routine.valoracion.promedio,
-            icon: 'star' as const,
-          },
-          {
-            key: 'downloads',
-            value: compactCount(routine.copias),
-            caption: routine.copias === 1 ? 'descarga' : 'descargas',
-            accessibility: `${routine.copias} ${routine.copias === 1 ? 'descarga' : 'descargas'}`,
-            icon: 'download-outline' as const,
-          },
-        ]
-      : []),
     {
       key: 'days',
       value: String(days),
@@ -202,7 +149,7 @@ export function DetailHeader({ routine, actions }: { routine: Routine; actions?:
           },
         ]
       : []),
-    ...(minutes > 0 && (!community || !routine.duracionSemanas)
+    ...(minutes > 0
       ? [
           {
             key: 'min',
@@ -219,11 +166,13 @@ export function DetailHeader({ routine, actions }: { routine: Routine; actions?:
   return (
     <View style={{ gap: spacing.xl }}>
       <EnterUp index={0}>
-        <AuthorRow routine={routine} />
+        <StatsStrip cells={cells} />
       </EnterUp>
-      <EnterUp index={1}>
-        <StatsStrip cells={cells.slice(0, 4)} />
-      </EnterUp>
+      {routine.atribucion ? (
+        <EnterUp index={1}>
+          <AttributionRow routine={routine} />
+        </EnterUp>
+      ) : null}
       {routine.descripcion ? (
         <EnterUp index={2}>
           <Text selectable tone="secondary" variant="body">

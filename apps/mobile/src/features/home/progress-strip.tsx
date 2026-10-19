@@ -2,7 +2,6 @@ import type React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
 import { IconBadge } from '@/components/icon-badge';
-import { Card } from '@/components/layout';
 import { Text } from '@/components/text';
 import { colors, iconSizes, spacing, tones, type MetricKey } from '@/theme';
 
@@ -17,13 +16,13 @@ export type ProgressFigure = {
 };
 
 /**
- * Las tres cifras del progreso en una sola tarjeta y en columnas: el número a
- * 22 (rampa `numeric`), su etiqueta debajo y, si la hay, la comparación. En
- * vez de tres losetas a 34 pt, donde «11,2 t» no cabía en un tercio de 390.
+ * Las cifras de apoyo del progreso, en columnas y sin tarjeta propia: van bajo
+ * la cifra protagonista de la semana y no compiten con ella. El número a 20
+ * (rampa `numeric`), su etiqueta debajo y, si la hay, la comparación.
  */
 export function ProgressStrip({ figures }: { figures: readonly ProgressFigure[] }) {
   return (
-    <Card style={{ flexDirection: 'row', gap: 0, paddingHorizontal: spacing.md }}>
+    <View style={{ flexDirection: 'row' }}>
       {figures.map((figure, index) => {
         const tone =
           figure.delta?.direction === 'up' ? tones.dark.success.text : colors.textMuted;
@@ -35,7 +34,8 @@ export function ProgressStrip({ figures }: { figures: readonly ProgressFigure[] 
             style={{
               flex: 1,
               gap: spacing.xxs,
-              paddingHorizontal: spacing.sm,
+              paddingLeft: index === 0 ? 0 : spacing.md,
+              paddingRight: spacing.sm,
               borderLeftWidth: index === 0 ? 0 : 1,
               borderLeftColor: colors.border,
             }}
@@ -66,6 +66,6 @@ export function ProgressStrip({ figures }: { figures: readonly ProgressFigure[] 
           </View>
         );
       })}
-    </Card>
+    </View>
   );
 }

@@ -4,13 +4,14 @@ import { useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Routine, TrainingGoal } from '@gymsheet/types';
 import { GlassButton } from '@/components/hero-bar';
+import { PersonAvatar } from '@/components/person-avatar';
 import { Text } from '@/components/text';
 import { GOAL_LABEL } from '@/lib/format';
 import { MediaChip } from '@/features/routine-catalog/media-chip';
-import { planLine } from '@/features/routine-catalog/routine-card';
+import { planLine, SocialProof } from '@/features/routine-catalog/routine-card';
 import { RoutineCover } from '@/features/routine-catalog/routine-cover';
 import { coverImageUri } from '@/features/routine-detail/routine-plan';
-import { alpha, gutter, heroTopScrim, ink, spacing } from '@/theme';
+import { gutter, heroTopScrim, ink, onMedia, spacing } from '@/theme';
 
 /** Alto de la portada del detalle para un ancho de pantalla y un área segura. */
 export function heroHeightFor(width: number, topInset: number): number {
@@ -28,12 +29,56 @@ export type HeroContent = {
   esOficial?: boolean;
   /** `null`: no es mía (no se dice si es pública o privada). */
   visibilidadPropia?: 'PUBLIC' | 'PRIVATE' | null;
+  /**
+   * Prueba social (#98): quién la hizo, la nota y las descargas. Solo llega
+   * con la rutina entera y solo si la comunidad la ve; sin ella, la portada
+   * dice qué es («4 días por semana · 8 semanas»).
+   */
+  social?: HeroSocial | null;
 };
+
+export type HeroSocial = {
+  author: { id: string; name: string; photoUrl?: string | null; official?: boolean } | null;
+  valoracion: Routine['valoracion'];
+  copias: number;
+};
+
+/** Autor, nota y descargas en una fila sobre el velo: lo primero que se lee tras el nombre. */
+function HeroSocialRow({ social }: { social: HeroSocial }) {
+  return (
+    <View
+      style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 32 }}
+      testID="routine-author"
+    >
+      {social.author ? (
+        <>
+          <PersonAvatar
+            id={social.author.id}
+            name={social.author.name}
+            official={social.author.official}
+            photoUrl={social.author.photoUrl}
+            ring
+            size={28}
+          />
+          <Text numberOfLines={1} strong style={{ flexShrink: 1, color: onMedia.text }} variant="subhead">
+            {social.author.name}
+          </Text>
+          <Text style={{ color: onMedia.textMuted }} variant="subhead">
+            ·
+          </Text>
+        </>
+      ) : null}
+      <SocialProof copias={social.copias} overMedia valoracion={social.valoracion} />
+    </View>
+  );
+}
 
 /**
  * Portada del detalle: la imagen de un ejercicio a todo el ancho con un velo
- * hacia el lienzo; encima, el objetivo, el título y «3 días por semana · 8
- * semanas» en blanco. Volver y ⋯ van en la barra fija (`HeroBar`), que no se va
+ * hacia el lienzo; encima, el objetivo, el título y, en una fila, quién la hizo
+ * con su nota y sus descargas (o «3 días por semana · 8 semanas» si no hay
+ * comunidad). Portada, nombre y prueba social se leen como una sola cabecera;
+ * las cifras del plan van justo debajo, en `DetailHeader`. Volver y ⋯ van en la barra fija (`HeroBar`), que no se va
  * con el scroll. Es el destino de la transición de zoom de la tarjeta, y por
  * eso se puede pintar con lo que ya sabía la tarjeta (`HeroContent`) antes de
  * que llegue la rutina entera: la foto crece hacia sí misma, no hacia un hueco.
@@ -82,9 +127,13 @@ export function DetailHero({ content }: { content: HeroContent }) {
             >
               {content.nombre}
             </Text>
-            <Text numberOfLines={1} style={{ color: alpha(ink.white, 0.82) }} tabular variant="subhead">
-              {plan}
-            </Text>
+            {content.social ? (
+              <HeroSocialRow social={content.social} />
+            ) : (
+              <Text numberOfLines={1} style={{ color: onMedia.textSoft }} tabular variant="subhead">
+                {plan}
+              </Text>
+            )}
           </View>
         </RoutineCover>
       </View>
@@ -92,9 +141,22 @@ export function DetailHero({ content }: { content: HeroContent }) {
   );
 }
 
+/** Quién firma la rutina en la portada: el equipo REPP, tú o su autor. */
+function heroAuthorOf(routine: Routine): HeroSocial['author'] {
+  if (routine.esOficial) return { id: 'repp', name: 'Equipo REPP', official: true };
+  if (routine.esMia) return { id: routine.autor?.id ?? 'me', name: 'Tú', photoUrl: routine.autor?.fotoUrl };
+  return routine.autor
+    ? { id: routine.autor.id, name: routine.autor.nombre, photoUrl: routine.autor.fotoUrl }
+    : null;
+}
+
 /** Lo que la portada necesita, sacado de la rutina completa. */
 export function heroContentOf(routine: Routine): HeroContent {
+  const community = routine.visibilidad === 'PUBLIC' || routine.esOficial || routine.copias > 0;
   return {
+    social: community
+      ? { author: heroAuthorOf(routine), valoracion: routine.valoracion, copias: routine.copias }
+      : null,
     nombre: routine.nombre,
     objetivo: routine.objetivo,
     portadaUrl: routine.portadaUrl ?? coverImageUri(routine),
