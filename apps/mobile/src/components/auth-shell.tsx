@@ -12,8 +12,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AmbientBackground } from '@/components/ambient';
+import { ReppLogo } from '@/components/brand/repp-mark';
+import { EnterUp } from '@/components/motion';
+import { Text as AppText } from '@/components/text';
+import { BenefitList } from '@/features/first-impression/benefit-list';
+import { valuePitch, type Benefit } from '@/features/first-impression/copy';
 import {
   accentContrast,
   accentGradient,
@@ -32,30 +36,6 @@ import {
 } from '@/theme';
 
 const EMBLEM = 64;
-
-function ReppWordmark({ width = 220 }: { width?: number }) {
-  return (
-    <Svg height={width * (230 / 700)} viewBox="0 0 700 230" width={width}>
-      <Path
-        d="M63 44 H139 C177 44 195 65 187 91 C182 109 167 120 147 126 L188 183 H142 L106 131 H83 L66 183 H22 L62 44 Z M91 76 L82 105 H121 C136 105 146 98 148 88 C150 80 143 76 131 76 Z"
-        fill={onMedia.text}
-      />
-      <Path d="M62 119 L101 77 L126 77 L78 135 L45 183 L20 183 Z" fill={reppJade} />
-      <Path
-        d="M213 44 H337 L327 76 H245 L237 99 H309 L300 128 H228 L220 151 H303 L293 183 H169 Z"
-        fill={onMedia.text}
-      />
-      <Path
-        d="M357 44 H438 C476 44 494 63 485 94 C476 124 451 140 415 140 H379 L366 183 H326 Z M387 76 L378 109 H412 C427 109 438 101 441 89 C444 80 438 76 424 76 Z"
-        fill={onMedia.text}
-      />
-      <Path
-        d="M505 44 H586 C624 44 642 63 633 94 C624 124 599 140 563 140 H527 L514 183 H474 Z M535 76 L526 109 H560 C575 109 586 101 589 89 C592 80 586 76 572 76 Z"
-        fill={onMedia.text}
-      />
-    </Svg>
-  );
-}
 
 /**
  * La marca gráfica en pantalla.
@@ -136,30 +116,34 @@ export function BrandEmblem({ size = EMBLEM }: { size?: number }) {
 /**
  * El marco de las pantallas de sesión en el teléfono.
  *
- * Sustituye al `Screen` genérico en `(auth)`. Tres diferencias, todas por el
- * mismo motivo —que el acceso se parezca a lo que hace la web y a lo que
- * promete la cortinilla—:
+ * Es el embudo que va de la App Store al alta (#124 ASO: continuidad con la
+ * ficha), así que arriba no va el formulario sino **qué es la app**: logotipo,
+ * un titular y una línea, legibles en tres segundos por quien no sabe nada de
+ * ella. En el alta, además, tres filas con lo que se lleva. Todo eso cabe sobre
+ * el pliegue de un iPhone SE (667 pt) con el teclado cerrado.
  *
- * - **Emblema, título y descripción**, en vez de sólo el nombre del gimnasio y
- *   una línea suelta. Son los mismos textos que la web, servidos desde
- *   `@gymsheet/domain`.
- * - **Tarjeta** bajo la cabecera. El formulario tenía los campos flotando
- *   directamente sobre el fondo ambiental, que se mueve; un plano propio los
- *   separa por luminancia sin recurrir a sombras.
- * - **Scroll**. El alta tiene seis campos y no cabe en un teléfono pequeño con
- *   el teclado abierto: sin scroll, el botón «Crear cuenta» quedaba fuera de la
- *   pantalla y no había forma de llegar a él.
+ * Debajo, la **tarjeta** con el formulario y su propio encabezado, más pequeño:
+ * el protagonista es la propuesta, el formulario es el paso siguiente. Los
+ * campos van sobre un plano propio porque el fondo ambiental se mueve.
+ *
+ * **Scroll**: el alta tiene seis campos y no cabe en un teléfono pequeño con el
+ * teclado abierto; sin scroll, «Crear cuenta» quedaba fuera de alcance.
+ *
+ * Movimiento: cinco `EnterUp` como mucho (logo, titular, línea, beneficios,
+ * tarjeta), sin bucles. El fondo ambiental queda exactamente como estaba.
  */
 export function AuthShell({
   title,
   description,
-  eyebrow,
+  benefits,
   children,
   footer,
 }: {
+  /** Encabezado del formulario, dentro de la tarjeta. */
   title: string;
-  description: string;
-  eyebrow?: string;
+  description?: string;
+  /** Lo que se lleva quien se registra; sólo en el alta. */
+  benefits?: readonly Benefit[];
   children: ReactNode;
   footer?: ReactNode;
 }) {
@@ -182,7 +166,7 @@ export function AuthShell({
             flexGrow: 1,
             justifyContent: 'center',
             paddingHorizontal: gutter,
-            paddingVertical: spacing.xl,
+            paddingVertical: spacing.lg,
             gap: spacing.lg,
           }}
           keyboardDismissMode="on-drag"
@@ -191,86 +175,68 @@ export function AuthShell({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Animated.View entering={FadeInDown.duration(320)} style={{ alignItems: 'center', gap: spacing.md }}>
-            {isRepp ? (
-              <ReppWordmark />
-            ) : (
-              <>
-                <BrandEmblem />
-                <Text
-                  style={{
-                    color: colors.text,
-                    fontSize: fontSizes.sm,
-                    fontWeight: semibold,
-                    letterSpacing: 3,
-                  }}
-                >
-                  {wordmark}
-                </Text>
-              </>
-            )}
-            {eyebrow ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-                <View
-                  style={{
-                    width: 3,
-                    height: 12,
-                    borderRadius: radii.full,
-                    backgroundColor: colors.volt,
-                  }}
-                />
-                <Text
-                  style={{
-                    color: colors.textMuted,
-                    fontSize: fontSizes.xs,
-                    fontWeight: semibold,
-                    letterSpacing: 1.6,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {eyebrow}
-                </Text>
-              </View>
+          <View style={{ alignItems: 'center', gap: spacing.sm }}>
+            <EnterUp index={0} style={{ alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs }}>
+              {isRepp ? (
+                <ReppLogo height={30} />
+              ) : (
+                <>
+                  <BrandEmblem size={52} />
+                  <Text
+                    style={{
+                      color: colors.text,
+                      fontSize: fontSizes.sm,
+                      fontWeight: semibold,
+                      letterSpacing: 3,
+                    }}
+                  >
+                    {wordmark}
+                  </Text>
+                </>
+              )}
+            </EnterUp>
+            <EnterUp index={1}>
+              <AppText accessibilityRole="header" style={{ textAlign: 'center' }} variant="display">
+                {valuePitch.headline}
+              </AppText>
+            </EnterUp>
+            <EnterUp index={2} style={{ maxWidth: 340 }}>
+              <AppText style={{ textAlign: 'center' }} tone="secondary" variant="subhead">
+                {valuePitch.subline}
+              </AppText>
+            </EnterUp>
+            {benefits ? (
+              <EnterUp index={3} style={{ marginTop: spacing.sm }}>
+                <BenefitList items={benefits} />
+              </EnterUp>
             ) : null}
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: fontSizes.xl,
-                fontWeight: semibold,
-                letterSpacing: -0.6,
-                textAlign: 'center',
-              }}
-            >
-              {title}
-            </Text>
-            <Text
-              style={{
-                color: colors.textMuted,
-                fontSize: fontSizes.sm,
-                lineHeight: 22,
-                textAlign: 'center',
-              }}
-            >
-              {description}
-            </Text>
-          </Animated.View>
+          </View>
 
-          <Animated.View
-            entering={FadeInDown.duration(320).delay(60)}
+          <EnterUp
+            index={benefits ? 4 : 3}
             style={{
               backgroundColor: colors.surfaceLow,
               borderRadius: radii.lg,
+              borderCurve: 'continuous',
               borderWidth: 1,
               borderColor: colors.borderSubtle,
               padding: spacing.lg,
               gap: spacing.md,
             }}
           >
+            <View style={{ gap: spacing.xs }}>
+              <AppText variant="title">{title}</AppText>
+              {description ? (
+                <AppText tone="muted" variant="footnote">
+                  {description}
+                </AppText>
+              ) : null}
+            </View>
             {children}
-          </Animated.View>
+          </EnterUp>
 
-          {/* Centrado, como en la web: los enlaces de pie cuelgan de la misma
-              columna que el emblema y el título, no del margen izquierdo. */}
+          {/* Centrado: los enlaces de pie cuelgan de la misma columna que el
+              logotipo y el titular, no del margen izquierdo. */}
           {footer ? (
             <View style={{ alignItems: 'center', gap: spacing.xs }}>{footer}</View>
           ) : null}

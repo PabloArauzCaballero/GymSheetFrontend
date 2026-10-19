@@ -7,16 +7,18 @@ import type { SessionRecord } from '@gymsheet/domain';
 import { Card, Divider } from '@/components/layout';
 import { Text } from '@/components/text';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
-import { accentContrast, celebrateSpring, colors, iconSizes, motion, radii, spacing } from '@/theme';
+import { celebrateSpring, iconSizes, metricColors, motion, radii, spacing } from '@/theme';
 
 const kg = (value: number) => `${value.toLocaleString('es-ES', { maximumFractionDigits: 1 })} kg`;
 
 /**
  * El sello «Nuevo récord»: el **único rebote** de la app (C8.1, `celebrateSpring`).
  * Entra una vez, con háptico `success` en el mismo instante; con «reducir
- * movimiento» solo aparece por opacidad.
+ * movimiento» solo aparece por opacidad. Va en oro (la tinta de los récords,
+ * no el acento): el acento de la pantalla es de la acción, y en la portada del
+ * resumen el oro es lo que dice «hoy hubo marca».
  */
-function RecordSeal({ count }: { count: number }) {
+export function RecordSeal({ count }: { count: number }) {
   const reduceMotion = useReduceMotion();
   const scale = useSharedValue(reduceMotion ? 1 : 0.6);
   const opacity = useSharedValue(0);
@@ -44,25 +46,32 @@ function RecordSeal({ count }: { count: number }) {
           paddingHorizontal: spacing.smd,
           paddingVertical: spacing.xs,
           borderRadius: radii.full,
-          backgroundColor: colors.volt,
+          borderWidth: 1,
+          borderColor: metricColors.record.edge,
+          backgroundColor: metricColors.record.tint,
         },
         style,
       ]}
     >
-      <Ionicons color={accentContrast()} name="trophy" size={iconSizes.sm} />
-      <Text strong tone="onAccent" variant="subhead">
+      <Ionicons color={metricColors.record.ink} name="trophy" size={iconSizes.sm} />
+      <Text strong style={{ color: metricColors.record.ink }} tabular variant="subhead">
         {count === 1 ? 'Nuevo récord' : `${count} récords nuevos`}
       </Text>
     </Animated.View>
   );
 }
 
-/** Récords de la sesión: ejercicio, la serie que lo bate y la marca anterior. */
+/**
+ * Récords de la sesión: ejercicio, la serie que lo bate y la marca anterior.
+ * El sello que los anuncia vive en la portada (`SessionHero`); aquí va el detalle.
+ */
 export function SessionRecords({ records }: { records: readonly SessionRecord[] }) {
   if (records.length === 0) return null;
   return (
-    <View style={{ gap: spacing.smd }} testID="session-records">
-      <RecordSeal count={records.length} />
+    <View style={{ gap: spacing.sm }} testID="session-records">
+      <Text accessibilityRole="header" variant="headline">
+        {records.length === 1 ? 'Tu récord de hoy' : 'Tus récords de hoy'}
+      </Text>
       <Card list>
         {records.map((record, index) => (
           <View key={record.exerciseId}>
@@ -74,7 +83,7 @@ export function SessionRecords({ records }: { records: readonly SessionRecord[] 
             >
               <Ionicons
                 accessibilityElementsHidden
-                color={colors.textSecondary}
+                color={metricColors.record.ink}
                 importantForAccessibility="no-hide-descendants"
                 name="trophy-outline"
                 size={iconSizes.md}

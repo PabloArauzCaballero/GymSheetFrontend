@@ -5,7 +5,7 @@ import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import type { TrainingGoal } from '@gymsheet/types';
 import { MediaImage } from '@/components/media-image';
 import { GOAL_ICON } from '@/lib/format';
-import { alpha, goalGradients, heroScrim, ink } from '@/theme';
+import { alpha, colors, goalGradients, heroScrim, ink } from '@/theme';
 
 /**
  * Portada de una rutina: la imagen de uno de sus ejercicios, a sangre y con
@@ -28,8 +28,12 @@ export function RoutineCover({
   instant?: boolean;
   uri: string | null | undefined;
   goal: TrainingGoal | null;
-  /** `strong`: el título va encima (detalle). `soft`: solo un realce abajo (tarjeta). */
-  scrim?: 'strong' | 'soft';
+  /**
+   * `strong`: el título va encima (detalle). `soft`: solo un realce abajo.
+   * `card`: el título va encima y la foto se funde con la superficie de la
+   * tarjeta, sin costura entre la portada y la fila del autor.
+   */
+  scrim?: 'strong' | 'soft' | 'card';
   style?: StyleProp<ViewStyle>;
   children?: ReactNode;
 }) {
@@ -49,8 +53,17 @@ export function RoutineCover({
   return (
     <MediaImage fallback={fallback} instant={instant} style={style} uri={uri}>
       <LinearGradient
-        colors={scrim === 'strong' ? heroScrim.colors : [alpha(ink.black, 0), alpha(ink.black, 0.35)]}
-        locations={scrim === 'strong' ? heroScrim.locations : [0.55, 1]}
+        colors={
+          scrim === 'strong'
+            ? heroScrim.colors
+            : scrim === 'card'
+              ? [alpha(colors.surfaceLow, 0), alpha(colors.surfaceLow, 0.72), colors.surfaceLow]
+              : [alpha(ink.black, 0), alpha(ink.black, 0.35)]
+        }
+        // `card`: el título (≥ 24 pt, texto grande, pide 3:1) empieza hacia el
+        // 58 % del alto, donde el velo ya ronda el 60 % → 4,6:1 aun con una foto
+        // blanca; la línea de días va abajo, sobre ≥ 85 % de superficie (> 9:1).
+        locations={scrim === 'strong' ? heroScrim.locations : scrim === 'card' ? [0.25, 0.65, 1] : [0.55, 1]}
         pointerEvents="none"
         style={StyleSheet.absoluteFill}
       />

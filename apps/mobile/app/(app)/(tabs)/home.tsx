@@ -1,5 +1,6 @@
-import type { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { IconBadge } from '@/components/icon-badge';
+import { IconButton } from '@/components/icon-button';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
@@ -7,6 +8,7 @@ import { formatVolume, isStaff, overloadDelta, summariseTraining } from '@gymshe
 import { programService, membershipService, progressionService, routineService, workoutService } from '@/api/services';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { Badge, Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
+import { PressableScale } from '@/components/motion';
 import { NavRow } from '@/components/list';
 import { MembershipGate } from '@/components/membership-gate';
 import { ProgressTrack } from '@/components/progression';
@@ -22,14 +24,16 @@ import { notificationService } from '@/features/notifications/service';
 import { activeProgramsKey } from '@/features/programs/use-active-programs';
 import { WORKOUT_LABEL, WORKOUT_TONE, formatDuration, formatTimeOfDay, relativeDay, shortName } from '@/lib/format';
 import { useAuthStore } from '@/state/auth-store';
-import { colors, spacing } from '@/theme';
+import { colors, iconSizes, metricColors, spacing } from '@/theme';
 
 const LONG_DATE = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
 
 /**
- * Inicio (C8.3.5), alrededor de «Hoy»: primero lo que toca entrenar con su
- * única acción en acento, después la semana en `WeekDots` y al final el
- * progreso (una sola fila de cifras), la senda y las últimas sesiones.
+ * Inicio (rediseño 2026-10-18). Un protagonista: «Hoy» en `HeroSurface`, con
+ * «Entrenar hoy» como única acción en acento. Antes, si hace falta, la franja
+ * de membresía. Después UNA cifra orgullosa (entrenos de la semana, la única
+ * `hero`), con la racha y la carga de apoyo; al final las sesiones y una
+ * lista callada con la senda y la membresía. Los avisos van a la campana.
  */
 export default function HomeScreen() {
   const principal = useAuthStore((state) => state.principal);
@@ -87,17 +91,42 @@ export default function HomeScreen() {
   const todayError = programs.error ?? routine.error ?? null;
   const membershipData = membership.data?.membership;
 
+  const unread = unreadNotifications.data?.count ?? 0;
+  const streak = training.streakWeeks;
+  const weekSummary =
+    week.planned > 0
+      ? `${week.done} de ${week.planned} entrenos hechos esta semana`
+      : week.done === 1
+        ? '1 entreno esta semana'
+        : `${week.done} entrenos esta semana`;
+
   return (
     <ScrollScreen onRefresh={refresh} refreshing={refreshing}>
       <ScreenHeader
+        action={
+          <View>
+            <IconButton
+              icon="notifications-outline"
+              label={unread ? `Centro de avisos, ${unread} nuevos` : 'Centro de avisos'}
+              onPress={() => router.push('/notifications-inbox')}
+              testID="home-notifications"
+            />
+            {unread ? (
+              <View pointerEvents="none" style={{ position: 'absolute', top: -spacing.xs, right: -spacing.xs }}>
+                <Badge label={unread > 99 ? '99+' : `${unread}`} tone="success" />
+              </View>
+            ) : null}
+          </View>
+        }
         subtitle={isStaff(principal?.role) ? 'El panel de staff vive en la versión web.' : LONG_DATE.format(new Date())}
         title={`Hola, ${firstName}`}
         tourKey="home"
       />
 
-      {/* Si el acceso no está vigente, eso es lo primero que hay que resolver. */}
+      {/* Si el acceso no está vigente, eso es lo primero que hay que resolver,
+          pero en una franja: el valor de la pantalla tiene que verse igual. */}
       {membership.data && !membershipData?.vigenteHoy ? (
-        <MembershipGate onRenew={() => router.push('/membership')} projection={membership.data} />
+        <MembershipGate onRenew={() => router.push('/membership')} projection={membership.data} variant="compact" />
       ) : null}
 
       <TodayCard
@@ -110,99 +139,64 @@ export default function HomeScreen() {
         routine={routine.data}
       />
 
-      <Section title="Avisos">
-        <Card list>
-          <NavRow
-            leading={<IconBadge icon="notifications-outline" size={36} tone="time" />}
-            meta={unreadNotifications.data?.count ? (
-              <Badge label={`${unreadNotifications.data.count} nuevos`} tone="success" />
-            ) : undefined}
-            onPress={() => router.push('/notifications-inbox')}
-            subtitle={
-              unreadNotifications.isError
-                ? 'Consulta los avisos de tu cuenta'
-                : unreadNotifications.data?.count
-                  ? 'Tienes avisos pendientes por leer'
-                  : 'Revisa tus mensajes y recordatorios'
-            }
-            title="Centro de avisos"
-          />
-        </Card>
-      </Section>
-
+      {/* La semana es UNA cifra orgullosa (la única `hero` de Inicio: «Hoy»
+          protagoniza con palabras, no con un número). Lo demás, de apoyo. */}
       <Section title="Tu semana">
         {workouts.isPending ? (
-          <Skeleton height={64} />
+          <Skeleton height={168} />
         ) : (
-          <View style={{ gap: spacing.smd }}>
-            <WeekDots days={week.days} />
-            <Text tabular tone="muted" variant="subhead">
-              {week.planned > 0
-                ? `${week.done} de ${week.planned} entrenos hechos esta semana`
-                : week.done === 1
-                  ? '1 entreno esta semana'
-                  : `${week.done} entrenos esta semana`}
-            </Text>
+          <View style={{ gap: spacing.md }}>
+            {workouts.isError ? null : sessions.length === 0 ? (
+              <Text tone="secondary" variant="subhead">
+                Tu primer entreno enciende el primer día. Desde ahí, cada semana cuenta.
+              </Text>
+            ) : (
+              <View accessibilityLabel={weekSummary} accessible style={{ gap: spacing.xxs }}>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm }}>
+                  <Text variant="hero">{`${week.done}`}</Text>
+                  <Text style={{ flexShrink: 1 }} tabular tone="secondary" variant="title">
+                    {week.planned > 0
+                      ? `de ${week.planned} entrenos`
+                      : week.done === 1
+                        ? 'entreno'
+                        : 'entrenos'}
+                  </Text>
+                </View>
+                {streak > 0 ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                    <Ionicons color={metricColors.streak.ink} name="flame-outline" size={iconSizes.sm} />
+                    <Text tabular tone="secondary" variant="footnote">
+                      {`${streak} ${streak === 1 ? 'semana seguida' : 'semanas seguidas'}`}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+            )}
+            <WeekDots days={week.days} quiet />
+            {workouts.isError ? (
+              <ErrorState error={workouts.error} onRetry={() => void workouts.refetch()} />
+            ) : (
+              <TourTarget id="home.progress">
+                <ProgressStrip
+                  figures={[
+                    {
+                      key: 'carga',
+                      value: formatVolume(training.thisWeek.volumeKg),
+                      label: 'Carga esta semana',
+                      delta: overload,
+                    },
+                    { key: 'mes', value: `${training.recentSessions}`, label: 'Sesiones en 4 semanas' },
+                  ]}
+                />
+              </TourTarget>
+            )}
+            {workouts.data ? (
+              <TourTarget id="home.muscles">
+                <MuscleSplit week={training.thisWeek} />
+              </TourTarget>
+            ) : null}
           </View>
         )}
-      </Section>
-
-      <Section title="Tu progreso">
-        {workouts.isPending ? (
-          <Skeleton height={120} />
-        ) : workouts.isError ? (
-          <ErrorState error={workouts.error} onRetry={() => void workouts.refetch()} />
-        ) : (
-          <TourTarget id="home.progress">
-            <ProgressStrip
-              figures={[
-                {
-                  key: 'carga',
-                  value: formatVolume(training.thisWeek.volumeKg),
-                  label: 'Carga esta semana',
-                  delta: overload,
-                  icon: 'barbell-outline',
-                  tone: 'weight',
-                },
-                { key: 'racha', value: `${training.streakWeeks}`, label: 'Semanas seguidas', icon: 'flame-outline', tone: 'streak' },
-                { key: 'mes', value: `${training.recentSessions}`, label: 'Sesiones en 4 semanas', icon: 'calendar-outline', tone: 'time' },
-              ]}
-            />
-          </TourTarget>
-        )}
-
-        {workouts.data ? (
-          <TourTarget id="home.muscles">
-            <MuscleSplit week={training.thisWeek} />
-          </TourTarget>
-        ) : null}
-
-        {progression.data?.level ? (
-          <Card
-            accessibilityLabel={`Tu rango es ${progression.data.level.name}, ${progression.data.points} puntos. Ver la senda completa.`}
-            onPress={() => router.push('/trayectoria')}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-              <IconBadge
-                icon={(progression.data.level.icon ?? 'ribbon-outline') as keyof typeof Ionicons.glyphMap}
-                size={36}
-                tone="record"
-              />
-              <Text style={{ flex: 1 }} variant="headline">
-                {progression.data.level.name}
-              </Text>
-              <Text tabular tone="secondary" variant="subhead">
-                {`${progression.data.points.toLocaleString('es-ES')} pts`}
-              </Text>
-            </View>
-            <ProgressTrack color={colors.textSecondary} ratio={progression.data.levelProgress} />
-            <Text tone="muted" variant="footnote">
-              {progression.data.nextLevel && progression.data.pointsToNextLevel !== null
-                ? `Faltan ${progression.data.pointsToNextLevel.toLocaleString('es-ES')} para ${progression.data.nextLevel.name}`
-                : 'Senda completa'}
-            </Text>
-          </Card>
-        ) : null}
       </Section>
 
       <Section title="Últimas sesiones">
@@ -211,8 +205,8 @@ export default function HomeScreen() {
         ) : workouts.isError ? null : sessions.length === 0 ? (
           <EmptyState
             icon="barbell-outline"
-            message="Cuando termines tu primer entreno, lo verás aquí con su duración y sus ejercicios."
-            title="Todavía sin sesiones"
+            message="Cada entreno queda aquí con su duración y sus ejercicios, listo para repetirlo o superarlo."
+            title="Tu historial empieza hoy"
           />
         ) : (
           <Card list>
@@ -252,14 +246,44 @@ export default function HomeScreen() {
         ) : null}
       </Section>
 
-      {membershipData?.vigenteHoy ? (
+      {/* La senda y la membresía vigente: una sola lista callada al final. */}
+      {progression.data?.level || membershipData?.vigenteHoy ? (
         <Card list>
-          <NavRow
-            leading={<IconBadge icon="card-outline" size={36} tone="record" />}
-            onPress={() => router.push('/membership')}
-            subtitle={`${membershipData.diasRestantes} ${membershipData.diasRestantes === 1 ? 'día restante' : 'días restantes'}`}
-            title={membershipData.plan?.nombre ?? 'Tu membresía'}
-          />
+          {progression.data?.level ? (
+            <PressableScale
+              accessibilityLabel={`Tu rango es ${progression.data.level.name}, ${progression.data.points} puntos. Ver la senda completa.`}
+              onPress={() => router.push('/trayectoria')}
+              style={{ gap: spacing.xs, paddingVertical: spacing.smd }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
+                <IconBadge
+                  icon={(progression.data.level.icon ?? 'ribbon-outline') as keyof typeof Ionicons.glyphMap}
+                  size={36}
+                  tone="record"
+                />
+                <View style={{ flex: 1, gap: spacing.xxs }}>
+                  <Text numberOfLines={1} variant="headline">
+                    {progression.data.level.name}
+                  </Text>
+                  <Text tabular tone="muted" variant="footnote">
+                    {progression.data.nextLevel && progression.data.pointsToNextLevel !== null
+                      ? `${progression.data.points.toLocaleString('es-ES')} pts · faltan ${progression.data.pointsToNextLevel.toLocaleString('es-ES')} para ${progression.data.nextLevel.name}`
+                      : `${progression.data.points.toLocaleString('es-ES')} pts · senda completa`}
+                  </Text>
+                </View>
+              </View>
+              <ProgressTrack color={colors.textSecondary} ratio={progression.data.levelProgress} />
+            </PressableScale>
+          ) : null}
+          {progression.data?.level && membershipData?.vigenteHoy ? <Divider /> : null}
+          {membershipData?.vigenteHoy ? (
+            <NavRow
+              leading={<IconBadge icon="card-outline" size={36} tone="record" />}
+              onPress={() => router.push('/membership')}
+              subtitle={`${membershipData.diasRestantes} ${membershipData.diasRestantes === 1 ? 'día restante' : 'días restantes'}`}
+              title={membershipData.plan?.nombre ?? 'Tu membresía'}
+            />
+          ) : null}
         </Card>
       ) : null}
     </ScrollScreen>

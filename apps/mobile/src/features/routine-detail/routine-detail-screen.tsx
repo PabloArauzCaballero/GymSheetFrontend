@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Share, useWindowDimensions, View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '@gymsheet/api-client';
 import type { Routine } from '@gymsheet/types';
@@ -10,6 +10,7 @@ import { routineBuilderService, routineCatalogService, routineService } from '@/
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { ScrollScreen } from '@/components/layout';
 import { usePullRefresh } from '@/hooks/use-pull-refresh';
+import { shareWithBrand } from '@/lib/share-brand';
 import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { ScheduleRoutine } from '@/components/schedule-routine';
@@ -170,9 +171,17 @@ export function RoutineDetailScreen() {
       setSharing(true);
       return;
     }
-    void Share.share({
-      message: `«${data.nombre}» en REPP · gymsheet://routines/${data.id}`,
-    });
+    // #87 Powered by: el nombre, qué es en una línea y el enlace; la firma la pone `shareWithBrand`.
+    const days = data.dias.length;
+    shareWithBrand(
+      [
+        `«${data.nombre}»`,
+        `Entrena ${days} ${days === 1 ? 'día' : 'días'} por semana${
+          data.duracionSemanas ? ` durante ${data.duracionSemanas} semanas` : ''
+        }.`,
+      ],
+      `gymsheet://routines/${data.id}`,
+    );
   };
 
   const more: MoreAction[] = [

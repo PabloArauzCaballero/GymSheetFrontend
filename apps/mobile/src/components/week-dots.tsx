@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { accentContrast, colors, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { accentContrast, accentPolicy, colors, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
 
 export type WeekDotState = 'done' | 'training' | 'rest';
 
@@ -24,8 +24,15 @@ export type WeekDot = {
 export function WeekDots({
   days,
   onPress,
+  quiet = false,
 }: {
   days: readonly WeekDot[];
+  /**
+   * Sin relleno de acento: hecho = relleno de control con ✓ en tinta de acento,
+   * entreno = contorno. Para pantallas donde el acento ya es de otra pieza
+   * (Inicio: «Entrenar hoy»).
+   */
+  quiet?: boolean;
   /** Si llega, los días con entreno se pueden tocar (háptico `selection`). */
   onPress?: (key: string) => void;
 }) {
@@ -42,13 +49,21 @@ export function WeekDots({
               borderRadius: radii.full,
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: done ? colors.volt : training ? colors.surfaceHighest : 'transparent',
-              borderWidth: day.today ? 2 : 0,
-              borderColor: day.today ? colors.text : 'transparent',
+              backgroundColor: quiet
+                ? done
+                  ? colors.surfaceHighest
+                  : 'transparent'
+                : done
+                  ? colors.volt
+                  : training
+                    ? colors.surfaceHighest
+                    : 'transparent',
+              borderWidth: day.today ? 2 : quiet && training ? 1 : 0,
+              borderColor: day.today ? colors.text : quiet && training ? colors.border : 'transparent',
             }}
           >
             {done ? (
-              <Ionicons color={accentContrast()} name="checkmark" size={iconSizes.md} />
+              <Ionicons color={quiet ? accentPolicy.ink : accentContrast()} name="checkmark" size={iconSizes.md} />
             ) : (
               <Text strong={training} tone={training ? 'default' : 'muted'} variant="subhead">
                 {day.initial}

@@ -3,31 +3,27 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { WEEKDAY_NAMES, nextSession, weekLabel, type Weekday } from '@gymsheet/hooks';
 import type { Program, Routine, RoutineAssignment, RoutineDay, Workout } from '@gymsheet/types';
+import { Ionicons } from '@expo/vector-icons';
 import { ErrorState, Skeleton } from '@/components/feedback';
+import { HeroSurface } from '@/components/hero-surface';
 import { ExerciseImage } from '@/components/media';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
 import { dayTitle } from '@/features/routine-detail/day-cards';
 import { dayMinutes } from '@/features/routine-detail/routine-plan';
 import { useStartRoutine } from '@/features/routine-detail/use-start-routine';
-import { cardGap, colors, radii, shadows, spacing, thumbSizes } from '@/theme';
+import { accentPolicy, iconSizes, radii, spacing, thumbSizes } from '@/theme';
 
-/** La superficie de «Hoy»: la única tarjeta elevada (e2) de Inicio. */
+/**
+ * La superficie de «Hoy»: el protagonista de Inicio y su única `HeroSurface`
+ * (degradado estático del acento + isotipo de agua). Solo se pinta un estado a
+ * la vez, así que nunca hay dos en la pantalla.
+ */
 function TodaySurface({ children, testID }: { children: ReactNode; testID?: string }) {
   return (
-    <View
-      style={{
-        gap: cardGap,
-        padding: spacing.mdl,
-        borderRadius: radii.xxl,
-        borderCurve: 'continuous',
-        backgroundColor: colors.surfaceRaised,
-        boxShadow: shadows.e2,
-      }}
-      testID={testID}
-    >
+    <HeroSurface testID={testID} watermark>
       {children}
-    </View>
+    </HeroSurface>
   );
 }
 
@@ -203,12 +199,38 @@ export function TodayCard({
 
   return (
     <TodaySurface testID="today-card">
-      <Kicker>Hoy</Kicker>
-      <Text variant="title">Elige la rutina que vas a seguir</Text>
-      <Text tone="muted" variant="subhead">
-        Te recomendamos una según tu objetivo y tus días. Al activarla, aquí verás qué toca cada día.
+      <Kicker>Empieza aquí</Kicker>
+      <Text variant="display">Entrena con un plan, no a ojo</Text>
+      <View style={{ gap: spacing.smd }}>
+        {PLAN_PROMISES.map((promise) => (
+          <View key={promise.text} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
+            <Ionicons
+              accessibilityElementsHidden
+              color={accentPolicy.glyph}
+              importantForAccessibility="no-hide-descendants"
+              name={promise.icon}
+              size={iconSizes.md}
+            />
+            <Text style={{ flex: 1 }} tone="secondary" variant="subhead">
+              {promise.text}
+            </Text>
+          </View>
+        ))}
+      </View>
+      <Text tone="muted" variant="footnote">
+        Te recomendamos una según tu objetivo y tus días.
       </Text>
       <Button icon="arrow-forward" iconPosition="end" label="Ver rutinas para ti" onPress={() => router.push('/routines')} size="lg" />
     </TodaySurface>
   );
 }
+
+/**
+ * Lo que alguien sin rutina gana al elegir una, en concreto y sin cifras
+ * inventadas: lo que esta misma pantalla le enseñará mañana.
+ */
+const PLAN_PROMISES: readonly { icon: keyof typeof Ionicons.glyphMap; text: string }[] = [
+  { icon: 'today-outline', text: 'Abre la app y mira qué toca hoy, con series y carga.' },
+  { icon: 'checkmark-circle-outline', text: 'Marca tu semana día a día y sostén la racha.' },
+  { icon: 'trending-up-outline', text: 'Comprueba cómo sube tu carga semana a semana.' },
+];
