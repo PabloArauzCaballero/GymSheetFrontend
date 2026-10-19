@@ -65,6 +65,7 @@ export default function AppLayout() {
             volviendo, así que es una hermana del resto de pantallas de detalle
             y no una sexta pestaña. */}
         <Stack.Screen name="descubrir" />
+        <Stack.Screen name="directorio" />
         <Stack.Screen name="chat" />
       </Stack>
       <TourOverlay />
