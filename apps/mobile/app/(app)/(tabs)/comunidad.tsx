@@ -8,233 +8,26 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { trainingGoals } from '@gymsheet/types';
 import type { GymDirectoryEntry, PublicBranchSummary } from '@gymsheet/schemas';
-import { chatService, facilitiesService, progressionService, socialService } from '@/api/services';
+import { chatService, facilitiesService, socialService } from '@/api/services';
 import { refreshSocialRelationship } from '@/api/social-cache';
-import { Card, ListScreen, Section, TourHelpButton } from '@/components/layout';
+import { ListScreen, Section } from '@/components/layout';
+import { CommunityHeader } from '@/features/community-home/community-header';
+import { PodiumHero } from '@/features/community-home/podium-hero';
+import { IconButton } from '@/components/icon-button';
+import { Text as TextPrimitive } from '@/components/text';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { DirectoryCardFace, levelTitle } from '@/components/directory-card';
 import { NavRow } from '@/components/list';
-import { RankBadge } from '@/components/rank-badge';
 import { StoriesBar } from '@/components/stories-bar';
 import { Button, Input } from '@/components/ui';
 import { CountUpText, PressableScale, SegmentedPill } from '@/components/motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
-import {
-  InteractionsBadge,
-  interactionsAlertTotal,
-  useInteractionCounts,
-} from '@/components/interactions-counts';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
 import { notify } from '@/notifications';
 import { initialsOf } from '@/lib/format';
 import { colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, semibold, spacing } from '@/theme';
 import { TRAINING_GOAL_LABEL } from '@/lib/social-labels';
-
-/**
- * Los iconos en la esquina, no un menú.
- *
- * La versión anterior aterrizaba en un panel con tres accesos — Directorio,
- * Solicitudes, Mis conexiones — antes de enseñar a una sola persona. Pablo
- * pidió Instagram fundido con Tinder: la gente aparece de entrada, con sus
- * filtros arriba, y los mensajes viven detrás de un ícono, no de un menú.
- *
- * Interacciones entra por la misma puerta y por la misma razón. Son las dos
- * bandejas de entrada de la parte social —lo que te han escrito y lo que han
- * hecho contigo— y las dos van donde ya se mira, en la esquina superior, no
- * detrás de una lista de opciones que habría que abrir para descubrir que hay
- * algo nuevo.
- */
-function CommunityHeader({ onOpenPreferences }: { onOpenPreferences: () => void }) {
-  const router = useRouter();
-  // Mismo dato que alimenta la pestaña "Te escribieron" de Mensajes — el
-  // punto solo dice que hay algo nuevo ahí, no cuánto ni de quién.
-  const pending = useQuery({
-    queryKey: ['social', 'connections', 'PENDING'],
-    queryFn: () => socialService.listConnections('PENDING'),
-    staleTime: 30_000,
-  });
-  const hasPendingReceived = (pending.data ?? []).some((connection) => connection.direction === 'RECEIVED');
-  // Aquí sí un número y no un punto: «alguien te dio like» y «siete personas te
-  // dieron like» piden entrar con urgencias distintas, y el dato ya existe.
-  const counts = useInteractionCounts();
-  const interactionsTotal = interactionsAlertTotal(counts.data);
-
-  /**
-   * Los iconos arriba y el título debajo, no los dos en la misma línea.
-   *
-   * Con dos iconos cabían al lado del título justo. Con el tercero ya no: tres
-   * objetivos táctiles de 44 más sus huecos dejan al título unos 170 puntos, y
-   * «Comunidad» a tamaño de display mide casi 200. Como es una sola palabra no
-   * puede partirse, así que el resultado no era un salto de línea sino una
-   * palabra recortada o desbordada — el mismo fallo que ya obligó a sacar
-   * pestañas de la barra inferior.
-   *
-   * La salida no es encoger el título ni esconder un icono en un menú: es la
-   * composición que usa el propio sistema para un título grande, con los
-   * botones en la barra de encima. Los iconos siguen en la esquina, que es la
-   * decisión de producto; lo único que cambia es que dejan de competir por el
-   * mismo renglón.
-   */
-  return (
-    <View style={{ gap: spacing.md }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm }}>
-        <TourHelpButton tourKey="comunidad" />
-        <PressableScale
-          accessibilityLabel="Preferencias de búsqueda"
-          onPress={onOpenPreferences}
-          style={{
-            width: minTouchTarget,
-            height: minTouchTarget,
-            borderRadius: radii.full,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: colors.surfaceHigh,
-          }}
-        >
-          <Ionicons color={colors.text} name="options-outline" size={iconSizes.lg} />
-        </PressableScale>
-        <PressableScale
-          accessibilityLabel="Explorar personas y gimnasios en el mapa"
-          onPress={() => router.push('/social-map' as Href)}
-          style={{
-            width: minTouchTarget,
-            height: minTouchTarget,
-            borderRadius: radii.full,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: colors.surfaceHigh,
-          }}
-        >
-          <Ionicons color={colors.text} name="map-outline" size={iconSizes.lg} />
-        </PressableScale>
-        <PressableScale
-          accessibilityLabel={
-            interactionsTotal > 0
-              ? `Interacciones, ${interactionsTotal} ${interactionsTotal === 1 ? 'novedad' : 'novedades'}`
-              : 'Interacciones'
-          }
-          onPress={() => router.push('/interacciones')}
-          style={{
-            width: minTouchTarget,
-            height: minTouchTarget,
-            borderRadius: radii.full,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: colors.surfaceHigh,
-          }}
-        >
-          <Ionicons color={colors.text} name="heart-outline" size={iconSizes.lg} />
-          <InteractionsBadge total={interactionsTotal} />
-        </PressableScale>
-        <PressableScale
-          accessibilityLabel="Mensajes y solicitudes"
-          onPress={() => router.push('/comunidad-mensajes')}
-          style={{
-            width: minTouchTarget,
-            height: minTouchTarget,
-            borderRadius: radii.full,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: colors.surfaceHigh,
-          }}
-        >
-          <Ionicons color={colors.text} name="chatbubbles-outline" size={iconSizes.lg} />
-          {hasPendingReceived ? (
-            <View
-              style={{
-                position: 'absolute',
-                top: 6,
-                right: 6,
-                width: 10,
-                height: 10,
-                borderRadius: radii.full,
-                backgroundColor: colors.volt,
-                borderWidth: 2,
-                borderColor: colors.background,
-              }}
-            />
-          ) : null}
-        </PressableScale>
-      </View>
-
-      <View style={{ gap: spacing.xs }}>
-        <Text
-          accessibilityRole="header"
-          style={{
-            color: colors.text,
-            fontSize: fontSizes.display,
-            fontWeight: semibold,
-            letterSpacing: fontSizes.display * -0.03,
-            lineHeight: fontSizes.display * 1.05,
-          }}
-        >
-          Comunidad
-        </Text>
-        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
-          Socios de tu gimnasio, filtrados por lo que buscas.
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-/**
- * Vista previa del podio: quien no entra a "Tu senda" nunca sabría que
- * existe. Tres filas, mismo idioma visual que la tabla completa, con un
- * toque que lleva ahí — no una copia del ranking, solo su puerta de entrada.
- */
-function PodiumPreview() {
-  const router = useRouter();
-  const leaderboard = useQuery({
-    queryKey: ['progression', 'leaderboard', 'points', 'preview'],
-    queryFn: () => progressionService.leaderboard(3, 'points'),
-    staleTime: 60_000,
-  });
-
-  if (leaderboard.isPending) return <Skeleton height={132} />;
-  if (leaderboard.isError || !leaderboard.data?.length) return null;
-
-  return (
-    <Card accessibilityLabel="Ver el podio completo" onPress={() => router.push('/trayectoria')}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-          <Ionicons color={colors.volt} name="podium-outline" size={iconSizes.md} />
-          <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold, letterSpacing: fontSizes.md * -0.01 }}>
-            Podio del gimnasio
-          </Text>
-        </View>
-        <Ionicons color={colors.textMuted} name="chevron-forward" size={iconSizes.sm} />
-      </View>
-      {leaderboard.data.map((entry, index) => (
-        <View
-          key={`${entry.position}-${entry.displayName}`}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}
-        >
-          <RankBadge isMe={entry.isMe} position={entry.position} />
-          <Text
-            numberOfLines={1}
-            style={{
-              flex: 1,
-              color: entry.isMe ? colors.text : colors.textMuted,
-              fontSize: fontSizes.sm,
-              fontWeight: entry.isMe ? semibold : '400',
-            }}
-          >
-            {entry.displayName}
-            {entry.isMe ? ' · tú' : ''}
-          </Text>
-          <CountUpText
-            delayMs={index * 60}
-            style={{ color: colors.textMuted, fontSize: fontSizes.sm }}
-            suffix=" pts"
-            value={entry.points}
-          />
-        </View>
-      ))}
-    </Card>
-  );
-}
 
 const GOAL_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   HIPERTROFIA: 'barbell-outline',
@@ -891,13 +684,24 @@ export default function ComunidadScreen() {
       header={
         <>
             <TourTarget id="comunidad.actions">
-              <CommunityHeader onOpenPreferences={() => setPrefsVisible(true)} />
+              <CommunityHeader
+                onDiscover={() =>
+                  router.push({
+                    pathname: '/descubrir',
+                    params: {
+                      objetivo: objetivo ?? undefined,
+                      sucursalId: sucursalId ?? undefined,
+                      genero: genero ?? undefined,
+                    },
+                  })
+                }
+              />
             </TourTarget>
 
             <StoriesBar />
 
             <TourTarget id="comunidad.podium">
-              <PodiumPreview />
+              <PodiumHero />
             </TourTarget>
 
             <Input
@@ -931,55 +735,11 @@ export default function ComunidadScreen() {
                 gap: spacing.md,
               }}
             >
-              <Text
-                accessibilityRole="header"
-                style={{
-                  color: colors.textMuted,
-                  fontSize: fontSizes.xs,
-                  fontWeight: semibold,
-                  letterSpacing: fontSizes.xs * 0.1,
-                  textTransform: 'uppercase',
-                }}
-              >
+              <TextPrimitive accessibilityRole="header" variant="headline">
                 Socios
-              </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-                {/* Tercera forma de mirar el mismo catálogo, pero no un modo de esta
-                    pantalla: la baraja se decide arrastrando y ocupa la pantalla
-                    entera, así que es un destino, no un ajuste del listado. Va junto
-                    al conmutador porque es donde se elige cómo mirar, y se lleva los
-                    filtros puestos para no reabrir un gimnasio recién acotado. */}
-                <TourTarget id="comunidad.discover">
-                <PressableScale
-                  accessibilityLabel="Descubrir socios uno a uno"
-                  onPress={() =>
-                    router.push({
-                      pathname: '/descubrir',
-                      params: {
-                        objetivo: objetivo ?? undefined,
-                        sucursalId: sucursalId ?? undefined,
-                        genero: genero ?? undefined,
-                      },
-                    })
-                  }
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: spacing.xs,
-                    height: 38,
-                    paddingHorizontal: spacing.md,
-                    borderRadius: radii.full,
-                    borderWidth: 1,
-                    borderColor: colors.volt,
-                    backgroundColor: colors.surfaceLow,
-                  }}
-                >
-                  <Ionicons color={colors.volt} name="flame-outline" size={iconSizes.md} />
-                  <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}>
-                    Descubrir
-                  </Text>
-                </PressableScale>
-                </TourTarget>
+              </TextPrimitive>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <IconButton icon="options-outline" label="Preferencias de búsqueda" onPress={() => setPrefsVisible(true)} />
                 <DirectoryViewToggle mode={viewMode} onChange={setViewMode} />
               </View>
             </View>
