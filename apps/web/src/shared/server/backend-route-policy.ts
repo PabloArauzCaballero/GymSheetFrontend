@@ -174,6 +174,16 @@ const allowedPathPatterns = [
   new RegExp(`^/workouts/${resourceId}/(finish|cancel|exercises)$`, 'u'),
   new RegExp(`^/workouts/session-exercises/${resourceId}(/sets)?$`, 'u'),
   new RegExp(`^/workouts/sets/${resourceId}$`, 'u'),
+  // Directorio multientidad y reseñas estilo App Store:
+  /^\/public\/directory\/categories$/u,
+  /^\/public\/directory\/entities$/u,
+  new RegExp(`^/public/directory/entities/${resourceId}$`, 'u'),
+  new RegExp(`^/public/directory/entities/${resourceId}/reviews$`, 'u'),
+  /^\/directory\/entities$/u,
+  new RegExp(`^/directory/entities/${resourceId}/reviews$`, 'u'),
+  new RegExp(`^/directory/reviews/${resourceId}$`, 'u'),
+  new RegExp(`^/directory/reviews/${resourceId}/helpful$`, 'u'),
+  new RegExp(`^/directory/reviews/${resourceId}/reply$`, 'u'),
 ];
 
 export function resolveAllowedBackendPath(parts: string[]) {

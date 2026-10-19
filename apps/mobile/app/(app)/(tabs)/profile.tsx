@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, Text } from 'react-native';
 import { Image } from 'expo-image';
@@ -15,6 +16,7 @@ import {
   Section,
 } from '@/components/layout';
 import { Button } from '@/components/ui';
+import { confirm, notify } from '@/notifications';
 import { GenderPreference } from '@/components/gender-preference';
 import { ProfilePhotoGallery } from '@/components/profile-photo-gallery';
 import { SocialStatusEditor } from '@/components/social-status-editor';
@@ -58,9 +60,28 @@ const ROLE_LABEL: Record<string, string> = {
 
 export default function ProfileScreen() {
   const principal = useAuthStore((state) => state.principal);
+  const logout = useAuthStore((state) => state.logout);
+  const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
   const resetTour = useTourStore((state) => state.reset);
   useScreenTour('profile');
+
+  const onLogout = async () => {
+    const result = await confirm({
+      title: 'Cerrar sesión',
+      message: 'Se cerrará la sesión en este dispositivo. Deberás iniciar sesión de nuevo.',
+      confirmLabel: 'Cerrar sesión',
+      cancelLabel: 'Volver',
+    });
+    if (!result.confirmed) return;
+    setSigningOut(true);
+    try {
+      await logout();
+      notify.success('Sesión cerrada.');
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   const measurements = useQuery({
     queryKey: ['profile', 'body-measurements'],
@@ -419,6 +440,14 @@ export default function ProfileScreen() {
           title="Ajustes"
         />
       </Card>
+
+      <Button
+        icon="log-out-outline"
+        label="Cerrar sesión"
+        loading={signingOut}
+        onPress={() => void onLogout()}
+        variant="danger"
+      />
     </ScrollScreen>
   );
 }

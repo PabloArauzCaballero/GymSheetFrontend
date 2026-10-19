@@ -287,6 +287,11 @@ export default function WorkoutDetailScreen() {
             ? previousPerformance(history.data?.items ?? [], item.ejercicio.id, id)
             : null;
           const previousTop = reference ? topSet(reference.exercise) : null;
+          // For today's default, use the set that was logged most recently in
+          // that workout. The top set remains the comparison for progress.
+          const previousLast = reference?.exercise.series.length
+            ? [...reference.exercise.series].sort((a, b) => b.numeroSerie - a.numeroSerie)[0]
+            : previousTop;
           const previousWhen = reference ? relativeDay(reference.workout.fechaInicio) : null;
           const todayTop = topSet(item);
           return (
@@ -435,7 +440,7 @@ export default function WorkoutDetailScreen() {
                 {/* Pre-filled from the last set: the next one is usually the
                     same load, so a repeat costs one tap. */}
                 <SetEntryForm
-                  previous={previousTop ?? undefined}
+                  previous={previousLast ?? undefined}
                   initial={(() => {
                     const last = [...item.series].sort(
                       (a, b) => b.numeroSerie - a.numeroSerie,

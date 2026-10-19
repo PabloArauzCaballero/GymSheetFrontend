@@ -7,4 +7,7 @@ export * from './definitions/tutorials';
 export * from './definitions/social';
 export * from './definitions/stories';
 export * from './definitions/public-facilities';
+export * from './definitions/directory';
+export * from './definitions/directory-payments';
+export * from './definitions/reviews';
 export * from './forms';

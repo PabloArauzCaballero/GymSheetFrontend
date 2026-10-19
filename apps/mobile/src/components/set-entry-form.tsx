@@ -1,122 +1,100 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
-import { colors, fontSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, fontSizes, minTouchTarget, radii, semibold, spacing, tones } from '@/theme';
 import { Button } from '@/components/ui';
 import { PressableScale } from '@/components/motion';
 import { numericInputProps } from '@/components/keyboard';
 
-/**
- * The one form used mid-workout, so it is built for a sweaty thumb between
- * sets: three numeric fields side by side, big numeric keypads, no scrolling
- * and no dropdowns. Values pre-fill from the previous set because the next one
- * is usually the same load.
- */
 export interface SetDraft {
   pesoKg: string;
   repeticiones: string;
   rir: string;
 }
 
-/** «2.5» → «2,5»: coma decimal, y sin ceros de sobra («5» en vez de «5,0»). */
 function formatIncrement(kg: number): string {
   return kg.toLocaleString('es-ES', { maximumFractionDigits: 2 });
 }
 
-function NumberField({
+function Stepper({
   label,
   value,
+  unit,
   onChange,
-  suffix,
+  onStep,
+  keyboardType = 'number-pad',
 }: {
   label: string;
   value: string;
-  onChange: (next: string) => void;
-  suffix?: string;
+  unit: string;
+  onChange: (value: string) => void;
+  onStep: (direction: -1 | 1) => void;
+  keyboardType?: 'decimal-pad' | 'number-pad';
 }) {
   return (
-    <View style={{ flex: 1, gap: spacing.xs }}>
-      <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>{label}</Text>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.xs,
-          minHeight: minTouchTarget,
-          borderRadius: radii.md,
-          borderWidth: 1,
-          borderColor: colors.border,
-          backgroundColor: colors.surface,
-          paddingHorizontal: spacing.sm,
-        }}
-      >
-        <TextInput
-          accessibilityLabel={label}
-          // `decimal-pad` on weight (plates come in halves), plain digits elsewhere.
-          keyboardType={label === 'Peso' ? 'decimal-pad' : 'number-pad'}
-          // Neither pad has a return key on iOS: without the accessory bar the
-          // keyboard covers «Registrar» and nothing on screen closes it.
-          {...numericInputProps}
-          onChangeText={onChange}
-          placeholder="0"
-          placeholderTextColor={colors.textDisabled}
-          selectTextOnFocus
+    <View style={{ flex: 1, gap: spacing.sm }}>
+      <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, fontWeight: semibold, letterSpacing: 1.1 }}>
+        {label.toUpperCase()}
+      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.xs }}>
+        {([-1, 1] as const).map((direction) =>
+          direction === -1 ? (
+            <PressableScale
+              accessibilityLabel={`Reducir ${label.toLowerCase()}`}
+              key={direction}
+              onPress={() => onStep(direction)}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: radii.full,
+                backgroundColor: colors.surfaceHigh,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons color={colors.text} name="remove" size={22} />
+            </PressableScale>
+          ) : null,
+        )}
+        <View style={{ flex: 1, alignItems: 'center', minWidth: 52 }}>
+          <TextInput
+            accessibilityLabel={label}
+            keyboardType={keyboardType}
+            {...numericInputProps}
+            onChangeText={onChange}
+            placeholder="0"
+            placeholderTextColor={colors.textDisabled}
+            selectTextOnFocus
+            style={{
+              color: colors.text,
+              fontSize: 36,
+              lineHeight: 42,
+              fontWeight: '800',
+              fontVariant: ['tabular-nums'],
+              padding: 0,
+              textAlign: 'center',
+              minWidth: 52,
+            }}
+            value={value}
+          />
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>{unit}</Text>
+        </View>
+        <PressableScale
+          accessibilityLabel={`Aumentar ${label.toLowerCase()}`}
+          onPress={() => onStep(1)}
           style={{
-            flex: 1,
-            color: colors.text,
-            fontSize: fontSizes.lg,
-            fontWeight: '700',
-            fontVariant: ['tabular-nums'],
-            paddingVertical: spacing.sm,
+            width: 40,
+            height: 40,
+            borderRadius: radii.full,
+            backgroundColor: colors.surfaceHigh,
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
-          value={value}
-        />
-        {suffix ? (
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>{suffix}</Text>
-        ) : null}
+        >
+          <Ionicons color={colors.text} name="add" size={22} />
+        </PressableScale>
       </View>
     </View>
-  );
-}
-
-
-/** A one-tap adjustment. Deliberately not a Button: these are modifiers, not
- *  the action, and dressing them as buttons would compete with "Registrar". */
-function QuickChip({
-  label,
-  onPress,
-  wide = false,
-}: {
-  label: string;
-  onPress: () => void;
-  wide?: boolean;
-}) {
-  return (
-    <PressableScale
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={{
-        flexGrow: wide ? 1 : 0,
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: 36,
-        paddingHorizontal: spacing.md,
-        borderRadius: radii.full,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.surfaceHigh,
-      }}
-    >
-      <Text
-        style={{
-          color: colors.text,
-          fontSize: fontSizes.xs,
-          fontWeight: '700',
-          fontVariant: ['tabular-nums'],
-        }}
-      >
-        {label}
-      </Text>
-    </PressableScale>
   );
 }
 
@@ -127,125 +105,158 @@ export function SetEntryForm({
   onSubmit,
   weightIncrementKg = 2.5,
 }: {
-  /** Previous set's values *within this session*, so a repeat is one tap. */
   initial?: Partial<SetDraft>;
-  /**
-   * The heaviest set of the last time this exercise was trained, in an earlier
-   * session. This is the number progressive overload is actually measured
-   * against: matching the set you did ninety seconds ago is not progress, and
-   * beating what you did last Tuesday is. `undefined` the first time an
-   * exercise is trained, which is why the chip is conditional rather than
-   * disabled — there is nothing to beat yet, and saying so would be noise.
-   */
   previous?: { pesoKg: number; repeticiones: number };
   pending: boolean;
   onSubmit: (draft: { pesoKg: number; repeticiones: number; rir: number }) => void;
-  /**
-   * Cuánto suma cada chip de peso. Preferencia de cuenta (`Ajustes`), no una
-   * constante: 2.5 kg es solo el valor por defecto para quien no la cambió.
-   */
   weightIncrementKg?: number;
 }) {
-  const [draft, setDraft] = useState<SetDraft>({
-    // Falls back to the previous session when this one has no sets yet: opening
-    // an exercise on an empty form asks the lifter to remember their own last
-    // load, which is precisely what a training log exists to avoid.
+  const [draft, setDraft] = useState<SetDraft>(() => ({
     pesoKg: initial?.pesoKg ?? (previous ? String(previous.pesoKg) : ''),
     repeticiones: initial?.repeticiones ?? (previous ? String(previous.repeticiones) : ''),
-    rir: initial?.rir ?? '',
-  });
+    rir: initial?.rir ?? '0',
+  }));
 
-  const pesoKg = Number(draft.pesoKg.replace(',', '.'));
-  const repeticiones = Number(draft.repeticiones);
-  const rir = Number(draft.rir);
-  // A set needs a rep count; load may legitimately be 0 (bodyweight) and RIR
-  // defaults to 0 rather than blocking the save.
-  const valid = Number.isFinite(repeticiones) && repeticiones > 0 && Number.isFinite(pesoKg);
-
-  /** Applies a delta to a field, floored at zero and keeping halves on weight. */
-  const bump = (field: keyof SetDraft, delta: number) =>
-    setDraft((prev) => {
-      const current = Number(String(prev[field]).replace(',', '.'));
-      const base = Number.isFinite(current) ? current : 0;
-      const next = Math.max(0, Math.round((base + delta) * 100) / 100);
-      return { ...prev, [field]: String(next) };
+  // History often resolves after the workout itself. Fill the empty form then,
+  // while preserving anything the user has already started typing.
+  useEffect(() => {
+    setDraft((current) => {
+      const fill = initial ?? (previous ? { pesoKg: String(previous.pesoKg), repeticiones: String(previous.repeticiones) } : undefined);
+      if (!fill) return current;
+      return {
+        pesoKg: current.pesoKg || fill.pesoKg || '',
+        repeticiones: current.repeticiones || fill.repeticiones || '',
+        rir: current.rir || initial?.rir || '0',
+      };
     });
+  }, [initial?.pesoKg, initial?.repeticiones, initial?.rir, previous?.pesoKg, previous?.repeticiones]);
 
-  const repeatLast =
-    initial?.pesoKg || initial?.repeticiones
-      ? () =>
-          setDraft({
-            pesoKg: initial?.pesoKg ?? '',
-            repeticiones: initial?.repeticiones ?? '',
-            rir: initial?.rir ?? '',
-          })
-      : null;
+  const weight = Number(draft.pesoKg.replace(',', '.'));
+  const reps = Number(draft.repeticiones);
+  const rir = Number(draft.rir);
+  const valid = Number.isFinite(reps) && reps > 0 && Number.isFinite(weight) && weight >= 0;
+
+  const step = (field: 'pesoKg' | 'repeticiones', direction: -1 | 1) => {
+    const amount = field === 'pesoKg' ? weightIncrementKg : 1;
+    setDraft((current) => {
+      const value = Number(current[field].replace(',', '.'));
+      const next = Math.max(0, Math.round(((Number.isFinite(value) ? value : 0) + amount * direction) * 100) / 100);
+      return { ...current, [field]: String(next) };
+    });
+  };
+
+  const applyPrevious = () => {
+    if (!previous) return;
+    setDraft((current) => ({
+      ...current,
+      pesoKg: String(previous.pesoKg),
+      repeticiones: String(previous.repeticiones),
+    }));
+  };
 
   return (
-    <View style={{ gap: spacing.sm }}>
-      {/* Progressive overload is arithmetic on the last set, not a fresh entry:
-          almost every set is the previous one plus a couple of reps or half a
-          plate. Typing that on a numeric keypad mid-set, with chalk on your
-          hands, is the friction these chips remove. */}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-        {repeatLast ? <QuickChip label="Igual que la anterior" onPress={repeatLast} wide /> : null}
-        {previous ? (
-          // Sobrecarga sobre la sesión anterior, en un toque. Es la operación
-          // que la gente hace de cabeza al llegar a la barra, y la única que
-          // convierte el registro en un plan en vez de en un diario.
-          <QuickChip
-            label={`Superar ${previous.pesoKg} kg`}
-            onPress={() =>
-              setDraft((prev) => ({
-                ...prev,
-                pesoKg: String(previous.pesoKg + weightIncrementKg),
-                repeticiones: prev.repeticiones || String(previous.repeticiones),
-              }))
-            }
-            wide
-          />
-        ) : null}
-        <QuickChip
-          label={`+${formatIncrement(weightIncrementKg)} kg`}
-          onPress={() => bump('pesoKg', weightIncrementKg)}
-        />
-        <QuickChip
-          label={`−${formatIncrement(weightIncrementKg)} kg`}
-          onPress={() => bump('pesoKg', -weightIncrementKg)}
-        />
-        <QuickChip label="+1 rep" onPress={() => bump('repeticiones', 1)} />
-        <QuickChip label="−1 rep" onPress={() => bump('repeticiones', -1)} />
-      </View>
+    <View
+      style={{
+        gap: spacing.md,
+        padding: spacing.md,
+        borderRadius: radii.xl,
+        borderWidth: 1,
+        borderColor: colors.border,
+        backgroundColor: colors.surfaceLow,
+      }}
+    >
+      {previous ? (
+        <PressableScale
+          accessibilityLabel={`Usar registro anterior: ${previous.pesoKg} kilogramos por ${previous.repeticiones} repeticiones`}
+          onPress={applyPrevious}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.sm,
+            paddingHorizontal: spacing.md,
+            minHeight: 46,
+            borderRadius: radii.full,
+            backgroundColor: colors.surfaceHigh,
+          }}
+        >
+          <Ionicons color={colors.volt} name="time-outline" size={18} />
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, flex: 1 }}>Último registro</Text>
+          <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold, fontVariant: ['tabular-nums'] }}>
+            {previous.pesoKg} kg × {previous.repeticiones}
+          </Text>
+          <Ionicons color={colors.textMuted} name="arrow-up-outline" size={16} />
+        </PressableScale>
+      ) : (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 42 }}>
+          <Ionicons color={colors.volt} name="sparkles-outline" size={18} />
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>Primera vez registrando este ejercicio</Text>
+        </View>
+      )}
 
-      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-        <NumberField
+      <View style={{ flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.xs }}>
+        <Stepper
+          keyboardType="decimal-pad"
           label="Peso"
-          onChange={(pesoKgNext) => setDraft((prev) => ({ ...prev, pesoKg: pesoKgNext }))}
-          suffix="kg"
+          onChange={(value) => setDraft((current) => ({ ...current, pesoKg: value }))}
+          onStep={(direction) => step('pesoKg', direction)}
+          unit={`KG · ±${formatIncrement(weightIncrementKg)}`}
           value={draft.pesoKg}
         />
-        <NumberField
+        <View style={{ width: 1, backgroundColor: colors.border, marginVertical: spacing.xs }} />
+        <Stepper
           label="Reps"
-          onChange={(next) => setDraft((prev) => ({ ...prev, repeticiones: next }))}
+          onChange={(value) => setDraft((current) => ({ ...current, repeticiones: value }))}
+          onStep={(direction) => step('repeticiones', direction)}
+          unit="REPS · ±1"
           value={draft.repeticiones}
         />
-        <NumberField
-          label="RIR"
-          onChange={(next) => setDraft((prev) => ({ ...prev, rir: next }))}
-          value={draft.rir}
-        />
       </View>
+
+      <View style={{ gap: spacing.sm }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <Ionicons color={tones.dark.warning.text} name="flame-outline" size={18} />
+            <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>RIR</Text>
+          </View>
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>Repeticiones en reserva</Text>
+        </View>
+        <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+          {[0, 1, 2, 3, 4].map((value) => {
+            const selected = Number(draft.rir) === value;
+            return (
+              <PressableScale
+                accessibilityLabel={`RIR ${value === 4 ? '4 o más' : value}`}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: selected }}
+                key={value}
+                onPress={() => setDraft((current) => ({ ...current, rir: String(value) }))}
+                style={{
+                  flex: 1,
+                  minHeight: 42,
+                  borderRadius: radii.full,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: selected ? colors.voltDim : colors.surfaceHigh,
+                  borderWidth: selected ? 1.5 : 1,
+                  borderColor: selected ? colors.volt : 'transparent',
+                }}
+              >
+                <Text style={{ color: selected ? colors.volt : colors.textMuted, fontSize: fontSizes.sm, fontWeight: '700' }}>
+                  {value === 4 ? '4+' : value}
+                </Text>
+              </PressableScale>
+            );
+          })}
+        </View>
+      </View>
+
       <Button
         disabled={!valid}
+        icon="checkmark"
         label="Registrar serie"
         loading={pending}
-        onPress={() =>
-          onSubmit({
-            pesoKg,
-            repeticiones,
-            rir: Number.isFinite(rir) ? rir : 0,
-          })
-        }
+        onPress={() => onSubmit({ pesoKg: weight, repeticiones: reps, rir: Number.isFinite(rir) ? rir : 0 })}
+        style={{ borderRadius: radii.full, minHeight: minTouchTarget + 4 }}
       />
     </View>
   );
