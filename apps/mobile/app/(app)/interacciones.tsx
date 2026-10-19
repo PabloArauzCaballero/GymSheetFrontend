@@ -14,6 +14,7 @@ import {
   profileViewsService,
   socialService,
 } from '@/api/services';
+import { refreshSocialRelationship } from '@/api/social-cache';
 import { ScreenHeader } from '@/components/layout';
 import { TourTarget, useScreenTour } from '@/components/tour';
 import { BackLink } from '@/components/nav';
@@ -54,13 +55,6 @@ const LIKES_SENT_KEY = ['interactions', 'likes', 'sent'] as const;
 const PASSES_RECEIVED_KEY = ['interactions', 'passes', 'received'] as const;
 const PASSES_SENT_KEY = ['interactions', 'passes', 'sent'] as const;
 const PROFILE_VIEWS_KEY = ['interactions', 'profile-views'] as const;
-
-/** Las tres claves que toda decisión sobre una conexión deja desactualizadas. */
-const SOCIAL_KEYS = [
-  ['social', 'connections'],
-  ['social', 'directory'],
-  INTERACTION_COUNTS_KEY,
-] as const;
 
 /** La baraja de Descubrir: sólo la toca deshacer un descarte. */
 const DECK_KEY = ['social', 'discovery', 'deck'] as const;
@@ -146,8 +140,11 @@ function LikesTab({ header }: { header: ReactNode }) {
     enabled: direction === 'sent',
   });
 
-  async function invalidateSocial(): Promise<void> {
-    await Promise.all(SOCIAL_KEYS.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
+  async function invalidateSocial(conversations = false): Promise<void> {
+    await Promise.all([
+      refreshSocialRelationship(queryClient, { conversations }),
+      queryClient.invalidateQueries({ queryKey: INTERACTION_COUNTS_KEY }),
+    ]);
   }
 
   const respond = useMutation({
@@ -190,8 +187,10 @@ function LikesTab({ header }: { header: ReactNode }) {
         setMatchedIds((ids) => (ids.includes(vars.userId) ? ids : [...ids, vars.userId]));
       }
     },
-    onSettled: () => {
-      void invalidateSocial();
+    onSettled: (connection, _error, variables) => {
+      void invalidateSocial(
+        variables.action === 'ACCEPT' && connection?.status === 'ACCEPTED',
+      );
     },
   });
 
@@ -494,6 +493,7 @@ function NextsTab({ header }: { header: ReactNode }) {
     onSuccess: () => notify.success('Vuelve a estar en la baraja.'),
     onSettled: () => {
       void Promise.all([
+        refreshSocialRelationship(queryClient),
         // La baraja tiene que volver a repartirse: esa persona ha dejado de
         // estar descartada y el servidor ya la considera candidata otra vez.
         queryClient.invalidateQueries({ queryKey: DECK_KEY }),
@@ -602,9 +602,9 @@ export default function InteraccionesScreen() {
         <Segmented
           onChange={setTab}
           options={[
-            { value: 'likes', label: 'Te gustan' },
-            { value: 'visitas', label: 'Visitas' },
-            { value: 'nexts', label: 'Nexts' },
+            { value: 'likes', label: 'Te gustan', icon: 'heart-outline' },
+            { value: 'visitas', label: 'Visitas', icon: 'eye-outline' },
+            { value: 'nexts', label: 'Nexts', icon: 'play-skip-forward-outline' },
           ]}
           value={tab}
         />

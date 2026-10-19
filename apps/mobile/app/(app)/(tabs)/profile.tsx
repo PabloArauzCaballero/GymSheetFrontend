@@ -1,63 +1,75 @@
+import { IconButton } from '@/components/icon-button';
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text } from 'react-native';
-import { Image } from 'expo-image';
+import type { ReactNode } from 'react';
+import { View } from 'react-native';
 import { ApiError } from '@gymsheet/api-client';
-import { NavRow } from '@/components/list';
-import {
-  Badge,
-  Card,
-  Columns,
-  Divider,
-  Row,
-  ScrollScreen,
-  ScreenHeader,
-  Section,
-} from '@/components/layout';
-import { Button } from '@/components/ui';
-import { confirm, notify } from '@/notifications';
+import { ErrorState, Skeleton } from '@/components/feedback';
 import { GenderPreference } from '@/components/gender-preference';
+import { Badge, Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
+import { NavRow } from '@/components/list';
+import { PressableScale } from '@/components/motion';
 import { ProfilePhotoGallery } from '@/components/profile-photo-gallery';
+import { ProgressTrack } from '@/components/progression';
 import { SocialStatusEditor } from '@/components/social-status-editor';
+import { Text } from '@/components/text';
+import { TourTarget, useScreenTour } from '@/components/tour';
+import { Button } from '@/components/ui';
 import { WeightIncrementPreference } from '@/components/weight-increment-preference';
-import { BadgeTile, RankHero } from '@/components/progression';
-import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
-import {
-  membershipService,
-  profilePhotosService,
-  profileService,
-  progressionService,
-} from '@/api/services';
+import { completionMessage, profileCompletion } from '@/features/profile-hero/profile-completion';
+import { HeroStats, ProfileHero, plural } from '@/features/profile-hero/profile-hero';
+import { proudStat, shareMyProfile } from '@/features/profile-hero/profile-share';
+import { confirm, notify } from '@/notifications';
+import { membershipService, profilePhotosService, profileService, progressionService } from '@/api/services';
+import { GOAL_LABEL, MEMBERSHIP_LABEL, MEMBERSHIP_TONE, formatDate, initialsOf, shortName } from '@/lib/format';
+import { routes } from '@/lib/routes';
 import { useAuthStore } from '@/state/auth-store';
 import { useTourStore } from '@/state/tour-store';
-import { TourTarget, useScreenTour } from '@/components/tour';
-import {
-  formatBirthDate,
-  GOAL_LABEL,
-  MEMBERSHIP_LABEL,
-  MEMBERSHIP_TONE,
-  formatDate,
-  initialsOf,
-  shortName,
-} from '@/lib/format';
-import { colors, fontSizes, radii, spacing } from '@/theme';
-
-const MEASUREMENT_SOURCE_LABEL: Record<string, string> = {
-  ONBOARDING: 'Onboarding',
-  PROFILE: 'Perfil',
-  USER: 'Manual',
-  ADMIN: 'Personal del gimnasio',
-};
+import { colors, iconSizes, spacing } from '@/theme';
 
 const ROLE_LABEL: Record<string, string> = {
   ADMIN: 'Administración',
-  CLIENTE: 'Cliente',
+  CLIENTE: 'Socio',
   ENTRENADOR_EXTERNO: 'Entrenador externo',
   COACH: 'Entrenador',
   FRONT_DESK: 'Recepción',
 };
 
+/**
+ * Glifo de fila, callado: un trazo gris en vez de una ficha de color animada
+ * por fila. El protagonista de la pantalla es el héroe, no la lista.
+ */
+function RowGlyph({ icon }: { icon: keyof typeof Ionicons.glyphMap }) {
+  return (
+    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: iconSizes.lg, alignItems: 'center' }}>
+      <Ionicons color={colors.textSecondary} name={icon} size={iconSizes.md} />
+    </View>
+  );
+}
+
+/** Lista agrupada de filas que navegan: el patrón de ajustes de iOS. */
+function RowGroup({ children }: { children: ReactNode[] }) {
+  const items = children.filter(Boolean);
+  return (
+    <Card list>
+      {items.map((child, index) => (
+        <View key={index}>
+          {index > 0 ? <Divider /> : null}
+          {child}
+        </View>
+      ))}
+    </Card>
+  );
+}
+
+/**
+ * Perfil (rediseño 2026-10-18): un héroe de identidad —foto con aro, nombre,
+ * rango y tres cifras reales— que es lo que alguien capturaría y compartiría.
+ * Debajo, el empujón para completar el perfil y dos listas calladas (tu
+ * actividad, tu cuenta). El correo es privado: va al pie, no al héroe.
+ */
 export default function ProfileScreen() {
   const principal = useAuthStore((state) => state.principal);
   const logout = useAuthStore((state) => state.logout);
@@ -87,41 +99,56 @@ export default function ProfileScreen() {
     queryKey: ['profile', 'body-measurements'],
     queryFn: () => profileService.measurements(),
   });
-
   const profile = useQuery({
     queryKey: ['profile', 'me'],
     queryFn: () => profileService.get(),
-    // A user who has not onboarded has no profile yet: that is an empty state,
-    // not a failure, so retrying the 404 would only delay the screen.
-    retry: (failureCount, error) =>
-      !(error instanceof ApiError && error.kind === 'not-found') && failureCount < 1,
+    // Sin onboarding no hay perfil: es un estado vacío, no un fallo.
+    retry: (failureCount, error) => !(error instanceof ApiError && error.kind === 'not-found') && failureCount < 1,
   });
-  const membership = useQuery({
-    queryKey: ['membership', 'me'],
-    queryFn: () => membershipService.getMine(),
-  });
-
-  // Misma clave que la galería y la tira de stories: subir o borrar una foto ya
-  // invalida esta caché, así que el avatar se actualiza sin código extra.
+  const membership = useQuery({ queryKey: ['membership', 'me'], queryFn: () => membershipService.getMine() });
   const photos = useQuery({
     queryKey: ['profile', 'photos'],
     queryFn: () => profilePhotosService.list(),
     staleTime: 60_000,
   });
+  const progression = useQuery({ queryKey: ['progression', 'me'], queryFn: () => progressionService.get() });
+
   const avatarUrl = photos.data?.[0]?.url ?? null;
-
-  // Misma clave que /trayectoria: entrar al detalle no vuelve a pedir lo que
-  // esta pantalla ya trajo.
-  const progression = useQuery({
-    queryKey: ['progression', 'me'],
-    queryFn: () => progressionService.get(),
-  });
-  const earnedBadges = (progression.data?.badges ?? []).filter((badge) => badge.earned);
-  // Tres caben sin empujar el resto del perfil fuera de la pantalla; el resto
-  // está a un toque, en la senda completa.
-  const shownBadges = earnedBadges.slice(0, 3);
-
   const missingProfile = profile.error instanceof ApiError && profile.error.kind === 'not-found';
+  const earned = (progression.data?.badges ?? []).filter((badge) => badge.earned).length;
+  const lastWeight = measurements.data?.[0];
+  const firstWeight = measurements.data?.[measurements.data.length - 1];
+  const weightTrend =
+    lastWeight && firstWeight && lastWeight.id !== firstWeight.id
+      ? `${lastWeight.weight - firstWeight.weight > 0 ? '+' : '−'}${Math.abs(lastWeight.weight - firstWeight.weight).toLocaleString('es-ES', { maximumFractionDigits: 1 })} ${lastWeight.unit.toLowerCase()} desde ${formatDate(firstWeight.measuredOn)}`
+      : null;
+  const member = membership.data?.membership;
+  const displayName = principal?.nombreCompleto ?? shortName(undefined, principal?.email);
+  const roleLabel = ROLE_LABEL[principal?.role ?? ''] ?? principal?.role ?? '—';
+
+  const progress = progression.data;
+  const rank = progress?.level?.name ?? null;
+  const points = progress?.points ?? 0;
+  const streak = progress ? (progress.streak?.current ?? progress.stats.currentStreakDays) : 0;
+  const sessions = progress?.stats.totalSessions ?? 0;
+
+  const completion = profileCompletion({
+    profileKnown: Boolean(profile.data) || missingProfile,
+    hasProfile: Boolean(profile.data),
+    photosKnown: Boolean(photos.data),
+    hasPhoto: Boolean(photos.data?.length),
+    measurementsKnown: Boolean(measurements.data),
+    hasMeasurement: Boolean(measurements.data?.length),
+  });
+  const completionText = completionMessage(completion.missing);
+
+  const dataSubtitle = profile.isPending
+    ? 'Cargando…'
+    : missingProfile
+      ? 'Completa tu perfil: peso, estatura y objetivo'
+      : profile.data
+        ? `${profile.data.pesoKg.toLocaleString('es-ES')} kg · ${profile.data.estaturaCm} cm · ${GOAL_LABEL[profile.data.objetivo]}`
+        : 'No se pudieron cargar tus datos';
 
   return (
     <ScrollScreen
@@ -130,324 +157,178 @@ export default function ProfileScreen() {
         void membership.refetch();
         void photos.refetch();
         void progression.refetch();
+        void measurements.refetch();
       }}
-      refreshing={
-        profile.isFetching || membership.isFetching || photos.isFetching || progression.isFetching
-      }
+      refreshing={profile.isFetching || membership.isFetching || photos.isFetching || progression.isFetching}
     >
-      <ScreenHeader title="Perfil" tourKey="profile" />
+      <ScreenHeader
+        action={<IconButton icon="settings-outline" label="Ajustes" onPress={() => router.push('/settings')} testID="profile-settings" />}
+        title="Perfil"
+        tourKey="profile"
+      />
 
       <TourTarget id="profile.identity">
-      <Card>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-          {/* Quien ya subió una foto la ve aquí: seguir pintando iniciales
-              encima de una cuenta con foto se lee como si no se hubiera
-              guardado. Las iniciales siguen siendo el fondo de armario. */}
-          {avatarUrl ? (
-            <Image
-              contentFit="cover"
-              source={{ uri: avatarUrl }}
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: radii.full,
-                backgroundColor: colors.surfaceHigh,
-              }}
-              transition={200}
-            />
+        <ProfileHero
+          initials={initialsOf(principal?.nombreCompleto, principal?.email)}
+          meta={principal?.role && principal.role !== 'CLIENTE' ? <Badge label={roleLabel} /> : null}
+          name={displayName}
+          photoUrl={avatarUrl}
+          rank={progress ? (rank ?? 'Sin empezar') : null}
+          testID="profile-hero"
+        >
+          {/* La senda: el dato que se gana entrenando; tocarla abre el detalle. */}
+          {progression.isPending ? (
+            <Skeleton height={96} />
+          ) : progression.isError || !progress ? (
+            <ErrorState error={progression.error} onRetry={() => void progression.refetch()} />
           ) : (
-            <View
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: radii.full,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: colors.volt,
-              }}
+            <PressableScale
+              accessibilityLabel={`Tu senda: ${rank ?? 'sin empezar'}, ${progress.points} puntos, ${earned} insignias. Ver la senda completa.`}
+              onPress={() => router.push('/trayectoria')}
+              style={{ gap: spacing.smd }}
             >
-              <Text
-                style={{ color: colors.background, fontSize: fontSizes.lg, fontWeight: '700' }}
-              >
-                {initialsOf(principal?.nombreCompleto, principal?.email)}
-              </Text>
-            </View>
+              <HeroStats
+                stats={[
+                  { key: 'points', value: points, label: 'puntos' },
+                  { key: 'streak', value: streak, label: plural(streak, 'día de racha', 'días de racha') },
+                  { key: 'sessions', value: sessions, label: plural(sessions, 'sesión', 'sesiones') },
+                ]}
+              />
+              <ProgressTrack color={colors.textSecondary} ratio={progress.levelProgress} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                <Text style={{ flex: 1 }} tone="secondary" variant="footnote">
+                  {[
+                    progress.nextLevel && progress.pointsToNextLevel !== null
+                      ? `Faltan ${progress.pointsToNextLevel.toLocaleString('es-ES')} para ${progress.nextLevel.name}`
+                      : 'Senda completa',
+                    earned === 1 ? '1 insignia' : `${earned} insignias`,
+                  ].join(' · ')}
+                </Text>
+                <Ionicons color={colors.textSecondary} name="chevron-forward" size={iconSizes.sm} />
+              </View>
+            </PressableScale>
           )}
-          <View style={{ flex: 1, gap: spacing.xs }}>
-            <Text
-              numberOfLines={1}
-              style={{ color: colors.text, fontSize: fontSizes.lg, fontWeight: '700' }}
-            >
-              {principal?.nombreCompleto ?? shortName(undefined, principal?.email)}
-            </Text>
-            <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-              {principal?.email}
-            </Text>
-            <Badge label={ROLE_LABEL[principal?.role ?? ''] ?? principal?.role ?? '—'} />
-          </View>
-        </View>
-
-        {/* Editing was only reachable from a navigation row far below the fold:
-            on a phone the user had to scroll past two data cards to find out
-            their own details could be changed at all. The action belongs next
-            to the identity it edits, and it is the only entry point: the same
-            destination also sat in the navigation list below, so the screen
-            offered one action twice under two different names. */}
-        <Button
-          label="Editar mis datos"
-          onPress={() => router.push('/profile-edit')}
-          variant="ghost"
-        />
-      </Card>
+          {progress && rank && principal?.id ? (
+            <Button
+              haptic="light"
+              icon="share-outline"
+              label="Compartir mi perfil"
+              onPress={() => shareMyProfile({ userId: principal.id, rank, stat: proudStat({ streak, sessions, points }) })}
+              size="sm"
+              style={{ alignSelf: 'flex-start' }}
+              testID="profile-share"
+              // Secundaria: el relleno de acento es de «Completar mi perfil» si aparece.
+              variant={missingProfile ? 'ghost' : 'primary'}
+            />
+          ) : null}
+        </ProfileHero>
       </TourTarget>
 
-      {/* Los puntos y las insignias estaban solo detrás de un enlace: lo que se
-          gana entrenando no puede vivir a un toque de distancia del perfil que
-          lo gana. Aquí va el resumen —rango, puntos y lo ya conseguido— y el
-          detalle completo sigue en /trayectoria. */}
-      <Section icon="trophy-outline" title="Tu senda">
-        {progression.isPending ? (
-          <Skeleton height={200} />
-        ) : progression.isError || !progression.data ? (
-          <ErrorState error={progression.error} onRetry={() => void progression.refetch()} />
-        ) : (
-          <>
-            <RankHero
-              level={progression.data.level}
-              levelProgress={progression.data.levelProgress}
-              nextLevel={progression.data.nextLevel}
-              points={progression.data.points}
-              pointsToNextLevel={progression.data.pointsToNextLevel}
-            />
-            {shownBadges.length ? (
-              <View style={{ gap: spacing.sm }}>
-                {shownBadges.map((badge) => (
-                  <BadgeTile
-                    badge={badge}
-                    key={badge.code}
-                    onPress={() => router.push('/trayectoria')}
-                  />
-                ))}
-                {earnedBadges.length > shownBadges.length ? (
-                  // Enseñar tres de siete sin decirlo haría creer que solo hay
-                  // tres: la cuenta que falta se dice, no se esconde.
-                  <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-                    {`Y ${earnedBadges.length - shownBadges.length} insignia${
-                      earnedBadges.length - shownBadges.length === 1 ? '' : 's'
-                    } más en tu senda.`}
-                  </Text>
-                ) : null}
-              </View>
-            ) : (
-              <EmptyState
-                icon="ribbon-outline"
-                message="Registra tu primer entrenamiento y la primera insignia llega sola."
-                title="Sin insignias todavía"
-              />
-            )}
-          </>
-        )}
-      </Section>
+      {/* Empujón para completar el perfil, solo con lo que ya se sabe. */}
+      {completionText ? (
+        <View style={{ gap: spacing.sm }}>
+          <Text tone="secondary" variant="subhead">
+            {completionText}
+          </Text>
+          <ProgressTrack color={colors.textSecondary} height={4} ratio={completion.ratio} />
+          {missingProfile ? (
+            <Button icon="create-outline" label="Completar mi perfil" onPress={() => router.push('/onboarding')} size="sm" style={{ alignSelf: 'flex-start' }} />
+          ) : null}
+        </View>
+      ) : null}
 
-      {/* Both are short label/value cards: side by side on a tablet, where one
-          full-width card stretches "Peso … 75 kg" across the whole screen. */}
-      <Columns>
-        <Section icon="body-outline" title="Datos físicos">
-        {profile.isPending ? (
-          <Skeleton height={130} />
-        ) : missingProfile ? (
-          <EmptyState
-            icon="body-outline"
-            message="Completa tu onboarding en la web para ver aquí peso, estatura y objetivo."
-            title="Perfil sin completar"
-          />
-        ) : profile.isError ? (
-          <ErrorState error={profile.error} onRetry={() => void profile.refetch()} />
-        ) : profile.data ? (
-          <Card list>
-            <Row icon="scale-outline" label="Peso" value={`${profile.data.pesoKg} kg`} />
-            <Divider />
-            <Row icon="resize-outline" label="Estatura" value={`${profile.data.estaturaCm} cm`} />
-            <Divider />
-            <Row
-              icon="calendar-outline"
-              label="Nacimiento"
-              value={
-                profile.data.fechaNacimiento
-                  ? `${formatBirthDate(profile.data.fechaNacimiento)} · ${profile.data.edad} años`
-                  : profile.data.edad
-                    ? `${profile.data.edad} años`
-                    : '—'
-              }
-            />
-            <Divider />
-            <Row icon="flag-outline" label="Objetivo" value={GOAL_LABEL[profile.data.objetivo]} />
-            {profile.data.fechaActualizacion ? (
-              <>
-                <Divider />
-                <Row
-                  icon="time-outline"
-                  label="Actualizado"
-                  value={formatDate(profile.data.fechaActualizacion)}
-                />
-              </>
-            ) : null}
-          </Card>
-        ) : null}
+      <Section title="Tu actividad">
+        <RowGroup>
+          {[
+            <NavRow key="entrenos" leading={<RowGlyph icon="barbell-outline" />} onPress={() => router.push('/workouts')} subtitle="Todas tus sesiones, con sus series" title="Mis entrenos" />,
+            <NavRow
+              key="ejercicios" leading={<RowGlyph icon="star-outline" />}
+              onPress={() => router.push(routes.exerciseFavorites())}
+              subtitle="Tus favoritos ☆ y el catálogo completo"
+              testID="profile-exercises"
+              title="Mis ejercicios y favoritos"
+            />,
+            <NavRow key="chat" leading={<RowGlyph icon="chatbubbles-outline" />} onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />,
+            <NavRow key="training-invitations" leading={<RowGlyph icon="people-outline" />} onPress={() => router.push('/training-invitations')} subtitle="Invitaciones recibidas y encuentros" title="Entrenar juntos" />,
+          ]}
+        </RowGroup>
       </Section>
-
-      <Section icon="card-outline" title="Membresía">
-        {membership.isPending ? (
-          <Skeleton height={110} />
-        ) : membership.isError ? (
-          <ErrorState error={membership.error} onRetry={() => void membership.refetch()} />
-        ) : membership.data?.membership ? (
-          <Card list>
-            <Row
-              icon="pricetag-outline"
-              label="Plan"
-              value={membership.data.membership.plan?.nombre ?? 'Plan actual'}
-            />
-            <Divider />
-            <Row icon="play-outline" label="Inicio" value={formatDate(membership.data.membership.iniciaEl)} />
-            <Divider />
-            <Row icon="flag-outline" label="Vence" value={formatDate(membership.data.membership.venceEl)} />
-            <Divider />
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Estado</Text>
-              <Badge
-                label={MEMBERSHIP_LABEL[membership.data.membership.estado]}
-                tone={MEMBERSHIP_TONE[membership.data.membership.estado]}
-              />
-            </View>
-          </Card>
-          ) : (
-            <EmptyState
-              icon="card-outline"
-              message="No hay una membresía asociada a tu cuenta."
-              title="Sin membresía"
-            />
-          )}
-        </Section>
-      </Columns>
 
       <ProfilePhotoGallery />
-
       <SocialStatusEditor />
-
-      <Section icon="trending-up-outline" title="Evolución del peso">
-        {measurements.isPending ? (
-          <Skeleton height={130} />
-        ) : measurements.isError ? (
-          <ErrorState error={measurements.error} onRetry={() => void measurements.refetch()} />
-        ) : measurements.data?.length ? (
-          <Card>
-            {measurements.data.map((item, index) => (
-              <View key={item.id}>
-                {index > 0 ? <Divider /> : null}
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingVertical: spacing.xs,
-                  }}
-                >
-                  <View>
-                    <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: '600' }}>
-                      {formatDate(item.measuredOn)}
-                    </Text>
-                    <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-                      {MEASUREMENT_SOURCE_LABEL[item.source] ?? item.source}
-                    </Text>
-                  </View>
-                  <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: '700' }}>
-                    {item.weight} {item.unit}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </Card>
-        ) : (
-          <EmptyState
-            icon="trending-up-outline"
-            message="Cada vez que actualices tu peso, queda registrado aquí."
-            title="Sin mediciones todavía"
-          />
-        )}
-        {/* Hasta ahora el histórico sólo se llenaba de rebote, al editar el
-            perfil entero. Anotar un pesaje es lo que se hace cada semana, así
-            que la acción vive junto a la evolución que alimenta. */}
-        <Button
-          icon="add"
-          label="Registrar peso"
-          onPress={() => router.push('/registrar-peso')}
-          variant="ghost"
-        />
-      </Section>
-
       <GenderPreference />
-
       <WeightIncrementPreference />
 
-      <Card list>
-        <NavRow
-          onPress={() => router.push('/trayectoria')}
-          subtitle="El camino completo, la clasificación y tus días de descanso"
-          title="Ver toda la senda"
-        />
-        <Divider />
-        {/* Entrenos dejó de ser pestaña cuando Comunidad hizo seis y la barra
-            empezó a truncar etiquetas. Aquí no está escondido: es historial, y
-            este es el sitio donde se busca el historial propio. La otra entrada
-            está en Inicio, en «Últimas sesiones», que es por donde se llega en
-            el uso diario. */}
-        <NavRow
-          onPress={() => router.push('/workouts')}
-          subtitle="Todas tus sesiones, con sus ejercicios y series"
-          title="Mis entrenos"
-        />
-        <Divider />
-        <NavRow onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />
-        <Divider />
-        <NavRow
-          onPress={() => router.push('/membership')}
-          subtitle="Plan, vencimiento, historial y renovación"
-          title="Mi suscripción"
-        />
-        <Divider />
-        <NavRow
-          onPress={() => router.push('/notifications')}
-          subtitle="Qué avisos quieres recibir"
-          title="Notificaciones"
-        />
-        <Divider />
-        <NavRow
-          onPress={() => void resetTour()}
-          subtitle="Vuelve a ver la bienvenida y los avisos de cada pantalla"
-          title="Ver tutorial"
-        />
-        <Divider />
-        <NavRow
-          onPress={() => router.push('/settings')}
-          subtitle="Cuenta, versión y cierre de sesión"
-          title="Ajustes"
-        />
-      </Card>
+      {/* Cuenta y app en una sola lista: una tarjeta menos. */}
+      <Section title="Tu cuenta">
+        <RowGroup>
+          {[
+            <NavRow
+              key="datos" leading={<RowGlyph icon="person-circle-outline" />}
+              onPress={() => router.push(missingProfile ? '/onboarding' : '/profile-edit')}
+              subtitle={dataSubtitle}
+              testID="profile-data"
+              title="Mis datos"
+            />,
+            <NavRow
+              key="peso" leading={<RowGlyph icon="scale-outline" />}
+              onPress={() => router.push('/registrar-peso')}
+              subtitle={
+                measurements.isError
+                  ? 'No se pudo cargar tu evolución'
+                  : lastWeight
+                    ? `Último: ${lastWeight.weight.toLocaleString('es-ES')} ${lastWeight.unit.toLowerCase()}${weightTrend ? ` · ${weightTrend}` : ''}`
+                    : 'Anota tu primer pesaje'
+              }
+              title="Registrar peso"
+            />,
+            membership.isError ? (
+              <View key="membresia-error" style={{ paddingVertical: spacing.sm }}>
+                <ErrorState error={membership.error} onRetry={() => void membership.refetch()} />
+              </View>
+            ) : (
+              <NavRow
+                key="membresia" leading={<RowGlyph icon="card-outline" />}
+                meta={member ? <Badge label={MEMBERSHIP_LABEL[member.estado]} tone={MEMBERSHIP_TONE[member.estado]} /> : null}
+                onPress={() => router.push('/membership')}
+                subtitle={
+                  membership.isPending
+                    ? 'Cargando…'
+                    : member
+                      ? `${member.plan?.nombre ?? 'Plan actual'} · vence ${formatDate(member.venceEl)}`
+                      : 'Sin membresía asociada'
+                }
+                title="Membresía"
+              />
+            ),
+            <NavRow key="notif" leading={<RowGlyph icon="notifications-outline" />} onPress={() => router.push('/notifications')} subtitle="Qué avisos quieres recibir" title="Notificaciones" />,
+            <NavRow
+              key="tour"
+              leading={<RowGlyph icon="help-buoy-outline" />}
+              onPress={() => void resetTour()}
+              subtitle="Vuelve a ver la bienvenida y los avisos de cada pantalla"
+              title="Ver tutorial"
+            />,
+            <NavRow key="ajustes" leading={<RowGlyph icon="settings-outline" />} onPress={() => router.push('/settings')} subtitle="Cuenta, versión y cierre de sesión" title="Ajustes" />,
+          ]}
+        </RowGroup>
+      </Section>
 
-      <Button
-        icon="log-out-outline"
-        label="Cerrar sesión"
-        loading={signingOut}
-        onPress={() => void onLogout()}
-        variant="danger"
-      />
+      <View style={{ gap: spacing.sm }}>
+        {principal?.email ? (
+          <Text numberOfLines={1} selectable style={{ textAlign: 'center' }} tone="muted" variant="footnote">
+            {`${roleLabel} · ${principal.email}`}
+          </Text>
+        ) : null}
+        <Button
+          icon="log-out-outline"
+          label="Cerrar sesión"
+          loading={signingOut}
+          onPress={() => void onLogout()}
+          size="lg"
+          variant="danger"
+        />
+      </View>
     </ScrollScreen>
   );
 }

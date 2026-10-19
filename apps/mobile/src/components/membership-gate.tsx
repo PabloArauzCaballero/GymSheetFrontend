@@ -4,10 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import type { MembershipProjection } from '@gymsheet/types';
 import { Button } from '@/components/ui';
 import { Card } from '@/components/layout';
+import { Text as AppText } from '@/components/text';
 import { membershipService } from '@/api/services';
 import { notify } from '@/notifications';
 import { formatDate } from '@/lib/format';
-import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, radii, semibold, spacing, tones } from '@/theme';
 
 /**
  * Qué se le dice a alguien cuya membresía no está vigente.
@@ -24,16 +25,13 @@ import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme'
  * fallo administrativo. Lo que la membresía gobierna es el acceso al gimnasio,
  * y eso lo comprueba la puerta, no esta pantalla.
  */
-export function MembershipGate({
-  projection,
-  onRenew,
-}: {
-  projection: MembershipProjection;
-  onRenew: () => void;
-}) {
+/**
+ * «Ya pagué por otro medio»: pide al backend un enlace de activación y lo manda
+ * al WhatsApp del gimnasio (o al menú de compartir). Lo comparten las dos
+ * variantes de `MembershipGate`.
+ */
+function useActivationRequest(projection: MembershipProjection) {
   const [asking, setAsking] = useState(false);
-  const membership = projection.membership;
-  const vencio = membership ? !membership.vigenteHoy : false;
 
   // El teléfono del gimnasio ya viaja en la proyección para el botón de
   // renovación; se reutiliza en vez de pedir otro dato al backend.
@@ -86,6 +84,89 @@ export function MembershipGate({
     }
   };
 
+  return { asking, pedirActivacion };
+}
+
+const ACTIVATION_HINT =
+  'Se enviará al gimnasio un enlace para que activen tu cuenta. Sólo puede usarlo el personal del gimnasio con su sesión iniciada.';
+
+export function MembershipGate({
+  projection,
+  onRenew,
+  variant = 'full',
+}: {
+  projection: MembershipProjection;
+  onRenew: () => void;
+  /**
+   * `compact`: una franja de una fila (icono, título, «Renovar») y debajo, en
+   * fantasma, «Ya pagué por otro medio». Es la de Inicio: avisa primero sin
+   * tapar el valor de la pantalla. `full`: la tarjeta con toda la explicación.
+   */
+  variant?: 'full' | 'compact';
+}) {
+  const { asking, pedirActivacion } = useActivationRequest(projection);
+  const membership = projection.membership;
+  const vencio = membership ? !membership.vigenteHoy : false;
+
+  if (variant === 'compact') {
+    const warning = tones.dark.warning;
+    return (
+      <View
+        style={{
+          gap: spacing.xxs,
+          paddingVertical: spacing.sm,
+          paddingHorizontal: spacing.md,
+          borderRadius: radii.lg,
+          borderCurve: 'continuous',
+          borderWidth: 1,
+          borderColor: warning.border,
+          backgroundColor: warning.bg,
+        }}
+        testID="membership-banner"
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
+          <Ionicons
+            accessibilityElementsHidden
+            color={colors.warning}
+            importantForAccessibility="no-hide-descendants"
+            name="warning-outline"
+            size={iconSizes.md}
+          />
+          <View style={{ flex: 1, gap: spacing.xxs }}>
+            <AppText numberOfLines={2} variant="headline">
+              {membership ? (vencio ? 'Tu membresía venció' : 'Membresía no vigente') : 'Aún no tienes membresía'}
+            </AppText>
+            <AppText numberOfLines={2} tone="secondary" variant="footnote">
+              {vencio && membership
+                ? `Desde el ${formatDate(membership.venceEl)}. Tu historial sigue aquí.`
+                : 'Tus rutinas y tu historial siguen aquí.'}
+            </AppText>
+          </View>
+          <Button
+            accessibilityLabel="Renovar en la app"
+            haptic="light"
+            label="Renovar"
+            onPress={onRenew}
+            size="sm"
+            variant="secondary"
+          />
+        </View>
+        {/* La segunda vía sigue a un toque: quien pagó en efectivo no debería
+            tener que volver al gimnasio para que alguien lo note. */}
+        <Button
+          accessibilityHint={ACTIVATION_HINT}
+          icon="logo-whatsapp"
+          label="Ya pagué por otro medio"
+          loading={asking}
+          onPress={() => void pedirActivacion()}
+          size="sm"
+          style={{ alignSelf: 'flex-start', marginLeft: iconSizes.md + spacing.smd }}
+          variant="ghost"
+        />
+      </View>
+    );
+  }
+
   return (
     <Card accent={colors.warning}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
@@ -125,8 +206,7 @@ export function MembershipGate({
       />
 
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
-        Se enviará al gimnasio un enlace para que activen tu cuenta. Sólo puede usarlo el personal
-        del gimnasio con su sesión iniciada.
+        {ACTIVATION_HINT}
       </Text>
 
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, fontWeight: semibold }}>

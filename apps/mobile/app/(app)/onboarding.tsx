@@ -3,26 +3,53 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import type { FitnessGoal } from '@gymsheet/types';
+import { Ionicons } from '@expo/vector-icons';
 import { equipmentOptions, goalOptions, preferenceOptions } from '@gymsheet/domain';
 import { onboardingService } from '@/api/services';
 import { BackLink } from '@/components/nav';
 import { Checkbox } from '@/components/checkbox';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { numericInputProps } from '@/components/keyboard';
-import { Card, ScreenHeader, ScrollScreen } from '@/components/layout';
+import { Card, ScrollScreen } from '@/components/layout';
+import { EnterUp } from '@/components/motion';
 import { StepProgress, type FlowStep } from '@/components/step-flow';
+import { Text as AppText } from '@/components/text';
 import { Button, Input } from '@/components/ui';
+import {
+  onboardingDone,
+  onboardingFinish,
+  onboardingFinishCta,
+  onboardingSteps,
+} from '@/features/first-impression/copy';
+import { shortName } from '@/lib/format';
 import { notify } from '@/notifications';
-import { colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { useAuthStore } from '@/state/auth-store';
+import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 const STEPS: readonly FlowStep[] = [
   { label: 'Objetivo', icon: 'flag-outline' },
   { label: 'Medidas', icon: 'barbell-outline' },
-  { label: 'Cómo entrenas', icon: 'options-outline' },
-  { label: 'Equipo', icon: 'construct-outline' },
+  { label: 'Entreno', icon: 'options-outline' },
+  { label: 'Material', icon: 'construct-outline' },
 ];
 
+const preferenceAlreadyAsked: Partial<Record<FitnessGoal, string>> = {
+  GAIN_MUSCLE: 'Hipertrofia',
+  IMPROVE_STRENGTH: 'Fuerza',
+};
+
 const today = new Date().toISOString().slice(0, 10);
+
+/** Un glifo por objetivo, los mismos que usa el directorio de Comunidad. */
+const GOAL_ICON: Record<FitnessGoal, keyof typeof Ionicons.glyphMap> = {
+  GAIN_MUSCLE: 'barbell-outline',
+  LOSE_FAT: 'flame-outline',
+  IMPROVE_STRENGTH: 'flash-outline',
+  IMPROVE_ENDURANCE: 'infinite-outline',
+  MAINTAIN_FITNESS: 'fitness-outline',
+  GENERAL_HEALTH: 'heart-outline',
+  SPORT_PERFORMANCE: 'trophy-outline',
+};
 
 /** Chip de un toque, para elegir entre un puñado de opciones excluyentes ("KG" vs "LB"). */
 function ToggleChip({
@@ -86,6 +113,7 @@ function ChoiceGroup({
 export default function OnboardingScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const principal = useAuthStore((state) => state.principal);
   const state = useQuery({ queryKey: ['onboarding', 'me'], queryFn: () => onboardingService.get() });
 
   const [step, setStep] = useState(0);
@@ -148,7 +176,7 @@ export default function OnboardingScreen() {
           consentHealth,
           consentData,
         });
-      return onboardingService.saveEquipment(equipment);
+      return onboardingService.saveEquipment(trainingLocation === 'GYM' ? [] : equipment);
     },
     onSuccess: (result) => {
       queryClient.setQueryData(['onboarding', 'me'], result);
@@ -161,7 +189,11 @@ export default function OnboardingScreen() {
   const complete = useMutation({
     mutationFn: () => onboardingService.complete(),
     onSuccess: () => {
-      notify.success('¡Listo! Ya puedes entrenar.');
+      // Lo que se acaba de contar cambia el perfil y las recomendaciones: sin
+      // esto «Para ti» seguía pidiendo «Cuéntanos tu objetivo» varios minutos.
+      void queryClient.invalidateQueries({ queryKey: ['profile'] });
+      void queryClient.invalidateQueries({ queryKey: ['routines'] });
+      notify.success(onboardingDone);
       router.replace('/home');
     },
     onError: (error: Error) => notify.error(error),
@@ -189,23 +221,58 @@ export default function OnboardingScreen() {
   const stepValid = step !== 1 || (weightValid && heightValid);
   const consentGiven = step !== 2 || (consentHealth && consentData);
 
+  // Un protagonista por paso: la pregunta. El último no pregunta, celebra, y
+  // apunta a lo que viene después —elegir la rutina del primer entreno—.
+  const heading =
+    onboardingSteps[step] ??
+    onboardingFinish(shortName(principal?.nombreCompleto, principal?.email), trainingLocation === 'GYM');
+
   return (
     <ScrollScreen>
       <BackLink />
-      <ScreenHeader
-        subtitle={`Paso ${step + 1} de 4 · Tu progreso se guarda en tu cuenta.`}
-        title="Personaliza tu experiencia"
-      />
       <StepProgress current={step} steps={STEPS} />
+
+      {/* `key` vuelve a montar la cabecera al cambiar de paso: la pregunta nueva
+          entra subiendo, que es lo que dice «has avanzado». Dos `EnterUp`. */}
+      <View key={step} style={{ gap: spacing.sm }}>
+        <EnterUp index={0}>
+          <AppText tone="muted" variant="footnote">
+            {`Paso ${step + 1} de 4 · Se guarda en tu cuenta`}
+          </AppText>
+        </EnterUp>
+        <EnterUp index={1} style={{ gap: spacing.sm }}>
+          {step === 3 ? (
+            <Ionicons
+              accessibilityElementsHidden
+              color={accentPolicy.ink}
+              importantForAccessibility="no-hide-descendants"
+              name="checkmark-circle"
+              size={iconSizes['2xl']}
+            />
+          ) : null}
+          <AppText accessibilityRole="header" variant="display">
+            {heading.title}
+          </AppText>
+          <AppText tone="secondary" variant="subhead">
+            {heading.subline}
+          </AppText>
+        </EnterUp>
+      </View>
 
       <Card style={{ gap: spacing.lg }}>
         {step === 0 ? (
           <View style={{ gap: spacing.sm }}>
             {goalOptions.map((option) => (
               <Pressable
+                accessibilityLabel={`${option.label}. ${option.description}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected: goal === option.value }}
                 key={option.value}
                 onPress={() => setGoal(option.value)}
                 style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing.md,
                   padding: spacing.md,
                   borderRadius: radii.md,
                   borderWidth: 1,
@@ -214,12 +281,21 @@ export default function OnboardingScreen() {
                   opacity: pressed ? 0.6 : 1,
                 })}
               >
-                <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
-                  {option.label}
-                </Text>
-                <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, marginTop: 2 }}>
-                  {option.description}
-                </Text>
+                <Ionicons
+                  accessibilityElementsHidden
+                  color={goal === option.value ? accentPolicy.ink : accentPolicy.glyph}
+                  importantForAccessibility="no-hide-descendants"
+                  name={GOAL_ICON[option.value]}
+                  size={iconSizes.lg}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
+                    {option.label}
+                  </Text>
+                  <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, marginTop: 2 }}>
+                    {option.description}
+                  </Text>
+                </View>
               </Pressable>
             ))}
           </View>
@@ -232,6 +308,7 @@ export default function OnboardingScreen() {
                 error={!weightValid && weight.length > 0 ? 'Ingresa un peso válido.' : undefined}
                 keyboardType="decimal-pad"
                 {...numericInputProps}
+                icon="barbell-outline"
                 label="Peso actual"
                 onChangeText={setWeight}
                 value={weight}
@@ -246,6 +323,7 @@ export default function OnboardingScreen() {
                 error={!heightValid && height.length > 0 ? 'Ingresa una estatura válida.' : undefined}
                 keyboardType="decimal-pad"
                 {...numericInputProps}
+                icon="resize-outline"
                 label="Altura"
                 onChangeText={setHeight}
                 value={height}
@@ -261,7 +339,7 @@ export default function OnboardingScreen() {
         {step === 2 ? (
           <View style={{ gap: spacing.lg }}>
             <View style={{ gap: spacing.xs }}>
-              <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>Experiencia</Text>
+              <AppText strong variant="subhead">Experiencia</AppText>
               <View style={{ flexDirection: 'row', gap: spacing.xs }}>
                 {(['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as const).map((level) => (
                   <ToggleChip
@@ -276,12 +354,13 @@ export default function OnboardingScreen() {
             <Input
               keyboardType="number-pad"
               {...numericInputProps}
+              icon="calendar-outline"
               label="Días por semana"
               onChangeText={setFrequency}
               value={weeklyFrequency}
             />
             <View style={{ gap: spacing.xs }}>
-              <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>Lugar</Text>
+              <AppText strong variant="subhead">Lugar</AppText>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
                 {(['GYM', 'HOME', 'OUTDOORS', 'MIXED'] as const).map((location) => (
                   <ToggleChip
@@ -294,9 +373,9 @@ export default function OnboardingScreen() {
               </View>
             </View>
             <View style={{ gap: spacing.xs }}>
-              <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-                Cómo prefieres entrenar
-              </Text>
+              <AppText strong variant="subhead">
+                Algo que quieras añadir a tu objetivo (opcional)
+              </AppText>
               <ChoiceGroup
                 onToggle={(value) =>
                   setPreferences((current) =>
@@ -305,7 +384,7 @@ export default function OnboardingScreen() {
                       : [...current, value],
                   )
                 }
-                options={preferenceOptions}
+                options={preferenceOptions.filter((option) => option !== preferenceAlreadyAsked[goal])}
                 selected={preferences}
               />
             </View>
@@ -328,29 +407,48 @@ export default function OnboardingScreen() {
         ) : null}
 
         {step === 3 ? (
-          <ChoiceGroup
-            onToggle={(value) =>
-              setEquipment((current) =>
-                current.includes(value)
-                  ? current.filter((item) => item !== value)
-                  : [...current, value],
-              )
-            }
-            options={equipmentOptions}
-            selected={equipment}
-          />
+          trainingLocation === 'GYM' ? (
+            <View style={{ gap: spacing.sm }}>
+              <Text style={{ color: colors.text, fontSize: fontSizes.md }}>
+                Entrenas en un gimnasio. Tomaremos como disponibles el material habitual, incluido banco y peso corporal.
+              </Text>
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+                Cuando crees una rutina podrás cambiar cualquier ejercicio si tu sede no tiene algo concreto.
+              </Text>
+            </View>
+          ) : (
+            <View style={{ gap: spacing.md }}>
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+                Marca solo el material que tienes fuera del gimnasio. El peso corporal ya está incluido.
+              </Text>
+              <ChoiceGroup
+                onToggle={(value) =>
+                  setEquipment((current) => {
+                    if (current.includes(value)) return current.filter((item) => item !== value);
+                    return value === 'Máquinas' ? [...current, 'Máquinas', 'Banco'].filter((item, index, all) => all.indexOf(item) === index) : [...current, value];
+                  })
+                }
+                options={equipmentOptions.filter((option) => option !== 'Peso corporal')}
+                selected={equipment}
+              />
+            </View>
+          )
         ) : null}
 
         {step < 3 ? (
           <Button
             disabled={!stepValid || !consentGiven}
+            icon="arrow-forward"
+            iconPosition="end"
             label="Guardar y continuar"
             loading={save.isPending}
             onPress={() => save.mutate()}
           />
         ) : (
           <Button
-            label="Completar"
+            icon="arrow-forward"
+            iconPosition="end"
+            label={onboardingFinishCta}
             loading={save.isPending || complete.isPending}
             onPress={async () => {
               await save.mutateAsync();
@@ -360,6 +458,7 @@ export default function OnboardingScreen() {
         )}
         {step > 0 ? (
           <Button
+            icon="arrow-back"
             label="Atrás"
             onPress={() => setStep((current) => Math.max(0, current - 1))}
             variant="ghost"

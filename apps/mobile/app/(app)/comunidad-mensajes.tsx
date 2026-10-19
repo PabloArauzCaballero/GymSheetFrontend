@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { chatService, profileViewsService, socialService } from '@/api/services';
+import { refreshSocialRelationship } from '@/api/social-cache';
 import { BackLink } from '@/components/nav';
 import { Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { ChatConversationRow } from '@/components/chat-conversation-row';
@@ -127,13 +128,13 @@ function SolicitudesTab() {
     queryKey: ['social', 'connections', 'PENDING'],
     queryFn: () => socialService.listConnections('PENDING'),
   });
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['social', 'connections'] });
-
   const respond = useMutation({
     mutationFn: ({ id, action }: { id: string; action: 'ACCEPT' | 'REJECT' }) =>
       socialService.respondConnection(id, action),
-    onSuccess: async () => {
-      await invalidate();
+    onSuccess: async (_result, variables) => {
+      await refreshSocialRelationship(queryClient, {
+        conversations: variables.action === 'ACCEPT',
+      });
       notify.success('Solicitud actualizada.');
     },
     onError: (error: Error) => notify.error(error.message),
@@ -141,8 +142,8 @@ function SolicitudesTab() {
 
   const withdraw = useMutation({
     mutationFn: (id: string) => socialService.withdrawConnection(id),
-    onSuccess: async () => {
-      await invalidate();
+    onSuccess: async (_result, _connectionId) => {
+      await refreshSocialRelationship(queryClient);
       notify.success('Solicitud retirada.');
     },
     onError: (error: Error) => notify.error(error.message),
@@ -225,6 +226,7 @@ function SolicitudesTab() {
                     {connection.otherUserName}
                   </Text>
                   <Button
+                    icon="close-circle-outline"
                     label="Retirar"
                     loading={withdraw.isPending && withdraw.variables === connection.id}
                     onPress={() => withdraw.mutate(connection.id)}
@@ -258,11 +260,25 @@ function ConexionesTab() {
   const remove = useMutation({
     mutationFn: (id: string) => socialService.withdrawConnection(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['social', 'connections'] });
+      await Promise.all([
+        refreshSocialRelationship(queryClient),
+        queryClient.invalidateQueries({ queryKey: ['chat'] }),
+      ]);
       notify.success('Conexión eliminada.');
     },
     onError: (error: Error) => notify.error(error.message),
   });
+
+  async function disconnect(connectionId: string): Promise<void> {
+    const result = await confirm({
+      title: 'Desconectar',
+      message: 'Se cerrará el chat y dejarás de ver esta conexión. Si vuelven a conectar, el chat empezará vacío.',
+      severity: 'danger',
+      confirmLabel: 'Desconectar',
+      cancelLabel: 'Cancelar',
+    });
+    if (result.confirmed) remove.mutate(connectionId);
+  }
 
   if (connections.isPending) return <Skeleton height={150} />;
   if (connections.isError) {
@@ -306,16 +322,14 @@ function ConexionesTab() {
                 onPress={() => message.mutate(connection.otherUserId)}
                 tint={colors.text}
               />
-              {connection.direction === 'SENT' ? (
-                <IconButton
-                  accessibilityLabel="Eliminar conexión"
-                  background={colors.surfaceHigh}
-                  disabled={remove.isPending && remove.variables === connection.id}
-                  icon="person-remove-outline"
-                  onPress={() => remove.mutate(connection.id)}
-                  tint={colors.textMuted}
-                />
-              ) : null}
+              <IconButton
+                accessibilityLabel="Desconectar"
+                background={colors.surfaceHigh}
+                disabled={remove.isPending && remove.variables === connection.id}
+                icon="person-remove-outline"
+                onPress={() => void disconnect(connection.id)}
+                tint={colors.textMuted}
+              />
             </View>
           </View>
         </View>

@@ -1,5 +1,5 @@
 import { countUpDuration } from '@gymsheet/domain';
-import { useCallback, useEffect, useRef, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -32,7 +32,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
-import { radii } from '@/theme';
+import { colors, glideSpring, popSpring, pressSpring, radii, releaseSpring, settleSpring } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -66,7 +66,7 @@ export const DURATION = {
  * settles, it does not bounce. High damping plus low mass keeps it responsive
  * without wobble.
  */
-export const PRESS_SPRING = { damping: 26, stiffness: 340, mass: 0.5, overshootClamping: true } as const;
+export const PRESS_SPRING = pressSpring;
 
 /**
  * Para lo que se ASIENTA en un sitio —píldoras, anillos, hojas— en vez de
@@ -74,7 +74,9 @@ export const PRESS_SPRING = { damping: 26, stiffness: 340, mass: 0.5, overshootC
  * muelle de toda transición de posición, para que dos cosas que se mueven a la
  * vez en pantalla compartan el mismo carácter.
  */
-export const SETTLE_SPRING = { damping: 24, stiffness: 220, mass: 0.7, overshootClamping: true } as const;
+export const SETTLE_SPRING = settleSpring;
+
+const PRESS_RETENTION = { top: 16, bottom: 16, left: 16, right: 16 } as const;
 
 /** Micro-cascade delay; capped so the last row never waits on a queue. */
 const STAGGER_MS = 40;
@@ -108,6 +110,7 @@ export function PressableScale({
   children,
   onPress,
   onLongPress,
+  onTouchStart,
   disabled = false,
   accessibilityLabel,
   accessibilityHint,
@@ -120,8 +123,11 @@ export function PressableScale({
   testID,
 }: {
   children: ReactNode;
-  onPress: () => void;
+  /** Opcional: dentro de un `Link asChild` el toque lo pone el enlace. */
+  onPress?: () => void;
   onLongPress?: () => void;
+  /** Al contacto, antes de saber si es un toque: para adelantar trabajo (precargar el destino). */
+  onTouchStart?: () => void;
   disabled?: boolean;
   accessibilityLabel?: string;
   accessibilityHint?: string;
@@ -138,7 +144,7 @@ export function PressableScale({
 
   const animated = useAnimatedStyle(() => ({
     transform: [{ scale: reduceMotion ? 1 : 1 - pressed.value * (1 - scaleTo) }],
-    opacity: 1 - pressed.value * 0.12,
+    opacity: 1 - Math.max(0, pressed.value) * 0.12,
   }));
 
   return (
@@ -151,16 +157,21 @@ export function PressableScale({
       hitSlop={hitSlop}
       onLongPress={onLongPress}
       onPress={onPress}
+      // El dedo que deriva unos puntos no cancela un toque que la persona quiso dar.
+      pressRetentionOffset={PRESS_RETENTION}
       onPressIn={() => {
         pressed.value = withSpring(1, PRESS_SPRING);
+        onTouchStart?.();
         // A tick on contact. Fired on press-in, not on press-out, so the phone
         // answers the finger at the moment of touch rather than after the
         // action resolves — that delay is what reads as an unresponsive app.
         if (haptic !== 'none') HAPTICS[haptic]();
       }}
       onPressOut={() => {
-        // Release settles a touch slower than the press — follow-through.
-        pressed.value = withTiming(0, { duration: DURATION.quick, easing: PREMIUM_EASING });
+        // Al soltar vuelve con un rebote corto: el control devuelve el empujón.
+        pressed.value = reduceMotion
+          ? withTiming(0, { duration: DURATION.quick, easing: PREMIUM_EASING })
+          : withSpring(0, releaseSpring);
       }}
       style={[animated, style]}
       testID={testID}
@@ -277,11 +288,15 @@ export function SegmentedPill<T extends string>({
   itemStyle,
   renderItem,
   gap = 0,
+  fill = false,
 }: {
   options: readonly { value: T; accessibilityLabel?: string }[];
+  /** Las opciones se reparten el ancho a partes iguales (pestañas). */
+  fill?: boolean;
   value: T;
   onChange: (next: T) => void;
-  pillColor: string;
+  /** Relleno de la opción activa; por defecto el de los controles. */
+  pillColor?: string;
   /** El contenedor: fondo, borde, relleno. */
   style?: StyleProp<ViewStyle>;
   /** Cada opción: tamaño y alineación del contenido. */
@@ -311,10 +326,11 @@ export function SegmentedPill<T extends string>({
         placed.current = true;
         return;
       }
-      x.value = withSpring(layout.x, SETTLE_SPRING);
-      y.value = withSpring(layout.y, SETTLE_SPRING);
-      w.value = withSpring(layout.width, SETTLE_SPRING);
-      h.value = withSpring(layout.height, SETTLE_SPRING);
+      // «Glide» (C8.1): el indicador viaja sin rebote.
+      x.value = withSpring(layout.x, glideSpring);
+      y.value = withSpring(layout.y, glideSpring);
+      w.value = withSpring(layout.width, glideSpring);
+      h.value = withSpring(layout.height, glideSpring);
     },
     [h, reduceMotion, shown, w, x, y],
   );
@@ -336,13 +352,14 @@ export function SegmentedPill<T extends string>({
       <View style={{ flexDirection: 'row', gap }}>
         <Animated.View
           pointerEvents="none"
-          style={[{ position: 'absolute', borderRadius: radii.full, backgroundColor: pillColor }, pill]}
+          style={[{ position: 'absolute', borderRadius: radii.full, backgroundColor: pillColor ?? colors.surfaceHighest }, pill]}
         />
         {options.map((option) => {
           const active = option.value === value;
           return (
             <View
               key={option.value}
+              style={fill ? { flex: 1 } : undefined}
               onLayout={(event) => {
                 layouts.current.set(option.value, event.nativeEvent.layout);
                 if (option.value === value) moveTo(option.value);
@@ -388,7 +405,12 @@ export function SegmentLabel({
       easing: PREMIUM_EASING,
     }),
   }));
-  return <Animated.Text style={[style, animated]}>{label}</Animated.Text>;
+  // Una línea que se encoge antes que partir la palabra: «Recomendad/as» no se lee.
+  return (
+    <Animated.Text adjustsFontSizeToFit minimumFontScale={0.8} numberOfLines={1} style={[style, animated]}>
+      {label}
+    </Animated.Text>
+  );
 }
 
 /**
@@ -552,6 +574,9 @@ export function CountUpText({
 }) {
   const reduceMotion = useReduceMotion();
   const current = useSharedValue(reduceMotion ? value : from);
+  // Cuando la cuenta termina, la cifra final se pinta con un `Text` normal. La cuenta del hilo de UI no siempre
+  // llega a la pantalla (resumen bajo una celebración, filas fuera de la vista al montarse): se quedaba en «+0».
+  const [settled, setSettled] = useState(reduceMotion);
 
   useEffect(() => {
     const start = current.value;
@@ -559,8 +584,11 @@ export function CountUpText({
     if (reduceMotion || duration === 0) {
       cancelAnimation(current);
       current.value = value;
+      setSettled(true);
       return;
     }
+    setSettled(false);
+    const settle = setTimeout(() => setSettled(true), delayMs + duration + SETTLE_MARGIN_MS);
     current.value = withDelay(
       delayMs,
       withTiming(value, { duration, easing: Easing.out(Easing.cubic) }),
@@ -568,6 +596,7 @@ export function CountUpText({
     return () => {
       // Al desmontar o al cambiar de destino: la cuenta en curso se detiene
       // donde está y la siguiente arranca desde ahí.
+      clearTimeout(settle);
       cancelAnimation(current);
     };
   }, [current, delayMs, durationMs, reduceMotion, value]);
@@ -584,7 +613,7 @@ export function CountUpText({
       <Text
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
-        style={[textStyle, { opacity: 0 }]}
+        style={[textStyle, { opacity: settled ? 1 : 0 }]}
       >
         {finalText}
       </Text>
@@ -597,7 +626,7 @@ export function CountUpText({
         importantForAccessibility="no-hide-descendants"
         pointerEvents="none"
         scrollEnabled={false}
-        style={[textStyle, StyleSheet.absoluteFill, COUNTER_INPUT]}
+        style={[textStyle, StyleSheet.absoluteFill, COUNTER_INPUT, settled ? { opacity: 0 } : null]}
         underlineColorAndroid="transparent"
       />
     </View>
@@ -607,6 +636,9 @@ export function CountUpText({
 // Reanimated 4 ya anima `text` en un TextInput sin registrarlo antes: el
 // antiguo `addWhitelistedNativeProps` es un no-op desde esa versión.
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+
+/** Holgura tras la duración de la cuenta antes de fijar la cifra final. */
+const SETTLE_MARGIN_MS = 150;
 
 /** Dígitos de ancho fijo: la cifra no baila mientras cuenta. */
 const COUNTER_BASE: TextStyle = { fontVariant: ['tabular-nums'] };
@@ -640,4 +672,144 @@ export function formatThousandsEs(input: number): string {
     }
   }
   return rounded < 0 ? `-${out}` : out;
+}
+
+/**
+ * Un decimal que CUENTA hasta su valor («4,3» → «4,6»): la nota media cuando
+ * alguien valora. Misma técnica que `CountUpText` (texto escrito en el hilo de
+ * UI), con una cifra decimal y coma española. No cuenta al montarse: una nota
+ * que ya estaba ahí no es una novedad.
+ */
+export function AnimatedDecimal({ value, style }: { value: number; style?: StyleProp<TextStyle> }) {
+  const reduceMotion = useReduceMotion();
+  const current = useSharedValue(value);
+  const [settled, setSettled] = useState(true);
+  const previous = useRef(value);
+
+  useEffect(() => {
+    if (previous.current === value) return;
+    previous.current = value;
+    if (reduceMotion) {
+      current.value = value;
+      return;
+    }
+    setSettled(false);
+    const timer = setTimeout(() => setSettled(true), 700 + SETTLE_MARGIN_MS);
+    current.value = withTiming(value, { duration: 700, easing: Easing.out(Easing.cubic) });
+    return () => clearTimeout(timer);
+  }, [current, reduceMotion, value]);
+
+  const animatedProps = useAnimatedProps(() => ({ text: formatDecimalEs(current.value) }) as TextInputProps);
+  const finalText = formatDecimalEs(value);
+  const textStyle = [COUNTER_BASE, style];
+  return (
+    <View accessibilityLabel={finalText} accessibilityRole="text" accessible>
+      <Text style={[textStyle, { opacity: settled ? 1 : 0 }]}>{finalText}</Text>
+      <AnimatedTextInput
+        accessibilityElementsHidden
+        animatedProps={animatedProps}
+        caretHidden
+        defaultValue={finalText}
+        editable={false}
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        scrollEnabled={false}
+        style={[textStyle, StyleSheet.absoluteFill, COUNTER_INPUT, { textAlign: 'left' }, settled ? { opacity: 0 } : null]}
+        underlineColorAndroid="transparent"
+      />
+    </View>
+  );
+}
+
+/** «4,3»: una cifra decimal con coma, apto para worklets. */
+export function formatDecimalEs(input: number): string {
+  'worklet';
+  const tenths = Math.round(input * 10);
+  return `${Math.floor(tenths / 10)},${tenths % 10}`;
+}
+
+/**
+ * El golpe de un icono que acaba de cambiar por un toque (estrella, corazón):
+ * salta cuando `trigger` cambia, con un retardo opcional para encadenar una
+ * cascada. No salta al montarse. Con «Reducir movimiento», nada.
+ */
+export function Pop({
+  trigger,
+  delay = 0,
+  children,
+  style,
+}: {
+  trigger: string | number | boolean;
+  delay?: number;
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const reduceMotion = useReduceMotion();
+  const scale = useSharedValue(1);
+  const previous = useRef(trigger);
+  useEffect(() => {
+    if (previous.current === trigger) return;
+    previous.current = trigger;
+    if (reduceMotion) return;
+    scale.value = withDelay(
+      delay,
+      withSequence(withTiming(0.72, { duration: 70, easing: PREMIUM_EASING }), withSpring(1, popSpring)),
+    );
+  }, [delay, reduceMotion, scale, trigger]);
+  const animated = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return <Animated.View style={[style, animated]}>{children}</Animated.View>;
+}
+
+const BURST_RAYS = [0, 60, 120, 180, 240, 300] as const;
+
+/**
+ * Pequeño estallido alrededor de un «me gusta» recién dado: seis motas que
+ * salen del centro y se apagan. Se monta solo mientras dura (`active`) y no
+ * recibe toques. Con «Reducir movimiento» no se pinta.
+ */
+export function Burst({ active, color, radius = 16 }: { active: boolean; color: string; radius?: number }) {
+  const reduceMotion = useReduceMotion();
+  const progress = useSharedValue(0);
+  useEffect(() => {
+    if (!active || reduceMotion) return;
+    progress.value = 0;
+    progress.value = withTiming(1, { duration: 420, easing: Easing.out(Easing.cubic) });
+  }, [active, progress, reduceMotion]);
+  if (!active || reduceMotion) return null;
+  return (
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
+      {BURST_RAYS.map((angle) => (
+        <BurstDot angle={angle} color={color} key={angle} progress={progress} radius={radius} />
+      ))}
+    </View>
+  );
+}
+
+function BurstDot({
+  angle,
+  color,
+  progress,
+  radius,
+}: {
+  angle: number;
+  color: string;
+  progress: { value: number };
+  radius: number;
+}) {
+  const rad = (angle * Math.PI) / 180;
+  const dx = Math.cos(rad) * radius;
+  const dy = Math.sin(rad) * radius;
+  const animated = useAnimatedStyle(() => ({
+    opacity: 1 - progress.value,
+    transform: [
+      { translateX: dx * progress.value },
+      { translateY: dy * progress.value },
+      { scale: 1 - progress.value * 0.5 },
+    ],
+  }));
+  return (
+    <Animated.View
+      style={[{ position: 'absolute', width: 4, height: 4, borderRadius: radii.full, backgroundColor: color }, animated]}
+    />
+  );
 }

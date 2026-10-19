@@ -1,0 +1,71 @@
+yarn run v1.22.22
+$ turbo run lint
+• turbo 2.10.6
+
+   • Packages in scope: @gymsheet/api-client, @gymsheet/auth, @gymsheet/design-tokens, @gymsheet/domain, @gymsheet/hooks, @gymsheet/mobile, @gymsheet/notifications, @gymsheet/observability, @gymsheet/schemas, @gymsheet/tsconfig, @gymsheet/types, @gymsheet/web
+   • Running lint in 12 packages
+   • Remote caching disabled
+
+@gymsheet/domain:lint: cache hit, replaying logs 410a66ba07817d74
+@gymsheet/domain:lint: yarn run v1.22.22
+@gymsheet/domain:lint: $ eslint . --max-warnings 0
+@gymsheet/domain:lint: Done in 1.30s.
+@gymsheet/observability:lint: cache hit, replaying logs 6f586243cc7d18e2
+@gymsheet/design-tokens:lint: cache hit, replaying logs 3e26acd8f07f680f
+@gymsheet/notifications:lint: cache hit, replaying logs afa8e23d0c8b0506
+@gymsheet/observability:lint: yarn run v1.22.22
+@gymsheet/observability:lint: $ eslint . --max-warnings 0
+@gymsheet/observability:lint: Done in 4.67s.
+@gymsheet/design-tokens:lint: yarn run v1.22.22
+@gymsheet/notifications:lint: yarn run v1.22.22
+@gymsheet/notifications:lint: $ eslint . --max-warnings 0
+@gymsheet/notifications:lint: Done in 4.88s.
+@gymsheet/types:lint: cache hit, replaying logs 9701d5872d1056f3
+@gymsheet/api-client:lint: cache hit, replaying logs b615f174e5be3643
+@gymsheet/types:lint: yarn run v1.22.22
+@gymsheet/types:lint: $ eslint . --max-warnings 0
+@gymsheet/types:lint: Done in 0.89s.
+@gymsheet/design-tokens:lint: $ eslint . --max-warnings 0
+@gymsheet/design-tokens:lint: Done in 4.49s.
+@gymsheet/api-client:lint: yarn run v1.22.22
+@gymsheet/api-client:lint: $ eslint . --max-warnings 0
+@gymsheet/api-client:lint: Done in 4.90s.
+@gymsheet/web:lint: cache hit, replaying logs a1df8572d38e7d3a
+@gymsheet/web:lint: yarn run v1.22.22
+@gymsheet/web:lint: $ eslint .
+@gymsheet/web:lint: Done in 6.58s.
+@gymsheet/schemas:lint: cache hit, replaying logs 56843368f6f8d1bc
+@gymsheet/auth:lint: cache hit, replaying logs b121700571792e1f
+@gymsheet/auth:lint: yarn run v1.22.22
+@gymsheet/auth:lint: $ eslint . --max-warnings 0
+@gymsheet/auth:lint: Done in 4.28s.
+@gymsheet/schemas:lint: yarn run v1.22.22
+@gymsheet/schemas:lint: $ eslint . --max-warnings 0
+@gymsheet/schemas:lint: Done in 1.33s.
+@gymsheet/mobile:lint: cache hit, replaying logs 6fdfde99f8bde467
+@gymsheet/mobile:lint: yarn run v1.22.22
+@gymsheet/mobile:lint: $ expo lint
+@gymsheet/mobile:lint: env: load .env
+@gymsheet/mobile:lint: env: export EXPO_PUBLIC_API_URL EXPO_PUBLIC_ENVIRONMENT EXPO_PUBLIC_SENTRY_DSN
+@gymsheet/mobile:lint: $ '/Users/josejeremias/Desktop/Mantra Core Technologies/GymSheet/GymSheetFrontend/node_modules/.bin/eslint' '/Users/josejeremias/Desktop/Mantra Core Technologies/GymSheet/GymSheetFrontend/apps/mobile/src' '/Users/josejeremias/Desktop/Mantra Core Technologies/GymSheet/GymSheetFrontend/apps/mobile/app' --fix=false --cache=true '--cache-location=/Users/josejeremias/Desktop/Mantra Core Technologies/GymSheet/GymSheetFrontend/apps/mobile/.expo/cache/eslint/'
+@gymsheet/mobile:lint: 
+@gymsheet/mobile:lint: /Users/josejeremias/Desktop/Mantra Core Technologies/GymSheet/GymSheetFrontend/apps/mobile/app/(app)/trayectoria.tsx
+@gymsheet/mobile:lint:   180:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+@gymsheet/mobile:lint: 
+@gymsheet/mobile:lint: /Users/josejeremias/Desktop/Mantra Core Technologies/GymSheet/GymSheetFrontend/apps/mobile/src/components/celebration/stage.tsx
+@gymsheet/mobile:lint:   220:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+@gymsheet/mobile:lint: 
+@gymsheet/mobile:lint: ✖ 2 problems (0 errors, 2 warnings)
+@gymsheet/mobile:lint:   0 errors and 2 warnings potentially fixable with the `--fix` option.
+@gymsheet/mobile:lint: 
+@gymsheet/mobile:lint: Done in 1.94s.
+@gymsheet/hooks:lint: cache hit, replaying logs e95f8ec5f490c5cc
+@gymsheet/hooks:lint: yarn run v1.22.22
+@gymsheet/hooks:lint: $ eslint . --max-warnings 0
+@gymsheet/hooks:lint: Done in 4.59s.
+
+ Tasks:    11 successful, 11 total
+Cached:    11 cached, 11 total
+  Time:    12ms >>> FULL TURBO
+
+Done in 0.46s.

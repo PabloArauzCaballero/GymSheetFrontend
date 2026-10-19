@@ -85,6 +85,13 @@ export const env = {
   environment: (process.env.EXPO_PUBLIC_ENVIRONMENT ?? 'development') as Environment,
   sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN ?? null,
   /**
+   * Bandera `routinesV2` del plan Rutinas REPP (08 · banderas): enciende el
+   * asistente de creación por pasos. Apagada, la pantalla de «Nueva rutina»
+   * es la de siempre. Por defecto encendida en desarrollo y apagada en una
+   * compilación de producción, para poder activarla sin revertir nada.
+   */
+  routinesV2: (process.env.EXPO_PUBLIC_ROUTINES_V2 ?? (__DEV__ ? 'true' : 'false')) === 'true',
+  /**
    * Gimnasio al que pertenece esta compilación.
    *
    * En móvil la marca se fija al compilar y no por petición: cada gimnasio

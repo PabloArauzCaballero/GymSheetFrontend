@@ -1,7 +1,8 @@
 'use client';
 
+import { goalLabel, visibilityLabel } from '@/features/routines-v2/labels';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Play, Trash2, UserPlus } from 'lucide-react';
+import { Play, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { confirm, notify } from '@/shared/notifications';
@@ -17,12 +18,10 @@ import {
 } from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Button } from '@/shared/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogTrigger } from '@/shared/components/ui/dialog';
 import { Field } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
+import { AssignRoutineDialog } from './assign-routine-dialog';
 import { ScheduleRoutine } from './schedule-routine';
-
-const WEEKDAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
 export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: UserRole }>) {
   const staff = isStaff(role);
@@ -32,10 +31,6 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
   const refresh = () => queryClient.invalidateQueries({ queryKey: queryKeys.routine(id) });
 
   const [exName, setExName] = useState('');
-  const [assignOpen, setAssignOpen] = useState(false);
-  const [clientId, setClientId] = useState('');
-  const [scheduledFor, setScheduledFor] = useState('');
-  const [weekdays, setWeekdays] = useState<number[]>([]);
 
   const addExercise = useMutation({
     mutationFn: (order: number) =>
@@ -63,24 +58,6 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
     },
     onError: (error: Error) => notify.error(error),
   });
-  const assign = useMutation({
-    mutationFn: () =>
-      trainingService.assign(id, {
-        clienteUsuarioId: clientId.trim(),
-        fechaProgramada: scheduledFor || null,
-        diasSemana: weekdays,
-      }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.coachAssignments });
-      setAssignOpen(false);
-      setClientId('');
-      setScheduledFor('');
-      setWeekdays([]);
-      notify.success('Rutina asignada al cliente.');
-    },
-    onError: (error: Error) => notify.error(error),
-  });
-
   if (query.isLoading) {
     return (
       <SkeletonScreen className="gap-8" label="Cargando la rutina">
@@ -94,7 +71,6 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
 
   const routine = query.data;
   const nextOrder = Math.max(0, ...routine.ejercicios.map((item) => item.orden)) + 1;
-  const owner = routine.creadoPorUsuarioId;
 
   return (
     <div className="grid gap-8">
@@ -110,82 +86,11 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
               <Play className="size-4" />
               Empezar entreno
             </Button>
-            {staff ? (
-              <Dialog onOpenChange={setAssignOpen} open={assignOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="secondary">
-                    <UserPlus className="size-4" />
-                    Asignar a cliente
-                  </Button>
-                </DialogTrigger>
-                <DialogContent
-                  description="Asigna esta rutina a un cliente. Puedes programar una fecha y/o días de la semana."
-                  title="Asignar rutina"
-                >
-                  <div className="grid gap-5">
-                    <Field htmlFor="client-id" label="ID de usuario del cliente">
-                      <Input
-                        id="client-id"
-                        onChange={(event) => setClientId(event.target.value)}
-                        placeholder="UUID del cliente"
-                        value={clientId}
-                      />
-                    </Field>
-                    <Field htmlFor="scheduled-for" label="Fecha programada (opcional)">
-                      <Input
-                        id="scheduled-for"
-                        onChange={(event) => setScheduledFor(event.target.value)}
-                        type="date"
-                        value={scheduledFor}
-                      />
-                    </Field>
-                    <Field htmlFor="weekdays" label="Días de la semana (opcional)">
-                      <div className="flex flex-wrap gap-2" id="weekdays">
-                        {WEEKDAYS.map((label, day) => {
-                          const active = weekdays.includes(day);
-                          return (
-                            <button
-                              aria-pressed={active}
-                              className={`min-h-9 rounded-[6px] border px-3 text-sm ${active ? 'border-[var(--volt)] bg-[color-mix(in_srgb,var(--volt)_14%,transparent)] text-[var(--text)]' : 'border-[var(--border-subtle)] text-[var(--text-muted)]'}`}
-                              key={label}
-                              onClick={() =>
-                                setWeekdays((current) =>
-                                  current.includes(day)
-                                    ? current.filter((value) => value !== day)
-                                    : [...current, day],
-                                )
-                              }
-                              type="button"
-                            >
-                              {label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </Field>
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <DialogClose asChild>
-                        <Button type="button" variant="ghost">
-                          Cancelar
-                        </Button>
-                      </DialogClose>
-                      <Button
-                        disabled={clientId.trim().length < 10}
-                        loading={assign.isPending}
-                        onClick={() => assign.mutate()}
-                        variant="primary"
-                      >
-                        Asignar
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            ) : null}
+            {staff ? <AssignRoutineDialog routineId={id} /> : null}
           </div>
         }
         description={routine.descripcion ?? 'Sin descripción.'}
-        eyebrow={`${routine.visibilidad} · ${routine.objetivo ?? 'objetivo libre'}`}
+        eyebrow={`${visibilityLabel(routine.visibilidad)} · ${goalLabel(routine.objetivo ?? null)}`}
         title={routine.nombre}
       />
 
@@ -255,7 +160,6 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
         </form>
       </section>
 
-      <p className="break-all text-xs text-[var(--text-disabled)]">Rutina de {owner}</p>
     </div>
   );
 }

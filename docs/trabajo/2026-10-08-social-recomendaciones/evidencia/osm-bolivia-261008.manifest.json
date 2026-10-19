@@ -1,0 +1,26 @@
+{
+  "sourceUrl": "https://download.geofabrik.de/south-america/bolivia-261008.osm.pbf",
+  "snapshot": "261008",
+  "downloadedAtUtc": "2026-10-09T03:25:33.657604+00:00",
+  "inputBytes": 174099715,
+  "sha256": "744149680fea4a037c6a3f4eb60e31dc9f914493f35e3269bf89fcbb14847b34",
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "selectedTags": [
+    "amenity=gym",
+    "leisure=fitness_centre",
+    "leisure=sports_centre+sport=fitness",
+    "place=city|town|village"
+  ],
+  "counts": {
+    "CITY": 6746,
+    "GYM": 201
+  },
+  "bbox": {
+    "south": -22.8516999,
+    "west": -69.5672108,
+    "north": -9.6995988,
+    "east": -57.7096304
+  },
+  "records": 6947
+}

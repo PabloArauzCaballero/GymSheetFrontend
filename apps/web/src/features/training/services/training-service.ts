@@ -96,8 +96,12 @@ export const trainingService = {
       method: 'POST',
       body: input,
     }),
-  start: (routineId: string) =>
-    apiRequest<Workout>(`/routines/${routineId}/start`, workoutSchema, { method: 'POST' }),
+  /** Inicia una sesión desde la rutina; con `routineDayId` desde ese día, y sin él desde el de hoy. */
+  start: (routineId: string, routineDayId?: string) =>
+    apiRequest<Workout>(`/routines/${routineId}/start`, workoutSchema, {
+      method: 'POST',
+      ...(routineDayId ? { body: { routineDayId } } : {}),
+    }),
   myAssignments: () =>
     apiRequest<RoutineAssignment[]>('/routines/assignments/me', assignmentListSchema),
   coachAssignments: () =>

@@ -1,0 +1,65 @@
+{
+  "api": {
+    "actors": {},
+    "ready": false
+  },
+  "cases": [
+    {
+      "id": "H4.E1",
+      "reasons": [
+        "required driver H4.E1-A_ANDROID.py missing",
+        "required driver H4.E1-A_IOS.py missing",
+        "required driver H4.E1-A_WEB.py missing"
+      ],
+      "requiredRoles": [
+        "A_ANDROID",
+        "A_IOS",
+        "A_WEB"
+      ],
+      "verdict": "BLOCKED"
+    }
+  ],
+  "createdAt": "2026-10-13T21:37:18Z",
+  "devices": {
+    "android": {
+      "ready": false,
+      "serial": null
+    },
+    "ios": {
+      "booted": false,
+      "udid": null
+    }
+  },
+  "ports": {
+    "api": 3011,
+    "web": 3002
+  },
+  "repositories": {
+    "backend": {
+      "branch": "feat/biblioteca-ejercicios",
+      "dirty": false,
+      "present": true,
+      "sha": "c68e48f45de284697d95884b65fe0a398539c217"
+    },
+    "frontend": {
+      "branch": "docs/h10-export-and-decline-evidence",
+      "dirty": true,
+      "present": true,
+      "sha": "1bfbd4f5f56881b07a73bd9a85b4e9ccfc1241a8"
+    },
+    "recommendations": {
+      "branch": "main",
+      "dirty": true,
+      "present": true,
+      "sha": null
+    }
+  },
+  "runId": "84fce418-1f7f-4064-a05d-06976cf08829",
+  "schemaVersion": 1,
+  "secretsIncluded": false,
+  "versions": {
+    "node": "v24.19.0",
+    "python": "3.14.7",
+    "yarn": "1.22.22"
+  }
+}

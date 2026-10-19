@@ -1,4 +1,9 @@
-import type { Workout, WorkoutExercise } from '@gymsheet/types';
+import type { Workout, WorkoutExercise, WorkoutSet } from '@gymsheet/types';
+
+// Vive en el dominio compartido desde que la web también compara esta semana
+// con la anterior: dos copias del cálculo acabarían dando dos cifras distintas
+// para la misma persona según dónde abra el panel. Sólo importa tipos, para
+// que `node --test` lo cargue sin resolver el resto del paquete.
 
 // Vive en el dominio compartido desde que la web también compara esta semana
 // con la anterior: dos copias del cálculo acabarían dando dos cifras distintas
@@ -29,9 +34,38 @@ export function startOfWeek(date: Date): Date {
   return copy;
 }
 
-/** Load moved in one set, in kilograms. */
-function setVolume(weightKg: number, reps: number): number {
-  return weightKg * reps;
+/**
+ * Load moved in one set, in kilograms. Cardio sets carry no weight or reps
+ * (`null`), so they move no load: they contribute zero instead of `NaN`.
+ */
+function setVolume(weightKg: number | null, reps: number | null): number {
+  return weightKg == null || reps == null ? 0 : weightKg * reps;
+}
+
+/** A strength set is one with weight and reps; cardio sets are timed, not lifted. */
+export function isStrengthSet(
+  set: WorkoutSet,
+): set is WorkoutSet & { pesoKg: number; repeticiones: number } {
+  return set.tipoSerie !== 'CARDIO' && set.pesoKg != null && set.repeticiones != null;
+}
+
+/**
+ * A strength set logged by time (a 45 s plank): seconds, no reps. It never
+ * counts as volume, reps or a record, even with added weight.
+ */
+export function isTimedSet(set: WorkoutSet): set is WorkoutSet & { duracionSeg: number } {
+  return set.tipoSerie !== 'CARDIO' && set.repeticiones == null && set.duracionSeg != null;
+}
+
+/** Longest hold of a timed exercise (seconds), or `null` without timed sets. */
+export function longestTimedSet(exercise: WorkoutExercise): number | null {
+  const seconds = exercise.series.filter(isTimedSet).map((set) => set.duracionSeg);
+  return seconds.length > 0 ? Math.max(...seconds) : null;
+}
+
+/** Kilograms moved in one set. Zero for cardio, which never has weight or reps. */
+export function setVolumeKg(set: WorkoutSet): number {
+  return setVolume(set.pesoKg, set.repeticiones);
 }
 
 /**
@@ -82,14 +116,15 @@ function summarise(start: Date, workouts: readonly Workout[]): WeekSummary {
   let volumeKg = 0;
   for (const workout of workouts) {
     for (const exercise of workout.ejercicios) {
-      sets += exercise.series.length;
+      const strength = exercise.series.filter(isStrengthSet);
+      sets += strength.length;
       volumeKg += exercise.series.reduce(
         (sum, item) => sum + setVolume(item.pesoKg, item.repeticiones),
         0,
       );
       const muscle = muscleOf(exercise);
-      if (muscle && exercise.series.length > 0) {
-        muscles.set(muscle, (muscles.get(muscle) ?? 0) + exercise.series.length);
+      if (muscle && strength.length > 0) {
+        muscles.set(muscle, (muscles.get(muscle) ?? 0) + strength.length);
       }
     }
   }
@@ -200,13 +235,15 @@ export function previousPerformance(
   workouts: readonly Workout[],
   exerciseId: string,
   excludeWorkoutId: string,
+  /** Which sets make a session comparable; pass `isTimedSet` for a timed exercise. */
+  qualifies: (set: WorkoutSet) => boolean = isStrengthSet,
 ): { readonly workout: Workout; readonly exercise: WorkoutExercise } | null {
   const candidates = workouts
     .filter((workout) => workout.id !== excludeWorkoutId && workout.estado === 'FINALIZADA')
     .sort((a, b) => new Date(b.fechaInicio).getTime() - new Date(a.fechaInicio).getTime());
   for (const workout of candidates) {
     const exercise = workout.ejercicios.find(
-      (item) => item.ejercicio?.id === exerciseId && item.series.length > 0,
+      (item) => item.ejercicio?.id === exerciseId && item.series.some(qualifies),
     );
     if (exercise) return { workout, exercise };
   }
@@ -219,6 +256,7 @@ export function topSet(
 ): { readonly pesoKg: number; readonly repeticiones: number } | null {
   let best: { pesoKg: number; repeticiones: number } | null = null;
   for (const item of exercise.series) {
+    if (item.pesoKg == null || item.repeticiones == null) continue;
     if (!best || item.pesoKg > best.pesoKg) {
       best = { pesoKg: item.pesoKg, repeticiones: item.repeticiones };
     }

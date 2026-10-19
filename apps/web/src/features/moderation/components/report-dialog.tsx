@@ -4,18 +4,13 @@ import { useMutation } from '@tanstack/react-query';
 import { Flag } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogTrigger,
-} from '@/shared/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogTrigger } from '@/shared/components/ui/dialog';
 import { Field } from '@/shared/components/ui/field';
 import { Select } from '@/shared/components/ui/select';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { notify } from '@/shared/notifications';
 import {
-  moderationReasons,
+  reasonsFor,
   moderationService,
   REASON_LABEL,
   type ModerationReason,
@@ -39,15 +34,21 @@ export function ReportDialog({
   targetId,
   subjectName,
   trigger,
+  defaultReason,
+  successMessage,
+  consequence,
 }: Readonly<{
   targetKind: ModerationTargetKind;
   targetId: string;
   /** Sobre quién o qué va, para decirlo en el diálogo. */
   subjectName?: string;
   trigger?: React.ReactNode;
+  defaultReason?: ModerationReason;
+  successMessage?: string;
+  consequence?: string;
 }>) {
   const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState<ModerationReason>('ACOSO');
+  const [reason, setReason] = useState<ModerationReason>(defaultReason ?? 'ACOSO');
   const [details, setDetails] = useState('');
 
   const submit = useMutation({
@@ -64,7 +65,7 @@ export function ReportDialog({
       notify.success(
         result.contentHidden
           ? 'Gracias por avisar. Retiramos el contenido mientras lo revisamos.'
-          : 'Gracias por avisar. Lo revisaremos y dejará de aparecerte.',
+          : successMessage ?? 'Gracias por avisar. Lo revisaremos y dejará de aparecerte.',
       );
     },
     onError: (error: Error) => notify.error(error),
@@ -94,7 +95,7 @@ export function ReportDialog({
               onChange={(event) => setReason(event.target.value as ModerationReason)}
               value={reason}
             >
-              {moderationReasons.map((value) => (
+              {reasonsFor(targetKind).map((value) => (
                 <option key={value} value={value}>
                   {REASON_LABEL[value]}
                 </option>
@@ -113,8 +114,7 @@ export function ReportDialog({
           </Field>
 
           <p className="text-xs leading-5 text-[var(--text-muted)]">
-            Al enviarlo, esta persona deja de aparecerte y se deshace vuestra conexión.
-            Alguien del equipo lo revisará.
+            {consequence ?? 'Al enviarlo, el perfil o contenido deja de aparecerte. Si corresponde, se deshace la conexión. Alguien del equipo lo revisará.'}
           </p>
 
           <div className="flex justify-end gap-2">

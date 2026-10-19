@@ -1,5 +1,6 @@
 import {
   Activity,
+  Award,
   BarChart3,
   Bell,
   Building2,
@@ -7,6 +8,7 @@ import {
   ClipboardList,
   Dumbbell,
   Flame,
+  Film,
   Gauge,
   GraduationCap,
   IdCard,
@@ -56,6 +58,7 @@ export const primaryNavigation: NavigationItem[] = [
   { href: '/routines', label: 'Rutinas', icon: ClipboardList },
   { href: '/exercises', label: 'Ejercicios', icon: Dumbbell },
   { href: '/comunidad', label: 'Comunidad', icon: Users2 },
+  { href: '/reels', label: 'Reels', icon: Film },
   // La baraja es un destino y no una pestaña de Comunidad: se decide
   // arrastrando y ocupa el ancho entero. Va pegada a Comunidad porque se llega
   // desde allí con los filtros puestos, y aquí sin ellos.
@@ -65,6 +68,7 @@ export const primaryNavigation: NavigationItem[] = [
   // que enterrarla al final la volvería una notificación que nadie atiende.
   { href: '/interacciones', label: 'Interacciones', icon: Sparkles },
   { href: '/chat', label: 'Mensajes', icon: MessageCircle },
+  { href: '/entrenar-juntos', label: 'Entrenar juntos', icon: CalendarCheck },
   { href: '/membership', label: 'Membresía', icon: IdCard },
   { href: '/access', label: 'Acceso', icon: KeyRound },
   { href: '/notifications', label: 'Avisos', icon: Bell },
@@ -205,6 +209,21 @@ export const systemNavigation: NavigationItem[] = [
     icon: ScrollText,
     roles: ['SYSTEM_ADMIN'],
     description: 'Toda la actividad administrativa de la plataforma.',
+  },
+  {
+    href: '/sistema/moderacion',
+    label: 'Moderación global',
+    icon: ShieldAlert,
+    roles: ['SYSTEM_ADMIN'],
+    description: 'Rutinas, ejercicios y comentarios públicos denunciados, lo urgente primero.',
+    requiredPermission: 'moderation:read',
+  },
+  {
+    href: '/sistema/rutinas-repp',
+    label: 'Rutinas REPP',
+    icon: Award,
+    roles: ['SYSTEM_ADMIN'],
+    description: 'Catálogo oficial: crear, marcar y desmarcar rutinas recomendadas por REPP.',
   },
 ];
 

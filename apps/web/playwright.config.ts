@@ -29,6 +29,55 @@ function loadE2EEnvironment(): void {
 
 loadE2EEnvironment();
 
+/**
+ * Puerto del servidor de pruebas. 3002 por omisión; `E2E_PORT` lo cambia cuando
+ * ese puerto ya lo usa otro `next dev` (por ejemplo, otro worktree): con
+ * `reuseExistingServer` la suite acabaría probando el código de otro checkout.
+ */
+const port = Number(process.env.E2E_PORT ?? 3002);
+
+/*
+ * Evidencia de rutinas REPP (RF-B1..B3): los mismos specs en cuatro
+ * combinaciones, 390 y 1440 px de ancho por tema claro y oscuro. El tema lo fija
+ * la cookie que lee el script anti-FOUC, y el nombre del proyecto es la clave
+ * del juego de datos de cada combinación (ver `e2e/evidencia.ts`). Se corren con
+ * `--project=evidencia-390-claro` (y así) o con `--grep` sobre los specs.
+ */
+const evidenciaSpecs =
+  /(admin-moderation-routines|sistema-rutinas-repp|admin-support-training)\.spec\.ts$/u;
+
+const evidenciaProjects = (
+  [
+    ['390-claro', 390, 844, 'light'],
+    ['390-oscuro', 390, 844, 'dark'],
+    ['1440-claro', 1440, 900, 'light'],
+    ['1440-oscuro', 1440, 900, 'dark'],
+  ] as const
+).map(([combo, width, height, theme]) => ({
+  name: `evidencia-${combo}`,
+  testMatch: evidenciaSpecs,
+  use: {
+    viewport: { width, height },
+    colorScheme: theme,
+    reducedMotion: 'reduce' as const,
+    storageState: {
+      cookies: [
+        {
+          name: 'gymsheet-theme',
+          value: theme,
+          domain: 'localhost',
+          path: '/',
+          expires: -1,
+          httpOnly: false,
+          secure: false,
+          sameSite: 'Lax' as const,
+        },
+      ],
+      origins: [],
+    },
+  },
+}));
+
 /*
  * Requisito del backend que no es obvio hasta que la suite se atasca.
  *
@@ -73,7 +122,7 @@ export default defineConfig({
    */
   expect: { timeout: 15_000 },
   use: {
-    baseURL: 'http://localhost:3002',
+    baseURL: `http://localhost:${port}`,
     trace: 'on-first-retry',
   },
   webServer: {
@@ -87,12 +136,13 @@ export default defineConfig({
     //
     // `require.resolve` pregunta a Node dónde está de verdad, así que funciona
     // igual con el paquete elevado, sin elevar, o con un `nohoist` futuro.
-    command: `"${process.execPath}" "${require.resolve('next/dist/bin/next')}" dev --port 3002`,
-    url: 'http://localhost:3002',
+    command: `"${process.execPath}" "${require.resolve('next/dist/bin/next')}" dev --port ${port}`,
+    url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile', use: { ...devices['Pixel 7'] } },
+    { name: 'chromium', testIgnore: evidenciaSpecs, use: { ...devices['Desktop Chrome'] } },
+    { name: 'mobile', testIgnore: evidenciaSpecs, use: { ...devices['Pixel 7'] } },
+    ...evidenciaProjects,
   ],
 });

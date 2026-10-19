@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import { chatMessageSchema, readReceiptSettingsSchema, setDisappearingMessagesResponseSchema, setMessageReactionResponseSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema, musicPlaylistSchema, musicPlaylistPageSchema } from '@gymsheet/schemas';
+import type { RoutineVisibility } from '@gymsheet/types';
+import type { MusicVisibility, SocialMapBounds, SocialMapCoordinates } from '@gymsheet/schemas';
 import {
   activationRequestSchema,
   bodyMeasurementSchema,
@@ -17,6 +20,8 @@ import {
   onboardingSchema,
   profilePhotoSchema,
   exerciseMusclesSchema,
+  exerciseSearchPageSchema,
+  exerciseShortcutsSchema,
   exerciseTaxonomySchema,
   muscleCatalogEntrySchema,
   muscleEquipmentInferenceSchema,
@@ -24,6 +29,7 @@ import {
   pointRulesSchema,
   progressionAcknowledgedSchema,
   progressionSchema,
+  prizeListSchema,
   publicBranchSummarySchema,
   restDaysSchema,
   membershipProjectionSchema,
@@ -51,12 +57,21 @@ import {
   entityPlanSchema,
   entityPaymentConfigSchema,
   paymentOrderSchema,
+  restSettingsResultSchema,
+  skippedSetSchema,
+  workoutRoutineLinkSchema,
+  commentAttachmentSchema,
 } from '@gymsheet/schemas';
 import type {
   AddWorkoutExerciseInput,
+  CardioSetInput,
   FitnessGoal,
+  RestSettingChange,
+  SkipReason,
+  TimedWorkoutSetInput,
   TrainingGoal,
   WorkoutSetInput,
+  WorkoutSetUpdateInput,
 } from '@gymsheet/types';
 import type {
   ConnectionStatus,
@@ -65,8 +80,19 @@ import type {
   SocialStatusState,
   SwipeDirection,
 } from '@gymsheet/schemas';
-import type { UserGender } from '@gymsheet/types';
+import type { CommentAttachment, UserGender } from '@gymsheet/types';
+import {
+  createCardioServices,
+  createCatalogServices,
+  createRecommendationServices,
+  createCommunityServices,
+  createExerciseCommunityServices,
+  createProgramServices,
+  createRoutineServices,
+  createSharingServices,
+} from '@gymsheet/api-client';
 import { apiClient } from '@/api/client';
+import { appendLocalFile, type LocalFile } from '@/api/local-file-part';
 
 /** Endpoints that answer with a free-form object we do not need to model. */
 const looseObject = z.record(z.string(), z.unknown());
@@ -162,14 +188,9 @@ export const onboardingService = {
 /** Galería de fotos de perfil. No es la mediateca administrada por el gimnasio. */
 export const profilePhotosService = {
   list: () => apiClient.request('/me/photos', z.array(profilePhotoSchema), { method: 'GET' }),
-  upload: (file: { uri: string; name: string; mimeType: string }) => {
+  upload: async (file: LocalFile) => {
     const form = new FormData();
-    // RN's FormData expects this exact shape for a file part, not a Blob.
-    form.append('file', {
-      uri: file.uri,
-      name: file.name,
-      type: file.mimeType,
-    } as unknown as Blob);
+    await appendLocalFile(form, 'file', file);
     return apiClient.upload('/me/photos', profilePhotoSchema, form);
   },
   remove: (photoId: string) =>
@@ -215,8 +236,11 @@ export const workoutService = {
       body: { observacion: observacion ?? null },
     }),
   /** Starts a session pre-filled from a routine. */
-  startFromRoutine: (routineId: string) =>
-    apiClient.request(`/routines/${routineId}/start`, workoutSchema, { method: 'POST' }),
+  startFromRoutine: (routineId: string, routineDayId?: string) =>
+    apiClient.request(`/routines/${routineId}/start`, workoutSchema, {
+      method: 'POST',
+      ...(routineDayId ? { body: { routineDayId } } : {}),
+    }),
   finish: (id: string, location?: { latitude: number; longitude: number }) =>
     apiClient.request(`/workouts/${id}/finish`, workoutFinishSchema, {
       method: 'PATCH',
@@ -235,15 +259,37 @@ export const workoutService = {
       method: 'DELETE',
     }),
 
-  addSet: (sessionExerciseId: string, input: WorkoutSetInput) =>
+  addSet: (sessionExerciseId: string, input: WorkoutSetInput | TimedWorkoutSetInput | CardioSetInput) =>
     apiClient.request(`/workouts/session-exercises/${sessionExerciseId}/sets`, looseObject, {
       method: 'POST',
       body: input,
     }),
-  updateSet: (setId: string, input: Partial<WorkoutSetInput>) =>
+  updateSet: (setId: string, input: WorkoutSetUpdateInput) =>
     apiClient.request(`/workouts/sets/${setId}`, looseObject, { method: 'PATCH', body: input }),
   removeSet: (setId: string) =>
     apiClient.request(`/workouts/sets/${setId}`, deletedSchema, { method: 'DELETE' }),
+
+  /* D1 · series saltadas y ejercicios omitidos (contrato 11a §1). Idempotentes. */
+  skipSet: (sessionExerciseId: string, input: { numeroSerie: number; motivo: SkipReason; nota: string | null }) =>
+    apiClient.request(`/workouts/session-exercises/${sessionExerciseId}/skipped-sets`, skippedSetSchema, {
+      method: 'POST',
+      body: input,
+    }),
+  unskipSet: (skippedSetId: string) =>
+    apiClient.request(`/workouts/skipped-sets/${skippedSetId}`, deletedSchema, { method: 'DELETE' }),
+  omitExercise: (sessionExerciseId: string, input: { motivo: SkipReason; nota: string | null }) =>
+    apiClient.request(`/workouts/session-exercises/${sessionExerciseId}/omit`, looseObject, {
+      method: 'POST',
+      body: input,
+    }),
+  unomitExercise: (sessionExerciseId: string) =>
+    apiClient.request(`/workouts/session-exercises/${sessionExerciseId}/omit`, looseObject, { method: 'DELETE' }),
+
+  /* D2 · descanso e intervalo a mano (contrato 11a §2). */
+  routineLink: (id: string) =>
+    apiClient.request(`/workouts/${id}/routine-link`, workoutRoutineLinkSchema, { method: 'GET' }),
+  restSettings: (id: string, input: { cambios: RestSettingChange[]; guardarEnRutina: boolean }) =>
+    apiClient.request(`/workouts/${id}/rest-settings`, restSettingsResultSchema, { method: 'PATCH', body: input }),
 };
 
 export const routineService = {
@@ -267,7 +313,120 @@ export const routineService = {
       method: 'POST',
       body: input,
     }),
+
+publicList: (goal?: TrainingGoal, page = 1) =>
+    apiClient.request(`/routines?scope=public&pageSize=20&page=${page}${goal ? `&goal=${goal}` : ''}`, pageSchema(routineSchema), {
+      method: 'GET',
+    }),
+createComplete: (input: CompleteRoutineInput) =>
+    apiClient.request('/routines/complete', routineSchema, { method: 'POST', body: input }),
+replaceComplete: (id: string, input: CompleteRoutineInput) =>
+    apiClient.request(`/routines/${id}/complete`, routineSchema, { method: 'PUT', body: input }),
+update: (id: string, input: { visibilidad: RoutineVisibility }) =>
+    apiClient.request(`/routines/${id}`, routineSchema, { method: 'PATCH', body: input }),
+copy: (id: string, creationKey: string) =>
+    apiClient.request(`/routines/${id}/copy`, routineSchema, {
+      method: 'POST', body: { creationKey },
+    }),
+report: (id: string, reason: 'SPAM' | 'DISCURSO_DE_ODIO' | 'OTRO', details: string) =>
+    apiClient.request('/me/reports', z.object({ id: z.string().uuid(), status: z.string(), contentHidden: z.boolean() }), {
+      method: 'POST',
+      body: { targetKind: 'ROUTINE', targetId: id, reason, details },
+    }),
+recommend: (input: { objetivo: TrainingGoal; lugar: 'GYM' | 'HOME' | 'OUTDOORS'; minutos: number; publico: boolean }) =>
+    apiClient.request(`/routines/recommendations?objetivo=${input.objetivo}&lugar=${input.lugar}&minutos=${input.minutos}&publico=${input.publico}`, routineRecommendationSchema, {
+      method: 'GET',
+    }),
 };
+
+/** Rutinas por días: crear con `dias`, `PUT structure`, calendario y semanas. */
+export const routineBuilderService = createRoutineServices(apiClient.request);
+
+const catalogApi = createCatalogServices(apiClient.request);
+const sharingApi = createSharingServices(apiClient.request);
+const communityApi = createCommunityServices(apiClient.request);
+const programsApi = createProgramServices(apiClient.request);
+const cardioApi = createCardioServices(apiClient.request);
+
+/**
+ * Los servicios compartidos (`@gymsheet/api-client`) son los mismos que usa la web; aquí se agrupan
+ * con los nombres que las pantallas del móvil ya usan (catálogo y publicar, compartir, comunidad,
+ * programas y cardio).
+ */
+export const routineCatalogService = {
+  list: catalogApi.list,
+  publish: sharingApi.publish,
+  unpublish: sharingApi.unpublish,
+  copy: sharingApi.copy,
+  syncFromSource: sharingApi.syncFromSource,
+};
+
+/** Rutinas recomendadas según el objetivo y el onboarding (C7): `[{ rutina, motivo }]`. */
+export const routineRecommendationService = createRecommendationServices(apiClient.request);
+
+export const routineSharingService = {
+  invite: sharingApi.invite,
+  listShares: sharingApi.listShares,
+  revoke: sharingApi.revokeShare,
+  myInvitations: sharingApi.myInvitations,
+  accept: sharingApi.accept,
+  decline: sharingApi.decline,
+};
+
+export const communityService = {
+  ratingSummary: communityApi.rating,
+  rate: communityApi.rate,
+  removeRating: communityApi.removeRating,
+  comments: (
+    kind: Parameters<typeof communityApi.comments>[0],
+    id: string,
+    cursor?: string | null,
+    orden?: Parameters<typeof communityApi.comments>[3],
+  ) => communityApi.comments(kind, id, cursor ?? undefined, orden),
+  comment: (
+    kind: Parameters<typeof communityApi.comment>[0],
+    id: string,
+    texto: string,
+    respuestaA?: string | null,
+    adjunto?: CommentAttachment | null,
+  ) =>
+    communityApi.comment(kind, id, {
+      texto,
+      ...(respuestaA ? { respuestaA } : {}),
+      ...(adjunto ? { adjunto } : {}),
+    }),
+  createComment: (
+    kind: Parameters<typeof communityApi.comment>[0],
+    id: string,
+    input: { texto: string; respuestaA?: string | null; adjunto?: CommentAttachment | null },
+  ) =>
+    communityApi.comment(kind, id, {
+      texto: input.texto,
+      ...(input.respuestaA ? { respuestaA: input.respuestaA } : {}),
+      ...(input.adjunto ? { adjunto: input.adjunto } : {}),
+    }),
+  gifs: communityApi.gifs,
+  /** Sube la foto, video o archivo de un comentario; devuelve el adjunto para enviarlo. */
+  uploadAttachment: async (file: LocalFile) => {
+    const form = new FormData();
+    await appendLocalFile(form, 'file', file);
+    return apiClient.upload('/comments/media', commentAttachmentSchema, form, { timeoutMs: 120_000 });
+  },
+  deleteComment: communityApi.removeComment,
+  likeComment: communityApi.likeComment,
+  unlikeComment: communityApi.unlikeComment,
+  report: communityApi.report,
+};
+
+export const programService = {
+  ...programsApi,
+  cardioPlans: cardioApi.listPlans,
+  createCardioPlan: cardioApi.createPlan,
+  activateCardio: cardioApi.activate,
+};
+
+/** Me gusta (público) y favorito (privado) de un ejercicio. */
+export const exerciseCommunityService = createExerciseCommunityServices(apiClient.request);
 
 export interface RoutineScheduleInput {
   diasSemana: number[];
@@ -282,8 +441,15 @@ export interface ExerciseFilters {
   /** Server-side drill-down: the catalogue is far too large to filter locally. */
   bodyPart?: string;
   targetMuscle?: string;
+  /** Sólo los ejercicios que la persona marcó como favoritos (privado). */
+  favoritos?: boolean;
   page?: number;
   pageSize?: number;
+  /** Buscador tolerante (contrato 11a §3). */
+  orden?: 'relevancia' | 'nombre' | 'populares' | 'recientes' | 'masUsados';
+  equipo?: string;
+  musculo?: string;
+  conImagen?: boolean;
 }
 
 // El esquema de la taxonomía vive en @gymsheet/schemas: la web lo usa igual.
@@ -304,6 +470,19 @@ export const exerciseService = {
       pageSchema(exerciseSchema),
       { method: 'GET' },
     ),
+  /**
+   * Una página del buscador: resultados, corrección («¿Quisiste decir…?») y lo
+   * que el servidor entendió. `signal` cancela la petición de la tecla anterior.
+   */
+  search: (filters: ExerciseFilters, signal?: AbortSignal) =>
+    apiClient.request(
+      `/exercises?${queryString({ page: 1, pageSize: 30, ...filters })}`,
+      exerciseSearchPageSchema,
+      { method: 'GET', signal },
+    ),
+  /** Recientes, los que más usa la persona y populares: la pantalla vacía del buscador. */
+  shortcuts: (limit = 8) =>
+    apiClient.request(`/exercises/shortcuts?limit=${limit}`, exerciseShortcutsSchema, { method: 'GET' }),
   get: (id: string) => apiClient.request(`/exercises/${id}`, exerciseSchema, { method: 'GET' }),
   taxonomy: () =>
     apiClient.request('/exercises/taxonomy', exerciseTaxonomySchema, { method: 'GET' }),
@@ -362,6 +541,8 @@ export const progressionService = {
       leaderboardSchema,
       { method: 'GET' },
     ),
+  /** Los cupones del socio (= `progression.prizes`), del más reciente al más antiguo. */
+  prizes: () => apiClient.request('/me/progression/prizes', prizeListSchema, { method: 'GET' }),
   getRestDays: () =>
     apiClient.request('/me/progression/rest-days', restDaysSchema, { method: 'GET' }),
   setRestDays: (weekdays: number[]) =>
@@ -454,6 +635,42 @@ export const socialService = {
   /** Perfil social de un socio del mismo gimnasio, con las insignias que ganó. */
   memberProfile: (userId: string) =>
     apiClient.request(`/me/gym-directory/${userId}`, memberProfileSchema, { method: 'GET' }),
+
+blockUser: (targetUserId: string) =>
+    apiClient.request('/me/blocks', z.object({ blocked: z.literal(true) }), {
+      method: 'POST', body: { targetUserId },
+    }),
+unblockUser: (targetUserId: string) =>
+    apiClient.request(`/me/blocks/${targetUserId}`, z.object({ unblocked: z.literal(true) }), { method: 'DELETE' }),
+listBlockedUsers: () =>
+    apiClient.request('/me/blocks', z.array(z.object({ userId: z.string().uuid(), displayName: z.string(), blockedAt: z.string() })), { method: 'GET' }),
+getDiscoverySettings: () =>
+    apiClient.request('/me/social-discovery-settings', socialDiscoverySettingsSchema, { method: 'GET' }),
+updateDiscoverySettings: (input: {
+    profileEnabled: boolean; crossGymEnabled: boolean; mapEnabled: boolean; expectedVersion: number;
+  }) => apiClient.request('/me/social-discovery-settings', socialDiscoverySettingsSchema, { method: 'PATCH', body: input }),
+getDiscoveryPreferences: () => apiClient.request('/me/discovery/preferences', discoveryPreferencesSchema, { method: 'GET' }),
+updateDiscoveryPreferences: (input: {
+    genders: ('MALE' | 'FEMALE')[]; intents: ('TRAINING' | 'FRIENDSHIP' | 'DATING')[];
+    minAge: number; maxAge: number; radiusKm: number; flexibleAge: boolean;
+    flexibleDistance: boolean; expectedVersion: number;
+  }) => apiClient.request('/me/discovery/preferences', discoveryPreferencesSchema, { method: 'PUT', body: input }),
+saveMapLocation: (location: SocialMapCoordinates) =>
+    apiClient.request('/me/social-map/location', z.object({ saved: z.literal(true) }), { method: 'PATCH', body: location }),
+mapAreas: (bounds: SocialMapBounds) => {
+    const query = new URLSearchParams(Object.entries(bounds).map(([key, value]) => [key, String(value)]));
+    return apiClient.request(`/me/social-map/areas?${query.toString()}`, socialMapAreasSchema, { method: 'GET' });
+  },
+mapPeople: (cellId: string) =>
+    apiClient.request(`/me/social-map/cells/${encodeURIComponent(cellId)}/people`, socialMapPeopleSchema, { method: 'GET' }),
+mapNearby: (point: SocialMapCoordinates) =>
+    apiClient.request(`/me/social-map/nearby?latitude=${point.latitude}&longitude=${point.longitude}`, socialMapNearbySchema, { method: 'GET' }),
+mapGyms: (bounds: SocialMapBounds) => {
+    const query = new URLSearchParams(Object.entries(bounds).map(([key, value]) => [key, String(value)]));
+    return apiClient.request(`/me/social-map/gyms?${query.toString()}`, socialMapGymsSchema, { method: 'GET' });
+  },
+searchMapCities: (query: string) =>
+    apiClient.request(`/me/social-map/cities?q=${encodeURIComponent(query)}`, socialMapCitiesSchema, { method: 'GET' }),
 };
 
 /** Filtros del directorio. La baraja acepta los mismos: es el mismo catálogo. */
@@ -481,14 +698,20 @@ export const discoveryService = {
       { method: 'GET' },
     ),
   /** «Me gusta» mutuo = match automático: la respuesta llega con `matched: true`. */
-  swipe: (targetId: string, direction: SwipeDirection) =>
+  swipe: (targetId: string, direction: SwipeDirection, impressionId?: string) =>
     apiClient.request('/me/discovery/swipes', swipeResultSchema, {
       method: 'POST',
-      body: { targetId, direction },
+      body: { targetId, direction, impressionId },
     }),
   /** Deshace el último swipe. Responde 409 si el match ya tiene mensajes. */
   undoSwipe: () =>
     apiClient.request('/me/discovery/swipes/undo', undoSwipeResultSchema, { method: 'POST' }),
+
+observeImpression: (impressionId: string) =>
+    apiClient.request('/me/discovery/impressions', z.object({ observed: z.literal(true) }), {
+      method: 'POST',
+      body: { impressionId },
+    }),
 };
 
 /** Sedes. El directorio público lista TODAS las marcas; `myBranches` sólo las del gimnasio propio. */
@@ -522,34 +745,65 @@ export const chatService = {
       method: 'POST',
       body: { otherUserId },
     }),
-  listMessages: (conversationId: string, params: { limit?: number; before?: string } = {}) =>
+  listMessages: (conversationId: string, params: { limit?: number; before?: string; beforeId?: string } = {}) =>
     apiClient.request(
       `/me/conversations/${conversationId}/messages?${socialQueryString(params)}`,
       z.array(messageSchema),
       { method: 'GET' },
     ),
-  sendMessage: (conversationId: string, body: string) =>
+  /** `replyToId`: el mensaje que se cita al responder (deslizar la burbuja a la derecha). */
+  sendMessage: (conversationId: string, body: string, replyToId?: string) =>
     apiClient.request(`/me/conversations/${conversationId}/messages`, messageSchema, {
       method: 'POST',
-      body: { type: 'text', body },
+      body: { type: 'text', body, ...(replyToId ? { replyToId } : {}) },
     }),
-  sendLocationMessage: (conversationId: string, location: { lat: number; lng: number }) =>
+  /** `label` es el nombre del lugar elegido en el mapa; sin él, es «mi ubicación actual». */
+  sendLocationMessage: (
+    conversationId: string,
+    location: { lat: number; lng: number; label?: string },
+    replyToId?: string,
+  ) =>
     apiClient.request(`/me/conversations/${conversationId}/messages`, messageSchema, {
       method: 'POST',
-      body: { type: 'location', locationLat: location.lat, locationLng: location.lng },
+      body: {
+        type: 'location',
+        locationLat: location.lat,
+        locationLng: location.lng,
+        ...(location.label ? { locationLabel: location.label } : {}),
+        ...(replyToId ? { replyToId } : {}),
+      },
+    }),
+  /** Una reacción por persona y mensaje; `null` la quita. Devuelve las reacciones vigentes del mensaje. */
+  setReaction: (conversationId: string, messageId: string, emoji: string | null) =>
+    apiClient.request(
+      `/me/conversations/${conversationId}/messages/${messageId}/reaction`,
+      setMessageReactionResponseSchema,
+      { method: 'PUT', body: { emoji } },
+    ),
+  /** Reenvía un mensaje de otra conversación a esta; el servidor copia el archivo si lo hay. */
+  forwardMessage: (conversationId: string, fromConversationId: string, messageId: string) =>
+    apiClient.request(`/me/conversations/${conversationId}/messages/forward`, messageSchema, {
+      method: 'POST',
+      body: { fromConversationId, messageId },
+    }),
+  /** Mensajes temporales de la conversación: `null` los desactiva; si no, 24 h, 7 días o 90 días en segundos. */
+  setDisappearing: (conversationId: string, seconds: number | null) =>
+    apiClient.request(`/me/conversations/${conversationId}/disappearing`, setDisappearingMessagesResponseSchema, {
+      method: 'PUT',
+      body: { seconds },
     }),
   /** `file.mimeType` decide si el backend lo trata como imagen o video. */
-  sendMediaMessage: (
+  sendMediaMessage: async (
     conversationId: string,
-    file: { uri: string; name: string; mimeType: string },
-    options: { type: 'image' | 'video'; body?: string; viewOnce?: boolean },
+    file: LocalFile,
+    options: { type: 'image' | 'video' | 'audio'; body?: string; viewOnce?: boolean; replyToId?: string },
   ) => {
     const form = new FormData();
-    // RN's FormData expects this exact shape for a file part, not a Blob.
-    form.append('file', { uri: file.uri, name: file.name, type: file.mimeType } as unknown as Blob);
+    await appendLocalFile(form, 'file', file);
     form.append('type', options.type);
     if (options.body) form.append('body', options.body);
     form.append('viewOnce', options.viewOnce ? 'true' : 'false');
+    if (options.replyToId) form.append('replyToId', options.replyToId);
     return apiClient.upload(`/me/conversations/${conversationId}/messages/media`, messageSchema, form);
   },
   /** Revela la URL real de un mensaje de vista única — una sola vez por mensaje, para quien sea. */
@@ -573,14 +827,47 @@ export const chatService = {
   // el gateway, igual en ambas plataformas.
   issueSocketTicket: () =>
     apiClient.request('/auth/socket-ticket', socketTicketSchema, { method: 'POST' }),
+
+  /** «Eliminar para mí» oculta el mensaje solo en mi vista; «para todos» lo borra del hilo (60 h). */
+  deleteMessage: (conversationId: string, messageId: string, scope: 'ME' | 'EVERYONE') =>
+    apiClient.request(
+      `/me/conversations/${conversationId}/messages/${messageId}?scope=${scope}`,
+      z.object({ scope: z.enum(['ME', 'EVERYONE']) }).passthrough(),
+      { method: 'DELETE' },
+    ),
+  editMessage: (conversationId: string, messageId: string, body: string) =>
+    apiClient.request(`/me/conversations/${conversationId}/messages/${messageId}`, chatMessageSchema, {
+      method: 'PATCH',
+      body: { body },
+    }),
+getReadReceiptSettings: (conversationId?: string) =>
+    apiClient.request(
+      `/me/chat/read-receipts${conversationId ? `?conversationId=${encodeURIComponent(conversationId)}` : ''}`,
+      readReceiptSettingsSchema,
+      { method: 'GET' },
+    ),
+updateReadReceiptSettings: (input: {
+    scope: 'ALL' | 'CONVERSATION' | 'SELECTED'; enabled: boolean; expectedVersion: number;
+    conversationId?: string; conversationIds?: string[];
+  }) => apiClient.request('/me/chat/read-receipts', readReceiptSettingsSchema, { method: 'PUT', body: input }),
 };
 
 /** Stories efímeras (24h), visibles a todo el tenant — independientes de la galería de fotos. */
 export const storiesService = {
   feed: () => apiClient.request('/me/stories/feed', z.array(storyFeedEntrySchema), { method: 'GET' }),
-  upload: (file: { uri: string; name: string; mimeType: string }) => {
+  upload: async (
+    file: LocalFile,
+    audience?: { mode: 'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS'; recipientIds: string[]; requestId?: string },
+    caption?: string | null,
+  ) => {
     const form = new FormData();
-    form.append('file', { uri: file.uri, name: file.name, type: file.mimeType } as unknown as Blob);
+    await appendLocalFile(form, 'file', file);
+    if (caption) form.append('caption', caption);
+    if (audience) {
+      form.append('audienceMode', audience.mode);
+      form.append('recipientIds', JSON.stringify(audience.recipientIds));
+      if (audience.requestId) form.append('requestId', audience.requestId);
+    }
     return apiClient.upload('/me/stories', storySchema, form);
   },
   view: (storyId: string) =>
@@ -589,6 +876,17 @@ export const storiesService = {
   viewers: (storyId: string) =>
     apiClient.request(`/me/stories/${storyId}/viewers`, storyViewersResponseSchema, { method: 'GET' }),
   remove: (storyId: string) => apiClient.request(`/me/stories/${storyId}`, deletedSchema, { method: 'DELETE' }),
+  /** Reacción rápida: el backend la entrega en el chat como un mensaje con el emoji. */
+  react: (storyId: string, emoji: string, requestId: string) =>
+    apiClient.request(`/me/stories/${storyId}/reactions`, chatMessageSchema, {
+      method: 'POST',
+      body: { emoji, requestId },
+    }),
+  reply: (storyId: string, text: string, requestId: string) =>
+    apiClient.request(`/me/stories/${storyId}/replies`, chatMessageSchema, {
+      method: 'POST',
+      body: { text, requestId },
+    }),
 };
 
 /** "Quién visitó tu perfil hoy" — registro de vistas append-only, resumen agregado por día. */
@@ -767,45 +1065,7 @@ export const directoryService = {
     ),
 };
 
-export const commentItemSchema: z.ZodType<any> = z.lazy(() =>
-  z.object({
-    id: z.string().uuid(),
-    autor: z.object({
-      id: z.string().uuid(),
-      nombre: z.string(),
-    }),
-    texto: z.string(),
-    respuestaA: z.string().uuid().nullable().optional(),
-    creadoEn: z.union([z.string(), z.date()]),
-    esMio: z.boolean().optional().default(false),
-    respuestas: z.array(z.lazy(() => commentItemSchema)).optional().default([]),
-  })
-);
 
-export const commentListResponseSchema = z.object({
-  items: z.array(commentItemSchema),
-  siguienteCursor: z.string().nullable().optional(),
-});
-
-export const communityService = {
-  comments: (kind: string, targetId: string) =>
-    apiClient.request(`/comments/${kind}/${targetId}`, commentListResponseSchema),
-
-  createComment: (
-    kind: string,
-    targetId: string,
-    input: { texto: string; respuestaA?: string | null }
-  ) =>
-    apiClient.request(`/comments/${kind}/${targetId}`, commentItemSchema, {
-      method: 'POST',
-      body: input,
-    }),
-
-  deleteComment: (commentId: string) =>
-    apiClient.request(`/comments/${commentId}`, z.object({ deleted: z.boolean() }), {
-      method: 'DELETE',
-    }),
-};
 
 export const directoryPaymentsService = {
   listPlans: (entityId: string) =>
@@ -857,4 +1117,56 @@ export const directoryPaymentsService = {
     apiClient.request(`/directory/payments/orders/${id}`, paymentOrderSchema),
 };
 
+/** Música para entrenar: enlaces a Spotify de la comunidad (públicas) o tuyos (privadas). */
+export const musicService = {
+  list: (scope: 'public' | 'private', cursor?: string | null, limit = 20) =>
+    apiClient.request(
+      `/music/playlists?${new URLSearchParams({ scope, limit: String(limit), ...(cursor ? { cursor } : {}) })}`,
+      musicPlaylistPageSchema,
+      { method: 'GET' },
+    ),
+  create: (input: { url: string; visibilidad: MusicVisibility; titulo?: string }) =>
+    apiClient.request('/music/playlists', musicPlaylistSchema, { method: 'POST', body: input }),
+  update: (id: string, input: { visibilidad?: MusicVisibility; titulo?: string }) =>
+    apiClient.request(`/music/playlists/${id}`, musicPlaylistSchema, { method: 'PATCH', body: input }),
+  remove: (id: string) => apiClient.request(`/music/playlists/${id}`, deletedSchema, { method: 'DELETE' }),
+};
 
+export const moderationService = {
+  report: (targetKind: 'USER' | 'CHAT_MESSAGE', targetId: string, reason: ModerationReportReason) =>
+    apiClient.request('/me/reports', moderationReportResultSchema, {
+      method: 'POST',
+      body: { targetKind, targetId, reason },
+    }),
+};
+
+export type ModerationReportReason =
+  | 'ACOSO'
+  | 'PERFIL_FALSO'
+  | 'SPAM'
+  | 'OTRO';
+
+const moderationReportResultSchema = z.object({
+  id: z.string().uuid(),
+  status: z.string(),
+  contentHidden: z.boolean(),
+});
+
+type CompleteRoutineInput = {
+  nombre: string;
+  descripcion: string | null;
+  visibilidad: RoutineVisibility;
+  objetivo: TrainingGoal;
+  creationKey: string;
+  ejercicios: Array<{
+    ejercicioId: string;
+    orden: number;
+    seriesObjetivo: number;
+    repsMin: number | null;
+    repsMax: number | null;
+    pesoObjetivoKg: number | null;
+    descansoSeg: number | null;
+    rirObjetivo: number | null;
+    nota: string | null;
+  }>;
+};

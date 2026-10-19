@@ -1,17 +1,28 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   useChatSocket,
-  type PresenceUpdate,
+  type MessageDeletedEvent,
   type ReceiptUpdate,
 } from '@/features/chat/hooks/use-chat-socket';
 import { chatService } from '@/features/chat/services/chat-service';
 import { dedupeById, mergeMessages } from '@/features/chat/lib/merge-messages';
+import { applyMessageUpdated } from '@/features/chat/lib/message-edit';
+import { useChatMessageMutations } from '@/features/chat/hooks/use-chat-message-mutations';
+import { useResumeValidation } from '@/features/chat/hooks/use-resume-validation';
+import { useMarkRead } from '@/features/chat/hooks/use-mark-read';
+import { useChatPresence } from '@/features/chat/hooks/use-chat-presence';
+import { useChatRoom } from '@/features/chat/hooks/use-chat-room';
 import { useChatSend } from '@/features/chat/hooks/use-chat-send';
+import { receiptCursors } from '@/features/chat/lib/receipt-cursors';
+import { applyMessageDeleted } from '@/features/chat/lib/apply-message-deleted';
+import { asDeletedMessage } from '@/features/chat/lib/as-deleted-message';
+import { applyReceiptUpdate, type LiveReceiptState } from '@/features/chat/lib/apply-receipt-update';
 import type { Message } from '@/shared/api/schemas';
 import { queryKeys } from '@/shared/api/query-keys';
+import { ApiError } from '@/shared/api/api-error';
 import { notify } from '@/shared/notifications';
 
 /** Mensajes por página. El backend admite hasta 100 y devuelve los más recientes. */
@@ -37,18 +48,23 @@ export function useChatThread({
   socketOrigin: string;
 }) {
   const queryClient = useQueryClient();
-  /** A qué conversación se unió el socket **actual**; se limpia al caerse. */
-  const joinedRef = useRef<string | null>(null);
-  /** Hubo una caída: al reconectar hay que recuperar lo que el socket no vio. */
-  const reconnectedRef = useRef(false);
-  const markedReadRef = useRef<string | null>(null);
+  const resumeValidation = useResumeValidation(conversationId, queryClient);
 
   const [liveMessages, setLiveMessages] = useState<Message[]>([]);
   const [olderMessages, setOlderMessages] = useState<Message[]>([]);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [reachedStart, setReachedStart] = useState(false);
-  const [livePresence, setLivePresence] = useState<PresenceUpdate | null>(null);
-  const [liveReceipt, setLiveReceipt] = useState<ReceiptUpdate | null>(null);
+  const [liveReceiptState, setLiveReceiptState] = useState<LiveReceiptState>(null);
+  /** Consent barriers are scoped to each conversation and live until an explicit post-change REST request succeeds. */
+  const receiptBarriersRef = useRef(new Map<string, number>());
+  const receiptBarrierSequenceRef = useRef(0);
+  const [conversationRevoked, setConversationRevoked] = useState(false);
+  const [historyUnavailableFor, setHistoryUnavailableFor] = useState<string | null>(null);
+  /** Tombstones persist for this mounted thread so stale sources cannot restore a deleted payload. */
+  const deletedEventsRef = useRef(new Map<string, MessageDeletedEvent>());
+  const [deletedEvents, setDeletedEvents] = useState<Map<string, MessageDeletedEvent>>(
+    () => new Map(),
+  );
   // Vista única: la URL real sólo llega una vez del backend, así que se guarda
   // aquí para poder seguir mostrándola durante esta sesión de pantalla.
   const [revealedMedia, setRevealedMedia] = useState<Record<string, string>>({});
@@ -57,6 +73,21 @@ export function useChatThread({
     queryKey: queryKeys.messages(conversationId),
     queryFn: () => chatService.listMessages(conversationId, { limit: PAGE_SIZE }),
   });
+  const historyNotFound = history.error instanceof ApiError && history.error.status === 404;
+  if (historyNotFound && historyUnavailableFor !== conversationId) {
+    setHistoryUnavailableFor(conversationId);
+    setLiveMessages([]);
+    setOlderMessages([]);
+    setRevealedMedia({});
+  }
+  const historyUnavailable = historyUnavailableFor === conversationId;
+  const isValidatingHistory = resumeValidation?.conversationId === conversationId;
+  const conversationUnavailable = conversationRevoked || historyUnavailable || historyNotFound;
+
+  useEffect(() => {
+    if (!historyNotFound) return;
+    queryClient.setQueryData(queryKeys.messages(conversationId), []);
+  }, [conversationId, historyNotFound, queryClient]);
   // El historial no trae el nombre ni la foto de la otra persona: salen de la
   // lista de conversaciones, ya en caché si se llegó navegando desde /chat.
   const conversations = useQuery({
@@ -67,31 +98,78 @@ export function useChatThread({
     (item) => item.conversationId === conversationId,
   );
   const otherUserId = conversation?.otherUserId;
+  const liveReceipt =
+    liveReceiptState?.conversationId === conversationId ? liveReceiptState.receipt : null;
 
   const onMessage = useCallback(
     (incoming: Message) => {
       if (incoming.conversationId !== conversationId) return;
-      setLiveMessages((current) => mergeMessages(current, incoming));
+      const deletedEvent = deletedEventsRef.current.get(incoming.id);
+      setLiveMessages((current) => mergeMessages(
+        current,
+        deletedEvent ? asDeletedMessage(incoming, deletedEvent.deletedAt) : incoming,
+      ));
     },
     [conversationId],
   );
-  const onPresence = useCallback(
-    (presence: PresenceUpdate) => {
-      if (presence.userId !== otherUserId) return;
-      setLivePresence(presence);
+  const onMessageDeleted = useCallback(
+    (event: MessageDeletedEvent) =>
+      applyMessageDeleted(event, {
+        conversationId,
+        queryClient,
+        deletedEventsRef,
+        setDeletedEvents,
+        setLiveMessages,
+        setOlderMessages,
+        setRevealedMedia,
+      }),
+    [conversationId, queryClient],
+  );
+  const onMessageUpdated = useCallback(
+    async (updated: Message) => {
+      if (
+        updated.conversationId !== conversationId ||
+        conversationUnavailable ||
+        deletedEventsRef.current.has(updated.id)
+      ) return;
+      await queryClient.cancelQueries({ queryKey: queryKeys.messages(conversationId), exact: true });
+      setLiveMessages((current) => applyMessageUpdated(current, updated, conversationId));
+      setOlderMessages((current) => applyMessageUpdated(current, updated, conversationId));
+      queryClient.setQueryData<Message[] | undefined>(
+        queryKeys.messages(conversationId),
+        (current) => current ? applyMessageUpdated(current, updated, conversationId) : current,
+      );
     },
-    [otherUserId],
+    [conversationId, conversationUnavailable, queryClient],
+  );
+  const isMessageDeleted = useCallback(
+    (messageId: string) => deletedEventsRef.current.has(messageId),
+    [],
+  );
+  const { onPresence, matchingPresence } = useChatPresence(otherUserId);
+  const receiptContext = useMemo(
+    () => ({
+      conversationId,
+      queryClient,
+      receiptBarriersRef,
+      receiptBarrierSequenceRef,
+      setConversationRevoked,
+      setLiveMessages,
+      setOlderMessages,
+      setRevealedMedia,
+      setLiveReceiptState,
+    }),
+    [conversationId, queryClient],
   );
   const onReceipt = useCallback(
-    (receipt: ReceiptUpdate) => {
-      if (receipt.userId !== otherUserId) return;
-      setLiveReceipt(receipt);
-    },
-    [otherUserId],
+    (receipt: ReceiptUpdate) => applyReceiptUpdate(receipt, otherUserId, receiptContext),
+    [otherUserId, receiptContext],
   );
 
-  const { connectionState, joinConversation, sendMessage } = useChatSocket(socketOrigin, {
+  const { connectionState, joinConversation, leaveConversation, sendMessage } = useChatSocket(socketOrigin, {
     onMessage,
+    onMessageUpdated,
+    onMessageDeleted,
     onPresence,
     onReceipt,
   });
@@ -116,59 +194,43 @@ export function useChatThread({
     setThreadIdentity(conversationId);
     setLiveMessages([]);
     setOlderMessages([]);
+    setConversationRevoked(false);
     setReachedStart(false);
     setRevealedMedia({});
   }
 
-  // Reconectar crea un socket nuevo que no pertenece a ninguna sala: sin
-  // re-emitir `conversation:join` el hilo queda mudo para siempre.
-  useEffect(() => {
-    if (connectionState === 'disconnected') {
-      joinedRef.current = null;
-      reconnectedRef.current = true;
-      return;
-    }
-    if (connectionState !== 'connected') return;
-    if (joinedRef.current === conversationId) return;
-    joinedRef.current = conversationId;
-    void joinConversation(conversationId);
-    // Mientras el socket estuvo caído pudieron llegar mensajes que nadie vio;
-    // el historial es la única forma de recuperarlos.
-    if (reconnectedRef.current) {
-      reconnectedRef.current = false;
-      void queryClient.invalidateQueries({ queryKey: queryKeys.messages(conversationId) });
-    }
-  }, [connectionState, conversationId, joinConversation, queryClient]);
+  useChatRoom({
+    connectionState,
+    conversationId,
+    joinConversation,
+    leaveConversation,
+    queryClient,
+  });
 
   const messages = useMemo(
-    () => dedupeById([olderMessages, history.data ?? [], liveMessages]),
-    [history.data, liveMessages, olderMessages],
+    () => conversationUnavailable || isValidatingHistory ? [] :
+      dedupeById([olderMessages, history.data ?? [], liveMessages]).map((message) =>
+        deletedEvents.has(message.id) ? asDeletedMessage(message) : message,
+      ),
+    [conversationUnavailable, deletedEvents, history.data, isValidatingHistory, liveMessages, olderMessages],
   );
   const latestMessageId = messages.at(-1)?.id;
 
-  // Abrir la conversación (o recibir un mensaje mientras está abierta) es
-  // haberla leído — se re-marca por cada mensaje nuevo, no sólo al montar. La
-  // clave es el último mensaje y no el total, para que cargar páginas
-  // anteriores no dispare marcados que no corresponden.
-  useEffect(() => {
-    if (!latestMessageId) return;
-    const key = `${conversationId}:${latestMessageId}`;
-    if (markedReadRef.current === key) return;
-    markedReadRef.current = key;
-    void chatService.markRead(conversationId).catch(() => undefined);
-  }, [conversationId, latestMessageId]);
+  useMarkRead(conversationId, latestMessageId);
 
   // Una primera página corta ya es todo el hilo: no hay nada anterior que pedir.
   const hasMoreOlder = !reachedStart && (history.data?.length ?? 0) >= PAGE_SIZE;
   const oldestLoadedAt = messages[0]?.createdAt ?? null;
+  const oldestLoadedId = messages[0]?.id ?? null;
 
   const loadOlderMessages = async () => {
-    if (!oldestLoadedAt || loadingOlder || !hasMoreOlder) return;
+    if (!oldestLoadedAt || !oldestLoadedId || loadingOlder || !hasMoreOlder) return;
     setLoadingOlder(true);
     try {
       const page = await chatService.listMessages(conversationId, {
         limit: PAGE_SIZE,
         before: oldestLoadedAt,
+        beforeId: oldestLoadedId ?? undefined,
       });
       // Una página incompleta significa que se llegó al principio del hilo.
       if (page.length < PAGE_SIZE) setReachedStart(true);
@@ -182,17 +244,12 @@ export function useChatThread({
     }
   };
 
-  // El snapshot REST es lo primero que se ve; en cuanto llega un evento en vivo
-  // por el socket (la misma cuenta que abrió o cerró) ese pasa a mandar.
-  const matchingPresence = livePresence?.userId === otherUserId ? livePresence : null;
-
-  const setNickname = useMutation({
-    mutationFn: (nickname: string | null) => chatService.setNickname(conversationId, nickname),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
-      notify.success('Apodo guardado.');
-    },
-    onError: (error: Error) => notify.error(error),
+  const { setNickname, editMessage, revealViewOnce } = useChatMessageMutations({
+    conversationId,
+    deletedEventsRef,
+    onMessageUpdated,
+    queryClient,
+    setRevealedMedia,
   });
 
   /**
@@ -204,40 +261,38 @@ export function useChatThread({
 
   const send = useChatSend({ conversationId, sendOverSocket: sendMessage, showOwnMessage });
 
-  const revealViewOnce = useMutation({
-    mutationFn: (messageId: string) => chatService.viewMessage(conversationId, messageId),
-    onSuccess: (revealed) => {
-      if (!revealed.mediaUrl) return;
-      const url = revealed.mediaUrl;
-      setRevealedMedia((current) => ({ ...current, [revealed.id]: url }));
-    },
-    onError: (error: Error) => notify.error(error),
-  });
+  const deliveredAt = conversation?.otherUserLastDeliveredAt;
+  const readAt = conversation?.otherUserLastReadAt;
+  const readSinceAt = conversation?.otherUserReadReceiptsSinceAt;
+  const cursors = useMemo(
+    () => receiptCursors({ deliveredAt, readAt, readSinceAt }, liveReceipt),
+    [deliveredAt, readAt, readSinceAt, liveReceipt],
+  );
 
   return {
     connectionState,
     conversation,
+    conversationUnavailable,
+    isValidatingHistory,
+    conversationRevoked,
+    isMessageDeleted,
     hasMoreOlder,
     history,
     latestMessageId,
     loadOlderMessages,
     loadingOlder,
     messages,
-    otherLastDeliveredAt:
-      liveReceipt?.deliveredAt ??
-      liveReceipt?.readAt ??
-      conversation?.otherUserLastDeliveredAt ??
-      null,
-    otherLastReadAt: liveReceipt?.readAt ?? conversation?.otherUserLastReadAt ?? null,
+    ...cursors,
     otherLastSeenAt: matchingPresence?.lastSeenAt ?? conversation?.otherUserLastSeenAt ?? null,
     otherOnline: matchingPresence?.online ?? conversation?.otherUserOnline ?? false,
     revealViewOnce,
-    revealedMedia,
+    revealedMedia: conversationUnavailable || isValidatingHistory ? {} : revealedMedia,
     sendLocation: send.sendLocation,
     sendMedia: send.sendMedia,
     sendText: send.sendText,
     sending: send.sending,
     sendingMedia: send.sendingMedia,
     setNickname,
+    editMessage,
   };
 }

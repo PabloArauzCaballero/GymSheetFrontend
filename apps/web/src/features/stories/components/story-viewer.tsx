@@ -4,10 +4,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { StoryFeedEntry } from '@/shared/api/schemas';
-import { DomainImage, mediaProxyUrl } from '@/shared/components/media/domain-image';
 import { confirmDelete, notify } from '@/shared/notifications';
 import { storiesService, storyKeys } from '@/features/stories/services/stories-service';
+import { useStoryReply } from '@/features/stories/hooks/use-story-reply';
 import { useStoryProgress } from '@/features/stories/hooks/use-story-progress';
+import { usePagePlaybackPause } from '@/features/stories/hooks/use-page-playback-pause';
+import { locateStoryInFeed } from '@/features/stories/lib/story-feed-location';
+import { StoryStage } from './story-stage';
+import { StoryReplyBar } from './story-reply-bar';
 import { ChromeButton, StoryOwnerBar, StoryTopBar } from './story-chrome';
 import { StoryViewersPanel } from './story-viewers-panel';
 
@@ -19,8 +23,6 @@ const IMAGE_DURATION_MS = 5_000;
  * clip que no declara duración, las dos plataformas enseñan el mismo tramo.
  */
 const VIDEO_FALLBACK_MS = 15_000;
-/** Por debajo de esto, el gesto fue un toque; por encima, fue mantener pulsado. */
-const TAP_MAX_MS = 250;
 
 /**
  * Visor de stories a pantalla completa.
@@ -51,18 +53,41 @@ export function StoryViewer({
   );
   const [storyIndex, setStoryIndex] = useState(0);
   const [held, setHeld] = useState(false);
+  const { paused: pausedAfterBackground, resume: resumeAfterBackground } = usePagePlaybackPause();
   const [muted, setMuted] = useState(true);
   const [showViewers, setShowViewers] = useState(false);
+  const [replyOpen, setReplyOpen] = useState(false);
   // La duración se guarda junto a la story que la produjo: así, al cambiar de
   // story, deja de aplicarse en el mismo render, sin un efecto que la limpie.
   const [videoDuration, setVideoDuration] = useState<{ storyId: string; ms: number } | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
-  const pressRef = useRef<{ at: number } | null>(null);
   const viewedRef = useRef(new Set<string>());
+  const activeStoryIdRef = useRef<string | null>(null);
+  const previousEntriesRef = useRef(entries);
 
   const entry = entries[userIndex];
   const story = entry?.stories[storyIndex];
+  useEffect(() => {
+    const feedChanged = previousEntriesRef.current !== entries;
+    previousEntriesRef.current = entries;
+    const activeStoryId = activeStoryIdRef.current;
+
+    if (feedChanged && activeStoryId) {
+      const position = locateStoryInFeed(entries, activeStoryId);
+      if (!position) {
+        onClose();
+        return;
+      }
+      if (story?.id !== activeStoryId) {
+        setUserIndex(position.userIndex);
+        setStoryIndex(position.storyIndex);
+        return;
+      }
+    }
+
+    activeStoryIdRef.current = story?.id ?? null;
+  }, [entries, onClose, story?.id]);
   const isOwn = entry?.userId === ownUserId;
 
   const goNext = useCallback(() => {
@@ -99,7 +124,7 @@ export function StoryViewer({
   const progress = useStoryProgress({
     activeKey: story?.id ?? 'none',
     durationMs,
-    paused: held || showViewers || !story,
+    paused: held || pausedAfterBackground || showViewers || !story,
     onComplete: goNext,
   });
 
@@ -120,6 +145,8 @@ export function StoryViewer({
     onError: (error: Error) => notify.error(error),
   });
 
+  const reply = useStoryReply({ story, isOwn, onClose });
+
   // Registrar la vista una sola vez por story y sesión de visor.
   useEffect(() => {
     if (!story || story.viewedByMe || isOwn) return;
@@ -132,9 +159,9 @@ export function StoryViewer({
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    if (held || showViewers) video.pause();
+    if (held || pausedAfterBackground || showViewers) video.pause();
     else void video.play().catch(() => undefined);
-  }, [held, showViewers, story?.id]);
+  }, [held, pausedAfterBackground, showViewers, story?.id]);
 
   // Al abrirse, el foco entra en el visor: si se quedara en el botón que hay
   // debajo, tabular llevaría por la página oculta detrás del overlay.
@@ -144,6 +171,13 @@ export function StoryViewer({
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (replyOpen) {
+        if (event.key === 'Escape') {
+          setReplyOpen(false);
+          setHeld(false);
+        }
+        return;
+      }
       if (event.key === 'Escape') onClose();
       else if (event.key === 'ArrowRight') goNext();
       else if (event.key === 'ArrowLeft') goPrevious();
@@ -159,7 +193,7 @@ export function StoryViewer({
       window.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = previousOverflow;
     };
-  }, [goNext, goPrevious, onClose]);
+  }, [goNext, goPrevious, onClose, replyOpen]);
 
   if (!entry || !story) return null;
 
@@ -179,49 +213,16 @@ export function StoryViewer({
         ref={surfaceRef}
         tabIndex={-1}
       >
-        <div
-          className="absolute inset-0"
-          onPointerCancel={() => setHeld(false)}
-          onPointerDown={() => {
-            pressRef.current = { at: Date.now() };
-            setHeld(true);
-          }}
-          onPointerLeave={() => setHeld(false)}
-          onPointerUp={(event) => {
-            setHeld(false);
-            const press = pressRef.current;
-            pressRef.current = null;
-            if (!press || Date.now() - press.at >= TAP_MAX_MS) return;
-            const bounds = event.currentTarget.getBoundingClientRect();
-            if (event.clientX - bounds.left < bounds.width * 0.33) goPrevious();
-            else goNext();
-          }}
-        >
-          {story.mediaType === 'video' ? (
-            <video
-              aria-label={`Story de ${entry.fullName}`}
-              autoPlay
-              className="size-full object-contain"
-              muted={muted}
-              onEnded={goNext}
-              onLoadedMetadata={(event) => {
-                const seconds = event.currentTarget.duration;
-                if (Number.isFinite(seconds) && seconds > 0) {
-                  setVideoDuration({ storyId: story.id, ms: seconds * 1_000 });
-                }
-              }}
-              playsInline
-              ref={videoRef}
-              src={mediaProxyUrl(story.mediaUrl)}
-            />
-          ) : (
-            <DomainImage
-              alt={`Story de ${entry.fullName}`}
-              className="object-contain"
-              src={story.mediaUrl}
-            />
-          )}
-        </div>
+        <StoryStage
+          fullName={entry.fullName}
+          muted={muted}
+          onHold={setHeld}
+          onNext={goNext}
+          onPrevious={goPrevious}
+          onVideoDuration={(ms) => setVideoDuration({ storyId: story.id, ms })}
+          story={story}
+          videoRef={videoRef}
+        />
 
         <StoryTopBar
           createdAt={story.createdAt}
@@ -230,8 +231,13 @@ export function StoryViewer({
           muted={muted}
           onClose={onClose}
           onToggleMuted={() => setMuted((value) => !value)}
-          onTogglePaused={() => setHeld((value) => !value)}
-          paused={held}
+          onTogglePaused={() => {
+            if (pausedAfterBackground) {
+              resumeAfterBackground();
+              setHeld(false);
+            } else setHeld((value) => !value);
+          }}
+          paused={held || pausedAfterBackground}
           progress={progress}
           storyIndex={storyIndex}
         />
@@ -258,6 +264,19 @@ export function StoryViewer({
               if (result.confirmed) removeStory.mutate(story.id);
             }}
             onShowViewers={() => setShowViewers(true)}
+          />
+        ) : null}
+
+        {!isOwn ? (
+          <StoryReplyBar
+            fullName={entry.fullName}
+            onCancel={() => { setReplyOpen(false); setHeld(false); }}
+            onChangeText={reply.setReplyText}
+            onOpen={() => { setReplyOpen(true); setHeld(true); }}
+            onSubmit={reply.submitStoryReply}
+            open={replyOpen}
+            pending={reply.replyToStory.isPending}
+            text={reply.replyText}
           />
         ) : null}
 

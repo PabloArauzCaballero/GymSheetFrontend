@@ -1,0 +1,71 @@
+import type React from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { View } from 'react-native';
+import { IconBadge } from '@/components/icon-badge';
+import { Text } from '@/components/text';
+import { colors, iconSizes, spacing, tones, type MetricKey } from '@/theme';
+
+export type ProgressFigure = {
+  key: string;
+  value: string;
+  label: string;
+  /** Icono con color por significado, encima de la cifra. */
+  icon?: React.ComponentProps<typeof Ionicons>['name'];
+  tone?: MetricKey;
+  delta?: { label: string; direction: 'up' | 'down' | 'flat' } | null;
+};
+
+/**
+ * Las cifras de apoyo del progreso, en columnas y sin tarjeta propia: van bajo
+ * la cifra protagonista de la semana y no compiten con ella. El número a 20
+ * (rampa `numeric`), su etiqueta debajo y, si la hay, la comparación.
+ */
+export function ProgressStrip({ figures }: { figures: readonly ProgressFigure[] }) {
+  return (
+    <View style={{ flexDirection: 'row' }}>
+      {figures.map((figure, index) => {
+        const tone =
+          figure.delta?.direction === 'up' ? tones.dark.success.text : colors.textMuted;
+        return (
+          <View
+            accessibilityLabel={`${figure.label}: ${figure.value}${figure.delta ? `, ${figure.delta.label} frente a la semana pasada` : ''}`}
+            accessible
+            key={figure.key}
+            style={{
+              flex: 1,
+              gap: spacing.xxs,
+              paddingLeft: index === 0 ? 0 : spacing.md,
+              paddingRight: spacing.sm,
+              borderLeftWidth: index === 0 ? 0 : 1,
+              borderLeftColor: colors.border,
+            }}
+          >
+            {figure.icon && figure.tone ? (
+              <View style={{ paddingBottom: spacing.xxs }}>
+                <IconBadge delay={index * 70} icon={figure.icon} size={28} tone={figure.tone} />
+              </View>
+            ) : null}
+            <Text adjustsFontSizeToFit minimumFontScale={0.7} numberOfLines={1} variant="numeric">
+              {figure.value}
+            </Text>
+            <Text numberOfLines={2} tone="muted" variant="footnote">
+              {figure.label}
+            </Text>
+            {figure.delta ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xxs }}>
+                <Ionicons
+                  color={tone}
+                  name={figure.delta.direction === 'up' ? 'trending-up' : figure.delta.direction === 'down' ? 'trending-down' : 'remove'}
+                  size={iconSizes.xs}
+                />
+                <Text strong style={{ color: tone }} tabular variant="caption">
+                  {figure.delta.label}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        );
+      })}
+    </View>
+  );
+}

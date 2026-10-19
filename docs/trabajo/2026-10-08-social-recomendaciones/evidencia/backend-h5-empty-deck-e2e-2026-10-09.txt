@@ -1,0 +1,21 @@
+H5.S1.M2 backend PostgreSQL E2E
+Date: 2026-10-09 (America/La_Paz)
+Target: 127.0.0.1:55432/gymsheet_social_qa (synthetic local QA DB)
+Node: v22.23.3; ephemeral JWT keys generated in shell; no service started.
+
+Command (DB/JWT environment values sanitized):
+  yarn test:e2e --runTestsByPath test/social-discovery-preferences.e2e-spec.ts --runInBand
+
+Output:
+PASS test/social-discovery-preferences.e2e-spec.ts (5.516 s)
+  social discovery preferences API (PostgreSQL integration)
+    ✓ requires explicit preferences and rejects stale writes between devices (70 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        5.637 s
+Ran all test suites within paths "test/social-discovery-preferences.e2e-spec.ts".
+Done in 6.80s.
+
+The E2E also requests the deck with a valid UUID for a branch with no eligible candidates and asserts HTTP 200 with `data: []`. The existing suite registers one synthetic `example.test` account and does not clean it up; no rows were deleted. Read-only post-run tally: `example.test` 1,943; `gymsheet.local` 10; total 1,953. No other email domains were present.

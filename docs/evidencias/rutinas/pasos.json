@@ -1,0 +1,362 @@
+{
+  "descripcion": "Capturas que exige 06_PRUEBAS_Y_EVIDENCIA.md §5 para RF-03 a RF-08, con lo que cada una debe mostrar. `plataformas` dice dónde existe la captura: `web` (390 y 1440 px, claro y oscuro) y `movil` (iOS, oscuro: la app móvil no tiene tema claro). Un paso que falta en una plataforma lleva su motivo en `faltante`.",
+  "pasos": [
+    {
+      "rf": "RF-03",
+      "paso": "01",
+      "nombre": "paso1-vacio",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "«Paso 1 de 6 · Nombre», campo vacío, barra de progreso con el primer segmento activo."
+    },
+    {
+      "rf": "RF-03",
+      "paso": "02",
+      "nombre": "paso1-error-nombre",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "Siguiente sin nombre: «Escribe un nombre» bajo el campo y sigue en el paso 1."
+    },
+    {
+      "rf": "RF-03",
+      "paso": "03",
+      "nombre": "paso2",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "«Paso 2 de 6 · Descripción»."
+    },
+    {
+      "rf": "RF-03",
+      "paso": "04",
+      "nombre": "volver-conserva",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "Volver al paso 1: el nombre escrito sigue ahí."
+    },
+    {
+      "rf": "RF-03",
+      "paso": "05",
+      "nombre": "retomar-borrador",
+      "plataformas": [],
+      "faltante": "NO cubierto con captura. Reabrir la app para ver «Tienes un borrador sin terminar» no está automatizado (ni Maestro ni Playwright lo recorren); sólo hay pruebas de lógica en Vitest (routine-draft.test.ts y draft-store.test.ts: persistir, recuperar, descartar contenido corrupto)."
+    },
+    {
+      "rf": "RF-03",
+      "paso": "06",
+      "nombre": "salir-sin-guardar",
+      "plataformas": [],
+      "faltante": "NO cubierto con captura. La confirmación «¿Salir sin guardar?» es una alerta nativa de iOS (móvil) y el aviso del navegador `beforeunload` (web); ninguno sale en una captura de página y no se probó visualmente."
+    },
+    {
+      "rf": "RF-03",
+      "paso": "07",
+      "nombre": "rutina-guardada",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "Tras Guardar se abre el detalle de la rutina recién creada, con su nombre."
+    },
+    {
+      "rf": "RF-04",
+      "paso": "01",
+      "nombre": "resumen-4-dias-12-semanas",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "Lunes, miércoles, jueves y viernes marcados y el resumen «4 días · 12 semanas»."
+    },
+    {
+      "rf": "RF-04",
+      "paso": "02",
+      "nombre": "sin-dias",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "Sin días: «Elige al menos un día» y Siguiente desactivado."
+    },
+    {
+      "rf": "RF-04",
+      "paso": "03",
+      "nombre": "descarga-cada-5",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "Progresión con descarga cada 5 semanas: «12 semanas · descarga cada 5»."
+    },
+    {
+      "rf": "RF-05",
+      "paso": "01",
+      "nombre": "toque-simple-abre-dia",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Toque simple en Lunes: abre la pantalla de ejercicios del lunes."
+    },
+    {
+      "rf": "RF-05",
+      "paso": "02",
+      "nombre": "toque-sostenido-selecciona",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Toque sostenido en Lunes: modo selección con Lunes marcado («1 día seleccionado»)."
+    },
+    {
+      "rf": "RF-05",
+      "paso": "03",
+      "nombre": "dos-dias-seleccionados",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Un toque en Jueves lo añade: «2 días seleccionados»."
+    },
+    {
+      "rf": "RF-05",
+      "paso": "04a",
+      "nombre": "configurar-juntos-3-ejercicios",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Pantalla «Configurar juntos» (Lunes y jueves) con los 3 ejercicios elegidos antes de pulsar Listo."
+    },
+    {
+      "rf": "RF-05",
+      "paso": "04",
+      "nombre": "lunes-y-jueves-con-3",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "Configurar juntos con 3 ejercicios y Listo: Lunes y Jueves con «3 ejercicios»."
+    },
+    {
+      "rf": "RF-05",
+      "paso": "05",
+      "nombre": "boton-seleccionar",
+      "plataformas": [
+        "movil"
+      ],
+      "debeVerse": "El botón «Seleccionar» entra al mismo modo de selección (alternativa accesible)."
+    },
+    {
+      "rf": "RF-05",
+      "paso": "01",
+      "nombre": "casillas-lunes-jueves",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Casillas marcadas en Lunes y Jueves y la barra «Configurar seleccionados»."
+    },
+    {
+      "rf": "RF-05",
+      "paso": "02",
+      "nombre": "lunes-jueves-con-3",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Tras configurar juntos con 3 ejercicios, ambos días con «3 ejercicios»."
+    },
+    {
+      "rf": "RF-05",
+      "paso": "03",
+      "nombre": "teclado-espacio",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Casilla marcada con la barra espaciadora y el foco visible."
+    },
+    {
+      "rf": "RF-06",
+      "paso": "01",
+      "nombre": "dia-pantalla-completa",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "El día se edita en una pantalla completa (no un modal), con la barra de progreso y «Lunes» / «Miércoles»."
+    },
+    {
+      "rf": "RF-06",
+      "paso": "02",
+      "nombre": "buscar-press",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "Resultados filtrados por la búsqueda."
+    },
+    {
+      "rf": "RF-06",
+      "paso": "03",
+      "nombre": "anadido-1-ejercicio",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "«+» convertido en «✓ Añadido» y la barra inferior con «1 ejercicio»."
+    },
+    {
+      "rf": "RF-06",
+      "paso": "04",
+      "nombre": "mapa-pectoral",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Tras elegir el pectoral mayor en la figura: lista de ese músculo con «+»."
+    },
+    {
+      "rf": "RF-06",
+      "paso": "04",
+      "nombre": "mapa-pectoral",
+      "plataformas": [],
+      "faltante": "NO cubierto en móvil. El toque sobre la figura es un gesto por coordenadas sobre un lienzo que Maestro no expone como elementos; la lista del músculo dentro del selector móvil se escribió pero no se verificó en el simulador."
+    },
+    {
+      "rf": "RF-06",
+      "paso": "05",
+      "nombre": "ficha-anadir-a-la-rutina",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "Ficha del ejercicio con el botón fijo «Añadir a la rutina», ♥ me gusta y ☆ favorito."
+    },
+    {
+      "rf": "RF-06",
+      "paso": "06",
+      "nombre": "anadido-desde-ficha-2-ejercicios",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "Añadir desde la ficha vuelve a la lista con «2 ejercicios»."
+    },
+    {
+      "rf": "RF-06",
+      "paso": "07",
+      "nombre": "ver-y-ordenar",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "Ver y ordenar: lista del día con series, repeticiones, RIR, descanso y nota."
+    },
+    {
+      "rf": "RF-06",
+      "paso": "08",
+      "nombre": "atras-conserva",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "Vuelta a la semana: el día conserva sus 2 ejercicios (en la web, tras recargar la página)."
+    },
+    {
+      "rf": "RF-07",
+      "paso": "01",
+      "nombre": "ficha-favorito",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "☆ Favorito activado en la ficha."
+    },
+    {
+      "rf": "RF-07",
+      "paso": "02",
+      "nombre": "filtro-favoritos",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "Ejercicios con el filtro Favoritos: aparece el ejercicio marcado."
+    },
+    {
+      "rf": "RF-07",
+      "paso": "03",
+      "nombre": "me-gusta-mas-uno",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "♥ activado y el contador +1."
+    },
+    {
+      "rf": "RF-07",
+      "paso": "04",
+      "nombre": "me-gusta-menos-uno",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "Quitar el me gusta: contador −1."
+    },
+    {
+      "rf": "RF-07",
+      "paso": "05",
+      "nombre": "cuenta-b-ve-contador",
+      "plataformas": [
+        "web"
+      ],
+      "debeVerse": "Con la cuenta B, la misma ficha muestra el contador público y NO el favorito de A."
+    },
+    {
+      "rf": "RF-07",
+      "paso": "05",
+      "nombre": "cuenta-b-ve-contador",
+      "plataformas": [],
+      "faltante": "NO cubierto en móvil. Cambiar de cuenta en el simulador exige cerrar sesión y entrar con otra; la comprobación entre cuentas sólo existe en la web."
+    },
+    {
+      "rf": "RF-08",
+      "paso": "01",
+      "nombre": "vista-mes-descargas",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "Vista Mes de 12 semanas con S4, S8 y S12 marcadas «Descarga»."
+    },
+    {
+      "rf": "RF-08",
+      "paso": "02",
+      "nombre": "s6-descarga",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "S6 marcada como descarga y S5 normal."
+    },
+    {
+      "rf": "RF-08",
+      "paso": "03",
+      "nombre": "aviso-frecuencia",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "Aviso «Piernas solo se entrena 1 vez por semana» que no bloquea Guardar."
+    },
+    {
+      "rf": "RF-08",
+      "paso": "04",
+      "nombre": "dia-vacio-bloquea",
+      "plataformas": [
+        "web",
+        "movil"
+      ],
+      "debeVerse": "«Hay un día sin ejercicios» y Guardar desactivado."
+    }
+  ]
+}

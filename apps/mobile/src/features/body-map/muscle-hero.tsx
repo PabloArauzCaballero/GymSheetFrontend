@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { type LayoutChangeEvent, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
-import { colors, radii, spacing } from '@/theme';
+import { alpha, colors, radii, spacing } from '@/theme';
 import {
   AGGREGATES,
   boundsArea,
@@ -18,7 +18,7 @@ import {
   toPathData,
   type BodyRegion,
 } from '@gymsheet/anatomy';
-import { IMAGES, type ImageTag } from './images';
+import { anatomyImage, type ImageTag } from './images';
 
 /** Proporción de la cabecera (alto / ancho): apaisada, como una lámina. */
 const ASPECT = 3 / 4;
@@ -45,38 +45,56 @@ function bestView(codes: readonly string[]): { tag: ImageTag; regions: BodyRegio
  * Si el código no tiene zona (el sistema cardiovascular, o uno desconocido) no
  * pinta nada en vez de enseñar un cuerpo sin resaltar que no significa nada.
  */
-export function MuscleHero({ code }: { code: string }) {
+export function MuscleHero({
+  code,
+  codes: many,
+  height: fixedHeight,
+  padding = PADDING,
+}: {
+  code?: string;
+  /** Varios músculos a la vez (una zona entera: «Piernas» = cuádriceps + isquios + glúteos…). */
+  codes?: readonly string[];
+  /** Alto fijo (tarjetas de zona): sin marco propio, lo pone la tarjeta. */
+  height?: number;
+  padding?: number;
+}) {
   const { width: windowWidth } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
   // Se estima antes de medir para reservar el alto desde el primer fotograma.
-  const [width, setWidth] = useState(windowWidth - spacing.lg * 2);
-  const height = Math.round(width * ASPECT);
-  const codes = AGGREGATES[code.toUpperCase()] ?? [code.toUpperCase()];
+  const [width, setWidth] = useState(fixedHeight ? Math.round(windowWidth / 2) : windowWidth - spacing.lg * 2);
+  const height = fixedHeight ?? Math.round(width * ASPECT);
+  const codes = (many ?? (code ? [code] : [])).flatMap((value) => AGGREGATES[value.toUpperCase()] ?? [value.toUpperCase()]);
   const view = useMemo(() => bestView(codes), [codes.join('|')]);
 
-  if (!view || !muscleInfo(code)) return null;
+  if (!view || view.regions.length === 0 || (code && !muscleInfo(code))) return null;
   const bounds = boundsOf(view.regions);
   const placement =
     bounds && width > 0
-      ? placeBounds(bounds, { width, height }, REGION_VIEWBOX, { padding: PADDING })
+      ? placeBounds(bounds, { width, height }, REGION_VIEWBOX, { padding })
       : null;
   const paths = view.regions.map((region) => toPathData(region.rings));
+  // La pequeña basta en miniaturas y tarjetas; un recorte muy acercado pide la grande.
+  const image = placement ? anatomyImage(view.tag, placement.width) : null;
 
   return (
     <View
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
       onLayout={(event: LayoutChangeEvent) => setWidth(Math.round(event.nativeEvent.layout.width))}
-      style={{
-        height,
-        borderRadius: radii.xl,
-        overflow: 'hidden',
-        backgroundColor: colors.surfaceLowest,
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: colors.border,
-      }}
+      style={
+        fixedHeight
+          ? { height, overflow: 'hidden', backgroundColor: colors.surfaceLowest }
+          : {
+              height,
+              borderRadius: radii.xl,
+              overflow: 'hidden',
+              backgroundColor: colors.surfaceLowest,
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: colors.border,
+            }
+      }
     >
-      {placement ? (
+      {placement && image ? (
         <View
           style={{
             position: 'absolute',
@@ -90,7 +108,8 @@ export function MuscleHero({ code }: { code: string }) {
             accessibilityIgnoresInvertColors
             cachePolicy="memory-disk"
             contentFit="fill"
-            source={IMAGES[view.tag]}
+            recyclingKey={image.recyclingKey}
+            source={image.source}
             style={{ width: '100%', height: '100%' }}
             transition={120}
           />
@@ -129,12 +148,12 @@ export function MuscleHero({ code }: { code: string }) {
       {/* Los bordes de arriba y abajo se funden con la tarjeta: la lámina
           recortada no termina en un corte seco a media pierna. */}
       <LinearGradient
-        colors={[colors.surfaceLowest, `${colors.surfaceLowest}00`]}
+        colors={[colors.surfaceLowest, alpha(colors.surfaceLowest, 0)]}
         pointerEvents="none"
         style={{ position: 'absolute', top: 0, left: 0, right: 0, height: spacing.xl }}
       />
       <LinearGradient
-        colors={[`${colors.surfaceLowest}00`, colors.surfaceLowest]}
+        colors={[alpha(colors.surfaceLowest, 0), colors.surfaceLowest]}
         pointerEvents="none"
         style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: spacing.xl }}
       />

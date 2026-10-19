@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import Animated, {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -29,7 +30,7 @@ import {
   scrollDeltaFor,
 } from '@/state/tour-queue';
 import { useTourStore, type TargetRect, type TourKey } from '@/state/tour-store';
-import { colors, fontSizes, iconSizes, radii, spacing, useActiveTenant } from '@/theme';
+import { colors, fontSizes, iconSizes, overlay, radii, spacing, useActiveTenant } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -62,8 +63,10 @@ type TourStep = {
  *
  * Cada paso nombra una pestaña y dice para qué SIRVE, no qué contiene, y señala
  * su icono real de la barra: «aquí están tus rutinas» describe una pantalla,
- * «esto responde qué te toca hoy» describe una razón para abrirla. Son las cinco
- * pestañas que hay —Entrenos ya no es una: se alcanza desde Inicio y Perfil—.
+ * «esto responde qué te toca hoy» describe una razón para abrirla. Son las cuatro
+ * pestañas que hay —Entrenos ya no es una: se alcanza desde Inicio y Perfil; y
+ * Ejercicios tampoco desde C4: el catálogo se abre desde Rutinas y Perfil y
+ * tiene su propio tour (`exercises`) la primera vez que se entra al buscador—.
  *
  * `null` en el título significa «rellénalo con el nombre del gimnasio al
  * pintar». Es el único paso que lo menciona, así que no compensa convertir todo
@@ -86,16 +89,8 @@ const WELCOME: readonly TourStep[] = [
   {
     icon: 'albums-outline',
     title: 'Rutinas',
-    body: 'Tu semana de un vistazo: qué toca hoy y qué días entrenas. Toca un día para abrir su rutina.',
+    body: 'Tu semana de un vistazo: qué toca hoy y qué días entrenas. Desde aquí también exploras el catálogo de ejercicios.',
     target: 'tab.routines',
-    optional: true,
-    fixed: true,
-  },
-  {
-    icon: 'barbell-outline',
-    title: 'Ejercicios',
-    body: 'El catálogo por zona del cuerpo y músculo, con la lámina de cada ejercicio para reconocerlo al instante.',
-    target: 'tab.exercises',
     optional: true,
     fixed: true,
   },
@@ -144,13 +139,13 @@ const SCREEN_TOURS: Record<Exclude<TourKey, 'welcome'>, readonly TourStep[]> = {
     {
       icon: 'calendar-outline',
       title: 'Tu semana',
-      body: 'Los días que entrenas, empezando en lunes. El día de hoy va marcado; toca cualquiera para abrir su rutina.',
+      body: 'Los días que entrenas, empezando en lunes: un punto por sesión, pesas y cardio con su color. Toca un día para elegir qué rutina abrir.',
       target: 'routines.week',
     },
     {
       icon: 'add-circle-outline',
-      title: 'Rutinas propias',
-      body: 'Además de las que te asigna tu entrenador, puedes crear las tuyas y programarlas en los días que quieras.',
+      title: 'Más opciones',
+      body: 'En este menú creas tus rutinas, exploras ejercicios, armas un plan de cardio, pones música y vuelves a ver esta guía.',
       target: 'routines.create',
     },
   ],
@@ -192,16 +187,22 @@ const SCREEN_TOURS: Record<Exclude<TourKey, 'welcome'>, readonly TourStep[]> = {
       target: 'trayectoria.rank',
     },
     {
+      icon: 'flag-outline',
+      title: 'Retos de la semana',
+      body: 'Cada lunes, tres retos hechos a tu medida: fácil, medio y difícil. Cumple los tres y la semana es redonda, con puntos extra.',
+      target: 'trayectoria.challenges',
+    },
+    {
+      icon: 'ribbon-outline',
+      title: 'Tu colección',
+      body: 'Las insignias van en cadenas: cada ficha dice en qué nivel vas y cuál es la siguiente. Toca una para ver sus pasos y sus cartas.',
+      target: 'trayectoria.badges',
+    },
+    {
       icon: 'trail-sign-outline',
       title: 'El camino',
       body: 'Todos los rangos, también los que te quedan. Cada uno pide más puntos que el anterior.',
       target: 'trayectoria.path',
-    },
-    {
-      icon: 'ribbon-outline',
-      title: 'Insignias',
-      body: 'Retos concretos que suman puntos extra. Toca una conseguida para ver su carta. La rareza dice lo difícil que es.',
-      target: 'trayectoria.badges',
     },
   ],
   comunidad: [
@@ -405,8 +406,15 @@ export function useScreenTour(key: Exclude<TourKey, 'welcome'>, enabled = true):
   useFocusEffect(
     useCallback(() => {
       setFocusedAt(Date.now());
-      return () => setFocusedAt(null);
-    }, []),
+      return () => {
+        setFocusedAt(null);
+        // La pantalla deja de estar delante (un enlace o un aviso abrieron
+        // otra) con su guía todavía abierta: se cierra sin darla por vista.
+        // Antes se quedaba encima de la pantalla nueva señalando al vacío, y
+        // «Siguiente» esperaba a un elemento que ya no existía.
+        if (useTourStore.getState().active === key) useTourStore.getState().dismiss();
+      };
+    }, [key]),
   );
 
   useEffect(() => {
@@ -505,9 +513,16 @@ function Spotlight({
     present.value = reduceMotion
       ? 1
       : withTiming(1, { duration: DURATION.standard, easing: PREMIUM_EASING });
+    return () => {
+      cancelAnimation(x);
+      cancelAnimation(y);
+      cancelAnimation(w);
+      cancelAnimation(h);
+      cancelAnimation(present);
+    };
   }, [h, holeH, holeW, holeX, holeY, present, reduceMotion, w, x, y]);
 
-  const dim = 'rgba(0,0,0,0.86)';
+  const dim = overlay.scrimStrong;
   const fullStyle = useAnimatedStyle(() => ({ opacity: 1 - present.value }));
   const topStyle = useAnimatedStyle(() => ({
     height: Math.max(0, y.value),
@@ -952,7 +967,12 @@ export function TourOverlay() {
       </ScrollView>
 
       <View style={{ width: '100%', gap: spacing.sm }}>
-        <Button label={frame?.last ? 'Entendido' : 'Siguiente'} onPress={advance} />
+        <Button
+          icon={frame?.last ? 'checkmark' : 'arrow-forward'}
+          iconPosition={frame?.last ? 'start' : 'end'}
+          label={frame?.last ? 'Entendido' : 'Siguiente'}
+          onPress={advance}
+        />
         {!frame?.last ? (
           <PressableScale
             accessibilityLabel="Saltar tutorial"

@@ -25,10 +25,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 /** Un ajuste de un toque. No es un botón: son modificadores del formulario, no la acción. */
-function QuickChip({
-  label,
-  onClick,
-}: Readonly<{ label: string; onClick: () => void }>) {
+function QuickChip({ label, onClick }: Readonly<{ label: string; onClick: () => void }>) {
   return (
     <button
       className={cn(
@@ -53,7 +50,7 @@ export function SetEntryForm({
   sessionExerciseId: string;
   nextSetNumber: number;
   /** Última serie registrada de este ejercicio en esta sesión, si hay alguna. */
-  lastSet?: { pesoKg: number; repeticiones: number; rir: number };
+  lastSet?: { pesoKg: number; repeticiones: number; rir: number | null };
 }>) {
   const queryClient = useQueryClient();
   const account = useQuery({ queryKey: ['user', 'me'], queryFn: profileService.getUser });
@@ -94,7 +91,7 @@ export function SetEntryForm({
             onClick={() => {
               form.setValue('pesoKg', lastSet.pesoKg);
               form.setValue('repeticiones', lastSet.repeticiones);
-              form.setValue('rir', lastSet.rir);
+              form.setValue('rir', lastSet.rir ?? 0);
             }}
           />
         ) : null}
@@ -122,11 +119,7 @@ export function SetEntryForm({
             {...form.register('numeroSerie', { valueAsNumber: true })}
           />
         </Field>
-        <Field
-          error={form.formState.errors.pesoKg?.message}
-          htmlFor={`${fieldId}-peso`}
-          label="KG"
-        >
+        <Field error={form.formState.errors.pesoKg?.message} htmlFor={`${fieldId}-peso`} label="KG">
           <Input
             id={`${fieldId}-peso`}
             inputMode="decimal"
@@ -149,11 +142,7 @@ export function SetEntryForm({
             {...form.register('repeticiones', { valueAsNumber: true })}
           />
         </Field>
-        <Field
-          error={form.formState.errors.rir?.message}
-          htmlFor={`${fieldId}-rir`}
-          label="RIR"
-        >
+        <Field error={form.formState.errors.rir?.message} htmlFor={`${fieldId}-rir`} label="RIR">
           <Input
             id={`${fieldId}-rir`}
             inputMode="numeric"

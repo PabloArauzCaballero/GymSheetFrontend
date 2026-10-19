@@ -1,5 +1,6 @@
 'use client';
 
+import { roleLabel } from '@/shared/lib/roles';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { ScrollText } from 'lucide-react';
 import { useState } from 'react';
@@ -27,11 +28,16 @@ const DOMAIN_OPTIONS = [
   { value: 'files', label: 'Archivos' },
   { value: 'moderation', label: 'Moderación' },
   { value: 'support', label: 'Soporte' },
+  { value: 'routines', label: 'Rutinas' },
 ] as const;
 
 const ACTION_LABEL: Record<string, string> = {
   grant: 'Otorgó permiso',
   revoke: 'Revocó permiso',
+  'create-official': 'Creó una rutina oficial',
+  'mark-official': 'Marcó una rutina como oficial',
+  'unmark-official': 'Quitó una rutina de oficiales',
+  'recompute-week': 'Recalculó una semana de un programa',
 };
 
 /**
@@ -110,7 +116,40 @@ export function AuditPanel({
               />
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* En móvil cada acción es una tarjeta: una tabla de cinco columnas
+                dejaba fuera de pantalla la acción y el objeto. */}
+            <ul aria-label="Registro de actividad" className="divide-y divide-[var(--border-subtle)] md:hidden">
+              {rows.map((entry) => (
+                <li className="grid gap-1.5 px-4 py-4" key={entry.id}>
+                  <p className="text-xs tabular-nums text-[var(--text-muted)]">
+                    {formatDateTime(entry.occurredAt)}
+                  </p>
+                  <p className="text-sm font-semibold text-[var(--text)]">{describe(entry)}</p>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    <span className="break-all">{entry.actorEmail}</span>
+                    <span className="block">
+                      {roleLabel(entry.actorRole)}
+                      {entry.metadata.impersonating ? ' · Suplantando' : ''}
+                    </span>
+                  </p>
+                  {entry.targetId ? (
+                    <p className="break-all text-xs text-[var(--text-muted)]">
+                      {entry.targetKind ?? 'objeto'}{' '}
+                      <span className="font-mono">{entry.targetId}</span>
+                    </p>
+                  ) : null}
+                  {scope === 'platform' ? (
+                    <p className="text-xs text-[var(--text-muted)]">
+                      {entry.tenantScope ?? 'Plataforma'}
+                    </p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+            <div aria-label="Registro de actividad" className="hidden overflow-x-auto md:block" role="region" tabIndex={0}>
+              {/* Una región que se desplaza necesita foco para que el teclado
+                  pueda recorrerla (axe: scrollable-region-focusable). */}
               <table className="w-full min-w-[760px] text-sm">
                 <thead>
                   <tr className="border-b border-[var(--border-subtle)] text-left text-xs uppercase tracking-wide text-[var(--text-muted)]">
@@ -134,7 +173,7 @@ export function AuditPanel({
                       </td>
                       <td className="px-5 py-3">
                         <p className="font-semibold text-[var(--text)]">{entry.actorEmail}</p>
-                        <p className="text-xs text-[var(--text-muted)]">{entry.actorRole}</p>
+                        <p className="text-xs text-[var(--text-muted)]">{roleLabel(entry.actorRole)}</p>
                       </td>
                       <td className="px-5 py-3">
                         {describe(entry)}
@@ -166,6 +205,7 @@ export function AuditPanel({
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </CardContent>
       </Card>

@@ -1,0 +1,18 @@
+# Copiar con atribución y versión nueva (plan Rutinas REPP · F4): RF-10.
+# Cuenta B (expiring.mock). Requiere los seeds `seed-rutinas-evidencia.mjs` y
+# `seed-rutinas-f4-version.mjs` (copia de B + versión nueva de A).
+appId: app.gymsheet.mobile
+name: 14 · Copiar con atribución y versión nueva
+env:
+  EMAIL: expiring.mock@gymsheet.local
+  FIRST: Expiring
+---
+- runFlow: login-as.subflow.yaml
+# RF-10 · p01: B guarda la pública de A en sus rutinas. Desde C2/C4 el botón
+# primario de una rutina ajena es «Guardar en mis rutinas» (antes «Copiar a
+# Mías», con un aviso efímero): ahora navega directamente a la copia, que se
+# llama «<nombre> · vN» y ya es propia, así que ofrece «Activar programa».
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Públicas', NAME: 'Pierna para publicar' }
+# Parte B (14b): pulsa «Guardar en mis rutinas» con fotogramas de `simctl` (run-toasts.sh).

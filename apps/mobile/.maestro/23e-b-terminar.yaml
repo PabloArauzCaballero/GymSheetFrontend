@@ -1,0 +1,27 @@
+appId: app.gymsheet.mobile
+name: 23e-b · Terminar y capturar el resumen
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+---
+- runFlow: login-as.subflow.yaml
+- openLink: gymsheet:///workouts/${SESSION}
+- extendedWaitUntil:
+    visible:
+      id: 'workout-focus'
+    timeout: 60000
+- runFlow: finalizar-sesion.subflow.yaml
+- extendedWaitUntil:
+    visible: 'Seguir|.*Insignia conseguida.*|.*subido de rango.*'
+    timeout: 60000
+- runFlow: cerrar-celebraciones.subflow.yaml
+- scrollUntilVisible:
+    element: 'Tu programa'
+- swipe:
+    start: 50%,75%
+    end: 50%,45%
+- assertNotVisible: '.* de 0 .*'
+- assertVisible: 'Esta sesión cuenta para tu programa.*'
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: RF-18_p00b_sesion-cuenta-sin-plan-semanal_ios_oscuro

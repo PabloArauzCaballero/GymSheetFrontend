@@ -1,0 +1,38 @@
+# Parte B de RF-09: confirma la publicación (el aviso «Rutina publicada» dura pocos segundos y no sale en el
+# árbol de accesibilidad: `run-toasts.sh` lo captura con fotogramas de `simctl`) y sigue con p02, p02b y p03.
+appId: app.gymsheet.mobile
+name: 13b · Confirmar publicación y bloqueo de duplicado
+---
+- tapOn: 'Publicar'
+# RF-09 · p02: queda pública (el botón pasa a «Despublicar»); el aviso dura pocos segundos, así que
+# se captura nada más confirmar.
+- tapOn:
+    id: 'routine-more'
+- extendedWaitUntil:
+    visible: 'Despublicar'
+    timeout: 20000
+- takeScreenshot: RF-09_p02_publicada-despublicar_ios_oscuro
+- tapOn: 'Cerrar'
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Públicas', NAME: 'Pierna para publicar' }
+- takeScreenshot: RF-09_p02b_aparece-en-publicas-con-autor_ios_oscuro
+
+# RF-09 · p03: una rutina idéntica a la de Leo se bloquea y ofrece verla.
+- runFlow:
+    file: open-routine.subflow.yaml
+    env: { TAB: 'Privadas', NAME: 'Torso idéntico' }
+- tapOn:
+    id: 'routine-more'
+- tapOn: 'Publicar'
+- tapOn: 'Publicar'
+- extendedWaitUntil:
+    visible: 'Ya existe una rutina idéntica'
+    timeout: 20000
+- takeScreenshot: RF-09_p03_ya-existe-identica_ios_oscuro
+- tapOn: 'Ver rutina'
+- extendedWaitUntil:
+    visible: 'Torso de Leo'
+    timeout: 20000
+- takeScreenshot: RF-09_p03b_ver-la-existente_ios_oscuro
+- assertNotVisible: 'Error'

@@ -6,17 +6,23 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./card-materials": "./src/card-materials.ts"
   },
   "scripts": {
     "type-check": "tsc --noEmit",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run --passWithNoTests && node --experimental-strip-types --test test/*.test.mjs",
+    "test:read-receipts": "node --experimental-strip-types --test test/read-receipt.test.mjs"
   },
   "dependencies": {
     "@gymsheet/types": "*"
   },
   "devDependencies": {
+    "@gymsheet/anatomy": "*",
     "@gymsheet/tsconfig": "*",
-    "typescript": "^5.7.0"
-  }
+    "typescript": "^5.7.0",
+    "vitest": "^3.2.0"
+  },
+  "resolutions": {}
 }

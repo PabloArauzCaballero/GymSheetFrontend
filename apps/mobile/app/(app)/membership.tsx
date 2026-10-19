@@ -28,7 +28,17 @@ import { TourTarget, useScreenTour } from '@/components/tour';
 import { Button } from '@/components/ui';
 import { MEMBERSHIP_LABEL, MEMBERSHIP_TONE, formatDate } from '@/lib/format';
 import { notify } from '@/notifications';
-import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import {
+  accentPolicy,
+  colors,
+  fontSizes,
+  iconSizes,
+  ink,
+  minTouchTarget,
+  radii,
+  semibold,
+  spacing,
+} from '@/theme';
 
 /**
  * Reads this screen owns. `getMine` already lives in the shared service; the
@@ -355,6 +365,8 @@ export default function MembershipScreen() {
               )}
               <Button
                 disabled={!renewablePlan}
+                icon="arrow-forward"
+                iconPosition="end"
                 label="Continuar"
                 onPress={() => setStep(1)}
               />
@@ -393,13 +405,14 @@ export default function MembershipScreen() {
                 actual.
               </Text>
               <Button
+                icon="qr-code-outline"
                 label="Confirmar y pagar"
                 loading={renewal.isPending}
                 onPress={() => {
                   if (renewablePlan) renewal.mutate(renewablePlan);
                 }}
               />
-              <Button label="Volver" onPress={() => setStep(0)} variant="ghost" />
+              <Button icon="arrow-back" label="Volver" onPress={() => setStep(0)} variant="ghost" />
             </>
           ) : null}
 
@@ -418,7 +431,7 @@ export default function MembershipScreen() {
                 // White plate behind the code: a QR on a dark surface is not
                 // reliably readable — scanners expect dark modules on light.
                 <View style={{ alignItems: 'center' }}>
-                  <View style={{ padding: spacing.md, borderRadius: radii.lg, backgroundColor: '#ffffff' }}>
+                  <View style={{ padding: spacing.md, borderRadius: radii.lg, backgroundColor: ink.white }}>
                     <Image
                       accessibilityLabel={paymentQr.altText}
                       contentFit="contain"
@@ -440,6 +453,7 @@ export default function MembershipScreen() {
               </Text>
               {intent ? (
                 <Button
+                  icon="logo-whatsapp"
                   label="Enviar comprobante por WhatsApp"
                   onPress={() => void Linking.openURL(intent.whatsappUrl)}
                   variant="ghost"
@@ -582,6 +596,7 @@ export default function MembershipScreen() {
                     </Text>
                   ) : offered && renewalActions.length > 0 ? (
                     <Button
+                      icon="logo-whatsapp"
                       label="Consultar"
                       onPress={() => void openWhatsApp(renewalActions[0]!)}
                       style={{ minHeight: minTouchTarget }}

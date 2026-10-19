@@ -1,12 +1,14 @@
 'use client';
 
-import { selectExerciseVideo } from '@gymsheet/domain';
+import { exerciseOriginLabel, exerciseStatusLabel, exerciseTypeLabel } from '@/features/exercises/origin-labels';
+import { bodyPartLabelEs, exerciseGroupLabelEs, muscleLabelEs, selectExerciseVideo } from '@gymsheet/domain';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Dumbbell, Heart, Pencil, Play, Target, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { confirm, notify } from '@/shared/notifications';
 import { exerciseService } from '@/features/exercises/services/exercise-service';
 import { ExerciseMediaManager } from '@/features/exercises/components/exercise-media-manager';
+import { ExerciseSocial } from '@/features/exercises/components/exercise-social';
 import { ExerciseMuscles } from '@/features/anatomy/components/exercise-muscles';
 import { profileService } from '@/features/profile/services/profile-service';
 import type { UserRole } from '@/shared/api/contracts';
@@ -22,11 +24,19 @@ import { Button, ButtonLink } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { DomainImage } from '@/shared/components/media/domain-image';
 
+/**
+ * Cuando la ficha se abre desde el asistente de rutinas, el botón fijo inferior
+ * añade (o quita) el ejercicio del día que se está editando, y «Volver» regresa
+ * al asistente. Sin esto la ficha es la de la biblioteca de siempre.
+ */
+export type DetailPick = { added: boolean; onToggle: () => void; backHref: string };
+
 export function ExerciseDetail({
   id,
   currentUserId,
   role,
-}: Readonly<{ id: string; currentUserId: string; role: UserRole }>) {
+  pick,
+}: Readonly<{ id: string; currentUserId: string; role: UserRole; pick?: DetailPick }>) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const exercise = useQuery({ queryKey: ['exercise', id], queryFn: () => exerciseService.get(id) });
@@ -81,6 +91,7 @@ export function ExerciseDetail({
     item.tipoEjercicio === 'PERSONAL' && item.createdByUsuarioId === currentUserId;
   const canManageMedia =
     ownsPersonalExercise || (item.tipoEjercicio === 'GLOBAL' && role === 'ADMIN');
+  const originLabel = exerciseOriginLabel(item.dataSource);
   const media = item.media.find((entry) => entry.isPrimary) ?? item.media[0];
   const video = selectExerciseVideo(item.media, account.data?.genero ?? null);
   const instructions =
@@ -94,18 +105,18 @@ export function ExerciseDetail({
   return (
     <div className="grid gap-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <ButtonLink href="/exercises" variant="ghost">
+        <ButtonLink href={pick?.backHref ?? '/exercises'} variant="ghost">
           <ArrowLeft className="size-4" />
           Volver
         </ButtonLink>
         <div className="flex flex-wrap gap-2">
-          {ownsPersonalExercise ? (
+          {ownsPersonalExercise && !pick ? (
             <ButtonLink href={`/exercises/${id}/edit`}>
               <Pencil className="size-4" />
               Editar
             </ButtonLink>
           ) : null}
-          {ownsPersonalExercise ? (
+          {ownsPersonalExercise && !pick ? (
             <Button
               loading={inactivate.isPending}
               onClick={async () => {
@@ -124,14 +135,16 @@ export function ExerciseDetail({
               Inactivar
             </Button>
           ) : null}
-          <Button
-            loading={toggle.isPending}
-            onClick={() => toggle.mutate()}
-            variant={favorite ? 'primary' : 'secondary'}
-          >
-            <Heart className="size-4" fill={favorite ? 'currentColor' : 'none'} />
-            {favorite ? 'Frecuente' : 'Agregar a frecuentes'}
-          </Button>
+          {pick ? null : (
+            <Button
+              loading={toggle.isPending}
+              onClick={() => toggle.mutate()}
+              variant={favorite ? 'primary' : 'secondary'}
+            >
+              <Heart className="size-4" fill={favorite ? 'currentColor' : 'none'} />
+              {favorite ? 'Frecuente' : 'Agregar a frecuentes'}
+            </Button>
+          )}
         </div>
       </div>
       <section className="grid gap-8 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
@@ -172,19 +185,24 @@ export function ExerciseDetail({
           </div>
           <div className="p-6 sm:p-8">
             <div className="flex flex-wrap gap-2">
-              <Badge tone="success">{item.estado}</Badge>
+              <Badge tone="success">{exerciseStatusLabel(item.estado)}</Badge>
               <Badge tone={item.tipoEjercicio === 'PERSONAL' ? 'info' : 'neutral'}>
-                {item.tipoEjercicio}
+                {exerciseTypeLabel(item.tipoEjercicio)}
               </Badge>
-              <Badge>{item.dataSource}</Badge>
             </div>
-            <p className="data-label mt-7 text-[var(--text-muted)]">{item.grupoMuscular}</p>
+            <p className="data-label mt-7 text-[var(--text-muted)]">{exerciseGroupLabelEs(item.grupoMuscular)}</p>
             <h1 className="mt-3 break-words text-3xl font-semibold tracking-[-0.02em] sm:text-5xl">
               {item.nombre}
             </h1>
+            <div className="mt-6">
+              <ExerciseSocial exercise={item} />
+            </div>
             <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--text-muted)]">
               {item.descripcion ?? 'Sin descripción adicional.'}
             </p>
+            {originLabel ? (
+              <p className="mt-4 text-xs text-[var(--text-muted)]">Origen: {originLabel}</p>
+            ) : null}
           </div>
         </div>
         <div className="grid content-start gap-5">
@@ -194,21 +212,21 @@ export function ExerciseDetail({
               <div className="flex items-center gap-3">
                 <Target className="size-5 text-[var(--accent-ink)]" />
                 <div>
-                  <p className="text-sm font-semibold">{item.targetMuscle ?? 'No especificado'}</p>
+                  <p className="text-sm font-semibold">{muscleLabelEs(item.targetMuscle) || 'No especificado'}</p>
                   <p className="text-xs text-[var(--text-muted)]">Músculo objetivo</p>
                 </div>
               </div>
               <div className="border-t border-[var(--border-subtle)] pt-4 text-sm text-[var(--text-muted)]">
                 <p>
-                  Parte corporal: <span className="text-[var(--text)]">{item.bodyPart ?? '—'}</span>
+                  Parte corporal: <span className="text-[var(--text)]">{bodyPartLabelEs(item.bodyPart) || '—'}</span>
                 </p>
                 <p className="mt-2">
-                  Sinergista: <span className="text-[var(--text)]">{item.synergistMuscleGroup ?? '—'}</span>
+                  Sinergista: <span className="text-[var(--text)]">{exerciseGroupLabelEs(item.synergistMuscleGroup) || '—'}</span>
                 </p>
               </div>
             </CardContent>
           </Card>
-          <ExerciseMuscles exerciseId={item.id} />
+          {pick ? null : <ExerciseMuscles exerciseId={item.id} />}
           <Card>
             <CardHeader title="Equipamiento" />
             <CardContent>
@@ -223,10 +241,12 @@ export function ExerciseDetail({
               )}
             </CardContent>
           </Card>
-          <ButtonLink href={`/workouts/new?exerciseId=${item.id}`} size="lg" variant="primary">
-            <Play className="size-4" />
-            Usar en una sesión
-          </ButtonLink>
+          {pick ? null : (
+            <ButtonLink href={`/workouts/new?exerciseId=${item.id}`} size="lg" variant="primary">
+              <Play className="size-4" />
+              Usar en una sesión
+            </ButtonLink>
+          )}
         </div>
       </section>
       <section className="grid gap-5 lg:grid-cols-2">
@@ -258,7 +278,20 @@ export function ExerciseDetail({
           </CardContent>
         </Card>
       </section>
-      {canManageMedia ? <ExerciseMediaManager exerciseId={item.id} media={item.media} /> : null}
+      {canManageMedia && !pick ? <ExerciseMediaManager exerciseId={item.id} media={item.media} /> : null}
+      {pick ? (
+        <div
+          aria-label="Acciones del asistente"
+          className="sticky bottom-0 z-30 rounded-t-[var(--radius-lg)] border border-b-0 border-[var(--border-subtle)] bg-[var(--surface-low)] px-4 py-3"
+          role="region"
+        >
+          <div className="flex justify-end">
+            <Button onClick={pick.onToggle} size="lg" variant={pick.added ? 'secondary' : 'primary'}>
+              {pick.added ? 'Quitar de la rutina' : 'Añadir a la rutina'}
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

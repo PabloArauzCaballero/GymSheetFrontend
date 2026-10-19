@@ -1,10 +1,4 @@
 const resourceId = '[A-Za-z0-9-]+';
-/**
- * Código de músculo de la taxonomía (`PECTORALIS_MAJOR`, `DELTOID_ANTERIOR`).
- * Va aparte de `resourceId` porque lleva guion bajo, y abrir el guion bajo a
- * todos los identificadores ampliaría cada ruta de la lista sin necesidad.
- */
-const muscleCode = '[A-Za-z][A-Za-z0-9_]{0,63}';
 // Clave de permiso granular, p. ej. `admin-access:manage` o `moderation:read`
 // (dominio:acción, `admin-permission.catalog.ts`). Va URL-encodeada en el
 // segmento (`encodeURIComponent` convierte `:` en `%3A`), así que el patrón
@@ -73,10 +67,7 @@ const allowedPathPatterns = [
   /^\/exercises\/personal$/u,
   // Máquina que corresponde a un músculo, para el alta de ejercicio propio.
   /^\/exercises\/equipment-suggestion$/u,
-  /^\/exercises\/taxonomy$/u,
   new RegExp(`^/exercises/${resourceId}(/media)?$`, 'u'),
-  // Los músculos que trabaja un ejercicio, para los chips que abren cada uno.
-  new RegExp(`^/exercises/${resourceId}/muscles$`, 'u'),
   /^\/export\/workout-history(\/csv)?$/u,
   /^\/memberships\/me$/u,
   /^\/membership\/plans$/u,
@@ -99,6 +90,11 @@ const allowedPathPatterns = [
   // Punto 11 (conexiones), 10 (estado social) y 5 (directorio + chat).
   /^\/me\/connections$/u,
   new RegExp(`^/me/connections/${resourceId}$`, 'u'),
+  // H10: listar, crear y responder a una revisión vigente.
+  /^\/me\/training-invitations$/u,
+  new RegExp(`^/me/training-invitations/${resourceId}/respond$`, 'u'),
+  new RegExp(`^/me/training-invitations/${resourceId}/calendar\\.ics$`, 'u'),
+  new RegExp(`^/me/training-invitations/${resourceId}/shared-session$`, 'u'),
   /^\/me\/social-status$/u,
   /^\/me\/gym-directory$/u,
   // Ficha social de un socio concreto (directorio + insignias ganadas). Es lo
@@ -116,12 +112,15 @@ const allowedPathPatterns = [
   // plano contra un backend que ya sirve el resto.
   new RegExp(`^/me/conversations/${resourceId}/messages/media$`, 'u'),
   new RegExp(`^/me/conversations/${resourceId}/messages/${resourceId}/view$`, 'u'),
+  new RegExp(`^/me/conversations/${resourceId}/messages/${resourceId}/media$`, 'u'),
   new RegExp(`^/me/conversations/${resourceId}/nickname$`, 'u'),
   new RegExp(`^/me/conversations/${resourceId}/read$`, 'u'),
   // Descubrimiento (R6.1): la baraja, el swipe y el deshacer. `swipes/undo` va
   // en su propia entrada y no como sufijo opcional de `swipes` porque son dos
   // operaciones distintas: una decide, la otra revierte la última decisión.
   /^\/me\/discovery\/deck$/u,
+  /^\/me\/discovery\/preferences$/u,
+  /^\/me\/discovery\/impressions$/u,
   /^\/me\/discovery\/swipes$/u,
   /^\/me\/discovery\/swipes\/undo$/u,
   // Stories (R6.2). `/me/stories` es GET del propio + POST multipart; el feed
@@ -131,7 +130,12 @@ const allowedPathPatterns = [
   /^\/me\/stories$/u,
   /^\/me\/stories\/feed$/u,
   new RegExp(`^/me/stories/${resourceId}$`, 'u'),
-  new RegExp(`^/me/stories/${resourceId}/(view|viewers)$`, 'u'),
+  new RegExp(`^/me/stories/${resourceId}/(view|viewers|replies)$`, 'u'),
+  new RegExp(`^/me/stories/${resourceId}/media$`, 'u'),
+  // Reels H9.M1/M2: first-page feed and multipart publication only.
+  /^\/me\/reels$/u,
+  /^\/me\/reels\/feed$/u,
+  new RegExp(`^/me/reels/${resourceId}/media$`, 'u'),
   // Vistas de perfil (R6.3): lista paginada por cursor, resumen y la marca de
   // «ya la revisé».
   /^\/me\/profile-views$/u,
@@ -157,15 +161,12 @@ const allowedPathPatterns = [
   // Catálogo anatómico: alimenta el selector de músculo del ejercicio propio.
   /^\/muscles$/u,
   /^\/muscle-groups$/u,
-  // La figura anatómica: la ficha de un músculo y sus ejercicios por rol.
-  new RegExp(`^/muscles/${muscleCode}$`, 'u'),
-  new RegExp(`^/muscles/${muscleCode}/exercises$`, 'u'),
   /^\/routines$/u,
   /^\/routines\/import$/u,
   /^\/routines\/assignments\/(me|coach)$/u,
   new RegExp(`^/routines/exercises/${resourceId}$`, 'u'),
   new RegExp(`^/routines/${resourceId}$`, 'u'),
-  new RegExp(`^/routines/${resourceId}/(exercises|assign|schedule|start)$`, 'u'),
+  new RegExp(`^/routines/${resourceId}/(exercises|assign|start)$`, 'u'),
   /^\/user-exercises$/u,
   new RegExp(`^/user-exercises/${resourceId}$`, 'u'),
   /^\/users\/me$/u,

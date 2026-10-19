@@ -1,0 +1,483 @@
+/**
+ * El orden del entrenamiento guiado (C3.e, C8.3.3), como lógica pura: qué
+ * ejercicio toca, en qué vuelta va un bloque y cuánto se descansa tras cada
+ * serie. Sin React ni importaciones de valor, para probarla con `node --test`.
+ *
+ * - Un ejercicio suelto: sus series seguidas, con su `descansoSeg` entre ellas.
+ * - Una superserie o circuito (ejercicios contiguos con el mismo `grupo`):
+ *   A1 → A2 (→ A3…) → descanso tras la vuelta → A1… Entre ejercicios del
+ *   bloque, la transición `descansoEntreSeg` (0 = pasar directo); tras el
+ *   último de la vuelta, el `descansoSeg` del último ejercicio del bloque.
+ */
+
+/** Descanso que se supone cuando la rutina no lo indica (el de siempre). */
+export const FALLBACK_REST_SEC = 90;
+/** Tope del backend para `descansoSegAnterior`. */
+export const MAX_PREVIOUS_REST_SEC = 7200;
+
+export type FlowItem = {
+  id: string;
+  grupo: number | null;
+  grupoTipo?: 'SUPERSERIE' | 'CIRCUITO' | null;
+  /** Series objetivo copiadas de la rutina; `null` en un ejercicio añadido a mano. */
+  target: number | null;
+  /** Series ya registradas hoy. */
+  logged: number;
+  /** Series saltadas hoy (D1): avanzan el flujo, pero no son trabajo hecho. */
+  skipped?: number;
+  /** Ejercicio omitido (D1): el flujo lo da por cerrado. */
+  omitted?: boolean;
+  descansoSeg: number | null;
+  descansoEntreSeg: number | null;
+};
+
+export type FlowBlock<T extends FlowItem> = {
+  kind: 'single' | 'superserie' | 'circuito';
+  /** «A», «B»… en un bloque; `null` en uno suelto. */
+  label: string | null;
+  items: T[];
+  /** Vueltas del bloque (la serie objetivo más alta); en uno suelto, sus series. */
+  rounds: number | null;
+  /** Transición dentro del bloque. */
+  between: number;
+  /** Descanso tras la vuelta (bloque) o tras cada serie (suelto). */
+  restAfter: number | null;
+};
+
+function letter(index: number): string {
+  let n = index;
+  let out = '';
+  do {
+    out = String.fromCharCode(65 + (n % 26)) + out;
+    n = Math.floor(n / 26) - 1;
+  } while (n >= 0);
+  return out;
+}
+
+/** Agrupa en bloques los ejercicios de la sesión, en su orden. */
+export function buildFlowBlocks<T extends FlowItem>(items: readonly T[]): Array<FlowBlock<T>> {
+  const runs: T[][] = [];
+  for (const item of items) {
+    const last = runs[runs.length - 1];
+    const prev = last?.[last.length - 1];
+    if (last && prev && item.grupo !== null && prev.grupo === item.grupo) last.push(item);
+    else runs.push([item]);
+  }
+  const blocks: Array<FlowBlock<T>> = [];
+  let index = 0;
+  for (const run of runs) {
+    const first = run[0];
+    if (!first) continue;
+    if (run.length < 2 || first.grupo === null) {
+      for (const item of run) {
+        blocks.push({ kind: 'single', label: null, items: [item], rounds: item.target, between: 0, restAfter: item.descansoSeg });
+      }
+      continue;
+    }
+    const targets = run.map((item) => item.target).filter((value): value is number => value !== null);
+    const declared = run.find((item) => item.grupoTipo)?.grupoTipo;
+    blocks.push({
+      kind: declared === 'CIRCUITO' || (!declared && run.length >= 3) ? 'circuito' : 'superserie',
+      label: letter(index),
+      items: run,
+      rounds: targets.length > 0 ? Math.max(...targets) : null,
+      between: run.find((item) => item.descansoEntreSeg !== null)?.descansoEntreSeg ?? 0,
+      restAfter: run[run.length - 1]?.descansoSeg ?? null,
+    });
+    index += 1;
+  }
+  return blocks;
+}
+
+/** ¿Le quedan series objetivo a este ejercicio? Sin objetivo, nunca se da por terminado solo. */
+export function isItemDone(item: FlowItem): boolean {
+  if (item.omitted) return true;
+  return item.target !== null && attempted(item) >= item.target;
+}
+
+/** Series por las que ya se pasó: las hechas más las saltadas. Es lo que mueve el flujo. */
+export function attempted(item: Pick<FlowItem, 'logged' | 'skipped'>): number {
+  return item.logged + (item.skipped ?? 0);
+}
+
+export function isBlockDone(block: FlowBlock<FlowItem>): boolean {
+  return block.items.every(isItemDone);
+}
+
+export type FlowStep = {
+  blockIndex: number;
+  itemId: string;
+  /** Vuelta (1…) en un bloque; en uno suelto, el número de la serie siguiente. */
+  round: number;
+};
+
+/**
+ * El paso siguiente de un bloque: la vuelta más baja que aún no completó algún
+ * ejercicio, y dentro de ella el primero en orden (A1 antes que A2).
+ */
+function stepInBlock(block: FlowBlock<FlowItem>, blockIndex: number): FlowStep | null {
+  if (block.kind === 'single') {
+    const item = block.items[0];
+    if (!item || isItemDone(item)) return null;
+    return { blockIndex, itemId: item.id, round: attempted(item) + 1 };
+  }
+  const pending = block.items.filter((item) => !isItemDone(item));
+  if (pending.length === 0) return null;
+  const round = Math.min(...pending.map(attempted)) + 1;
+  const item = block.items.find((candidate) => !isItemDone(candidate) && attempted(candidate) < round);
+  return item ? { blockIndex, itemId: item.id, round } : null;
+}
+
+/** Lo que toca ahora: el primer bloque con trabajo pendiente. `null` = sesión completa. */
+export function currentStep(blocks: ReadonlyArray<FlowBlock<FlowItem>>): FlowStep | null {
+  return stepFrom(blocks, 0);
+}
+
+/**
+ * El siguiente paso empezando por el bloque `startIndex` y dando la vuelta: si
+ * la persona eligió otro ejercicio y registró allí, se sigue desde ese bloque
+ * (A1 → A2 dentro de él) en vez de saltar al primero pendiente.
+ */
+export function stepFrom(blocks: ReadonlyArray<FlowBlock<FlowItem>>, startIndex: number): FlowStep | null {
+  const start = Math.max(0, Math.min(blocks.length - 1, startIndex));
+  for (let offset = 0; offset < blocks.length; offset += 1) {
+    const index = (start + offset) % blocks.length;
+    const block = blocks[index];
+    if (!block) continue;
+    const step = stepInBlock(block, index);
+    if (step) return step;
+  }
+  return null;
+}
+
+/** El paso de un ejercicio concreto (para el que la persona eligió a mano). */
+export function stepOf(blocks: ReadonlyArray<FlowBlock<FlowItem>>, itemId: string): FlowStep | null {
+  const blockIndex = blocks.findIndex((block) => block.items.some((item) => item.id === itemId));
+  const block = blocks[blockIndex];
+  const item = block?.items.find((candidate) => candidate.id === itemId);
+  if (!block || !item) return null;
+  const natural = stepInBlock(block, blockIndex);
+  if (natural && natural.itemId === itemId) return natural;
+  return { blockIndex, itemId, round: attempted(item) + 1 };
+}
+
+/** Los mismos bloques con una serie más registrada en `itemId` (antes de que responda el servidor). */
+export function withLoggedSet<T extends FlowItem>(blocks: ReadonlyArray<FlowBlock<T>>, itemId: string): Array<FlowBlock<T>> {
+  return blocks.map((block) => ({
+    ...block,
+    items: block.items.map((item) => (item.id === itemId ? { ...item, logged: item.logged + 1 } : item)),
+  }));
+}
+
+/** Los mismos bloques con una serie saltada más en `itemId`. */
+export function withSkippedSet<T extends FlowItem>(blocks: ReadonlyArray<FlowBlock<T>>, itemId: string): Array<FlowBlock<T>> {
+  return blocks.map((block) => ({
+    ...block,
+    items: block.items.map((item) => (item.id === itemId ? { ...item, skipped: (item.skipped ?? 0) + 1 } : item)),
+  }));
+}
+
+/** Los mismos bloques con `itemId` omitido. */
+export function withOmitted<T extends FlowItem>(blocks: ReadonlyArray<FlowBlock<T>>, itemId: string): Array<FlowBlock<T>> {
+  return blocks.map((block) => ({
+    ...block,
+    items: block.items.map((item) => (item.id === itemId ? { ...item, omitted: true } : item)),
+  }));
+}
+
+/** Los ejercicios que vienen después del actual, en orden y sin repetir. */
+export function upcomingItems<T extends FlowItem>(
+  blocks: ReadonlyArray<FlowBlock<T>>,
+  step: FlowStep | null,
+  limit = 6,
+): T[] {
+  if (!step) return [];
+  const block = blocks[step.blockIndex];
+  if (!block) return [];
+  const position = block.items.findIndex((item) => item.id === step.itemId);
+  const candidates = [
+    // Lo que queda de esta vuelta…
+    ...block.items.slice(position + 1),
+    // …y, en un bloque, el principio de la vuelta siguiente.
+    ...(block.kind === 'single' ? [] : block.items.slice(0, position)),
+    ...blocks.slice(step.blockIndex + 1).flatMap((next) => next.items),
+  ];
+  const seen = new Set<string>([step.itemId]);
+  const out: T[] = [];
+  for (const item of candidates) {
+    if (seen.has(item.id) || isItemDone(item)) continue;
+    seen.add(item.id);
+    out.push(item);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+export type RestPlan = {
+  /** Segundos de descanso; 0 = pasar directo al siguiente. */
+  seconds: number;
+  kind: 'between' | 'round' | 'set' | 'none';
+};
+
+/**
+ * Cuánto descansar justo después de registrar una serie de `itemId`, con los
+ * contadores **ya actualizados** (la serie recién registrada incluida).
+ */
+export function restAfterLogging(
+  blocks: ReadonlyArray<FlowBlock<FlowItem>>,
+  itemId: string,
+  fallback = FALLBACK_REST_SEC,
+): RestPlan {
+  const blockIndex = blocks.findIndex((block) => block.items.some((item) => item.id === itemId));
+  const block = blocks[blockIndex];
+  if (!block) return { seconds: fallback, kind: 'set' };
+  if (!currentStep(blocks)) return { seconds: 0, kind: 'none' };
+  if (block.kind === 'single') {
+    // Entre series, y también al cambiar de ejercicio: el descanso del que se hizo.
+    return { seconds: block.items[0]?.descansoSeg ?? fallback, kind: 'set' };
+  }
+  const next = stepInBlock(block, blockIndex);
+  const done = block.items.find((item) => item.id === itemId);
+  const position = block.items.findIndex((item) => item.id === itemId);
+  const laterInRound =
+    next !== null &&
+    done !== undefined &&
+    block.items.findIndex((item) => item.id === next.itemId) > position &&
+    next.round === attempted(done);
+  if (laterInRound) return { seconds: block.between, kind: block.between > 0 ? 'between' : 'none' };
+  return { seconds: block.restAfter ?? fallback, kind: 'round' };
+}
+
+/**
+ * El descanso real antes de una serie: el tiempo desde la última serie
+ * registrada en la sesión (de cualquier ejercicio), acotado a 0–7200 s.
+ * La primera serie de la sesión no tiene descanso anterior (0).
+ */
+export function previousRestSeconds(
+  registeredAt: readonly string[],
+  now: number = Date.now(),
+): number {
+  let latest = Number.NEGATIVE_INFINITY;
+  for (const iso of registeredAt) {
+    const time = new Date(iso).getTime();
+    if (Number.isFinite(time) && time > latest) latest = time;
+  }
+  if (!Number.isFinite(latest)) return 0;
+  return Math.min(MAX_PREVIOUS_REST_SEC, Math.max(0, Math.round((now - latest) / 1000)));
+}
+
+/** «2/4» (con objetivo) o «2 series» (sin él). */
+export function progressLabel(item: Pick<FlowItem, 'logged' | 'target'>): string {
+  if (item.target !== null) return `${Math.min(item.logged, item.target)}/${item.target}`;
+  return `${item.logged} ${item.logged === 1 ? 'serie' : 'series'}`;
+}
+
+/** «Vuelta 2/3». */
+export function roundLabel(round: number, rounds: number | null): string {
+  return rounds ? `Vuelta ${Math.min(round, rounds)}/${rounds}` : `Vuelta ${round}`;
+}
+
+/** 80 → «80», 62.5 → «62,5». */
+export function kgLabel(kg: number): string {
+  return (Number.isInteger(kg) ? String(kg) : kg.toFixed(1).replace(/\.0$/, '')).replace('.', ',');
+}
+
+/** «9 × 80 kg» (reps × carga), como se dice en la sala. */
+export function lastTimeLabel(set: { pesoKg: number; repeticiones: number }): string {
+  return `${set.repeticiones} × ${kgLabel(set.pesoKg)} kg`;
+}
+
+/**
+ * Si una serie supera a la mejor de la última vez: más peso, o el mismo peso
+ * con más repeticiones. Sin referencia (primera vez) o sin carga, no hay
+ * marca que batir — un 0 kg × 13 no es «mejor» que 0 kg × 12 en un gesto sin peso.
+ */
+type LoadedSet = { pesoKg: number | null; repeticiones: number | null };
+
+export function beatsReference(set: LoadedSet, reference: LoadedSet | null | undefined): boolean {
+  const weight = set.pesoKg ?? 0;
+  const before = reference?.pesoKg ?? 0;
+  if (!reference || weight <= 0 || before <= 0) return false;
+  if (weight > before) return true;
+  return weight === before && (set.repeticiones ?? 0) > (reference.repeticiones ?? 0);
+}
+
+/** Tope del backend para una serie de fuerza por tiempo. */
+export const MAX_TIMED_SET_SEC = 3600;
+
+/**
+ * Los segundos que se escribieron para una serie por tiempo: «45» o «1:30».
+ * `null` si no es un número entero de 1 a 3600 s.
+ */
+export function parseSeconds(text: string): number | null {
+  const value = text.trim();
+  const clock = /^(\d{1,2}):([0-5]\d)$/u.exec(value);
+  const seconds = clock ? Number(clock[1]) * 60 + Number(clock[2]) : /^\d+$/u.test(value) ? Number(value) : Number.NaN;
+  return Number.isInteger(seconds) && seconds >= 1 && seconds <= MAX_TIMED_SET_SEC ? seconds : null;
+}
+
+/** ±`delta` segundos sobre lo escrito, dentro de 1–3600 (vacío o inválido parte de 0). */
+export function bumpSeconds(text: string, delta: number): string {
+  const current = parseSeconds(text) ?? 0;
+  return String(Math.max(1, Math.min(MAX_TIMED_SET_SEC, current + delta)));
+}
+
+/* ─── Modo enfoque: una página por bloque ────────────────────────────────── */
+
+/** Cuánto de un bloque está hecho, de 0 a 1 (para su segmento de la barra de progreso). */
+export function blockFill(block: FlowBlock<FlowItem>): number {
+  let done = 0;
+  let total = 0;
+  for (const item of block.items) {
+    // Sin objetivo (añadido a mano): una serie ya lo da por empezado y hecho.
+    const target = item.target ?? Math.max(1, attempted(item));
+    total += target;
+    // Omitido: el tramo se cierra entero (se pinta apagado, ver `blockState`).
+    done += item.omitted ? target : Math.min(attempted(item), target);
+  }
+  return total > 0 ? done / total : 0;
+}
+
+/** Cómo se pinta el tramo de un bloque: hecho, a medias, omitido entero o con series saltadas. */
+export type BlockState = 'pending' | 'active' | 'done' | 'partial' | 'omitted';
+
+export function blockState(block: FlowBlock<FlowItem>): BlockState {
+  if (block.items.length > 0 && block.items.every((item) => item.omitted)) return 'omitted';
+  const anySkipped = block.items.some((item) => item.omitted || (item.skipped ?? 0) > 0);
+  if (isBlockDone(block)) return anySkipped ? 'partial' : 'done';
+  return block.items.some((item) => attempted(item) > 0) ? 'active' : 'pending';
+}
+
+/** El número de la serie que viene: una más que la mayor hecha o saltada. */
+export function nextSetNumber(done: readonly number[], skipped: readonly number[] = []): number {
+  return Math.max(0, ...done, ...skipped) + 1;
+}
+
+/** Motivos de saltar u omitir (D1), con su texto. El orden es el de la hoja. */
+export const SKIP_REASONS = [
+  { code: 'CANSANCIO', label: 'Cansancio' },
+  { code: 'PRISA', label: 'Voy con prisa' },
+  { code: 'DOLOR', label: 'Dolor o molestia' },
+  { code: 'EQUIPO_OCUPADO', label: 'Equipo ocupado' },
+  { code: 'TECNICA', label: 'No me sale la técnica' },
+  { code: 'OTRO', label: 'Otro motivo' },
+] as const;
+
+export type SkipReasonCode = (typeof SKIP_REASONS)[number]['code'];
+
+export function skipReasonLabel(code: string): string {
+  return SKIP_REASONS.find((reason) => reason.code === code)?.label ?? 'Otro motivo';
+}
+
+/* ─── Descanso a mano (D2) ───────────────────────────────────────────────── */
+
+export const REST_STEP = 5;
+export const REST_MAX_SEC = 7200;
+export const REST_BETWEEN_MAX_SEC = 600;
+/** Atajos de la hoja de descanso. */
+export const REST_SHORTCUTS = [30, 60, 90, 120, 180] as const;
+
+/** Acota y redondea al paso de 5 s. */
+export function clampRest(seconds: number, max = REST_MAX_SEC): number {
+  if (!Number.isFinite(seconds)) return 0;
+  return Math.max(0, Math.min(max, Math.round(seconds / REST_STEP) * REST_STEP));
+}
+
+/** 150 → «2:30», 45 → «0:45». */
+export function restLabel(seconds: number): string {
+  const total = Math.max(0, Math.round(seconds));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
+
+/**
+ * A quién aplica un cambio de descanso: solo al ejercicio, o a todos los que
+ * aún tienen trabajo pendiente hoy (el propio incluido).
+ */
+export function restTargets<T extends FlowItem>(
+  blocks: ReadonlyArray<FlowBlock<T>>,
+  itemId: string,
+  scope: 'one' | 'remaining',
+): T[] {
+  const all = blocks.flatMap((block) => block.items);
+  if (scope === 'one') return all.filter((item) => item.id === itemId);
+  return all.filter((item) => item.id === itemId || !isItemDone(item));
+}
+
+/**
+ * El ejercicio activo de una página: el que la persona eligió dentro del
+ * bloque (A2 en vez de A1), si no el que toca, y con el bloque terminado el
+ * último (para una serie extra).
+ */
+export function activeItemOf<T extends FlowItem>(
+  blocks: ReadonlyArray<FlowBlock<T>>,
+  blockIndex: number,
+  chosenId: string | null = null,
+): { item: T; step: FlowStep; done: boolean } | null {
+  const block = blocks[blockIndex];
+  if (!block) return null;
+  const chosen = chosenId ? block.items.find((item) => item.id === chosenId) : undefined;
+  const natural = stepFrom([block], 0);
+  const item = chosen ?? block.items.find((candidate) => candidate.id === natural?.itemId) ?? block.items[block.items.length - 1];
+  if (!item) return null;
+  const step = stepOf(blocks, item.id);
+  return step ? { item, step, done: isItemDone(item) } : null;
+}
+
+/**
+ * La página a la que ir tras registrar: la del paso siguiente o, con la sesión
+ * completa, la del resumen (una más que los bloques).
+ */
+export function pageAfterLogging(blocks: ReadonlyArray<FlowBlock<FlowItem>>, next: FlowStep | null): number {
+  return next ? next.blockIndex : blocks.length;
+}
+
+/** Horas a partir de las cuales una sesión abierta ya no es «la de ahora». */
+export const STALE_SESSION_HOURS = 6;
+
+/** ¿La sesión lleva abierta tanto que lo honesto es preguntar si se reanuda? */
+export function isStaleSession(startIso: string, now: number = Date.now(), hours = STALE_SESSION_HOURS): boolean {
+  const start = new Date(startIso).getTime();
+  return Number.isFinite(start) && now - start > hours * 3_600_000;
+}
+
+/** Cronómetro de la sesión: «4:07», «1:02:33». Nunca negativo. */
+export function sessionClock(startIso: string, now: number = Date.now()): string {
+  const start = new Date(startIso).getTime();
+  const total = Number.isFinite(start) ? Math.max(0, Math.floor((now - start) / 1000)) : 0;
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = String(total % 60).padStart(2, '0');
+  return hours > 0 ? `${hours}:${String(minutes).padStart(2, '0')}:${seconds}` : `${minutes}:${seconds}`;
+}
+
+/**
+ * Título de la sesión a partir de su nota. Al empezar desde una rutina la nota
+ * es «Plan: <rutina> · <día>»: el día es el título y la rutina, el apoyo.
+ * Una nota escrita a mano o vacía no da título (se usa «Entrenamiento»).
+ */
+export function sessionTitle(observacion: string | null | undefined): { title: string; subtitle: string | null } {
+  const note = observacion?.trim() ?? '';
+  const plan = /^Plan:\s*(.+)$/u.exec(note);
+  if (!plan?.[1]) return { title: 'Entrenamiento', subtitle: null };
+  const parts = plan[1].split(' · ').map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 2) return { title: parts[0] ?? 'Entrenamiento', subtitle: null };
+  return { title: parts[parts.length - 1] ?? 'Entrenamiento', subtitle: parts.slice(0, -1).join(' · ') };
+}
+
+/**
+ * El peso con el que abre una serie: el de la última serie de hoy, si no la
+ * carga sugerida por el programa, si no el de la última vez, si no el objetivo
+ * de la rutina. `null` = no se sabe (no se inventa un 0: el campo sale vacío).
+ */
+export function openingWeight(sources: {
+  today?: number | null;
+  suggested?: number | null;
+  lastTime?: number | null;
+  target?: number | null;
+}): number | null {
+  for (const value of [sources.today, sources.suggested, sources.lastTime, sources.target]) {
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0) return value;
+  }
+  // Un 0 explícito de hoy (peso corporal) sí se respeta.
+  return sources.today === 0 ? 0 : null;
+}

@@ -81,6 +81,8 @@ interface TourState {
   setStep: (step: number) => void;
   /** Closes and remembers, so it never reappears unasked. */
   complete: () => Promise<void>;
+  /** Cierra la guía SIN darla por vista: la pantalla que explicaba ya no está delante. */
+  dismiss: () => void;
   measure: (id: string, rect: TargetRect) => void;
   forget: (id: string) => void;
   /**
@@ -173,6 +175,7 @@ export const useTourStore = create<TourState>((set, get) => ({
     return true;
   },
   setStep: (step) => set({ step }),
+  dismiss: () => set({ restoreOffset: null, active: null, step: 0, closedAt: Date.now() }),
   complete: async () => {
     const key = get().active;
     const { scroller, restoreOffset } = get();

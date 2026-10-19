@@ -1,9 +1,9 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
-import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import type { NotificationSeverity, ToastItem } from '@gymsheet/notifications';
-import { colors, fontSizes, minTouchTarget, motion, radii, semibold, spacing, tones } from '@/theme';
+import { colors, fontSizes, ink, minTouchTarget, motion, radii, semibold, spacing, tones } from '@/theme';
 import { toastQueue } from './notify';
 import { useReduceMotion } from './use-reduce-motion';
 
@@ -58,7 +58,7 @@ export function ToastHost() {
       pointerEvents="box-none"
       style={[
         StyleSheet.absoluteFill,
-        { paddingTop: insets.top + spacing.sm, paddingHorizontal: spacing.md, gap: spacing.sm },
+        { paddingTop: insets.top + spacing.xs, paddingHorizontal: spacing.md, gap: spacing.sm },
       ]}
     >
       {items.map((item) => (
@@ -94,12 +94,26 @@ function ToastCard({ item }: { item: ToastItem }) {
     }).start();
   }, [item.pending, item.severity, progress, reduceMotion]);
 
+  // VoiceOver no siempre lee una región viva que aparece sola: se anuncia el texto además de la etiqueta.
+  const spoken = [item.title, item.message, item.description].filter(Boolean).join('. ');
+  useEffect(() => {
+    if (!item.pending && spoken) AccessibilityInfo.announceForAccessibility(spoken);
+  }, [item.pending, spoken]);
+
+  // Un aviso sin acción no captura toques: tapaba «‹ Volver» y el resto de la cabecera mientras duraba.
+  const passThrough = !item.action;
+
   const translateY = reduceMotion
     ? 0
     : progress.interpolate({ inputRange: [0, 1], outputRange: [-16, 0] });
 
   return (
-    <Animated.View style={{ opacity: progress, transform: [{ translateY }] }}>
+    <Animated.View
+      pointerEvents={passThrough ? 'none' : 'auto'}
+      // Base opaca: el fondo del tono de éxito es un tinte al 12 % y, sin ella, el título de la
+      // cabecera se leía a través del aviso.
+      style={{ opacity: progress, transform: [{ translateY }], borderRadius: radii.lg, backgroundColor: colors.surfaceHigh }}
+    >
       <Pressable
         accessible
         accessibilityRole="alert"
@@ -120,9 +134,11 @@ function ToastCard({ item }: { item: ToastItem }) {
           borderWidth: 1,
           borderColor: tone.border,
           backgroundColor: tone.bg,
-          padding: spacing.md,
+          // Más bajo que antes: con `spacing.md` arriba y abajo el aviso rozaba el «‹ Volver» de la cabecera.
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.sm,
           // Lifts the card off the screen content behind it (iOS + Android).
-          shadowColor: '#000000',
+          shadowColor: ink.black,
           shadowOpacity: 0.45,
           shadowRadius: 18,
           shadowOffset: { width: 0, height: 10 },

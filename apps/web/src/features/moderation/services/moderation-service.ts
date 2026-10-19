@@ -6,6 +6,10 @@ export const moderationTargetKinds = [
   'PROFILE_PHOTO',
   'CHAT_MESSAGE',
   'USER',
+  'REEL',
+  'ROUTINE',
+  'EXERCISE',
+  'COMMENT',
 ] as const;
 export type ModerationTargetKind = (typeof moderationTargetKinds)[number];
 
@@ -18,9 +22,19 @@ export const moderationReasons = [
   'PERFIL_FALSO',
   'MENOR_DE_EDAD',
   'DROGAS',
+  'EJERCICIO_PELIGROSO',
+  'INFORMACION_ENGANOSA',
+  'PLAGIO',
   'OTRO',
 ] as const;
 export type ModerationReason = (typeof moderationReasons)[number];
+
+const TRAINING_REASONS: ModerationReason[] = ['EJERCICIO_PELIGROSO', 'INFORMACION_ENGANOSA', 'PLAGIO'];
+export function reasonsFor(kind: ModerationTargetKind): ModerationReason[] {
+  return kind === 'ROUTINE' || kind === 'EXERCISE' || kind === 'COMMENT'
+    ? [...moderationReasons]
+    : moderationReasons.filter((reason) => !TRAINING_REASONS.includes(reason));
+}
 
 /** Cómo se dice cada motivo a una persona, no cómo lo guarda la base. */
 export const REASON_LABEL: Record<ModerationReason, string> = {
@@ -32,6 +46,9 @@ export const REASON_LABEL: Record<ModerationReason, string> = {
   PERFIL_FALSO: 'Perfil falso o suplantación',
   MENOR_DE_EDAD: 'Parece una persona menor de edad',
   DROGAS: 'Drogas o sustancias ilegales',
+  EJERCICIO_PELIGROSO: 'Ejercicio peligroso',
+  INFORMACION_ENGANOSA: 'Información engañosa',
+  PLAGIO: 'Plagio',
   OTRO: 'Otro motivo',
 };
 
@@ -40,6 +57,10 @@ export const TARGET_LABEL: Record<ModerationTargetKind, string> = {
   PROFILE_PHOTO: 'Foto de perfil',
   CHAT_MESSAGE: 'Mensaje',
   USER: 'Perfil',
+  REEL: 'Reel',
+  ROUTINE: 'Rutina',
+  EXERCISE: 'Ejercicio',
+  COMMENT: 'Comentario',
 };
 
 /**
@@ -64,7 +85,7 @@ export const moderationCaseSchema = z.object({
   claimed_by_user_id: z.string().uuid().nullable(),
   claimed_by_name: z.string().nullable(),
   claimed_at: z.string().nullable(),
-  content_hidden: z.boolean(),
+  content_hidden: z.boolean().nullish().transform((value) => value ?? false),
 });
 
 export type ModerationCase = z.infer<typeof moderationCaseSchema>;
@@ -101,9 +122,7 @@ export type ModerationCaseDetail = z.infer<typeof moderationCaseDetailSchema>;
 const resolveResultSchema = z.object({
   resolved: z.boolean(),
   reportsClosed: z.number().int(),
-  sanction: z
-    .object({ kind: z.string(), days: z.number().int().nullable() })
-    .nullable(),
+  sanction: z.object({ kind: z.string(), days: z.number().int().nullable() }).nullable(),
   contentHidden: z.boolean(),
 });
 
@@ -138,11 +157,9 @@ export const moderationService = {
     ),
 
   release: (targetKind: ModerationTargetKind, targetId: string) =>
-    apiRequest(
-      `${casePath(targetKind, targetId)}/release`,
-      z.object({ released: z.boolean() }),
-      { method: 'POST' },
-    ),
+    apiRequest(`${casePath(targetKind, targetId)}/release`, z.object({ released: z.boolean() }), {
+      method: 'POST',
+    }),
 
   resolve: (
     targetKind: ModerationTargetKind,

@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { equipmentStatuses, equipmentTypes, trainingGoals, userRoles } from '@gymsheet/types';
 
 export const problemSchema = z.object({
+  /** Código estable de dominio (`ROUTINE_HAS_NO_DAYS`…). */
+  code: z.string().optional(),
+  details: z.record(z.string(), z.unknown()).optional(),
   type: z.string().optional(),
   title: z.string().optional(),
   status: z.number().optional(),
@@ -143,10 +146,30 @@ export const exerciseMediaSchema = z
   })
   .passthrough();
 
+export const ratingSummarySchema = z.object({
+  promedio: z.number().nullable(),
+  total: z.number().int(),
+});
+
+/**
+ * Identificador con forma de UUID, sin exigir versión ni variante.
+ *
+ * Zod 4 valida RFC 9562 de verdad (`z.string().uuid()` rechaza
+ * `00000000-0000-0000-0000-0000000000e2`), mientras que el backend valida con
+ * Zod 3, que sólo mira la forma. Los ejercicios de la siembra de demostración
+ * llevan ids así, y con la validación estricta una sola fila rota la página
+ * entera del catálogo con «Respuesta no válida».
+ */
+const uuidShape = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu);
+
 export const exerciseSchema = z
   .object({
-    id: z.string().uuid(),
+    id: uuidShape,
     nombre: z.string(),
+    /** Nombre revisado en español (C3.b); la interfaz muestra `nombreEs ?? nombre`. */
+    nombreEs: z.string().nullable().optional(),
+    /** Su lámina (o el póster de su vídeo), ya resuelta por el servidor. Aditivo. */
+    imagenUrl: z.string().nullable().optional(),
     grupoMuscular: z.string(),
     descripcion: z.string().nullable(),
     tipoEjercicio: z.enum(['GLOBAL', 'PERSONAL']),
@@ -164,6 +187,11 @@ export const exerciseSchema = z
     metadata: z.record(z.string(), z.unknown()),
     equipment: z.array(equipmentSchema),
     media: z.array(exerciseMediaSchema),
+    meGustaTotal: z.number().int().default(0),
+    valoracion: ratingSummarySchema.default({ promedio: null, total: 0 }),
+    estadoModeracion: z.string().default('VISIBLE'),
+    meGusta: z.boolean().optional(),
+    esFavorito: z.boolean().optional(),
   })
   .passthrough();
 
@@ -182,6 +210,25 @@ export function pageSchema<T extends z.ZodType>(itemSchema: T) {
     totalPages: z.number().int(),
   });
 }
+
+/**
+ * Página del buscador de ejercicios (`GET /exercises?search=`). Además de la
+ * página de siempre trae la corrección («¿Quisiste decir sentadilla?») y lo que
+ * el servidor entendió. Opcionales: un servidor anterior no los manda.
+ */
+export const exerciseSearchPageSchema = pageSchema(exerciseSchema).extend({
+  sugerencia: z.string().nullable().optional(),
+  consulta: z.string().nullable().optional(),
+});
+export type ExerciseSearchPage = z.infer<typeof exerciseSearchPageSchema>;
+
+/** Atajos de la pantalla vacía del buscador (`GET /exercises/shortcuts`). */
+export const exerciseShortcutsSchema = z.object({
+  recientes: z.array(exerciseSchema).default([]),
+  masUsados: z.array(exerciseSchema).default([]),
+  populares: z.array(exerciseSchema).default([]),
+});
+export type ExerciseShortcuts = z.infer<typeof exerciseShortcutsSchema>;
 
 /**
  * Zonas del cuerpo y, dentro de cada una, los músculos que entrenan, con

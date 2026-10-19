@@ -1,0 +1,14 @@
+yarn run v1.22.22
+$ jest --runInBand --runInBand src/modules/social/social-map.service.spec.ts src/modules/social/social-map.repository.spec.ts src/modules/social/social.service.spec.ts src/modules/social/social-discovery.spec.ts src/modules/social/social-discovery-settings.policy.spec.ts
+PASS src/modules/social/social-map.service.spec.ts
+PASS src/modules/social/social.service.spec.ts
+PASS src/modules/social/social-discovery.spec.ts
+PASS src/modules/social/social-map.repository.spec.ts
+PASS src/modules/social/social-discovery-settings.policy.spec.ts
+
+Test Suites: 5 passed, 5 total
+Tests:       44 passed, 44 total
+Snapshots:   0 total
+Time:        2.05 s
+Ran all test suites matching /src\/modules\/social\/social-map.service.spec.ts|src\/modules\/social\/social-map.repository.spec.ts|src\/modules\/social\/social.service.spec.ts|src\/modules\/social\/social-discovery.spec.ts|src\/modules\/social\/social-discovery-settings.policy.spec.ts/i.
+Done in 3.24s.

@@ -54,21 +54,23 @@ export type TenantDefinition = {
   readonly colors: TenantBrandColors;
 };
 
-/** Identidad de referencia del producto. */
+/** Identidad de referencia de la plataforma REPP. */
 export const gymsheetTenant: TenantDefinition = {
   id: 'gymsheet',
-  name: 'GymSheet',
-  wordmark: 'GYMSHEET',
-  monogram: 'GS',
+  // De cara a la gente la app se llama REPP (relanzamiento 13/10). El `id`
+  // se queda: es el que viaja en configuración, cookies y almacenamiento.
+  name: 'REPP',
+  wordmark: 'REPP',
+  monogram: 'R',
   colors: {
-    accent: '#c3f400',
-    accentDim: '#abd600',
-    accentGradient: ['#d8ff33', '#a8d400'],
+    accent: '#2E8B7B',
+    accentDim: '#2E8B7B',
+    accentGradient: ['#3AA593', '#2E8B7B'],
     accentContrast: '#000000',
-    accentInkOnDark: '#c3f400',
-    accentInkOnLight: '#55730a',
-    successOnDark: '#c3f400',
-    successOnLight: '#4d6b00',
+    accentInkOnDark: '#74CFBE',
+    accentInkOnLight: '#22685D',
+    successOnDark: '#62D99C',
+    successOnLight: '#216B46',
   },
 };
 

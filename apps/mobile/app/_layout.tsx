@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { BricolageGrotesque_600SemiBold } from '@expo-google-fonts/bricolage-grotesque/600SemiBold';
+import { BricolageGrotesque_700Bold } from '@expo-google-fonts/bricolage-grotesque/700Bold';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -15,7 +17,16 @@ export default function RootLayout() {
   // render sale un hueco. Da igual en una pestana, pero la primera pantalla que
   // ve alguien nuevo es el tutorial, y ahi el hueco es lo primero que se ve.
   // Esperar a la fuente cuesta unos milisegundos y evita esa primera impresion.
-  const [fontsLoaded] = useFonts(Ionicons.font);
+  // La display del rediseño (Bricolage Grotesque, C8.1) se carga a la vez: solo
+  // los dos pesos que usa `Text` (títulos y cifras), no la familia entera.
+  // Si una fuente falla, se sigue con la del sistema: esperar para siempre
+  // dejaría la app en negro tras el logo.
+  const [fontsReady, fontError] = useFonts({
+    ...Ionicons.font,
+    BricolageGrotesque_600SemiBold,
+    BricolageGrotesque_700Bold,
+  });
+  const fontsLoaded = fontsReady || fontError != null;
 
   useEffect(() => {
     void hydrate();

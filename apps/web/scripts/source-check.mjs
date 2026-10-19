@@ -9,6 +9,16 @@ const allowedFetchFiles = new Set([
   'src/shared/server/backend.ts',
   'src/shared/server/media-proxy.ts',
 ]);
+/**
+ * El almacenamiento del navegador está prohibido para datos de sesión. El
+ * borrador del asistente de rutinas no lo es: es texto que la persona escribió y
+ * que no debe perderse al recargar. Va en `sessionStorage` (muere con la
+ * pestaña) y sólo ese almacén (y su prueba) están autorizados a tocarlo.
+ */
+const allowedStorageFiles = new Set([
+  'src/features/routine-wizard/draft-store.ts',
+  'src/features/routine-wizard/draft-store.test.ts',
+]);
 const sourceExtensions = new Set(['.ts', '.tsx', '.css']);
 
 /**
@@ -46,7 +56,7 @@ for (const absolute of await walk(sourceRoot)) {
   if (/\bfetch\s*\(/u.test(content) && !allowedFetchFiles.has(relative)) {
     findings.push(`${relative}: direct fetch outside the authorized network layer`);
   }
-  if (/\b(localStorage|sessionStorage)\b/u.test(content)) {
+  if (/\b(localStorage|sessionStorage)\b/u.test(content) && !allowedStorageFiles.has(relative)) {
     findings.push(`${relative}: browser storage is prohibited for session data`);
   }
   if (/(@ts-ignore|@ts-nocheck|\bas any\b)/u.test(content)) {

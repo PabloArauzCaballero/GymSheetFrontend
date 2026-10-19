@@ -24,6 +24,8 @@ export type ExerciseFilters = {
   equipoId?: string;
   bodyPart?: string;
   targetMuscle?: string;
+  /** Sólo los favoritos de quien pregunta (privados). */
+  favoritos?: boolean;
   dataSource?: 'CUSTOM' | 'EXERCISES_DATASET';
 };
 

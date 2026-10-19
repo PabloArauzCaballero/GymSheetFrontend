@@ -1,0 +1,82 @@
+{
+  "api": {
+    "actors": {},
+    "ready": false
+  },
+  "cases": [
+    {
+      "id": "H3.S2.M1",
+      "reasons": [
+        "required driver H3.S2.M1-A_WEB.py missing",
+        "required driver H3.S2.M1-B_WEB.py missing"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H3.S2.M2",
+      "reasons": [
+        "required driver H3.S2.M2-A_WEB.py missing",
+        "required driver H3.S2.M2-B_WEB.py missing"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H3.S2.M3",
+      "reasons": [
+        "required driver H3.S2.M3-A_WEB.py missing",
+        "required driver H3.S2.M3-B_WEB.py missing"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H3.S2.M4",
+      "reasons": [
+        "required driver H3.S2.M4-A_WEB.py missing"
+      ],
+      "verdict": "BLOCKED"
+    }
+  ],
+  "createdAt": "2026-10-09T21:59:30Z",
+  "devices": {
+    "android": {
+      "ready": false,
+      "serial": null
+    },
+    "ios": {
+      "booted": false,
+      "udid": null
+    }
+  },
+  "ports": {
+    "api": 3011,
+    "web": 3002
+  },
+  "repositories": {
+    "backend": {
+      "branch": "feat/biblioteca-ejercicios",
+      "dirty": true,
+      "present": true,
+      "sha": "474da618fe4d191ae5d5f25b2dac537fd3a6856f"
+    },
+    "frontend": {
+      "branch": "dev",
+      "dirty": true,
+      "present": true,
+      "sha": "6b66d8aba9329f4897e900a9e3be09f495c41343"
+    },
+    "recommendations": {
+      "branch": "main",
+      "dirty": true,
+      "present": true,
+      "sha": null
+    }
+  },
+  "runId": "5c9ddee0-e93c-4dd1-8268-c198aa39d79e",
+  "schemaVersion": 1,
+  "secretsIncluded": false,
+  "versions": {
+    "node": "v24.19.0",
+    "python": "3.14.7",
+    "yarn": "1.22.22"
+  }
+}

@@ -14,9 +14,7 @@ import { ProgressTrack } from './progression-track';
  * dibujan, de modo que la tarjeta de entrada y la pantalla a la que lleva no
  * puedan divergir.
  */
-export function SendaCard({
-  progression,
-}: Readonly<{ progression: Progression }>) {
+export function SendaCard({ progression }: Readonly<{ progression: Progression }>) {
   const level = progression.level;
   if (!level) return null;
 
@@ -37,11 +35,7 @@ export function SendaCard({
             backgroundColor: withAlpha(level.color, 0.16),
           }}
         >
-          <ProgressionIcon
-            className="size-7"
-            name={level.icon}
-            style={{ color: level.color }}
-          />
+          <ProgressionIcon className="size-7" name={level.icon} style={{ color: level.color }} />
         </span>
         <div className="grid min-w-0 flex-1 gap-0.5">
           <span className="text-xl font-semibold tracking-[-0.02em] text-[var(--text)]">

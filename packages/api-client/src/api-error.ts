@@ -13,13 +13,25 @@ export class ApiError extends Error {
   readonly status: number;
   readonly requestId?: string;
   readonly kind: ApiErrorKind;
+  /** Código estable de dominio (`ROUTINE_HAS_NO_DAYS`…) cuando el backend lo declara. */
+  readonly code?: string;
+  readonly details?: Record<string, unknown>;
 
-  constructor(input: { message: string; status: number; requestId?: string; kind: ApiErrorKind }) {
+  constructor(input: {
+    message: string;
+    status: number;
+    requestId?: string;
+    kind: ApiErrorKind;
+    code?: string;
+    details?: Record<string, unknown>;
+  }) {
     super(input.message);
     this.name = 'ApiError';
     this.status = input.status;
     this.requestId = input.requestId;
     this.kind = input.kind;
+    this.code = input.code;
+    this.details = input.details;
   }
 }
 

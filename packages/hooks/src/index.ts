@@ -13,3 +13,12 @@
  * `resolver.extraNodeModules`). See docs/mobile/registro-de-decisiones.md (ADR-008).
  */
 export * from './query-keys';
+
+/** Lógica pura del asistente de creación de rutinas (sin React; ver ADR-008). */
+export * from './routine-draft';
+
+/** Catálogo de rutinas, tarjetas y vistas del calendario (sin React). */
+export * from './routine-catalog';
+
+/** Programas de fuerza y cardio: activación, metas, propuesta RF-20 y cálculo de zonas. */
+export * from './programs';

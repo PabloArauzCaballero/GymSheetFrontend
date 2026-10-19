@@ -12,10 +12,14 @@ import {
 } from '@/lib/social-labels';
 import {
   accentPolicy,
+  alpha,
   colors,
   fontSizes,
   iconSizes,
+  ink,
   minTouchTarget,
+  onMedia,
+  overlay,
   radii,
   semibold,
   spacing,
@@ -57,10 +61,10 @@ const SEGMENT_HEIGHT = 3;
  * de una tarjeta improvisada. Tres paradas, no dos: con dos, el tramo medio
  * sube demasiado rápido y vuelve a leerse como una banda.
  */
-const SCRIM_BOTTOM = ['rgba(0,0,0,0)', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.88)'] as const;
+const SCRIM_BOTTOM = [overlay.clearDark, alpha(ink.black, 0.45), overlay.scrimStrong] as const;
 
 /** Cabecera: sólo lo justo para que las barras blancas no se pierdan en una foto clara. */
-const SCRIM_TOP = ['rgba(0,0,0,0.45)', 'rgba(0,0,0,0)'] as const;
+const SCRIM_TOP = [alpha(ink.black, 0.45), overlay.clearDark] as const;
 
 /** Paradas del degradado del pie: el tramo medio es el que evita la banda. */
 const SCRIM_BOTTOM_STOPS = [0, 0.45, 1] as const;
@@ -120,14 +124,15 @@ export function DirectoryCardFace({
   const photos = galleryOf(entry);
   const index = Math.min(Math.max(photoIndex, 0), Math.max(photos.length - 1, 0));
   const current = photos[index] ?? null;
-  // La siguiente foto se descarga antes de que nadie la pida: sin esto, el
-  // primer toque del carrusel muestra un hueco gris y la ilusión se rompe justo
-  // en el gesto que la tarjeta existe para ofrecer.
+  // Sólo la baraja ofrece un carrusel de fotos. En Comunidad y en las tarjetas
+  // de interacciones se pintaba una sola foto, pero este prefetch descargaba la
+  // siguiente de cada persona igualmente: hasta 50 solicitudes extra al abrir
+  // Comunidad, muchas con la resolución original.
   const nextUrl = photos[index + 1]?.url ?? null;
 
   useEffect(() => {
-    if (nextUrl) void Image.prefetch(nextUrl);
-  }, [nextUrl]);
+    if (onStepPhoto && nextUrl) void Image.prefetch(nextUrl).catch(() => undefined);
+  }, [nextUrl, onStepPhoto]);
 
   const meta = [
     entry.objetivo ? (TRAINING_GOAL_LABEL[entry.objetivo] ?? entry.objetivo) : null,
@@ -156,7 +161,10 @@ export function DirectoryCardFace({
     >
       {current ? (
         <Image
+          cachePolicy="memory-disk"
           contentFit="cover"
+          priority="low"
+          recyclingKey={current.url}
           source={{ uri: current.url }}
           style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
           // Entre fotos de la misma persona el cruce es corto: es navegación
@@ -183,10 +191,10 @@ export function DirectoryCardFace({
               borderRadius: radii.full,
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: colors.volt,
+              backgroundColor: colors.surfaceHighest,
             }}
           >
-            <Text style={{ color: colors.background, fontSize: fontSizes.xl, fontWeight: '700' }}>
+            <Text style={{ color: colors.textSecondary, fontSize: fontSizes.xl, fontWeight: semibold }}>
               {initialsOf(entry.displayName, undefined)}
             </Text>
           </View>
@@ -246,7 +254,7 @@ export function DirectoryCardFace({
                   height: SEGMENT_HEIGHT,
                   borderRadius: radii.full,
                   backgroundColor:
-                    position === index ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.30)',
+                    position === index ? alpha(onMedia.text, 0.95) : alpha(onMedia.text, 0.3),
                 }}
               />
             ))}
@@ -277,7 +285,7 @@ export function DirectoryCardFace({
               numberOfLines={1}
               style={{
                 flexShrink: 1,
-                color: '#fff',
+                color: onMedia.text,
                 fontSize: nameSize,
                 fontWeight: '700',
                 letterSpacing: nameSize * -0.02,
@@ -288,7 +296,7 @@ export function DirectoryCardFace({
             {typeof entry.age === 'number' ? (
               <Text
                 style={{
-                  color: 'rgba(255,255,255,0.92)',
+                  color: alpha(onMedia.text, 0.92),
                   fontSize: nameSize * 0.82,
                   fontWeight: '400',
                 }}
@@ -302,7 +310,7 @@ export function DirectoryCardFace({
             <Text
               numberOfLines={2}
               style={{
-                color: 'rgba(255,255,255,0.86)',
+                color: onMedia.textSoft,
                 fontSize: fontSizes.sm,
                 lineHeight: 19,
                 marginTop: 2,
@@ -366,10 +374,10 @@ export function DirectoryCardFace({
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: radii.full,
-            backgroundColor: 'rgba(0,0,0,0.35)',
+            backgroundColor: overlay.scrimFaint,
           }}
         >
-          <Ionicons color="#fff" name="information-circle-outline" size={iconSizes.lg} />
+          <Ionicons color={onMedia.text} name="information-circle-outline" size={iconSizes.lg} />
         </View>
       ) : null}
     </View>

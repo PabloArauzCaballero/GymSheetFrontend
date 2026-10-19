@@ -1,0 +1,265 @@
+{
+  "api": {
+    "actors": {},
+    "ready": false
+  },
+  "cases": [
+    {
+      "id": "H10.S1.M1",
+      "reasons": [
+        "required driver H10.S1.M1-A_API.py missing",
+        "required driver H10.S1.M1-B_API.py missing"
+      ],
+      "requiredRoles": [
+        "A_API",
+        "B_API"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S1.M2",
+      "reasons": [
+        "required driver H10.S1.M2-A_API.py missing",
+        "required driver H10.S1.M2-B_API.py missing"
+      ],
+      "requiredRoles": [
+        "A_API",
+        "B_API"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S1.M3",
+      "reasons": [
+        "required driver H10.S1.M3-A_API.py missing",
+        "required driver H10.S1.M3-B_API.py missing"
+      ],
+      "requiredRoles": [
+        "A_API",
+        "B_API"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S1.M4",
+      "reasons": [
+        "required driver H10.S1.M4-A_API.py missing",
+        "required driver H10.S1.M4-B_API.py missing"
+      ],
+      "requiredRoles": [
+        "A_API",
+        "B_API"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S1.M5",
+      "reasons": [
+        "required driver H10.S1.M5-A_API.py missing",
+        "required driver H10.S1.M5-B_API.py missing"
+      ],
+      "requiredRoles": [
+        "A_API",
+        "B_API"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S1.M6",
+      "reasons": [
+        "required driver H10.S1.M6-A_API.py missing",
+        "required driver H10.S1.M6-B_API.py missing"
+      ],
+      "requiredRoles": [
+        "A_API",
+        "B_API"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S2.M1",
+      "reasons": [
+        "required driver H10.S2.M1-A_API.py missing",
+        "required driver H10.S2.M1-B_API.py missing"
+      ],
+      "requiredRoles": [
+        "A_API",
+        "B_API"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S2.M2",
+      "reasons": [
+        "required driver H10.S2.M2-A_API.py missing",
+        "required driver H10.S2.M2-B_API.py missing"
+      ],
+      "requiredRoles": [
+        "A_API",
+        "B_API"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S2.M3",
+      "reasons": [
+        "required driver H10.S2.M3-A_API.py missing",
+        "required driver H10.S2.M3-B_API.py missing"
+      ],
+      "requiredRoles": [
+        "A_API",
+        "B_API"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S2.M4",
+      "reasons": [
+        "required driver H10.S2.M4-A_API.py missing",
+        "required driver H10.S2.M4-B_API.py missing"
+      ],
+      "requiredRoles": [
+        "A_API",
+        "B_API"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S2.M5",
+      "reasons": [
+        "required driver H10.S2.M5-A_API.py missing",
+        "required driver H10.S2.M5-B_API.py missing"
+      ],
+      "requiredRoles": [
+        "A_API",
+        "B_API"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S3.M1",
+      "reasons": [
+        "required driver H10.S3.M1-A_ANDROID.py missing",
+        "required driver H10.S3.M1-A_WEB.py missing"
+      ],
+      "requiredRoles": [
+        "A_ANDROID",
+        "A_WEB"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S3.M2",
+      "reasons": [
+        "required driver H10.S3.M2-A_ANDROID.py missing",
+        "required driver H10.S3.M2-B_IOS.py missing",
+        "required driver H10.S3.M2-B_WEB.py missing"
+      ],
+      "requiredRoles": [
+        "A_ANDROID",
+        "B_IOS",
+        "B_WEB"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S3.M3",
+      "reasons": [
+        "API /health/ready unavailable",
+        "H10.S3.M3 requires QA_H10_DISPOSABLE_INVITATION_ID"
+      ],
+      "requiredRoles": [
+        "A_IOS",
+        "A_WEB"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S3.M4",
+      "reasons": [
+        "required driver H10.S3.M4-A_ANDROID.py missing",
+        "required driver H10.S3.M4-A_IOS.py missing"
+      ],
+      "requiredRoles": [
+        "A_ANDROID",
+        "A_IOS"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S3.M5",
+      "reasons": [
+        "required driver H10.S3.M5-A_ANDROID.py missing",
+        "required driver H10.S3.M5-A_WEB.py missing"
+      ],
+      "requiredRoles": [
+        "A_ANDROID",
+        "A_WEB"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S4.M1",
+      "reasons": [
+        "required driver H10.S4.M1-A_API.py missing"
+      ],
+      "requiredRoles": [
+        "A_API"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H10.S4.M2",
+      "reasons": [
+        "required driver H10.S4.M2-A_API.py missing"
+      ],
+      "requiredRoles": [
+        "A_API"
+      ],
+      "verdict": "BLOCKED"
+    }
+  ],
+  "createdAt": "2026-10-12T16:29:20Z",
+  "devices": {
+    "android": {
+      "ready": false,
+      "serial": null
+    },
+    "ios": {
+      "booted": true,
+      "udid": "D4C28B4D-3615-4E6D-9092-C180668D5EE6"
+    }
+  },
+  "ports": {
+    "api": 3011,
+    "web": 3002
+  },
+  "repositories": {
+    "backend": {
+      "branch": "feat/biblioteca-ejercicios",
+      "dirty": true,
+      "present": true,
+      "sha": "474da618fe4d191ae5d5f25b2dac537fd3a6856f"
+    },
+    "frontend": {
+      "branch": "dev",
+      "dirty": true,
+      "present": true,
+      "sha": "6b66d8aba9329f4897e900a9e3be09f495c41343"
+    },
+    "recommendations": {
+      "branch": "main",
+      "dirty": true,
+      "present": true,
+      "sha": null
+    }
+  },
+  "runId": "e89c1f7d-f935-4d72-8a38-547a082a78cc",
+  "schemaVersion": 1,
+  "secretsIncluded": false,
+  "versions": {
+    "node": "v24.19.0",
+    "python": "3.14.7",
+    "yarn": "1.22.22"
+  }
+}

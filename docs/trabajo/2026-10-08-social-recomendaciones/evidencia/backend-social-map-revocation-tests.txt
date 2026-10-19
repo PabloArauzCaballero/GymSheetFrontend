@@ -1,0 +1,25 @@
+yarn run v1.22.22
+$ '/Users/josejeremias/Desktop/Mantra Core Technologies/GymSheet/GymSheetBackend/node_modules/.bin/jest' src/modules/social/social.service.spec.ts src/modules/social/social-discovery.spec.ts src/modules/social/social-interactions.spec.ts src/modules/social/social-discovery-settings.policy.spec.ts src/modules/social/social-revocation.repository.spec.ts src/modules/social/social-map.policy.spec.ts src/modules/social/social-map.service.spec.ts src/modules/social/social-map.repository.spec.ts src/modules/chat/chat.service.spec.ts src/database/migrations/migrations.registry.spec.ts --runInBand
+PASS src/modules/social/social-map.repository.spec.ts
+PASS src/modules/chat/chat.service.spec.ts
+PASS src/modules/social/social-map.service.spec.ts
+[Nest] 66586  - 10/08/2026, 10:44:06 PM    WARN [ChatService] Object(4) {
+  event: 'chat.push_notify_failed',
+  conversationId: 'conv-1',
+  messageId: 'msg-push-1',
+  reason: 'Error'
+}
+PASS src/modules/social/social.service.spec.ts
+PASS src/modules/social/social-interactions.spec.ts
+PASS src/modules/social/social-discovery.spec.ts
+PASS src/modules/social/social-revocation.repository.spec.ts
+PASS src/database/migrations/migrations.registry.spec.ts
+PASS src/modules/social/social-map.policy.spec.ts
+PASS src/modules/social/social-discovery-settings.policy.spec.ts
+
+Test Suites: 10 passed, 10 total
+Tests:       101 passed, 101 total
+Snapshots:   0 total
+Time:        1.54 s, estimated 2 s
+Ran all test suites matching /src\/modules\/social\/social.service.spec.ts|src\/modules\/social\/social-discovery.spec.ts|src\/modules\/social\/social-interactions.spec.ts|src\/modules\/social\/social-discovery-settings.policy.spec.ts|src\/modules\/social\/social-revocation.repository.spec.ts|src\/modules\/social\/social-map.policy.spec.ts|src\/modules\/social\/social-map.service.spec.ts|src\/modules\/social\/social-map.repository.spec.ts|src\/modules\/chat\/chat.service.spec.ts|src\/database\/migrations\/migrations.registry.spec.ts/i.
+Done in 2.19s.

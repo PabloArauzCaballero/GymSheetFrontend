@@ -5,15 +5,7 @@ import { Modal, Pressable, Text, View } from 'react-native';
 import { PressableScale } from '@/components/motion';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import {
-  colors,
-  fontSizes,
-  iconSizes,
-  minTouchTarget,
-  radii,
-  semibold,
-  spacing,
-} from '@/theme';
+import { colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, semibold, spacing } from '@/theme';
 
 export type SelectOption<T extends string> = { value: T; label: string };
 
@@ -21,7 +13,7 @@ export type SelectOption<T extends string> = { value: T; label: string };
  * El velo tras la hoja. Literal y no un token porque la paleta compartida no
  * declara ninguno: es opacidad sobre lo que haya debajo, no un color de marca.
  */
-const SCRIM = 'rgba(0, 0, 0, 0.62)';
+const SCRIM = overlay.scrimSoft;
 
 /**
  * Selector de un valor entre varios cerrados.

@@ -1,9 +1,14 @@
-import { useEffect } from 'react';
+import { use, useCallback, useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, type ColorValue } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Tabs } from 'expo-router';
+import {
+  BottomTabBar,
+  BottomTabBarHeightCallbackContext,
+  type BottomTabBarProps,
+} from 'expo-router/build/react-navigation/bottom-tabs';
 import ReAnimated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -17,13 +22,13 @@ import {
   useInteractionCounts,
 } from '@/components/interactions-counts';
 import { TourTarget } from '@/components/tour';
-import { accentContrast, colors, fontSizes, iconSizes, semibold } from '@/theme';
+import { ACTIVE_BAR_SPACE, ActiveWorkoutBar, useActiveWorkout } from '@/features/workout/active-workout-bar';
+import { accentContrast, alpha, colors, fontSizes, iconSizes, semibold } from '@/theme';
 
 /** Outline when resting, filled when active — the platform convention. */
 const ICONS = {
   home: ['home-outline', 'home'],
   routines: ['albums-outline', 'albums'],
-  exercises: ['barbell-outline', 'barbell'],
   comunidad: ['people-outline', 'people'],
   profile: ['person-outline', 'person'],
 } as const satisfies Record<
@@ -50,7 +55,7 @@ const SCENE_TRAVEL = 28;
  *
  * Fade and a slight scale ride along so the change still registers when two
  * sections look alike; travel alone would be nearly invisible between, say,
- * Rutinas and Ejercicios.
+ * Rutinas and Comunidad.
  */
 const sceneStyleInterpolator = ({ current }: { current: { progress: Animated.Value } }) => ({
   sceneStyle: {
@@ -129,11 +134,25 @@ function tabIcon(screen: keyof typeof ICONS) {
     const style = useAnimatedStyle(() => ({
       transform: [{ scale: scale.value }],
     }));
+    // La píldora del destino activo: se abre desde el centro del icono (0.9 → 1
+    // de 0 a 1 en opacidad, más rápido el ancho que el alto). Dice «estás aquí»
+    // con un solo relleno jade suave, sin latir ni moverse sola.
+    const pill = useAnimatedStyle(() => {
+      const on = (scale.value - 0.9) / 0.1;
+      return { opacity: on, transform: [{ scaleX: 0.55 + on * 0.45 }, { scaleY: 0.8 + on * 0.2 }] };
+    });
 
     return (
       // El icono es el ancla del tutorial de bienvenida: la tarjeta que habla de
       // «Rutinas» señala el botón real de Rutinas, no una lista abstracta.
       <TourTarget grow={10} id={`tab.${screen}`}>
+        <ReAnimated.View
+          pointerEvents="none"
+          style={[
+            { position: 'absolute', top: -4, bottom: -4, left: -16, right: -16, borderRadius: 999, backgroundColor: alpha(colors.volt, 0.2) },
+            pill,
+          ]}
+        />
         <ReAnimated.View style={style}>
           <Ionicons color={color} name={ICONS[screen][focused ? 1 : 0]} size={iconSizes.lg} />
         </ReAnimated.View>
@@ -142,8 +161,37 @@ function tabIcon(screen: keyof typeof ICONS) {
   };
 }
 
+function TabBarBackground() {
+  return <BlurView intensity={60} style={StyleSheet.absoluteFill} tint="systemChromeMaterialDark" />;
+}
+
 /**
- * Six destinations. Settings is reachable from Profile instead of taking a
+ * La barra de pestañas con la mini-barra del entreno abierto encima (C8.3.9).
+ * Intercepta el alto que la barra comunica al navegador y le suma el de la
+ * mini-barra: así las pantallas (`ScrollScreen`, sus pies fijos) reservan los
+ * dos y nada queda debajo.
+ */
+function TabBarWithWorkout(props: BottomTabBarProps) {
+  const report = use(BottomTabBarHeightCallbackContext);
+  const [height, setHeight] = useState(0);
+  const active = useActiveWorkout();
+  const extra = active ? ACTIVE_BAR_SPACE : 0;
+  const onHeight = useCallback((next: number) => setHeight(next), []);
+  useEffect(() => {
+    if (height > 0) report?.(height + extra);
+  }, [extra, height, report]);
+  return (
+    <>
+      <BottomTabBarHeightCallbackContext.Provider value={onHeight}>
+        <BottomTabBar {...props} />
+      </BottomTabBarHeightCallbackContext.Provider>
+      {active && height > 0 ? <ActiveWorkoutBar active={active} bottom={height} /> : null}
+    </>
+  );
+}
+
+/**
+ * Four destinations (Inicio · Rutinas · Comunidad · Perfil). Settings is reachable from Profile instead of taking a
  * slot of its own — it is visited rarely and belongs to the account.
  *
  * Comunidad used to be a stack sibling reached only through a NavRow buried
@@ -183,8 +231,13 @@ export default function TabsLayout() {
           if (!navigation.isFocused()) void Haptics.selectionAsync();
         },
       })}
+      tabBar={(props) => <TabBarWithWorkout {...props} />}
       screenOptions={{
         headerShown: false,
+        // Una pestaña que no se ve no se vuelve a pintar (sus consultas siguen
+        // llegando a la caché y se pintan al volver). Lo que corre en segundo
+        // plano —el descanso, su háptico y su aviso— vive en el store, no aquí.
+        freezeOnBlur: true,
         animation: 'shift',
         sceneStyleInterpolator,
         transitionSpec: {
@@ -202,7 +255,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.accentInk,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontSize: fontSizes.xs, fontWeight: semibold },
-        // Cinco pestañas, no seis. Es el techo que este proyecto ya se había
+        // Cuatro pestañas desde C4 (antes cinco, no seis). Cinco es el techo que este proyecto ya se había
         // fijado —«cinco es el techo de una barra inferior antes de que las
         // etiquetas empiecen a truncarse», en `(app)/_layout.tsx`— y la regla
         // por la que Trayectoria y Descubrir viven en el stack y no aquí.
@@ -235,9 +288,7 @@ export default function TabsLayout() {
           borderTopWidth: StyleSheet.hairlineWidth,
           elevation: 0,
         },
-        tabBarBackground: () => (
-          <BlurView intensity={60} style={StyleSheet.absoluteFill} tint="systemChromeMaterialDark" />
-        ),
+        tabBarBackground: TabBarBackground,
       }}
     >
       <Tabs.Screen name="home" options={{ title: 'Inicio', tabBarIcon: tabIcon('home') }} />
@@ -245,10 +296,10 @@ export default function TabsLayout() {
         name="routines"
         options={{ title: 'Rutinas', tabBarIcon: tabIcon('routines') }}
       />
-      <Tabs.Screen
-        name="exercises"
-        options={{ title: 'Ejercicios', tabBarIcon: tabIcon('exercises') }}
-      />
+      {/* Ejercicios dejó de ser pestaña (C4): el catálogo es una herramienta
+          para armar rutinas, no un destino diario. Vive en la pila hermana
+          `../ejercicios/` y se abre desde Rutinas («Explorar ejercicios») y
+          desde Perfil («Mis ejercicios y favoritos»). Cuatro pestañas. */}
       <Tabs.Screen
         name="comunidad"
         options={{

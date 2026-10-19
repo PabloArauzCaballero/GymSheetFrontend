@@ -1,0 +1,14 @@
+# Cierra las cartas que tapan el resumen de la sesión: insignias («¡Insignia conseguida!»), rango
+# («subido de rango»), retos («¡Reto cumplido!», «¡Semana redonda!»), comodín («¡Comodín ganado!») y
+# premios («¡Premio desbloqueado!»). Según el día y el historial salen cero, una o varias; se cierran
+# con «Siguiente», «Listo» o «Seguir» sin tocar el «Seguir» del resumen.
+appId: app.gymsheet.mobile
+---
+- repeat:
+    times: 8
+    while:
+      visible: '.*Insignia conseguida.*|.*subido de rango.*|.*Reto cumplido.*|.*Semana redonda!.*|.*Comodín ganado.*|.*Premio desbloqueado.*'
+    commands:
+      - tapOn: 'Siguiente.*|Listo|Seguir'
+      - waitForAnimationToEnd:
+          timeout: 3000

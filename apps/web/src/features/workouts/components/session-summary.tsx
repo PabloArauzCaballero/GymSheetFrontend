@@ -5,18 +5,24 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { motion } from 'framer-motion';
 import { Gift } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { SessionReward } from '@/shared/api/schemas';
 import { progressionService } from '@/features/progression/services/progression-service';
 import { writeSeen } from '@/features/progression/components/progression-celebration';
 import {
   ProgressionCelebration,
-  sessionRewardSubjects,
+  rewardCelebrations,
 } from '@/features/progression/components/progression-celebration';
 import { ProgressionIcon } from '@/features/progression/components/progression-icon';
 import { CountUp } from '@/shared/components/motion/count-up';
 import { Button } from '@/shared/components/ui/button';
 import { Dialog } from '@/shared/components/ui/dialog';
 import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
+import {
+  PendingCardsLine,
+  SessionRewardSections,
+  SessionStreakLine,
+} from './session-summary-rewards';
 
 /**
  * «Sesión terminada»: el momento en que la app enseña causa y efecto.
@@ -28,7 +34,14 @@ import { useReducedMotion } from '@/shared/hooks/use-reduced-motion';
  */
 
 const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
-const BREAKDOWN_ORDER: ReadonlyArray<PointRuleLine['key']> = ['session', 'sets', 'volume', 'streak', 'badges'];
+const BREAKDOWN_ORDER: ReadonlyArray<PointRuleLine['key'] | 'challenges'> = [
+  'session',
+  'sets',
+  'volume',
+  'streak',
+  'badges',
+  'challenges',
+];
 /** Pausa tras la última cifra antes de abrir las cartas solas. */
 const AUTO_OPEN_PAUSE_MS = 600;
 
@@ -37,9 +50,17 @@ export function SessionSummary({
   sets,
   duration,
   onClose,
-}: Readonly<{ reward: SessionReward; sets: number; duration: string; onClose: () => void }>) {
+  extras,
+}: Readonly<{
+  reward: SessionReward;
+  sets: number;
+  duration: string;
+  onClose: () => void;
+  /** Lo que dice el programa de esta sesión (bono de modo, cargas, actualizar la rutina). */
+  extras?: ReactNode;
+}>) {
   const still = useReducedMotion();
-  const subjects = useMemo(() => sessionRewardSubjects(reward), [reward]);
+  const subjects = useMemo(() => rewardCelebrations(reward), [reward]);
   const [showingCards, setShowingCards] = useState(false);
   // El ascenso ya se anuncia aquí: se anota en la marca de la senda para que,
   // al entrar después, no vuelva a detectarlo contra el rango anterior.
@@ -51,9 +72,15 @@ export function SessionSummary({
   const acknowledged = useRef(false);
   const autoOpened = useRef(false);
 
-  const rows = BREAKDOWN_ORDER.map((key) => ({ key, value: reward.breakdown[key] })).filter(
-    (row) => row.value > 0,
-  );
+  const rows = [
+    ...BREAKDOWN_ORDER.map((key) => ({
+      key,
+      label: BREAKDOWN_LABEL[key],
+      value: reward.breakdown[key],
+    })),
+    // El bono de los programas con modo (multiplicador semanal y metas); 0 si no hay modo.
+    { key: 'modes', label: 'Por tu programa', value: reward.breakdown.modes },
+  ].filter((row) => row.value > 0);
   const earnedMs = countUpDuration(0, reward.pointsEarned);
   const totalDelayMs = earnedMs * 0.5;
   const totalMs = countUpDuration(reward.pointsBefore, reward.pointsAfter);
@@ -127,9 +154,13 @@ export function SessionSummary({
                       className="flex items-baseline justify-between gap-4 border-b border-[var(--border-subtle)] py-3 text-sm last:border-b-0"
                       initial={still ? false : { opacity: 0, y: 8 }}
                       key={row.key}
-                      transition={still ? { duration: 0 } : { delay: 0.2 + position * 0.08, duration: 0.3, ease: EASE_OUT }}
+                      transition={
+                        still
+                          ? { duration: 0 }
+                          : { delay: 0.2 + position * 0.08, duration: 0.3, ease: EASE_OUT }
+                      }
                     >
-                      <span className="text-[var(--text-muted)]">{BREAKDOWN_LABEL[row.key]}</span>
+                      <span className="text-[var(--text-muted)]">{row.label}</span>
                       <span className="font-semibold tabular-nums text-[var(--text)]">
                         +{row.value.toLocaleString('es-ES')}
                       </span>
@@ -142,16 +173,30 @@ export function SessionSummary({
                 </p>
               )}
 
+              {extras}
+
               <section className="grid gap-3 rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-low)] p-5">
                 <div className="flex items-baseline justify-between gap-4">
                   <span className="text-sm text-[var(--text-muted)]">Tu total</span>
-                  <span aria-hidden className="text-xl font-semibold tabular-nums text-[var(--text)]">
-                    <CountUp delayMs={totalDelayMs} from={reward.pointsBefore} value={reward.pointsAfter} /> pts
+                  <span
+                    aria-hidden
+                    className="text-xl font-semibold tabular-nums text-[var(--text)]"
+                  >
+                    <CountUp
+                      delayMs={totalDelayMs}
+                      from={reward.pointsBefore}
+                      value={reward.pointsAfter}
+                    />{' '}
+                    pts
                   </span>
                   <span className="sr-only">{`${reward.pointsAfter.toLocaleString('es-ES')} puntos en total`}</span>
                 </div>
                 <div
-                  aria-label={reward.nextLevel ? `Avance hacia ${reward.nextLevel.name}` : 'Avance de la senda'}
+                  aria-label={
+                    reward.nextLevel
+                      ? `Avance hacia ${reward.nextLevel.name}`
+                      : 'Avance de la senda'
+                  }
                   aria-valuemax={100}
                   aria-valuemin={0}
                   aria-valuenow={Math.round(reward.levelProgress * 100)}
@@ -185,6 +230,7 @@ export function SessionSummary({
                     {`¡Has subido a ${reward.levelAfter.name}!`}
                   </p>
                 ) : null}
+                <SessionStreakLine streak={reward.streak} />
                 <p className="text-xs text-[var(--text-muted)]">
                   {reward.nextLevel && reward.pointsToNextLevel !== null
                     ? `Te faltan ${reward.pointsToNextLevel.toLocaleString('es-ES')} puntos para ${reward.nextLevel.name}.`
@@ -192,12 +238,18 @@ export function SessionSummary({
                 </p>
               </section>
 
+              <SessionRewardSections reward={reward} />
+
+              <PendingCardsLine subjects={subjects} />
+
               <div className="grid gap-2">
                 {subjects.length > 0 ? (
                   <>
                     <Button onClick={openCards} size="lg" variant="primary">
                       <Gift aria-hidden className="size-5" />
-                      {subjects.length === 1 ? 'Abrir recompensa' : `Abrir ${subjects.length} recompensas`}
+                      {subjects.length === 1
+                        ? 'Abrir recompensa'
+                        : `Abrir ${subjects.length} recompensas`}
                     </Button>
                     <Button onClick={onClose} variant="ghost">
                       Seguir

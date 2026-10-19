@@ -21,6 +21,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { Field } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
+import { randomUuid } from '@/shared/lib/uuid';
 
 /**
  * Versión del texto de consentimiento biométrico que se está firmando. Viaja
@@ -100,7 +101,7 @@ export function PersonEnrollment() {
         proveedor: FACE_PROVIDER,
         // Referencia de inscripción: identifica la credencial sin contener
         // nada derivado del rostro.
-        referenciaExterna: `face-${crypto.randomUUID()}`,
+        referenciaExterna: `face-${randomUuid()}`,
         versionConsentimiento: CONSENT_VERSION,
         consentimientoRegistradoEn: new Date().toISOString(),
         metadata: {

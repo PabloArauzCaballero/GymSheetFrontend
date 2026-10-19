@@ -34,7 +34,9 @@ export function ChatConversationRow({
         <View>
           {conversation.otherUserPhotoUrl ? (
             <Image
+              cachePolicy="memory-disk"
               contentFit="cover"
+              recyclingKey={conversation.otherUserPhotoUrl}
               source={{ uri: conversation.otherUserPhotoUrl }}
               style={{
                 width: AVATAR_SIZE,

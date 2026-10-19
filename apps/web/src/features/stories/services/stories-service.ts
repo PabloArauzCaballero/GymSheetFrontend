@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { apiRequest, apiUpload } from '@/shared/api/api-client';
-import type { Story, StoryFeedEntry, StoryViewersResponse } from '@/shared/api/schemas';
-import { storyFeedEntrySchema, storySchema, storyViewersResponseSchema } from '@/shared/api/schemas';
+import type { Message, Story, StoryFeedEntry, StoryViewersResponse } from '@/shared/api/schemas';
+import { messageSchema, storyFeedEntrySchema, storySchema, storyViewersResponseSchema } from '@/shared/api/schemas';
 
 /**
  * Stories efímeras (24 h). Sólo las ven los matches, nunca el gimnasio entero.
@@ -13,14 +13,27 @@ import { storyFeedEntrySchema, storySchema, storyViewersResponseSchema } from '@
  */
 export const storiesService = {
   feed: () => apiRequest<StoryFeedEntry[]>('/me/stories/feed', z.array(storyFeedEntrySchema)),
-  upload: (file: File) => {
+  upload: (
+    file: File,
+    audience?: { mode: 'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS'; recipientIds: string[]; requestId?: string },
+  ) => {
     const form = new FormData();
     form.append('file', file);
+    if (audience) {
+      form.append('audienceMode', audience.mode);
+      form.append('recipientIds', JSON.stringify(audience.recipientIds));
+      if (audience.requestId) form.append('requestId', audience.requestId);
+    }
     return apiUpload<Story>('/me/stories', storySchema, form);
   },
   view: (storyId: string) =>
     apiRequest(`/me/stories/${storyId}/view`, z.object({ recorded: z.literal(true) }), {
       method: 'POST',
+    }),
+  reply: (storyId: string, text: string, requestId: string) =>
+    apiRequest<Message>(`/me/stories/${storyId}/replies`, messageSchema, {
+      method: 'POST',
+      body: { text, requestId },
     }),
   /** Quién vio una story propia. El backend responde 404 si es de otra persona. */
   viewers: (storyId: string) =>

@@ -1,0 +1,43 @@
+# RF-15 p04 (dos fallos seguidos bajan la carga) y p05 (semana de descarga). Lo lanza `run-18b.sh`.
+# Parte `FALLOS` (SCENARIO=fallos): una sesión fallida terminada por API (fallo 1) y una segunda fallida que se
+# termina en la app (fallo 2): el resumen dice «Baja el peso → 57,5 kg».
+# Parte `DESCARGA` (SCENARIO=descarga): `run-18b.sh` retrocede 21 días las fechas del programa por SQL (SIMULACIÓN:
+# hoy cae en la semana 4, de descarga) y la sesión que se termina en la app dice «Semana de descarga: no cambia».
+appId: app.gymsheet.mobile
+name: 18b · Progresión - ${SCENARIO}
+env:
+  EMAIL: athlete.mock@gymsheet.local
+  FIRST: Athlete
+---
+- runFlow: login-as.subflow.yaml
+- openLink: gymsheet:///workouts/${SESSION}
+- extendedWaitUntil:
+    visible:
+      id: 'workout-focus'
+    timeout: 60000
+- runFlow: finalizar-sesion.subflow.yaml
+- extendedWaitUntil:
+    visible: 'Seguir|.*Insignia conseguida.*|.*subido de rango.*'
+    timeout: 60000
+- runFlow: cerrar-celebraciones.subflow.yaml
+- scrollUntilVisible:
+    element: 'Tu programa'
+- swipe:
+    start: 50%,75%
+    end: 50%,45%
+- runFlow:
+    when:
+      true: ${SCENARIO == 'fallos'}
+    commands:
+      - assertVisible: '.*Baja el peso.*'
+      - waitForAnimationToEnd:
+          timeout: 4000
+      - takeScreenshot: RF-15_p04_dos-fallos-bajan-la-carga_ios_oscuro
+- runFlow:
+    when:
+      true: ${SCENARIO == 'descarga'}
+    commands:
+      - assertVisible: '.*Semana de descarga.*'
+      - waitForAnimationToEnd:
+          timeout: 4000
+      - takeScreenshot: RF-15_p05_semana-de-descarga_ios_oscuro

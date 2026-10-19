@@ -1,7 +1,9 @@
 'use client';
 
+import { roleLabel } from '@/shared/lib/roles';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -9,14 +11,6 @@ import { Pagination } from '@/shared/components/ui/pagination';
 import { Input } from '@/shared/components/ui/input';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { insightsService, type PortalUser } from '@/features/admin/services/insights-service';
-
-const ROLE_LABEL: Record<string, string> = {
-  ADMIN: 'Administración',
-  CLIENTE: 'Cliente',
-  COACH: 'Entrenador',
-  ENTRENADOR_EXTERNO: 'Entrenador externo',
-  FRONT_DESK: 'Recepción',
-};
 
 /**
  * Estado de acceso, resuelto a una sola frase.
@@ -26,7 +20,7 @@ const ROLE_LABEL: Record<string, string> = {
  * resta mentalmente, con el cliente delante.
  */
 function AccessBadge({ user }: { user: PortalUser }) {
-  if (user.rol !== 'CLIENTE') return <Badge tone="neutral">{ROLE_LABEL[user.rol] ?? user.rol}</Badge>;
+  if (user.rol !== 'CLIENTE') return <Badge tone="neutral">{roleLabel(user.rol)}</Badge>;
   if (user.vigente) return <Badge tone="success">Al día</Badge>;
   if (user.venceEl) return <Badge tone="warning">Vencida</Badge>;
   return <Badge tone="neutral">Sin membresía</Badge>;
@@ -40,7 +34,7 @@ function AccessBadge({ user }: { user: PortalUser }) {
  * hacerle adivinar la pestaña correcta es la clase de fricción que termina en
  * «no aparece».
  */
-export function UsersPanel() {
+export function UsersPanel({ canViewTraining = false }: Readonly<{ canViewTraining?: boolean }>) {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
@@ -114,6 +108,7 @@ export function UsersPanel() {
                     <th className="px-5 py-3 font-semibold">Plan</th>
                     <th className="px-5 py-3 font-semibold">Acceso</th>
                     <th className="px-5 py-3 font-semibold">Último entreno</th>
+                    {canViewTraining ? <th className="px-5 py-3 font-semibold">Soporte</th> : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -129,7 +124,7 @@ export function UsersPanel() {
                         </p>
                       </td>
                       <td className="px-5 py-3 text-[var(--text-muted)]">
-                        {ROLE_LABEL[user.rol] ?? user.rol}
+                        {roleLabel(user.rol)}
                         {user.tenantId ? (
                           <span className="ml-2 text-xs">{user.tenantId}</span>
                         ) : null}
@@ -146,6 +141,19 @@ export function UsersPanel() {
                       <td className="px-5 py-3 text-[var(--text-muted)]">
                         {user.ultimaSesion ?? 'Nunca'}
                       </td>
+                      {canViewTraining ? (
+                        <td className="px-5 py-3">
+                          {user.rol === 'CLIENTE' ? (
+                            <Link
+                              className="text-sm font-semibold underline-offset-4 hover:underline"
+                              href={`/admin/usuarios/${user.id}/entrenamiento?nombre=${encodeURIComponent(user.nombreCompleto)}`}
+                            >
+                              Entrenamiento
+                              <span className="sr-only"> de {user.nombreCompleto}</span>
+                            </Link>
+                          ) : null}
+                        </td>
+                      ) : null}
                     </tr>
                   ))}
                 </tbody>

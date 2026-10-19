@@ -8,6 +8,7 @@ import { Link } from 'expo-router';
 import { Text, View } from 'react-native';
 import { Button, Input, textLinkStyle } from '@/components/ui';
 import { AuthAlert, AuthShell } from '@/components/auth-shell';
+import { accountEmailTextProps } from '@/lib/credential-input';
 import { useAuthStore } from '@/state/auth-store';
 import { colors, fontSizes, spacing } from '@/theme';
 
@@ -46,8 +47,6 @@ export default function LoginScreen() {
 
   return (
     <AuthShell
-      description={authCopy.login.description}
-      eyebrow={authCopy.login.eyebrow}
       footer={
         <>
           <Link href="/(auth)/recover-password" style={textLinkStyle()}>
@@ -70,20 +69,16 @@ export default function LoginScreen() {
         name="email"
         render={({ field: { onChange, onBlur, value } }) => (
           <Input
-            autoCapitalize="none"
+            {...accountEmailTextProps}
             // iOS ofrece la credencial guardada en el Llavero sólo si el campo
-            // declara qué contiene. Sin esto, el sistema pide guardar la
-            // contraseña al entrar pero luego no la sabe rellenar, que es la
-            // mitad peor de las dos. `autoComplete` cubre a Android.
-            autoComplete="email"
+            // declara qué contiene, y para emparejarla con la contraseña tiene
+            // que ser `username`, no `emailAddress` (ver credential-input).
             error={errors.email?.message}
             icon="mail-outline"
-            keyboardType="email-address"
             label={authCopy.fields.email.label}
             onBlur={onBlur}
             onChangeText={onChange}
             placeholder={authCopy.fields.email.placeholder}
-            textContentType="emailAddress"
             value={value}
           />
         )}
@@ -111,7 +106,7 @@ export default function LoginScreen() {
 
       {failure ? <AuthAlert message={failure} /> : null}
 
-      <Button label={authCopy.login.submit} loading={isSubmitting} onPress={onSubmit} />
+      <Button icon="log-in-outline" label={authCopy.login.submit} loading={isSubmitting} onPress={onSubmit} />
     </AuthShell>
   );
 }

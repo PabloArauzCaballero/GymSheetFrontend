@@ -139,6 +139,10 @@ export type ExerciseMedia = {
 export type Exercise = {
   id: string;
   nombre: string;
+  /** Nombre revisado en español (C3.b). La interfaz muestra `nombreEs ?? nombre`. */
+  nombreEs?: string | null;
+  /** Su lámina (o el póster de su vídeo), ya resuelta por el servidor. Puede no venir. */
+  imagenUrl?: string | null;
   grupoMuscular: string;
   descripcion: string | null;
   tipoEjercicio: 'GLOBAL' | 'PERSONAL';
@@ -156,7 +160,18 @@ export type Exercise = {
   metadata: Record<string, unknown>;
   equipment: Equipment[];
   media: ExerciseMedia[];
+  /** Me gusta públicos del ejercicio. */
+  meGustaTotal: number;
+  valoracion: RatingSummary;
+  /** `VISIBLE` salvo que la moderación lo haya ocultado. */
+  estadoModeracion: string;
+  /** Lo que sabe quien mira (sólo en las lecturas del catálogo). */
+  meGusta?: boolean;
+  esFavorito?: boolean;
 };
+
+/** Promedio de estrellas y cuántas valoraciones lo componen. */
+export type RatingSummary = { promedio: number | null; total: number };
 
 export type FavoriteExercise = {
   id: string;

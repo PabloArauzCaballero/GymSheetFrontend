@@ -8,7 +8,7 @@ import { profilePhotosService } from '@/api/services';
 import { Card, Section } from '@/components/layout';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { notify } from '@/notifications';
-import { colors, iconSizes, radii, spacing } from '@/theme';
+import { colors, iconSizes, ink, overlay, radii, spacing } from '@/theme';
 
 const MAX_PHOTOS = 6;
 const THUMB_SIZE = 92;
@@ -81,6 +81,8 @@ export function ProfilePhotoGallery() {
             {(photos.data ?? []).map((photo) => (
               <View key={photo.id} style={{ width: THUMB_SIZE, height: THUMB_SIZE }}>
                 <Image
+                  cachePolicy="memory-disk"
+                  recyclingKey={photo.url}
                   source={{ uri: photo.url }}
                   style={{
                     width: THUMB_SIZE,
@@ -103,12 +105,12 @@ export function ProfilePhotoGallery() {
                     width: 24,
                     height: 24,
                     borderRadius: radii.full,
-                    backgroundColor: 'rgba(0,0,0,0.6)',
+                    backgroundColor: overlay.scrimSoft,
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  <Ionicons color="#fff" name="close" size={14} />
+                  <Ionicons color={ink.white} name="close" size={14} />
                 </PressableScale>
               </View>
             ))}

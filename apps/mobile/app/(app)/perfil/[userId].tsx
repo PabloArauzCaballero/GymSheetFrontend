@@ -1,21 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Text, View } from 'react-native';
-import { Image } from 'expo-image';
+import { Alert, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { EarnedBadge, ProgressionBadge } from '@gymsheet/schemas';
-import { chatService, profileViewsService, socialService } from '@/api/services';
+import { chatService, moderationService, profileViewsService, socialService } from '@/api/services';
+import { refreshSocialRelationship } from '@/api/social-cache';
 import { BackLink } from '@/components/nav';
 import { Card, Row, ScrollScreen, Section } from '@/components/layout';
-import { CountUpText } from '@/components/motion';
 import { levelTitle } from '@/components/directory-card';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { BadgeTile } from '@/components/progression';
 import { Button } from '@/components/ui';
+import { HeroStats, ProfileHero, plural } from '@/features/profile-hero/profile-hero';
+import { CreateTrainingInviteModal } from '@/features/training-invitations/create-training-invite-modal';
 import { notify } from '@/notifications';
 import { initialsOf } from '@/lib/format';
-import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, semibold, spacing } from '@/theme';
 import {
   EXPERIENCE_LEVEL_LABEL,
   GENDER_LABEL,
@@ -23,7 +24,8 @@ import {
   TRAINING_GOAL_LABEL,
 } from '@/lib/social-labels';
 
-const AVATAR_SIZE = 120;
+/** Alto del esqueleto del héroe mientras llega el perfil. */
+const HERO_SKELETON = 220;
 
 /**
  * La insignia ajena, en el molde de la propia senda.
@@ -55,6 +57,7 @@ export default function PerfilDetailScreen() {
   const queryClient = useQueryClient();
   const userId = params.userId;
   const recordedRef = useRef<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   /**
    * Registrar la visita una sola vez, sea cual sea la forma de llegar aquí.
@@ -99,11 +102,7 @@ export default function PerfilDetailScreen() {
 
   /** El perfil y el directorio cuentan lo mismo: se refrescan juntos. */
   async function refreshSocial() {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['social', 'member-profile', userId] }),
-      queryClient.invalidateQueries({ queryKey: ['social', 'directory'] }),
-      queryClient.invalidateQueries({ queryKey: ['social', 'connections'] }),
-    ]);
+    await refreshSocialRelationship(queryClient);
   }
 
   const connect = useMutation({
@@ -131,11 +130,33 @@ export default function PerfilDetailScreen() {
     onError: (error: Error) => notify.error(error.message),
   });
 
+  const block = useMutation({
+    mutationFn: (targetUserId: string) => socialService.blockUser(targetUserId),
+    onSuccess: async () => {
+      await refreshSocial();
+      await queryClient.invalidateQueries({ queryKey: ['social', 'blocked-users'] });
+      notify.success('La persona quedó bloqueada.');
+      router.back();
+    },
+    onError: (error: Error) => notify.error(error.message),
+  });
+
+  const report = useMutation({
+    mutationFn: (reason: 'ACOSO' | 'PERFIL_FALSO' | 'SPAM' | 'OTRO') =>
+      moderationService.report('USER', userId, reason),
+    onSuccess: async () => {
+      await refreshSocial();
+      notify.success('Gracias por avisar. Revisaremos el perfil.');
+      router.back();
+    },
+    onError: (error: Error) => notify.error(error.message),
+  });
+
   if (profile.isPending) {
     return (
       <ScrollScreen>
         <BackLink />
-        <Skeleton height={AVATAR_SIZE + spacing.xl} />
+        <Skeleton height={HERO_SKELETON} />
         <Skeleton height={180} />
         <Skeleton height={120} />
       </ScrollScreen>
@@ -157,99 +178,32 @@ export default function PerfilDetailScreen() {
     <ScrollScreen onRefresh={() => void profile.refetch()} refreshing={profile.isFetching}>
       <BackLink />
 
-      <View style={{ alignItems: 'center', gap: spacing.md, paddingVertical: spacing.lg }}>
-        {entry.photoUrl ? (
-          <Image
-            contentFit="cover"
-            source={{ uri: entry.photoUrl }}
-            style={{
-              width: AVATAR_SIZE,
-              height: AVATAR_SIZE,
-              borderRadius: radii.full,
-              backgroundColor: colors.surfaceHigh,
-            }}
-            transition={200}
-          />
-        ) : (
-          <View
-            style={{
-              width: AVATAR_SIZE,
-              height: AVATAR_SIZE,
-              borderRadius: radii.full,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: colors.volt,
-            }}
-          >
-            <Text style={{ color: colors.background, fontSize: fontSizes.xl, fontWeight: '700' }}>
-              {initialsOf(entry.displayName, undefined)}
+      <ProfileHero
+        initials={initialsOf(entry.displayName, undefined)}
+        meta={
+          entry.socialStatus ? (
+            <Text style={{ color: colors.textSecondary, fontSize: fontSizes.sm }}>
+              {SOCIAL_STATUS_LABEL[entry.socialStatus]}
             </Text>
-          </View>
-        )}
-        <Text
-          accessibilityRole="header"
-          style={{ color: colors.text, fontSize: fontSizes.xl, fontWeight: semibold }}
-        >
-          {entry.displayName}
-        </Text>
-        {entry.levelCode ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-            <Ionicons color={colors.volt} name="trophy-outline" size={iconSizes.sm} />
-            <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}>
-              {levelTitle(entry.levelCode)}
-              {typeof entry.points === 'number' ? ' · ' : ''}
-            </Text>
-            {typeof entry.points === 'number' ? (
-              <CountUpText
-                style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}
-                suffix=" pts"
-                value={entry.points}
-              />
-            ) : null}
-          </View>
-        ) : null}
-        {entry.socialStatus ? (
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-            {SOCIAL_STATUS_LABEL[entry.socialStatus]}
-          </Text>
-        ) : null}
-      </View>
-
-      <Card>
-        {entry.objetivo ? (
-          <Row
-            icon="flag-outline"
-            label="Objetivo"
-            value={TRAINING_GOAL_LABEL[entry.objetivo] ?? entry.objetivo}
-          />
-        ) : null}
-        {entry.branchName ? (
-          <Row icon="business-outline" label="Sucursal" value={entry.branchName} />
-        ) : null}
-        {entry.gender ? (
-          <Row
-            icon="person-outline"
-            label="Género"
-            value={GENDER_LABEL[entry.gender] ?? entry.gender}
-          />
-        ) : null}
-        {entry.experienceLevel ? (
-          <Row
-            icon="school-outline"
-            label="Experiencia"
-            value={EXPERIENCE_LEVEL_LABEL[entry.experienceLevel] ?? entry.experienceLevel}
-          />
-        ) : null}
-        {typeof entry.points === 'number' ? (
-          <Row
-            count={entry.points}
-            countSuffix=" pts"
-            icon="stats-chart-outline"
-            label="Puntos"
-            value={`${entry.points.toLocaleString('es-ES')} pts`}
-          />
-        ) : null}
-      </Card>
+          ) : null
+        }
+        name={entry.displayName}
+        photoUrl={entry.photoUrl}
+        rank={entry.levelCode ? levelTitle(entry.levelCode) : null}
+        testID="member-profile-hero"
+      >
+        {/* Prueba social con cifras reales: lo que el servidor manda, nada más. */}
+        <HeroStats
+          stats={[
+            ...(typeof entry.points === 'number' ? [{ key: 'points', value: entry.points, label: 'puntos' }] : []),
+            {
+              key: 'badges',
+              value: entry.badges.length,
+              label: plural(entry.badges.length, 'insignia', 'insignias'),
+            },
+          ]}
+        />
+      </ProfileHero>
 
       {entry.connectionStatus === 'NONE' ? (
         <Button
@@ -259,12 +213,20 @@ export default function PerfilDetailScreen() {
           onPress={() => connect.mutate(entry.userId)}
         />
       ) : entry.connectionStatus === 'ACCEPTED' ? (
-        <Button
-          icon="chatbubble-outline"
-          label="Enviar mensaje"
-          loading={message.isPending}
-          onPress={() => message.mutate(entry.userId)}
-        />
+        <View style={{ gap: spacing.sm }}>
+          <Button
+            icon="chatbubble-outline"
+            label="Enviar mensaje"
+            loading={message.isPending}
+            onPress={() => message.mutate(entry.userId)}
+          />
+          <Button
+            icon="barbell-outline"
+            label="Entrenemos juntos"
+            onPress={() => setInviteOpen(true)}
+            variant="ghost"
+          />
+        </View>
       ) : entry.connectionStatus === 'PENDING_SENT' ? (
         <Button
           icon="close-circle-outline"
@@ -285,12 +247,50 @@ export default function PerfilDetailScreen() {
             paddingVertical: spacing.sm,
           }}
         >
-          <Ionicons color={colors.volt} name="mail-unread-outline" size={iconSizes.sm} />
-          <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}>
+          <Ionicons color={accentPolicy.ink} name="mail-unread-outline" size={iconSizes.sm} />
+          <Text style={{ color: accentPolicy.ink, fontSize: fontSizes.sm, fontWeight: semibold }}>
             Te escribió — revisa Solicitudes
           </Text>
         </View>
       )}
+
+      {entry.connectionStatus === 'ACCEPTED' ? (
+        <CreateTrainingInviteModal
+          onClose={() => setInviteOpen(false)}
+          recipientId={entry.userId}
+          recipientName={entry.displayName}
+          visible={inviteOpen}
+        />
+      ) : null}
+
+      {entry.objetivo || entry.branchName || entry.gender || entry.experienceLevel ? (
+        <Card>
+          {entry.objetivo ? (
+            <Row
+              icon="flag-outline"
+              label="Objetivo"
+              value={TRAINING_GOAL_LABEL[entry.objetivo] ?? entry.objetivo}
+            />
+          ) : null}
+          {entry.branchName ? (
+            <Row icon="business-outline" label="Sucursal" value={entry.branchName} />
+          ) : null}
+          {entry.gender ? (
+            <Row
+              icon="person-outline"
+              label="Género"
+              value={GENDER_LABEL[entry.gender] ?? entry.gender}
+            />
+          ) : null}
+          {entry.experienceLevel ? (
+            <Row
+              icon="school-outline"
+              label="Experiencia"
+              value={EXPERIENCE_LEVEL_LABEL[entry.experienceLevel] ?? entry.experienceLevel}
+            />
+          ) : null}
+        </Card>
+      ) : null}
 
       <Section icon="ribbon-outline" title={`Insignias · ${entry.badges.length}`}>
         {entry.badges.length ? (
@@ -307,6 +307,44 @@ export default function PerfilDetailScreen() {
           />
         )}
       </Section>
+
+      {/* Moderación: al pie y en fantasma; existe, pero no compite con conectar. */}
+      <View style={{ gap: spacing.xs }}>
+        <Button
+          icon="ban-outline"
+          label="Bloquear persona"
+          loading={block.isPending}
+          onPress={() => Alert.alert(
+            '¿Bloquear a esta persona?',
+            'Se cerrará el chat y dejará de aparecer en tu comunidad y mapa. Puedes desbloquearla desde Personas bloqueadas.',
+            [
+              { text: 'Cancelar', style: 'cancel' },
+              { text: 'Bloquear', style: 'destructive', onPress: () => block.mutate(entry.userId) },
+            ],
+          )}
+          variant="ghost"
+        />
+
+        <Button
+          accessibilityLabel="Reportar perfil"
+          disabled={report.isPending}
+          icon="flag-outline"
+          label="Reportar perfil"
+          loading={report.isPending}
+          onPress={() => Alert.alert(
+            'Reportar perfil',
+            'Elige el motivo. Tu identidad no se compartirá con esta persona.',
+            [
+              { text: 'Acoso', onPress: () => report.mutate('ACOSO') },
+              { text: 'Perfil falso', onPress: () => report.mutate('PERFIL_FALSO') },
+              { text: 'Spam', onPress: () => report.mutate('SPAM') },
+              { text: 'Otro', onPress: () => report.mutate('OTRO') },
+              { text: 'Cancelar', style: 'cancel' },
+            ],
+          )}
+          variant="ghost"
+        />
+      </View>
     </ScrollScreen>
   );
 }

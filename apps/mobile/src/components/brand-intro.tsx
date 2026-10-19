@@ -15,8 +15,17 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
+import { ReppIntro } from '@/components/brand/repp-intro';
 import { DURATION, PREMIUM_EASING } from '@/components/motion';
-import { accentContrast, accentGradient, colors, fontSizes, useActiveTenant } from '@/theme';
+import {
+  accentContrast,
+  accentGradient,
+  brandIntroSweep,
+  colors,
+  fontSizes,
+  stageBackground,
+  useActiveTenant,
+} from '@/theme';
 
 /**
  * La cortinilla de marca del arranque.
@@ -137,7 +146,7 @@ const SWEEP_IN = DURATION.slow;
 const WORDMARK_AT = SWEEP_AT + 210;
 /**
  * Ventana total del escalonado, **repartida** entre las letras en vez de un
- * retardo fijo por letra. Con un retardo fijo, `GYMSHEET` (8) y `TOP FITNESS`
+ * retardo fijo por letra. Con un retardo fijo, `REPP` y `TOP FITNESS`
  * (11) tendrían revelados de duración distinta y la cortinilla duraría más en
  * un gimnasio que en otro. Así el acto dura lo mismo para cualquier marca.
  */
@@ -188,7 +197,7 @@ const REDUCED_HOLD_CAP = 400;
  * la diferencia con el `colors.background` de la aplicación es invisible, así
  * que la disolución final no tiene escalón.
  */
-const STAGE_BACKGROUND = '#050505';
+const STAGE_BACKGROUND = stageBackground.brandIntro;
 
 /** Lado del emblema. */
 const EMBLEM = 112;
@@ -312,11 +321,7 @@ const HALO_RINGS: readonly number[] = Array.from({ length: HALO_RING_COUNT }, (_
 });
 
 /** Barrido: blanco puro, transparente en los extremos. */
-const SWEEP_GRADIENT: readonly [string, string, string] = [
-  'rgba(255,255,255,0)',
-  'rgba(255,255,255,0.8)',
-  'rgba(255,255,255,0)',
-];
+const SWEEP_GRADIENT: readonly [string, string, string] = brandIntroSweep;
 
 /** Tracking del wordmark, como fracción del tamaño de letra. */
 const WORDMARK_TRACKING = 0.3;
@@ -326,6 +331,13 @@ const WORDMARK_TRACKING = 0.3;
 /* -------------------------------------------------------------------------- */
 
 export function BrandIntro({ ready }: { ready: boolean }) {
+  const tenant = useActiveTenant();
+  // REPP tiene su propia escena: arranca en el signo del splash nativo y lo
+  // transforma en el logotipo. El resto de marcas usan la cortinilla genérica.
+  return tenant.name === 'REPP' ? <ReppIntro onFinish={finish} ready={ready} /> : <TenantIntro ready={ready} />;
+}
+
+function TenantIntro({ ready }: { ready: boolean }) {
   const tenant = useActiveTenant();
   const reduceMotion = useReducedMotion();
 
@@ -624,7 +636,7 @@ export function BrandIntro({ ready }: { ready: boolean }) {
               }}
             >
               {/* El relleno de marca, con su degradado declarado por inquilino:
-                  el verde de GymSheet o el rojo de TOP Fitness, sin una sola
+                  el jade de REPP o el rojo de TOP Fitness, sin una sola
                   línea que sepa cuál de los dos es. */}
               <LinearGradient
                 colors={gradient}

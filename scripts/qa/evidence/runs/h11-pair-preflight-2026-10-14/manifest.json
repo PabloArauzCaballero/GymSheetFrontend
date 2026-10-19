@@ -1,0 +1,113 @@
+{
+  "api": {
+    "actors": {},
+    "ready": false
+  },
+  "cases": [
+    {
+      "id": "H11.S3.M1",
+      "reasons": [
+        "required driver H11.S3.M1-A_ANDROID.py missing",
+        "required driver H11.S3.M1-A_IOS.py missing",
+        "required driver H11.S3.M1-B_WEB.py missing"
+      ],
+      "requiredRoles": [
+        "A_ANDROID",
+        "A_IOS",
+        "B_WEB"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H11.S3.M2",
+      "reasons": [
+        "required driver H11.S3.M2-A_ANDROID.py missing",
+        "required driver H11.S3.M2-A_IOS.py missing",
+        "required driver H11.S3.M2-B_WEB.py missing",
+        "required driver H11.S3.M2-C_WEB.py missing"
+      ],
+      "requiredRoles": [
+        "A_ANDROID",
+        "A_IOS",
+        "B_WEB",
+        "C_WEB"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H11.S3.M3",
+      "reasons": [
+        "required driver H11.S3.M3-A_ANDROID.py missing",
+        "required driver H11.S3.M3-A_IOS.py missing",
+        "required driver H11.S3.M3-B_WEB.py missing",
+        "required driver H11.S3.M3-C_WEB.py missing"
+      ],
+      "requiredRoles": [
+        "A_ANDROID",
+        "A_IOS",
+        "B_WEB",
+        "C_WEB"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H11.S3.M4",
+      "reasons": [
+        "required driver H11.S3.M4-A_ANDROID.py missing",
+        "required driver H11.S3.M4-A_IOS.py missing",
+        "required driver H11.S3.M4-B_IOS.py missing",
+        "required driver H11.S3.M4-B_WEB.py missing"
+      ],
+      "requiredRoles": [
+        "A_ANDROID",
+        "A_IOS",
+        "B_IOS",
+        "B_WEB"
+      ],
+      "verdict": "BLOCKED"
+    }
+  ],
+  "createdAt": "2026-10-14T14:13:08Z",
+  "devices": {
+    "android": {
+      "ready": false,
+      "serial": null
+    },
+    "ios": {
+      "booted": false,
+      "udid": null
+    }
+  },
+  "ports": {
+    "api": 3011,
+    "web": 3002
+  },
+  "repositories": {
+    "backend": {
+      "branch": "feat/biblioteca-ejercicios",
+      "dirty": false,
+      "present": true,
+      "sha": "c68e48f45de284697d95884b65fe0a398539c217"
+    },
+    "frontend": {
+      "branch": "docs/h10-export-and-decline-evidence",
+      "dirty": true,
+      "present": true,
+      "sha": "e1a4993253cc196f151809f74144d4b775729f90"
+    },
+    "recommendations": {
+      "branch": "main",
+      "dirty": false,
+      "present": true,
+      "sha": "21b27fc8b61a174360b3094fae0cdb0e6bcdf0bd"
+    }
+  },
+  "runId": "f11214c1-379f-434c-b477-c98096203230",
+  "schemaVersion": 1,
+  "secretsIncluded": false,
+  "versions": {
+    "node": "v24.19.0",
+    "python": "3.14.7",
+    "yarn": "1.22.22"
+  }
+}

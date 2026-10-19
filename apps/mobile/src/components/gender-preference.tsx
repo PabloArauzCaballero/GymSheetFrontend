@@ -3,9 +3,9 @@ import { Text, View } from 'react-native';
 import type { UserGender } from '@gymsheet/types';
 import { accountService } from '@/api/services';
 import { Card, Section } from '@/components/layout';
-import { PressableScale } from '@/components/motion';
+import { FilterChip } from '@/components/filter-chip';
 import { notify } from '@/notifications';
-import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
+import { colors, fontSizes, spacing } from '@/theme';
 
 /**
  * Con qué arquetipos habla la senda.
@@ -47,38 +47,22 @@ export function GenderPreference() {
   const current = account.data?.genero ?? 'UNSPECIFIED';
 
   return (
-    <Section icon="sparkles-outline" title="Tu senda">
+    <Section title="Rangos de tu senda">
       <Card>
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
           Elige con qué rangos e insignias te habla tu senda. Puedes cambiarlo cuando quieras.
         </Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
           {OPTIONS.map((option) => {
             const active = option.value === current;
             return (
-              <PressableScale
+              <FilterChip
                 accessibilityLabel={option.label}
-                key={option.value}
+                key={String(option.value)}
+                label={option.label}
                 onPress={() => save.mutate(option.value)}
-                style={{
-                  paddingHorizontal: spacing.md,
-                  paddingVertical: spacing.sm,
-                  borderRadius: radii.full,
-                  borderWidth: 1,
-                  borderColor: active ? colors.volt : colors.border,
-                  backgroundColor: active ? colors.surfaceHigh : colors.surfaceLow,
-                }}
-              >
-                <Text
-                  style={{
-                    color: active ? colors.text : colors.textMuted,
-                    fontSize: fontSizes.sm,
-                    fontWeight: active ? semibold : '400',
-                  }}
-                >
-                  {option.label}
-                </Text>
-              </PressableScale>
+                selected={active}
+              />
             );
           })}
         </View>

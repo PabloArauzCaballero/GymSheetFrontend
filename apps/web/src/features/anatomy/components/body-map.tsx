@@ -1,5 +1,6 @@
 'use client';
 
+import { muscleLabelEs } from '@gymsheet/domain';
 import {
   HIGHLIGHT,
   IMAGE_ASPECT,
@@ -55,7 +56,17 @@ const INSET_BOTTOM = 52;
  * tabulación (Intro abre). Gestos de zoom en `useFigureGestures`. Con «reducir
  * movimiento» no hay transiciones ni retardo.
  */
-export function BodyMap({ className }: Readonly<{ className?: string }>) {
+export function BodyMap({
+  className,
+  onSelectMuscle,
+}: Readonly<{
+  className?: string;
+  /**
+   * Qué hacer al elegir un músculo. Por omisión abre su página; el selector del
+   * asistente de rutinas lo sustituye para abrir la lista sin salir del asistente.
+   */
+  onSelectMuscle?: (code: string) => void;
+}>) {
   const router = useRouter();
   const reduceMotion = usePrefersReducedMotion();
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -100,11 +111,11 @@ export function BodyMap({ className }: Readonly<{ className?: string }>) {
       setSelected(code);
       if (openTimer.current) clearTimeout(openTimer.current);
       openTimer.current = setTimeout(
-        () => router.push(`/exercises/muscle/${code}`),
+        () => (onSelectMuscle ? onSelectMuscle(code) : router.push(`/exercises/muscle/${code}`)),
         reduceMotion ? 0 : OPEN_DELAY_MS,
       );
     },
-    [reduceMotion, router],
+    [onSelectMuscle, reduceMotion, router],
   );
 
   // `pick` necesita la transformación del hook y el hook necesita a `pick`:
@@ -239,7 +250,7 @@ export function BodyMap({ className }: Readonly<{ className?: string }>) {
                   al enfocarlos con teclado se resaltan igual que al pasar. */}
               {muscles.map((muscle) => (
                 <g
-                  aria-label={`${muscleInfo(muscle.code)?.name ?? muscle.code}: ver ejercicios`}
+                  aria-label={`${muscleLabelEs(muscle.code)}: ver ejercicios`}
                   className="outline-none"
                   key={muscle.code}
                   onBlur={() => setHovered((current) => (current === muscle.code ? null : current))}

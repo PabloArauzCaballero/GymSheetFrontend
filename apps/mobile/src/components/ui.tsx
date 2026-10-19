@@ -1,3 +1,5 @@
+import { useContext } from 'react';
+import { TextScaleLimit } from '@/components/text';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, type ReactNode } from 'react';
 import {
@@ -5,7 +7,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  Text,
+  StyleSheet,
+  Text as RNText,
   TextInput,
   useWindowDimensions,
   View,
@@ -15,16 +18,23 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
+  Easing,
   FadeIn,
+  interpolate,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  withSequence,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { AmbientBackground } from '@/components/ambient';
+import { credentialTextProps } from '@/lib/credential-input';
 import { DURATION, PressableScale } from '@/components/motion';
-import { accentContrast, accentPolicy, colors, fontSizes, iconSizes, maxContentWidth, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { Text } from '@/components/text';
+import { accentContrast, accentGlow, accentGradient, accentPolicy, colors, comfortableTouchTarget, fontSizes, iconSizes, maxContentWidth, minTouchTarget, onMedia, overlay, pressScale, pressSpring, radii, releaseSpring, semibold, spacing, type TextVariant } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -94,174 +104,248 @@ export function textLinkStyle() {
   } as const;
 }
 
+/**
+ * Alias de compatibilidad de `Text` (`components/text.tsx`). Acepta las
+ * variantes antiguas (`title`, `body`, `muted`) y las de la rampa nueva.
+ */
 export function AppText({
   children,
   variant = 'body',
 }: {
   children: ReactNode;
-  variant?: 'title' | 'body' | 'muted';
+  variant?: 'muted' | TextVariant;
 }) {
-  const style = {
-    // Misma regla que `ScreenHeader`: cuanto mayor el tamaño, menor el peso.
-    title: { color: colors.text, fontSize: fontSizes.xl, fontWeight: semibold },
-    body: { color: colors.text, fontSize: fontSizes.md },
-    muted: { color: colors.textMuted, fontSize: fontSizes.sm },
-  }[variant];
-  return <Text style={style}>{children}</Text>;
+  if (variant === 'muted') {
+    return (
+      <Text tone="muted" variant="subhead">
+        {children}
+      </Text>
+    );
+  }
+  return <Text variant={variant}>{children}</Text>;
 }
 
-export type ButtonVariant = 'primary' | 'danger' | 'ghost';
+/**
+ * Variantes del botón (C8.2): `primary` (relleno de acento: una por pantalla),
+ * `secondary` (relleno neutro), `ghost` (contorno de control ≥ 3:1) y
+ * `destructive`. `danger` se mantiene como alias de `destructive`.
+ */
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive' | 'danger';
+export type ButtonSize = 'sm' | 'md' | 'lg';
 
 /**
- * Fill per variant — un color plano por variante, sin degradados.
- *
- * Antes cada botón lleno era un degradado de dos paradas con un velo blanco
- * animado encima. Tres capas para pintar un rectángulo. El degradado no se
- * leía como volumen sino como una superficie sucia, porque la rampa iba de un
- * volt más claro que la marca a uno más apagado: el color del botón principal
- * no era el color de la marca en ningún punto de su cara.
- *
- * Un relleno plano en el volt exacto es más limpio, se lee mejor sobre negro y
- * es lo que hace un botón nativo. La respuesta al toque la sigue dando la
- * escala, que es háptica y no decorativa.
- */
-/**
- * Relleno por variante. Plano, no degradado.
- *
- * `dev` los traía en degradado; se mantiene la decisión de esta rama de dejarlos
- * planos, porque el degradado sobre un acento saturado a tamaño de botón lee
- * como un adorno de plantilla y no como una marca. Lo que sí se conserva de
- * `dev` es de dónde salen los colores: el acento y su contraste los fija el
- * inquilino, así que un gimnasio con marca clara no acaba con texto blanco
- * ilegible sobre su propio color.
- *
- * Es una función y no una constante porque el inquilino se resuelve en tiempo
- * de ejecución: una constante congelaría los colores del primero que cargara.
+ * Tono por variante. Función y no constante: el acento depende del gimnasio,
+ * que se resuelve en tiempo de ejecución.
  */
 function buttonTone(variant: ButtonVariant): {
   background: string;
   ink: string;
   border: string;
 } {
-  if (variant === 'primary') {
-    return { background: colors.volt, ink: accentContrast(), border: colors.volt };
+  switch (variant) {
+    case 'primary':
+      return { background: colors.volt, ink: accentContrast(), border: colors.volt };
+    case 'secondary':
+      return { background: colors.surfaceHighest, ink: colors.text, border: colors.surfaceHighest };
+    case 'destructive':
+    case 'danger':
+      return { background: colors.danger, ink: colors.background, border: colors.danger };
+    default:
+      return { background: 'transparent', ink: colors.text, border: colors.borderControl };
   }
-  if (variant === 'danger') {
-    return { background: colors.danger, ink: colors.background, border: colors.danger };
-  }
-  return { background: 'transparent', ink: colors.text, border: colors.border };
 }
 
-/**
- * Press spring for the primary action surface. Slightly livelier than the one
- * used for cards: a button is the thing the user came to hit, so it may answer
- * with more energy than a row that merely happens to be tappable. Still clamped
- * against overshoot, so it stays inside the app's Premium motion identity.
- */
-const BUTTON_SPRING = { damping: 22, stiffness: 380, mass: 0.5, overshootClamping: true } as const;
+/** Alto mínimo 48 en todos los tamaños (C8.2): manos sudadas, en movimiento. */
+const BUTTON_SIZES = {
+  sm: { minHeight: comfortableTouchTarget, paddingHorizontal: spacing.md, fontSize: fontSizes.sm, radius: radii.md },
+  md: { minHeight: 52, paddingHorizontal: spacing.mdl, fontSize: fontSizes.md, radius: radii.lg },
+  lg: { minHeight: 56, paddingHorizontal: spacing.lg, fontSize: fontSizes.md, radius: radii.lg },
+} as const;
 
 /**
- * The action surface. Dos cosas responden al toque: la escala y un tic háptico.
- * Ambas son de compositor o fuera del hilo de JS, así que ninguna mueve el
- * layout de alrededor.
+ * La superficie de acción. Responde al toque con un hundimiento a 0,97 (muelle
+ * sin rebote; con «reducir movimiento», un cambio de opacidad).
+ *
+ * **Sin háptico por defecto** (C8.1): un Medium en cada botón deja de
+ * significar nada. Los hápticos van donde dice el mapa: `selection` en
+ * selectores, `light` al marcar una serie, `success` tras guardar (lo dispara
+ * quien conoce el resultado) y `warning` en errores. `haptic` permite pedir uno
+ * al contacto cuando la acción lo merece.
  */
 export function Button({
   label,
   onPress,
   icon,
+  iconPosition = 'start',
   loading = false,
   disabled = false,
   variant = 'primary',
+  size = 'md',
+  haptic,
+  accessibilityHint,
+  accessibilityLabel,
+  testID,
   style,
 }: {
   label: string;
   onPress: () => void;
-  /**
-   * Glifo antes de la etiqueta.
-   *
-   * Opcional y decorativo: el texto es el que nombra la acción, y el icono sólo
-   * la hace reconocible de un vistazo cuando hay dos botones seguidos que
-   * hacen cosas distintas —exportar en PDF frente a exportar en CSV—, que es
-   * justo donde leer dos etiquetas parecidas cuesta más que ver dos formas
-   * distintas. Un botón que se explica solo por su texto no necesita ninguno.
-   */
+  /** Glifo antes de la etiqueta; decorativo (la etiqueta nombra la acción). */
   icon?: keyof typeof Ionicons.glyphMap;
+  /**
+   * `end` para acciones que avanzan («Continuar», «Siguiente», «Ver todos»):
+   * la flecha apunta hacia donde se va, después de la palabra.
+   */
+  iconPosition?: 'start' | 'end';
   loading?: boolean;
   disabled?: boolean;
   variant?: ButtonVariant;
+  size?: ButtonSize;
+  haptic?: 'none' | 'selection' | 'light';
+  accessibilityHint?: string;
+  accessibilityLabel?: string;
+  testID?: string;
   style?: StyleProp<ViewStyle>;
 }) {
+  const textLimit = useContext(TextScaleLimit);
   const isDisabled = disabled || loading;
   const tone = buttonTone(variant);
+  const metrics = BUTTON_SIZES[size];
   const pressed = useSharedValue(0);
+  /** 0 → 1: la franja de luz cruza el botón principal al soltarlo. */
+  const sheen = useSharedValue(0);
+  const [buttonWidth, setButtonWidth] = useState(0);
   const reduceMotion = useReducedMotion();
 
-  const animated = useAnimatedStyle(() => ({
-    transform: [{ scale: reduceMotion ? 1 : 1 - pressed.value * 0.04 }],
-  }));
+  // Al tocar: se hunde (escala), se ilumina por dentro y la etiqueta baja 1 pt.
+  // Al soltar: vuelve con un rebote corto (`releaseSpring`). Es el par
+  // «me hizo caso / te devuelvo el empujón» que hace que un botón se sienta
+  // físico. Con «Reducir movimiento» solo queda el cambio de luz.
+  const animated = useAnimatedStyle(() =>
+    reduceMotion
+      ? { opacity: 1 - pressed.value * 0.2 }
+      : { transform: [{ scale: 1 - pressed.value * (1 - pressScale.button) }] },
+  );
+  const glow = useAnimatedStyle(() => ({ opacity: Math.max(0, pressed.value) * 0.16 }));
+  const labelStyle = useAnimatedStyle(() => (reduceMotion ? {} : { transform: [{ translateY: Math.max(0, pressed.value) }] }));
+  // El glifo se adelanta y gira un poco al tocar: el botón «arranca». Una
+  // flecha final solo avanza: girarla la haría apuntar a otra parte.
+  const trailing = iconPosition === 'end';
+  const iconStyle = useAnimatedStyle(() =>
+    reduceMotion
+      ? {}
+      : trailing
+        ? { transform: [{ translateX: pressed.value * 3 }] }
+        : { transform: [{ translateX: pressed.value * 3 }, { rotate: `${pressed.value * -8}deg` }] },
+  );
+  const sweep = useAnimatedStyle(() => {
+    const band = Math.max(64, buttonWidth * 0.35);
+    return {
+      opacity: interpolate(sheen.value, [0, 0.15, 0.85, 1], [0, 1, 1, 0]),
+      transform: [{ translateX: interpolate(sheen.value, [0, 1], [-band * 1.5, buttonWidth + band * 0.5]) }, { skewX: '-20deg' }],
+      width: band,
+    };
+  });
+  // La acción principal responde también en la mano; el resto, en silencio.
+  const touchHaptic = haptic ?? (variant === 'primary' ? 'light' : 'none');
+  // Encendida: degradado de marca y halo. Bloqueada no lleva ninguno de los
+  // dos: un botón apagado que sigue brillando invita a pulsarlo.
+  const lit = variant === 'primary' && !isDisabled;
+  const gradient = accentGradient();
 
   const ink = isDisabled ? colors.textDisabled : tone.ink;
   const content = loading ? (
     <ActivityIndicator color={tone.ink} />
   ) : (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+    <Animated.View
+      style={[{ flexDirection: trailing ? 'row-reverse' : 'row', alignItems: 'center', gap: spacing.sm }, labelStyle]}
+    >
       {icon ? (
-        <Ionicons
-          // Oculto para lectores de pantalla: la etiqueta de al lado ya se
-          // anuncia, y repetir el nombre del glifo sólo alarga el anuncio.
-          accessibilityElementsHidden
-          color={ink}
-          importantForAccessibility="no-hide-descendants"
-          name={icon}
-          size={iconSizes.md}
-        />
+        <Animated.View style={iconStyle}>
+          <Ionicons
+            accessibilityElementsHidden
+            color={ink}
+            importantForAccessibility="no-hide-descendants"
+            name={icon}
+            size={iconSizes.md}
+          />
+        </Animated.View>
       ) : null}
-      <Text
+      <RNText
+        maxFontSizeMultiplier={textLimit}
         numberOfLines={1}
-        style={{
-          color: ink,
-          fontSize: fontSizes.md,
-          fontWeight: '700',
-          letterSpacing: 0.2,
-        }}
+        style={{ color: ink, fontSize: metrics.fontSize, fontWeight: semibold }}
       >
         {label}
-      </Text>
-    </View>
+      </RNText>
+    </Animated.View>
   );
 
   return (
     <AnimatedPressable
+      accessibilityHint={accessibilityHint}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
       onPress={onPress}
       onPressIn={() => {
         if (isDisabled) return;
-        pressed.value = withSpring(1, BUTTON_SPRING);
-        // Fired on contact, not on release: the phone should answer the finger
-        // at the moment of touch, not after the action resolves.
-        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        pressed.value = withSpring(1, pressSpring);
+        if (touchHaptic === 'selection') void Haptics.selectionAsync();
+        if (touchHaptic === 'light') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }}
       onPressOut={() => {
-        pressed.value = withSpring(0, BUTTON_SPRING);
+        if (reduceMotion) {
+          pressed.value = withTiming(0, { duration: DURATION.quick });
+          return;
+        }
+        pressed.value = withSpring(0, releaseSpring);
+        if (lit) {
+          sheen.value = 0;
+          sheen.value = withSequence(withTiming(0, { duration: 40 }), withTiming(1, { duration: 520, easing: Easing.bezier(0.23, 1, 0.32, 1) }));
+        }
       }}
+      onLayout={(event) => setButtonWidth(event.nativeEvent.layout.width)}
+      testID={testID}
       style={[
         {
-          minHeight: minTouchTarget,
-          borderRadius: radii.md,
+          minHeight: metrics.minHeight,
+          borderRadius: metrics.radius,
+          borderCurve: 'continuous',
           overflow: 'hidden',
-          borderWidth: 1,
+          borderWidth: variant === 'ghost' ? 1 : 0,
           borderColor: isDisabled ? colors.surfaceHigh : tone.border,
           backgroundColor: isDisabled ? colors.surfaceHigh : tone.background,
           alignItems: 'center',
           justifyContent: 'center',
-          paddingHorizontal: spacing.lg,
+          paddingHorizontal: metrics.paddingHorizontal,
+          boxShadow: lit ? accentGlow(colors.volt) : undefined,
         },
         animated,
         style,
       ]}
     >
+      {lit ? (
+        <LinearGradient
+          colors={[gradient[0], gradient[1]]}
+          end={{ x: 1, y: 1 }}
+          pointerEvents="none"
+          start={{ x: 0, y: 0 }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
+      {/* Luz interior al pulsar: el botón «se enciende» bajo el dedo. */}
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: lit ? onMedia.text : colors.text }, glow]} />
+      {lit && !reduceMotion ? (
+        <Animated.View pointerEvents="none" style={[{ position: 'absolute', top: -8, bottom: -8, left: 0 }, sweep]}>
+          <LinearGradient
+            colors={[overlay.clearLight, overlay.glassStrong, overlay.clearLight]}
+            end={{ x: 1, y: 0.5 }}
+            start={{ x: 0, y: 0.5 }}
+            style={{ flex: 1 }}
+          />
+        </Animated.View>
+      ) : null}
       {content}
     </AnimatedPressable>
   );
@@ -325,7 +409,7 @@ export function Input({
   return (
     <View style={{ gap: spacing.xs }}>
       {labelHidden ? null : (
-        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{label}</Text>
+        <RNText style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{label}</RNText>
       )}
       <View style={{ justifyContent: 'center' }}>
         {icon ? (
@@ -377,8 +461,10 @@ export function Input({
           {...props}
           // Después de `props` a propósito: cuando el campo gestiona su propio
           // ojo, quien lo usa no debe poder fijar `secureTextEntry` por su
-          // cuenta y dejar el interruptor mintiendo.
-          {...(revealable ? { secureTextEntry: !revealed } : {})}
+          // cuenta y dejar el interruptor mintiendo. Por lo mismo, ni mayúscula
+          // automática ni autocorrector: revelado deja de ser un campo seguro y
+          // el teclado volvía a «arreglar» la contraseña (ver credential-input).
+          {...(revealable ? { secureTextEntry: !revealed, ...credentialTextProps } : {})}
         />
         {revealable ? (
           <PressableScale
@@ -411,7 +497,7 @@ export function Input({
         ) : null}
       </View>
       {error ? (
-        <Text
+        <RNText
           // Sin esto el mensaje aparece pero no se anuncia: quien no ve la
           // pantalla pulsa «Iniciar sesión», no ocurre nada, y nada le dice por
           // qué.
@@ -420,7 +506,7 @@ export function Input({
           style={{ color: colors.danger, fontSize: fontSizes.xs }}
         >
           {error}
-        </Text>
+        </RNText>
       ) : null}
     </View>
   );

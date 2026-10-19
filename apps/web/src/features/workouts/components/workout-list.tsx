@@ -9,9 +9,8 @@ import { workoutService } from '@/features/workouts/services/workout-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
-import {
-  SkeletonList,
-} from '@/shared/components/feedback/skeleton';
+import { SkeletonList } from '@/shared/components/feedback/skeleton';
+import { setVolumeKg } from '@gymsheet/domain';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button, ButtonLink } from '@/shared/components/ui/button';
@@ -22,8 +21,7 @@ import { formatDateTime, formatDuration } from '@/shared/lib/date';
 function sessionVolume(session: Awaited<ReturnType<typeof workoutService.get>>) {
   return session.ejercicios.reduce(
     (total, exercise) =>
-      total +
-      exercise.series.reduce((subtotal, set) => subtotal + set.pesoKg * set.repeticiones, 0),
+      total + exercise.series.reduce((subtotal, set) => subtotal + setVolumeKg(set), 0),
     0,
   );
 }

@@ -1,22 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, FlatList, Modal, Pressable, Text, View } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { exerciseService } from '@/api/services';
-import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
-import { Divider } from '@/components/layout';
-import { NavRow } from '@/components/list';
-import { ExerciseImage } from '@/components/media';
-import { Button, Input } from '@/components/ui';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
+import { Button } from '@/components/ui';
+import { ExerciseSearch } from '@/features/exercise-search/exercise-search';
+import { colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, spacing } from '@/theme';
 
 /** How much of the screen the sheet claims: enough rows to scan, still clearly a sheet. */
-const SHEET_HEIGHT = '85%';
-
-/** One page is plenty for a picker — the search box, not scrolling, narrows 1300+ rows. */
-const PAGE_SIZE = 30;
+const SHEET_HEIGHT = '90%';
 
 /**
  * Catalogue search in a bottom sheet, used to add an exercise to a session in
@@ -37,24 +29,11 @@ export function ExercisePicker({
 }) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const [search, setSearch] = useState('');
-
-  // Every opening starts from the full catalogue: a query left over from the
-  // previous exercise is never what the user is looking for now.
+  // Cuál se está guardando: su fila gira y las demás no admiten otro toque.
+  const [pendingId, setPendingId] = useState<string | null>(null);
   useEffect(() => {
-    if (!visible) setSearch('');
-  }, [visible]);
-
-  const exercises = useQuery({
-    queryKey: ['exercises', 'picker', search],
-    queryFn: () => exerciseService.list({ search: search.trim() || undefined, pageSize: PAGE_SIZE }),
-    // Keeps the previous results on screen while the new search resolves, so the
-    // list does not collapse into skeletons on every keystroke.
-    placeholderData: keepPreviousData,
-    enabled: visible,
-  });
-
-  const items = exercises.data?.items ?? [];
+    if (!pending) setPendingId(null);
+  }, [pending]);
 
   return (
     <Modal
@@ -64,7 +43,7 @@ export function ExercisePicker({
       transparent
       visible={visible}
     >
-      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0, 0, 0, 0.72)' }}>
+      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: overlay.scrim }}>
         {/* The strip above the sheet dismisses it, the way a native sheet does.
             Hidden from the accessibility tree: the close button is the labelled
             way out, and a full-screen target would swallow every swipe. */}
@@ -80,13 +59,10 @@ export function ExercisePicker({
             borderColor: colors.borderSubtle,
             backgroundColor: colors.surfaceLow,
             paddingTop: spacing.md,
-            paddingHorizontal: spacing.lg,
-            // Above the home indicator: the last row must stay tappable.
-            paddingBottom: insets.bottom + spacing.md,
-            gap: spacing.md,
+            gap: spacing.sm,
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg }}>
             <Text
               accessibilityRole="header"
               style={{
@@ -123,80 +99,42 @@ export function ExercisePicker({
             </Pressable>
           </View>
 
-          <Input
-            autoCapitalize="none"
-            autoCorrect={false}
-            editable={!pending}
-            label="Buscar"
-            onChangeText={setSearch}
-            placeholder="Nombre, grupo muscular…"
-            returnKeyType="search"
-            value={search}
-          />
-
-          {pending ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-              <ActivityIndicator color={colors.volt} />
-              <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-                Añadiendo ejercicio…
-              </Text>
-            </View>
+          {/* El buscador compartido: se monta al abrir, así cada apertura parte
+              de cero (una búsqueda del ejercicio anterior nunca es lo que se
+              busca ahora) y el teclado sale con el campo ya enfocado. */}
+          {visible ? (
+            <ExerciseSearch
+              emptyAction={
+                // Una lista vacía sin salida deja la sesión a medias: el
+                // ejercicio que falta se puede crear sin abandonarla.
+                <Button
+                  icon="add"
+                  label="Crear ejercicio"
+                  onPress={() => {
+                    onClose();
+                    router.push('/ejercicio-nuevo');
+                  }}
+                  size="sm"
+                  variant="ghost"
+                />
+              }
+              mode={{
+                kind: 'select',
+                pendingId: pending ? (pendingId ?? 'guardando') : null,
+                onSelect: (exerciseId) => {
+                  setPendingId(exerciseId);
+                  onSelect(exerciseId);
+                },
+              }}
+              padding={{
+                top: 0,
+                // Above the home indicator: the last row must stay tappable.
+                bottom: insets.bottom + spacing.lg,
+                left: spacing.lg,
+                right: spacing.lg,
+              }}
+            />
           ) : null}
-
-          {/* While the caller saves, the list stays visible but inert: a second
-              tap would add a duplicate exercise to the session. */}
-          <View pointerEvents={pending ? 'none' : 'auto'} style={{ flex: 1, opacity: pending ? 0.5 : 1 }}>
-            {exercises.isPending ? (
-              <View style={{ gap: spacing.sm }}>
-                <Skeleton height={72} />
-                <Skeleton height={72} />
-                <Skeleton height={72} />
-                <Skeleton height={72} />
-              </View>
-            ) : exercises.isError ? (
-              <ErrorState error={exercises.error} onRetry={() => void exercises.refetch()} />
-            ) : (
-              <FlatList
-                // 1300+ exercises in the catalogue: virtualised rows only, never
-                // a mapped list.
-                data={items}
-                ItemSeparatorComponent={Divider}
-                keyboardShouldPersistTaps="handled"
-                keyExtractor={(exercise) => exercise.id}
-                ListEmptyComponent={
-                  <EmptyState
-                    icon="search-outline"
-                    message={
-                      search
-                        ? `Ningún ejercicio coincide con «${search}».`
-                        : 'El catálogo está vacío por ahora.'
-                    }
-                    title="Sin resultados"
-                  >
-                    {/* Una lista vacía sin salida deja la sesión a medias: el
-                        ejercicio que falta se puede crear sin abandonarla. */}
-                    <Button
-                      label="Crear ejercicio"
-                      onPress={() => {
-                        onClose();
-                        router.push('/ejercicio-nuevo');
-                      }}
-                      variant={search ? 'ghost' : 'primary'}
-                    />
-                  </EmptyState>
-                }
-                renderItem={({ item }) => (
-                  <NavRow
-                    leading={<ExerciseImage exercise={item} size={56} />}
-                    onPress={() => onSelect(item.id)}
-                    subtitle={item.grupoMuscular}
-                    title={item.nombre}
-                  />
-                )}
-                showsVerticalScrollIndicator={false}
-              />
-            )}
-          </View>
         </View>
       </View>
     </Modal>

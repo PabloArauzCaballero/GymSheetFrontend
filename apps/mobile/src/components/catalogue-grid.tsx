@@ -1,8 +1,21 @@
-import { Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
-import { EnterUp, PressableScale } from '@/components/motion';
-import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+import { Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { EnterUp, PressableScale } from "@/components/motion";
+import { MuscleHero } from "@/features/body-map";
+import { zoneMuscles } from "@/features/body-map/zones";
+import {
+  accentPolicy,
+  alpha,
+  colors,
+  fontFamilies,
+  fontSizes,
+  iconSizes,
+  radii,
+  semibold,
+  shadows,
+  spacing,
+} from "@/theme";
 
 /**
  * Icon per body part.
@@ -12,25 +25,34 @@ import { accentPolicy, colors, fontSizes, iconSizes, radii, semibold, spacing } 
  * fallback glyph — instead of vanishing from the grid. That way a new body part
  * added in the catalogue never silently disappears from navigation.
  */
-const BODY_PART_ICON: ReadonlyArray<readonly [RegExp, keyof typeof Ionicons.glyphMap]> = [
+const BODY_PART_ICON: ReadonlyArray<
+  readonly [RegExp, keyof typeof Ionicons.glyphMap]
+> = [
   // El catálogo devuelve las zonas en inglés (dataset) o en español (las que
   // definió el gimnasio: «Tren superior», «Cadena posterior»). Con una tabla
   // de nombres exactos en inglés, todas las zonas en español caían en el mismo
   // icono de reserva y la cuadrícula se leía como seis tarjetas iguales.
-  [/cardio|aer[oó]bic/i, 'pulse-outline'],
-  [/upper arm|brazo|b[ií]ceps|tr[ií]ceps/i, 'barbell-outline'],
-  [/lower arm|antebrazo|forearm/i, 'hand-left-outline'],
-  [/lower leg|pantorrilla|gemelo|calf/i, 'footsteps-outline'],
-  [/upper leg|pierna|tren inferior|cu[aá]driceps|gl[uú]teo|leg/i, 'walk-outline'],
-  [/cadena posterior|posterior|back|espalda|dorsal/i, 'body-outline'],
-  [/chest|pecho|pectoral/i, 'shield-outline'],
-  [/waist|core|abdom|cintura/i, 'ellipse-outline'],
-  [/shoulder|hombro|delto/i, 'triangle-outline'],
-  [/tren superior|upper/i, 'barbell-outline'],
-  [/neck|cuello/i, 'accessibility-outline'],
+  [/cardio|aer[oó]bic/i, "pulse-outline"],
+  [/upper arm|brazo|b[ií]ceps|tr[ií]ceps/i, "barbell-outline"],
+  [/lower arm|antebrazo|forearm/i, "hand-left-outline"],
+  [/lower leg|pantorrilla|gemelo|calf/i, "footsteps-outline"],
+  [
+    /upper leg|pierna|tren inferior|cu[aá]driceps|gl[uú]teo|leg/i,
+    "walk-outline",
+  ],
+  [/cadena posterior|posterior|back|espalda|dorsal/i, "body-outline"],
+  [/chest|pecho|pectoral/i, "shield-outline"],
+  [/waist|core|abdom|cintura/i, "ellipse-outline"],
+  [/shoulder|hombro|delto/i, "triangle-outline"],
+  [/tren superior|upper/i, "barbell-outline"],
+  [/neck|cuello/i, "accessibility-outline"],
 ];
 
-const FALLBACK_ICON: keyof typeof Ionicons.glyphMap = 'fitness-outline';
+const FALLBACK_ICON: keyof typeof Ionicons.glyphMap = "fitness-outline";
+
+export { zoneMuscles } from "@/features/body-map/zones";
+
+const TILE_ART = 148;
 
 /** `upper arms` → `Upper arms`. The catalogue stores them lowercase. */
 export function titleCase(value: string): string {
@@ -38,7 +60,10 @@ export function titleCase(value: string): string {
 }
 
 export function iconFor(bodyPart: string): keyof typeof Ionicons.glyphMap {
-  return BODY_PART_ICON.find(([pattern]) => pattern.test(bodyPart))?.[1] ?? FALLBACK_ICON;
+  return (
+    BODY_PART_ICON.find(([pattern]) => pattern.test(bodyPart))?.[1] ??
+    FALLBACK_ICON
+  );
 }
 
 /**
@@ -51,69 +76,137 @@ export function iconFor(bodyPart: string): keyof typeof Ionicons.glyphMap {
  */
 export function GridTile({
   icon,
-  imageUrl,
   index,
   label,
   onPress,
   total,
+  zone,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
+  /** Se ignora: el servidor puede mandar un vídeo aquí. La lámina sale de `zone`. */
   imageUrl?: string | null;
   index: number;
   label: string;
   onPress: () => void;
   total: number;
+  /** Nombre de la zona o músculo en el catálogo, para encender su silueta. */
+  zone?: string;
 }) {
+  const muscles = zone ? zoneMuscles(zone) : null;
   return (
-    <EnterUp index={index} style={{ width: '48%' }}>
+    <EnterUp index={index} style={{ width: "48.5%" }}>
       <PressableScale
         accessibilityLabel={`${label}, ${total} ejercicios`}
         onPress={onPress}
         style={{
-          overflow: 'hidden',
-          borderRadius: radii.lg,
+          overflow: "hidden",
+          borderRadius: radii.xl,
+          borderCurve: "continuous",
           borderWidth: 1,
           borderColor: colors.borderSubtle,
-          borderTopColor: colors.border,
-          backgroundColor: colors.surface,
+          backgroundColor: colors.surfaceLow,
+          boxShadow: shadows.card,
         }}
       >
-        {/* The plate, not a glyph. These illustrations show a body with the
-            worked muscle picked out in red, which is the fastest possible
-            answer to "is this the one I want?" — and it needs no translation.
-            The icon stays as the fallback for a group the catalogue has no
-            artwork for, so the grid never renders a hole. */}
+        {/* La figura con la zona encendida: se elige con el ojo, no leyendo. */}
         <View
           style={{
-            height: 116,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: imageUrl ? '#ffffff' : colors.surfaceHigh,
+            height: TILE_ART,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: colors.surfaceLowest,
           }}
         >
-          {imageUrl ? (
-            <Image
-              accessibilityIgnoresInvertColors
-              contentFit="contain"
-              source={{ uri: imageUrl }}
-              style={{ width: '100%', height: '100%' }}
-              transition={180}
-            />
+          {muscles ? (
+            <View style={{ alignSelf: "stretch" }}>
+              <MuscleHero codes={muscles} height={TILE_ART} padding={1.3} />
+            </View>
           ) : (
-            <Ionicons color={colors.textMuted} name={icon} size={iconSizes.xl} />
+            <View
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: radii.full,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: alpha(colors.volt, 0.14),
+                borderWidth: 1,
+                borderColor: alpha(colors.volt, 0.28),
+              }}
+            >
+              <Ionicons
+                color={colors.accentInk}
+                name={icon}
+                size={iconSizes.lg}
+              />
+            </View>
           )}
+          <LinearGradient
+            colors={[alpha(colors.surfaceLow, 0), colors.surfaceLow]}
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 44,
+            }}
+          />
         </View>
 
-        <View style={{ gap: 2, padding: spacing.md }}>
-          <Text
-            numberOfLines={2}
-            style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: '700' }}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: spacing.sm,
+            paddingLeft: spacing.md,
+            paddingRight: spacing.sm + 2,
+            paddingTop: spacing.xs,
+            paddingBottom: spacing.md,
+          }}
+        >
+          <View style={{ flex: 1, gap: 3 }}>
+            <Text
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+              numberOfLines={1}
+              style={{
+                color: colors.text,
+                fontFamily: fontFamilies.displaySemibold,
+                fontSize: fontSizes.md + 1,
+                letterSpacing: -0.35,
+              }}
+            >
+              {label}
+            </Text>
+            <Text
+              numberOfLines={1}
+              style={{
+                color: colors.textMuted,
+                fontSize: fontSizes.xs,
+                fontVariant: ["tabular-nums"],
+                letterSpacing: 0.1,
+              }}
+            >
+              {`${total} ${total === 1 ? "ejercicio" : "ejercicios"}`}
+            </Text>
+          </View>
+          <View
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: radii.full,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: colors.surfaceHigh,
+            }}
           >
-            {label}
-          </Text>
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-            {`${total} ${total === 1 ? 'ejercicio' : 'ejercicios'}`}
-          </Text>
+            <Ionicons
+              color={colors.textSecondary}
+              name="chevron-forward"
+              size={iconSizes.sm - 2}
+            />
+          </View>
         </View>
       </PressableScale>
     </EnterUp>
@@ -125,10 +218,10 @@ export function Grid({ children }: { children: React.ReactNode }) {
   return (
     <View
       style={{
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        rowGap: spacing.sm,
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "space-between",
+        rowGap: spacing.md,
       }}
     >
       {children}
@@ -137,15 +230,36 @@ export function Grid({ children }: { children: React.ReactNode }) {
 }
 
 /** Breadcrumb back control for the drill-down. */
-export function DrillBack({ label, onPress }: { label: string; onPress: () => void }) {
+export function DrillBack({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}) {
   return (
     <PressableScale
       accessibilityLabel={`Volver a ${label}`}
       onPress={onPress}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: 4 }}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacing.xs,
+        paddingVertical: 4,
+      }}
     >
-      <Ionicons color={accentPolicy.quietLink} name="chevron-back" size={iconSizes.md} />
-      <Text style={{ color: accentPolicy.quietLink, fontSize: fontSizes.sm, fontWeight: semibold }}>
+      <Ionicons
+        color={accentPolicy.quietLink}
+        name="chevron-back"
+        size={iconSizes.md}
+      />
+      <Text
+        style={{
+          color: accentPolicy.quietLink,
+          fontSize: fontSizes.sm,
+          fontWeight: semibold,
+        }}
+      >
         {label}
       </Text>
     </PressableScale>

@@ -20,7 +20,6 @@ import {
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
-  FadeOut,
   runOnJS,
   useAnimatedStyle,
   useReducedMotion,
@@ -29,7 +28,18 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import { colors, fontSizes, iconSizes, motion, radii, semibold, spacing } from '@/theme';
+import {
+  alpha,
+  bodyMapColors,
+  colors,
+  fontSizes,
+  iconSizes,
+  motion,
+  overlay,
+  radii,
+  semibold,
+  spacing,
+} from '@/theme';
 import {
   clampTransform,
   containFrame,
@@ -79,7 +89,7 @@ function Glass({ children, round = false }: { children: React.ReactNode; round?:
         borderRadius: radii.full,
         overflow: 'hidden',
         borderWidth: StyleSheet.hairlineWidth,
-        borderColor: 'rgba(255,255,255,0.14)',
+        borderColor: overlay.glass,
         ...(round ? { width: 40, height: 40 } : null),
       }}
     >
@@ -117,7 +127,7 @@ function Chip({
           gap: spacing.xs + 2,
           height: 36,
           paddingHorizontal: spacing.md - 2,
-          backgroundColor: active ? 'rgba(255,255,255,0.16)' : 'transparent',
+          backgroundColor: active ? bodyMapColors.chipActive : 'transparent',
           opacity: pressed ? 0.6 : 1,
         })}
       >
@@ -435,13 +445,15 @@ export function BodyMap({
             <Animated.View style={[StyleSheet.absoluteFill, contentStyle]}>
               <Animated.View
                 entering={reduceMotion ? undefined : FadeIn.duration(motion.enter)}
-                exiting={reduceMotion ? undefined : FadeOut.duration(motion.exit)}
+                // La lámina anterior se desmonta antes de decodificar la nueva:
+                // cada WebP mide 1536×3072 (≈19 MB decodificada) y mantener ambas durante el fundido
+                // disparaba el pico de memoria al cambiar de cara o capa.
                 key={tag}
                 style={{ position: 'absolute', left: frame.x, top: frame.y, width: frame.width, height: frame.height }}
               >
                 <Image
                   accessibilityIgnoresInvertColors
-                  cachePolicy="memory-disk"
+                  cachePolicy="disk"
                   contentFit="contain"
                   source={IMAGES[tag]}
                   style={{ width: '100%', height: '100%' }}
@@ -463,7 +475,7 @@ export function BodyMap({
                       fill="none"
                       fillRule="evenodd"
                       key={`${region.code}-${index}`}
-                      stroke="#ffffff"
+                      stroke={bodyMapColors.highlightStroke}
                       strokeOpacity={0.5}
                       strokeWidth={1.5}
                     />
@@ -538,7 +550,7 @@ export function BodyMap({
         {/* Abajo, el resultado: el músculo tocado o, sin selección, la pista
             de uso. Sobre un degradado para que se lea encima de las piernas. */}
         <LinearGradient
-          colors={['rgba(13,13,13,0)', 'rgba(13,13,13,0.86)']}
+          colors={[alpha(colors.background, 0), alpha(colors.background, 0.86)]}
           pointerEvents="none"
           style={{
             position: 'absolute',

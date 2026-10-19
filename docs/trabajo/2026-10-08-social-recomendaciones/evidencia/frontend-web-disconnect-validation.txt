@@ -1,0 +1,9 @@
+Verificaciones de cambios actuales de desconexión social
+
+PASS: PATH=/opt/homebrew/opt/node@22/bin:$PATH yarn type-check (workspace frontend): 11 tareas exitosas.
+PASS: PATH=/opt/homebrew/opt/node@22/bin:$PATH yarn lint (apps/web): eslint . sin errores.
+PASS: PATH=/opt/homebrew/opt/node@22/bin:$PATH yarn type-check (GymSheetBackend): tsc --noEmit.
+PASS: Jest dirigido backend: 7 suites, 94 pruebas.
+PASS: ESLint móvil dirigido a apps/mobile/app/(app)/comunidad-mensajes.tsx.
+NOT RUN/PASS: compilación iOS falló antes del build nativo por espacio insuficiente; ver ios-build-disk-space.txt.
+NOT AVAILABLE: PostgreSQL/Docker y AVD Android.

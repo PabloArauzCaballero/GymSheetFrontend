@@ -1,0 +1,87 @@
+{
+  "api": {
+    "actors": {},
+    "ready": false
+  },
+  "cases": [
+    {
+      "id": "H1.S3.M1",
+      "reasons": [
+        "API /health/ready unavailable",
+        "selected Android device is not connected",
+        "selected iOS simulator is not booted"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H1.S3.M2",
+      "reasons": [
+        "API /health/ready unavailable",
+        "selected Android device is not connected",
+        "selected iOS simulator is not booted"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H1.S3.M3",
+      "reasons": [
+        "API /health/ready unavailable",
+        "selected Android device is not connected",
+        "selected iOS simulator is not booted"
+      ],
+      "verdict": "BLOCKED"
+    },
+    {
+      "id": "H1.S3.M4",
+      "reasons": [
+        "API /health/ready unavailable",
+        "selected Android device is not connected",
+        "selected iOS simulator is not booted"
+      ],
+      "verdict": "BLOCKED"
+    }
+  ],
+  "createdAt": "2026-10-09T05:26:27Z",
+  "devices": {
+    "android": {
+      "ready": false,
+      "serial": null
+    },
+    "ios": {
+      "booted": false,
+      "udid": null
+    }
+  },
+  "ports": {
+    "api": 3011,
+    "web": 3002
+  },
+  "repositories": {
+    "backend": {
+      "branch": "feat/biblioteca-ejercicios",
+      "dirty": true,
+      "present": true,
+      "sha": "474da618fe4d191ae5d5f25b2dac537fd3a6856f"
+    },
+    "frontend": {
+      "branch": "dev",
+      "dirty": true,
+      "present": true,
+      "sha": "6b66d8aba9329f4897e900a9e3be09f495c41343"
+    },
+    "recommendations": {
+      "branch": "main",
+      "dirty": true,
+      "present": true,
+      "sha": null
+    }
+  },
+  "runId": "48db5d4b-d504-4bf9-be7b-d89f2f960247",
+  "schemaVersion": 1,
+  "secretsIncluded": false,
+  "versions": {
+    "node": "v24.19.0",
+    "python": "3.14.7",
+    "yarn": "1.22.22"
+  }
+}

@@ -12,10 +12,14 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import type { ProgressionBadge, ProgressionLevel } from '@gymsheet/schemas';
+import { MiniRewardCard } from '@/components/cards/reward-card';
+import { isVeiled, resolveIllustration } from '@/components/cards/resolve';
 import { CountUpText, PressableScale } from '@/components/motion';
 import {
   accentPolicy,
+  alpha,
   cardGap,
+  cardMaterials,
   cardPadding,
   colors,
   fontSizes,
@@ -107,7 +111,10 @@ export function ProgressTrack({
     // Un tramo recién empezado debe verse empezado: sin este mínimo, el
     // 1 % es un pixel y la barra parece vacía justo cuando más importa
     // confirmar que el primer entrenamiento contó.
-    return { width: `${Math.max(value * 100, value > 0.001 ? 3 : 0)}%` };
+    const ratio = Math.max(value, value > 0.001 ? 0.03 : 0);
+    return {
+      transform: [{ scaleX: Math.max(0, Math.min(1, ratio)) }],
+    };
   });
 
   return (
@@ -123,7 +130,16 @@ export function ProgressTrack({
       }}
     >
       <Animated.View
-        style={[{ height: '100%', borderRadius: radii.full, backgroundColor: color }, fillStyle]}
+        style={[
+          {
+            height: '100%',
+            width: '100%',
+            transformOrigin: 'left',
+            borderRadius: radii.full,
+            backgroundColor: color,
+          },
+          fillStyle,
+        ]}
       />
     </View>
   );
@@ -322,7 +338,8 @@ export function BadgeTile({
    */
   onPress?: () => void;
 }) {
-  const tint = badge.earned ? badge.color : colors.textDisabled;
+  const veiled = isVeiled(badge);
+  const material = cardMaterials[badge.rarity];
   /**
    * Que se pueda tocar **tiene que verse**.
    *
@@ -336,44 +353,34 @@ export function BadgeTile({
   const content = (
     <>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        <View
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: radii.md,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 1,
-            borderColor: badge.earned ? withAlpha(badge.color, 0.45) : colors.borderSubtle,
-            backgroundColor: badge.earned ? withAlpha(badge.color, 0.14) : colors.surfaceHigh,
-          }}
-        >
-          <Ionicons
-            color={tint}
-            name={badge.icon as keyof typeof Ionicons.glyphMap}
-            size={iconSizes.md}
-          />
-        </View>
+        <MiniRewardCard
+          art={resolveIllustration(badge)}
+          rarity={badge.rarity}
+          state={badge.earned ? 'earned' : veiled ? 'veiled' : 'pending'}
+          width={44}
+        />
         <View style={{ flex: 1, gap: 2 }}>
           <Text
-            numberOfLines={1}
+            // Dos líneas: «Cuatro semanas de sobrecarga» no cabe en una columna de tres y cortarla
+            // en «sob…» esconde justo lo que distingue a la insignia.
+            numberOfLines={2}
             style={{
-              color: badge.earned ? colors.text : colors.textMuted,
+              color: badge.earned ? colors.text : colors.textSecondary,
               fontSize: fontSizes.sm,
               fontWeight: semibold,
             }}
           >
-            {badge.name}
+            {veiled ? 'Insignia secreta' : badge.name}
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text numberOfLines={1} style={{ color: colors.textDisabled, fontSize: fontSizes.xs }}>
+            <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
               {RARITY_LABEL[badge.rarity] ?? badge.rarity}
               {badge.pointsReward > 0 ? ' · ' : ''}
             </Text>
             {badge.pointsReward > 0 ? (
               <CountUpText
                 prefix="+"
-                style={{ color: colors.textDisabled, fontSize: fontSizes.xs }}
+                style={{ color: colors.textMuted, fontSize: fontSizes.xs }}
                 suffix=" pts"
                 value={badge.pointsReward}
               />
@@ -386,10 +393,10 @@ export function BadgeTile({
               paddingHorizontal: spacing.xs,
               paddingVertical: 2,
               borderRadius: radii.full,
-              backgroundColor: withAlpha(badge.color, 0.2),
+              backgroundColor: alpha(material.label, 0.18),
             }}
           >
-            <Text style={{ color: badge.color, fontSize: fontSizes.xs, fontWeight: semibold }}>
+            <Text style={{ color: material.label, fontSize: fontSizes.xs, fontWeight: semibold }}>
               NUEVA
             </Text>
           </View>
@@ -408,23 +415,27 @@ export function BadgeTile({
               alignItems: 'center',
               justifyContent: 'center',
               borderWidth: 1,
-              borderColor: withAlpha(badge.color, 0.4),
-              backgroundColor: withAlpha(badge.color, 0.12),
+              borderColor: alpha(material.label, 0.4),
+              backgroundColor: alpha(material.label, 0.12),
             }}
           >
-            <Ionicons color={badge.color} name="sparkles" size={iconSizes.sm} />
+            <Ionicons color={material.label} name="sparkles" size={iconSizes.sm} />
           </View>
         ) : null}
       </View>
 
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
-        {badge.earned ? (badge.flavorText ?? badge.description) : badge.description}
+        {veiled
+          ? 'Se revela al conseguirla. Sigue entrenando.'
+          : badge.earned
+            ? (badge.flavorText ?? badge.description)
+            : badge.description}
       </Text>
 
       {!badge.earned && badge.progress !== null ? (
         <View style={{ gap: spacing.xs }}>
-          <ProgressTrack color={colors.textDisabled} height={4} ratio={badge.progress} />
-          <Text style={{ color: colors.textDisabled, fontSize: fontSizes.xs }}>
+          <ProgressTrack color={material.label} height={4} ratio={badge.progress} />
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
             {badge.progressLabel}
           </Text>
         </View>
@@ -436,11 +447,9 @@ export function BadgeTile({
     gap: spacing.sm,
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: badge.earned ? withAlpha(badge.color, 0.28) : colors.borderSubtle,
+    borderColor: badge.earned ? alpha(material.label, 0.3) : colors.borderSubtle,
     backgroundColor: colors.surfaceLow,
     padding: cardPadding - 4,
-    // Las pendientes se apagan sin desaparecer: siguen siendo el objetivo.
-    opacity: badge.earned ? 1 : 0.72,
   } as const;
 
   if (onPress) {

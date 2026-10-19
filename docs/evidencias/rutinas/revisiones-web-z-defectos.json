@@ -1,0 +1,20 @@
+{
+  "RF-B3_p04_sin-permiso-de-lectura_390_oscuro.png": "390 oscuro: sin tour; aviso «Acceso denegado · No tienes permiso para acceder a esa sección.» legible, bajo la cabecera; subtítulo «Recepción puede consultar…» sin código FRONT_DESK. Cierra D-C12 y el «Algo salió mal» de RF-B3 p04.",
+  "RF-B3_p02_recalculo-idempotente_390_oscuro.png": "390 oscuro: botón Recalcular con un solo icono y sin estado de carga tras el aviso; «×1,20» y «×1,00» con coma. Cierra D-C15 y D-C7 (cabecera ×1,00 sigue siendo dato del programa).",
+  "RF-02_p04_ficha-del-ejercicio_390_oscuro.png": "390 oscuro: chips «Activo» y «Del catálogo»; sin GLOBAL ni EXERCISES_DATASET; «Origen: Base de datos pública de ejercicios» discreto. Los textos en inglés del catálogo no son de esta entrega. Cierra A-04/D-B1.",
+  "RF-03_p01_paso1-vacio_1440_claro.png": "1440 claro: la pista de la barra de progreso (pasos 2 a 6) se distingue sobre el fondo claro; rol «Socio». Cierra A-05.",
+  "RF-03_p07_rutina-guardada_390_oscuro.png": "390 oscuro: detalle recién creado con «Privada», «Hipertrofia», sin pie con uuid; el aviso ya no dice que no se ajustó la semana 6 (la causa era un contrato: el servidor responde isDeload y el cliente esperaba esDescarga). Cierra A-06.",
+  "RF-03_p07_rutina-guardada_1440_claro.png": "1440 claro: aviso «Rutina creada.» bajo la cabecera, sin tapar el nombre de usuario; etiqueta «Privada». Cierra A-06.",
+  "RF-06_p08_atras-conserva_390_claro.png": "390 claro: sin tour; el día Miércoles conserva «2 ejercicios». Cierra A-08.",
+  "RF-10_p07_sin-atribucion-desde-cero_390_oscuro.png": "390 oscuro: sin tour (D2-7 por el tour cerrado). Aviso: la pantalla sigue siendo la rutina original «Empuje 4 días» (v2, 2 copias) y no una creada desde cero; ese guion del spec queda pendiente.",
+  "RF-13_p05_detalle-bloqueado-antes-de-aceptar_390_oscuro.png": "390 oscuro: tarjeta Aceptar/Rechazar sin toast de error «Acceso denegado». Cierra D2-10.",
+  "RF-13_p09b_bruno-ya-no-la-ve_390_oscuro.png": "390 oscuro: el cuerpo del aviso «No encontramos el recurso solicitado.» se lee con contraste. Cierra D-B6 (D-B12 «Reintentar» queda pendiente).",
+  "RF-14_p03_a1-reemplazo_390_oscuro.png": "390 oscuro: cuerpo del aviso «Rutina de … · v1. Es tuya…» legible; pista de la barra visible. Cierra D-C3 y D-C2.",
+  "RF-14_p01_a2-fechas_390_oscuro.png": "390 oscuro: «Domingo, 11 de octubre» con «de» en minúscula; pista de la barra visible. Cierra D-C1 y D-C2.",
+  "RF-B2_p06_auditoria-acciones_390_oscuro.png": "390 oscuro: la auditoría global pasa a tarjetas con fecha, acción, actor, rol «Administrador del sistema» y objeto, todo a la vista. Cierra D-B13.",
+  "RF-B2_p06_auditoria-acciones_390_claro.png": "390 claro: tarjetas de la auditoría global con todas las columnas visibles; rol en su propia línea. Cierra D-B13.",
+  "RF-B2_p05_sin-acceso-admin-gimnasio_1440_claro.png": "1440 claro: sin tour; panel del administrador de gimnasio con rol «Administrador del gimnasio». Cierra D-B7 en lo del tour.",
+  "RF-B1_p06_sistema-moderacion-global_1440_claro.png": "1440 claro: cabecera con «Administrador del sistema» en vez de SYSTEM_ADMIN. Cierra A-11.",
+  "RF-16_p03_avance-hacia-la-meta_1440_claro.png": "1440 claro: «122,5 → 125 kg» con coma decimal. Cierra D-C7.",
+  "RF-12_p08_comentario-oculto-por-tres-denuncias_390_oscuro.png": "390 oscuro: tras tres denuncias el comentario de spam ya no aparece en el hilo (solo quedan «Muy buena rutina…» y la respuesta). Recaptura en las cuatro combinaciones: cubre D2-9."
+}

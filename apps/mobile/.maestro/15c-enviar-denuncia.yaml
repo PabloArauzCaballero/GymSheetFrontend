@@ -1,0 +1,15 @@
+# Parte 2 de RF-12 p04: pulsa «Enviar denuncia» sobre la hoja que dejó 15b. El aviso «Gracias. Lo revisaremos.» dura
+# pocos segundos y no sale en el árbol de accesibilidad ni en `takeScreenshot` (Maestro espera a que la pantalla
+# quede quieta), así que `run-15b.sh` graba fotogramas con `simctl io screenshot` durante este paso.
+appId: app.gymsheet.mobile
+name: 15c · Enviar denuncia
+---
+- tapOn: 'Enviar denuncia'
+# Maestro (XCUITest) sigue sin ver el aviso en el árbol de accesibilidad pese a `accessibilityRole="alert"`: el
+# intento es opcional y la prueba real es el fotograma.
+- extendedWaitUntil:
+    visible: 'Gracias.*'
+    timeout: 3000
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 6000

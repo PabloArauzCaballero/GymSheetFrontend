@@ -17,6 +17,7 @@ import { Select } from '@/shared/components/ui/select';
 const schema = z
   .object({
     recordatoriosVencimiento: z.boolean(),
+    vistaPreviaMensajes: z.boolean(),
     canalPreferido: z.enum(['IN_APP', 'HTTP_GATEWAY']),
     consentimientoExternoEn: z.string().optional(),
     versionConsentimiento: z.string().max(80).optional(),
@@ -60,6 +61,7 @@ export function NotificationPreferenceForm({
     resolver: zodResolver(schema),
     defaultValues: {
       recordatoriosVencimiento: true,
+      vistaPreviaMensajes: false,
       canalPreferido: 'IN_APP',
       consentimientoExternoEn: '',
       versionConsentimiento: '',
@@ -70,6 +72,7 @@ export function NotificationPreferenceForm({
   useEffect(() => {
     form.reset({
       recordatoriosVencimiento: preference.recordatoriosVencimiento,
+      vistaPreviaMensajes: preference.vistaPreviaMensajes,
       canalPreferido: preference.canalPreferido,
       consentimientoExternoEn: toLocalDateTime(preference.consentimientoExternoEn),
       versionConsentimiento: preference.versionConsentimiento ?? '',
@@ -81,6 +84,7 @@ export function NotificationPreferenceForm({
     mutationFn: (values: FormValues) =>
       notificationService.updatePreference({
         recordatoriosVencimiento: values.recordatoriosVencimiento,
+        vistaPreviaMensajes: values.vistaPreviaMensajes,
         canalPreferido: values.canalPreferido,
         consentimientoExternoEn: values.consentimientoExternoEn
           ? new Date(values.consentimientoExternoEn).toISOString()
@@ -110,6 +114,19 @@ export function NotificationPreferenceForm({
           className="size-5 accent-[var(--volt)]"
           type="checkbox"
           {...form.register('recordatoriosVencimiento')}
+        />
+      </label>
+      <label className="flex items-center justify-between gap-4 rounded-[4px] border border-[var(--border-subtle)] bg-[var(--surface-low)] p-4">
+        <span>
+          <span className="block font-semibold">Vista previa del texto en push</span>
+          <span className="mt-1 block text-xs leading-5 text-[var(--text-muted)]">
+            Si está desactivada, la pantalla bloqueada solo dirá que tienes un mensaje nuevo.
+          </span>
+        </span>
+        <input
+          className="size-5 accent-[var(--volt)]"
+          type="checkbox"
+          {...form.register('vistaPreviaMensajes')}
         />
       </label>
       <Field htmlFor="canalPreferido" label="Canal preferido">
