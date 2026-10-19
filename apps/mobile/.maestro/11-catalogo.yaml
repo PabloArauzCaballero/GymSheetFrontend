@@ -1,7 +1,10 @@
 # Catálogo de rutinas (plan Rutinas REPP · F3): RF-01.
 # Requiere el backend con F1–F4 y `node scripts/seed-rutinas-evidencia.mjs`.
+# UI actual (2026-10-18): segmentado Todas|Compartidas, buscador, botón de
+# Filtros con su hoja (el objetivo vive dentro) y vacío con «Limpiar filtros».
+# REPP ya no es pestaña: sus rutinas salen primero en Compartidas.
 appId: app.gymsheet.mobile
-name: 11 · Catálogo de rutinas por pestañas
+name: 11 · Catálogo de rutinas Todas|Compartidas
 env:
   EMAIL: athlete.mock@gymsheet.local
   FIRST: Athlete
@@ -13,10 +16,15 @@ env:
     visible:
       id: 'routines-more'
     timeout: 60000
-- assertVisible: 'Pestaña Públicas'
+- assertVisible: 'Pestaña Todas'
+- assertVisible: 'Pestaña Compartidas.*'
+- assertVisible:
+    id: 'routine-search'
+- assertVisible:
+    id: 'open-filters'
 - assertNotVisible: 'Error'
 
-# RF-01 · p02: Públicas con autor, valoración y copias; orden Populares.
+# RF-01 · p02: Todas, búsqueda por nombre.
 - tapOn:
     id: 'routine-search'
 - inputText: 'Empuje 4'
@@ -24,20 +32,35 @@ env:
 - extendedWaitUntil:
     visible: 'Empuje 4 días.*'
     timeout: 30000
-- assertVisible: 'Orden: Populares'
-- takeScreenshot: RF-01_p02_publicas-populares_ios_oscuro
+- takeScreenshot: RF-01_p02_todas-busqueda_ios_oscuro
 
-# RF-01 · p03: filtro Fuerza + 4 días (la búsqueda se limpia para ver el filtro solo).
-- tapOn: 'Filtros'
+# RF-01 · p03: hoja de Filtros con Hipertrofia + 4 días. Primero se limpia
+# dentro de la hoja (conserva la búsqueda): el objetivo del perfil puede venir
+# precargado y tocarlo lo quitaría en vez de ponerlo.
+- tapOn:
+    id: 'open-filters'
+- extendedWaitUntil:
+    visible:
+      id: 'filters-sheet'
+    timeout: 10000
+- tapOn: 'Limpiar filtros'
 - tapOn:
     id: 'filter-goal-HIPERTROFIA'
 - tapOn:
     id: 'filter-days-4'
-- assertVisible: 'Limpiar filtros'
+- assertVisible: 'Listo'
 - takeScreenshot: RF-01_p03_filtros-hipertrofia-4-dias_ios_oscuro
 - tapOn: 'Listo'
+- extendedWaitUntil:
+    notVisible:
+      id: 'filters-sheet'
+    timeout: 10000
 - assertVisible: 'Filtros, 2 aplicados'
-- assertVisible: 'Empuje 4 días.*'
+- assertVisible:
+    id: 'goal-chip-HIPERTROFIA'
+- extendedWaitUntil:
+    visible: 'Empuje 4 días.*'
+    timeout: 30000
 - takeScreenshot: RF-01_p03b_resultado-filtrado_ios_oscuro
 
 # RF-01 · p04: sin resultados → vacío con «Limpiar filtros».
@@ -47,30 +70,33 @@ env:
 - inputText: 'zzzzzz-no-existe'
 - pressKey: Enter
 - extendedWaitUntil:
-    visible: 'Aún no hay rutinas públicas con estos filtros'
+    visible: 'Aún no hay rutinas con estos filtros'
     timeout: 30000
+- assertVisible: 'Limpiar filtros'
 - takeScreenshot: RF-01_p04_sin-resultados_ios_oscuro
 - tapOn: 'Limpiar filtros'
 - extendedWaitUntil:
-    visible: 'Orden: Populares'
+    notVisible: 'Aún no hay rutinas con estos filtros'
     timeout: 30000
+- assertVisible: 'Filtros'
+- assertNotVisible:
+    id: 'goal-chips'
 
-# RF-01 · p05: pestaña REPP con el sello.
-- tapOn: 'Pestaña REPP'
+# RF-01 · p05: Compartidas, con las del equipo REPP primero (su sello va en la tarjeta).
+- tapOn: 'Pestaña Compartidas.*'
 - extendedWaitUntil:
     visible: '.*Recomendada por REPP.*'
     timeout: 30000
-- takeScreenshot: RF-01_p05_pestana-repp_ios_oscuro
+# Los filtros solo existen en Todas.
+- assertNotVisible:
+    id: 'open-filters'
+- takeScreenshot: RF-01_p05_compartidas-repp_ios_oscuro
 
-# RF-01 · p06: Privadas › Creadas por mí.
-- tapOn: 'Pestaña Privadas'
-- assertVisible: 'Creadas por mí'
+# RF-01 · p01: vuelta a Todas; vista general del catálogo.
+- tapOn: 'Pestaña Todas'
 - extendedWaitUntil:
-    visible: '[0-9]+ rutinas.*'
+    visible:
+      id: 'open-filters'
     timeout: 30000
-- takeScreenshot: RF-01_p06_mias-creadas_ios_oscuro
-
-# RF-01 · p01: la tarjeta de programa llega en F5; aquí queda la vista general.
-- tapOn: 'Pestaña Públicas'
 - assertNotVisible: 'Error'
-- takeScreenshot: RF-01_p01_catalogo-pestanas_ios_oscuro
+- takeScreenshot: RF-01_p01_catalogo-todas_ios_oscuro
