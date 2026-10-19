@@ -4,11 +4,15 @@ import {
   pointRuleLines,
   pointsFigures,
   rewardRuleLines,
+  strikeAndPenaltyRuleLines,
   type PointRuleLine,
   type RewardRuleLine,
+  type StrikeAndPenaltyRuleLine,
 } from '@gymsheet/domain';
 import { useQuery } from '@tanstack/react-query';
 import {
+  AlertCircle,
+  ArrowLeftRight,
   Award,
   CheckCheck,
   CircleCheckBig,
@@ -16,7 +20,9 @@ import {
   Flag,
   Flame,
   Layers,
+  ShieldCheck,
   Snowflake,
+  TrendingUp,
   Zap,
   type LucideIcon,
 } from 'lucide-react';
@@ -45,6 +51,13 @@ const REWARD_ICON: Record<RewardRuleLine['key'], LucideIcon> = {
   challenges: Flag,
   perfect: CircleCheckBig,
   freezes: Snowflake,
+};
+
+const STRIKE_PENALTY_ICON: Record<StrikeAndPenaltyRuleLine['key'], LucideIcon> = {
+  progress: TrendingUp,
+  strikes: ShieldCheck,
+  penalties: AlertCircle,
+  strikeCost: ArrowLeftRight,
 };
 
 function format(value: number): string {
@@ -107,6 +120,7 @@ export function PointsRulesDialog({
               figures={pointsFigures(rules.data, stats, badges)}
               lines={pointRuleLines(rules.data)}
               points={points}
+              strikesAndPenalties={strikeAndPenaltyRuleLines(rules.data)}
             />
           )}
           <DialogClose asChild>
@@ -123,12 +137,15 @@ export function PointsRulesDialog({
 function RuleList({
   lines,
   extra,
+  strikesAndPenalties,
   figures,
   points,
 }: Readonly<{
   lines: ReturnType<typeof pointRuleLines>;
   /** Retos y comodines (contrato 12): solo si el servidor publica sus reglas. */
   extra: readonly RewardRuleLine[];
+  /** Strikes, penalizaciones y progreso (contrato 13). */
+  strikesAndPenalties: readonly StrikeAndPenaltyRuleLine[];
   figures: ReturnType<typeof pointsFigures>;
   points: number;
 }>) {
@@ -173,6 +190,22 @@ function RuleList({
             </li>
           );
         })}
+        {strikesAndPenalties.map((line) => {
+          const Icon = STRIKE_PENALTY_ICON[line.key];
+          return (
+            <li
+              className="flex items-center gap-4 p-4"
+              data-testid={`rule-${line.key}`}
+              key={line.key}
+            >
+              <Icon aria-hidden className="size-5 shrink-0 text-[var(--text-muted)]" />
+              <span className="min-w-0 flex-1 text-sm font-semibold text-[var(--text)]">
+                {line.label}
+              </span>
+              <span className="text-xs tabular-nums text-[var(--text-muted)]">{line.rate}</span>
+            </li>
+          );
+        })}
         {modes > 0 ? (
           <li className="flex items-center gap-4 p-4" data-testid="rule-modes">
             <Zap aria-hidden className="size-5 shrink-0 text-[var(--text-muted)]" />
@@ -199,8 +232,7 @@ function RuleList({
         </span>
       </p>
       <p className="text-xs leading-5 text-[var(--text-muted)]">
-        Los puntos nunca bajan. La racha cuenta la más larga que hayas hecho, así que descansar no
-        te quita nada.
+        Cumplir con tu plan mantiene tu racha viva. Tienes 3 strikes mensuales para protegerla si faltas; si no repones en la semana o agotas tus strikes se penalizan puntos. Podés canjear puntos para recuperar strikes.
       </p>
     </div>
   );

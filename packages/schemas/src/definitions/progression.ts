@@ -32,6 +32,8 @@ export const badgeCategories = [
   'CARDIO',
   'SOCIAL',
   'CREADOR',
+  /** Contrato 13: logros de coach y de alumno guiado. */
+  'COACH',
 ] as const;
 export type BadgeCategory = (typeof badgeCategories)[number];
 
@@ -217,6 +219,16 @@ export type Prize = z.infer<typeof prizeSchema>;
 export type ProgressionStreak = z.infer<typeof progressionStreakSchema>;
 export type SessionStreak = z.infer<typeof sessionStreakSchema>;
 
+export const progressionStreakStrikesSchema = z.object({
+  totalMonthly: z.number().int(),
+  available: z.number().int(),
+  usedThisMonth: z.number().int(),
+  purchasedThisMonth: z.number().int(),
+  strikeCostPoints: z.number().int(),
+  month: z.string(),
+});
+export type ProgressionStreakStrikes = z.infer<typeof progressionStreakStrikesSchema>;
+
 export const progressionSchema = z.object({
   points: z.number().int(),
   audience: z.enum(progressionAudiences),
@@ -240,6 +252,8 @@ export const progressionSchema = z.object({
   prizes: z.array(prizeSchema).default([]),
   /** Hasta tres sin conseguir, sin secretas, por progreso descendente. */
   nearest: z.array(progressionBadgeSchema).default([]),
+  /** Contrato 13: strikes mensuales y saldo de reposición para proteger la racha. */
+  strikes: progressionStreakStrikesSchema.optional(),
 });
 
 export const leaderboardEntrySchema = z.object({
@@ -389,6 +403,12 @@ export const pointsBreakdownSchema = z.object({
   modes: z.number().int().default(0),
   /** Retos cumplidos y bonos de semana redonda. Ausente en servidores antiguos. */
   challenges: z.number().int().default(0),
+  /** Progresos en el plan y récords personales (PR). Ausente en servidores antiguos. */
+  progress: z.number().int().default(0),
+  /** Penalizaciones por faltas sin reponer. Ausente en servidores antiguos. */
+  penalties: z.number().int().default(0),
+  /** Puntos intercambiados por strikes mensuales. Ausente en servidores antiguos. */
+  strikePurchases: z.number().int().default(0),
 });
 
 export const sessionRewardSchema = z.object({
@@ -426,6 +446,11 @@ export const pointRulesSchema = z.object({
   perfectWeekBonus: z.number().int().optional(),
   freezeEveryDays: z.number().int().optional(),
   maxFreezes: z.number().int().optional(),
+  /** Contrato 13: progresos, penalizaciones y strikes mensuales. */
+  perPersonalRecord: z.number().int().optional(),
+  penaltyMissedSession: z.number().int().optional(),
+  strikeCost: z.number().int().optional(),
+  monthlyStrikes: z.number().int().optional(),
 });
 export type PointsBreakdown = z.infer<typeof pointsBreakdownSchema>;
 export type SessionReward = z.infer<typeof sessionRewardSchema>;

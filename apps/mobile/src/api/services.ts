@@ -528,6 +528,11 @@ export const progressionService = {
       method: 'PATCH',
       body: { weekdays },
     }),
+  /** Canjea puntos por un strike mensual para proteger la racha. */
+  buyStrike: () =>
+    apiClient.request('/me/progression/strikes/buy', progressionSchema, {
+      method: 'POST',
+    }),
 };
 
 /**

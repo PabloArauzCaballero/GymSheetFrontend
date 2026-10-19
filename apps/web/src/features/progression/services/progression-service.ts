@@ -44,6 +44,11 @@ export const progressionService = {
       method: 'PATCH',
       body: { weekdays },
     }),
+  /** Canjea puntos por un strike mensual para proteger la racha. */
+  buyStrike: () =>
+    apiRequest<Progression>('/me/progression/strikes/buy', progressionSchema, {
+      method: 'POST',
+    }),
 };
 
 /** Ejercicios propios: se elige el músculo y el servidor deduce la máquina. */
