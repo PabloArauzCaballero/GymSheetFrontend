@@ -36,6 +36,7 @@ import { CatalogTabBar } from '@/features/routine-catalog/catalog-tab-bar';
 import { InvitationCard } from '@/features/routine-catalog/invitation-card';
 import { RoutineCardSkeleton, RoutineCardView } from '@/features/routine-catalog/routine-card';
 import { useRoutineCatalog } from '@/features/routine-catalog/use-routine-catalog';
+import { DownloadProgressWizardModal } from '@/features/routine-catalog/download-progress-wizard-modal';
 import { GOAL_LABEL } from '@/lib/format';
 import { colors, fontSizes, iconSizes, radii, spacing } from '@/theme';
 
@@ -69,6 +70,7 @@ export function RoutinesCatalogScreen() {
   const [search, setSearch] = useState('');
   const [sheet, setSheet] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [downloadWizardOpen, setDownloadWizardOpen] = useState(false);
   const [pickedDay, setPickedDay] = useState<number | null>(null);
   const openTour = useTourStore((state) => state.open);
   const debounced = useDebouncedValue(search, 350);
@@ -181,6 +183,13 @@ export function RoutinesCatalogScreen() {
   const menu: MoreAction[] = [
     { key: 'create', label: 'Crear rutina', icon: 'add-circle-outline', onPress: () => router.push('/routines/new') },
     { key: 'exercises', label: 'Explorar ejercicios', icon: 'search-outline', onPress: () => router.push(routes.exercises()) },
+    {
+      key: 'download-progress',
+      label: 'Descargar progreso',
+      icon: 'download-outline',
+      afterClose: true,
+      onPress: () => setDownloadWizardOpen(true),
+    },
     ...(programs.data && !programs.data.cardio
       ? [{ key: 'cardio', label: 'Plan de cardio', icon: 'pulse-outline' as const, onPress: () => router.push('/routines/cardio/new') }]
       : []),
@@ -225,6 +234,10 @@ export function RoutinesCatalogScreen() {
         title="Rutinas"
       />
       <MoreSheet actions={menu} onClose={() => setMenuOpen(false)} title="Rutinas" visible={menuOpen} />
+      <DownloadProgressWizardModal
+        onClose={() => setDownloadWizardOpen(false)}
+        visible={downloadWizardOpen}
+      />
 
       {weekSessions.length > 0 ? (
         <Section index={0} title="Tu semana">

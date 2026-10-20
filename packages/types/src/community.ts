@@ -1,7 +1,6 @@
 import type { RatingSummary } from './core';
 
-/** Qué se puede valorar o comentar (RF-12). Los ejercicios son los privados de una rutina publicada. */
-export const contentKinds = ['ROUTINE', 'EXERCISE'] as const;
+export const contentKinds = ['ROUTINE', 'EXERCISE', 'DIRECTORY_ENTITY', 'DIRECTORY_PRODUCT'] as const;
 export type ContentKind = (typeof contentKinds)[number];
 
 /** `GET/PUT/DELETE /ratings/:kind/:id`. `miValoracion` es nulo si no has valorado. */

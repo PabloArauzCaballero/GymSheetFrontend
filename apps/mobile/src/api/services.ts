@@ -49,6 +49,14 @@ import {
   undoSwipeResultSchema,
   workoutFinishSchema,
   workoutSchema,
+  categoryTreeNodeSchema,
+  directoryEntitySummarySchema,
+  directoryEntityDetailSchema,
+  entityReviewsResponseSchema,
+  reviewItemSchema,
+  entityPlanSchema,
+  entityPaymentConfigSchema,
+  paymentOrderSchema,
   restSettingsResultSchema,
   skippedSetSchema,
   workoutRoutineLinkSchema,
@@ -387,6 +395,16 @@ export const communityService = {
       ...(respuestaA ? { respuestaA } : {}),
       ...(adjunto ? { adjunto } : {}),
     }),
+  createComment: (
+    kind: Parameters<typeof communityApi.comment>[0],
+    id: string,
+    input: { texto: string; respuestaA?: string | null; adjunto?: CommentAttachment | null },
+  ) =>
+    communityApi.comment(kind, id, {
+      texto: input.texto,
+      ...(input.respuestaA ? { respuestaA: input.respuestaA } : {}),
+      ...(input.adjunto ? { adjunto: input.adjunto } : {}),
+    }),
   gifs: communityApi.gifs,
   /** Sube la foto, video o archivo de un comentario; devuelve el adjunto para enviarlo. */
   uploadAttachment: async (file: LocalFile) => {
@@ -531,6 +549,11 @@ export const progressionService = {
     apiClient.request<RestDays>('/me/progression/rest-days', restDaysSchema, {
       method: 'PATCH',
       body: { weekdays },
+    }),
+  /** Canjea puntos por un strike mensual para proteger la racha. */
+  buyStrike: () =>
+    apiClient.request('/me/progression/strikes/buy', progressionSchema, {
+      method: 'POST',
     }),
 };
 
@@ -956,6 +979,147 @@ export const deviceTokenService = {
       method: 'DELETE',
       body: { expoPushToken },
     }),
+};
+
+export const directoryService = {
+  categories: (scope?: string) => {
+    const q = scope ? `?scope=${encodeURIComponent(scope)}` : '';
+    return apiClient.request(`/public/directory/categories${q}`, z.array(categoryTreeNodeSchema));
+  },
+
+  entities: (filters: {
+    categoryPath?: string;
+    type?: string;
+    search?: string;
+    ratingMin?: number;
+    verifiedOnly?: boolean;
+    city?: string;
+    limit?: number;
+  }) => {
+    const params = new URLSearchParams();
+    if (filters.categoryPath) params.set('category_path', filters.categoryPath);
+    if (filters.type) params.set('type', filters.type);
+    if (filters.search) params.set('search', filters.search);
+    if (filters.ratingMin) params.set('rating_min', String(filters.ratingMin));
+    if (filters.verifiedOnly) params.set('verified_only', 'true');
+    if (filters.city) params.set('city', filters.city);
+    if (filters.limit) params.set('limit', String(filters.limit));
+
+    return apiClient.request(
+      `/public/directory/entities?${params.toString()}`,
+      z.array(directoryEntitySummarySchema)
+    );
+  },
+
+  entity: (slug: string) =>
+    apiClient.request(
+      `/public/directory/entities/${encodeURIComponent(slug)}`,
+      directoryEntityDetailSchema
+    ),
+
+  reviews: (entityId: string, query: { sortBy?: string; rating?: number; limit?: number } = {}) => {
+    const params = new URLSearchParams();
+    if (query.sortBy) params.set('sort_by', query.sortBy);
+    if (query.rating) params.set('rating', String(query.rating));
+    if (query.limit) params.set('limit', String(query.limit));
+
+    return apiClient.request(
+      `/public/directory/entities/${entityId}/reviews?${params.toString()}`,
+      entityReviewsResponseSchema
+    );
+  },
+
+  createReview: (
+    entityId: string,
+    input: { rating: number; title: string; body: string; experienceDate?: string }
+  ) =>
+    apiClient.request(`/directory/entities/${entityId}/reviews`, reviewItemSchema, {
+      method: 'POST',
+      body: {
+        rating: input.rating,
+        title: input.title,
+        body: input.body,
+        experience_date: input.experienceDate,
+      },
+    }),
+
+  updateReview: (
+    reviewId: string,
+    input: { rating?: number; title?: string; body?: string; experienceDate?: string }
+  ) =>
+    apiClient.request(`/directory/reviews/${reviewId}`, reviewItemSchema, {
+      method: 'PATCH',
+      body: {
+        rating: input.rating,
+        title: input.title,
+        body: input.body,
+        experience_date: input.experienceDate,
+      },
+    }),
+
+  deleteReview: (reviewId: string) =>
+    apiClient.request(`/directory/reviews/${reviewId}`, z.unknown(), {
+      method: 'DELETE',
+    }),
+
+  toggleHelpful: (reviewId: string) =>
+    apiClient.request(
+      `/directory/reviews/${reviewId}/helpful`,
+      z.object({ hasVoted: z.boolean(), newCount: z.number() }),
+      { method: 'POST' }
+    ),
+};
+
+
+
+export const directoryPaymentsService = {
+  listPlans: (entityId: string) =>
+    apiClient.request(`/public/directory/entities/${entityId}/plans`, z.array(entityPlanSchema)),
+
+  getPlan: (planId: string) =>
+    apiClient.request(`/public/directory/plans/${planId}`, entityPlanSchema),
+
+  getPaymentConfig: (entityId: string) =>
+    apiClient.request(
+      `/public/directory/entities/${entityId}/payment-config`,
+      entityPaymentConfigSchema.nullable()
+    ),
+
+  createOrder: (input: { planId: string; athleteNotes?: string }) =>
+    apiClient.request(
+      '/directory/payments/orders',
+      z.object({
+        order: paymentOrderSchema,
+        paymentConfig: entityPaymentConfigSchema.nullable(),
+      }),
+      {
+        method: 'POST',
+        body: input,
+      }
+    ),
+
+  submitReceipt: (
+    orderId: string,
+    input: {
+      receiptUrl: string;
+      receiptStorageKey?: string;
+      receiptReference?: string;
+      athleteNotes?: string;
+    }
+  ) =>
+    apiClient.request(`/directory/payments/orders/${orderId}/receipt`, paymentOrderSchema, {
+      method: 'POST',
+      body: input,
+    }),
+
+  myOrders: () =>
+    apiClient.request('/directory/payments/orders/my-orders', z.object({
+      items: z.array(paymentOrderSchema),
+      total: z.number(),
+    })),
+
+  getOrder: (id: string) =>
+    apiClient.request(`/directory/payments/orders/${id}`, paymentOrderSchema),
 };
 
 /** Música para entrenar: enlaces a Spotify de la comunidad (públicas) o tuyos (privadas). */

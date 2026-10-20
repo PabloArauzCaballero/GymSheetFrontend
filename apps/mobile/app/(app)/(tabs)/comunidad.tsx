@@ -81,6 +81,20 @@ function CommunityHeader({ onOpenPreferences }: { onOpenPreferences: () => void 
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm }}>
         <TourHelpButton tourKey="comunidad" />
         <PressableScale
+          accessibilityLabel="Directorio de gimnasios, tiendas y coaches"
+          onPress={() => router.push('/directorio')}
+          style={{
+            width: minTouchTarget,
+            height: minTouchTarget,
+            borderRadius: radii.full,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: colors.surfaceHigh,
+          }}
+        >
+          <Ionicons color={colors.text} name="storefront-outline" size={iconSizes.lg} />
+        </PressableScale>
+        <PressableScale
           accessibilityLabel="Preferencias de búsqueda"
           onPress={onOpenPreferences}
           style={{
@@ -899,6 +913,39 @@ export default function ComunidadScreen() {
             <TourTarget id="comunidad.podium">
               <PodiumPreview />
             </TourTarget>
+
+            <Card
+              accessibilityLabel="Explorar Directorio de Gimnasios, Suplementos y Coaches"
+              onPress={() => router.push('/directorio')}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: radii.md,
+                      backgroundColor: colors.surfaceHigh,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <Ionicons color={colors.volt} name="storefront" size={iconSizes.md} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
+                      Directorio GymSheet
+                    </Text>
+                    <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                      Gimnasios, tiendas de nutrición y coaches verificados
+                    </Text>
+                  </View>
+                </View>
+                <Ionicons color={colors.textMuted} name="chevron-forward" size={iconSizes.sm} />
+              </View>
+            </Card>
 
             <Input
               autoCapitalize="none"

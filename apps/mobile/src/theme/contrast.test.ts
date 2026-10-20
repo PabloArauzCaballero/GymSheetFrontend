@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { tenantCatalog } from '../../../../packages/design-tokens/src/tenants.ts';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { contrastRatio, metricInk, mobileBrand, neutral } from './palette.ts';
 
 const surfaces = {
@@ -98,7 +99,7 @@ function over(fgHex: string, opacity: number, bgHex: string): string {
  * cambia el formato, la prueba falla en vez de pasar en vacío.
  */
 const sharedDarkTones = (() => {
-  const source = readFileSync(new URL('../../../../packages/design-tokens/src/index.ts', import.meta.url), 'utf8');
+  const source = readFileSync(fileURLToPath(new URL('../../../../packages/design-tokens/src/index.ts', import.meta.url) as any), 'utf8');
   const block = /dark:\s*\{([\s\S]*?)\n\s{2}\},/.exec(source.slice(source.indexOf('export const tones')))?.[1] ?? '';
   const out: Record<string, { bg: string; text: string }> = {};
   for (const m of block.matchAll(/(\w+):\s*\{\s*bg:\s*'(#[0-9a-f]{6})',\s*border:\s*'#[0-9a-f]{6}',\s*text:\s*'(#[0-9a-f]{6})'/gi)) {

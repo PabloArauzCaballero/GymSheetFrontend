@@ -50,6 +50,8 @@ const BY_ICON: Readonly<Record<string, IllustrationKey>> = {
   hourglass: 'hourglass',
   gift: 'gift',
   snow: 'snowflake',
+  people: 'chat-bubble',
+  school: 'medal',
 };
 
 const BY_CATEGORY: Readonly<Record<string, IllustrationKey>> = {
@@ -63,6 +65,7 @@ const BY_CATEGORY: Readonly<Record<string, IllustrationKey>> = {
   CARDIO: 'heart-pulse',
   SOCIAL: 'chat-bubble',
   CREADOR: 'pencil',
+  COACH: 'medal',
 };
 
 export function resolveIllustration(badge: {

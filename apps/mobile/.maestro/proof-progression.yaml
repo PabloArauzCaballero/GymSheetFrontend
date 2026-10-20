@@ -1,0 +1,27 @@
+appId: app.gymsheet.mobile
+name: Prueba de progresión, strikes y logros
+---
+- tapOn: 'tu@correo.com'
+- inputText: 'athlete.mock@gymsheet.local'
+- pressKey: Enter
+- tapOn:
+    point: 50%,60%
+- inputText: 'MockLocal2026!'
+- pressKey: Enter
+- tapOn: 'Iniciar sesión'
+- tapOn:
+    text: 'Ahora no'
+    optional: true
+- extendedWaitUntil:
+    visible: 'Bienvenido a GymSheet|Hola, .*|Rutinas, tab.*'
+    timeout: 60000
+- runFlow:
+    when:
+      visible: 'Bienvenido a GymSheet'
+    commands:
+      - tapOn: 'Saltar tutorial'
+- runFlow: cerrar-tour.subflow.yaml
+- openLink: 'gymsheet:///trayectoria'
+- extendedWaitUntil:
+    visible: 'Tu senda'
+    timeout: 30000

@@ -1,9 +1,18 @@
-# Plan situado — GymSheet Frontend (apps/web primero)
+# Plan situado — GymSheet Frontend (alcance original, 2026-09-21)
 
 > Consumir junto a CONTEXTO_REAL.md, INVENTARIO.md y BASELINE.md. Este documento se precisa en
 > cada fase siguiente; aquí fija alcance, exclusiones y la secuencia de las primeras tareas.
 
-## Alcance confirmado (2026-09-21)
+> **Actualización de alcance (2026-10-13):** la decisión previa de limitar el trabajo a `apps/web`
+> y dejar `apps/mobile` para después queda reemplazada por la decisión del usuario de rediseñar
+> integralmente REPP: web, móvil, backend, portal del gimnasio y administración de plataforma,
+> en ese orden de audiencias (atleta → gimnasio → administración). La guía oficial es
+> `/Users/pablo/Downloads/REPP_identidad_visual.html`. El plan vigente está en
+> [PLAN_INTEGRAL_REPP.md](PLAN_INTEGRAL_REPP.md). El inventario y la evidencia de este documento
+> siguen sirviendo como material de partida, pero cualquier exclusión y secuencia incompatible
+> con el plan integral está supersedida.
+
+## Alcance original confirmado (2026-09-21; supersedido el 2026-10-13)
 
 - **Dentro:** `apps/web` completa — las tres navegaciones (`primaryNavigation`,
   `adminNavigation`, `systemNavigation`), sus ~27 grupos de ruta y los componentes compartidos

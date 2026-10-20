@@ -330,12 +330,21 @@ export function pointRuleLines(rules: {
 }
 
 /** Etiquetas del desglose de una sesión, en el orden en que se leen. */
-export const BREAKDOWN_LABEL: Readonly<Record<PointRuleLine['key'] | 'modes' | 'challenges', string>> = {
+export const BREAKDOWN_LABEL: Readonly<
+  Record<
+    PointRuleLine['key'] | 'modes' | 'challenges' | 'progress' | 'penalties' | 'strikePurchases',
+    string
+  >
+> = {
   session: 'Por terminar la sesión',
   sets: 'Por las series',
   volume: 'Por los kilos levantados',
   streak: 'Por tu racha',
+  progress: 'Por récords personales y progresos',
   badges: 'Por insignias nuevas',
   modes: 'Por tu programa (multiplicador)',
   challenges: 'Por tus retos de la semana',
+  penalties: 'Penalización por falta no repuesta',
+  strikePurchases: 'Intercambio por strikes',
 };
+

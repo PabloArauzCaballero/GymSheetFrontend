@@ -10,6 +10,7 @@ import { ButtonLink } from '@/shared/components/ui/button';
 const NAV_LINKS = [
   { href: '/#producto', label: 'Producto' },
   { href: '/#planes', label: 'Planes' },
+  { href: '/directorio', label: 'Directorio' },
   { href: '/gimnasios', label: 'Gimnasios' },
   { href: '/#preguntas', label: 'Preguntas' },
 ];

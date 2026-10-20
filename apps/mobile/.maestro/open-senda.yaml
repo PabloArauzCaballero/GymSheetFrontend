@@ -1,0 +1,6 @@
+appId: app.gymsheet.mobile
+---
+- tapOn: "Chispa"
+- extendedWaitUntil:
+    visible: "Tu senda"
+    timeout: 10000

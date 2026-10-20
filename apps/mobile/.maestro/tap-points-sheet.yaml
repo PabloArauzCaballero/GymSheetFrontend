@@ -1,0 +1,6 @@
+appId: app.gymsheet.mobile
+---
+- tapOn: "Cómo se ganan los puntos"
+- extendedWaitUntil:
+    visible: "Cada regla con tus números al lado."
+    timeout: 10000

@@ -125,3 +125,10 @@ export type NotificationStatus = (typeof notificationStatuses)[number];
 
 export const tutorialProgressStatuses = ['IN_PROGRESS', 'COMPLETED', 'SKIPPED'] as const;
 export type TutorialProgressStatus = (typeof tutorialProgressStatuses)[number];
+
+export const entityTypes = ['GYM', 'COACH', 'CENTER', 'STORE', 'SERVICE_PROVIDER'] as const;
+export type EntityType = (typeof entityTypes)[number];
+
+export const reviewSortOptions = ['helpful', 'recent', 'highest', 'lowest'] as const;
+export type ReviewSortOption = (typeof reviewSortOptions)[number];
+
