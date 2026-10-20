@@ -1,0 +1,14 @@
+appId: app.gymsheet.mobile
+name: Reabrir reglas de puntos
+---
+- tapOn:
+    text: "Entendido"
+    optional: true
+- openLink: "gymsheet:///trayectoria"
+- extendedWaitUntil:
+    visible: "Tu senda"
+    timeout: 10000
+- tapOn: "¿Cómo se ganan los puntos?"
+- extendedWaitUntil:
+    visible: "Cómo se ganan los puntos"
+    timeout: 10000
