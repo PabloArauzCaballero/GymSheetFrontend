@@ -53,6 +53,19 @@ export const progressionLevelSchema = z.object({
   current: z.boolean(),
 });
 
+/** Una arena del camino: un lugar del gimnasio, más fino que los rangos. */
+export const progressionArenaSchema = z.object({
+  code: z.string(),
+  order: z.number().int(),
+  name: z.string(),
+  tagline: z.string(),
+  minPoints: z.number().int(),
+  /** Hitos típicos de la fase, orientativos y en orden. */
+  milestones: z.array(z.string()),
+  unlocked: z.boolean(),
+  current: z.boolean(),
+});
+
 export const progressionBadgeSchema = z.object({
   code: z.string(),
   name: z.string(),
@@ -239,6 +252,13 @@ export const progressionSchema = z.object({
   /** Avance dentro del tramo actual, de 0 a 1. */
   levelProgress: z.number(),
   path: z.array(progressionLevelSchema),
+  /** El camino de arenas. Un servidor anterior no lo manda: la app lo deduce de los rangos. */
+  arenas: z.array(progressionArenaSchema).default([]),
+  /**
+   * Puntos ganados en total, sin canjes ni penalizaciones: lo que mueve el
+   * camino, que nunca baja. `points` es el saldo y puede bajar.
+   */
+  arenaPoints: z.number().int().optional(),
   badges: z.array(progressionBadgeSchema),
   stats: progressionStatsSchema,
   unlockedNow: z.array(progressionBadgeSchema),
@@ -391,6 +411,7 @@ export type MuscleExercisesPage = z.infer<typeof muscleExercisesPageSchema>;
 
 export type MuscleCatalogEntry = z.infer<typeof muscleCatalogEntrySchema>;
 export type ProgressionLevel = z.infer<typeof progressionLevelSchema>;
+export type ProgressionArena = z.infer<typeof progressionArenaSchema>;
 export type ProgressionBadge = z.infer<typeof progressionBadgeSchema>;
 export type ProgressionStats = z.infer<typeof progressionStatsSchema>;
 export type Progression = z.infer<typeof progressionSchema>;
