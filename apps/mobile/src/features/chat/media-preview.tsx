@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { BackHandler, KeyboardAvoidingView, Platform, Text, TextInput, View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableScale } from '@/components/motion';
 import { colors, fontSizes, iconSizes, overlay, radii, semibold, spacing } from '@/theme';
@@ -22,14 +23,21 @@ function PreviewVideo({ uri }: { uri: string }) {
  * completa, un comentario opcional y el «1» de vista única junto al botón de
  * enviar. Antes la foto salía sin verla, y la vista única era un ojo suelto en
  * el redactor que había que acordarse de activar antes de elegirla.
+ *
+ * Es una capa a pantalla completa dentro del chat, no un `Modal`: en el iPhone
+ * un `Modal` que se abre mientras el selector de fotos todavía se está cerrando
+ * no llega a presentarse, y la foto elegida se perdía sin aviso.
  */
 export function MediaPreview({
   media,
+  initialViewOnce,
   sending,
   onCancel,
   onSend,
 }: {
   media: PickedMedia | null;
+  /** Lo que se eligió en el desplegable antes de escoger la foto. */
+  initialViewOnce: boolean;
   sending: boolean;
   onCancel: () => void;
   onSend: (options: { caption: string; viewOnce: boolean }) => void;
@@ -37,13 +45,30 @@ export function MediaPreview({
   const insets = useSafeAreaInsets();
   const [caption, setCaption] = useState('');
   const [viewOnce, setViewOnce] = useState(false);
+  // Solo al cambiar de foto: la elección del desplegable es el punto de partida.
+  const initialViewOnceRef = useRef(initialViewOnce);
+  initialViewOnceRef.current = initialViewOnce;
   useEffect(() => {
     setCaption('');
-    setViewOnce(false);
+    setViewOnce(initialViewOnceRef.current);
   }, [media?.uri]);
+  useEffect(() => {
+    if (!media) return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (!sending) onCancel();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [media, onCancel, sending]);
 
+  if (!media) return null;
   return (
-    <Modal animationType="slide" onRequestClose={onCancel} visible={Boolean(media)}>
+    <Animated.View
+      entering={FadeIn.duration(160)}
+      exiting={FadeOut.duration(120)}
+      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 30 }}
+      testID="chat-media-preview"
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1, backgroundColor: overlay.scrimSolid, paddingTop: insets.top, paddingBottom: insets.bottom + spacing.sm }}
@@ -62,15 +87,15 @@ export function MediaPreview({
           </PressableScale>
         </View>
         <View style={{ flex: 1 }}>
-          {media?.kind === 'video' ? (
+          {media.kind === 'video' ? (
             <PreviewVideo uri={media.uri} />
-          ) : media ? (
+          ) : (
             <Image contentFit="contain" source={{ uri: media.uri }} style={{ flex: 1 }} />
-          ) : null}
+          )}
         </View>
         {viewOnce ? (
           <Text style={{ color: colors.text, fontSize: fontSizes.xs, textAlign: 'center', paddingVertical: spacing.xs }}>
-            {media?.kind === 'video' ? 'El video' : 'La foto'} se podrá ver una sola vez.
+            {media.kind === 'video' ? 'El video' : 'La foto'} se podrá ver una sola vez.
           </Text>
         ) : null}
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm, paddingHorizontal: spacing.md, paddingTop: spacing.sm }}>
@@ -120,7 +145,7 @@ export function MediaPreview({
             </PressableScale>
           </View>
           <PressableScale
-            accessibilityLabel={media?.kind === 'video' ? 'Enviar video' : 'Enviar foto'}
+            accessibilityLabel={media.kind === 'video' ? 'Enviar video' : 'Enviar foto'}
             disabled={sending}
             haptic="light"
             onPress={() => onSend({ caption: caption.trim(), viewOnce })}
@@ -140,6 +165,6 @@ export function MediaPreview({
           </PressableScale>
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </Animated.View>
   );
 }

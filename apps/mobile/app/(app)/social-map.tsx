@@ -71,6 +71,9 @@ export default function SocialMapScreen() {
   const [citySearch, setCitySearch] = useState('');
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [birthDateOpen, setBirthDateOpen] = useState(false);
+  // La hoja de la fecha se abre cuando la de Preferencias ya se fue: dos `Modal`
+  // a la vez en iOS dejan el segundo sin presentar.
+  const openBirthDateAfterPreferences = useRef(false);
   const location = useShareLocation();
 
   useEffect(() => {
@@ -100,7 +103,6 @@ export default function SocialMapScreen() {
     gym.latitud !== null && gym.longitud !== null
     && gym.latitud >= bounds.south && gym.latitud <= bounds.north
     && gym.longitud >= bounds.west && gym.longitud <= bounds.east), [branches.data, bounds.south, bounds.north, bounds.west, bounds.east]);
-  const gymCount = registeredGyms.length + (externalGyms.data?.length ?? 0);
 
   const openPlace = (next: MapPlace) => {
     setPlace(next);
@@ -111,10 +113,6 @@ export default function SocialMapScreen() {
       longitudeDelta: Math.min(region.longitudeDelta, 0.05),
     }, 350);
   };
-
-  const status = !gymsInRange
-    ? 'Acerca el mapa para ver los gimnasios'
-    : `${gymCount} ${gymCount === 1 ? 'gimnasio' : 'gimnasios'} en esta zona · toca cualquier zona o gimnasio para ver quién entrena por ahí`;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -203,28 +201,21 @@ export default function SocialMapScreen() {
               });
             }} />
           </View>
-          <View style={{ gap: spacing.sm, padding: spacing.md, borderRadius: radii.xl, backgroundColor: socialMapColors.glass, borderColor: socialMapColors.glassBorder, borderWidth: 1 }}>
-            <Text style={{ color: colors.text, fontSize: fontSizes.footnote }}>{status}</Text>
-            {location.missingAge ? (
-              <>
-                <Text style={{ color: colors.textSecondary, fontSize: fontSizes.footnote, lineHeight: 18 }}>
-                  Para aparecer en el mapa necesitamos tu fecha de nacimiento: aquí solo se muestran mayores de edad.
-                </Text>
-                {location.profile ? (
-                  <Button icon="calendar-outline" label="Añadir fecha de nacimiento" onPress={() => setBirthDateOpen(true)} size="sm" />
-                ) : (
-                  // Sin perfil no hay dónde guardar la fecha: el onboarding la pide junto al resto.
-                  <Button icon="person-outline" label="Completar mi perfil" onPress={() => router.push('/onboarding')} size="sm" />
-                )}
-              </>
-            ) : null}
-            {!location.missingAge && location.settingsLoaded && !location.sharing ? (
-              <Button icon="eye-outline" label="Aparecer en el mapa" loading={location.appear.isPending} onPress={() => location.appear.mutate({})} size="sm" />
-            ) : null}
-            <Text accessibilityRole="link" onPress={() => { void Linking.openURL('https://www.openstreetmap.org/copyright'); }} style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-              Gimnasios © OpenStreetMap contributors · ODbL
+          {!gymsInRange ? (
+            <Text style={{ alignSelf: 'center', color: colors.text, fontSize: fontSizes.footnote, backgroundColor: socialMapColors.glass, borderRadius: radii.full, overflow: 'hidden', paddingHorizontal: spacing.md, paddingVertical: spacing.xs }}>
+              Acerca el mapa para ver los gimnasios
             </Text>
-          </View>
+          ) : null}
+          {/* Sin tarjeta encima del mapa: Pablo la quitó. Lo de aparecer en el
+              mapa vive en Preferencias; aquí solo queda la cita que exige la
+              licencia de los datos de gimnasios. */}
+          <Text
+            accessibilityRole="link"
+            onPress={() => { void Linking.openURL('https://www.openstreetmap.org/copyright'); }}
+            style={{ alignSelf: 'flex-end', color: colors.textMuted, fontSize: fontSizes.xs }}
+          >
+            © OpenStreetMap
+          </Text>
         </Animated.View>
       ) : null}
 
@@ -244,10 +235,39 @@ export default function SocialMapScreen() {
           setPreferencesOpen(false);
           void queryClient.invalidateQueries({ queryKey: ['social-map', viewerId, 'nearby'] });
         }}
+        onDismissed={() => {
+          if (!openBirthDateAfterPreferences.current) return;
+          openBirthDateAfterPreferences.current = false;
+          setBirthDateOpen(true);
+        }}
         subtitle="El mapa solo te muestra a quienes encajan con esto."
         title="Preferencias"
         visible={preferencesOpen}
       >
+        {location.missingAge ? (
+          <View style={{ gap: spacing.sm }}>
+            <Text style={{ color: colors.textSecondary, fontSize: fontSizes.footnote, lineHeight: 18 }}>
+              Para aparecer en el mapa necesitamos tu fecha de nacimiento: aquí solo se muestran mayores de edad.
+            </Text>
+            {location.profile ? (
+              <Button
+                icon="calendar-outline"
+                label="Añadir fecha de nacimiento"
+                onPress={() => {
+                  openBirthDateAfterPreferences.current = true;
+                  setPreferencesOpen(false);
+                }}
+                size="sm"
+              />
+            ) : (
+              // Sin perfil no hay dónde guardar la fecha: el onboarding la pide junto al resto.
+              <Button icon="person-outline" label="Completar mi perfil" onPress={() => { setPreferencesOpen(false); router.push('/onboarding'); }} size="sm" />
+            )}
+          </View>
+        ) : null}
+        {!location.missingAge && location.settingsLoaded && !location.sharing ? (
+          <Button icon="eye-outline" label="Aparecer en el mapa" loading={location.appear.isPending} onPress={() => location.appear.mutate({})} size="sm" />
+        ) : null}
         <DiscoveryPreferencesEditor />
       </BottomSheet>
     </View>

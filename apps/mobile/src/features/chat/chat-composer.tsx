@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -85,10 +85,10 @@ function RecordingDot() {
 /**
  * El redactor del chat, con la gramática de WhatsApp:
  *
- * - «+» abre el menú de adjuntos (fotos y videos, cámara, ubicación, entrenar
- *   juntos): ya no hay cinco iconos aplastando el campo de texto.
- * - El emoji vive dentro del campo; a la derecha, cámara y micrófono mientras
- *   el campo está vacío, y el botón de enviar en cuanto se escribe algo.
+ * - «+» abre el desplegable con emojis, fotos y videos, cámara, ubicación y
+ *   vista única: ningún icono suelto aplasta el campo de texto.
+ * - A la derecha solo el micrófono, que pasa a ser «enviar» en cuanto se
+ *   escribe algo.
  * - Nota de voz: mantener pulsado el micrófono graba y soltar envía; deslizar a
  *   la izquierda cancela; deslizar hacia arriba la deja fija para grabar sin
  *   mantener el dedo, con papelera y enviar.
@@ -101,8 +101,11 @@ export function ChatComposer({
   editing,
   onCancelEdit,
   onOpenAttach,
-  onOpenCamera,
-  onOpenEmoji,
+  attachOpen,
+  inputRef,
+  onInputFocus,
+  viewOnce,
+  onClearViewOnce,
   recording,
   recordingMillis,
   onVoiceStart,
@@ -115,12 +118,17 @@ export function ChatComposer({
   sending: boolean;
   editing: ComposerEditing | null;
   onCancelEdit: () => void;
-  onOpenAttach: () => void;
-  onOpenCamera: () => void;
-  onOpenEmoji: () => void;
+  /** Recibe dónde está el «+» en la ventana, para abrir el menú encima. */
+  onOpenAttach: (anchor: { x: number; y: number }) => void;
+  attachOpen: boolean;
+  inputRef: RefObject<TextInput | null>;
+  onInputFocus: () => void;
+  viewOnce: boolean;
+  onClearViewOnce: () => void;
   recording: boolean;
   recordingMillis: number;
-  onVoiceStart: () => void;
+  /** Resuelve `false` si la grabación no pudo empezar (permiso, micrófono ocupado…). */
+  onVoiceStart: () => Promise<boolean>;
   onVoiceStop: (send: boolean) => void;
   /** Subiendo una foto, un audio o una ubicación. */
   busy: boolean;
@@ -129,6 +137,7 @@ export function ChatComposer({
   const [locked, setLocked] = useState(false);
   const cancelledRef = useRef(false);
   const lockedRef = useRef(false);
+  const attachRef = useRef<View>(null);
   const dragX = useSharedValue(0);
   const dragY = useSharedValue(0);
   const hasText = draft.trim().length > 0;
@@ -164,7 +173,17 @@ export function ChatComposer({
       lockedRef.current = false;
       setHolding(true);
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      onVoiceStart();
+      void onVoiceStart().then((started) => {
+        if (started) return;
+        // No arrancó: el redactor vuelve a su estado normal en vez de quedarse
+        // en «grabando» con el reloj en 0:00.
+        cancelledRef.current = true;
+        setHolding(false);
+        setLocked(false);
+        lockedRef.current = false;
+        dragX.value = withSpring(0);
+        dragY.value = withSpring(0);
+      });
     })
     .onUpdate((event) => {
       if (cancelledRef.current || lockedRef.current) return;
@@ -266,6 +285,29 @@ export function ChatComposer({
           </PressableScale>
         </Animated.View>
       ) : null}
+      {viewOnce && !editing ? (
+        <Animated.View
+          entering={FadeIn.duration(140)}
+          exiting={FadeOut.duration(120)}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            alignSelf: 'flex-start',
+            gap: spacing.xs,
+            borderRadius: radii.full,
+            backgroundColor: colors.surface,
+            paddingVertical: spacing.xs,
+            paddingLeft: spacing.sm,
+            paddingRight: spacing.xs,
+          }}
+        >
+          <Ionicons color={colors.volt} name="eye-outline" size={iconSizes.sm} />
+          <Text style={{ color: colors.text, fontSize: fontSizes.xs }}>Vista única: la próxima foto o video se verá una vez</Text>
+          <PressableScale accessibilityLabel="Quitar vista única" haptic="none" hitSlop={spacing.sm} onPress={onClearViewOnce} scaleTo={0.9}>
+            <Ionicons color={colors.textMuted} name="close" size={iconSizes.sm} />
+          </PressableScale>
+        </Animated.View>
+      ) : null}
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing.xs }}>
         {holding ? (
           <View style={[pill, { gap: spacing.sm, paddingHorizontal: spacing.md }]}>
@@ -281,36 +323,39 @@ export function ChatComposer({
         ) : (
           <>
             {!editing ? (
-              <PressableScale
-                accessibilityLabel="Adjuntar"
-                accessibilityHint="Fotos y videos, cámara, ubicación o entrenar juntos"
-                disabled={busy}
-                haptic="light"
-                onPress={onOpenAttach}
-                scaleTo={0.9}
-                style={{ width: ROUND_BUTTON - 4, height: ROUND_BUTTON, alignItems: 'center', justifyContent: 'center' }}
-              >
-                <Ionicons color={colors.text} name="add" size={iconSizes.lg + 4} />
-              </PressableScale>
+              <View collapsable={false} ref={attachRef}>
+                <PressableScale
+                  accessibilityHint="Emojis, fotos y videos, cámara, ubicación o vista única"
+                  accessibilityLabel="Adjuntar"
+                  accessibilityState={{ expanded: attachOpen }}
+                  disabled={busy}
+                  haptic="light"
+                  onPress={() => attachRef.current?.measureInWindow((x, y) => onOpenAttach({ x, y }))}
+                  scaleTo={0.9}
+                  style={{
+                    width: ROUND_BUTTON,
+                    height: ROUND_BUTTON,
+                    borderRadius: radii.full,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: attachOpen ? colors.surfaceHigh : 'transparent',
+                  }}
+                  testID="chat-attach-button"
+                >
+                  <Ionicons color={colors.text} name={attachOpen ? 'close' : 'add'} size={iconSizes.lg + 4} />
+                </PressableScale>
+              </View>
             ) : null}
-            <View style={pill}>
-              <PressableScale
-                accessibilityLabel="Emojis"
-                haptic="none"
-                hitSlop={spacing.xs}
-                onPress={onOpenEmoji}
-                scaleTo={0.9}
-                style={{ padding: spacing.xs + 2 }}
-              >
-                <Ionicons color={colors.textMuted} name="happy-outline" size={iconSizes.md + 2} />
-              </PressableScale>
+            <View style={[pill, { paddingLeft: spacing.md }]}>
               <TextInput
                 accessibilityLabel={editing ? 'Editar mensaje actual' : 'Escribe un mensaje'}
                 keyboardAppearance="dark"
                 multiline
                 onChangeText={onChangeDraft}
+                onFocus={onInputFocus}
                 placeholder={editing ? 'Edita tu mensaje' : 'Mensaje'}
                 placeholderTextColor={colors.textDisabled}
+                ref={inputRef}
                 style={{
                   flex: 1,
                   maxHeight: 120,
@@ -335,18 +380,6 @@ export function ChatComposer({
           />
         ) : (
           <>
-            {!holding ? (
-              <PressableScale
-                accessibilityLabel="Cámara"
-                disabled={busy}
-                haptic="none"
-                onPress={onOpenCamera}
-                scaleTo={0.9}
-                style={{ width: ROUND_BUTTON - 4, height: ROUND_BUTTON, alignItems: 'center', justifyContent: 'center' }}
-              >
-                <Ionicons color={colors.text} name="camera-outline" size={iconSizes.lg} />
-              </PressableScale>
-            ) : null}
             <View>
               {holding ? (
                 <Animated.View

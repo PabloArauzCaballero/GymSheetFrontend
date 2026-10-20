@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableScale } from '@/components/motion';
@@ -17,17 +17,39 @@ export function BottomSheet({
   subtitle,
   children,
   testID,
+  onDismissed,
 }: {
   visible: boolean;
   onClose: () => void;
+  /**
+   * Cuando la hoja ya terminó de irse. Lo que se abra después (otra hoja, el
+   * selector de fotos, una alerta) va aquí: iOS no presenta nada mientras un
+   * `Modal` todavía se está cerrando, y en un iPhone real ese cierre tarda más
+   * que cualquier temporizador fijo.
+   */
+  onDismissed?: () => void;
   title: string;
   subtitle?: string;
   children: ReactNode;
   testID?: string;
 }) {
   const insets = useSafeAreaInsets();
+  const wasVisible = useRef(visible);
+  const onDismissedRef = useRef(onDismissed);
+  onDismissedRef.current = onDismissed;
+  // `onDismiss` del `Modal` solo existe en iOS; en Android basta con que se cierre.
+  useEffect(() => {
+    if (Platform.OS !== 'ios' && wasVisible.current && !visible) onDismissedRef.current?.();
+    wasVisible.current = visible;
+  }, [visible]);
   return (
-    <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
+    <Modal
+      animationType="slide"
+      onDismiss={Platform.OS === 'ios' ? () => onDismissedRef.current?.() : undefined}
+      onRequestClose={onClose}
+      transparent
+      visible={visible}
+    >
       {/* Con el teclado abierto la hoja sube con él: el botón de abajo no queda tapado. */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

@@ -60,42 +60,6 @@ export function SheetRow({
   );
 }
 
-/** El menú del «+»: lo que antes eran cinco iconos sueltos junto al campo de texto. */
-export function AttachSheet({
-  visible,
-  onClose,
-  onGallery,
-  onCamera,
-  onLocation,
-  onTrainTogether,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  onGallery: () => void;
-  onCamera: () => void;
-  onLocation: () => void;
-  onTrainTogether: (() => void) | null;
-}) {
-  const pick = (action: () => void) => () => {
-    onClose();
-    // La hoja se cierra antes de que aparezca el selector del sistema: dos
-    // modales a la vez en iOS dejan el segundo sin presentar.
-    setTimeout(action, 350);
-  };
-  return (
-    <BottomSheet onClose={onClose} title="Compartir" visible={visible}>
-      <View style={{ gap: spacing.sm }}>
-        <SheetRow icon="images-outline" label="Fotos y videos" onPress={pick(onGallery)} testID="chat-attach-gallery" />
-        <SheetRow icon="camera-outline" label="Cámara" onPress={pick(onCamera)} testID="chat-attach-camera" />
-        <SheetRow icon="location-outline" label="Ubicación" hint="Envía dónde estás ahora" onPress={pick(onLocation)} />
-        {onTrainTogether ? (
-          <SheetRow icon="barbell-outline" label="Entrenemos juntos" hint="Propón día, hora y lugar" onPress={pick(onTrainTogether)} />
-        ) : null}
-      </View>
-    </BottomSheet>
-  );
-}
-
 const ACTION_ROWS: Record<MessageAction, { icon: IconName; label: string; destructive?: boolean }> = {
   copy: { icon: 'copy-outline', label: 'Copiar' },
   edit: { icon: 'pencil-outline', label: 'Editar' },
@@ -110,15 +74,17 @@ export function MessageActionsSheet({
   actions,
   onClose,
   onAction,
+  onDismissed,
 }: {
   visible: boolean;
   preview: string;
   actions: MessageAction[];
   onClose: () => void;
   onAction: (action: MessageAction) => void;
+  onDismissed?: () => void;
 }) {
   return (
-    <BottomSheet onClose={onClose} title="Mensaje" subtitle={preview} visible={visible}>
+    <BottomSheet onClose={onClose} onDismissed={onDismissed} title="Mensaje" subtitle={preview} visible={visible}>
       <View style={{ gap: spacing.sm }}>
         {actions.map((action) => {
           const row = ACTION_ROWS[action];
@@ -207,9 +173,11 @@ export function ContactInfoSheet({
   onChooseChats,
   onTrainTogether,
   onOpenProfile,
+  onDismissed,
 }: {
   visible: boolean;
   onClose: () => void;
+  onDismissed?: () => void;
   name: string;
   nickname: string | null;
   photoUrl: string | null;
@@ -234,7 +202,7 @@ export function ContactInfoSheet({
   const nicknameChanged = trimmed !== (nickname ?? '');
 
   return (
-    <BottomSheet onClose={onClose} title="Info. del contacto" visible={visible}>
+    <BottomSheet onClose={onClose} onDismissed={onDismissed} title="Info. del contacto" visible={visible}>
       <View style={{ alignItems: 'center', gap: spacing.xs }}>
         {photoUrl ? (
           <Image

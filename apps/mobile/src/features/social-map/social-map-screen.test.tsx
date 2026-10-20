@@ -36,7 +36,19 @@ vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ t
 vi.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 vi.mock('expo-linear-gradient', () => ({ LinearGradient: () => null }));
 vi.mock('@/components/motion', () => ({ PressableScale: Press }));
-vi.mock('@/components/bottom-sheet', () => ({ BottomSheet: ({ visible, children }: Props & { visible: boolean }) => (visible ? <div>{children}</div> : null) }));
+vi.mock('@/components/bottom-sheet', async () => {
+  const { useEffect, useRef } = await import('react');
+  return {
+    BottomSheet: ({ visible, children, onDismissed }: Props & { visible: boolean; onDismissed?: () => void }) => {
+      const wasVisible = useRef(visible);
+      useEffect(() => {
+        if (wasVisible.current && !visible) onDismissed?.();
+        wasVisible.current = visible;
+      }, [visible, onDismissed]);
+      return visible ? <div>{children}</div> : null;
+    },
+  };
+});
 vi.mock('@/components/social-status-editor', () => ({ DiscoveryPreferencesEditor: () => <div>Editor de preferencias</div> }));
 vi.mock('@/components/feedback', () => ({ ErrorState: () => <div>Error</div> }));
 vi.mock('@/components/media-image', () => ({ MediaImage: Box }));
@@ -107,7 +119,6 @@ describe('SocialMapScreen', () => {
     renderMap();
     expect(await screen.findByLabelText('Gimnasio Sopocachi')).toBeTruthy();
     expect(mapGyms).toHaveBeenCalledTimes(1);
-    expect(screen.getByText(/1 gimnasio en esta zona/)).toBeTruthy();
   });
 
   it('al tocar un gimnasio muestra la cuadrícula de personas cercanas según preferencias', async () => {
@@ -137,10 +148,20 @@ describe('SocialMapScreen', () => {
     expect(screen.queryByText('Personas')).toBeNull();
   });
 
+  it('no pone ninguna tarjeta encima del mapa: la fecha y «Aparecer» viven en Preferencias', async () => {
+    renderMap();
+    await screen.findByLabelText('Gimnasio Sopocachi');
+    expect(screen.queryByText('Añadir fecha de nacimiento')).toBeNull();
+    expect(screen.queryByText(/gimnasios en esta zona/)).toBeNull();
+    fireEvent.click(screen.getByLabelText('Preferencias'));
+    expect(await screen.findByText('Añadir fecha de nacimiento')).toBeTruthy();
+  });
+
   it('pide solo la fecha de nacimiento, sin salir del mapa, y te hace aparecer', async () => {
     renderMap();
+    fireEvent.click(await screen.findByLabelText('Preferencias'));
     fireEvent.click(await screen.findByText('Añadir fecha de nacimiento'));
-    fireEvent.change(screen.getByLabelText('Día'), { target: { value: '15' } });
+    fireEvent.change(await screen.findByLabelText('Día'), { target: { value: '15' } });
     fireEvent.change(screen.getByLabelText('Mes'), { target: { value: '3' } });
     fireEvent.change(screen.getByLabelText('Año'), { target: { value: '1996' } });
     fireEvent.click(screen.getByText('Guardar y aparecer en el mapa'));
@@ -150,9 +171,10 @@ describe('SocialMapScreen', () => {
 
   it('no deja aparecer a un menor de edad', async () => {
     renderMap();
+    fireEvent.click(await screen.findByLabelText('Preferencias'));
     fireEvent.click(await screen.findByText('Añadir fecha de nacimiento'));
     const year = String(new Date().getFullYear() - 15);
-    fireEvent.change(screen.getByLabelText('Día'), { target: { value: '1' } });
+    fireEvent.change(await screen.findByLabelText('Día'), { target: { value: '1' } });
     fireEvent.change(screen.getByLabelText('Mes'), { target: { value: '1' } });
     fireEvent.change(screen.getByLabelText('Año'), { target: { value: year } });
     fireEvent.click(screen.getByText('Guardar y aparecer en el mapa'));

@@ -7,6 +7,7 @@ import {
   Alert,
   AppState,
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Linking,
   Modal,
@@ -16,6 +17,7 @@ import {
   Text,
   View,
   type ListRenderItemInfo,
+  type TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -36,8 +38,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { ChatComposer } from '@/features/chat/chat-composer';
+import { AttachMenu, type AttachAnchor } from '@/features/chat/attach-menu';
+import { EmojiPanel } from '@/features/chat/emoji-panel';
+import { dropLastSymbol } from '@/features/chat/emoji-text';
 import {
-  AttachSheet,
   ContactInfoSheet,
   DeleteMessageSheet,
   MessageActionsSheet,
@@ -50,7 +54,6 @@ import {
   tombstoneLabel,
   type MessageAction,
 } from '@/hooks/chat-message-actions';
-import EmojiPicker from 'rn-emoji-keyboard';
 import type { Message } from '@gymsheet/schemas';
 import { isMessageReadByOther, trainingInviteAcceptedMessage } from '@gymsheet/domain';
 import {
@@ -80,7 +83,7 @@ import {
   recoverFromHistoryError,
   viewerUriWhileHistoryAccessPending,
 } from '@/hooks/chat-history-recovery';
-import { chatService, moderationService } from '@/api/services';
+import { accountService, chatService, moderationService } from '@/api/services';
 import { env } from '@/config/env';
 import { secureStoreTokenProvider } from '@/storage/secure-store';
 import { useChatSocket, type PresenceUpdate } from '@/hooks/use-chat-socket';
@@ -150,11 +153,20 @@ function ChatVideo({ uri, token }: { uri: string; token: string | null }) {
   return <VideoView nativeControls player={player} style={{ width: 240, height: 220, borderRadius: radii.md }} />;
 }
 
-function ChatAudioMessage({ uri, token, mine }: { uri: string; token: string | null; mine: boolean }) {
+function ChatAudioMessage({ uri, token, mine, onLoadError }: {
+  uri: string;
+  token: string | null;
+  mine: boolean;
+  /** El audio no cargó: casi siempre la sesión caducó; la pantalla la renueva. */
+  onLoadError: () => void;
+}) {
   const source = token ? chatAudioPlayerSource(uri, env.apiUrl, token) : null;
   const player = useAudioPlayer(source, { updateInterval: 250 });
   const status = useAudioPlayerStatus(player);
   const unavailable = Boolean(status.error);
+  useEffect(() => {
+    if (status.error) onLoadError();
+  }, [onLoadError, status.error]);
   const time = status.currentTime > 0 ? status.currentTime : status.duration;
   // En la burbuja propia el fondo ya es el acento: el control va en tinta oscura.
   const ink = mine ? colors.background : colors.volt;
@@ -284,7 +296,19 @@ export default function ChatThreadScreen() {
   const resumeValidationRef = useRef<{ conversationId: string; dataUpdateCount: number } | null>(null);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [sendingMedia, setSendingMedia] = useState(false);
-  const [attachOpen, setAttachOpen] = useState(false);
+  /** El desplegable del «+» abierto, con su posición en pantalla. */
+  const [attachAnchor, setAttachAnchor] = useState<AttachAnchor | null>(null);
+  /** «Vista única» elegida en el desplegable para la próxima foto o video. */
+  const [viewOnceNext, setViewOnceNext] = useState(false);
+  const rootRef = useRef<View>(null);
+  const inputRef = useRef<TextInput>(null);
+  /**
+   * Lo que se abre al terminar de cerrarse la hoja de acciones (eliminar,
+   * reportar). En un iPhone real un temporizador fijo no basta: si la hoja
+   * todavía se está yendo, iOS no presenta la siguiente.
+   */
+  const afterActionsRef = useRef<(() => void) | null>(null);
+  const afterContactRef = useRef<(() => void) | null>(null);
   const [contactOpen, setContactOpen] = useState(false);
   const [pickedMedia, setPickedMedia] = useState<PickedMedia | null>(null);
   const [actionMessage, setActionMessage] = useState<Message | null>(null);
@@ -297,6 +321,13 @@ export default function ChatThreadScreen() {
   const [storyReplyNotFound, setStoryReplyNotFound] = useState(false);
   const storyReplySearchRef = useRef<{ id: string; pages: number; before: string | null } | null>(null);
   const [recordingAudio, setRecordingAudio] = useState(false);
+  /**
+   * Reloj propio de la nota de voz. En el iPhone `durationMillis` del grabador
+   * puede quedarse en 0: el contador no avanzaba («bugueado») y, al soltar, la
+   * nota parecía de menos de un segundo y no se enviaba.
+   */
+  const voiceStartedAtRef = useRef<number | null>(null);
+  const [voiceElapsedMs, setVoiceElapsedMs] = useState(0);
   const recordingWasActiveRef = useRef(false);
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const audioRecorderState = useAudioRecorderState(audioRecorder, 250);
@@ -355,13 +386,44 @@ export default function ChatThreadScreen() {
     ));
   }
 
+  /**
+   * Las fotos, audios y videos del chat se piden con el token de acceso, que
+   * dura 15 minutos. Antes se leía una sola vez al abrir el chat: con el chat
+   * abierto un rato, o al volver a la app, todo salía «ya no está disponible»
+   * hasta salir y volver a entrar. Una petición autenticada cualquiera hace que
+   * el cliente renueve la sesión si hace falta (una sola renovación compartida),
+   * y luego se toma el token vigente.
+   */
+  const lastMediaRefreshRef = useRef(0);
+  const refreshMediaToken = useCallback(async (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastMediaRefreshRef.current < 30_000) return;
+    lastMediaRefreshRef.current = now;
+    try {
+      await accountService.getMe();
+    } catch {
+      // Sin red el token guardado es lo mejor que hay.
+    }
+    const token = await secureStoreTokenProvider.getAccessToken();
+    setMediaAccessToken((current) => (current === token ? current : token));
+  }, []);
+  const onMediaLoadError = useCallback(() => void refreshMediaToken(), [refreshMediaToken]);
   useEffect(() => {
     let mounted = true;
     void secureStoreTokenProvider.getAccessToken().then((token) => {
       if (mounted) setMediaAccessToken(token);
     });
-    return () => { mounted = false; };
-  }, [conversationId]);
+    void refreshMediaToken(true);
+    const every = setInterval(() => void refreshMediaToken(true), 10 * 60_000);
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') void refreshMediaToken(true);
+    });
+    return () => {
+      mounted = false;
+      clearInterval(every);
+      subscription.remove();
+    };
+  }, [conversationId, refreshMediaToken]);
   const otherName = otherConversation?.otherUserName;
   const otherPhotoUrl = otherConversation?.otherUserPhotoUrl ?? null;
   const otherUserId = otherConversation?.otherUserId;
@@ -805,11 +867,11 @@ export default function ChatThreadScreen() {
     } else if (action === 'edit') {
       beginMessageEdit(message);
     } else if (action === 'delete') {
-      // La hoja de acciones se cierra antes de abrir la de eliminar: dos
+      // La hoja de eliminar se abre cuando la de acciones ya se fue: dos
       // modales a la vez en iOS dejan el segundo sin presentar.
-      setTimeout(() => setDeleteTarget(message), 350);
+      afterActionsRef.current = () => setDeleteTarget(message);
     } else {
-      setTimeout(() => Alert.alert(
+      afterActionsRef.current = () => Alert.alert(
         'Reportar mensaje',
         'Elige el motivo. Al reportarlo, este chat se cerrará para ambos.',
         [
@@ -818,7 +880,7 @@ export default function ChatThreadScreen() {
           { text: 'Otro', onPress: () => reportMessage.mutate({ messageId: message.id, reason: 'OTRO' }) },
           { text: 'Cancelar', style: 'cancel' },
         ],
-      ), 350);
+      );
     }
   }
 
@@ -841,9 +903,15 @@ export default function ChatThreadScreen() {
   /** Sube la nota de voz ya grabada, o la descarta si se canceló. */
   const finishAudioRecording = useCallback(async (send: boolean) => {
     setRecordingAudio(false);
+    const startedAt = voiceStartedAtRef.current;
+    voiceStartedAtRef.current = null;
     try {
       const recorderStatus = await audioRecorder.getStatus();
-      const durationMs = Math.max(audioRecorder.currentTime * 1_000, recorderStatus.durationMillis);
+      const durationMs = Math.max(
+        startedAt === null ? 0 : Date.now() - startedAt,
+        audioRecorder.currentTime * 1_000,
+        recorderStatus.durationMillis,
+      );
       if (audioRecorder.isRecording) await audioRecorder.stop();
       const uri = audioRecorder.uri;
       await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
@@ -889,9 +957,25 @@ export default function ChatThreadScreen() {
     void finishAudioRecording(true);
   }, [audioRecorderState.isRecording, finishAudioRecording, recordingAudio]);
 
-  /** Mantener pulsado el micrófono: pide permiso la primera vez y empieza a grabar. */
-  async function startVoiceNote() {
-    if (!canWrite || sending || sendingMedia || recordingAudio) return;
+  useEffect(() => {
+    if (!recordingAudio) {
+      setVoiceElapsedMs(0);
+      return;
+    }
+    const tick = setInterval(() => {
+      const startedAt = voiceStartedAtRef.current;
+      if (startedAt !== null) setVoiceElapsedMs(Date.now() - startedAt);
+    }, 200);
+    return () => clearInterval(tick);
+  }, [recordingAudio]);
+
+  /**
+   * Mantener pulsado el micrófono: pide permiso la primera vez y empieza a
+   * grabar. Resuelve `false` si no llegó a grabar, para que el redactor salga
+   * del modo «grabando».
+   */
+  async function startVoiceNote(): Promise<boolean> {
+    if (!canWrite || sending || sendingMedia || recordingAudio) return false;
     voiceStopRequestRef.current = null;
     try {
       const existing = await getRecordingPermissionsAsync();
@@ -913,7 +997,8 @@ export default function ChatThreadScreen() {
         } else {
           notify.error('Sin permiso de micrófono no se pueden grabar notas de voz.');
         }
-        return;
+        voiceStopRequestRef.current = null;
+        return false;
       }
 
       await withTimeout((async () => {
@@ -921,9 +1006,11 @@ export default function ChatThreadScreen() {
         await audioRecorder.prepareToRecordAsync();
       })(), 5_000);
       audioRecorder.record({ forDuration: 119 });
+      voiceStartedAtRef.current = Date.now();
       setRecordingAudio(true);
       const pendingStop = voiceStopRequestRef.current;
       if (pendingStop !== null) void finishAudioRecording(pendingStop);
+      return true;
     } catch (error: unknown) {
       setRecordingAudio(false);
       recordingWasActiveRef.current = false;
@@ -933,7 +1020,9 @@ export default function ChatThreadScreen() {
         // Keep the text composer available even if audio session cleanup fails.
       }
       voiceStopRequestRef.current = null;
+      voiceStartedAtRef.current = null;
       notify.error(error instanceof Error ? error.message : 'No se pudo iniciar la grabación.');
+      return false;
     }
   }
 
@@ -1004,6 +1093,7 @@ export default function ChatThreadScreen() {
       );
       showOwnMessage(sent);
       setPickedMedia(null);
+      setViewOnceNext(false);
     } catch (error: unknown) {
       notify.error(error instanceof Error ? error.message : 'No se pudo enviar el archivo.');
     } finally {
@@ -1125,7 +1215,7 @@ export default function ChatThreadScreen() {
 
     if (message.type === 'audio') {
       return message.mediaUrl
-        ? <ChatAudioMessage mine={mine} token={mediaAccessToken} uri={message.mediaUrl} />
+        ? <ChatAudioMessage mine={mine} onLoadError={onMediaLoadError} token={mediaAccessToken} uri={message.mediaUrl} />
         : <Text style={{ color: mutedOnBubble, fontSize: fontSizes.sm }}>Este audio ya no está disponible.</Text>;
     }
 
@@ -1205,6 +1295,7 @@ export default function ChatThreadScreen() {
           <Image
             cachePolicy="none"
             contentFit="cover"
+            onError={onMediaLoadError}
             source={{
               uri: resolveChatMediaUrl(url),
               ...(mediaAccessToken ? { headers: { Authorization: `Bearer ${mediaAccessToken}` } } : {}),
@@ -1355,7 +1446,7 @@ export default function ChatThreadScreen() {
 
   return (
     <>
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View collapsable={false} ref={rootRef} style={{ flex: 1, backgroundColor: colors.background }}>
         <AmbientBackground />
         <KeyboardAvoidingView
           // Android reduce la ventana con el teclado abierto; iOS no, y sin esto
@@ -1448,6 +1539,28 @@ export default function ChatThreadScreen() {
                 </Text>
               </View>
             </PressableScale>
+            {/* Un icono en la cabecera y no un botón a todo el ancho: esa franja
+                le quitaba alto al hilo y, con el teclado abierto en un iPhone
+                pequeño, los mensajes quedaban aplastados abajo. */}
+            {otherConversation?.systemKind === null && canWrite && otherUserId ? (
+              <PressableScale
+                accessibilityLabel="Entrenemos juntos"
+                accessibilityRole="button"
+                haptic="light"
+                onPress={() => setInviteModalOpen(true)}
+                scaleTo={0.9}
+                style={{
+                  width: minTouchTarget,
+                  height: minTouchTarget,
+                  borderRadius: radii.full,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                testID="chat-train-together"
+              >
+                <Ionicons color={colors.volt} name="barbell-outline" size={iconSizes.md + 2} />
+              </PressableScale>
+            ) : null}
             <PressableScale
               accessibilityLabel="Info. del contacto"
               accessibilityRole="button"
@@ -1466,14 +1579,6 @@ export default function ChatThreadScreen() {
             </PressableScale>
           </View>
 
-          {otherConversation?.systemKind === null && canWrite && otherUserId ? (
-            <Button
-              icon="barbell-outline"
-              label="Entrenemos juntos"
-              onPress={() => setInviteModalOpen(true)}
-              variant="ghost"
-            />
-          ) : null}
           {otherConversation?.systemKind === null && otherUserId ? (
             <CreateTrainingInviteModal
               onClose={() => setInviteModalOpen(false)}
@@ -1534,16 +1639,37 @@ export default function ChatThreadScreen() {
                 editing={editingMessageId ? { body: messages.find((message) => message.id === editingMessageId)?.body ?? '' } : null}
                 onCancelEdit={cancelMessageEdit}
                 onChangeDraft={setDraft}
-                onOpenAttach={() => setAttachOpen(true)}
-                onOpenCamera={() => void pickFromCamera()}
-                onOpenEmoji={() => setEmojiOpen(true)}
+                attachOpen={attachAnchor !== null}
+                inputRef={inputRef}
+                onClearViewOnce={() => setViewOnceNext(false)}
+                onInputFocus={() => setEmojiOpen(false)}
+                onOpenAttach={({ x, y }) => {
+                  if (attachAnchor) {
+                    setAttachAnchor(null);
+                    return;
+                  }
+                  rootRef.current?.measureInWindow((rootX, rootY, _width, rootHeight) => {
+                    setAttachAnchor({ left: x - rootX, bottom: rootY + rootHeight - y + spacing.sm });
+                  });
+                }}
+                viewOnce={viewOnceNext}
                 onSend={() => void (editingMessageId ? handleSaveMessageEdit() : handleSend())}
-                onVoiceStart={() => void startVoiceNote()}
+                onVoiceStart={startVoiceNote}
                 onVoiceStop={stopVoiceNote}
                 recording={recordingAudio}
-                recordingMillis={audioRecorderState.durationMillis}
+                recordingMillis={Math.max(voiceElapsedMs, audioRecorderState.durationMillis)}
                 sending={sending || savingEdit}
               />
+              {emojiOpen ? (
+                <EmojiPanel
+                  onBackspace={() => setDraft((current) => dropLastSymbol(current))}
+                  onPick={(emoji) => setDraft((current) => current + emoji)}
+                  onShowKeyboard={() => {
+                    setEmojiOpen(false);
+                    inputRef.current?.focus();
+                  }}
+                />
+              ) : null}
             </View>
           ) : (
             <View
@@ -1568,6 +1694,27 @@ export default function ChatThreadScreen() {
           )}
         </KeyboardAvoidingView>
 
+        <AttachMenu
+          anchor={attachAnchor}
+          onCamera={() => void pickFromCamera()}
+          onClose={() => setAttachAnchor(null)}
+          onEmoji={() => {
+            Keyboard.dismiss();
+            setEmojiOpen(true);
+          }}
+          onGallery={() => void pickFromGallery()}
+          onLocation={() => void handleShareLocation()}
+          onToggleViewOnce={() => setViewOnceNext((current) => !current)}
+          viewOnce={viewOnceNext}
+          visible={attachAnchor !== null}
+        />
+        <MediaPreview
+          initialViewOnce={viewOnceNext}
+          media={pickedMedia}
+          onCancel={() => setPickedMedia(null)}
+          onSend={(options) => void sendPickedMedia(options)}
+          sending={sendingMedia}
+        />
         {/* Banda opaca sobre la barra de estado: sin ella el hilo se desliza
             bajo el reloj y la batería y los dos quedan ilegibles. */}
         <View
@@ -1607,25 +1754,6 @@ export default function ChatThreadScreen() {
           ) : null}
         </Pressable>
       </Modal>
-      <EmojiPicker
-        onClose={() => setEmojiOpen(false)}
-        onEmojiSelected={(selection) => setDraft((current) => current + selection.emoji)}
-        open={emojiOpen}
-      />
-      <AttachSheet
-        onCamera={() => void pickFromCamera()}
-        onClose={() => setAttachOpen(false)}
-        onGallery={() => void pickFromGallery()}
-        onLocation={() => void handleShareLocation()}
-        onTrainTogether={otherConversation?.systemKind === null && otherUserId ? () => setInviteModalOpen(true) : null}
-        visible={attachOpen}
-      />
-      <MediaPreview
-        media={pickedMedia}
-        onCancel={() => setPickedMedia(null)}
-        onSend={(options) => void sendPickedMedia(options)}
-        sending={sendingMedia}
-      />
       <MessageActionsSheet
         actions={actionMessage && currentUserId
           ? messageActions(actionMessage, currentUserId, {
@@ -1635,6 +1763,11 @@ export default function ChatThreadScreen() {
           : []}
         onAction={(action) => actionMessage && handleMessageAction(actionMessage, action)}
         onClose={() => setActionMessage(null)}
+        onDismissed={() => {
+          const next = afterActionsRef.current;
+          afterActionsRef.current = null;
+          next?.();
+        }}
         preview={actionMessage
           ? isTombstone(actionMessage, deletedMessageIds)
             ? tombstoneLabel(actionMessage.senderId === currentUserId)
@@ -1678,8 +1811,13 @@ export default function ChatThreadScreen() {
         }}
         onChooseChats={() => {
           setSelectedReceiptConversationIds([conversationId]);
+          afterContactRef.current = () => setReadReceiptSelectionOpen(true);
           setContactOpen(false);
-          setTimeout(() => setReadReceiptSelectionOpen(true), 350);
+        }}
+        onDismissed={() => {
+          const next = afterContactRef.current;
+          afterContactRef.current = null;
+          next?.();
         }}
         onToggleReceipts={(enabled) => {
           const settings = readReceiptSettings.data;
@@ -1692,8 +1830,8 @@ export default function ChatThreadScreen() {
           });
         }}
         onTrainTogether={otherConversation?.systemKind === null && canWrite && otherUserId ? () => {
+          afterContactRef.current = () => setInviteModalOpen(true);
           setContactOpen(false);
-          setTimeout(() => setInviteModalOpen(true), 350);
         } : null}
         online={otherOnline}
         photoUrl={otherPhotoUrl}
