@@ -150,7 +150,7 @@ export function ArenaUnlock({
   return (
     <Animated.View
       accessibilityViewIsModal
-      style={[StyleSheet.absoluteFill, { backgroundColor: alpha(stageBackground.celebration, 0.94) }, stageStyle]}
+      style={[StyleSheet.absoluteFill, { backgroundColor: stageBackground.celebration }, stageStyle]}
     >
       <Animated.View
         pointerEvents="none"
@@ -161,7 +161,7 @@ export function ArenaUnlock({
         ]}
       >
         <Svg height={raySize} viewBox={`0 0 ${raySize} ${raySize}`} width={raySize}>
-          <Path d={raysPath} fill={alpha(tint.glow, 0.12)} />
+          <Path d={raysPath} fill={alpha(tint.glow, 0.08)} />
         </Svg>
       </Animated.View>
 
@@ -175,7 +175,7 @@ export function ArenaUnlock({
         </Animated.View>
 
         <Animated.View style={[{ width: bannerWidth }, bannerStyle]}>
-          <ArenaBanner arena={{ ...arena, state: 'done' }} teaser width={bannerWidth} />
+          <ArenaBanner arena={{ ...arena, state: 'done' }} bare width={bannerWidth} />
           <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.bannerVeil, veilStyle]} />
           <Animated.View pointerEvents="none" style={[styles.bigLock, { borderColor: tint.glow }, lockStyle]}>
             <Ionicons color={onMedia.text} name="lock-closed" size={iconSizes.xl} />

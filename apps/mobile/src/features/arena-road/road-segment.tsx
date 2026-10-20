@@ -83,7 +83,15 @@ export const RoadSegment = memo(function RoadSegment({
   }));
 
   const center = width / 2;
-  const labelWidth = center - DOT - spacing.md;
+  // La pestaña «TÚ» va al lado contrario del hito más cercano, para no pisarlo.
+  const nearest = MILESTONE_AT.reduce(
+    (best, at, index) => (Math.abs(at - target) < Math.abs((MILESTONE_AT[best] ?? 0) - target) ? index : best),
+    0,
+  );
+  const tagOnLeft = nearest % 2 === 1;
+  // Las etiquetas empiezan donde acaba el marcador: así nunca lo pisan.
+  const labelGap = MARKER / 2 + spacing.sm;
+  const labelWidth = center - labelGap - spacing.sm;
 
   return (
     <View style={{ width, height: SEGMENT_HEIGHT }}>
@@ -119,7 +127,7 @@ export const RoadSegment = memo(function RoadSegment({
                 {
                   width: labelWidth,
                   bottom: bottom - spacing.xs,
-                  ...(onLeft ? { right: center + DOT } : { left: center + DOT }),
+                  ...(onLeft ? { right: center + labelGap } : { left: center + labelGap }),
                   alignItems: onLeft ? 'flex-end' : 'flex-start',
                 },
               ]}
@@ -149,8 +157,14 @@ export const RoadSegment = memo(function RoadSegment({
               size={iconSizes.md}
             />
           </View>
-          <View style={[styles.youTag, { backgroundColor: arena.level.color }]}>
-            <Text style={{ color: ink.black, letterSpacing: 0.8 }} tabular variant="caption" strong>
+          <View
+            style={[
+              styles.youTag,
+              { backgroundColor: arena.level.color },
+              tagOnLeft ? { right: MARKER + spacing.sm } : { left: MARKER + spacing.sm },
+            ]}
+          >
+            <Text numberOfLines={1} style={{ color: ink.black, letterSpacing: 0.8 }} tabular variant="caption" strong>
               {`TÚ · ${pointsLabel}`}
             </Text>
           </View>
@@ -217,11 +231,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceHigh,
   },
   youTag: {
-    marginTop: spacing.xs,
+    position: 'absolute',
+    top: (MARKER - 24) / 2,
+    height: 24,
+    width: 136,
+    justifyContent: 'center',
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: radii.full,
-    minWidth: 96,
     alignItems: 'center',
   },
 });

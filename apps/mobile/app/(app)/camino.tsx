@@ -168,6 +168,11 @@ export default function CaminoScreen() {
       </ScrollView>
 
       <View pointerEvents="box-none" style={[styles.header, { paddingTop: insets.top + spacing.xs }]}>
+        <LinearGradient
+          colors={[colors.background, alpha(colors.background, 0)]}
+          pointerEvents="none"
+          style={styles.headerFade}
+        />
         <BackButton onPress={goBack} />
         <View style={{ flex: 1 }}>
           <Text style={{ color: onMedia.text }} variant="title">
@@ -283,7 +288,14 @@ const styles = StyleSheet.create({
     gap: spacing.smd,
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.sm,
-    backgroundColor: alpha(colors.background, 0.82),
+    backgroundColor: colors.background,
+  },
+  headerFade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: -spacing.xl,
+    height: spacing.xl,
   },
   back: {
     width: minTouchTarget,

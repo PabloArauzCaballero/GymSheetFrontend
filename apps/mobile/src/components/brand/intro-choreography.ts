@@ -138,6 +138,12 @@ function easeInOut(x: number): number {
   return cubicBezier(0.45, 0, 0.25, 1, x);
 }
 
+/** Salida: arranca con decisión y se frena al abrirse del todo. */
+function easeExit(x: number): number {
+  'worklet';
+  return cubicBezier(0.65, 0, 0.2, 1, x);
+}
+
 /* -------------------------------------------------------------------------- */
 /* Trazados interpolables                                                      */
 /* -------------------------------------------------------------------------- */
@@ -343,12 +349,6 @@ export function irisPath(e: number, layout: IntroLayout): string {
   const cx = width / 2;
   const cy = height / 2;
   return `${frame}M${(cx - r).toFixed(2)} ${cy.toFixed(2)}A${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(cx + r).toFixed(2)} ${cy.toFixed(2)}A${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(cx - r).toFixed(2)} ${cy.toFixed(2)}Z`;
-}
-
-/** Salida: arranca con decisión y se frena al abrirse del todo. */
-function easeExit(x: number): number {
-  'worklet';
-  return cubicBezier(0.65, 0, 0.2, 1, x);
 }
 
 function letterProgress(index: number, t: number): number {
