@@ -3,18 +3,16 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { cardioModalityLabels } from '@gymsheet/hooks';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import {
   activeFilterCount,
   emptyCatalogFilters,
   hasActiveFilters,
   initialCatalogFilters,
   isPendingInvitation,
-  ORDER_LABELS,
   type CatalogFilterState,
   type CatalogTab,
 } from '@gymsheet/hooks';
-import { trainingGoals, type TrainingGoal } from '@gymsheet/types';
 import { ApiError } from '@gymsheet/api-client';
 import { profileService, programService, routineService, routineSharingService } from '@/api/services';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
@@ -34,12 +32,13 @@ import { useActivePrograms } from '@/features/programs/use-active-programs';
 import { ActiveProgramsCompact } from '@/features/programs/active-programs-compact';
 import { MoreButton, MoreSheet, type MoreAction } from '@/features/routine-detail/more-sheet';
 import { CatalogFiltersSheet } from '@/features/routine-catalog/catalog-filters';
-import { CatalogTabBar, ResultCount } from '@/features/routine-catalog/catalog-tab-bar';
+import { CatalogTabBar } from '@/features/routine-catalog/catalog-tab-bar';
 import { InvitationCard } from '@/features/routine-catalog/invitation-card';
 import { RoutineCardSkeleton, RoutineCardView } from '@/features/routine-catalog/routine-card';
 import { useRoutineCatalog } from '@/features/routine-catalog/use-routine-catalog';
+import { DownloadProgressWizardModal } from '@/features/routine-catalog/download-progress-wizard-modal';
 import { GOAL_LABEL } from '@/lib/format';
-import { colors, fontSizes, gutter, iconSizes, radii, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, radii, spacing } from '@/theme';
 
 /** Una sesión de «Tu semana» con su destino: la hoja del día la abre al elegirla. */
 type PickableSession = WeekSession & { open: () => void };
@@ -71,6 +70,7 @@ export function RoutinesCatalogScreen() {
   const [search, setSearch] = useState('');
   const [sheet, setSheet] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [downloadWizardOpen, setDownloadWizardOpen] = useState(false);
   const [pickedDay, setPickedDay] = useState<number | null>(null);
   const openTour = useTourStore((state) => state.open);
   const debounced = useDebouncedValue(search, 350);
@@ -183,6 +183,13 @@ export function RoutinesCatalogScreen() {
   const menu: MoreAction[] = [
     { key: 'create', label: 'Crear rutina', icon: 'add-circle-outline', onPress: () => router.push('/routines/new') },
     { key: 'exercises', label: 'Explorar ejercicios', icon: 'search-outline', onPress: () => router.push(routes.exercises()) },
+    {
+      key: 'download-progress',
+      label: 'Descargar progreso',
+      icon: 'download-outline',
+      afterClose: true,
+      onPress: () => setDownloadWizardOpen(true),
+    },
     ...(programs.data && !programs.data.cardio
       ? [{ key: 'cardio', label: 'Plan de cardio', icon: 'pulse-outline' as const, onPress: () => router.push('/routines/cardio/new') }]
       : []),
@@ -227,6 +234,10 @@ export function RoutinesCatalogScreen() {
         title="Rutinas"
       />
       <MoreSheet actions={menu} onClose={() => setMenuOpen(false)} title="Rutinas" visible={menuOpen} />
+      <DownloadProgressWizardModal
+        onClose={() => setDownloadWizardOpen(false)}
+        visible={downloadWizardOpen}
+      />
 
       {weekSessions.length > 0 ? (
         <Section index={0} title="Tu semana">
@@ -244,12 +255,12 @@ export function RoutinesCatalogScreen() {
 
       <ActiveProgramsCompact cardio={cardioProgram} strength={strengthProgram} />
 
-      {/* Explorar: pestañas, búsqueda y objetivo juntos, a 16 entre sí; antes
-          iban a 32 como si fueran secciones distintas y la pantalla se partía. */}
-      <View style={{ gap: spacing.md }}>
-        <AppText accessibilityRole="header" variant="title">
-          Explorar
-        </AppText>
+      {/* El catálogo: pestañas y búsqueda juntas, a 12 entre sí. Un solo título
+          en la pantalla («Rutinas»): el segmentado ya dice qué se explora, así
+          que el «Explorar» de encima y la fila de objetivos sobraban (2026-10-18).
+          El objetivo vive en Filtros; si hay uno puesto, se ve aquí como una
+          sola ficha que se quita al tocarla. */}
+      <View style={{ gap: spacing.smd }}>
         <CatalogTabBar onChange={setTab} pendingInvitations={pending} value={tab} />
 
         <View
@@ -307,36 +318,20 @@ export function RoutinesCatalogScreen() {
           ) : null}
         </View>
 
-        {tab === 'all' ? (
-          <ScrollView
-            // A sangre: los chips corren hasta el borde de la pantalla y el
-            // primero arranca alineado con el margen.
-            contentContainerStyle={{ gap: spacing.sm, paddingHorizontal: gutter }}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginHorizontal: -gutter }}
-            testID="goal-chips"
-          >
+        {tab === 'all' && filters.objetivo ? (
+          <View style={{ flexDirection: 'row' }} testID="goal-chips">
             <FilterChip
-              label="Todos"
+              accessibilityLabel={`Quitar el filtro ${GOAL_LABEL[filters.objetivo]}`}
+              label={
+                profileGoal && filters.objetivo === profileGoal
+                  ? `${GOAL_LABEL[filters.objetivo]} · tu objetivo`
+                  : GOAL_LABEL[filters.objetivo]
+              }
               onPress={() => setFilters({ ...filters, objetivo: null })}
-              selected={!filters.objetivo}
+              selected
+              testID={`goal-chip-${filters.objetivo}`}
             />
-            {trainingGoals.map((goal: TrainingGoal) => (
-              <FilterChip
-                key={goal}
-                label={GOAL_LABEL[goal]}
-                onPress={() =>
-                  setFilters({
-                    ...filters,
-                    objetivo: filters.objetivo === goal ? null : goal,
-                  })
-                }
-                selected={filters.objetivo === goal}
-                testID={`goal-chip-${goal}`}
-              />
-            ))}
-          </ScrollView>
+          </View>
         ) : null}
       </View>
 
@@ -385,16 +380,6 @@ export function RoutinesCatalogScreen() {
               Sin conexión. Mostramos lo último que cargó.
             </Text>
           ) : null}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
-            <ResultCount hasMore={catalog.hasNextPage} shown={cards.length} />
-            {tab === 'all' ? (
-              <Text numberOfLines={1} style={{ flexShrink: 1, color: colors.textMuted, fontSize: fontSizes.sm }}>
-                Orden: {ORDER_LABELS[filters.orden]}
-                {filters.deMiGimnasio ? ' · De mi gimnasio' : ''}
-                {profileGoal && filters.objetivo === profileGoal ? ' · Tu objetivo' : ''}
-              </Text>
-            ) : null}
-          </View>
           {pendingCards.map((card) => (
             <InvitationCard card={card} key={card.id} onAccepted={open} />
           ))}
