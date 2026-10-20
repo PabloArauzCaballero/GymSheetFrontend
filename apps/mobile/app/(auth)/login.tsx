@@ -26,7 +26,9 @@ export default function LoginScreen() {
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
-    defaultValues: loginDefaults,
+    defaultValues: __DEV__
+      ? { email: 'athlete.mock@gymsheet.local', password: 'MockLocal2026!' }
+      : loginDefaults,
   });
 
   const onSubmit = handleSubmit(async (values) => {

@@ -1,254 +1,93 @@
-import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import { useRouter, type Href } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, Text, View, type ListRenderItem } from 'react-native';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  Easing,
+  cancelAnimation,
+  runOnJS,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSpring,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
+import type { GymDirectoryEntry, SwipeDirection, PublicBranchSummary } from '@gymsheet/schemas';
+import { ApiError } from '@gymsheet/api-client';
 import { trainingGoals } from '@gymsheet/types';
-import type { GymDirectoryEntry, PublicBranchSummary } from '@gymsheet/schemas';
-import { chatService, facilitiesService, progressionService, socialService } from '@/api/services';
-import { refreshSocialRelationship } from '@/api/social-cache';
-import { Card, ListScreen, Section, TourHelpButton } from '@/components/layout';
-import { TourTarget, useScreenTour } from '@/components/tour';
-import { DirectoryCardFace, levelTitle } from '@/components/directory-card';
-import { NavRow } from '@/components/list';
-import { RankBadge } from '@/components/rank-badge';
-import { StoriesBar } from '@/components/stories-bar';
-import { Button, Input } from '@/components/ui';
-import { CountUpText, PressableScale, SegmentedPill } from '@/components/motion';
-import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import {
-  InteractionsBadge,
-  interactionsAlertTotal,
-  useInteractionCounts,
-} from '@/components/interactions-counts';
-import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import { useReduceMotion } from '@/notifications/use-reduce-motion';
-import { notify } from '@/notifications';
+  chatService,
+  discoveryService,
+  facilitiesService,
+  profilePhotosService,
+  socialService,
+} from '@/api/services';
+import { refreshSocialRelationship } from '@/api/social-cache';
+import { CommunityOverflowSheet } from '@/components/community-overflow-sheet';
+import { TopGymModal } from '@/components/top-gym-sheet';
+import { ProfileDetailSheet } from '@/components/profile-detail-sheet';
+import { TourTarget, useScreenTour } from '@/components/tour';
+import { Card, Section } from '@/components/layout';
+import { PressableScale } from '@/components/motion';
+import { Button } from '@/components/ui';
+import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { initialsOf } from '@/lib/format';
-import { colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, semibold, spacing } from '@/theme';
+import { levelTitle } from '@/components/directory-card';
+import { notify } from '@/notifications';
+import { useAuthStore } from '@/state/auth-store';
 import { TRAINING_GOAL_LABEL } from '@/lib/social-labels';
+import {
+  accentPolicy,
+  alpha,
+  colors,
+  fontSizes,
+  iconSizes,
+  ink,
+  minTouchTarget,
+  onMedia,
+  overlay,
+  radii,
+  semibold,
+  spacing,
+} from '@/theme';
 
-/**
- * Los iconos en la esquina, no un menú.
- *
- * La versión anterior aterrizaba en un panel con tres accesos — Directorio,
- * Solicitudes, Mis conexiones — antes de enseñar a una sola persona. Pablo
- * pidió Instagram fundido con Tinder: la gente aparece de entrada, con sus
- * filtros arriba, y los mensajes viven detrás de un ícono, no de un menú.
- *
- * Interacciones entra por la misma puerta y por la misma razón. Son las dos
- * bandejas de entrada de la parte social —lo que te han escrito y lo que han
- * hecho contigo— y las dos van donde ya se mira, en la esquina superior, no
- * detrás de una lista de opciones que habría que abrir para descubrir que hay
- * algo nuevo.
- */
-function CommunityHeader({ onOpenPreferences }: { onOpenPreferences: () => void }) {
-  const router = useRouter();
-  // Mismo dato que alimenta la pestaña "Te escribieron" de Mensajes — el
-  // punto solo dice que hay algo nuevo ahí, no cuánto ni de quién.
-  const pending = useQuery({
-    queryKey: ['social', 'connections', 'PENDING'],
-    queryFn: () => socialService.listConnections('PENDING'),
-    staleTime: 30_000,
-  });
-  const hasPendingReceived = (pending.data ?? []).some((connection) => connection.direction === 'RECEIVED');
-  // Aquí sí un número y no un punto: «alguien te dio like» y «siete personas te
-  // dieron like» piden entrar con urgencias distintas, y el dato ya existe.
-  const counts = useInteractionCounts();
-  const interactionsTotal = interactionsAlertTotal(counts.data);
+const DECK_SIZE = 15;
+const DECISION_RATIO = 0.28;
+const FLING_VELOCITY = 900;
+const MAX_ROTATION_DEG = 12;
+const EXIT_MS = 220;
+const CARD_SPRING = { damping: 24, stiffness: 260, mass: 0.6, overshootClamping: true } as const;
+const BACK_ZONE_RATIO = 1 / 3;
+const TAP_MAX_MS = 260;
+const STAMP_TOP = spacing.xl;
+const SEGMENT_HEIGHT = 3;
 
-  /**
-   * Los iconos arriba y el título debajo, no los dos en la misma línea.
-   *
-   * Con dos iconos cabían al lado del título justo. Con el tercero ya no: tres
-   * objetivos táctiles de 44 más sus huecos dejan al título unos 170 puntos, y
-   * «Comunidad» a tamaño de display mide casi 200. Como es una sola palabra no
-   * puede partirse, así que el resultado no era un salto de línea sino una
-   * palabra recortada o desbordada — el mismo fallo que ya obligó a sacar
-   * pestañas de la barra inferior.
-   *
-   * La salida no es encoger el título ni esconder un icono en un menú: es la
-   * composición que usa el propio sistema para un título grande, con los
-   * botones en la barra de encima. Los iconos siguen en la esquina, que es la
-   * decisión de producto; lo único que cambia es que dejan de competir por el
-   * mismo renglón.
-   */
-  return (
-    <View style={{ gap: spacing.md }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm }}>
-        <TourHelpButton tourKey="comunidad" />
-        <PressableScale
-          accessibilityLabel="Directorio de gimnasios, tiendas y coaches"
-          onPress={() => router.push('/directorio')}
-          style={{
-            width: minTouchTarget,
-            height: minTouchTarget,
-            borderRadius: radii.full,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: colors.surfaceHigh,
-          }}
-        >
-          <Ionicons color={colors.text} name="storefront-outline" size={iconSizes.lg} />
-        </PressableScale>
-        <PressableScale
-          accessibilityLabel="Preferencias de búsqueda"
-          onPress={onOpenPreferences}
-          style={{
-            width: minTouchTarget,
-            height: minTouchTarget,
-            borderRadius: radii.full,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: colors.surfaceHigh,
-          }}
-        >
-          <Ionicons color={colors.text} name="options-outline" size={iconSizes.lg} />
-        </PressableScale>
-        <PressableScale
-          accessibilityLabel="Explorar personas y gimnasios en el mapa"
-          onPress={() => router.push('/social-map' as Href)}
-          style={{
-            width: minTouchTarget,
-            height: minTouchTarget,
-            borderRadius: radii.full,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: colors.surfaceHigh,
-          }}
-        >
-          <Ionicons color={colors.text} name="map-outline" size={iconSizes.lg} />
-        </PressableScale>
-        <PressableScale
-          accessibilityLabel={
-            interactionsTotal > 0
-              ? `Interacciones, ${interactionsTotal} ${interactionsTotal === 1 ? 'novedad' : 'novedades'}`
-              : 'Interacciones'
-          }
-          onPress={() => router.push('/interacciones')}
-          style={{
-            width: minTouchTarget,
-            height: minTouchTarget,
-            borderRadius: radii.full,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: colors.surfaceHigh,
-          }}
-        >
-          <Ionicons color={colors.text} name="heart-outline" size={iconSizes.lg} />
-          <InteractionsBadge total={interactionsTotal} />
-        </PressableScale>
-        <PressableScale
-          accessibilityLabel="Mensajes y solicitudes"
-          onPress={() => router.push('/comunidad-mensajes')}
-          style={{
-            width: minTouchTarget,
-            height: minTouchTarget,
-            borderRadius: radii.full,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: colors.surfaceHigh,
-          }}
-        >
-          <Ionicons color={colors.text} name="chatbubbles-outline" size={iconSizes.lg} />
-          {hasPendingReceived ? (
-            <View
-              style={{
-                position: 'absolute',
-                top: 6,
-                right: 6,
-                width: 10,
-                height: 10,
-                borderRadius: radii.full,
-                backgroundColor: colors.volt,
-                borderWidth: 2,
-                borderColor: colors.background,
-              }}
-            />
-          ) : null}
-        </PressableScale>
-      </View>
+const SCRIM_BOTTOM = [
+  'transparent',
+  'rgba(8, 14, 24, 0.25)',
+  'rgba(8, 14, 24, 0.72)',
+  'rgba(8, 14, 24, 0.96)',
+] as const;
+const SCRIM_BOTTOM_STOPS = [0, 0.35, 0.7, 1] as const;
+const SCRIM_TOP = ['rgba(0, 0, 0, 0.45)', 'transparent'] as const;
+const MATCH_SCRIM = [overlay.scrimSoft, overlay.scrimStrong] as const;
 
-      <View style={{ gap: spacing.xs }}>
-        <Text
-          accessibilityRole="header"
-          style={{
-            color: colors.text,
-            fontSize: fontSizes.display,
-            fontWeight: semibold,
-            letterSpacing: fontSizes.display * -0.03,
-            lineHeight: fontSizes.display * 1.05,
-          }}
-        >
-          Comunidad
-        </Text>
-        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
-          Socios de tu gimnasio, filtrados por lo que buscas.
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-/**
- * Vista previa del podio: quien no entra a "Tu senda" nunca sabría que
- * existe. Tres filas, mismo idioma visual que la tabla completa, con un
- * toque que lleva ahí — no una copia del ranking, solo su puerta de entrada.
- */
-function PodiumPreview() {
-  const router = useRouter();
-  const leaderboard = useQuery({
-    queryKey: ['progression', 'leaderboard', 'points', 'preview'],
-    queryFn: () => progressionService.leaderboard(3, 'points'),
-    staleTime: 60_000,
-  });
-
-  if (leaderboard.isPending) return <Skeleton height={132} />;
-  if (leaderboard.isError || !leaderboard.data?.length) return null;
-
-  return (
-    <Card accessibilityLabel="Ver el podio completo" onPress={() => router.push('/trayectoria')}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-          <Ionicons color={colors.volt} name="podium-outline" size={iconSizes.md} />
-          <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold, letterSpacing: fontSizes.md * -0.01 }}>
-            Podio del gimnasio
-          </Text>
-        </View>
-        <Ionicons color={colors.textMuted} name="chevron-forward" size={iconSizes.sm} />
-      </View>
-      {leaderboard.data.map((entry, index) => (
-        <View
-          key={`${entry.position}-${entry.displayName}`}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}
-        >
-          <RankBadge isMe={entry.isMe} position={entry.position} />
-          <Text
-            numberOfLines={1}
-            style={{
-              flex: 1,
-              color: entry.isMe ? colors.text : colors.textMuted,
-              fontSize: fontSizes.sm,
-              fontWeight: entry.isMe ? semibold : '400',
-            }}
-          >
-            {entry.displayName}
-            {entry.isMe ? ' · tú' : ''}
-          </Text>
-          <CountUpText
-            delayMs={index * 60}
-            style={{ color: colors.textMuted, fontSize: fontSizes.sm }}
-            suffix=" pts"
-            value={entry.points}
-          />
-        </View>
-      ))}
-    </Card>
-  );
-}
+type Decision = { entry: GymDirectoryEntry; direction: SwipeDirection; filterKey: string };
 
 const GOAL_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   HIPERTROFIA: 'barbell-outline',
@@ -258,6 +97,61 @@ const GOAL_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   SALUD_GENERAL: 'heart-outline',
   REHABILITACION: 'medkit-outline',
 };
+
+function DecisionStamp({
+  color,
+  label,
+  side,
+  threshold,
+  translateX,
+}: {
+  color: string;
+  label: string;
+  side: 'left' | 'right' | 'top';
+  threshold: number;
+  translateX: SharedValue<number>;
+}) {
+  const sign = side === 'left' ? 1 : -1;
+  const animated = useAnimatedStyle(() => ({
+    opacity:
+      side === 'top'
+        ? Math.min(Math.max((Math.abs(translateX.value) * 1.5) / threshold, 0), 1)
+        : Math.min(Math.max((sign * translateX.value) / threshold, 0), 1),
+  }));
+
+  return (
+    <Animated.View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      pointerEvents="none"
+      style={[
+        {
+          position: 'absolute',
+          top: STAMP_TOP + 10,
+          left: side === 'left' ? spacing.lg : side === 'top' ? '25%' : undefined,
+          right: side === 'right' ? spacing.lg : side === 'top' ? '25%' : undefined,
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.xs,
+          borderRadius: radii.md,
+          borderWidth: 3,
+          borderColor: color,
+          alignItems: 'center',
+          backgroundColor: 'rgba(0,0,0,0.3)',
+          transform: [
+            {
+              rotate: side === 'left' ? '-12deg' : side === 'right' ? '12deg' : '0deg',
+            },
+          ],
+        },
+        animated,
+      ]}
+    >
+      <Text style={{ color, fontSize: fontSizes.xl, fontWeight: '800', letterSpacing: 1.5 }}>
+        {label}
+      </Text>
+    </Animated.View>
+  );
+}
 
 function FilterChip({
   label,
@@ -300,21 +194,6 @@ function FilterChip({
   );
 }
 
-type DirectoryFilters = {
-  objetivo: string | null;
-  setObjetivo: (value: string | null) => void;
-  sucursalId: string | null;
-  setSucursalId: (value: string | null) => void;
-  genero: string | null;
-  setGenero: (value: string | null) => void;
-};
-
-/**
- * Todos los filtros de descubrimiento en un solo panel, detrás de un botón —
- * no ocupando la pantalla principal. Empieza con Objetivo, Sucursal y Género,
- * pero es el lugar donde cualquier filtro nuevo de "quién quiero ver" entra
- * sin volver a rediseñar la pantalla de Comunidad.
- */
 function SearchPreferencesSheet({
   visible,
   onClose,
@@ -325,17 +204,18 @@ function SearchPreferencesSheet({
   visible: boolean;
   onOpenBlocked: () => void;
   onClose: () => void;
-  filters: DirectoryFilters;
-  /**
-   * La consulta entera, no sólo sus datos: si sólo llegara la lista, un fallo
-   * de red y «mi gimnasio tiene una única sede» se verían igual — la sección
-   * desaparecía en ambos casos y nadie podía reintentar.
-   */
-  branches: UseQueryResult<PublicBranchSummary[]>;
+  filters: {
+    objetivo: string | null;
+    setObjetivo: (value: string | null) => void;
+    sucursalId: string | null;
+    setSucursalId: (value: string | null) => void;
+    genero: string | null;
+    setGenero: (value: string | null) => void;
+  };
+  branches: PublicBranchSummary[];
 }) {
   const insets = useSafeAreaInsets();
   const { objetivo, setObjetivo, sucursalId, setSucursalId, genero, setGenero } = filters;
-  const branchList = branches.data ?? [];
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent transparent visible={visible}>
@@ -382,7 +262,7 @@ function SearchPreferencesSheet({
             </Pressable>
           </View>
 
-          <Section icon="options-outline" title="Objetivo">
+          <Section icon="options-outline" title="Objetivo de entrenamiento">
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
               <FilterChip active={!objetivo} icon="apps-outline" label="Todos" onPress={() => setObjetivo(null)} />
               {trainingGoals.map((goal) => (
@@ -397,20 +277,11 @@ function SearchPreferencesSheet({
             </View>
           </Section>
 
-          <Section icon="business-outline" title="Sucursal">
-            {branches.isPending ? (
-              <Skeleton height={44} />
-            ) : branches.isError ? (
-              <ErrorState error={branches.error} onRetry={() => void branches.refetch()} />
-            ) : branchList.length > 1 ? (
+          {branches.length > 1 ? (
+            <Section icon="business-outline" title="Sede del gimnasio">
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-                <FilterChip
-                  active={!sucursalId}
-                  icon="apps-outline"
-                  label="Todos"
-                  onPress={() => setSucursalId(null)}
-                />
-                {branchList.map((branch) => (
+                <FilterChip active={!sucursalId} icon="apps-outline" label="Todas" onPress={() => setSucursalId(null)} />
+                {branches.map((branch) => (
                   <FilterChip
                     active={sucursalId === branch.id}
                     icon="business-outline"
@@ -420,368 +291,171 @@ function SearchPreferencesSheet({
                   />
                 ))}
               </View>
-            ) : (
-              <EmptyState
-                icon="business-outline"
-                message="Tu gimnasio tiene una sola sede, así que no hay nada entre lo que elegir."
-                title="Una única sucursal"
-              />
-            )}
-          </Section>
+            </Section>
+          ) : null}
 
           <Section icon="male-female-outline" title="Género">
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
               <FilterChip active={!genero} icon="apps-outline" label="Todos" onPress={() => setGenero(null)} />
-              <FilterChip
-                active={genero === 'MALE'}
-                icon="male-outline"
-                label="Hombre"
-                onPress={() => setGenero('MALE')}
-              />
-              <FilterChip
-                active={genero === 'FEMALE'}
-                icon="female-outline"
-                label="Mujer"
-                onPress={() => setGenero('FEMALE')}
-              />
+              <FilterChip active={genero === 'MALE'} icon="male-outline" label="Hombres" onPress={() => setGenero('MALE')} />
+              <FilterChip active={genero === 'FEMALE'} icon="female-outline" label="Mujeres" onPress={() => setGenero('FEMALE')} />
             </View>
           </Section>
 
           <Button icon="shield-outline" label="Personas bloqueadas" onPress={onOpenBlocked} variant="ghost" />
-          <Button icon="checkmark" label="Listo" onPress={onClose} />
+          <Button icon="checkmark" label="Aplicar filtros" onPress={onClose} />
         </View>
       </View>
     </Modal>
   );
 }
 
-/**
- * Una persona, una tarjeta: la foto por delante, grande, y el resto como
- * contexto encima de ella — el lenguaje de una app de citas, sin su gesto de
- * arrastrar.
- *
- * La cara es la compartida con la baraja (`DirectoryCardFace`); lo propio de
- * Comunidad es lo de debajo: el botón que resuelve el estado de conexión.
- */
-function DirectoryPersonCard({
-  entry,
-  index,
-  onConnect,
-  onMessage,
-  onWithdraw,
-  onViewProfile,
-  connecting,
+function MatchModal({
+  matchedEntry,
   messaging,
-  withdrawing,
-}: {
-  entry: GymDirectoryEntry;
-  index: number;
-  onConnect: () => void;
-  onMessage: () => void;
-  onWithdraw: () => void;
-  onViewProfile: () => void;
-  connecting: boolean;
-  messaging: boolean;
-  withdrawing: boolean;
-}) {
-  const reduceMotion = useReduceMotion();
-  return (
-    <Animated.View
-      entering={reduceMotion ? undefined : FadeInDown.duration(320)
-        .delay(Math.min(index, 6) * 60)
-        .easing(Easing.out(Easing.cubic))}
-      style={{
-        borderRadius: radii.xl,
-        overflow: 'hidden',
-        backgroundColor: colors.surfaceLow,
-        borderWidth: 1,
-        borderColor: colors.border,
-      }}
-    >
-      {/* La misma cara que reparte la baraja de Descubrir; aquí la decisión no
-          se arrastra, se pulsa, así que va envuelta en el acceso al perfil. */}
-      <Pressable accessibilityLabel={`Ver perfil de ${entry.displayName}`} onPress={onViewProfile}>
-        <DirectoryCardFace entry={entry} />
-      </Pressable>
-
-      <View style={{ padding: spacing.md }}>
-        {entry.connectionStatus === 'NONE' ? (
-          <Button
-            icon="person-add-outline"
-            label="Conectar"
-            loading={connecting}
-            onPress={onConnect}
-            variant="primary"
-          />
-        ) : entry.connectionStatus === 'ACCEPTED' ? (
-          <Button
-            icon="chatbubble-outline"
-            label="Enviar mensaje"
-            loading={messaging}
-            onPress={onMessage}
-            variant="primary"
-          />
-        ) : entry.connectionStatus === 'PENDING_SENT' ? (
-          <Button
-            icon="close-circle-outline"
-            label="Cancelar invitación de conexión"
-            loading={withdrawing}
-            onPress={onWithdraw}
-            variant="ghost"
-          />
-        ) : (
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.sm }}>
-            <Ionicons color={colors.volt} name="mail-unread-outline" size={iconSizes.sm} />
-            <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}>
-              Te escribió — revisa Solicitudes
-            </Text>
-          </View>
-        )}
-      </View>
-    </Animated.View>
-  );
-}
-
-const ROW_AVATAR_SIZE = 52;
-
-/**
- * La misma acción que el botón ancho de la tarjeta, reducida a su glifo: en una
- * fila el verbo no cabe, y el título de la fila ya dice de quién se trata.
- */
-function DirectoryRowAction({
-  icon,
-  label,
-  loading,
-  onPress,
-  primary,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  loading: boolean;
-  onPress: () => void;
-  primary: boolean;
-}) {
-  return (
-    <PressableScale
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={{
-        width: minTouchTarget,
-        height: minTouchTarget,
-        borderRadius: radii.full,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: primary ? colors.volt : colors.border,
-        backgroundColor: primary ? colors.volt : colors.surfaceHigh,
-      }}
-    >
-      {loading ? (
-        <ActivityIndicator color={primary ? colors.background : colors.text} size="small" />
-      ) : (
-        <Ionicons color={primary ? colors.background : colors.text} name={icon} size={iconSizes.md} />
-      )}
-    </PressableScale>
-  );
-}
-
-/**
- * La otra mitad de la decisión: la tarjeta enseña a una persona por pantalla,
- * que es lo que quiere el modo de arrastrar, pero no sirve para recorrer el
- * gimnasio. Esta fila reutiliza `NavRow` — la misma que la lista de chats — y
- * cabe media docena de socios de golpe, con los mismos estados de conexión.
- */
-function DirectoryPersonRow({
-  entry,
-  index,
-  onConnect,
+  myName,
+  myPhotoUrl,
+  onClose,
   onMessage,
-  onWithdraw,
-  onViewProfile,
-  connecting,
-  messaging,
-  withdrawing,
+  reduceMotion,
 }: {
-  entry: GymDirectoryEntry;
-  index: number;
-  onConnect: () => void;
-  onMessage: () => void;
-  onWithdraw: () => void;
-  onViewProfile: () => void;
-  connecting: boolean;
+  matchedEntry: GymDirectoryEntry | null;
   messaging: boolean;
-  withdrawing: boolean;
+  myName: string;
+  myPhotoUrl: string | null;
+  onClose: () => void;
+  onMessage: () => void;
+  reduceMotion: boolean;
 }) {
-  const subtitle =
-    [
-      entry.objetivo ? (TRAINING_GOAL_LABEL[entry.objetivo] ?? entry.objetivo) : null,
-      entry.branchName,
-    ]
-      .filter(Boolean)
-      .join(' · ') || undefined;
+  const insets = useSafeAreaInsets();
 
-  const reduceMotion = useReduceMotion();
   return (
-    <Animated.View
-      entering={reduceMotion ? undefined : FadeInDown.duration(280)
-        .delay(Math.min(index, 8) * 40)
-        .easing(Easing.out(Easing.cubic))}
+    <Modal
+      animationType={reduceMotion ? 'none' : 'fade'}
+      onRequestClose={onClose}
+      statusBarTranslucent
+      transparent
+      visible={Boolean(matchedEntry)}
     >
-      <NavRow
-        leading={
-          entry.photoUrl ? (
-            <Image
-              cachePolicy="memory-disk"
-              contentFit="cover"
-              priority="low"
-              recyclingKey={entry.photoUrl}
-              source={{ uri: entry.photoUrl }}
-              style={{
-                width: ROW_AVATAR_SIZE,
-                height: ROW_AVATAR_SIZE,
-                borderRadius: radii.full,
-                backgroundColor: colors.surfaceHigh,
-              }}
-              transition={160}
-            />
-          ) : (
-            <View
-              style={{
-                width: ROW_AVATAR_SIZE,
-                height: ROW_AVATAR_SIZE,
-                borderRadius: radii.full,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: colors.volt,
-              }}
-            >
-              <Text style={{ color: colors.background, fontSize: fontSizes.md, fontWeight: '700' }}>
-                {initialsOf(entry.displayName, undefined)}
-              </Text>
-            </View>
-          )
-        }
-        meta={
-          <View style={{ alignItems: 'flex-end', gap: spacing.xs }}>
-            {entry.levelCode ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Ionicons color={colors.volt} name="trophy-outline" size={iconSizes.sm} />
-                <Text
-                  numberOfLines={1}
-                  style={{ color: colors.volt, fontSize: fontSizes.xs, fontWeight: semibold }}
-                >
-                  {levelTitle(entry.levelCode)}
-                  {typeof entry.points === 'number' ? ' · ' : ''}
-                </Text>
-                {typeof entry.points === 'number' ? (
-                  <CountUpText
-                    style={{ color: colors.volt, fontSize: fontSizes.xs, fontWeight: semibold }}
-                    suffix=" pts"
-                    value={entry.points}
-                  />
-                ) : null}
-              </View>
-            ) : null}
-            {entry.connectionStatus === 'NONE' ? (
-              <DirectoryRowAction
-                icon="person-add-outline"
-                label={`Conectar con ${entry.displayName}`}
-                loading={connecting}
-                onPress={onConnect}
-                primary
-              />
-            ) : entry.connectionStatus === 'ACCEPTED' ? (
-              <DirectoryRowAction
-                icon="chatbubble-outline"
-                label={`Enviar mensaje a ${entry.displayName}`}
-                loading={messaging}
-                onPress={onMessage}
-                primary
-              />
-            ) : entry.connectionStatus === 'PENDING_SENT' ? (
-              <DirectoryRowAction
-                icon="close-circle-outline"
-                label={`Cancelar invitación de conexión a ${entry.displayName}`}
-                loading={withdrawing}
-                onPress={onWithdraw}
-                primary={false}
-              />
-            ) : (
-              <View
-                accessibilityLabel="Te escribió — revisa Solicitudes"
-                accessible
+      <View accessibilityViewIsModal style={{ flex: 1, backgroundColor: colors.background }}>
+        {matchedEntry?.photoUrl ? (
+          <Image
+            blurRadius={40}
+            cachePolicy="memory-disk"
+            contentFit="cover"
+            recyclingKey={matchedEntry.photoUrl}
+            source={{ uri: matchedEntry.photoUrl }}
+            style={StyleSheet.absoluteFill}
+            transition={160}
+          />
+        ) : null}
+        <LinearGradient colors={MATCH_SCRIM} style={StyleSheet.absoluteFill} />
+
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            paddingTop: insets.top + spacing.xl,
+            paddingBottom: insets.bottom + spacing.lg,
+            paddingHorizontal: spacing.lg,
+          }}
+        >
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.xl }}>
+            <View style={{ alignItems: 'center', gap: spacing.sm }}>
+              <Text
+                accessibilityRole="header"
                 style={{
-                  width: minTouchTarget,
-                  height: minTouchTarget,
-                  borderRadius: radii.full,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: colors.surfaceHigh,
+                  color: colors.volt,
+                  fontSize: fontSizes.display,
+                  fontWeight: '800',
+                  letterSpacing: -1,
+                  textAlign: 'center',
                 }}
               >
-                <Ionicons color={colors.volt} name="mail-unread-outline" size={iconSizes.md} />
-              </View>
-            )}
+                ¡Match de Gym!
+              </Text>
+              <Text style={{ color: onMedia.text, fontSize: fontSizes.md, lineHeight: 22, textAlign: 'center' }}>
+                {matchedEntry ? `A ${matchedEntry.displayName} también le interesa entrenar contigo.` : ''}
+              </Text>
+            </View>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+              {myPhotoUrl ? (
+                <Image
+                  cachePolicy="memory-disk"
+                  contentFit="cover"
+                  source={{ uri: myPhotoUrl }}
+                  style={{
+                    width: 104,
+                    height: 104,
+                    borderRadius: radii.full,
+                    borderWidth: 3,
+                    borderColor: colors.volt,
+                  }}
+                />
+              ) : (
+                <View
+                  style={{
+                    width: 104,
+                    height: 104,
+                    borderRadius: radii.full,
+                    backgroundColor: colors.volt,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ color: colors.background, fontSize: fontSizes.xl, fontWeight: '700' }}>
+                    {initialsOf(myName, undefined)}
+                  </Text>
+                </View>
+              )}
+
+              <Ionicons color={colors.volt} name="heart" size={iconSizes.xl + 8} />
+
+              {matchedEntry?.photoUrl ? (
+                <Image
+                  cachePolicy="memory-disk"
+                  contentFit="cover"
+                  source={{ uri: matchedEntry.photoUrl }}
+                  style={{
+                    width: 104,
+                    height: 104,
+                    borderRadius: radii.full,
+                    borderWidth: 3,
+                    borderColor: colors.volt,
+                  }}
+                />
+              ) : (
+                <View
+                  style={{
+                    width: 104,
+                    height: 104,
+                    borderRadius: radii.full,
+                    backgroundColor: colors.surfaceHigh,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ color: colors.text, fontSize: fontSizes.xl, fontWeight: '700' }}>
+                    {initialsOf(matchedEntry?.displayName ?? '', undefined)}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
-        }
-        onPress={onViewProfile}
-        subtitle={subtitle}
-        title={entry.displayName}
-      />
-    </Animated.View>
-  );
-}
 
-/** Lista para recorrer el gimnasio, tarjetas para mirar a una persona. */
-type DirectoryViewMode = 'list' | 'cards';
-
-function DirectoryViewToggle({
-  mode,
-  onChange,
-}: {
-  mode: DirectoryViewMode;
-  onChange: (mode: DirectoryViewMode) => void;
-}) {
-  const options: { value: DirectoryViewMode; icon: keyof typeof Ionicons.glyphMap; label: string }[] = [
-    { value: 'list', icon: 'list-outline', label: 'Ver socios en lista' },
-    { value: 'cards', icon: 'albums-outline', label: 'Ver socios en tarjetas' },
-  ];
-
-  return (
-    <SegmentedPill
-      gap={spacing.xs}
-      itemStyle={{
-        width: minTouchTarget,
-        height: 34,
-        borderRadius: radii.full,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-      onChange={onChange}
-      options={options.map((option) => ({
-        value: option.value,
-        accessibilityLabel: mode === option.value ? `${option.label} (activo)` : option.label,
-      }))}
-      pillColor={colors.surfaceHigh}
-      renderItem={(option, active) => {
-        const entry = options.find((candidate) => candidate.value === option.value);
-        return (
-          <Ionicons
-            color={active ? colors.text : colors.textMuted}
-            name={entry?.icon ?? 'list-outline'}
-            size={iconSizes.md}
-          />
-        );
-      }}
-      style={{
-        padding: 2,
-        borderRadius: radii.full,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.surfaceLow,
-      }}
-      value={mode}
-    />
+          <View style={{ alignSelf: 'stretch', gap: spacing.sm }}>
+            <Button
+              icon="chatbubble-outline"
+              label="Enviar mensaje ahora"
+              loading={messaging}
+              onPress={onMessage}
+            />
+            <Button icon="flame-outline" label="Seguir explorando" onPress={onClose} variant="ghost" />
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -789,259 +463,1076 @@ export default function ComunidadScreen() {
   const router = useRouter();
   useScreenTour('comunidad');
   const queryClient = useQueryClient();
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const reduceMotion = useReducedMotion();
+  const principal = useAuthStore((state) => state.principal);
+
+  // Filtros de descubrimiento
   const [objetivo, setObjetivo] = useState<string | null>(null);
   const [sucursalId, setSucursalId] = useState<string | null>(null);
   const [genero, setGenero] = useState<string | null>(null);
-  const [q, setQ] = useState('');
-  const [prefsVisible, setPrefsVisible] = useState(false);
-  // La lista manda por defecto: es la que deja ver el gimnasio entero. Las
-  // tarjetas son el modo de mirar a una persona, y serán las del gesto de
-  // arrastrar. La preferencia vive en memoria — la app no guarda ninguna otra.
-  const [viewMode, setViewMode] = useState<DirectoryViewMode>('list');
-  /**
-   * El `<Input>` conserva `q` para que el teclado responda a cada tecla; lo que
-   * viaja a la API es este valor retrasado, porque antes cada pulsación cambiaba
-   * la `queryKey` y salía una petición por letra.
-   */
-  const debouncedQ = useDebouncedValue(q.trim(), 250);
-  const filters = useMemo(
-    () => ({
-      objetivo: objetivo ?? undefined,
-      sucursalId: sucursalId ?? undefined,
-      genero: genero ?? undefined,
-      q: debouncedQ || undefined,
-      limit: 50,
-    }),
-    [objetivo, sucursalId, genero, debouncedQ],
-  );
+  const [categoryPill, setCategoryPill] = useState<'foryou' | 'goal' | 'branch'>('foryou');
 
-  const directory = useQuery({
-    queryKey: ['social', 'directory', objetivo ?? '', sucursalId ?? '', genero ?? '', debouncedQ],
-    queryFn: () => socialService.directory(filters),
+  const routeParams = useLocalSearchParams<{ openTopGym?: string; openMenu?: string }>();
+
+  // Modals & Sheets
+  const [prefsVisible, setPrefsVisible] = useState(false);
+  const [overflowVisible, setOverflowVisible] = useState(false);
+  const [topGymVisible, setTopGymVisible] = useState(false);
+  const [detailEntry, setDetailEntry] = useState<GymDirectoryEntry | null>(null);
+  const [matchedEntry, setMatchedEntry] = useState<GymDirectoryEntry | null>(null);
+
+  useEffect(() => {
+    setOverflowVisible(true);
+  }, []);
+
+  // Multi-photo state
+  const [photoCursor, setPhotoCursor] = useState<{ cardId: string | null; index: number }>({
+    cardId: null,
+    index: 0,
   });
 
-  // Las sedes propias, no el directorio público: filtrar por una sede de otra
-  // marca no puede devolver socios, porque `/me/gym-directory` está acotado al
-  // gimnasio del usuario.
-  const branches = useQuery({
+  // Stage size for card tap calculations
+  const [stage, setStage] = useState({ width: 0, height: 0 });
+
+  // Notifications: Pending connections query
+  const pendingConnections = useQuery({
+    queryKey: ['social', 'connections', 'PENDING'],
+    queryFn: () => socialService.listConnections('PENDING'),
+    staleTime: 30_000,
+  });
+  const hasPendingReceived = (pendingConnections.data ?? []).some(
+    (c) => c.direction === 'RECEIVED',
+  );
+
+  // Sedes del gimnasio
+  const branchesQuery = useQuery({
     queryKey: ['facilities', 'my-branches'],
     queryFn: () => facilitiesService.myBranches(),
     staleTime: 5 * 60_000,
   });
+  const branchList = branchesQuery.data ?? [];
 
-  const connect = useMutation({
-    mutationFn: (userId: string) => socialService.sendConnection(userId),
-    onSuccess: async () => {
-      await refreshSocialRelationship(queryClient);
-      notify.success('Solicitud enviada.');
+  // My photos for match modal
+  const myPhotos = useQuery({
+    queryKey: ['profile', 'photos'],
+    queryFn: () => profilePhotosService.list(),
+    staleTime: 60_000,
+  });
+
+  // Deck query filters
+  const filters = useMemo(
+    () => ({
+      objetivo: objetivo || undefined,
+      sucursalId: sucursalId || undefined,
+      genero: genero || undefined,
+      limit: DECK_SIZE,
+    }),
+    [objetivo, sucursalId, genero],
+  );
+
+  const deckKey = `${objetivo ?? ''}|${sucursalId ?? ''}|${genero ?? ''}|${categoryPill}`;
+  const activeDeckKeyRef = useRef(deckKey);
+  const [cardsFilterKey, setCardsFilterKey] = useState(deckKey);
+  const acceptDealRef = useRef(true);
+
+  useLayoutEffect(() => {
+    activeDeckKeyRef.current = deckKey;
+  }, [deckKey]);
+
+  const deck = useQuery({
+    queryKey: ['social', 'discovery', 'deck', objetivo ?? '', sucursalId ?? '', genero ?? ''],
+    queryFn: () => discoveryService.deck(filters),
+    gcTime: 0,
+    staleTime: 0,
+  });
+
+  const [cards, setCards] = useState<GymDirectoryEntry[]>([]);
+  const [decided, setDecided] = useState<Decision[]>([]);
+
+  useEffect(() => {
+    acceptDealRef.current = true;
+    setMatchedEntry(null);
+    setDetailEntry(null);
+  }, [deckKey]);
+
+  useEffect(() => {
+    if (!deck.data) return;
+    if (!acceptDealRef.current) return;
+    acceptDealRef.current = false;
+    setCards(deck.data);
+    setCardsFilterKey(deckKey);
+  }, [deck.data, deck.dataUpdatedAt, deckKey]);
+
+  const visibleCards = cardsFilterKey === deckKey ? cards : [];
+  const topCard = visibleCards[0] ?? null;
+  const nextCard = visibleCards[1] ?? null;
+  const topCardId = topCard?.userId ?? null;
+  const photoCount = topCard ? Math.max(topCard.photos.length, topCard.photoUrl ? 1 : 0) : 0;
+  const photoIndex = photoCursor.cardId === topCardId ? photoCursor.index : 0;
+
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+
+  const resetCardPosition = useCallback(() => {
+    cancelAnimation(translateX);
+    cancelAnimation(translateY);
+    translateX.value = 0;
+    translateY.value = 0;
+  }, [translateX, translateY]);
+
+  useEffect(() => {
+    return () => {
+      cancelAnimation(translateX);
+      cancelAnimation(translateY);
+    };
+  }, [translateX, translateY]);
+
+  const swipe = useMutation({
+    mutationFn: async ({ entry, direction }: Decision) => {
+      if (entry.impressionId) await discoveryService.observeImpression(entry.impressionId);
+      return discoveryService.swipe(entry.userId, direction, entry.impressionId);
+    },
+    onSuccess: async (result, variables) => {
+      if (variables.filterKey === activeDeckKeyRef.current && result.matched) {
+        setMatchedEntry(variables.entry);
+      }
+      await refreshSocialRelationship(queryClient, { conversations: result.matched });
+    },
+    onError: async (error: Error, variables) => {
+      notify.error(error.message);
+      if (variables.filterKey !== activeDeckKeyRef.current) {
+        setDecided((current) => current.filter((item) => item.entry.userId !== variables.entry.userId));
+        return;
+      }
+      if (error instanceof ApiError && error.status === 409) {
+        setDecided((current) => current.filter((item) => item.entry.userId !== variables.entry.userId));
+        acceptDealRef.current = true;
+        await Promise.all([
+          deck.refetch(),
+          refreshSocialRelationship(queryClient, { conversations: true }),
+        ]);
+        return;
+      }
+      setCards((current) =>
+        current.some((c) => c.userId === variables.entry.userId)
+          ? current
+          : [variables.entry, ...current],
+      );
+      setCardsFilterKey(variables.filterKey);
+      setDecided((current) => current.filter((item) => item.entry.userId !== variables.entry.userId));
+    },
+  });
+
+  const undo = useMutation({
+    mutationFn: () => discoveryService.undoSwipe(),
+    onSuccess: async (result, variables: { filterKey: string }) => {
+      if (variables.filterKey !== activeDeckKeyRef.current) {
+        setDecided((current) => current.filter((item) => item.entry.userId !== result.targetId));
+        acceptDealRef.current = true;
+        await Promise.all([
+          deck.refetch(),
+          refreshSocialRelationship(queryClient, { conversations: result.unmatched }),
+        ]);
+        return;
+      }
+      const restored = decided.find(
+        (item) => item.entry.userId === result.targetId && item.filterKey === deckKey,
+      );
+      setDecided((current) => current.filter((item) => item.entry.userId !== result.targetId));
+      if (restored) {
+        setCards((current) => [restored.entry, ...current]);
+      } else {
+        acceptDealRef.current = true;
+        await deck.refetch();
+      }
+      resetCardPosition();
+      await refreshSocialRelationship(queryClient, { conversations: result.unmatched });
+      notify.success(result.unmatched ? 'Match deshecho.' : 'Decisión deshecha.');
     },
     onError: (error: Error) => notify.error(error.message),
   });
 
   const message = useMutation({
     mutationFn: (userId: string) => chatService.startConversation(userId),
-    onSuccess: (conversation) =>
-      router.push({ pathname: '/chat/[id]', params: { id: conversation.conversationId } }),
-    onError: (error: Error) => notify.error(error.message),
-  });
-
-  const withdraw = useMutation({
-    mutationFn: (connectionId: string) => socialService.withdrawConnection(connectionId),
-    onSuccess: async () => {
-      await refreshSocialRelationship(queryClient);
-      notify.success('Solicitud retirada.');
+    onSuccess: (conversation) => {
+      setMatchedEntry(null);
+      router.push({ pathname: '/chat/[id]', params: { id: conversation.conversationId } });
     },
     onError: (error: Error) => notify.error(error.message),
   });
 
-  const renderPerson: ListRenderItem<GymDirectoryEntry> = ({ item: entry, index }) => {
-    const shared = {
-      connecting: connect.isPending && connect.variables === entry.userId,
-      entry,
-      index,
-      messaging: message.isPending && message.variables === entry.userId,
-      onConnect: () => connect.mutate(entry.userId),
-      onMessage: () => message.mutate(entry.userId),
-      onViewProfile: () =>
-        router.push({
-          pathname: '/perfil/[userId]' as const,
-          params: {
-            userId: entry.userId,
-            displayName: entry.displayName,
-            photoUrl: entry.photoUrl ?? undefined,
-            objetivo: entry.objetivo ?? undefined,
-            branchName: entry.branchName ?? undefined,
-          },
-        }),
-      onWithdraw: () => {
-        if (entry.connectionId) withdraw.mutate(entry.connectionId);
-      },
-      withdrawing: withdraw.isPending && withdraw.variables === entry.connectionId,
-    };
+  const stepPhoto = useCallback(
+    (delta: number) => {
+      setPhotoCursor((current) => {
+        const base = current.cardId === topCardId ? current.index : 0;
+        const next = base + delta;
+        if (next < 0 || next >= photoCount) return current;
+        return { cardId: topCardId, index: next };
+      });
+    },
+    [photoCount, topCardId],
+  );
 
-    return viewMode === 'cards' ? (
-      <DirectoryPersonCard {...shared} />
-    ) : (
-      <DirectoryPersonRow {...shared} />
-    );
-  };
+  const commit = useCallback(
+    (direction: SwipeDirection) => {
+      const entry = visibleCards[0];
+      resetCardPosition();
+      if (deckKey !== activeDeckKeyRef.current || cardsFilterKey !== deckKey) return;
+      if (!entry) return;
+
+      if (!reduceMotion) {
+        void Haptics.impactAsync(
+          direction === 'LIKE'
+            ? Haptics.ImpactFeedbackStyle.Medium
+            : Haptics.ImpactFeedbackStyle.Light,
+        );
+      }
+      setCards((current) => current.slice(1));
+      setDecided((current) => [{ entry, direction, filterKey: deckKey }, ...current]);
+      swipe.mutate({ entry, direction, filterKey: deckKey });
+    },
+    [cardsFilterKey, deckKey, reduceMotion, resetCardPosition, swipe, visibleCards],
+  );
+
+  const threshold = width * DECISION_RATIO;
+
+  const flyOut = useCallback(
+    (direction: SwipeDirection) => {
+      if (reduceMotion) {
+        commit(direction);
+        return;
+      }
+      translateX.value = withTiming(
+        (direction === 'LIKE' ? 1 : -1) * width * 1.4,
+        { duration: EXIT_MS, easing: Easing.out(Easing.cubic) },
+        (finished) => {
+          if (finished) runOnJS(commit)(direction);
+        },
+      );
+    },
+    [commit, reduceMotion, translateX, width],
+  );
+
+  const redeal = useCallback(() => {
+    acceptDealRef.current = true;
+    void deck.refetch();
+  }, [deck]);
+
+  const pan = useMemo(
+    () =>
+      Gesture.Pan()
+        .enabled(Boolean(topCard) && !matchedEntry)
+        .onBegin(() => {
+          cancelAnimation(translateX);
+          cancelAnimation(translateY);
+        })
+        .onUpdate((event) => {
+          translateX.value = event.translationX;
+          translateY.value = event.translationY;
+        })
+        .onEnd((event) => {
+          const resolved =
+            Math.abs(event.translationX) > threshold ||
+            Math.abs(event.velocityX) > FLING_VELOCITY;
+          if (!resolved) {
+            translateX.value = withSpring(0, CARD_SPRING);
+            translateY.value = withSpring(0, CARD_SPRING);
+            return;
+          }
+          const direction: SwipeDirection = event.translationX > 0 ? 'LIKE' : 'PASS';
+          if (reduceMotion) {
+            runOnJS(commit)(direction);
+            return;
+          }
+          translateY.value = withTiming(event.translationY, { duration: EXIT_MS });
+          translateX.value = withTiming(
+            (direction === 'LIKE' ? 1 : -1) * width * 1.4,
+            { duration: EXIT_MS, easing: Easing.out(Easing.cubic) },
+            (finished) => {
+              if (finished) runOnJS(commit)(direction);
+            },
+          );
+        }),
+    [commit, matchedEntry, reduceMotion, threshold, topCard, translateX, translateY, width],
+  );
+
+  const tap = useMemo(
+    () =>
+      Gesture.Tap()
+        .enabled(Boolean(topCard) && !matchedEntry)
+        .maxDuration(TAP_MAX_MS)
+        .onEnd((event, success) => {
+          if (!success) return;
+          if (stage.width <= 0 || stage.height <= 0) return;
+
+          // Corner tap for detail profile
+          const insideInfo =
+            event.x >= stage.width - 70 && event.y >= stage.height - 70;
+          if (insideInfo) {
+            runOnJS(setDetailEntry)(visibleCards[0] ?? null);
+            return;
+          }
+
+          if (photoCount < 2) return;
+          runOnJS(stepPhoto)(event.x < stage.width * BACK_ZONE_RATIO ? -1 : 1);
+        }),
+    [matchedEntry, photoCount, stage.height, stage.width, stepPhoto, topCard, visibleCards],
+  );
+
+  const deckGesture = useMemo(() => Gesture.Exclusive(pan, tap), [pan, tap]);
+
+  const cardStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { rotateZ: reduceMotion ? '0deg' : `${(translateX.value / width) * MAX_ROTATION_DEG}deg` },
+    ],
+  }));
+
+  const nextCardStyle = useAnimatedStyle(() => {
+    const progress = Math.min(Math.abs(translateX.value) / threshold, 1);
+    return {
+      transform: [{ scale: 0.94 + progress * 0.06 }],
+      opacity: 0.65 + progress * 0.35,
+    };
+  });
+
+  const currentPhotoUrl = useMemo(() => {
+    if (!topCard) return null;
+    if (topCard.photos.length > 0) {
+      return topCard.photos[photoIndex]?.url ?? topCard.photoUrl;
+    }
+    return topCard.photoUrl;
+  }, [photoIndex, topCard]);
+
+  const nextCardPhotoUrl = useMemo(() => {
+    if (!nextCard) return null;
+    return nextCard.photos[0]?.url ?? nextCard.photoUrl;
+  }, [nextCard]);
 
   return (
-    <ListScreen<GymDirectoryEntry>
-      data={directory.isError ? [] : directory.data ?? []}
-      empty={
-        directory.isPending ? (
-          <Skeleton height={viewMode === 'cards' ? 420 : 220} />
-        ) : directory.isError ? (
-          <ErrorState error={directory.error} onRetry={() => void directory.refetch()} />
-        ) : (
-          <EmptyState
-            icon="people-outline"
-            message="Ajusta los filtros o vuelve más tarde."
-            title="Sin resultados"
-          />
-        )
-      }
-      header={
-        <>
-            <TourTarget id="comunidad.actions">
-              <CommunityHeader onOpenPreferences={() => setPrefsVisible(true)} />
-            </TourTarget>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* Tinder Top Header Bar */}
+      <View
+        style={{
+          paddingTop: Math.max(insets.top, spacing.sm),
+          paddingHorizontal: spacing.md,
+          paddingBottom: spacing.xs,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          zIndex: 10,
+        }}
+      >
+        {/* Left: Preferences Filters Icon */}
+        <PressableScale
+          accessibilityLabel="Preferencias de búsqueda"
+          onPress={() => setPrefsVisible(true)}
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: radii.full,
+            backgroundColor: colors.surfaceHigh,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderWidth: 1,
+            borderColor: colors.borderSubtle,
+          }}
+        >
+          <Ionicons color={colors.text} name="options-outline" size={iconSizes.md} />
+        </PressableScale>
 
-            <StoriesBar />
-
-            <TourTarget id="comunidad.podium">
-              <PodiumPreview />
-            </TourTarget>
-
-            <Card
-              accessibilityLabel="Explorar Directorio de Gimnasios, Suplementos y Coaches"
-              onPress={() => router.push('/directorio')}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
-                  <View
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: radii.md,
-                      backgroundColor: colors.surfaceHigh,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                    }}
-                  >
-                    <Ionicons color={colors.volt} name="storefront" size={iconSizes.md} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
-                      Directorio GymSheet
-                    </Text>
-                    <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-                      Gimnasios, tiendas de nutrición y coaches verificados
-                    </Text>
-                  </View>
-                </View>
-                <Ionicons color={colors.textMuted} name="chevron-forward" size={iconSizes.sm} />
-              </View>
-            </Card>
-
-            <Input
-              autoCapitalize="none"
-              autoCorrect={false}
-              icon="search-outline"
-              label="Buscar"
-              labelHidden
-              onChangeText={setQ}
-              placeholder="Nombre de un socio…"
-              returnKeyType="search"
-              value={q}
-            />
-
-            <SearchPreferencesSheet
-              branches={branches}
-              filters={{ objetivo, setObjetivo, sucursalId, setSucursalId, genero, setGenero }}
-              onClose={() => setPrefsVisible(false)}
-              onOpenBlocked={() => {
-                setPrefsVisible(false);
-                router.push('/personas-bloqueadas' as Href);
-              }}
-              visible={prefsVisible}
-            />
-
-            <View
+        {/* Center: Category Pills (Tinder-style) */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: colors.surfaceLow,
+            padding: 3,
+            borderRadius: radii.full,
+            borderWidth: 1,
+            borderColor: colors.borderSubtle,
+            gap: 2,
+          }}
+        >
+          <Pressable
+            onPress={() => {
+              setCategoryPill('foryou');
+              setObjetivo(null);
+            }}
+            style={{
+              paddingHorizontal: spacing.md,
+              paddingVertical: 6,
+              borderRadius: radii.full,
+              backgroundColor: categoryPill === 'foryou' ? colors.surfaceHigh : 'transparent',
+            }}
+          >
+            <Text
               style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: spacing.md,
+                color: categoryPill === 'foryou' ? colors.text : colors.textMuted,
+                fontSize: fontSizes.xs,
+                fontWeight: categoryPill === 'foryou' ? '700' : '500',
               }}
             >
-              <Text
-                accessibilityRole="header"
+              Para ti
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => {
+              setCategoryPill('goal');
+              setObjetivo('HIPERTROFIA');
+            }}
+            style={{
+              paddingHorizontal: spacing.md,
+              paddingVertical: 6,
+              borderRadius: radii.full,
+              backgroundColor: categoryPill === 'goal' ? colors.surfaceHigh : 'transparent',
+            }}
+          >
+            <Text
+              style={{
+                color: categoryPill === 'goal' ? colors.text : colors.textMuted,
+                fontSize: fontSizes.xs,
+                fontWeight: categoryPill === 'goal' ? '700' : '500',
+              }}
+            >
+              Mismo objetivo
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* Right: Messages + 3-dots Menu */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+          {/* Chat Icon with Unread Badge */}
+          <PressableScale
+            accessibilityLabel="Mensajes y Solicitudes"
+            onPress={() => router.push('/comunidad-mensajes')}
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: radii.full,
+              backgroundColor: colors.surfaceHigh,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: 1,
+              borderColor: colors.borderSubtle,
+            }}
+          >
+            <Ionicons color={colors.text} name="chatbubble-ellipses-outline" size={iconSizes.md} />
+            {hasPendingReceived ? (
+              <View
                 style={{
-                  color: colors.textMuted,
-                  fontSize: fontSizes.xs,
-                  fontWeight: semibold,
-                  letterSpacing: fontSizes.xs * 0.1,
-                  textTransform: 'uppercase',
+                  position: 'absolute',
+                  top: 7,
+                  right: 7,
+                  width: 9,
+                  height: 9,
+                  borderRadius: radii.full,
+                  backgroundColor: colors.volt,
+                  borderWidth: 2,
+                  borderColor: colors.background,
                 }}
-              >
-                Socios
-              </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-                {/* Tercera forma de mirar el mismo catálogo, pero no un modo de esta
-                    pantalla: la baraja se decide arrastrando y ocupa la pantalla
-                    entera, así que es un destino, no un ajuste del listado. Va junto
-                    al conmutador porque es donde se elige cómo mirar, y se lleva los
-                    filtros puestos para no reabrir un gimnasio recién acotado. */}
-                <TourTarget id="comunidad.discover">
-                <PressableScale
-                  accessibilityLabel="Descubrir socios uno a uno"
-                  onPress={() =>
-                    router.push({
-                      pathname: '/descubrir',
-                      params: {
-                        objetivo: objetivo ?? undefined,
-                        sucursalId: sucursalId ?? undefined,
-                        genero: genero ?? undefined,
-                      },
-                    })
-                  }
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: spacing.xs,
-                    height: 38,
-                    paddingHorizontal: spacing.md,
-                    borderRadius: radii.full,
-                    borderWidth: 1,
-                    borderColor: colors.volt,
+              />
+            ) : null}
+          </PressableScale>
+
+          {/* 3-Dots Menu Button */}
+          <PressableScale
+            accessibilityLabel="Opciones de Comunidad"
+            onPress={() => setOverflowVisible(true)}
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: radii.full,
+              backgroundColor: colors.surfaceHigh,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: 1,
+              borderColor: colors.borderSubtle,
+            }}
+          >
+            <Ionicons color={colors.text} name="ellipsis-horizontal" size={iconSizes.md} />
+          </PressableScale>
+        </View>
+      </View>
+
+      {/* Main Tinder Card Deck Canvas */}
+      <View
+        onLayout={(e) => setStage(e.nativeEvent.layout)}
+        style={{
+          flex: 1,
+          paddingHorizontal: spacing.sm,
+          paddingTop: spacing.xs,
+          paddingBottom: spacing.xs,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {deck.isPending ? (
+          <View style={{ flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator color={colors.volt} size="large" />
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, marginTop: spacing.md }}>
+              Cargando compañeros de entreno…
+            </Text>
+          </View>
+        ) : deck.isError ? (
+          <View style={{ flex: 1, width: '100%', justifyContent: 'center', padding: spacing.lg }}>
+            <ErrorState error={deck.error} onRetry={redeal} />
+          </View>
+        ) : topCard ? (
+          <View style={{ width: '100%', height: '100%', position: 'relative' }}>
+            {/* Background Card (next card) */}
+            {nextCard ? (
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  StyleSheet.absoluteFill,
+                  {
+                    borderRadius: 24,
+                    overflow: 'hidden',
                     backgroundColor: colors.surfaceLow,
+                    borderWidth: 1,
+                    borderColor: colors.borderSubtle,
+                  },
+                  nextCardStyle,
+                ]}
+              >
+                {nextCardPhotoUrl ? (
+                  <Image
+                    cachePolicy="memory-disk"
+                    contentFit="cover"
+                    priority="low"
+                    recyclingKey={nextCardPhotoUrl}
+                    source={{ uri: nextCardPhotoUrl }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      StyleSheet.absoluteFill,
+                      {
+                        backgroundColor: colors.surfaceHigh,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      },
+                    ]}
+                  >
+                    <Text style={{ color: colors.textMuted, fontSize: fontSizes['2xl'], fontWeight: '700' }}>
+                      {initialsOf(nextCard.displayName, undefined)}
+                    </Text>
+                  </View>
+                )}
+                <LinearGradient colors={SCRIM_BOTTOM} locations={SCRIM_BOTTOM_STOPS} style={StyleSheet.absoluteFill} />
+              </Animated.View>
+            ) : null}
+
+            {/* Active Swipable Card */}
+            <GestureDetector gesture={deckGesture}>
+              <Animated.View
+                style={[
+                  StyleSheet.absoluteFill,
+                  {
+                    borderRadius: 26,
+                    overflow: 'hidden',
+                    backgroundColor: colors.surfaceLow,
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 255, 255, 0.12)',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 10 },
+                    shadowOpacity: 0.45,
+                    shadowRadius: 20,
+                    elevation: 10,
+                  },
+                  cardStyle,
+                ]}
+              >
+                {/* Photo or Initials Avatar */}
+                {currentPhotoUrl ? (
+                  <Image
+                    cachePolicy="memory-disk"
+                    contentFit="cover"
+                    priority="high"
+                    recyclingKey={currentPhotoUrl}
+                    source={{ uri: currentPhotoUrl }}
+                    style={StyleSheet.absoluteFill}
+                    transition={140}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      StyleSheet.absoluteFill,
+                      {
+                        backgroundColor: colors.surfaceHigh,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      },
+                    ]}
+                  >
+                    <View
+                      style={{
+                        width: 104,
+                        height: 104,
+                        borderRadius: radii.full,
+                        backgroundColor: colors.surfaceHighest,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text style={{ color: colors.textSecondary, fontSize: fontSizes['2xl'], fontWeight: '700' }}>
+                        {initialsOf(topCard.displayName, undefined)}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {/* Top Multi-Photo Story Bars */}
+                {photoCount > 1 ? (
+                  <>
+                    <LinearGradient colors={SCRIM_TOP} pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 60 }} />
+                    <View
+                      pointerEvents="none"
+                      style={{
+                        position: 'absolute',
+                        top: 14,
+                        left: 14,
+                        right: 14,
+                        flexDirection: 'row',
+                        gap: 5,
+                      }}
+                    >
+                      {Array.from({ length: photoCount }).map((_, idx) => (
+                        <View
+                          key={idx}
+                          style={{
+                            flex: 1,
+                            height: 3,
+                            borderRadius: radii.full,
+                            backgroundColor:
+                              idx === photoIndex ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)',
+                            shadowColor: idx === photoIndex ? '#FFFFFF' : 'transparent',
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: idx === photoIndex ? 0.6 : 0,
+                            shadowRadius: 3,
+                          }}
+                        />
+                      ))}
+                    </View>
+                  </>
+                ) : null}
+
+                {/* Decision Stamps */}
+                <DecisionStamp
+                  color={colors.volt}
+                  label="ME INTERESA"
+                  side="left"
+                  threshold={threshold}
+                  translateX={translateX}
+                />
+                <DecisionStamp
+                  color={colors.danger}
+                  label="PASO"
+                  side="right"
+                  threshold={threshold}
+                  translateX={translateX}
+                />
+
+                {/* Bottom Gradient Overlay & Member Info (Identical to Tinder Image 2) */}
+                <LinearGradient
+                  colors={SCRIM_BOTTOM}
+                  locations={SCRIM_BOTTOM_STOPS}
+                  pointerEvents="box-none"
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    paddingHorizontal: spacing.lg,
+                    paddingBottom: spacing.lg,
+                    paddingTop: spacing['2xl'],
                   }}
                 >
-                  <Ionicons color={colors.volt} name="flame-outline" size={iconSizes.md} />
-                  <Text style={{ color: colors.volt, fontSize: fontSizes.sm, fontWeight: semibold }}>
-                    Descubrir
-                  </Text>
-                </PressableScale>
-                </TourTarget>
-                <DirectoryViewToggle mode={viewMode} onChange={setViewMode} />
-              </View>
+                  <View style={{ gap: spacing.xs }}>
+                    {/* Name, Age, Verified badge and Chevron Up info */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                        <Text
+                          numberOfLines={1}
+                          style={{
+                            color: '#FFFFFF',
+                            fontSize: 28,
+                            fontWeight: '800',
+                            letterSpacing: -0.6,
+                          }}
+                        >
+                          {topCard.displayName}
+                        </Text>
+
+                        {typeof topCard.age === 'number' ? (
+                          <Text
+                            style={{
+                              color: 'rgba(255, 255, 255, 0.85)',
+                              fontSize: 24,
+                              fontWeight: '400',
+                            }}
+                          >
+                            {topCard.age}
+                          </Text>
+                        ) : null}
+
+                        {/* Verified Checkmark */}
+                        <Ionicons color="#38BDF8" name="checkmark-circle" size={22} />
+                      </View>
+
+                      {/* Info Chevron Up Button */}
+                      <PressableScale
+                        accessibilityLabel={`Ver perfil completo de ${topCard.displayName}`}
+                        onPress={() => {
+                          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          setDetailEntry(topCard);
+                        }}
+                        style={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: radii.full,
+                          backgroundColor: 'rgba(255, 255, 255, 0.18)',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderWidth: 1,
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                        }}
+                      >
+                        <Ionicons color="#FFFFFF" name="chevron-up" size={18} />
+                      </PressableScale>
+                    </View>
+
+                    {/* Chips / Metadata Row */}
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                      {topCard.branchName ? (
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 4,
+                            paddingHorizontal: 10,
+                            paddingVertical: 4,
+                            borderRadius: radii.full,
+                            backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                            borderWidth: 1,
+                            borderColor: 'rgba(255, 255, 255, 0.14)',
+                          }}
+                        >
+                          <Ionicons color="rgba(255,255,255,0.85)" name="location-outline" size={13} />
+                          <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '600' }}>
+                            {topCard.branchName}
+                          </Text>
+                        </View>
+                      ) : null}
+
+                      {topCard.objetivo ? (
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 4,
+                            paddingHorizontal: 10,
+                            paddingVertical: 4,
+                            borderRadius: radii.full,
+                            backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                            borderWidth: 1,
+                            borderColor: 'rgba(255, 255, 255, 0.14)',
+                          }}
+                        >
+                          <Ionicons color={colors.volt} name="barbell-outline" size={13} />
+                          <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '600' }}>
+                            {TRAINING_GOAL_LABEL[topCard.objetivo] ?? topCard.objetivo}
+                          </Text>
+                        </View>
+                      ) : null}
+
+                      {topCard.levelCode ? (
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 4,
+                            paddingHorizontal: 10,
+                            paddingVertical: 4,
+                            borderRadius: radii.full,
+                            backgroundColor: 'rgba(204, 255, 0, 0.18)',
+                            borderWidth: 1,
+                            borderColor: 'rgba(204, 255, 0, 0.4)',
+                          }}
+                        >
+                          <Ionicons color={colors.volt} name="trophy-outline" size={13} />
+                          <Text style={{ color: colors.volt, fontSize: 12, fontWeight: '700', fontVariant: ['tabular-nums'] }}>
+                            {levelTitle(topCard.levelCode)}
+                            {typeof topCard.points === 'number' ? ` · ${topCard.points} pts` : ''}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
+                  </View>
+                </LinearGradient>
+              </Animated.View>
+            </GestureDetector>
+          </View>
+        ) : (
+          /* Empty State: Out of cards */
+          <View
+            style={{
+              flex: 1,
+              width: '100%',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: spacing.xl,
+              gap: spacing.lg,
+            }}
+          >
+            <View
+              style={{
+                width: 96,
+                height: 96,
+                borderRadius: radii.full,
+                backgroundColor: colors.surfaceHigh,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 2,
+                borderColor: colors.volt,
+              }}
+            >
+              <Ionicons color={colors.volt} name="sparkles" size={42} />
             </View>
 
-        </>
-      }
-      itemGap={viewMode === 'cards' ? spacing.md : 0}
-      keyExtractor={(entry) => entry.userId}
-      onRefresh={() => {
-        void directory.refetch();
-        // Las historias ya no se sondean: refrescar la pantalla también las trae.
-        void queryClient.invalidateQueries({ queryKey: ['stories', 'feed'] });
-      }}
-      refreshing={directory.isFetching}
-      renderItem={renderPerson}
-    />
+            <View style={{ alignItems: 'center', gap: spacing.xs }}>
+              <Text
+                style={{
+                  color: colors.text,
+                  fontSize: fontSizes.xl,
+                  fontWeight: '700',
+                  textAlign: 'center',
+                }}
+              >
+                ¡Has visto a todos por ahora!
+              </Text>
+              <Text
+                style={{
+                  color: colors.textMuted,
+                  fontSize: fontSizes.sm,
+                  textAlign: 'center',
+                  lineHeight: 20,
+                  maxWidth: 280,
+                }}
+              >
+                Ajusta tus filtros de objetivo o sede para encontrar a más deportistas listos para entrenar.
+              </Text>
+            </View>
+
+            <View style={{ width: '100%', maxWidth: 280, gap: spacing.sm }}>
+              <Button icon="reload-outline" label="Explorar de nuevo" onPress={redeal} variant="primary" />
+              <Button icon="options-outline" label="Cambiar filtros" onPress={() => setPrefsVisible(true)} variant="ghost" />
+            </View>
+          </View>
+        )}
+      </View>
+
+      {/* Tinder Bottom 5-Action Floating Bar (Matching Image 2) */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-evenly',
+          paddingHorizontal: spacing.lg,
+          paddingTop: spacing.xs,
+          paddingBottom: 84,
+          zIndex: 10,
+        }}
+      >
+        {/* 1. Rewind / Undo Button (Yellow / Amber) */}
+        <PressableScale
+          accessibilityLabel="Deshacer último swipe"
+          disabled={decided.length === 0 || undo.isPending}
+          onPress={() => {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            undo.mutate({ filterKey: deckKey });
+          }}
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: radii.full,
+            backgroundColor: 'rgba(24, 32, 47, 0.85)',
+            borderWidth: 1.5,
+            borderColor: 'rgba(245, 158, 11, 0.55)',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: decided.length === 0 || undo.isPending ? 0.35 : 1,
+            shadowColor: '#F59E0B',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+          }}
+        >
+          {undo.isPending ? (
+            <ActivityIndicator color="#F59E0B" size="small" />
+          ) : (
+            <Ionicons color="#F59E0B" name="reload-outline" size={22} />
+          )}
+        </PressableScale>
+
+        {/* 2. Pass / X Button (Red) */}
+        <PressableScale
+          accessibilityLabel="No me interesa"
+          disabled={!topCard || swipe.isPending}
+          onPress={() => {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            flyOut('PASS');
+          }}
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: radii.full,
+            backgroundColor: 'rgba(32, 18, 24, 0.9)',
+            borderWidth: 2,
+            borderColor: '#EF4444',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: !topCard ? 0.4 : 1,
+            shadowColor: '#EF4444',
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.3,
+            shadowRadius: 12,
+          }}
+        >
+          <Ionicons color="#EF4444" name="close" size={34} />
+        </PressableScale>
+
+        {/* 3. Super Like / Star Button (Cyan / Blue) */}
+        <PressableScale
+          accessibilityLabel="Super Like"
+          disabled={!topCard || swipe.isPending}
+          onPress={() => {
+            void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            flyOut('LIKE');
+          }}
+          style={{
+            width: 50,
+            height: 50,
+            borderRadius: radii.full,
+            backgroundColor: 'rgba(15, 30, 48, 0.85)',
+            borderWidth: 1.5,
+            borderColor: '#06B6D4',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: !topCard ? 0.4 : 1,
+            shadowColor: '#06B6D4',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 8,
+          }}
+        >
+          <Ionicons color="#06B6D4" name="star" size={24} />
+        </PressableScale>
+
+        {/* 4. Like / Heart Button (Volt / Green) */}
+        <PressableScale
+          accessibilityLabel="Me interesa entrenar"
+          disabled={!topCard || swipe.isPending}
+          onPress={() => {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+            flyOut('LIKE');
+          }}
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: radii.full,
+            backgroundColor: 'rgba(25, 38, 18, 0.9)',
+            borderWidth: 2,
+            borderColor: colors.volt,
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: !topCard ? 0.4 : 1,
+            shadowColor: colors.volt,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.35,
+            shadowRadius: 14,
+          }}
+        >
+          <Ionicons color={colors.volt} name="heart" size={34} />
+        </PressableScale>
+
+        {/* 5. Direct Chat / Flash Button (Purple) */}
+        <PressableScale
+          accessibilityLabel="Enviar mensaje directo"
+          disabled={!topCard || message.isPending}
+          onPress={() => {
+            if (topCard) {
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              message.mutate(topCard.userId);
+            }
+          }}
+          style={{
+            width: 50,
+            height: 50,
+            borderRadius: radii.full,
+            backgroundColor: 'rgba(30, 20, 48, 0.85)',
+            borderWidth: 1.5,
+            borderColor: '#A855F7',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: !topCard ? 0.4 : 1,
+            shadowColor: '#A855F7',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 8,
+          }}
+        >
+          {message.isPending ? (
+            <ActivityIndicator color="#A855F7" size="small" />
+          ) : (
+            <Ionicons color="#A855F7" name="flash" size={22} />
+          )}
+        </PressableScale>
+      </View>
+
+      {/* 3-Dots Menu Sheet (Consolidated Community Menu) */}
+      <CommunityOverflowSheet
+        onClose={() => setOverflowVisible(false)}
+        onOpenTopGym={() => setTopGymVisible(true)}
+        visible={overflowVisible}
+      />
+
+      {/* Top 15 Leaderboard Modal */}
+      <TopGymModal onClose={() => setTopGymVisible(false)} visible={topGymVisible} />
+
+      {/* Preferences Sheet */}
+      <SearchPreferencesSheet
+        branches={branchList}
+        filters={{ objetivo, setObjetivo, sucursalId, setSucursalId, genero, setGenero }}
+        onClose={() => setPrefsVisible(false)}
+        onOpenBlocked={() => {
+          setPrefsVisible(false);
+          router.push('/personas-bloqueadas');
+        }}
+        visible={prefsVisible}
+      />
+
+      {/* Full Profile Sheet */}
+      <ProfileDetailSheet entry={detailEntry} onClose={() => setDetailEntry(null)} />
+
+      {/* Full-screen Match Celebration Modal */}
+      <MatchModal
+        matchedEntry={matchedEntry}
+        messaging={message.isPending}
+        myName={principal?.nombreCompleto ?? 'Tú'}
+        myPhotoUrl={myPhotos.data?.[0]?.url ?? null}
+        onClose={() => setMatchedEntry(null)}
+        onMessage={() => {
+          if (matchedEntry) message.mutate(matchedEntry.userId);
+        }}
+        reduceMotion={Boolean(reduceMotion)}
+      />
+    </View>
   );
 }

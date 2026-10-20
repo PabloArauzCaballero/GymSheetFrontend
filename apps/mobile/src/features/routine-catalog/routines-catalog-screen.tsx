@@ -181,20 +181,54 @@ export function RoutinesCatalogScreen() {
   // Lo poco frecuente de la cabecera va al menú ⋯ (2026-10-18): las cuatro
   // fichas y el «?» ocupaban la mitad de arriba, que ahora es de la semana.
   const menu: MoreAction[] = [
-    { key: 'create', label: 'Crear rutina', icon: 'add-circle-outline', onPress: () => router.push('/routines/new') },
-    { key: 'exercises', label: 'Explorar ejercicios', icon: 'search-outline', onPress: () => router.push(routes.exercises()) },
+    {
+      key: 'create',
+      label: 'Crear rutina',
+      icon: 'add-circle',
+      description: 'Diseña una rutina desde cero',
+      onPress: () => router.push('/routines/new'),
+    },
+    {
+      key: 'exercises',
+      label: 'Explorar ejercicios',
+      icon: 'barbell',
+      description: 'Catálogo con técnica y músculos',
+      onPress: () => router.push(routes.exercises()),
+    },
     {
       key: 'download-progress',
       label: 'Descargar progreso',
-      icon: 'download-outline',
+      icon: 'cloud-download',
+      description: 'Exportar historial en Excel, CSV o PDF',
       afterClose: true,
       onPress: () => setDownloadWizardOpen(true),
     },
     ...(programs.data && !programs.data.cardio
-      ? [{ key: 'cardio', label: 'Plan de cardio', icon: 'pulse-outline' as const, onPress: () => router.push('/routines/cardio/new') }]
+      ? [
+          {
+            key: 'cardio',
+            label: 'Plan de cardio',
+            icon: 'pulse' as const,
+            description: 'Añadir sesiones aeróbicas',
+            onPress: () => router.push('/routines/cardio/new'),
+          },
+        ]
       : []),
-    { key: 'music', label: 'Música', icon: 'musical-notes-outline', onPress: () => router.push('/routines/musica') },
-    { key: 'guide', label: 'Ver la guía de esta pantalla', icon: 'help-circle-outline', afterClose: true, onPress: () => openTour('routines') },
+    {
+      key: 'music',
+      label: 'Música',
+      icon: 'musical-notes',
+      description: 'Playlists y ritmos para entrenar',
+      onPress: () => router.push('/routines/musica'),
+    },
+    {
+      key: 'guide',
+      label: 'Ver la guía de esta pantalla',
+      icon: 'help-circle',
+      description: 'Tour interactivo de la sección',
+      afterClose: true,
+      onPress: () => openTour('routines'),
+    },
   ];
   const officialCards = withOfficial ? (official.data?.pages.flatMap((page) => page.items) ?? []) : [];
   const ownCards = own.data?.pages.flatMap((page) => page.items) ?? [];

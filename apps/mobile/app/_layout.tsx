@@ -5,11 +5,13 @@ import { BricolageGrotesque_700Bold } from '@expo-google-fonts/bricolage-grotesq
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
+import { LogBox, View } from 'react-native';
 import { BrandIntro, useBrandIntroPending } from '@/components/brand-intro';
 import { AppProviders } from '@/providers/app-providers';
 import { useAuthStore } from '@/state/auth-store';
 import { colors, useActiveTenant } from '@/theme';
+
+LogBox.ignoreAllLogs();
 
 export default function RootLayout() {
   const hydrate = useAuthStore((state) => state.hydrate);
