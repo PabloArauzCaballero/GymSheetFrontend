@@ -47,6 +47,10 @@ export const progressionLevelSchema = z.object({
   /** Nombre de icono de Ionicons; ambos clientes usan ese mismo juego. */
   icon: z.string(),
   color: z.string(),
+  /** El lugar del gimnasio de esta fase («La Jaula»). Un servidor anterior no lo manda. */
+  arena: z.string().nullable().default(null),
+  /** Hitos típicos de la fase, orientativos y en orden. */
+  milestones: z.array(z.string()).default([]),
   unlocked: z.boolean(),
   current: z.boolean(),
 });

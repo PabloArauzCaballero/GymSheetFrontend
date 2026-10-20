@@ -14,7 +14,7 @@ import {
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { Card, ScreenHeader, ScrollScreen, Section, useResponsive } from '@/components/layout';
 import { BackLink } from '@/components/nav';
-import { PathNode, RankHero } from '@/components/progression';
+import { RankHero } from '@/components/progression';
 import { BadgeChainTile, ChainSheet, type BadgeChain } from '@/components/progression/chains';
 import { ChallengesList } from '@/components/progression/challenges';
 import { LeaderboardSection } from '@/components/progression/leaderboard';
@@ -26,13 +26,15 @@ import { StreakCard } from '@/components/progression/streak';
 import { PointsRulesSheet, usePointRules } from '@/components/points-rules-sheet';
 import { RarityLegend } from '@/components/rarity-legend';
 import { TourTarget, useScreenTour } from '@/components/tour';
+import { ArenaTeaser } from '@/features/arena-road/arena-teaser';
 import { useAuthStore } from '@/state/auth-store';
 import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, semibold, spacing } from '@/theme';
 
 /**
  * La senda: el camino hacia tu imagen ideal, ordenada por **urgencia**.
  *
- * 1. **Quién eres ahora** y cuánto falta para lo siguiente.
+ * 1. **Quién eres ahora** y cuánto falta para lo siguiente, y **tu arena**:
+ *    la puerta al camino de arenas (`/camino`).
  * 2. **Retos de la semana**: lo único que se puede hacer *ya*, con su cuenta
  *    atrás al lunes. Es lo que trae de vuelta (Zeigarnik).
  * 3. **Mis premios**: lo real que te llevas, con el código para recepción. Solo
@@ -40,7 +42,7 @@ import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, semibold, s
  * 4. **Racha y comodines**, con los días de descanso pegados: son la excepción.
  * 5. **Lo más cerca**: las insignias que casi tienes (gradiente de meta).
  * 6. **La colección**, agrupada en cadenas: una ficha por criterio.
- * 7. **El camino** entero, **lo que suma** y **la clasificación**: contexto.
+ * 7. **Lo que suma** y **la clasificación**: contexto.
  *
  * Ni un solo nombre de rango, reto o premio está escrito aquí: todo llega del
  * servidor, porque el catálogo lo administra el gimnasio.
@@ -203,6 +205,12 @@ export default function TrayectoriaScreen() {
           </Text>
         </Pressable>
 
+        <TourTarget id="trayectoria.path">
+          <Section icon="trail-sign-outline" title="El camino">
+            <ArenaTeaser path={data.path} points={data.points} />
+          </Section>
+        </TourTarget>
+
         {pendingLevel ? (
           // El aviso del ascenso, no el ascenso: un rango nuevo en la cabecera
           // se confunde con el de siempre.
@@ -275,16 +283,6 @@ export default function TrayectoriaScreen() {
                 </View>
               ))}
             </View>
-          </Section>
-        </TourTarget>
-
-        <TourTarget id="trayectoria.path">
-          <Section icon="trail-sign-outline" title="El camino">
-            <Card style={{ paddingBottom: spacing.xs }}>
-              {data.path.map((level, index) => (
-                <PathNode isLast={index === data.path.length - 1} key={level.code} level={level} points={data.points} />
-              ))}
-            </Card>
           </Section>
         </TourTarget>
 

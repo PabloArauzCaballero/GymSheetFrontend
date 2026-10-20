@@ -47,6 +47,7 @@ export default function AppLayout() {
         <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="trayectoria" />
+        <Stack.Screen name="camino" />
         {/* Entrenos. Era la cuarta pestaña hasta que Comunidad hizo seis y
             «Comunidad» dejó de caber en la barra. Baja aquí por la misma regla
             que el resto: es historial que se consulta, no un destino diario. Se

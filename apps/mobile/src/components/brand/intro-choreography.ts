@@ -12,11 +12,22 @@
  * | t (ms)      | Acto                                                        |
  * |-------------|-------------------------------------------------------------|
  * | 0–120       | Relevo: idéntico píxel a píxel al splash nativo             |
- * | 120–740     | 1. La «R» del icono se transforma en la «R» del logotipo    |
- * | 160–780     |    El gesto jade la sigue con 40 ms de arrastre             |
- * | 520–1140    | 2. «E», «P», «P» salen de detrás de la «R», escalonadas     |
- * | 1180–1820   | 3. Un destello cruza el logotipo, recortado a sus letras    |
- * | 1820 →      | 4. Salida (la decide la app: cuando la sesión está lista)   |
+ * | 120–420     | 1. Carga: la «R» crece un 6 % y se enciende la luz jade     |
+ * | 380–1000    | 2. La «R» se transforma en la del logotipo y ocupa su sitio |
+ * | 420–1040    |    El gesto jade la sigue con 40 ms de arrastre             |
+ * | 700–1340    | 3. «E», «P», «P» se levantan pegadas a la «R», escalonadas  |
+ * | 1360–1960   | 4. Un destello cruza el logotipo, recortado a sus letras    |
+ * | 1960 →      | 5. Salida en iris (la decide la app: con la sesión lista)   |
+ *
+ * **Por qué la carga.** La «R» del splash es más grande que la del logotipo:
+ * sin nada antes, lo primero que hacía la cortinilla era *encoger*, y se leía
+ * como un bajón. Con un pequeño crecimiento y la luz encendiéndose detrás, el
+ * encogimiento posterior se lee como lo que es: la letra yendo a su sitio.
+ *
+ * **Por qué el iris.** La salida anterior fundía el logotipo y el fondo a la
+ * vez sobre la app, y a mitad de camino todo era un gris lavado. Ahora el fondo
+ * no se funde: se abre un círculo desde el centro con un filo jade, la app
+ * aparece dentro y el logotipo avanza hacia quien mira mientras se apaga.
  */
 import {
   REPP_MARK_BODY,
@@ -45,20 +56,26 @@ export const SPLASH_UNIT = (SPLASH_IMAGE_WIDTH / 120) * SPLASH_MARK_SCALE;
 
 export const INTRO = {
   handoff: 120,
-  morphAt: 120,
+  /** Carga: la «R» crece antes de moverse. */
+  anticipateIn: 300,
+  anticipateScale: 0.06,
+  morphAt: 380,
   morphIn: 620,
   /** El gesto llega un poco después que la «R»: arrastre, no bloque. */
   tickLag: 40,
-  lettersAt: 560,
-  letterIn: 560,
-  letterStagger: 70,
-  sheenAt: 1180,
-  sheenIn: 640,
+  lettersAt: 700,
+  letterIn: 520,
+  letterStagger: 60,
+  sheenAt: 1360,
+  sheenIn: 600,
+  /** La luz jade detrás: se enciende en la carga y se queda a media potencia. */
+  glowPeak: 0.55,
+  glowRest: 0.32,
   /** Fin de la parte animada: desde aquí la escena está quieta y legible. */
-  main: 1820,
-  exitIn: 360,
+  main: 1960,
+  exitIn: 560,
   /** Golpe háptico: cuando la última «P» toca su sitio. */
-  hapticAt: 1000,
+  hapticAt: 1200,
 } as const;
 
 /* -------------------------------------------------------------------------- */
@@ -264,25 +281,74 @@ export function introLayout(width: number, height: number, markUnit: number, wor
   };
 }
 
-/** Ancho del logotipo en la app: presente sin gritar. */
+/**
+ * Ancho del logotipo en la app: presente sin gritar. Cuanto más grande, menos
+ * encoge la «R» del splash al ir a su sitio.
+ */
 export function appWordWidth(screenWidth: number): number {
-  return Math.min(screenWidth * 0.56, 260);
+  return Math.min(screenWidth * 0.66, 290);
 }
 
 /* -------------------------------------------------------------------------- */
 /* Fotogramas                                                                  */
 /* -------------------------------------------------------------------------- */
 
+/** El signo del splash crecido por la carga, siempre centrado en su sitio. */
+function chargedMark(t: number, layout: IntroLayout): Place {
+  'worklet';
+  const grow = 1 + INTRO.anticipateScale * easeArrive(local(t, INTRO.handoff, INTRO.anticipateIn));
+  const s = layout.mark.s * grow;
+  return {
+    s,
+    ox: layout.width / 2 - REPP_MARK_CENTER.x * s,
+    oy: layout.height / 2 - REPP_MARK_CENTER.y * s,
+  };
+}
+
 export function rPath(t: number, layout: IntroLayout): string {
   'worklet';
   const k = easeMorph(local(t, INTRO.morphAt, INTRO.morphIn));
-  return blendPath(SHAPES.rCmds, SHAPES.markR, layout.mark, SHAPES.wordR, layout.word, k);
+  return blendPath(SHAPES.rCmds, SHAPES.markR, chargedMark(t, layout), SHAPES.wordR, layout.word, k);
 }
 
 export function tickPath(t: number, layout: IntroLayout): string {
   'worklet';
   const k = easeMorph(local(t, INTRO.morphAt + INTRO.tickLag, INTRO.morphIn));
-  return blendPath(SHAPES.tickCmds, SHAPES.markTick, layout.mark, SHAPES.wordTick, layout.word, k);
+  return blendPath(SHAPES.tickCmds, SHAPES.markTick, chargedMark(t, layout), SHAPES.wordTick, layout.word, k);
+}
+
+/** Opacidad de la luz jade detrás de la marca. */
+export function glowOpacity(t: number): number {
+  'worklet';
+  const up = easeArrive(local(t, INTRO.handoff, INTRO.morphAt + INTRO.morphIn - INTRO.handoff));
+  const settle = easeInOut(local(t, INTRO.sheenAt, INTRO.main - INTRO.sheenAt));
+  return up * (INTRO.glowPeak - (INTRO.glowPeak - INTRO.glowRest) * settle);
+}
+
+/**
+ * La salida en iris, con `e` de 0 a 1: el fondo es un rectángulo con un
+ * agujero circular que crece desde el centro hasta cubrir las esquinas.
+ */
+export function irisRadius(e: number, layout: IntroLayout): number {
+  'worklet';
+  return easeExit(e) * Math.hypot(layout.width, layout.height) * 0.52;
+}
+
+export function irisPath(e: number, layout: IntroLayout): string {
+  'worklet';
+  const { width, height } = layout;
+  const frame = `M0 0L${width} 0L${width} ${height}L0 ${height}Z`;
+  const r = irisRadius(e, layout);
+  if (r < 0.5) return frame;
+  const cx = width / 2;
+  const cy = height / 2;
+  return `${frame}M${(cx - r).toFixed(2)} ${cy.toFixed(2)}A${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(cx + r).toFixed(2)} ${cy.toFixed(2)}A${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(cx - r).toFixed(2)} ${cy.toFixed(2)}Z`;
+}
+
+/** Salida: arranca con decisión y se frena al abrirse del todo. */
+function easeExit(x: number): number {
+  'worklet';
+  return cubicBezier(0.65, 0, 0.2, 1, x);
 }
 
 function letterProgress(index: number, t: number): number {
