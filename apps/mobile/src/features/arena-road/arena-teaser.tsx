@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import type { ProgressionLevel } from '@gymsheet/schemas';
+import type { ProgressionArena, ProgressionLevel } from '@gymsheet/schemas';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { accentPolicy, arenaTrack, iconSizes, spacing } from '@/theme';
-import { ARENA_ART_HEIGHT, ARENA_ART_WIDTH, arenaInkAt } from './arena-art';
+import { ARENA_ART_HEIGHT, ARENA_ART_WIDTH, arenaInkFor } from './arena-art';
 import { ArenaBanner } from './arena-banner';
 import { buildRoad, formatPoints } from './road';
 
@@ -14,14 +14,23 @@ import { buildRoad, formatPoints } from './road';
  * La puerta al camino de arenas desde «Tu senda»: tu arena, cuánto llevas del
  * tramo y cuánto falta para la siguiente. Un toque abre el camino entero.
  */
-export function ArenaTeaser({ path, points }: { path: readonly ProgressionLevel[]; points: number }) {
+export function ArenaTeaser({
+  arenas,
+  path,
+  points,
+}: {
+  arenas: readonly ProgressionArena[];
+  path: readonly ProgressionLevel[];
+  /** Puntos ganados (`arenaPoints`): el camino no baja al gastar. */
+  points: number;
+}) {
   const router = useRouter();
-  const road = useMemo(() => buildRoad(path, points), [path, points]);
+  const road = useMemo(() => buildRoad(arenas, path, points), [arenas, path, points]);
   const [width, setWidth] = useState(0);
   const current = road.arenas[road.currentIndex] ?? road.arenas[0];
   if (!current) return null;
   const next = road.next;
-  const tint = arenaInkAt(current.order);
+  const tint = arenaInkFor(current.code, current.order);
 
   return (
     <PressableScale
@@ -38,7 +47,7 @@ export function ArenaTeaser({ path, points }: { path: readonly ProgressionLevel[
             <View style={[styles.fill, { width: `${current.segmentProgress * 100}%`, backgroundColor: tint.b[1] }]} />
           </View>
           <Text tabular tone="secondary" variant="footnote">
-            {next ? `${formatPoints(next.pointsToEnter)} pts para ${next.arenaName}` : 'En la cima'}
+            {next ? `${formatPoints(next.pointsToEnter)} pts para ${next.name}` : 'En la cima'}
           </Text>
         </View>
         <View style={styles.row}>

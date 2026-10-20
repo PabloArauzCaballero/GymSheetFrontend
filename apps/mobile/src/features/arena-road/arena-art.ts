@@ -13,11 +13,19 @@
  *
  * Las coordenadas son el dibujo: no hay nada que configurar.
  */
-import { arenaInks, arenaShadow, arenaSpark, type ArenaInk } from '../../theme/arenas.ts';
+import {
+  ARENA_CODES,
+  arenaInks,
+  arenaShadow,
+  arenaSpark,
+  arenaVignette,
+  type ArenaCode,
+  type ArenaInk,
+} from '../../theme/arenas.ts';
 
 export const ARENA_ART_WIDTH = 360;
 export const ARENA_ART_HEIGHT = 200;
-export const ARENA_COUNT = arenaInks.length;
+export const ARENA_COUNT = ARENA_CODES.length;
 
 const W = arenaSpark;
 const GROUND_Y = 164;
@@ -435,23 +443,370 @@ function olimpo(id: string, ink: ArenaInk): string {
   );
 }
 
-const SCENES = [puerta, maquinas, mancuernas, jaula, templo, fragua, coliseo, olimpo] as const;
-
-/**
- * El SVG de la arena en la posición `order` del camino (1 = la primera).
- *
- * Un gimnasio con más rangos que arenas dibujadas repite la última: llegar más
- * lejos que el dibujo no debería dejar a nadie sin escenario.
- */
-export function arenaArtXml(order: number): string {
-  const index = Math.min(Math.max(order, 1), SCENES.length) - 1;
-  const scene = SCENES[index] as (typeof SCENES)[number];
-  const ink = arenaInks[index] as ArenaInk;
-  const id = `arena${index + 1}`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ARENA_ART_WIDTH} ${ARENA_ART_HEIGHT}" preserveAspectRatio="xMidYMid slice">${scene(id, ink)}</svg>`;
+/** 2 · El Vestuario: taquillas, una abierta con la luz dentro, y el banco. */
+function vestuario(id: string, ink: ArenaInk): string {
+  let lockers = '';
+  for (let index = 0; index < 6; index += 1) {
+    const x = 78 + index * 34;
+    if (index === 3) {
+      lockers +=
+        rect(x, 40, 32, 120, ink.a[2], 2) +
+        rect(x + 3, 44, 26, 112, `url(#${id}-b)`, 2, op(0.85)) +
+        rect(x + 6, 58, 20, 3, ink.a[2], 1.5) +
+        rect(x + 9, 61, 14, 30, ink.b[2], 3) +
+        path(`M${x + 32} 40L${x + 48} 46L${x + 48} 154L${x + 32} 160Z`, ink.a[0]);
+      continue;
+    }
+    lockers +=
+      rect(x, 40, 32, 120, ink.a[1], 2) +
+      rect(x, 40, 3, 120, ink.a[0], 1, op(0.6)) +
+      rect(x + 8, 48, 16, 2, ink.a[2], 1) +
+      rect(x + 8, 53, 16, 2, ink.a[2], 1) +
+      rect(x + 8, 58, 16, 2, ink.a[2], 1) +
+      rect(x + 24, 96, 3, 14, ink.a[0], 1.5);
+  }
+  return (
+    stage(id, ink, 96, 13) +
+    platform(ink) +
+    path('M168 0L192 0L262 166L98 166Z', ink.b[0], op(0.09)) +
+    rect(164, 0, 32, 6, ink.a[0], 2) +
+    lockers +
+    ellipse(180, 162, 96, 6, arenaShadow) +
+    rect(92, 136, 176, 10, ink.b[2], 5) +
+    rect(92, 136, 176, 3, ink.b[1], 2) +
+    rect(104, 146, 6, 18, ink.a[2], 2) +
+    rect(250, 146, 6, 18, ink.a[2], 2) +
+    rect(196, 118, 46, 20, ink.b[1], 9) +
+    path('M206 120Q219 104 232 120', 'none', ` stroke="${ink.b[2]}" stroke-width="3"`) +
+    rect(196, 126, 46, 3, ink.b[2], 1.5, op(0.6)) +
+    spark(196, 54, 4) +
+    spark(300, 30, 5) +
+    spark(60, 40, 3)
+  );
 }
 
-/** La tinta de la arena en `order`, para el color de la pista y del brillo. */
-export function arenaInkAt(order: number): ArenaInk {
-  return arenaInks[Math.min(Math.max(order, 1), arenaInks.length) - 1] as ArenaInk;
+/** 4 · Zona de Cardio: la cinta, la bici y el pulso en neón. */
+function cardio(id: string, ink: ArenaInk): string {
+  const pulse = 'M14 74L118 74L132 74L142 46L156 108L168 58L178 74L346 74';
+  return (
+    stage(id, ink, 92, 29) +
+    path(pulse, 'none', ` stroke="${ink.b[1]}" stroke-width="10" stroke-opacity="0.22" stroke-linejoin="round"`) +
+    path(pulse, 'none', ` stroke="${ink.b[0]}" stroke-width="2.5" stroke-linejoin="round"`) +
+    platform(ink) +
+    // Cinta de correr.
+    ellipse(150, 166, 70, 5, arenaShadow) +
+    path('M84 148L204 148L218 162L72 162Z', ink.a[2]) +
+    path('M92 146L198 146L208 154L84 154Z', ink.a[1]) +
+    rect(186, 92, 8, 58, ink.a[1], 2) +
+    rect(186, 92, 3, 58, ink.a[0], 1.5) +
+    rect(150, 104, 40, 5, ink.a[0], 2.5) +
+    path('M176 82L222 82L218 98L180 98Z', ink.a[0]) +
+    rect(184, 86, 30, 8, ink.b[1], 2) +
+    rect(186, 88, 12, 4, ink.b[0], 1) +
+    // Bici estática.
+    rect(236, 158, 70, 7, ink.a[2], 3) +
+    circle(260, 142, 18, ink.a[1]) +
+    circle(260, 142, 12, ink.a[2]) +
+    circle(260, 142, 5, ink.b[1]) +
+    path('M260 142L284 108L292 110', 'none', ` stroke="${ink.a[0]}" stroke-width="6" stroke-linecap="round"`) +
+    path('M262 140L242 112', 'none', ` stroke="${ink.a[0]}" stroke-width="6" stroke-linecap="round"`) +
+    rect(278, 101, 22, 6, ink.b[2], 3) +
+    rect(232, 104, 18, 6, ink.b[1], 3) +
+    // Corazón de neón.
+    path('M318 38C318 31 309 28 305 35C301 28 292 31 292 38C292 46 305 54 305 54C305 54 318 46 318 38Z', ink.b[1]) +
+    circle(305, 42, 20, ink.b[1], op(0.18)) +
+    spark(60, 34, 4) +
+    spark(220, 26, 3)
+  );
+}
+
+/** 6 · El Banco: el press de banca bajo un foco. */
+function banco(id: string, ink: ArenaInk): string {
+  return (
+    stage(id, ink, 96, 31) +
+    platform(ink) +
+    path('M166 0L194 0L272 168L88 168Z', ink.b[0], op(0.11)) +
+    rect(162, 0, 36, 7, ink.a[0], 2) +
+    ellipse(180, 166, 90, 6, arenaShadow) +
+    // Soportes y barra.
+    rect(108, 64, 9, 100, ink.a[1], 2) +
+    rect(243, 64, 9, 100, ink.a[1], 2) +
+    rect(108, 64, 3, 100, ink.a[0], 1.5) +
+    rect(243, 64, 3, 100, ink.a[0], 1.5) +
+    rect(116, 74, 9, 7, ink.a[0], 2) +
+    rect(235, 74, 9, 7, ink.a[0], 2) +
+    rect(100, 160, 25, 6, ink.a[2], 2) +
+    rect(235, 160, 25, 6, ink.a[2], 2) +
+    barbell(180, 72, 64, 48, ink, ink.a[0]) +
+    // Banco.
+    rect(126, 124, 108, 13, ink.b[2], 6) +
+    rect(126, 124, 108, 4, ink.b[1], 2) +
+    rect(140, 137, 7, 26, ink.a[2], 2) +
+    rect(213, 137, 7, 26, ink.a[2], 2) +
+    rect(132, 160, 22, 5, ink.a[1], 2) +
+    rect(206, 160, 22, 5, ink.a[1], 2) +
+    spark(180, 46, 5) +
+    spark(300, 36, 4) +
+    spark(62, 30, 3)
+  );
+}
+
+/** 8 · La Plataforma: madera, discos de goma y magnesio en el aire. */
+function plataforma(id: string, ink: ArenaInk): string {
+  const random = seeded(47);
+  let chalk = '';
+  for (let index = 0; index < 14; index += 1) {
+    const side = index % 2 === 0 ? 92 : 268;
+    chalk += circle(side + (random() - 0.5) * 50, 96 + random() * 50, 3 + random() * 7, W, op(0.08 + random() * 0.16));
+  }
+  let grain = '';
+  for (let index = 0; index < 5; index += 1) {
+    grain += path(`M${146 + index * 14} 150L${142 + index * 16} 176`, 'none', ` stroke="${ink.a[2]}" stroke-width="1" stroke-opacity="0.45"`);
+  }
+  return (
+    stage(id, ink, 100, 47) +
+    platform(ink) +
+    path('M82 148L278 148L304 178L56 178Z', ink.a[2]) +
+    path('M138 148L222 148L232 178L128 178Z', ink.a[0]) +
+    grain +
+    chalk +
+    ellipse(180, 172, 104, 6, arenaShadow) +
+    // Barra en el suelo con discos de goma grandes.
+    rect(70, 132, 220, 5, W, 2.5) +
+    rect(84, 104, 16, 62, ink.b[1], 5) +
+    rect(84, 104, 5, 62, ink.b[0], 2.5) +
+    rect(100, 110, 11, 50, ink.b[2], 4) +
+    rect(260, 104, 16, 62, ink.b[1], 5) +
+    rect(260, 104, 5, 62, ink.b[0], 2.5) +
+    rect(249, 110, 11, 50, ink.b[2], 4) +
+    rect(64, 130, 22, 9, W, 3) +
+    rect(274, 130, 22, 9, W, 3) +
+    spark(180, 66, 5) +
+    spark(300, 30, 4) +
+    spark(56, 36, 3)
+  );
+}
+
+/** 10 · La Cueva: roca, antorchas, barra de dominadas y mancuernas de bola. */
+function cueva(id: string, ink: ArenaInk): string {
+  const torch = (x: number) =>
+    circle(x, 84, 30, ink.b[1], op(0.22)) +
+    circle(x, 84, 14, ink.b[0], op(0.35)) +
+    rect(x - 3, 92, 6, 26, ink.a[0], 2) +
+    rect(x - 7, 90, 14, 5, ink.a[1], 2) +
+    path(`M${x} 64Q${x + 11} 80 ${x} 90Q${x - 11} 80 ${x} 64Z`, ink.b[1]) +
+    path(`M${x} 72Q${x + 5} 82 ${x} 88Q${x - 5} 82 ${x} 72Z`, ink.b[0]);
+  let chain = '';
+  for (let y = 66; y < 112; y += 7) {
+    chain += ellipse(150, y, 2.5, 4, 'none', ` stroke="${ink.a[0]}" stroke-width="1.6"`);
+    chain += ellipse(210, y, 2.5, 4, 'none', ` stroke="${ink.a[0]}" stroke-width="1.6"`);
+  }
+  const globe = (x: number) => circle(x, 148, 15, ink.a[1]) + circle(x - 5, 143, 5, ink.a[0], op(0.6));
+  return (
+    stage(id, ink, 96, 59) +
+    platform(ink) +
+    path('M0 0L0 200L58 200Q34 136 66 88Q100 38 180 32Q260 38 294 88Q326 136 302 200L360 200L360 0Z', ink.a[2]) +
+    path('M0 0L0 120Q28 70 64 52Q40 30 0 0Z', ink.a[1], op(0.5)) +
+    path('M360 0L360 130Q330 80 296 60Q322 30 360 0Z', ink.a[1], op(0.5)) +
+    torch(92) +
+    torch(268) +
+    rect(124, 58, 112, 6, ink.a[0], 3) +
+    rect(124, 58, 6, 14, ink.a[1], 2) +
+    rect(230, 58, 6, 14, ink.a[1], 2) +
+    chain +
+    ellipse(180, 166, 54, 5, arenaShadow) +
+    rect(150, 146, 60, 5, ink.a[0], 2.5) +
+    globe(148) +
+    globe(212) +
+    spark(180, 44, 4, ink.b[0]) +
+    spark(120, 120, 2.5, ink.b[0])
+  );
+}
+
+/** 12 · Patio Strongman: piedras de Atlas, yugo y neumático al atardecer. */
+function strongman(id: string, ink: ArenaInk): string {
+  const stone = (x: number, y: number, r: number) =>
+    ellipse(x, y + r - 1, r * 0.9, 3, arenaShadow) +
+    circle(x, y, r, ink.a[1]) +
+    path(`M${x - r} ${y}A${r} ${r} 0 0 0 ${x + r} ${y}A${r} ${r * 0.6} 0 0 1 ${x - r} ${y}Z`, ink.a[2], op(0.7)) +
+    circle(x - r * 0.35, y - r * 0.4, r * 0.32, ink.a[0], op(0.55));
+  let tread = '';
+  for (let index = 0; index < 8; index += 1) {
+    const a = (index / 8) * Math.PI * 2;
+    tread += circle(300 + Math.cos(a) * 25, 128 + Math.sin(a) * 33, 2.5, ink.a[1]);
+  }
+  return (
+    stage(id, ink, 108, 71) +
+    circle(180, 108, 62, ink.b[0], op(0.22)) +
+    circle(180, 108, 40, ink.b[1], op(0.45)) +
+    circle(180, 108, 26, ink.b[0], op(0.7)) +
+    platform(ink) +
+    // Yugo.
+    rect(196, 92, 8, 72, ink.b[1], 2) +
+    rect(240, 92, 8, 72, ink.b[1], 2) +
+    rect(196, 92, 3, 72, ink.b[0], 1.5) +
+    rect(190, 96, 64, 8, ink.b[0], 3) +
+    rect(186, 156, 30, 8, ink.b[2], 3) +
+    rect(228, 156, 30, 8, ink.b[2], 3) +
+    // Neumático apoyado.
+    ellipse(300, 128, 30, 38, ink.a[2]) +
+    ellipse(300, 128, 14, 20, ink.ground[1]) +
+    tread +
+    // Piedras de Atlas, de menor a mayor.
+    stone(84, 150, 12) +
+    stone(114, 145, 17) +
+    stone(154, 139, 23) +
+    spark(130, 40, 4) +
+    spark(270, 46, 3) +
+    spark(60, 60, 3)
+  );
+}
+
+/** 14 · Valhalla: el gran salón bajo la aurora, con escudos y nieve. */
+function valhalla(id: string, ink: ArenaInk): string {
+  let shields = '';
+  [112, 136, 224, 248].forEach((x, index) => {
+    shields +=
+      circle(x, 118, 10, index % 2 === 0 ? ink.b[1] : ink.glow) +
+      circle(x, 118, 10, 'none', ` stroke="${ink.a[2]}" stroke-width="2"`) +
+      circle(x, 118, 3, ink.a[2]);
+  });
+  return (
+    stage(id, ink, 80, 83) +
+    path('M0 58C90 18 170 94 360 26L360 46C170 112 90 40 0 82Z', ink.glow, op(0.2)) +
+    path('M0 30C110 0 200 70 360 4L360 18C200 86 110 18 0 48Z', ink.b[0], op(0.1)) +
+    platform(ink) +
+    ellipse(180, 166, 104, 6, arenaShadow) +
+    rect(90, 96, 180, 70, `url(#${id}-a)`) +
+    rect(90, 96, 180, 6, ink.a[2], 0, op(0.6)) +
+    path('M74 100L180 44L286 100Z', ink.a[2]) +
+    path('M84 96L180 50L276 96L270 96L180 56L90 96Z', ink.ground[0], op(0.9)) +
+    path('M180 44Q170 28 182 22Q194 30 184 40', 'none', ` stroke="${ink.b[1]}" stroke-width="3" stroke-linecap="round"`) +
+    path('M74 100Q60 92 66 82Q76 84 72 94', 'none', ` stroke="${ink.b[1]}" stroke-width="3" stroke-linecap="round"`) +
+    path('M286 100Q300 92 294 82Q284 84 288 94', 'none', ` stroke="${ink.b[1]}" stroke-width="3" stroke-linecap="round"`) +
+    shields +
+    path('M160 166L160 128Q180 108 200 128L200 166Z', ink.a[2]) +
+    path('M160 128Q180 108 200 128', 'none', ` stroke="${ink.b[1]}" stroke-width="3"`) +
+    circle(180, 146, 20, ink.b[1], op(0.18)) +
+    spark(60, 30, 4) +
+    spark(300, 60, 3) +
+    spark(220, 20, 3)
+  );
+}
+
+/** 16 · Salón de Leyendas: columnas, estandartes y el trofeo con la corona. */
+function leyendas(id: string, ink: ArenaInk): string {
+  let columns = '';
+  [70, 102, 238, 270].forEach((x) => {
+    columns +=
+      rect(x - 3, 30, 26, 7, ink.a[0], 2) +
+      rect(x, 36, 20, 122, `url(#${id}-a)`) +
+      rect(x + 6, 36, 2, 122, ink.a[2], 1, op(0.4)) +
+      rect(x + 13, 36, 2, 122, ink.a[2], 1, op(0.4)) +
+      rect(x - 3, 156, 26, 8, ink.a[1], 2);
+  });
+  const random = seeded(97);
+  let confetti = '';
+  for (let index = 0; index < 22; index += 1) {
+    const colors = [ink.b[1], ink.glow, W, ink.b[0]];
+    confetti += `<rect x="${n(30 + random() * 300)}" y="${n(10 + random() * 110)}" width="3" height="6" rx="1" fill="${colors[index % colors.length]}" opacity="${n(0.5 + random() * 0.5)}" transform="rotate(${n(random() * 180)} ${n(30 + random() * 300)} ${n(10 + random() * 110)})"/>`;
+  }
+  return (
+    stage(id, ink, 80, 97) +
+    platform(ink) +
+    columns +
+    path('M126 26L144 26L144 70L135 62L126 70Z', ink.glow, op(0.9)) +
+    path('M216 26L234 26L234 70L225 62L216 70Z', ink.glow, op(0.9)) +
+    rect(126, 26, 18, 4, ink.b[1]) +
+    rect(216, 26, 18, 4, ink.b[1]) +
+    confetti +
+    ellipse(180, 166, 60, 5, arenaShadow) +
+    rect(150, 128, 60, 36, ink.a[0], 3) +
+    rect(144, 124, 72, 7, ink.a[1], 3) +
+    rect(144, 158, 72, 8, ink.a[2], 3) +
+    // Trofeo.
+    circle(180, 88, 40, ink.b[0], op(0.25)) +
+    rect(166, 114, 28, 9, ink.b[2], 3) +
+    rect(176, 98, 8, 18, ink.b[1], 2) +
+    path('M156 64L204 64Q204 100 180 102Q156 100 156 64Z', ink.b[1]) +
+    path('M160 66L170 66Q170 92 180 98Q160 96 160 66Z', ink.b[0], op(0.7)) +
+    path('M156 70Q140 70 144 82Q148 92 160 90', 'none', ` stroke="${ink.b[1]}" stroke-width="4"`) +
+    path('M204 70Q220 70 216 82Q212 92 200 90', 'none', ` stroke="${ink.b[1]}" stroke-width="4"`) +
+    // Corona flotando encima.
+    path('M162 50L166 34L174 44L180 30L186 44L194 34L198 50Z', ink.b[0]) +
+    rect(162, 49, 36, 5, ink.b[2], 2) +
+    circle(180, 32, 2.5, W) +
+    spark(180, 18, 5) +
+    spark(122, 104, 3) +
+    spark(240, 104, 3)
+  );
+}
+
+/**
+ * El acabado común: bokeh en primer plano, un haz desde arriba y viñeta. Es
+ * lo que separa un dibujo plano de una escena con profundidad.
+ */
+function finish(id: string, ink: ArenaInk, seed: number): string {
+  const random = seeded(seed * 7 + 3);
+  let bokeh = '';
+  for (let index = 0; index < 6; index += 1) {
+    const left = index % 2 === 0;
+    const x = left ? random() * 70 : 290 + random() * 70;
+    bokeh += circle(x, 120 + random() * 80, 8 + random() * 16, `url(#${id}-bokeh)`, op(0.5 + random() * 0.5));
+  }
+  return (
+    `<defs>` +
+    `<radialGradient id="${id}-vig" cx="0.5" cy="0.45" r="0.78"><stop offset="0.5" stop-color="${arenaVignette}" stop-opacity="0"/><stop offset="1" stop-color="${arenaVignette}" stop-opacity="0.6"/></radialGradient>` +
+    `<radialGradient id="${id}-bokeh" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="${ink.glow}" stop-opacity="0.55"/><stop offset="1" stop-color="${ink.glow}" stop-opacity="0"/></radialGradient>` +
+    `<linearGradient id="${id}-shaft" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${W}" stop-opacity="0.12"/><stop offset="1" stop-color="${W}" stop-opacity="0"/></linearGradient>` +
+    `</defs>` +
+    path('M40 0L96 0L176 200L104 200Z', `url(#${id}-shaft)`) +
+    bokeh +
+    rect(0, 0, ARENA_ART_WIDTH, ARENA_ART_HEIGHT, `url(#${id}-vig)`)
+  );
+}
+
+const SCENES: Readonly<Record<ArenaCode, (id: string, ink: ArenaInk) => string>> = {
+  PUERTA: puerta,
+  VESTUARIO: vestuario,
+  MAQUINAS: maquinas,
+  CARDIO: cardio,
+  MANCUERNAS: mancuernas,
+  BANCO: banco,
+  JAULA: jaula,
+  PLATAFORMA: plataforma,
+  TEMPLO: templo,
+  CUEVA: cueva,
+  FRAGUA: fragua,
+  STRONGMAN: strongman,
+  COLISEO: coliseo,
+  VALHALLA: valhalla,
+  OLIMPO: olimpo,
+  LEYENDAS: leyendas,
+};
+
+/**
+ * Qué escena le toca a una arena: por su `code` si es una de las dibujadas;
+ * si no (un servidor anterior, un gimnasio con arenas propias), por su
+ * posición en el camino. Más allá de la última se repite la última: llegar más
+ * lejos que el dibujo no debería dejar a nadie sin escenario.
+ */
+export function arenaCodeFor(code: string, order: number): ArenaCode {
+  if (code in SCENES) return code as ArenaCode;
+  const index = Math.min(Math.max(order, 1), ARENA_CODES.length) - 1;
+  return ARENA_CODES[index] as ArenaCode;
+}
+
+/** El SVG de una arena, con su acabado. */
+export function arenaArtXml(code: string, order = 1): string {
+  const key = arenaCodeFor(code, order);
+  const ink: ArenaInk = arenaInks[key];
+  const id = `arena-${key.toLowerCase()}`;
+  const seed = ARENA_CODES.indexOf(key) + 1;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ARENA_ART_WIDTH} ${ARENA_ART_HEIGHT}" preserveAspectRatio="xMidYMid slice">${SCENES[key](id, ink)}${finish(id, ink, seed)}</svg>`;
+}
+
+/** La tinta de una arena, para el color de la pista, el brillo y los rótulos. */
+export function arenaInkFor(code: string, order = 1): ArenaInk {
+  return arenaInks[arenaCodeFor(code, order)];
 }

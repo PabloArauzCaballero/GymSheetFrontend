@@ -207,7 +207,7 @@ export default function TrayectoriaScreen() {
 
         <TourTarget id="trayectoria.path">
           <Section icon="trail-sign-outline" title="El camino">
-            <ArenaTeaser path={data.path} points={data.points} />
+            <ArenaTeaser arenas={data.arenas} path={data.path} points={data.arenaPoints ?? data.points} />
           </Section>
         </TourTarget>
 

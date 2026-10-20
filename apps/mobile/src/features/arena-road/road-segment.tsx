@@ -1,46 +1,59 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
+  interpolate,
+  useAnimatedReaction,
   useAnimatedStyle,
-  useDerivedValue,
   useReducedMotion,
   useSharedValue,
   withDelay,
   withRepeat,
+  withSequence,
   withSpring,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import { Text } from '@/components/text';
-import { alpha, arenaTrack, colors, iconSizes, ink, onMedia, radii, spacing } from '@/theme';
-import { arenaInkAt } from './arena-art';
+import { alpha, arenaTrack, colors, iconSizes, ink, onMedia, radii, spacing, type ArenaInk } from '@/theme';
+import { arenaInkFor } from './arena-art';
+import { Shockwave, SparkBurst } from './particles';
 import type { RoadArena } from './road';
 
 export const SEGMENT_HEIGHT = 236;
-const TRACK = 8;
-const DOT = 16;
-const MARKER = 46;
+const TRACK = 10;
+const DOT = 18;
+const MARKER = 48;
 /** Dónde caen los tres hitos a lo largo del tramo (desde abajo). */
 const MILESTONE_AT = [0.22, 0.5, 0.78] as const;
 const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
+/** Sobreimpulso del aterrizaje del marcador: pasa un poco y vuelve. */
+const EASE_LAND = Easing.bezier(0.34, 1.56, 0.64, 1);
 
-/** Cuándo empieza cada cosa al abrir el camino (ms). */
+/**
+ * Cuándo empieza cada cosa al abrir el camino (ms). La pista espera a que la
+ * cámara haya bajado hasta tu arena (`CAMERA` en `camino.tsx`).
+ */
 export const ROAD_CUES = {
-  fillAt: 380,
-  fillIn: 950,
-  markerAt: 1240,
+  fillAt: 1250,
+  fillIn: 1100,
+  markerAt: 2350,
+  markerIn: 620,
 } as const;
 
 /**
  * El tramo de pista que sale de una arena hacia la siguiente, con los hitos
  * típicos de esa fase a los lados y, si estás en él, tu marcador.
  *
- * Se lee de abajo arriba, como se sube: la pista se rellena desde la arena de
- * abajo. Los hitos son orientativos (el sistema no los mide), así que se
- * encienden por avance del tramo, no se tachan: un punto encendido dice «por
- * aquí suele caer», no «conseguido».
+ * Se lee de abajo arriba, como se sube. En tu tramo la pista se llena con un
+ * brillo que corre hacia arriba, cada hito **se enciende con un golpe** en el
+ * instante en que la pista lo alcanza, y tu marcador cae desde arriba con una
+ * onda expansiva y chispas. Los hitos son orientativos (el sistema no los
+ * mide): encendido dice «por aquí suele caer», no «conseguido».
  */
 export const RoadSegment = memo(function RoadSegment({
   arena,
@@ -49,130 +62,222 @@ export const RoadSegment = memo(function RoadSegment({
 }: {
   arena: RoadArena;
   width: number;
-  /** Texto bajo el marcador («5.000 pts»); solo en el tramo actual. */
+  /** Texto de tu pestaña («4.691»); solo en el tramo actual. */
   pointsLabel: string;
 }) {
   const reduceMotion = useReducedMotion();
-  const tint = arenaInkAt(arena.order);
+  const tint = arenaInkFor(arena.code, arena.order);
   const current = arena.state === 'current';
+  const animate = current && !reduceMotion;
   const target = arena.segmentProgress;
 
-  const fill = useSharedValue(current && !reduceMotion ? 0 : target);
-  const marker = useSharedValue(current && !reduceMotion ? 0 : 1);
-  const pulse = useSharedValue(0);
+  const fill = useSharedValue(animate ? 0 : target);
+  const marker = useSharedValue(animate ? 0 : 1);
+  const shimmer = useSharedValue(0);
 
   useEffect(() => {
-    if (!current || reduceMotion) return;
+    if (!animate) return;
     fill.value = withDelay(ROAD_CUES.fillAt, withTiming(target, { duration: ROAD_CUES.fillIn, easing: EASE_OUT }));
-    marker.value = withDelay(ROAD_CUES.markerAt, withSpring(1, { duration: 520, dampingRatio: 0.55 }));
-    pulse.value = withDelay(
-      ROAD_CUES.markerAt + 400,
-      withRepeat(withTiming(1, { duration: 1800, easing: Easing.out(Easing.quad) }), -1, false),
+    marker.value = withDelay(
+      ROAD_CUES.markerAt,
+      withTiming(1, { duration: ROAD_CUES.markerIn, easing: EASE_LAND }, (finished) => {
+        if (finished) scheduleOnRN(Haptics.impactAsync, Haptics.ImpactFeedbackStyle.Medium);
+      }),
     );
-  }, [current, fill, marker, pulse, reduceMotion, target]);
+    shimmer.value = withDelay(
+      ROAD_CUES.fillAt,
+      withRepeat(withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.quad) }), -1, false),
+    );
+  }, [animate, fill, marker, shimmer, target]);
 
-  const fillHeight = useDerivedValue(() => fill.value * SEGMENT_HEIGHT);
-  const fillStyle = useAnimatedStyle(() => ({ height: fillHeight.value }));
-  const markerStyle = useAnimatedStyle(() => ({
-    opacity: Math.min(1, marker.value * 2),
-    transform: [{ translateY: -fillHeight.value }, { scale: 0.6 + marker.value * 0.4 }],
+  const fillStyle = useAnimatedStyle(() => ({ height: fill.value * SEGMENT_HEIGHT }));
+  const shimmerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: interpolate(shimmer.value, [0, 1], [40, -fill.value * SEGMENT_HEIGHT - 40]) }],
   }));
-  const pulseStyle = useAnimatedStyle(() => ({
-    opacity: 0.55 * (1 - pulse.value),
-    transform: [{ scale: 1 + pulse.value * 0.9 }],
+  // Cae desde 90 pt más arriba con sobreimpulso: aterriza, no aparece.
+  const markerStyle = useAnimatedStyle(() => ({
+    opacity: Math.min(1, marker.value * 3),
+    transform: [
+      { translateY: -target * SEGMENT_HEIGHT - (1 - marker.value) * 90 },
+      { scale: 0.7 + Math.min(marker.value, 1.1) * 0.3 },
+    ],
   }));
 
   const center = width / 2;
+  // Las etiquetas empiezan donde acaba el marcador: así nunca lo pisan.
+  const labelGap = MARKER / 2 + spacing.sm;
+  const labelWidth = center - labelGap - spacing.sm;
   // La pestaña «TÚ» va al lado contrario del hito más cercano, para no pisarlo.
   const nearest = MILESTONE_AT.reduce(
     (best, at, index) => (Math.abs(at - target) < Math.abs((MILESTONE_AT[best] ?? 0) - target) ? index : best),
     0,
   );
   const tagOnLeft = nearest % 2 === 1;
-  // Las etiquetas empiezan donde acaba el marcador: así nunca lo pisan.
-  const labelGap = MARKER / 2 + spacing.sm;
-  const labelWidth = center - labelGap - spacing.sm;
+  const landAt = ROAD_CUES.markerAt + ROAD_CUES.markerIn * 0.55;
 
   return (
     <View style={{ width, height: SEGMENT_HEIGHT }}>
       <View style={[styles.track, { left: center - TRACK / 2, backgroundColor: arenaTrack }]}>
         <Animated.View style={[styles.fill, fillStyle]}>
-          <LinearGradient colors={[tint.b[0], tint.b[1]]} style={StyleSheet.absoluteFill} />
+          <LinearGradient colors={[tint.b[0], tint.b[1], tint.b[2]]} style={StyleSheet.absoluteFill} />
+          {current ? (
+            <Animated.View style={[styles.shimmer, shimmerStyle]}>
+              <LinearGradient
+                colors={[alpha(ink.white, 0), alpha(ink.white, 0.85), alpha(ink.white, 0)]}
+                style={StyleSheet.absoluteFill}
+              />
+            </Animated.View>
+          ) : null}
         </Animated.View>
       </View>
 
-      {arena.level.milestones.slice(0, MILESTONE_AT.length).map((milestone, index) => {
-        const at = MILESTONE_AT[index] ?? 0.5;
-        const lit = arena.segmentProgress >= at;
-        const onLeft = index % 2 === 0;
-        const bottom = at * SEGMENT_HEIGHT - DOT / 2;
-        return (
-          <View key={milestone} style={StyleSheet.absoluteFill} pointerEvents="none">
-            <View
-              style={[
-                styles.dot,
-                {
-                  left: center - DOT / 2,
-                  bottom,
-                  backgroundColor: lit ? tint.b[1] : colors.surfaceHighest,
-                  borderColor: lit ? tint.b[0] : alpha(ink.white, 0.16),
-                },
-              ]}
-            >
-              {lit ? <View style={styles.dotCore} /> : null}
-            </View>
-            <View
-              style={[
-                styles.label,
-                {
-                  width: labelWidth,
-                  bottom: bottom - spacing.xs,
-                  ...(onLeft ? { right: center + labelGap } : { left: center + labelGap }),
-                  alignItems: onLeft ? 'flex-end' : 'flex-start',
-                },
-              ]}
-            >
-              <Text
-                style={{ color: lit ? onMedia.text : colors.textMuted, textAlign: onLeft ? 'right' : 'left' }}
-                variant="footnote"
-                strong={lit}
-              >
-                {milestone}
-              </Text>
-            </View>
-          </View>
-        );
-      })}
+      {arena.milestones.slice(0, MILESTONE_AT.length).map((milestone, index) => (
+        <Milestone
+          at={MILESTONE_AT[index] ?? 0.5}
+          center={center}
+          fill={fill}
+          key={milestone}
+          labelGap={labelGap}
+          labelWidth={labelWidth}
+          onLeft={index % 2 === 0}
+          text={milestone}
+          tint={tint}
+        />
+      ))}
 
       {current ? (
-        <Animated.View
-          accessibilityLabel={`Tú, con ${pointsLabel}`}
-          style={[styles.marker, { left: center - MARKER / 2 }, markerStyle]}
-        >
-          <Animated.View style={[styles.pulse, { borderColor: arena.level.color }, pulseStyle]} />
-          <View style={[styles.markerBody, { borderColor: arena.level.color }]}>
-            <Ionicons
-              color={onMedia.text}
-              name={arena.level.icon.replace('-outline', '') as keyof typeof Ionicons.glyphMap}
-              size={iconSizes.md}
-            />
-          </View>
-          <View
-            style={[
-              styles.youTag,
-              { backgroundColor: arena.level.color },
-              tagOnLeft ? { right: MARKER + spacing.sm } : { left: MARKER + spacing.sm },
-            ]}
+        <>
+          {animate ? (
+            <View pointerEvents="none" style={[styles.burstAt, { left: center, bottom: target * SEGMENT_HEIGHT }]}>
+              <Shockwave color={tint.glow} delay={landAt} size={MARKER} to={3.2} />
+              <SparkBurst
+                colors={[tint.b[0], tint.glow, ink.white]}
+                count={16}
+                delay={landAt}
+                maxDistance={84}
+                minDistance={34}
+                seed={arena.order * 13}
+              />
+            </View>
+          ) : null}
+          <Animated.View
+            accessibilityLabel={`Tú, con ${pointsLabel} puntos ganados`}
+            style={[styles.marker, { left: center - MARKER / 2 }, markerStyle]}
           >
-            <Text numberOfLines={1} style={{ color: ink.black, letterSpacing: 0.8 }} tabular variant="caption" strong>
-              {`TÚ · ${pointsLabel}`}
-            </Text>
-          </View>
-        </Animated.View>
+            <MarkerPulse color={tint.glow} enabled={animate} />
+            <View style={[styles.markerBody, { borderColor: tint.b[0], shadowColor: tint.glow }]}>
+              <Ionicons
+                color={onMedia.text}
+                name={(arena.rank?.icon ?? 'flame').replace('-outline', '') as keyof typeof Ionicons.glyphMap}
+                size={iconSizes.md}
+              />
+            </View>
+            <View
+              style={[
+                styles.youTag,
+                { backgroundColor: tint.b[1] },
+                tagOnLeft ? { right: MARKER + spacing.sm } : { left: MARKER + spacing.sm },
+              ]}
+            >
+              <Text numberOfLines={1} style={{ color: ink.black, letterSpacing: 0.8 }} tabular variant="caption" strong>
+                {`TÚ · ${pointsLabel}`}
+              </Text>
+            </View>
+          </Animated.View>
+        </>
       ) : null}
     </View>
   );
 });
+
+/** Un hito: se enciende con un golpe cuando la pista lo alcanza. */
+function Milestone({
+  text,
+  at,
+  fill,
+  onLeft,
+  center,
+  labelGap,
+  labelWidth,
+  tint,
+}: {
+  text: string;
+  at: number;
+  fill: SharedValue<number>;
+  onLeft: boolean;
+  center: number;
+  labelGap: number;
+  labelWidth: number;
+  tint: ArenaInk;
+}) {
+  const lit = useSharedValue(0);
+  const pop = useSharedValue(0);
+  useAnimatedReaction(
+    () => fill.value >= at,
+    (reached, before) => {
+      if (!reached || before === true) return;
+      lit.value = withTiming(1, { duration: 180 });
+      // Ya encendido al montar (tramo superado): sin golpe.
+      if (before === null) return;
+      pop.value = withSequence(withTiming(1, { duration: 140 }), withSpring(0, { duration: 420, dampingRatio: 0.5 }));
+    },
+  );
+  const dotStyle = useAnimatedStyle(() => ({
+    backgroundColor: lit.value > 0.5 ? tint.b[1] : colors.surfaceHighest,
+    borderColor: lit.value > 0.5 ? tint.b[0] : alpha(ink.white, 0.16),
+    transform: [{ scale: 1 + pop.value * 0.7 }],
+  }));
+  const coreStyle = useAnimatedStyle(() => ({ opacity: lit.value }));
+  const ringStyle = useAnimatedStyle(() => ({
+    opacity: pop.value * 0.8,
+    transform: [{ scale: 1 + pop.value * 1.6 }],
+  }));
+  const labelStyle = useAnimatedStyle(() => ({
+    opacity: 0.55 + lit.value * 0.45,
+    transform: [{ translateX: (onLeft ? -1 : 1) * pop.value * 4 }],
+  }));
+  const bottom = at * SEGMENT_HEIGHT - DOT / 2;
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Animated.View style={[styles.dotRing, { left: center - DOT / 2, bottom, borderColor: tint.glow }, ringStyle]} />
+      <Animated.View style={[styles.dot, { left: center - DOT / 2, bottom }, dotStyle]}>
+        <Animated.View style={[styles.dotCore, coreStyle]} />
+      </Animated.View>
+      <Animated.View
+        style={[
+          styles.label,
+          {
+            width: labelWidth,
+            bottom: bottom - spacing.xs,
+            ...(onLeft ? { right: center + labelGap } : { left: center + labelGap }),
+            alignItems: onLeft ? 'flex-end' : 'flex-start',
+          },
+          labelStyle,
+        ]}
+      >
+        <Text style={{ color: onMedia.text, textAlign: onLeft ? 'right' : 'left' }} variant="footnote">
+          {text}
+        </Text>
+      </Animated.View>
+    </View>
+  );
+}
+
+function MarkerPulse({ color, enabled }: { color: string; enabled: boolean }) {
+  const pulse = useSharedValue(0);
+  useEffect(() => {
+    if (!enabled) return;
+    pulse.value = withDelay(
+      ROAD_CUES.markerAt + ROAD_CUES.markerIn,
+      withRepeat(withTiming(1, { duration: 1800, easing: Easing.out(Easing.quad) }), -1, false),
+    );
+  }, [enabled, pulse]);
+  const style = useAnimatedStyle(() => ({
+    opacity: 0.6 * (1 - pulse.value),
+    transform: [{ scale: 1 + pulse.value * 1.1 }],
+  }));
+  return <Animated.View style={[styles.pulse, { borderColor: color }, style]} />;
+}
 
 const styles = StyleSheet.create({
   track: {
@@ -189,6 +294,13 @@ const styles = StyleSheet.create({
     borderRadius: TRACK / 2,
     overflow: 'hidden',
   },
+  shimmer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 46,
+  },
   dot: {
     position: 'absolute',
     width: DOT,
@@ -198,6 +310,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  dotRing: {
+    position: 'absolute',
+    width: DOT,
+    height: DOT,
+    borderRadius: DOT / 2,
+    borderWidth: 2,
+  },
   dotCore: {
     width: 6,
     height: 6,
@@ -206,6 +325,11 @@ const styles = StyleSheet.create({
   },
   label: {
     position: 'absolute',
+  },
+  burstAt: {
+    position: 'absolute',
+    width: 0,
+    height: 0,
   },
   marker: {
     position: 'absolute',
@@ -229,16 +353,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.surfaceHigh,
+    shadowOpacity: 0.9,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 0 },
   },
   youTag: {
     position: 'absolute',
     top: (MARKER - 24) / 2,
     height: 24,
-    width: 136,
+    width: 128,
     justifyContent: 'center',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radii.full,
     alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.full,
   },
 });

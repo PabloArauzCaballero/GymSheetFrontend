@@ -242,6 +242,11 @@ export const progressionSchema = z.object({
   path: z.array(progressionLevelSchema),
   /** El camino de arenas. Un servidor anterior no lo manda: la app lo deduce de los rangos. */
   arenas: z.array(progressionArenaSchema).default([]),
+  /**
+   * Puntos ganados en total, sin canjes ni penalizaciones: lo que mueve el
+   * camino, que nunca baja. `points` es el saldo y puede bajar.
+   */
+  arenaPoints: z.number().int().optional(),
   badges: z.array(progressionBadgeSchema),
   stats: progressionStatsSchema,
   unlockedNow: z.array(progressionBadgeSchema),
