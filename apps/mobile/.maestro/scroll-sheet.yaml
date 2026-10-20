@@ -1,0 +1,5 @@
+appId: app.gymsheet.mobile
+name: Scroll points sheet
+---
+- scroll
+- takeScreenshot: 12-points-rules-scrolled
