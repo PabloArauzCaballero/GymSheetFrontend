@@ -3,8 +3,9 @@
  * `road.test.ts` con `node --test`.
  *
  * La pantalla solo pinta lo que sale de aquí: en qué estado está cada arena,
- * cuánto de su tramo llevas y cuántos puntos te faltan. Así la coreografía no
- * decide nada y las reglas se pueden probar sin un simulador.
+ * qué rango vive en ella, cuánto de su tramo llevas y cuántos puntos te
+ * faltan. Así la coreografía no decide nada y las reglas se prueban sin
+ * simulador.
  */
 
 /** Lo que la pantalla necesita de un rango del servidor. */
@@ -12,14 +13,19 @@ export type RoadLevel = Readonly<{
   code: string;
   name: string;
   tagline: string;
-  arena: string | null;
-  milestones: readonly string[];
   minPoints: number;
   sortOrder: number;
   color: string;
   icon: string;
-  unlocked: boolean;
-  current: boolean;
+}>;
+
+/** Lo que la pantalla necesita de una arena del servidor. */
+export type RoadArenaSource = Readonly<{
+  code: string;
+  name: string;
+  tagline: string;
+  minPoints: number;
+  milestones: readonly string[];
 }>;
 
 /**
@@ -31,11 +37,17 @@ export type RoadLevel = Readonly<{
 export type ArenaState = 'done' | 'current' | 'next' | 'locked';
 
 export type RoadArena = Readonly<{
-  level: RoadLevel;
+  code: string;
   /** 1 = la primera arena del camino. */
   order: number;
-  /** El nombre del lugar; si el gimnasio no le puso arena, el del rango. */
-  arenaName: string;
+  name: string;
+  tagline: string;
+  milestones: readonly string[];
+  minPoints: number;
+  /** El rango vigente dentro de esta arena (el último con umbral ≤ el de la arena). */
+  rank: RoadLevel | null;
+  /** Entrar aquí es subir de rango: el umbral de la arena es el de un rango. */
+  rankUp: boolean;
   state: ArenaState;
   /** Puntos que faltan para entrar (0 si ya se entró). */
   pointsToEnter: number;
@@ -59,12 +71,33 @@ function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
 }
 
-export function buildRoad(path: readonly RoadLevel[], points: number): Road {
-  const sorted = [...path].sort((left, right) => left.sortOrder - right.sortOrder);
-  const currentIndex = sorted.reduce((found, level, index) => (points >= level.minPoints ? index : found), -1);
+/**
+ * Un servidor anterior no manda arenas: cada rango hace de arena, con su
+ * nombre y sin hitos. El camino se ve igual, solo más corto.
+ */
+function arenasFromLevels(levels: readonly RoadLevel[]): RoadArenaSource[] {
+  return levels.map((level) => ({
+    code: level.code,
+    name: level.name,
+    tagline: level.tagline,
+    minPoints: level.minPoints,
+    milestones: [],
+  }));
+}
 
-  const arenas = sorted.map((level, index): RoadArena => {
-    const following = sorted[index + 1];
+export function buildRoad(
+  sources: readonly RoadArenaSource[],
+  path: readonly RoadLevel[],
+  points: number,
+): Road {
+  const levels = [...path].sort((left, right) => left.sortOrder - right.sortOrder);
+  const arenaList = [...(sources.length > 0 ? sources : arenasFromLevels(levels))].sort(
+    (left, right) => left.minPoints - right.minPoints,
+  );
+  const currentIndex = arenaList.reduce((found, arena, index) => (points >= arena.minPoints ? index : found), -1);
+
+  const arenas = arenaList.map((arena, index): RoadArena => {
+    const following = arenaList[index + 1];
     let state: ArenaState = 'locked';
     if (index < currentIndex) state = 'done';
     else if (index === currentIndex) state = 'current';
@@ -74,16 +107,26 @@ export function buildRoad(path: readonly RoadLevel[], points: number): Road {
     if (index < currentIndex) segmentProgress = 1;
     else if (index === currentIndex) {
       segmentProgress = following
-        ? clamp01((points - level.minPoints) / Math.max(1, following.minPoints - level.minPoints))
+        ? clamp01((points - arena.minPoints) / Math.max(1, following.minPoints - arena.minPoints))
         : 1;
     }
 
+    const rank = levels.reduce<RoadLevel | null>(
+      (found, level) => (level.minPoints <= arena.minPoints ? level : found),
+      null,
+    );
+
     return {
-      level,
+      code: arena.code,
       order: index + 1,
-      arenaName: level.arena?.trim() || level.name,
+      name: arena.name,
+      tagline: arena.tagline,
+      milestones: arena.milestones,
+      minPoints: arena.minPoints,
+      rank,
+      rankUp: rank !== null && rank.minPoints === arena.minPoints,
       state,
-      pointsToEnter: Math.max(0, level.minPoints - points),
+      pointsToEnter: Math.max(0, arena.minPoints - points),
       segmentProgress,
     };
   });
