@@ -2,8 +2,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { DirectoryReviewsSection } from '@/features/directory/components/directory-reviews-section';
+import { MarketplacePlansSection } from '@/features/directory/components/marketplace-plans-section';
 import {
   getDirectoryEntity,
+  getEntityPaymentConfig,
+  getEntityPlans,
   listDirectoryReviews,
 } from '@/features/directory/services/directory-server';
 import { PublicFooter } from '@/features/public-facilities/components/public-footer';
@@ -40,10 +43,14 @@ export default async function DirectoryEntityDetailPage({ params }: PageProps) {
   const entity = await getDirectoryEntity(slug);
   if (!entity) notFound();
 
-  const reviewsResponse = await listDirectoryReviews(entity.id, {
-    sortBy: 'helpful',
-    limit: 20,
-  });
+  const [reviewsResponse, plans, paymentConfig] = await Promise.all([
+    listDirectoryReviews(entity.id, {
+      sortBy: 'helpful',
+      limit: 20,
+    }),
+    getEntityPlans(entity.id),
+    getEntityPaymentConfig(entity.id),
+  ]);
 
   const typeName = TYPE_NAMES[entity.entityType] ?? entity.entityType;
 
@@ -207,6 +214,14 @@ export default async function DirectoryEntityDetailPage({ params }: PageProps) {
             </div>
           </div>
         </section>
+
+        {/* Marketplace de Planes y Membresías con Pago QR */}
+        <MarketplacePlansSection
+          plans={plans}
+          paymentConfig={paymentConfig}
+          entityId={entity.id}
+          entityName={entity.name}
+        />
 
         {/* Galería si existe */}
         {entity.gallery.length > 0 && (

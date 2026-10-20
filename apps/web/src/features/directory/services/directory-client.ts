@@ -2,19 +2,27 @@ import { z } from 'zod';
 import { apiRequest } from '@/shared/api/api-client';
 import type {
   CategoryTreeNode,
+  CreatePaymentOrderInput,
   CreateReviewInput,
   CreateReviewReplyInput,
   DirectoryEntitySummary,
   DirectoryFilterQuery,
+  EntityPaymentConfig,
+  EntityPlan,
   EntityReviewsResponse,
   ListReviewsQuery,
+  PaymentOrder,
   ReviewItem,
+  SubmitReceiptInput,
   UpdateReviewInput,
 } from '@/shared/api/schemas';
 import {
   categoryTreeNodeSchema,
   directoryEntitySummarySchema,
+  entityPaymentConfigSchema,
+  entityPlanSchema,
   entityReviewsResponseSchema,
+  paymentOrderSchema,
   reviewItemSchema,
 } from '@/shared/api/schemas';
 
@@ -61,13 +69,12 @@ export const directoryClient = {
       reviewItemSchema,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           rating: input.rating,
           title: input.title,
           body: input.body,
           experience_date: input.experienceDate,
-        }),
+        },
       }
     );
   },
@@ -78,13 +85,12 @@ export const directoryClient = {
       reviewItemSchema,
       {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           rating: input.rating,
           title: input.title,
           body: input.body,
           experience_date: input.experienceDate,
-        }),
+        },
       }
     );
   },
@@ -111,9 +117,56 @@ export const directoryClient = {
       reviewItemSchema,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reply_text: input.replyText }),
+        body: { reply_text: input.replyText },
       }
     );
   },
+
+  getEntityPlans: (entityId: string) => {
+    return apiRequest<EntityPlan[]>(
+      `/public/directory/entities/${encodeURIComponent(entityId)}/plans`,
+      z.array(entityPlanSchema)
+    );
+  },
+
+  getEntityPaymentConfig: (entityId: string) => {
+    return apiRequest<EntityPaymentConfig | null>(
+      `/public/directory/entities/${encodeURIComponent(entityId)}/payment-config`,
+      entityPaymentConfigSchema.nullable()
+    );
+  },
+
+  createPaymentOrder: (input: CreatePaymentOrderInput) => {
+    return apiRequest<PaymentOrder>(
+      '/directory/payments/orders',
+      paymentOrderSchema,
+      {
+        method: 'POST',
+        body: input,
+      }
+    );
+  },
+
+  submitReceipt: (orderId: string, input: SubmitReceiptInput) => {
+    return apiRequest<PaymentOrder>(
+      `/directory/payments/orders/${encodeURIComponent(orderId)}/receipt`,
+      paymentOrderSchema,
+      {
+        method: 'POST',
+        body: input,
+      }
+    );
+  },
+
+  getMyOrders: (query: { status?: string; limit?: number } = {}) => {
+    const params = new URLSearchParams();
+    if (query.status) params.set('status', query.status);
+    if (query.limit) params.set('limit', String(query.limit));
+
+    return apiRequest<PaymentOrder[]>(
+      `/directory/payments/orders/my-orders?${params.toString()}`,
+      z.array(paymentOrderSchema)
+    );
+  },
 };
+

@@ -1,0 +1,10 @@
+appId: app.gymsheet.mobile
+---
+- tapOn:
+    point: 30%,51.5%
+- extendedWaitUntil:
+    visible: "Cada regla con tus números al lado."
+    timeout: 10000
+- takeScreenshot: rules_sheet_top_51
+- scroll
+- takeScreenshot: rules_sheet_bottom_51

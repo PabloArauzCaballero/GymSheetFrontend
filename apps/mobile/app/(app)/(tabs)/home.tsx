@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { IconBadge } from '@/components/icon-badge';
 import { IconButton } from '@/components/icon-button';
@@ -38,6 +39,12 @@ const LONG_DATE = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'nume
 export default function HomeScreen() {
   const principal = useAuthStore((state) => state.principal);
   const router = useRouter();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.push('/directorio');
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [router]);
   useScreenTour('home');
   const unreadNotifications = useQuery({
     queryKey: ['notifications', 'unread-count'],
@@ -122,6 +129,28 @@ export default function HomeScreen() {
         title={`Hola, ${firstName}`}
         tourKey="home"
       />
+
+      <PressableScale
+        accessibilityLabel="Explorar Directorio Fitness"
+        onPress={() => router.push('/directorio')}
+        style={{
+          backgroundColor: '#10b981',
+          borderRadius: 14,
+          paddingVertical: 14,
+          paddingHorizontal: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          marginBottom: 12,
+        }}
+      >
+        <Ionicons color="#000" name="storefront" size={24} />
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: '#000', fontSize: 15, fontWeight: '700' }}>Directorio & Reseñas App Store</Text>
+          <Text style={{ color: '#064e3b', fontSize: 12, fontWeight: '500' }}>Gimnasios, suplementos, coaches y valoraciones</Text>
+        </View>
+        <Ionicons color="#000" name="arrow-forward" size={20} />
+      </PressableScale>
 
       {/* Si el acceso no está vigente, eso es lo primero que hay que resolver,
           pero en una franja: el valor de la pantalla tiene que verse igual. */}

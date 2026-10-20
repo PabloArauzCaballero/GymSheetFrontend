@@ -56,7 +56,7 @@ export default function DirectorioScreen() {
   const [selectedType, setSelectedType] = useState<string | undefined>(undefined);
   const [selectedCategoryPath, setSelectedCategoryPath] = useState<string | undefined>(undefined);
   const [search, setSearch] = useState('');
-  const [selectedEntitySlug, setSelectedEntitySlug] = useState<string | null>(null);
+  const [selectedEntitySlug, setSelectedEntitySlug] = useState<string | null>('topfitness');
 
   // Estados para modal de reseña
   const [isComposerOpen, setIsComposerOpen] = useState(false);
@@ -73,6 +73,7 @@ export default function DirectorioScreen() {
   const [receiptReference, setReceiptReference] = useState('');
   const [athleteNotes, setAthleteNotes] = useState('');
   const [isReceiptSubmitted, setIsReceiptSubmitted] = useState(false);
+  const [uploadingReceipt, setUploadingReceipt] = useState(false);
 
   // Estados para comentarios del plan (sistema community existente)
   const [selectedPlanForComments, setSelectedPlanForComments] = useState<EntityPlan | null>(null);
@@ -86,16 +87,27 @@ export default function DirectorioScreen() {
   });
 
   // 2. Cargar entidades
-  const { data: entities = [], isLoading: loadingEntities } = useQuery<DirectoryEntitySummary[]>({
+  const { data: entities = [], isLoading: loadingEntities, error: entitiesError } = useQuery<DirectoryEntitySummary[]>({
     queryKey: ['directory-entities', selectedType, selectedCategoryPath, search],
-    queryFn: () =>
-      directoryService.entities({
-        type: selectedType,
-        categoryPath: selectedCategoryPath,
-        search: search.trim() || undefined,
-        limit: 30,
-      }),
+    queryFn: async () => {
+      try {
+        const res = await directoryService.entities({
+          type: selectedType,
+          categoryPath: selectedCategoryPath,
+          search: search.trim() || undefined,
+          limit: 30,
+        });
+        console.log('[Directorio] Fetched entities count:', res?.length);
+        return res;
+      } catch (err) {
+        console.error('[Directorio] Fetch entities error:', err);
+        throw err;
+      }
+    },
   });
+  if (entitiesError) {
+    console.error('[Directorio] React-query entitiesError:', entitiesError);
+  }
 
   // 3. Cargar detalle de entidad seleccionada
   const { data: entityDetail, isLoading: loadingDetail } = useQuery<DirectoryEntityDetail | null>({
@@ -264,19 +276,27 @@ export default function DirectorioScreen() {
       });
       if (!res.canceled && res.assets && res.assets[0]) {
         Haptics.selectionAsync();
-        setReceiptUrl(res.assets[0].uri);
-        notify.success('Comprobante seleccionado');
+        const asset = res.assets[0];
+        setUploadingReceipt(true);
+        try {
+          const uploaded = await communityService.uploadAttachment({
+            uri: asset.uri,
+            name: asset.fileName ?? 'comprobante.jpg',
+            mimeType: asset.mimeType ?? 'image/jpeg',
+          });
+          setReceiptUrl(uploaded.url);
+          notify.success('Comprobante subido al servidor correctamente');
+        } catch (uploadErr) {
+          console.warn('[Directorio] Receipt upload fallback to local uri:', uploadErr);
+          setReceiptUrl(asset.uri);
+          notify.info('Comprobante seleccionado localmente.');
+        } finally {
+          setUploadingReceipt(false);
+        }
       }
     } catch {
       notify.warning('No se pudo abrir la galería.');
     }
-  };
-
-  const handleUseDemoReceipt = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setReceiptUrl('https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600');
-    setReceiptReference(`OP-${Math.floor(100000 + Math.random() * 900000)}`);
-    notify.success('Comprobante demo cargado');
   };
 
   const handleSubmitReceipt = () => {
@@ -306,7 +326,7 @@ export default function DirectorioScreen() {
   };
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={[styles.screen, { paddingTop: Math.max(insets.top, spacing.md) + spacing.xs }]}>
       <StatusBar barStyle="light-content" />
       <AmbientBackground />
 
@@ -965,14 +985,19 @@ export default function DirectorioScreen() {
                   </Text>
 
                   <View style={{ flexDirection: 'row', gap: spacing.sm, marginVertical: spacing.sm }}>
-                    <PressableScale onPress={handlePickReceiptImage} style={styles.pickImageButton}>
-                      <Ionicons name="image-outline" size={18} color={colors.text} />
-                      <Text style={styles.pickImageText}>Elegir de Galería</Text>
-                    </PressableScale>
-
-                    <PressableScale onPress={handleUseDemoReceipt} style={styles.demoReceiptButton}>
-                      <Ionicons name="sparkles-outline" size={18} color={colors.volt} />
-                      <Text style={styles.demoReceiptText}>Cargar Demo</Text>
+                    <PressableScale
+                      disabled={uploadingReceipt}
+                      onPress={handlePickReceiptImage}
+                      style={styles.pickImageButton}
+                    >
+                      {uploadingReceipt ? (
+                        <ActivityIndicator size="small" color={colors.volt} />
+                      ) : (
+                        <Ionicons name="image-outline" size={18} color={colors.text} />
+                      )}
+                      <Text style={styles.pickImageText}>
+                        {uploadingReceipt ? 'Subiendo al servidor...' : 'Elegir de Galería'}
+                      </Text>
                     </PressableScale>
                   </View>
 
@@ -1205,6 +1230,7 @@ const styles = StyleSheet.create({
   cardBadges: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: spacing.xs,
     marginBottom: 2,
   },
@@ -1213,13 +1239,16 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.xs,
     textTransform: 'uppercase',
     fontWeight: semibold,
+    flexShrink: 1,
   },
   verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: colors.voltDim,
-    paddingHorizontal: spacing.xs,
+    backgroundColor: 'rgba(63, 230, 148, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(63, 230, 148, 0.35)',
+    paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: radii.sm,
   },
@@ -1920,23 +1949,6 @@ const styles = StyleSheet.create({
   },
   pickImageText: {
     color: colors.text,
-    fontSize: fontSizes.xs,
-    fontWeight: semibold,
-  },
-  demoReceiptButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: colors.voltDim,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.volt,
-  },
-  demoReceiptText: {
-    color: colors.volt,
     fontSize: fontSizes.xs,
     fontWeight: semibold,
   },

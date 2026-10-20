@@ -1,0 +1,21 @@
+appId: app.gymsheet.mobile
+---
+- openLink: "gymsheet:///trayectoria"
+- extendedWaitUntil:
+    visible: "Tu senda"
+    timeout: 10000
+- tapOn:
+    point: 30%,62%
+- extendedWaitUntil:
+    visible: "Cada regla con tus números al lado."
+    timeout: 10000
+- takeScreenshot: proof_rules_top
+- scroll
+- takeScreenshot: proof_rules_bottom
+- tapOn:
+    point: 88%,17%
+- extendedWaitUntil:
+    visible: "Tu senda"
+    timeout: 10000
+- scroll
+- takeScreenshot: proof_badges_section

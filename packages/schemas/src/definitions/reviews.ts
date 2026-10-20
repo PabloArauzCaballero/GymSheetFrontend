@@ -18,7 +18,7 @@ export const updateReviewInputSchema = z.object({
 export type UpdateReviewInput = z.infer<typeof updateReviewInputSchema>;
 
 export const reviewReplySchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
   authorName: z.string(),
   authorRole: z.string(),
   replyText: z.string(),
@@ -33,12 +33,12 @@ export const createReviewReplyInputSchema = z.object({
 export type CreateReviewReplyInput = z.infer<typeof createReviewReplyInputSchema>;
 
 export const reviewItemSchema = z.object({
-  id: z.string().uuid(),
-  entityId: z.string().uuid(),
+  id: z.string(),
+  entityId: z.string(),
   author: z.object({
-    id: z.string().uuid(),
+    id: z.string(),
     displayName: z.string(),
-    avatarUrl: z.string().url().nullable(),
+    avatarUrl: z.string().nullable(),
   }),
   rating: z.number().int().min(1).max(5),
   title: z.string(),
@@ -53,7 +53,7 @@ export const reviewItemSchema = z.object({
 export type ReviewItem = z.infer<typeof reviewItemSchema>;
 
 export const entityReviewsResponseSchema = z.object({
-  entityId: z.string().uuid(),
+  entityId: z.string(),
   score: z.number(),
   totalReviews: z.number(),
   histogram: ratingHistogramSchema,

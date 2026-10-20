@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const entityPaymentConfigSchema = z.object({
-  id: z.string().uuid().optional(),
-  entityId: z.string().uuid().optional(),
+  id: z.string().optional(),
+  entityId: z.string().optional(),
   bankName: z.string().trim().min(2).max(100),
   accountHolderName: z.string().trim().min(2).max(180),
   taxId: z.string().trim().min(3).max(50),
@@ -23,8 +23,8 @@ export const entityPlanStatusEnum = z.enum(['ACTIVE', 'INACTIVE', 'ARCHIVED']);
 export type EntityPlanStatus = z.infer<typeof entityPlanStatusEnum>;
 
 export const entityPlanSchema = z.object({
-  id: z.string().uuid(),
-  entityId: z.string().uuid(),
+  id: z.string(),
+  entityId: z.string(),
   type: entityPlanTypeEnum,
   name: z.string(),
   slug: z.string(),
@@ -43,13 +43,13 @@ export const entityPlanSchema = z.object({
 export type EntityPlan = z.infer<typeof entityPlanSchema>;
 
 export const planPriceHistorySchema = z.object({
-  id: z.string().uuid(),
-  planId: z.string().uuid(),
+  id: z.string(),
+  planId: z.string(),
   price: z.string(),
   currency: z.string().length(3),
   effectiveFrom: z.string(),
   effectiveTo: z.string().nullable(),
-  changedByUserId: z.string().uuid(),
+  changedByUserId: z.string(),
   changeReason: z.string(),
   isPromotional: z.boolean(),
   createdAt: z.string(),
@@ -90,12 +90,12 @@ export const paymentOrderStatusEnum = z.enum([
 export type PaymentOrderStatus = z.infer<typeof paymentOrderStatusEnum>;
 
 export const paymentOrderSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
   orderNumber: z.string(),
-  entityId: z.string().uuid(),
-  planId: z.string().uuid(),
-  athleteUserId: z.string().uuid(),
-  priceHistoryId: z.string().uuid(),
+  entityId: z.string(),
+  planId: z.string(),
+  athleteUserId: z.string(),
+  priceHistoryId: z.string(),
   amount: z.string(),
   currency: z.string().length(3),
   planSnapshot: z.record(z.string(), z.unknown()),
@@ -114,7 +114,7 @@ export const paymentOrderSchema = z.object({
 export type PaymentOrder = z.infer<typeof paymentOrderSchema>;
 
 export const createPaymentOrderSchema = z.object({
-  planId: z.string().uuid(),
+  planId: z.string(),
   athleteNotes: z.string().trim().max(500).nullable().optional(),
 });
 export type CreatePaymentOrderInput = z.infer<typeof createPaymentOrderSchema>;

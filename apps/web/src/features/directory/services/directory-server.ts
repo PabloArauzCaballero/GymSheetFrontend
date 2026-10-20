@@ -6,6 +6,8 @@ import type {
   DirectoryEntityDetail,
   DirectoryEntitySummary,
   DirectoryFilterQuery,
+  EntityPaymentConfig,
+  EntityPlan,
   EntityReviewsResponse,
   ListReviewsQuery,
 } from '@/shared/api/schemas';
@@ -13,6 +15,8 @@ import {
   categoryTreeNodeSchema,
   directoryEntityDetailSchema,
   directoryEntitySummarySchema,
+  entityPaymentConfigSchema,
+  entityPlanSchema,
   entityReviewsResponseSchema,
 } from '@/shared/api/schemas';
 import { backendRequest, readBackendJson } from '@/shared/server/backend';
@@ -75,3 +79,23 @@ export async function listDirectoryReviews(
   );
   return readData(response, entityReviewsResponseSchema);
 }
+
+export const getEntityPlans = cache(
+  async (entityId: string): Promise<EntityPlan[]> => {
+    const response = await backendRequest(
+      `/public/directory/entities/${encodeURIComponent(entityId)}/plans`
+    );
+    const plans = await readData(response, z.array(entityPlanSchema));
+    return plans ?? [];
+  }
+);
+
+export const getEntityPaymentConfig = cache(
+  async (entityId: string): Promise<EntityPaymentConfig | null> => {
+    const response = await backendRequest(
+      `/public/directory/entities/${encodeURIComponent(entityId)}/payment-config`
+    );
+    return readData(response, entityPaymentConfigSchema);
+  }
+);
+

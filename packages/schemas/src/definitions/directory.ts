@@ -11,7 +11,7 @@ export type EntityType = z.infer<typeof entityTypeEnum>;
 
 export const categoryTreeNodeSchema: z.ZodType<CategoryTreeNode> = z.lazy(() =>
   z.object({
-    id: z.string().uuid(),
+    id: z.string(),
     slug: z.string(),
     name: z.string(),
     description: z.string().nullable(),
@@ -45,15 +45,15 @@ export const ratingHistogramSchema = z.object({
 export type RatingHistogram = z.infer<typeof ratingHistogramSchema>;
 
 export const directoryEntitySummarySchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
   slug: z.string(),
   entityType: entityTypeEnum,
   name: z.string(),
   headline: z.string().nullable(),
-  logoUrl: z.string().url().nullable(),
-  coverUrl: z.string().url().nullable(),
+  logoUrl: z.string().nullable(),
+  coverUrl: z.string().nullable(),
   primaryCategory: z.object({
-    id: z.string().uuid(),
+    id: z.string(),
     name: z.string(),
     slug: z.string(),
     path: z.string(),
@@ -70,22 +70,22 @@ export type DirectoryEntitySummary = z.infer<typeof directoryEntitySummarySchema
 
 export const directoryEntityDetailSchema = directoryEntitySummarySchema.extend({
   description: z.string(),
-  gallery: z.array(z.string().url()),
+  gallery: z.array(z.string()),
   address: z.string().nullable(),
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
   contactInfo: z.object({
     phone: z.string().optional(),
     whatsapp: z.string().optional(),
-    website: z.string().url().optional(),
+    website: z.string().optional(),
     instagram: z.string().optional(),
-    email: z.string().email().optional(),
+    email: z.string().optional(),
   }),
   businessHours: z.record(z.string(), z.object({ open: z.string(), close: z.string() })),
   ratingBreakdown: ratingHistogramSchema,
   secondaryCategories: z.array(
     z.object({
-      id: z.string().uuid(),
+      id: z.string(),
       name: z.string(),
       slug: z.string(),
       path: z.string(),

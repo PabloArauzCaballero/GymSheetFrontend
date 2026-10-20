@@ -205,6 +205,7 @@ export function createApiClient(config: ApiClientConfig) {
       }
       const parsed = schema.safeParse(envelope.data.data);
       if (!parsed.success) {
+        console.error('[Contract Validation Error]', path, JSON.stringify(parsed.error.issues, null, 2));
         throw new ApiError({
           message: 'La respuesta no coincide con el contrato esperado.',
           status: 502,
