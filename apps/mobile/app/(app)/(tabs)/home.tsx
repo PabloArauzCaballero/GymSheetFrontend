@@ -39,12 +39,6 @@ const LONG_DATE = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'nume
 export default function HomeScreen() {
   const principal = useAuthStore((state) => state.principal);
   const router = useRouter();
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      router.push('/directorio');
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [router]);
   useScreenTour('home');
   const unreadNotifications = useQuery({
     queryKey: ['notifications', 'unread-count'],
