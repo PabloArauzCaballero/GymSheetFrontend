@@ -95,3 +95,97 @@ export async function exportWorkoutHistory(format: ExportFormat): Promise<Export
   await FileSystem.writeAsStringAsync(target, contents, { encoding });
   return { status: 'saved', location: spec.fileName };
 }
+
+export interface RoutineProgressExportFilters {
+  format: 'excel' | 'csv' | 'pdf';
+  routineId?: string;
+  datePreset?: 'ALL' | 'LAST_30' | 'LAST_90' | 'LAST_YEAR';
+  dateFrom?: string;
+  dateTo?: string;
+  includeHistory?: boolean;
+  includeTargets?: boolean;
+  includePrograms?: boolean;
+}
+
+export type RoutineProgressExportResult =
+  | { readonly status: 'saved'; readonly fileName: string; readonly recordsCount: number }
+  | { readonly status: 'cancelled' }
+  | { readonly status: 'unsupported' };
+
+/**
+ * Descarga y exporta el progreso completo del sistema de rutinas
+ * con filtros seleccionados y auditoría en backend.
+ */
+export async function exportRoutineProgress(
+  filters: RoutineProgressExportFilters,
+): Promise<RoutineProgressExportResult> {
+  const token = await secureStoreTokenProvider.getAccessToken();
+  if (!token) throw new Error('Tu sesión expiró. Inicia sesión otra vez.');
+
+  const cacheDirectory = FileSystem.cacheDirectory;
+  if (!cacheDirectory) return { status: 'unsupported' };
+
+  const response = await fetch(`${env.apiUrl}/export/routine-progress`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify(filters),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`El servidor respondió ${response.status} al generar el archivo.`);
+  }
+
+  const data = (await response.json()) as {
+    fileName: string;
+    format: string;
+    mimeType: string;
+    recordsCount: number;
+    base64: string;
+  };
+
+  const fileName =
+    data.fileName ||
+    `gymsheet-progreso-rutinas.${filters.format === 'excel' ? 'xlsx' : filters.format}`;
+  const temporaryUri = `${cacheDirectory}${fileName}`;
+
+  await FileSystem.writeAsStringAsync(temporaryUri, data.base64, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+
+  if (await Sharing.isAvailableAsync()) {
+    await Sharing.shareAsync(temporaryUri, {
+      mimeType: data.mimeType,
+      dialogTitle: 'Descargar progreso de rutinas',
+      UTI:
+        filters.format === 'pdf'
+          ? 'com.adobe.pdf'
+          : filters.format === 'csv'
+            ? 'public.comma-separated-values-text'
+            : 'org.openxmlformats.spreadsheetml.sheet',
+    });
+    return { status: 'saved', fileName, recordsCount: data.recordsCount ?? 0 };
+  }
+
+  if (Platform.OS !== 'android') {
+    return { status: 'saved', fileName, recordsCount: data.recordsCount ?? 0 };
+  }
+
+  const permission = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+  if (!permission.granted) return { status: 'cancelled' };
+
+  const target = await FileSystem.StorageAccessFramework.createFileAsync(
+    permission.directoryUri,
+    fileName,
+    data.mimeType,
+  );
+  await FileSystem.writeAsStringAsync(target, data.base64, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+  return { status: 'saved', fileName, recordsCount: data.recordsCount ?? 0 };
+}
+
