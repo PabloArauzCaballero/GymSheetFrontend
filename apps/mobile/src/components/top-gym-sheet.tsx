@@ -16,22 +16,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { LeaderboardBadge, LeaderboardSortBy } from '@gymsheet/schemas';
 import { chatService, progressionService } from '@/api/services';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
-import { Card, Section } from '@/components/layout';
+
 import { CountUpText, PressableScale, SegmentLabel, SegmentedPill } from '@/components/motion';
 import { RankBadge } from '@/components/rank-badge';
 import { levelTitle } from '@/components/directory-card';
 import { initialsOf } from '@/lib/format';
 import { notify } from '@/notifications';
-import {
-  colors,
-  fontSizes,
-  iconSizes,
-  minTouchTarget,
-  overlay,
-  radii,
-  semibold,
-  spacing,
-} from '@/theme';
+import { alpha, colors, fontSizes, iconSizes, ink, minTouchTarget, overlay, radii, semibold, spacing } from '@/theme';
 
 const AVATAR_SIZE = 48;
 
@@ -60,7 +51,7 @@ function BadgeChip({ badge }: { badge: LeaderboardBadge }) {
         numberOfLines={1}
         style={{
           color: colors.textMuted,
-          fontSize: 10,
+          fontSize: fontSizes.micro,
           fontWeight: '600',
           maxWidth: 90,
         }}
@@ -127,7 +118,7 @@ export function TopGymModal({
               width: 38,
               height: 4,
               borderRadius: 2,
-              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              backgroundColor: alpha(ink.white, 0.25),
               alignSelf: 'center',
               marginBottom: spacing.xs,
             }}
@@ -329,7 +320,7 @@ export function TopGymModal({
                             <Text
                               style={{
                                 color: colors.background,
-                                fontSize: 10,
+                                fontSize: fontSizes.micro,
                                 fontWeight: '700',
                               }}
                             >

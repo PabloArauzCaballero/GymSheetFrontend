@@ -10,7 +10,7 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { radii } from '@/theme';
+import { alpha, ink, radii } from '@/theme';
 
 export interface AnimatedIconBadgeProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -140,6 +140,6 @@ const styles = StyleSheet.create({
     height: '42%',
     borderBottomLeftRadius: radii.full,
     borderBottomRightRadius: radii.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: alpha(ink.white, 0.12),
   },
 });

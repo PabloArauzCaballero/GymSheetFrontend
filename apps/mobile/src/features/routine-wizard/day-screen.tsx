@@ -1,15 +1,7 @@
 import { Redirect, router } from 'expo-router';
 import { useMemo } from 'react';
 import { View } from 'react-native';
-import {
-  WEEKDAY_NAMES,
-  WIZARD_STEPS,
-  countLabel,
-  createDraftExercise,
-  findDay,
-  type DayTarget,
-  type Weekday,
-} from '@gymsheet/hooks';
+import { WEEKDAY_NAMES, countLabel, createDraftExercise, findDay, type DayTarget, type DraftExercise, type Weekday } from '@gymsheet/hooks';
 import { ScreenHeader } from '@/components/layout';
 import { BackLink } from '@/components/nav';
 import { WizardActionBar } from '@/components/wizard/wizard-action-bar';
@@ -17,10 +9,16 @@ import { WizardProgress } from '@/components/wizard/wizard-progress';
 import { ExerciseBrowser } from '@/features/exercise-browser/exercise-browser';
 import type { PickConfig } from '@/features/exercise-browser/types';
 import { useRoutineDraft } from '@/features/routine-wizard/use-wizard';
-import { goToWizardStep, orderPath, pickDetailPath, wizardStepPath } from '@/lib/wizard-routes';
+import {
+  MOBILE_WIZARD_STEPS,
+  goToWizardStep,
+  orderPath,
+  pickDetailPath,
+  wizardStepPath,
+} from '@/lib/wizard-routes';
 import { spacing } from '@/theme';
 
-const DAYS_STEP = 4;
+const DAYS_STEP = MOBILE_WIZARD_STEPS.findIndex((s) => s.id === 'dias');
 
 /** Nombres de los días del grupo: «Lunes y jueves», «Lunes, miércoles y viernes». */
 function listDays(days: readonly Weekday[]): string {
@@ -47,7 +45,7 @@ export function DayPickScreen({ dia }: { dia: DayTarget }) {
 
   const pick = useMemo<PickConfig>(
     () => ({
-      isAdded: (id) => list?.some((exercise) => exercise.ejercicioId === id) ?? false,
+      isAdded: (id) => list?.some((exercise: DraftExercise) => exercise.ejercicioId === id) ?? false,
       add: (exercise) =>
         dispatch({
           type: 'agregarEjercicio',
@@ -83,7 +81,7 @@ export function DayPickScreen({ dia }: { dia: DayTarget }) {
         <>
           <BackLink />
           <View style={{ gap: spacing.lg }}>
-            <WizardProgress actual={DAYS_STEP} pasos={WIZARD_STEPS} />
+            <WizardProgress actual={DAYS_STEP} pasos={MOBILE_WIZARD_STEPS} />
             <ScreenHeader
               detail
               subtitle={scope ? `${scope}. ${subtitle}` : subtitle}

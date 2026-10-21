@@ -291,7 +291,7 @@ function RuleList({
       </View>
 
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
-        Cumplir con tu plan mantiene tu racha viva. Tienes 3 strikes mensuales para protegerla si faltas; si no repones en la semana o agotas tus strikes se penalizan puntos. Podés canjear puntos para recuperar strikes.
+        Cumplir tu plan semanal mantiene tu racha viva. Si faltas un día de tu plan, repónlo entrenando un día de descanso de esa misma semana. Si no lo repones, se gasta uno de tus 3 strikes del mes; sin strikes, la falta te cuesta puntos y no protege la racha. Puedes canjear puntos por strikes extra (tu arena nunca baja). Solo cuenta si declaraste tus días de descanso.
       </Text>
     </View>
   );

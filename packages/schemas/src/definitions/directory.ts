@@ -60,6 +60,7 @@ export const directoryEntitySummarySchema = z.object({
   }),
   city: z.string().nullable(),
   country: z.string().nullable(),
+  tenantId: z.string().nullable().optional(),
   isOnlineOnly: z.boolean(),
   isVerified: z.boolean(),
   ratingAverage: z.number().min(0).max(5),

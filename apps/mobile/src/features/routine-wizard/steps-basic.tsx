@@ -83,6 +83,16 @@ export function useLeaveConfirmation(): void {
   );
 }
 
+const GOAL_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
+  HIPERTROFIA: 'barbell-outline',
+  FUERZA: 'flash-outline',
+  RESISTENCIA: 'infinite-outline',
+  PERDIDA_GRASA: 'flame-outline',
+  SALUD_GENERAL: 'heart-outline',
+  RENDIMIENTO_DEPORTIVO: 'trophy-outline',
+  REHABILITACION: 'medkit-outline',
+};
+
 export function NameStep() {
   const { draft, dispatch, errors, next } = useRoutineDraft();
   const buscarPendiente = useRoutineDraftStore((store) => store.buscarPendiente);
@@ -95,7 +105,7 @@ export function NameStep() {
     <WizardShell
       actions={<WizardActionBar primary={{ label: 'Siguiente', onPress: () => next(0) }} />}
       paso={0}
-      subtitle="Un nombre corto que te ayude a reconocerla."
+      subtitle="Un nombre y una descripción para reconocerla fácilmente."
       title="¿Cómo se llama tu rutina?"
     >
       <PendingDraftCard />
@@ -111,6 +121,40 @@ export function NameStep() {
         testID="routine-name"
         value={draft.nombre}
       />
+      <View style={{ gap: spacing.xs }}>
+        <Input
+          error={errors(0).descripcion}
+          label="Descripción (opcional)"
+          maxLength={1000}
+          multiline
+          numberOfLines={4}
+          onChangeText={(valor) => dispatch({ type: 'campo', campo: 'descripcion', valor })}
+          placeholder="Ej. Pecho, hombros y tríceps con progresión de cargas."
+          style={{
+            minHeight: 110,
+            textAlignVertical: 'top',
+            paddingTop: spacing.md,
+            paddingHorizontal: spacing.md,
+            borderRadius: radii.md,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.surface,
+            color: colors.text,
+            fontSize: fontSizes.md,
+          }}
+          testID="routine-description"
+          value={draft.descripcion}
+        />
+        <Text
+          style={{
+            color: colors.textMuted,
+            fontSize: fontSizes.xs,
+            textAlign: 'right',
+          }}
+        >
+          {`${draft.descripcion.length} / 1000`}
+        </Text>
+      </View>
     </WizardShell>
   );
 }
@@ -119,13 +163,13 @@ export function DescriptionStep() {
   const { draft, dispatch, errors, next } = useRoutineDraft();
   return (
     <WizardShell
-      actions={<WizardActionBar primary={{ label: 'Siguiente', onPress: () => next(1) }} />}
-      paso={1}
+      actions={<WizardActionBar primary={{ label: 'Siguiente', onPress: () => next(0) }} />}
+      paso={0}
       subtitle="Opcional. Cuenta para qué sirve o a quién va dirigida."
       title="Descríbela"
     >
       <Input
-        error={errors(1).descripcion}
+        error={errors(0).descripcion}
         label="Descripción"
         maxLength={1000}
         multiline
@@ -169,16 +213,17 @@ export function GoalStep() {
     });
   return (
     <WizardShell
-      actions={<WizardActionBar primary={{ label: 'Siguiente', onPress: () => next(2) }} />}
-      paso={2}
+      actions={<WizardActionBar primary={{ label: 'Siguiente', onPress: () => next(1) }} />}
+      paso={1}
       subtitle="Define las series y repeticiones con las que empiezan tus ejercicios."
       title="¿Cuál es tu objetivo?"
     >
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
         {trainingGoals.map((goal) => (
           <ChoiceChip
+            icon={GOAL_ICON[goal] ?? 'trophy-outline'}
             key={goal}
-            label={GOAL_LABEL[goal]}
+            label={GOAL_LABEL[goal] ?? goal}
             onSelect={() => select(goal)}
             selected={draft.objetivo === goal}
             testID={`goal-${goal}`}
@@ -269,10 +314,10 @@ export function DurationStep() {
       actions={
         <WizardActionBar
           info={progressionSummary(state)}
-          primary={{ label: 'Siguiente', onPress: () => next(3) }}
+          primary={{ label: 'Siguiente', onPress: () => next(2) }}
         />
       }
-      paso={3}
+      paso={2}
       subtitle="Cuánto dura el programa y quién la puede ver."
       title="Duración y visibilidad"
     >
@@ -332,7 +377,7 @@ export function DurationStep() {
         </View>
         {custom ? (
           <WeeksStepper
-            error={errors(3).duracion}
+            error={errors(2).duracion}
             onChange={(cantidad) =>
               dispatch({
                 type: 'duracion',

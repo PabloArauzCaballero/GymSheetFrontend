@@ -17,7 +17,6 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import type {
-  CategoryTreeNode,
   DirectoryEntityDetail,
   DirectoryEntitySummary,
   EntityReviewsResponse,
@@ -25,39 +24,39 @@ import type {
   EntityPaymentConfig,
   PaymentOrder,
 } from '@gymsheet/schemas';
-import { directoryService, directoryPaymentsService, communityService } from '@/api/services';
+import { directoryService, directoryPaymentsService, communityService, membershipService } from '@/api/services';
+import { useAuthStore } from '@/state/auth-store';
 import { AmbientBackground } from '@/components/ambient';
-import { EmptyState } from '@/components/feedback';
+import { EmptyState, ErrorState } from '@/components/feedback';
 import { PressableScale } from '@/components/motion';
 import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
-import {
-  alpha,
-  colors,
-  fontSizes,
-  radii,
-  semibold,
-  spacing,
-} from '@/theme';
+import { accentHues, alpha, colors, darkSurfaces, fontSizes, heroNumberFontSize, ink, radii, semibold, spacing } from '@/theme';
 
-const TYPE_PILLS = [
-  { label: 'Todos', value: undefined },
-  { label: 'Tiendas', value: 'STORE' },
-  { label: 'Gimnasios', value: 'GYM' },
-  { label: 'Coaches', value: 'COACH' },
-  { label: 'Centros', value: 'CENTER' },
-  { label: 'Salud', value: 'SERVICE_PROVIDER' },
+const MARKET_CATEGORIES = [
+  { id: 'all', label: '🏷️ Todo', type: undefined, categoryPath: undefined },
+  { id: 'gyms', label: '🏋️ Gimnasios', type: 'GYM', categoryPath: 'gimnasios' },
+  { id: 'supplements', label: '💊 Suplementos', type: 'STORE', categoryPath: 'tiendas.nutricion' },
+  { id: 'apparel', label: '👕 Indumentaria', type: 'STORE', categoryPath: 'tiendas.indumentaria' },
+  { id: 'passes', label: '🎟️ Pases & Planes', type: undefined, categoryPath: undefined },
+  { id: 'coaches', label: '🥋 Coaches', type: 'COACH', categoryPath: 'coaches' },
 ] as const;
 
 export default function DirectorioScreen() {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const principal = useAuthStore((s) => s.principal);
+  const userTenantId = principal?.tenantId || 'default';
 
-  const [selectedType, setSelectedType] = useState<string | undefined>(undefined);
-  const [selectedCategoryPath, setSelectedCategoryPath] = useState<string | undefined>(undefined);
+  const [viewMode, setViewMode] = useState<'OFFERS' | 'ENTITIES'>('OFFERS');
+  const [selectedPillId, setSelectedPillId] = useState<string>('all');
   const [search, setSearch] = useState('');
-  const [selectedEntitySlug, setSelectedEntitySlug] = useState<string | null>('topfitness');
+  const [selectedEntitySlug, setSelectedEntitySlug] = useState<string | null>(null);
+
+  const activeCategoryConfig = MARKET_CATEGORIES.find((c) => c.id === selectedPillId);
+  const selectedType = activeCategoryConfig?.type;
+  const selectedCategoryPath = activeCategoryConfig?.categoryPath;
 
   // Estados para modal de reseña
   const [isComposerOpen, setIsComposerOpen] = useState(false);
@@ -81,34 +80,84 @@ export default function DirectorioScreen() {
   const [isPlanCommentsOpen, setIsPlanCommentsOpen] = useState(false);
   const [newPlanCommentText, setNewPlanCommentText] = useState('');
 
-  // 1. Cargar categorías
-  const { data: categories = [] } = useQuery<CategoryTreeNode[]>({
-    queryKey: ['directory-categories'],
-    queryFn: () => directoryService.categories(),
+  // 2. Cargar entidades (gimnasios, tiendas, coaches)
+  const {
+    data: entities = [],
+    isLoading: loadingEntities,
+    error: entitiesError,
+    refetch: refetchEntities,
+  } = useQuery<DirectoryEntitySummary[]>({
+    queryKey: ['directory-entities', selectedType, selectedCategoryPath, search],
+    queryFn: () =>
+      directoryService.entities({
+        type: selectedType,
+        categoryPath: selectedCategoryPath,
+        search: search.trim() || undefined,
+        limit: 50,
+      }),
   });
 
-  // 2. Cargar entidades
-  const { data: entities = [], isLoading: loadingEntities, error: entitiesError } = useQuery<DirectoryEntitySummary[]>({
-    queryKey: ['directory-entities', selectedType, selectedCategoryPath, search],
-    queryFn: async () => {
-      try {
-        const res = await directoryService.entities({
-          type: selectedType,
-          categoryPath: selectedCategoryPath,
-          search: search.trim() || undefined,
-          limit: 30,
-        });
-        console.log('[Directorio] Fetched entities count:', res?.length);
-        return res;
-      } catch (err) {
-        console.error('[Directorio] Fetch entities error:', err);
-        throw err;
-      }
-    },
+  // 3. Cargar todas las ofertas de productos y pases del Marketplace
+  const {
+    data: marketplaceOffers = [],
+    isLoading: loadingOffers,
+    error: offersError,
+    refetch: refetchOffers,
+  } = useQuery<EntityPlan[]>({
+    queryKey: ['directory-marketplace-all-plans'],
+    queryFn: () => directoryPaymentsService.allMarketplacePlans({ limit: 50 }),
   });
-  if (entitiesError) {
-    console.error('[Directorio] React-query entitiesError:', entitiesError);
-  }
+
+  // 4. Cargar membresía del usuario para destacar su condición
+  const { data: myMembership } = useQuery({
+    queryKey: ['my-membership-directorio'],
+    queryFn: () => membershipService.getMine(),
+  });
+
+  // «Tu gimnasio» es el ente del mismo gimnasio que la sesión, sin excepciones
+  // por nombre: el atajo anterior marcaba «topfitness» a cualquiera de `default`.
+  const isGymOfUser = (item: { tenantId?: string | null }) =>
+    Boolean(item.tenantId && item.tenantId === userTenantId);
+
+  const myGym = entities.find((e) => isGymOfUser(e));
+
+  const filteredOffers = marketplaceOffers.filter((plan) => {
+    if (selectedPillId === 'gyms') {
+      if (plan.type !== 'MEMBERSHIP_PLAN' && plan.type !== 'PASS') return false;
+    } else if (selectedPillId === 'supplements') {
+      const lower = (plan.name + ' ' + plan.description).toLowerCase();
+      if (!lower.includes('protein') && !lower.includes('creatina') && !lower.includes('workout') && !lower.includes('nutri')) {
+        return false;
+      }
+    } else if (selectedPillId === 'apparel') {
+      const lower = (plan.name + ' ' + plan.description).toLowerCase();
+      if (!lower.includes('cintur') && !lower.includes('strap') && !lower.includes('polera') && !lower.includes('indumentaria')) {
+        return false;
+      }
+    } else if (selectedPillId === 'passes') {
+      if (plan.type !== 'PASS' && plan.type !== 'MEMBERSHIP_PLAN') return false;
+    } else if (selectedPillId === 'coaches') {
+      if (plan.type !== 'SERVICE' && plan.entity?.entityType !== 'COACH') return false;
+    }
+
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const matchName = plan.name.toLowerCase().includes(q);
+      const matchDesc = plan.description.toLowerCase().includes(q);
+      const matchSeller = plan.entity?.name.toLowerCase().includes(q);
+      if (!matchName && !matchDesc && !matchSeller) return false;
+    }
+
+    return true;
+  });
+
+  const filteredEntities = entities.filter((item) => {
+    if (selectedPillId === 'gyms' && item.entityType !== 'GYM') return false;
+    if (selectedPillId === 'supplements' && item.primaryCategory?.slug !== 'tiendas-nutricion' && item.primaryCategory?.slug !== 'tiendas') return false;
+    if (selectedPillId === 'apparel' && item.primaryCategory?.slug !== 'tiendas-indumentaria' && item.primaryCategory?.slug !== 'tiendas') return false;
+    if (selectedPillId === 'coaches' && item.entityType !== 'COACH') return false;
+    return true;
+  });
 
   // 3. Cargar detalle de entidad seleccionada
   const { data: entityDetail, isLoading: loadingDetail } = useQuery<DirectoryEntityDetail | null>({
@@ -334,15 +383,18 @@ export default function DirectorioScreen() {
       {/* Header */}
       <View style={styles.header}>
         <BackLink label="Atrás" />
-        <Text style={styles.title}>Directorio</Text>
+        <View style={{ alignItems: 'center' }}>
+          <Text style={styles.title}>Marketplace GymSheet</Text>
+          <Text style={styles.headerSubtitle}>Directorio oficial de gimnasios, tiendas y pases</Text>
+        </View>
         <View style={{ width: 44 }} />
       </View>
 
-      {/* Buscador */}
+      {/* Buscador Marketplace */}
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={18} color={colors.textMuted} />
         <TextInput
-          placeholder="Buscar gimnasios, suplementos, coaches..."
+          placeholder="Buscar ofertas, marcas, suplementos, gyms..."
           placeholderTextColor={colors.textMuted}
           value={search}
           onChangeText={setSearch}
@@ -355,22 +407,22 @@ export default function DirectorioScreen() {
         )}
       </View>
 
-      {/* Píldoras de Filtro de Tipo */}
+      {/* Píldoras de Categorías Estilo Marketplace (Fila única limpia) */}
       <View style={styles.pillsWrapper}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillsScroll}>
-          {TYPE_PILLS.map((pill) => {
-            const isSelected = selectedType === pill.value;
+          {MARKET_CATEGORIES.map((cat) => {
+            const isSelected = selectedPillId === cat.id;
             return (
               <PressableScale
-                key={pill.label}
+                key={cat.id}
                 onPress={() => {
                   Haptics.selectionAsync();
-                  setSelectedType(pill.value);
+                  setSelectedPillId(cat.id);
                 }}
                 style={[styles.pill, isSelected && styles.pillSelected]}
               >
                 <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
-                  {pill.label}
+                  {cat.label}
                 </Text>
               </PressableScale>
             );
@@ -378,120 +430,332 @@ export default function DirectorioScreen() {
         </ScrollView>
       </View>
 
-      {/* Píldoras de Categorías Jerárquicas */}
-      {categories.length > 0 && (
-        <View style={{ marginBottom: spacing.sm }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillsScroll}>
-            <PressableScale
-              onPress={() => {
-                Haptics.selectionAsync();
-                setSelectedCategoryPath(undefined);
-              }}
-              style={[styles.pill, !selectedCategoryPath && styles.pillSelected]}
-            >
-              <Text style={[styles.pillText, !selectedCategoryPath && styles.pillTextSelected]}>
-                Todas las categorías
-              </Text>
-            </PressableScale>
-            {categories.map((cat) => {
-              const isSelected = selectedCategoryPath === cat.path;
-              return (
-                <PressableScale
-                  key={cat.id}
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    setSelectedCategoryPath(isSelected ? undefined : cat.path);
-                  }}
-                  style={[styles.pill, isSelected && styles.pillSelected]}
-                >
-                  <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
-                    {cat.name}
-                  </Text>
-                </PressableScale>
-              );
-            })}
-          </ScrollView>
-        </View>
-      )}
+      {/* Selector Segmentado: Ofertas & Catálogo vs Tiendas & Gimnasios */}
+      <View style={styles.segmentContainer}>
+        <PressableScale
+          onPress={() => {
+            Haptics.selectionAsync();
+            setViewMode('OFFERS');
+          }}
+          style={[styles.segmentButton, viewMode === 'OFFERS' && styles.segmentButtonActive]}
+        >
+          <Ionicons
+            name="pricetags"
+            size={15}
+            color={viewMode === 'OFFERS' ? ink.black : colors.textMuted}
+          />
+          <Text style={[styles.segmentText, viewMode === 'OFFERS' && styles.segmentTextActive]}>
+            Ofertas ({filteredOffers.length})
+          </Text>
+        </PressableScale>
 
-      {/* Listado de Entidades */}
-      {loadingEntities ? (
+        <PressableScale
+          onPress={() => {
+            Haptics.selectionAsync();
+            setViewMode('ENTITIES');
+          }}
+          style={[styles.segmentButton, viewMode === 'ENTITIES' && styles.segmentButtonActive]}
+        >
+          <Ionicons
+            name="business"
+            size={15}
+            color={viewMode === 'ENTITIES' ? ink.black : colors.textMuted}
+          />
+          <Text style={[styles.segmentText, viewMode === 'ENTITIES' && styles.segmentTextActive]}>
+            Tiendas & Gyms ({filteredEntities.length})
+          </Text>
+        </PressableScale>
+      </View>
+
+      {/* Contenido Principal en Cuadrícula Marketplace */}
+      {loadingEntities || loadingOffers ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.volt} />
         </View>
-      ) : entities.length === 0 ? (
+      ) : viewMode === 'OFFERS' && offersError ? (
+        // Un fallo de red no es «sin ofertas»: se dice y se puede reintentar.
         <View style={{ flex: 1, padding: spacing.xl }}>
-          <EmptyState
-            title="Sin resultados"
-            message="No encontramos oferentes con esos filtros. Prueba cambiando de categoría o término de búsqueda."
-          />
+          <ErrorState error={offersError} onRetry={() => void refetchOffers()} />
         </View>
-      ) : (
-        <FlatList
-          data={entities}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => (
-            <PressableScale
-              onPress={() => {
-                Haptics.selectionAsync();
-                setSelectedEntitySlug(item.slug);
-              }}
-              style={styles.entityCard}
-            >
-              <View style={styles.cardHeader}>
-                {item.logoUrl ? (
-                  <Image source={{ uri: item.logoUrl }} style={styles.cardLogo} />
-                ) : (
-                  <View style={[styles.cardLogo, styles.cardLogoPlaceholder]}>
-                    <Text style={styles.logoInitials}>{item.name.slice(0, 2).toUpperCase()}</Text>
+      ) : viewMode === 'ENTITIES' && entitiesError ? (
+        <View style={{ flex: 1, padding: spacing.xl }}>
+          <ErrorState error={entitiesError} onRetry={() => void refetchEntities()} />
+        </View>
+      ) : viewMode === 'OFFERS' ? (
+        /* VISTA MARKETPLACE: OFERTAS & PRODUCTOS */
+        filteredOffers.length === 0 ? (
+          <View style={{ flex: 1, padding: spacing.xl }}>
+            <EmptyState
+              title="Sin ofertas encontradas"
+              message="No encontramos artículos con esos filtros. Prueba con otro término de búsqueda o categoría."
+            />
+          </View>
+        ) : (
+          <FlatList
+            key="marketplace-grid-offers"
+            data={filteredOffers}
+            numColumns={2}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.gridContent}
+            columnWrapperStyle={styles.gridRow}
+            ListHeaderComponent={
+              /* Card Destacado: TU GIMNASIO ACTUAL (Siempre al tope) */
+              myGym && (selectedPillId === 'all' || selectedPillId === 'gyms' || selectedPillId === 'passes') ? (
+                <PressableScale
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setSelectedEntitySlug(myGym.slug);
+                  }}
+                  style={styles.myGymSpotlightCard}
+                >
+                  <View style={styles.myGymCoverWrapper}>
+                    <Image source={{ uri: myGym.coverUrl ?? undefined }} style={styles.myGymCover} />
+                    <View style={styles.myGymGradientOverlay} />
+                    <View style={styles.myGymTopBadges}>
+                      <View style={styles.myGymVoltBadge}>
+                        <Ionicons name="flash" size={12} color={ink.black} />
+                        <Text style={styles.myGymVoltBadgeText}>TU GIMNASIO ACTUAL</Text>
+                      </View>
+                      <View style={styles.myGymActiveBadge}>
+                        <Ionicons name="checkmark-circle" size={12} color={colors.accentInk} />
+                        <Text style={styles.myGymActiveBadgeText}>
+                          {myMembership?.membership?.estado === 'ACTIVE'
+                            ? `Socio Activo (${myMembership.membership.diasRestantes}d)`
+                            : 'Sede Principal'}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                )}
 
-                <View style={{ flex: 1 }}>
-                  <View style={styles.cardBadges}>
-                    <Text style={styles.categoryBadge}>{item.primaryCategory.name}</Text>
-                    {item.isVerified && (
-                      <View style={styles.verifiedBadge}>
-                        <Ionicons name="checkmark-circle" size={12} color={colors.volt} />
-                        <Text style={styles.verifiedText}>Verificado</Text>
+                  <View style={styles.myGymBody}>
+                    <View style={styles.myGymInfoRow}>
+                      {myGym.logoUrl ? (
+                        <Image source={{ uri: myGym.logoUrl }} style={styles.myGymLogo} />
+                      ) : (
+                        <View style={[styles.myGymLogo, styles.cardLogoPlaceholder]}>
+                          <Text style={styles.logoInitials}>{myGym.name.slice(0, 2).toUpperCase()}</Text>
+                        </View>
+                      )}
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text style={styles.myGymName} numberOfLines={1}>
+                          {myGym.name}
+                        </Text>
+                        <Text style={styles.myGymHeadline} numberOfLines={1}>
+                          {myGym.headline ?? myGym.city}
+                        </Text>
+                        <View style={styles.myGymRatingRow}>
+                          <Ionicons name="star" size={12} color={accentHues.amber} />
+                          <Text style={styles.myGymRatingText}>
+                            {myGym.ratingAverage > 0 ? myGym.ratingAverage.toFixed(1) : '5.0'} ({myGym.ratingCount})
+                          </Text>
+                          <Text style={styles.myGymDot}>·</Text>
+                          <Ionicons name="location-outline" size={12} color={colors.textMuted} />
+                          <Text style={styles.myGymLocationText}>{myGym.city ?? 'La Paz'}</Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View style={styles.myGymActionsRow}>
+                      <PressableScale
+                        onPress={() => {
+                          Haptics.selectionAsync();
+                          setSelectedEntitySlug(myGym.slug);
+                        }}
+                        style={styles.myGymCtaPrimary}
+                      >
+                        <Ionicons name="qr-code-outline" size={14} color={ink.black} />
+                        <Text style={styles.myGymCtaPrimaryText}>Planes & QR</Text>
+                      </PressableScale>
+
+                      <PressableScale
+                        onPress={() => {
+                          Haptics.selectionAsync();
+                          setSelectedEntitySlug(myGym.slug);
+                        }}
+                        style={styles.myGymCtaSecondary}
+                      >
+                        <Ionicons name="eye-outline" size={14} color={colors.text} />
+                        <Text style={styles.myGymCtaSecondaryText}>Ver Ficha</Text>
+                      </PressableScale>
+                    </View>
+                  </View>
+                </PressableScale>
+              ) : null
+            }
+            renderItem={({ item }) => {
+              const itemIsFromMyGym = isGymOfUser({ tenantId: item.entity?.tenantId });
+              const displayImage =
+                (item.mediaUrls && item.mediaUrls[0]) ||
+                item.entity?.coverUrl ||
+                item.entity?.logoUrl ||
+                'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=600';
+
+              return (
+                <PressableScale
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    if (item.entity?.slug) {
+                      setSelectedEntitySlug(item.entity.slug);
+                    } else {
+                      checkoutMutation.mutate(item);
+                    }
+                  }}
+                  style={styles.marketCard}
+                >
+                  <View style={styles.marketCardImageWrapper}>
+                    <Image source={{ uri: displayImage }} style={styles.marketCardImage} contentFit="cover" />
+                    <View style={styles.marketCardTypeTag}>
+                      <Text style={styles.marketCardTypeTagText}>
+                        {item.type === 'MEMBERSHIP_PLAN'
+                          ? 'Membresía'
+                          : item.type === 'PASS'
+                          ? 'Pase'
+                          : item.type === 'PRODUCT'
+                          ? 'Producto'
+                          : 'Servicio'}
+                      </Text>
+                    </View>
+                    {itemIsFromMyGym && (
+                      <View style={styles.marketCardMyGymTag}>
+                        <Text style={styles.marketCardMyGymTagText}>TU GYM</Text>
                       </View>
                     )}
                   </View>
 
-                  <Text style={styles.cardName} numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                  {item.headline ? (
-                    <Text style={styles.cardHeadline} numberOfLines={1}>
-                      {item.headline}
+                  <View style={styles.marketCardContent}>
+                    <Text style={styles.marketCardPrice}>
+                      {item.currency} {Number(item.currentPrice).toFixed(2)}
                     </Text>
-                  ) : null}
-                </View>
-              </View>
 
-              {/* Footer con rating estilo App Store */}
-              <View style={styles.cardFooter}>
-                <View style={styles.locationContainer}>
-                  <Ionicons name="location-outline" size={14} color={colors.textMuted} />
-                  <Text style={styles.locationText} numberOfLines={1}>
-                    {item.isOnlineOnly ? 'Envíos / Online' : item.city ?? 'Presencial'}
-                  </Text>
-                </View>
+                    <Text style={styles.marketCardTitle} numberOfLines={2}>
+                      {item.name}
+                    </Text>
 
-                <View style={styles.ratingBadge}>
-                  <Ionicons name="star" size={14} color="#f59e0b" />
-                  <Text style={styles.ratingText}>
-                    {item.ratingAverage > 0 ? item.ratingAverage.toFixed(1) : 'Nuevo'}
-                  </Text>
-                  {item.ratingCount > 0 && (
-                    <Text style={styles.ratingCount}>({item.ratingCount})</Text>
-                  )}
-                </View>
-              </View>
-            </PressableScale>
-          )}
-        />
+                    {item.entity?.name ? (
+                      <View style={styles.marketCardSellerRow}>
+                        <Ionicons name="checkmark-circle" size={11} color={colors.volt} />
+                        <Text style={styles.marketCardSellerName} numberOfLines={1}>
+                          {item.entity.name}
+                        </Text>
+                      </View>
+                    ) : null}
+
+                    <View style={styles.marketCardLocationRow}>
+                      <Ionicons name="location-outline" size={11} color={colors.textMuted} />
+                      <Text style={styles.marketCardLocationText} numberOfLines={1}>
+                        {item.entity?.city ?? 'Bolivia'}
+                      </Text>
+                    </View>
+
+                    <PressableScale
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                        checkoutMutation.mutate(item);
+                      }}
+                      style={styles.marketCardBuyBtn}
+                    >
+                      <Ionicons name="qr-code-outline" size={12} color={colors.accentInk} />
+                      <Text style={styles.marketCardBuyBtnText}>Comprar QR</Text>
+                    </PressableScale>
+                  </View>
+                </PressableScale>
+              );
+            }}
+          />
+        )
+      ) : (
+        /* VISTA MARKETPLACE: TIENDAS & GIMNASIOS */
+        filteredEntities.length === 0 ? (
+          <View style={{ flex: 1, padding: spacing.xl }}>
+            <EmptyState
+              title="Sin establecimientos"
+              message="No encontramos comercios con esos filtros. Prueba cambiando de categoría o búsqueda."
+            />
+          </View>
+        ) : (
+          <FlatList
+            key="marketplace-grid-entities"
+            data={filteredEntities}
+            numColumns={2}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.gridContent}
+            columnWrapperStyle={styles.gridRow}
+            renderItem={({ item }) => {
+              const itemIsMyGym = isGymOfUser(item);
+              const coverImg = item.coverUrl || 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800';
+
+              return (
+                <PressableScale
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setSelectedEntitySlug(item.slug);
+                  }}
+                  style={[styles.entityMarketCard, itemIsMyGym && styles.entityMarketCardMyGym]}
+                >
+                  <View style={styles.entityCardCoverWrapper}>
+                    <Image source={{ uri: coverImg }} style={styles.entityCardCover} contentFit="cover" />
+                    {itemIsMyGym && (
+                      <View style={styles.marketCardMyGymTag}>
+                        <Text style={styles.marketCardMyGymTagText}>TU GYM</Text>
+                      </View>
+                    )}
+                    <View style={styles.entityCardTypeBadge}>
+                      <Text style={styles.entityCardTypeBadgeText}>
+                        {item.entityType === 'GYM'
+                          ? 'Gimnasio'
+                          : item.entityType === 'STORE'
+                          ? 'Tienda'
+                          : item.entityType === 'COACH'
+                          ? 'Coach'
+                          : 'Centro'}
+                      </Text>
+                    </View>
+
+                    {/* Logo superpuesto */}
+                    {item.logoUrl ? (
+                      <Image source={{ uri: item.logoUrl }} style={styles.entityCardLogoOverlap} />
+                    ) : (
+                      <View style={[styles.entityCardLogoOverlap, styles.cardLogoPlaceholder]}>
+                        <Text style={styles.logoInitialsSmall}>{item.name.slice(0, 2).toUpperCase()}</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.entityCardBody}>
+                    <Text style={styles.entityCardName} numberOfLines={2}>
+                      {item.name}
+                    </Text>
+
+                    <View style={styles.entityCardRatingRow}>
+                      <Ionicons name="star" size={11} color={accentHues.amber} />
+                      <Text style={styles.entityCardRatingText}>
+                        {item.ratingAverage > 0 ? item.ratingAverage.toFixed(1) : '5.0'} ({item.ratingCount})
+                      </Text>
+                      <Text style={styles.myGymDot}>·</Text>
+                      <Ionicons name="location-outline" size={11} color={colors.textMuted} />
+                      <Text style={styles.entityCardLocationText} numberOfLines={1}>
+                        {item.city ?? 'Bolivia'}
+                      </Text>
+                    </View>
+
+                    {item.headline ? (
+                      <Text style={styles.entityCardHeadline} numberOfLines={2}>
+                        {item.headline}
+                      </Text>
+                    ) : null}
+
+                    {item.isVerified && (
+                      <View style={styles.entityVerifiedRow}>
+                        <Ionicons name="checkmark-circle" size={11} color={colors.volt} />
+                        <Text style={styles.entityVerifiedText}>Verificado</Text>
+                      </View>
+                    )}
+                  </View>
+                </PressableScale>
+              );
+            }}
+          />
+        )
       )}
 
       {/* Modal / BottomSheet de Detalle de Entidad y Reseñas App Store */}
@@ -656,7 +920,7 @@ export default function DirectorioScreen() {
                             key={s}
                             name={s <= entityDetail.ratingAverage ? 'star' : 'star-outline'}
                             size={16}
-                            color="#f59e0b"
+                            color={accentHues.amber}
                           />
                         ))}
                       </View>
@@ -689,16 +953,28 @@ export default function DirectorioScreen() {
                     <View style={{ gap: spacing.md, marginTop: spacing.md }}>
                       {reviewsData.reviews.map((rev) => (
                         <View key={rev.id} style={styles.reviewItem}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                              <Text style={styles.reviewAuthor}>{rev.author.displayName}</Text>
-                              {rev.isVerifiedAthlete && (
-                                <View style={styles.verifiedAthletePill}>
-                                  <Text style={styles.verifiedAthleteText}>Atleta Verificado</Text>
+                          <View style={styles.reviewHeader}>
+                            <View style={styles.reviewAuthorRow}>
+                              <View style={styles.reviewAvatarCircle}>
+                                <Text style={styles.reviewAvatarInitials}>
+                                  {rev.author.displayName ? rev.author.displayName.slice(0, 2).toUpperCase() : 'GS'}
+                                </Text>
+                              </View>
+                              <View style={{ flex: 1, minWidth: 0 }}>
+                                <Text style={styles.reviewAuthor} numberOfLines={1}>
+                                  {rev.author.displayName}
+                                </Text>
+                                <View style={styles.reviewMetaRow}>
+                                  {rev.isVerifiedAthlete && (
+                                    <View style={styles.verifiedAthletePill}>
+                                      <Ionicons name="checkmark-circle" size={10} color={colors.accentInk} />
+                                      <Text style={styles.verifiedAthleteText}>Atleta Verificado</Text>
+                                    </View>
+                                  )}
+                                  <Text style={styles.reviewDate}>{rev.createdAt.slice(0, 10)}</Text>
                                 </View>
-                              )}
+                              </View>
                             </View>
-                            <Text style={styles.reviewDate}>{rev.createdAt.slice(0, 10)}</Text>
                           </View>
 
                           {/* Estrellas */}
@@ -708,7 +984,7 @@ export default function DirectorioScreen() {
                                 key={s}
                                 name={s <= rev.rating ? 'star' : 'star-outline'}
                                 size={14}
-                                color="#f59e0b"
+                                color={accentHues.amber}
                               />
                             ))}
                           </View>
@@ -725,9 +1001,9 @@ export default function DirectorioScreen() {
                               <Ionicons
                                 name="thumbs-up-outline"
                                 size={12}
-                                color={rev.hasVotedHelpful ? '#f59e0b' : colors.textMuted}
+                                color={rev.hasVotedHelpful ? accentHues.amber : colors.textMuted}
                               />
-                              <Text style={[styles.helpfulText, rev.hasVotedHelpful && { color: '#f59e0b' }]}>
+                              <Text style={[styles.helpfulText, rev.hasVotedHelpful && { color: accentHues.amber }]}>
                                 ¿Útil? {rev.helpfulCount > 0 ? `(${rev.helpfulCount})` : ''}
                               </Text>
                             </PressableScale>
@@ -771,7 +1047,7 @@ export default function DirectorioScreen() {
                       <Ionicons
                         name={s <= composerRating ? 'star' : 'star-outline'}
                         size={36}
-                        color="#f59e0b"
+                        color={accentHues.amber}
                       />
                     </PressableScale>
                   ))}
@@ -849,7 +1125,7 @@ export default function DirectorioScreen() {
                 </Text>
 
                 <View style={styles.statusPillPending}>
-                  <Ionicons name="time-outline" size={16} color="#f59e0b" />
+                  <Ionicons name="time-outline" size={16} color={accentHues.amber} />
                   <Text style={styles.statusPillPendingText}>En Verificación por el Gimnasio</Text>
                 </View>
 
@@ -1071,7 +1347,7 @@ export default function DirectorioScreen() {
               <ActivityIndicator size="small" color={colors.volt} style={{ marginVertical: spacing.xl }} />
             ) : planCommentsData?.items && planCommentsData.items.length > 0 ? (
               <View style={{ gap: spacing.md }}>
-                {planCommentsData.items.map((comment: any) => (
+                {planCommentsData.items.map((comment) => (
                   <View key={comment.id} style={styles.planCommentCard}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                       <Text style={styles.planCommentAuthor}>{comment.autor.nombre}</Text>
@@ -1083,7 +1359,7 @@ export default function DirectorioScreen() {
 
                     {comment.respuestas && comment.respuestas.length > 0 && (
                       <View style={{ gap: spacing.xs, marginTop: spacing.xs }}>
-                        {comment.respuestas.map((reply: any) => (
+                        {comment.respuestas.map((reply) => (
                           <View key={reply.id} style={styles.planCommentReply}>
                             <Text style={styles.planCommentReplyAuthor}>{reply.autor.nombre} (Respuesta):</Text>
                             <Text style={styles.planCommentReplyText}>{reply.texto}</Text>
@@ -1145,6 +1421,11 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.xl,
     fontWeight: semibold,
   },
+  headerSubtitle: {
+    color: colors.textMuted,
+    fontSize: fontSizes.xs,
+    marginTop: 1,
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1163,7 +1444,7 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.sm,
   },
   pillsWrapper: {
-    marginVertical: spacing.md,
+    marginVertical: spacing.sm,
   },
   pillsScroll: {
     paddingHorizontal: spacing.lg,
@@ -1178,8 +1459,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   pillSelected: {
-    backgroundColor: colors.volt,
+    backgroundColor: alpha(colors.volt, 0.16),
     borderColor: colors.volt,
+    borderWidth: 1.5,
   },
   pillText: {
     color: colors.textMuted,
@@ -1187,7 +1469,396 @@ const styles = StyleSheet.create({
     fontWeight: semibold,
   },
   pillTextSelected: {
-    color: colors.background,
+    color: colors.text,
+    fontWeight: '800',
+  },
+  segmentContainer: {
+    flexDirection: 'row',
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.surfaceLow,
+    borderRadius: radii.xl,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  segmentButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.lg,
+  },
+  segmentButtonActive: {
+    backgroundColor: colors.volt,
+  },
+  segmentText: {
+    color: colors.textMuted,
+    fontSize: fontSizes.xs,
+    fontWeight: semibold,
+  },
+  segmentTextActive: {
+    color: ink.black,
+    fontWeight: '800',
+  },
+  gridContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing['2xl'],
+  },
+  gridRow: {
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+    gap: spacing.md,
+  },
+  myGymSpotlightCard: {
+    backgroundColor: colors.surfaceHigh,
+    borderRadius: radii.xl,
+    borderWidth: 1.5,
+    borderColor: colors.volt,
+    overflow: 'hidden',
+    marginBottom: spacing.md,
+  },
+  myGymCoverWrapper: {
+    height: 110,
+    width: '100%',
+    position: 'relative',
+    backgroundColor: colors.surfaceLow,
+  },
+  myGymCover: {
+    width: '100%',
+    height: '100%',
+  },
+  myGymGradientOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: alpha(darkSurfaces.abyss, 0.55),
+  },
+  myGymTopBadges: {
+    position: 'absolute',
+    top: spacing.sm,
+    left: spacing.sm,
+    right: spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  myGymVoltBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.volt,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radii.full,
+  },
+  myGymVoltBadgeText: {
+    color: ink.black,
+    fontSize: fontSizes.micro,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  myGymActiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: alpha(darkSurfaces.abyss, 0.75),
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    borderColor: alpha(colors.volt, 0.4),
+  },
+  myGymActiveBadgeText: {
+    color: colors.accentInk,
+    fontSize: fontSizes.micro,
+    fontWeight: semibold,
+  },
+  myGymBody: {
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  myGymInfoRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'center',
+  },
+  myGymLogo: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceLow,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  myGymName: {
+    color: colors.text,
+    fontSize: fontSizes.md,
+    fontWeight: '800',
+  },
+  myGymHeadline: {
+    color: colors.textMuted,
+    fontSize: fontSizes.xs,
+    marginTop: 1,
+  },
+  myGymRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  myGymRatingText: {
+    color: colors.text,
+    fontSize: fontSizes.micro,
+    fontWeight: semibold,
+  },
+  myGymDot: {
+    color: colors.textMuted,
+    fontSize: fontSizes.micro,
+  },
+  myGymLocationText: {
+    color: colors.textMuted,
+    fontSize: fontSizes.micro,
+  },
+  myGymActionsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: 4,
+  },
+  myGymCtaPrimary: {
+    flex: 1.3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: colors.volt,
+    paddingVertical: 8,
+    borderRadius: radii.md,
+  },
+  myGymCtaPrimaryText: {
+    color: ink.black,
+    fontSize: fontSizes.xs,
+    fontWeight: '800',
+  },
+  myGymCtaSecondary: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: colors.surfaceLow,
+    paddingVertical: 8,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  myGymCtaSecondaryText: {
+    color: colors.text,
+    fontSize: fontSizes.xs,
+    fontWeight: semibold,
+  },
+  marketCard: {
+    flex: 1,
+    backgroundColor: colors.surfaceHigh,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  marketCardImageWrapper: {
+    width: '100%',
+    aspectRatio: 1,
+    backgroundColor: colors.surfaceLow,
+    position: 'relative',
+  },
+  marketCardImage: {
+    width: '100%',
+    height: '100%',
+  },
+  marketCardTypeTag: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    backgroundColor: alpha(darkSurfaces.abyss, 0.75),
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: alpha(ink.white, 0.15),
+  },
+  marketCardTypeTagText: {
+    color: colors.text,
+    fontSize: fontSizes.micro,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  marketCardMyGymTag: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: colors.volt,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radii.sm,
+  },
+  marketCardMyGymTagText: {
+    color: ink.black,
+    fontSize: fontSizes.micro,
+    fontWeight: '800',
+  },
+  marketCardContent: {
+    padding: spacing.sm,
+    gap: 3,
+  },
+  marketCardPrice: {
+    color: colors.accentInk,
+    fontSize: fontSizes.md,
+    fontWeight: '800',
+  },
+  marketCardTitle: {
+    color: colors.text,
+    fontSize: fontSizes.xs,
+    fontWeight: semibold,
+    lineHeight: 16,
+    minHeight: 32,
+  },
+  marketCardSellerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginTop: 2,
+  },
+  marketCardSellerName: {
+    color: colors.textMuted,
+    fontSize: fontSizes.micro,
+    fontWeight: semibold,
+    flex: 1,
+  },
+  marketCardLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginTop: 1,
+  },
+  marketCardLocationText: {
+    color: colors.textMuted,
+    fontSize: fontSizes.micro,
+  },
+  marketCardBuyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: alpha(colors.volt, 0.16),
+    borderWidth: 1,
+    borderColor: alpha(colors.volt, 0.35),
+    paddingVertical: 6,
+    borderRadius: radii.md,
+    marginTop: 4,
+  },
+  marketCardBuyBtnText: {
+    color: colors.accentInk,
+    fontSize: fontSizes.micro,
+    fontWeight: '700',
+  },
+  entityMarketCard: {
+    flex: 1,
+    backgroundColor: colors.surfaceHigh,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  entityMarketCardMyGym: {
+    borderColor: colors.volt,
+    borderWidth: 1.5,
+  },
+  entityCardCoverWrapper: {
+    width: '100%',
+    height: 95,
+    backgroundColor: colors.surfaceLow,
+    position: 'relative',
+  },
+  entityCardCover: {
+    width: '100%',
+    height: '100%',
+  },
+  entityCardTypeBadge: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    backgroundColor: alpha(darkSurfaces.abyss, 0.75),
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: alpha(ink.white, 0.15),
+  },
+  entityCardTypeBadgeText: {
+    color: colors.text,
+    fontSize: fontSizes.micro,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  entityCardLogoOverlap: {
+    position: 'absolute',
+    bottom: -16,
+    left: 8,
+    width: 36,
+    height: 36,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceHigh,
+    borderWidth: 2,
+    borderColor: colors.surfaceHigh,
+  },
+  logoInitialsSmall: {
+    color: colors.volt,
+    fontSize: fontSizes.xs,
+    fontWeight: semibold,
+  },
+  entityCardBody: {
+    padding: spacing.sm,
+    paddingTop: 18,
+    gap: 2,
+  },
+  entityCardName: {
+    color: colors.text,
+    fontSize: fontSizes.xs,
+    fontWeight: '800',
+  },
+  entityCardRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginTop: 2,
+  },
+  entityCardRatingText: {
+    color: colors.text,
+    fontSize: fontSizes.micro,
+    fontWeight: semibold,
+  },
+  entityCardLocationText: {
+    color: colors.textMuted,
+    fontSize: fontSizes.micro,
+  },
+  entityCardHeadline: {
+    color: colors.textMuted,
+    fontSize: fontSizes.micro,
+    marginTop: 2,
+    lineHeight: 14,
+  },
+  entityVerifiedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginTop: 4,
+  },
+  entityVerifiedText: {
+    color: colors.volt,
+    fontSize: fontSizes.micro,
+    fontWeight: semibold,
   },
   loadingContainer: {
     flex: 1,
@@ -1246,9 +1917,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: 'rgba(63, 230, 148, 0.12)',
+    backgroundColor: alpha(accentHues.mint, 0.12),
     borderWidth: 1,
-    borderColor: 'rgba(63, 230, 148, 0.35)',
+    borderColor: alpha(accentHues.mint, 0.35),
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: radii.sm,
@@ -1392,7 +2063,7 @@ const styles = StyleSheet.create({
   },
   scoreBig: {
     color: colors.text,
-    fontSize: 44,
+    fontSize: heroNumberFontSize,
     fontWeight: '900',
   },
   scoreTotal: {
@@ -1425,7 +2096,7 @@ const styles = StyleSheet.create({
   },
   histogramFill: {
     height: '100%',
-    backgroundColor: '#f59e0b',
+    backgroundColor: accentHues.amber,
     borderRadius: radii.full,
   },
   reviewItem: {
@@ -1436,12 +2107,45 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 4,
   },
+  reviewHeader: {
+    marginBottom: spacing.xs,
+  },
+  reviewAuthorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  reviewAvatarCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: radii.full,
+    backgroundColor: alpha(colors.volt, 0.16),
+    borderWidth: 1,
+    borderColor: alpha(colors.volt, 0.35),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reviewAvatarInitials: {
+    color: colors.accentInk,
+    fontSize: fontSizes.xs,
+    fontWeight: '700',
+  },
+  reviewMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: 2,
+    flexWrap: 'wrap',
+  },
   reviewAuthor: {
     color: colors.text,
     fontSize: fontSizes.sm,
     fontWeight: semibold,
   },
   verifiedAthletePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
     backgroundColor: alpha(colors.volt, 0.16),
     paddingHorizontal: 7,
     paddingVertical: 2,
@@ -1451,7 +2155,7 @@ const styles = StyleSheet.create({
   },
   verifiedAthleteText: {
     color: colors.accentInk,
-    fontSize: 10,
+    fontSize: fontSizes.micro,
     fontWeight: semibold,
   },
   reviewDate: {
@@ -1479,8 +2183,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   helpfulButtonActive: {
-    borderColor: '#f59e0b',
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    borderColor: accentHues.amber,
+    backgroundColor: alpha(accentHues.amber, 0.1),
   },
   helpfulText: {
     color: colors.textMuted,
@@ -1512,7 +2216,7 @@ const styles = StyleSheet.create({
   },
   composerOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: alpha(ink.black, 0.7),
     justifyContent: 'center',
     padding: spacing.lg,
   },
@@ -1599,13 +2303,13 @@ const styles = StyleSheet.create({
   },
   planTypeText: {
     color: colors.textMuted,
-    fontSize: 10,
+    fontSize: fontSizes.micro,
     fontWeight: semibold,
     textTransform: 'uppercase',
   },
   planDurationText: {
     color: colors.volt,
-    fontSize: 10,
+    fontSize: fontSizes.micro,
     fontWeight: semibold,
   },
   planName: {
@@ -1720,15 +2424,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    backgroundColor: alpha(accentHues.amber, 0.15),
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: radii.full,
     borderWidth: 1,
-    borderColor: '#f59e0b',
+    borderColor: accentHues.amber,
   },
   statusPillPendingText: {
-    color: '#f59e0b',
+    color: accentHues.amber,
     fontSize: fontSizes.xs,
     fontWeight: semibold,
   },
@@ -1856,7 +2560,7 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: radii.lg,
-    backgroundColor: '#ffffff',
+    backgroundColor: ink.white,
   },
   qrPlaceholder: {
     width: 220,
@@ -1919,7 +2623,7 @@ const styles = StyleSheet.create({
   },
   bankInstructionsLabel: {
     color: colors.volt,
-    fontSize: 10,
+    fontSize: fontSizes.micro,
     fontWeight: semibold,
   },
   bankInstructionsText: {
@@ -1984,7 +2688,7 @@ const styles = StyleSheet.create({
   },
   receiptUrlText: {
     color: colors.textMuted,
-    fontSize: 10,
+    fontSize: fontSizes.micro,
   },
   modalBarSubtitle: {
     color: colors.textMuted,

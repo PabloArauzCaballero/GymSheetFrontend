@@ -21,9 +21,11 @@ import { WizardActionBar } from '@/components/wizard/wizard-action-bar';
 import { WizardShell } from '@/components/wizard/wizard-shell';
 import { useRoutineDraft } from '@/features/routine-wizard/use-wizard';
 import { GOAL_LABEL } from '@/lib/format';
+import { goToWizardStep, MOBILE_WIZARD_STEPS } from '@/lib/wizard-routes';
 import { notify } from '@/notifications';
-import { goToWizardStep } from '@/lib/wizard-routes';
 import { colors, fontSizes, iconSizes, semibold, spacing } from '@/theme';
+
+const REVIEW_STEP = MOBILE_WIZARD_STEPS.findIndex((s) => s.id === 'revision');
 
 function IssueRow({ issue, blocking }: { issue: QualityIssue; blocking: boolean }) {
   const tone = blocking ? colors.danger : colors.warning;
@@ -130,7 +132,7 @@ export function ReviewStep() {
           }}
         />
       }
-      paso={5}
+      paso={REVIEW_STEP}
       subtitle="Revisa la progresión y los avisos antes de guardar."
       title="Revisión"
     >

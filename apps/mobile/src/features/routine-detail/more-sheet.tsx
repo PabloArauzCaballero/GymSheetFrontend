@@ -6,7 +6,7 @@ import { AnimatedIconBadge } from '@/components/animated-icon-badge';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { alpha, colors, comfortableTouchTarget, iconSizes, radii, spacing } from '@/theme';
+import { accentHues, alpha, colors, comfortableTouchTarget, darkSurfaces, iconSizes, ink, radii, reppJade, spacing } from '@/theme';
 
 export type MoreAction = {
   key: string;
@@ -30,8 +30,8 @@ export type MoreAction = {
 function getActionVisual(action: MoreAction) {
   if (action.destructive) {
     return {
-      gradient: ['rgba(255, 133, 119, 0.28)', 'rgba(136, 19, 55, 0.14)'] as const,
-      border: 'rgba(255, 133, 119, 0.45)',
+      gradient: [alpha(accentHues.coral, 0.28), alpha(accentHues.roseDeep, 0.14)] as const,
+      border: alpha(accentHues.coral, 0.45),
       color: colors.danger,
       glow: colors.danger,
       pulsing: false,
@@ -50,79 +50,79 @@ function getActionVisual(action: MoreAction) {
     case 'create':
     case 'add':
       return {
-        gradient: ['rgba(46, 139, 123, 0.32)', 'rgba(20, 60, 52, 0.15)'] as const,
-        border: 'rgba(46, 139, 123, 0.5)',
-        color: '#48D1B6',
+        gradient: [alpha(reppJade, 0.32), alpha(accentHues.tealDeep, 0.15)] as const,
+        border: alpha(reppJade, 0.5),
+        color: accentHues.teal,
         glow: colors.volt,
         pulsing: true,
       };
     case 'exercises':
     case 'search':
       return {
-        gradient: ['rgba(56, 189, 248, 0.28)', 'rgba(30, 58, 138, 0.15)'] as const,
-        border: 'rgba(56, 189, 248, 0.45)',
-        color: '#38BDF8',
-        glow: '#38BDF8',
+        gradient: [alpha(accentHues.sky, 0.28), alpha(accentHues.blueDeep, 0.15)] as const,
+        border: alpha(accentHues.sky, 0.45),
+        color: accentHues.sky,
+        glow: accentHues.sky,
         pulsing: false,
       };
     case 'download-progress':
     case 'download':
     case 'export':
       return {
-        gradient: ['rgba(52, 211, 153, 0.28)', 'rgba(6, 78, 59, 0.15)'] as const,
-        border: 'rgba(52, 211, 153, 0.45)',
-        color: '#34D399',
-        glow: '#34D399',
+        gradient: [alpha(accentHues.emeraldSoft, 0.28), alpha(accentHues.emeraldDeep, 0.15)] as const,
+        border: alpha(accentHues.emeraldSoft, 0.45),
+        color: accentHues.emeraldSoft,
+        glow: accentHues.emeraldSoft,
         pulsing: false,
       };
     case 'cardio':
     case 'heart':
       return {
-        gradient: ['rgba(255, 133, 119, 0.28)', 'rgba(136, 19, 55, 0.15)'] as const,
-        border: 'rgba(255, 133, 119, 0.45)',
-        color: '#ff8577',
-        glow: '#ff8577',
+        gradient: [alpha(accentHues.coral, 0.28), alpha(accentHues.roseDeep, 0.15)] as const,
+        border: alpha(accentHues.coral, 0.45),
+        color: accentHues.coral,
+        glow: accentHues.coral,
         pulsing: false,
       };
     case 'music':
       return {
-        gradient: ['rgba(183, 155, 255, 0.28)', 'rgba(88, 28, 135, 0.15)'] as const,
-        border: 'rgba(183, 155, 255, 0.45)',
-        color: '#b79bff',
-        glow: '#b79bff',
+        gradient: [alpha(accentHues.lilac, 0.28), alpha(accentHues.purpleDeep, 0.15)] as const,
+        border: alpha(accentHues.lilac, 0.45),
+        color: accentHues.lilac,
+        glow: accentHues.lilac,
         pulsing: false,
       };
     case 'guide':
     case 'help':
     case 'info':
       return {
-        gradient: ['rgba(255, 210, 74, 0.28)', 'rgba(120, 80, 20, 0.15)'] as const,
-        border: 'rgba(255, 210, 74, 0.45)',
-        color: '#ffd24a',
-        glow: '#ffd24a',
+        gradient: [alpha(accentHues.sun, 0.28), alpha(accentHues.sunDeep, 0.15)] as const,
+        border: alpha(accentHues.sun, 0.45),
+        color: accentHues.sun,
+        glow: accentHues.sun,
         pulsing: false,
       };
     case 'publish':
     case 'share':
       return {
-        gradient: ['rgba(108, 184, 255, 0.28)', 'rgba(30, 58, 138, 0.15)'] as const,
-        border: 'rgba(108, 184, 255, 0.45)',
-        color: '#6cb8ff',
-        glow: '#6cb8ff',
+        gradient: [alpha(accentHues.azure, 0.28), alpha(accentHues.blueDeep, 0.15)] as const,
+        border: alpha(accentHues.azure, 0.45),
+        color: accentHues.azure,
+        glow: accentHues.azure,
         pulsing: false,
       };
     case 'reply':
       return {
-        gradient: ['rgba(46, 139, 123, 0.28)', 'rgba(20, 60, 52, 0.15)'] as const,
-        border: 'rgba(46, 139, 123, 0.45)',
+        gradient: [alpha(reppJade, 0.28), alpha(accentHues.tealDeep, 0.15)] as const,
+        border: alpha(reppJade, 0.45),
         color: colors.volt,
         glow: colors.volt,
         pulsing: false,
       };
     default:
       return {
-        gradient: ['rgba(39, 54, 77, 0.5)', 'rgba(23, 34, 53, 0.3)'] as const,
-        border: 'rgba(255, 255, 255, 0.1)',
+        gradient: [alpha(darkSurfaces.panel, 0.5), alpha(colors.surfaceLow, 0.3)] as const,
+        border: alpha(ink.white, 0.1),
         color: colors.textSecondary,
         glow: colors.textSecondary,
         pulsing: false,
@@ -183,7 +183,7 @@ export function MoreSheet({
                   borderRadius: radii.xl,
                   backgroundColor: colors.surfaceHigh,
                   borderWidth: 1,
-                  borderColor: 'rgba(255, 255, 255, 0.08)',
+                  borderColor: alpha(ink.white, 0.08),
                 }}
                 testID={`more-${action.key}`}
               >

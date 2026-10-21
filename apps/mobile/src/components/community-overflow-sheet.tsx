@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedIconBadge } from '@/components/animated-icon-badge';
@@ -10,21 +10,13 @@ import {
   interactionsAlertTotal,
   useInteractionCounts,
 } from '@/components/interactions-counts';
-import {
-  colors,
-  fontSizes,
-  iconSizes,
-  minTouchTarget,
-  overlay,
-  radii,
-  semibold,
-  spacing,
-} from '@/theme';
+import { accentHues, alpha, colors, fontSizes, iconSizes, ink, minTouchTarget, overlay, radii, reppJade, semibold, spacing } from '@/theme';
 
 interface CommunityOverflowSheetProps {
   visible: boolean;
   onClose: () => void;
   onOpenTopGym: () => void;
+  onOpenPreferences?: () => void;
   onStartTour?: () => void;
 }
 
@@ -70,7 +62,7 @@ function MenuItem({
           borderRadius: radii.xl,
           backgroundColor: colors.surfaceHigh,
           borderWidth: 1,
-          borderColor: 'rgba(255, 255, 255, 0.08)',
+          borderColor: alpha(ink.white, 0.08),
           gap: spacing.md,
         }}
       >
@@ -121,6 +113,7 @@ export function CommunityOverflowSheet({
   visible,
   onClose,
   onOpenTopGym,
+  onOpenPreferences,
   onStartTour,
 }: CommunityOverflowSheetProps) {
   const router = useRouter();
@@ -165,7 +158,7 @@ export function CommunityOverflowSheet({
               width: 38,
               height: 4,
               borderRadius: 2,
-              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              backgroundColor: alpha(ink.white, 0.25),
               alignSelf: 'center',
               marginBottom: 4,
             }}
@@ -217,14 +210,34 @@ export function CommunityOverflowSheet({
 
           {/* Menu Items */}
           <View style={{ gap: spacing.sm, paddingVertical: spacing.xs }}>
+            {/* Preferencias de Búsqueda (Filtros) */}
+            {onOpenPreferences ? (
+              <MenuItem
+                borderColor={alpha(reppJade, 0.45)}
+                glowColor={colors.volt}
+                gradient={[alpha(reppJade, 0.25), alpha(reppJade, 0.12)]}
+                icon="options"
+                iconColor={colors.volt}
+                index={0}
+                onPress={() => {
+                  onClose();
+                  setTimeout(() => {
+                    onOpenPreferences();
+                  }, 250);
+                }}
+                subtitle="Filtra por objetivos de entrenamiento, sedes y género"
+                title="Preferencias de Búsqueda"
+              />
+            ) : null}
+
             {/* Top 15 Leaderboard */}
             <MenuItem
-              borderColor="rgba(255, 215, 0, 0.45)"
-              glowColor="#FFD700"
-              gradient={['rgba(255, 215, 0, 0.28)', 'rgba(46, 139, 123, 0.14)']}
+              borderColor={alpha(accentHues.gold, 0.45)}
+              glowColor={accentHues.gold}
+              gradient={[alpha(accentHues.gold, 0.28), alpha(reppJade, 0.14)]}
               icon="trophy"
-              iconColor="#FFD700"
-              index={0}
+              iconColor={accentHues.gold}
+              index={1}
               onPress={() => {
                 onClose();
                 setTimeout(() => {
@@ -238,11 +251,11 @@ export function CommunityOverflowSheet({
 
             {/* Directorio */}
             <MenuItem
-              borderColor="rgba(56, 189, 248, 0.45)"
-              glowColor="#38BDF8"
-              gradient={['rgba(56, 189, 248, 0.28)', 'rgba(30, 58, 138, 0.14)']}
+              borderColor={alpha(accentHues.sky, 0.45)}
+              glowColor={accentHues.sky}
+              gradient={[alpha(accentHues.sky, 0.28), alpha(accentHues.blueDeep, 0.14)]}
               icon="storefront"
-              iconColor="#38BDF8"
+              iconColor={accentHues.sky}
               index={1}
               onPress={() => navigateTo('/directorio')}
               subtitle="Gimnasios, tiendas de nutrición y coaches verificados"
@@ -251,11 +264,11 @@ export function CommunityOverflowSheet({
 
             {/* Mapa Social */}
             <MenuItem
-              borderColor="rgba(16, 185, 129, 0.45)"
-              glowColor="#10B981"
-              gradient={['rgba(16, 185, 129, 0.28)', 'rgba(6, 78, 59, 0.14)']}
+              borderColor={alpha(accentHues.emerald, 0.45)}
+              glowColor={accentHues.emerald}
+              gradient={[alpha(accentHues.emerald, 0.28), alpha(accentHues.emeraldDeep, 0.14)]}
               icon="navigate"
-              iconColor="#34D399"
+              iconColor={accentHues.emeraldSoft}
               index={2}
               onPress={() => navigateTo('/social-map')}
               subtitle="Descubre quién está entrenando cerca de ti en el mapa"
@@ -265,11 +278,11 @@ export function CommunityOverflowSheet({
             {/* Interacciones */}
             <MenuItem
               badge={interactionsTotal > 0 ? <InteractionsBadge total={interactionsTotal} /> : null}
-              borderColor="rgba(244, 63, 94, 0.45)"
-              glowColor="#F43F5E"
-              gradient={['rgba(244, 63, 94, 0.28)', 'rgba(136, 19, 55, 0.14)']}
+              borderColor={alpha(accentHues.rose, 0.45)}
+              glowColor={accentHues.rose}
+              gradient={[alpha(accentHues.rose, 0.28), alpha(accentHues.roseDeep, 0.14)]}
               icon="heart"
-              iconColor="#FB7185"
+              iconColor={accentHues.roseSoft}
               index={3}
               onPress={() => navigateTo('/interacciones')}
               pulsing={interactionsTotal > 0}
@@ -279,11 +292,11 @@ export function CommunityOverflowSheet({
 
             {/* Personas Bloqueadas */}
             <MenuItem
-              borderColor="rgba(148, 163, 184, 0.4)"
-              glowColor="#94A3B8"
-              gradient={['rgba(148, 163, 184, 0.24)', 'rgba(30, 41, 59, 0.14)']}
+              borderColor={alpha(accentHues.slate, 0.4)}
+              glowColor={accentHues.slate}
+              gradient={[alpha(accentHues.slate, 0.24), alpha(accentHues.slateDeep, 0.14)]}
               icon="shield-checkmark"
-              iconColor="#CBD5E1"
+              iconColor={accentHues.slateSoft}
               index={4}
               onPress={() => navigateTo('/personas-bloqueadas')}
               subtitle="Privacidad y control de usuarios bloqueados"
@@ -293,11 +306,11 @@ export function CommunityOverflowSheet({
             {/* Tour / Ayuda */}
             {onStartTour ? (
               <MenuItem
-                borderColor="rgba(168, 85, 247, 0.45)"
-                glowColor="#A855F7"
-                gradient={['rgba(168, 85, 247, 0.28)', 'rgba(88, 28, 135, 0.14)']}
+                borderColor={alpha(accentHues.purple, 0.45)}
+                glowColor={accentHues.purple}
+                gradient={[alpha(accentHues.purple, 0.28), alpha(accentHues.purpleDeep, 0.14)]}
                 icon="sparkles"
-                iconColor="#C084FC"
+                iconColor={accentHues.purpleSoft}
                 index={5}
                 onPress={() => {
                   onClose();

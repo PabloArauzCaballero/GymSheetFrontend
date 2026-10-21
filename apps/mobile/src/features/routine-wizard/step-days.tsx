@@ -14,11 +14,13 @@ import { WeekStrip } from '@/components/wizard/week-strip';
 import { WizardActionBar } from '@/components/wizard/wizard-action-bar';
 import { WizardShell } from '@/components/wizard/wizard-shell';
 import { useRoutineDraft } from '@/features/routine-wizard/use-wizard';
-import { dayPath } from '@/lib/wizard-routes';
+import { dayPath, MOBILE_WIZARD_STEPS } from '@/lib/wizard-routes';
 import { colors, fontSizes, spacing } from '@/theme';
 
+const DAYS_STEP = MOBILE_WIZARD_STEPS.findIndex((s) => s.id === 'dias');
+
 /**
- * Paso 5: qué días se entrena y qué se hace cada uno.
+ * Qué días se entrena y qué se hace cada uno.
  *
  * Elegir los días y editarlos viven en la misma pantalla para que el resumen
  * («4 días · 12 semanas») y la semana se vean cambiar a la vez.
@@ -27,7 +29,7 @@ export function DaysStep() {
   const { state, draft, dispatch, errors, next } = useRoutineDraft();
   const { seleccion } = state;
   const selecting = seleccion !== null;
-  const dayError = errors(4).dias;
+  const dayError = errors(DAYS_STEP).dias;
 
   const toggleDay = (dia: Weekday) => {
     const day = draft.dias.find((candidate) => candidate.diaSemana === dia);
@@ -75,7 +77,7 @@ export function DaysStep() {
       primary={{
         label: 'Siguiente',
         disabled: draft.dias.length === 0,
-        onPress: () => next(4),
+        onPress: () => next(DAYS_STEP),
       }}
     />
   );
@@ -83,7 +85,7 @@ export function DaysStep() {
   return (
     <WizardShell
       actions={actions}
-      paso={4}
+      paso={DAYS_STEP}
       subtitle="Elige los días y toca cada uno para añadir sus ejercicios."
       title="¿Qué días entrenas?"
     >

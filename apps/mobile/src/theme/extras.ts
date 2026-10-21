@@ -330,3 +330,58 @@ export const socialMapColors = {
   glass: alpha(brandNavy, 0.86),
   glassBorder: alpha(ink.white, 0.12),
 } as const;
+
+/* ─── Comunidad, directorio y menús de tres puntos (2026-10-20) ────────────── */
+
+/**
+ * Tintes de acento de Comunidad (acciones estilo «deslizar»), del directorio y
+ * de los menús de tres puntos. Vivían como literales sueltos en cada pantalla;
+ * aquí tienen nombre para que quien los cambie vea el resto de la paleta.
+ * Ningún texto pequeño va directamente sobre ellos sin un velo oscuro debajo.
+ */
+export const accentHues = {
+  /** Valoraciones (estrellas) y deshacer. */
+  amber: '#F59E0B',
+  /** Descartar. */
+  red: '#EF4444',
+  /** «Me interesa mucho». */
+  cyan: '#06B6D4',
+  /** Impulso. */
+  purple: '#A855F7',
+  purpleSoft: '#C084FC',
+  purpleDeep: '#581C87',
+  /** Verificado. */
+  sky: '#38BDF8',
+  blueDeep: '#1E3A8A',
+  emerald: '#10B981',
+  emeraldSoft: '#34D399',
+  emeraldDeep: '#064E3B',
+  mint: '#3FE694',
+  teal: '#48D1B6',
+  tealDeep: '#143C34',
+  rose: '#F43F5E',
+  roseSoft: '#FB7185',
+  roseDeep: '#881337',
+  slate: '#94A3B8',
+  slateSoft: '#CBD5E1',
+  slateDeep: '#1E293B',
+  gold: '#FFD700',
+  coral: '#FF8577',
+  lilac: '#B79BFF',
+  sun: '#FFD24A',
+  sunDeep: '#785014',
+  azure: '#6CB8FF',
+  volt: '#CCFF00',
+} as const;
+
+/** Fondos oscuros de las tarjetas y botones flotantes de Comunidad y el directorio. */
+export const darkSurfaces = {
+  night: '#080E18',
+  abyss: '#050A0F',
+  card: '#18202F',
+  panel: '#27364D',
+  rewind: '#201218',
+  superLike: '#0F1E30',
+  like: '#192612',
+  boost: '#1E1430',
+} as const;

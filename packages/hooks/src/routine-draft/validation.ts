@@ -39,6 +39,8 @@ export function validateStep(draft: RoutineDraft, step: WizardStepId): StepError
     case 'nombre': {
       const message = firstMessage(nameSchema.safeParse(draft.nombre));
       if (message) errors.nombre = message;
+      const descMessage = firstMessage(descriptionSchema.safeParse(draft.descripcion));
+      if (descMessage) errors.descripcion = descMessage;
       break;
     }
     case 'descripcion': {
