@@ -239,6 +239,10 @@ export const progressionStreakStrikesSchema = z.object({
   purchasedThisMonth: z.number().int(),
   strikeCostPoints: z.number().int(),
   month: z.string(),
+  /** Faltas de esta semana que aún se pueden reponer. Un servidor anterior no lo manda. */
+  pendingThisWeek: z.number().int().default(0),
+  /** Puntos perdidos por faltas sin strike, en toda la historia. */
+  penaltyPointsTotal: z.number().int().default(0),
 });
 export type ProgressionStreakStrikes = z.infer<typeof progressionStreakStrikesSchema>;
 

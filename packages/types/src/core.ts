@@ -37,6 +37,7 @@ export type SessionPrincipal = {
   email: string;
   role: UserRole;
   nombreCompleto?: string;
+  tenantId?: string | null;
   /** Permisos granulares de administración otorgados a esta cuenta (solo staff). */
   permissions?: string[];
 };

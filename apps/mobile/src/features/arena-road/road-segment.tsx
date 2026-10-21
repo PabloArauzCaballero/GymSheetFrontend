@@ -107,12 +107,6 @@ export const RoadSegment = memo(function RoadSegment({
   // Las etiquetas empiezan donde acaba el marcador: así nunca lo pisan.
   const labelGap = MARKER / 2 + spacing.sm;
   const labelWidth = center - labelGap - spacing.sm;
-  // La pestaña «TÚ» va al lado contrario del hito más cercano, para no pisarlo.
-  const nearest = MILESTONE_AT.reduce(
-    (best, at, index) => (Math.abs(at - target) < Math.abs((MILESTONE_AT[best] ?? 0) - target) ? index : best),
-    0,
-  );
-  const tagOnLeft = nearest % 2 === 1;
   const landAt = ROAD_CUES.markerAt + ROAD_CUES.markerIn * 0.55;
 
   return (
@@ -172,15 +166,11 @@ export const RoadSegment = memo(function RoadSegment({
                 size={iconSizes.md}
               />
             </View>
-            <View
-              style={[
-                styles.youTag,
-                { backgroundColor: tint.b[1] },
-                tagOnLeft ? { right: MARKER + spacing.sm } : { left: MARKER + spacing.sm },
-              ]}
-            >
-              <Text numberOfLines={1} style={{ color: ink.black, letterSpacing: 0.8 }} tabular variant="caption" strong>
-                {`TÚ · ${pointsLabel}`}
+            {/* «TÚ» encima del marcador y estrecho: las etiquetas de los hitos
+                empiezan donde acaba el marcador, así nunca se pisan. */}
+            <View style={[styles.youTag, { backgroundColor: tint.b[1] }]}>
+              <Text numberOfLines={1} style={{ color: ink.black, letterSpacing: 1 }} variant="caption" strong>
+                TÚ
               </Text>
             </View>
           </Animated.View>
@@ -222,9 +212,15 @@ function Milestone({
       pop.value = withSequence(withTiming(1, { duration: 140 }), withSpring(0, { duration: 420, dampingRatio: 0.5 }));
     },
   );
+  // Los colores se resuelven aquí, en JS: dentro del worklet solo se eligen.
+  // Llamar a `alpha()` desde el hilo de UI tumba la app («Remote Function»).
+  const litFill = tint.b[1];
+  const litBorder = tint.b[0];
+  const offFill = colors.surfaceHighest;
+  const offBorder = alpha(ink.white, 0.16);
   const dotStyle = useAnimatedStyle(() => ({
-    backgroundColor: lit.value > 0.5 ? tint.b[1] : colors.surfaceHighest,
-    borderColor: lit.value > 0.5 ? tint.b[0] : alpha(ink.white, 0.16),
+    backgroundColor: lit.value > 0.5 ? litFill : offFill,
+    borderColor: lit.value > 0.5 ? litBorder : offBorder,
     transform: [{ scale: 1 + pop.value * 0.7 }],
   }));
   const coreStyle = useAnimatedStyle(() => ({ opacity: lit.value }));
@@ -359,9 +355,10 @@ const styles = StyleSheet.create({
   },
   youTag: {
     position: 'absolute',
-    top: (MARKER - 24) / 2,
-    height: 24,
-    width: 128,
+    bottom: MARKER + spacing.xs,
+    left: (MARKER - 40) / 2,
+    height: 22,
+    width: 40,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: spacing.sm,

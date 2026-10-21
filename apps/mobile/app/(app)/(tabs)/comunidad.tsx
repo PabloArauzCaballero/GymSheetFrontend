@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -35,36 +36,25 @@ import {
   discoveryService,
   facilitiesService,
   profilePhotosService,
+  profileService,
   socialService,
 } from '@/api/services';
 import { refreshSocialRelationship } from '@/api/social-cache';
 import { CommunityOverflowSheet } from '@/components/community-overflow-sheet';
 import { TopGymModal } from '@/components/top-gym-sheet';
 import { ProfileDetailSheet } from '@/components/profile-detail-sheet';
-import { TourTarget, useScreenTour } from '@/components/tour';
-import { Card, Section } from '@/components/layout';
+import { useScreenTour } from '@/components/tour';
+import { Section } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { Button } from '@/components/ui';
-import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
+import { ErrorState } from '@/components/feedback';
+import { DiscoveryPreferencesEditor } from '@/components/social-status-editor';
 import { initialsOf } from '@/lib/format';
 import { levelTitle } from '@/components/directory-card';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { TRAINING_GOAL_LABEL } from '@/lib/social-labels';
-import {
-  accentPolicy,
-  alpha,
-  colors,
-  fontSizes,
-  iconSizes,
-  ink,
-  minTouchTarget,
-  onMedia,
-  overlay,
-  radii,
-  semibold,
-  spacing,
-} from '@/theme';
+import { accentHues, alpha, colors, darkSurfaces, fontSizes, iconSizes, ink, minTouchTarget, onMedia, overlay, radii, spacing } from '@/theme';
 
 const DECK_SIZE = 15;
 const DECISION_RATIO = 0.28;
@@ -75,16 +65,15 @@ const CARD_SPRING = { damping: 24, stiffness: 260, mass: 0.6, overshootClamping:
 const BACK_ZONE_RATIO = 1 / 3;
 const TAP_MAX_MS = 260;
 const STAMP_TOP = spacing.xl;
-const SEGMENT_HEIGHT = 3;
 
 const SCRIM_BOTTOM = [
   'transparent',
-  'rgba(8, 14, 24, 0.25)',
-  'rgba(8, 14, 24, 0.72)',
-  'rgba(8, 14, 24, 0.96)',
+  alpha(darkSurfaces.night, 0.25),
+  alpha(darkSurfaces.night, 0.72),
+  alpha(darkSurfaces.night, 0.96),
 ] as const;
 const SCRIM_BOTTOM_STOPS = [0, 0.35, 0.7, 1] as const;
-const SCRIM_TOP = ['rgba(0, 0, 0, 0.45)', 'transparent'] as const;
+const SCRIM_TOP = [alpha(ink.black, 0.45), 'transparent'] as const;
 const MATCH_SCRIM = [overlay.scrimSoft, overlay.scrimStrong] as const;
 
 type Decision = { entry: GymDirectoryEntry; direction: SwipeDirection; filterKey: string };
@@ -95,6 +84,7 @@ const GOAL_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   RESISTENCIA: 'infinite-outline',
   PERDIDA_GRASA: 'flame-outline',
   SALUD_GENERAL: 'heart-outline',
+  RENDIMIENTO_DEPORTIVO: 'trophy-outline',
   REHABILITACION: 'medkit-outline',
 };
 
@@ -136,7 +126,7 @@ function DecisionStamp({
           borderWidth: 3,
           borderColor: color,
           alignItems: 'center',
-          backgroundColor: 'rgba(0,0,0,0.3)',
+          backgroundColor: alpha(ink.black, 0.3),
           transform: [
             {
               rotate: side === 'left' ? '-12deg' : side === 'right' ? '12deg' : '0deg',
@@ -173,23 +163,26 @@ function FilterChip({
         alignItems: 'center',
         gap: 6,
         paddingHorizontal: spacing.md,
-        paddingVertical: spacing.sm,
+        paddingVertical: 8,
         borderRadius: radii.full,
-        borderWidth: 1,
-        borderColor: active ? colors.volt : colors.border,
-        backgroundColor: active ? colors.surfaceHigh : colors.surfaceLow,
+        borderWidth: active ? 1.5 : 1,
+        borderColor: active ? colors.volt : colors.borderSubtle,
+        backgroundColor: active ? alpha(colors.volt, 0.16) : colors.surfaceHigh,
       }}
     >
-      <Ionicons color={active ? colors.text : colors.textMuted} name={icon} size={iconSizes.sm} />
+      <Ionicons color={active ? colors.volt : colors.textMuted} name={icon} size={iconSizes.sm} />
       <Text
         style={{
           color: active ? colors.text : colors.textMuted,
           fontSize: fontSizes.sm,
-          fontWeight: active ? semibold : '400',
+          fontWeight: active ? '700' : '500',
         }}
       >
         {label}
       </Text>
+      {active && (
+        <Ionicons color={colors.volt} name="checkmark" size={14} style={{ marginLeft: 2 }} />
+      )}
     </PressableScale>
   );
 }
@@ -205,8 +198,8 @@ function SearchPreferencesSheet({
   onOpenBlocked: () => void;
   onClose: () => void;
   filters: {
-    objetivo: string | null;
-    setObjetivo: (value: string | null) => void;
+    objetivos?: string[];
+    setObjetivos: (value: string[]) => void;
     sucursalId: string | null;
     setSucursalId: (value: string | null) => void;
     genero: string | null;
@@ -215,7 +208,9 @@ function SearchPreferencesSheet({
   branches: PublicBranchSummary[];
 }) {
   const insets = useSafeAreaInsets();
-  const { objetivo, setObjetivo, sucursalId, setSucursalId, genero, setGenero } = filters;
+  const { setObjetivos, sucursalId, setSucursalId, genero, setGenero } = filters;
+  const objetivos = Array.isArray(filters?.objetivos) ? filters.objetivos : [];
+  const hasActiveFilters = objetivos.length > 0 || sucursalId !== null || genero !== null;
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent transparent visible={visible}>
@@ -231,19 +226,60 @@ function SearchPreferencesSheet({
             borderWidth: 1,
             borderColor: colors.borderSubtle,
             backgroundColor: colors.surfaceLow,
-            paddingTop: spacing.md,
+            paddingTop: spacing.sm,
             paddingHorizontal: spacing.lg,
-            paddingBottom: insets.bottom + spacing.md,
+            paddingBottom: Math.max(insets.bottom, spacing.md),
             gap: spacing.lg,
           }}
         >
+          {/* iOS Grab Handle */}
+          <View
+            style={{
+              width: 38,
+              height: 4,
+              borderRadius: 2,
+              backgroundColor: alpha(ink.white, 0.25),
+              alignSelf: 'center',
+              marginBottom: 4,
+            }}
+          />
+
+          {/* Header */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-            <Text
-              accessibilityRole="header"
-              style={{ flex: 1, color: colors.text, fontSize: fontSizes.lg, fontWeight: '700', letterSpacing: -0.5 }}
-            >
-              Preferencias de búsqueda
-            </Text>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text
+                accessibilityRole="header"
+                style={{ color: colors.text, fontSize: fontSizes.lg, fontWeight: '700', letterSpacing: -0.5 }}
+              >
+                Preferencias de búsqueda
+              </Text>
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                {objetivos.length > 0
+                  ? `${objetivos.length} ${objetivos.length === 1 ? 'objetivo seleccionado' : 'objetivos seleccionados'}`
+                  : 'Explora deportistas con cualquier objetivo'}
+              </Text>
+            </View>
+
+            {hasActiveFilters ? (
+              <PressableScale
+                onPress={() => {
+                  setObjetivos([]);
+                  setSucursalId(null);
+                  setGenero(null);
+                }}
+                style={{
+                  paddingHorizontal: spacing.sm,
+                  paddingVertical: 6,
+                  borderRadius: radii.full,
+                  backgroundColor: alpha(colors.volt, 0.12),
+                }}
+              >
+                <Text style={{ color: colors.accentInk, fontSize: fontSizes.xs, fontWeight: '700' }}>
+                  Restablecer
+                </Text>
+              </PressableScale>
+            ) : null}
+
             <Pressable
               accessibilityLabel="Cerrar"
               accessibilityRole="button"
@@ -264,16 +300,30 @@ function SearchPreferencesSheet({
 
           <Section icon="options-outline" title="Objetivo de entrenamiento">
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-              <FilterChip active={!objetivo} icon="apps-outline" label="Todos" onPress={() => setObjetivo(null)} />
-              {trainingGoals.map((goal) => (
-                <FilterChip
-                  active={objetivo === goal}
-                  icon={GOAL_ICON[goal] ?? 'flag-outline'}
-                  key={goal}
-                  label={TRAINING_GOAL_LABEL[goal] ?? goal}
-                  onPress={() => setObjetivo(goal)}
-                />
-              ))}
+              <FilterChip
+                active={objetivos.length === 0}
+                icon="apps-outline"
+                label="Todos"
+                onPress={() => setObjetivos([])}
+              />
+              {trainingGoals.map((goal) => {
+                const isSelected = objetivos.includes(goal);
+                return (
+                  <FilterChip
+                    active={isSelected}
+                    icon={GOAL_ICON[goal] ?? 'trophy-outline'}
+                    key={goal}
+                    label={TRAINING_GOAL_LABEL[goal] ?? goal}
+                    onPress={() => {
+                      if (isSelected) {
+                        setObjetivos(objetivos.filter((g) => g !== goal));
+                      } else {
+                        setObjetivos([...objetivos, goal]);
+                      }
+                    }}
+                  />
+                );
+              })}
             </View>
           </Section>
 
@@ -287,7 +337,7 @@ function SearchPreferencesSheet({
                     icon="business-outline"
                     key={branch.id}
                     label={branch.nombre}
-                    onPress={() => setSucursalId(branch.id)}
+                    onPress={() => setSucursalId(sucursalId === branch.id ? null : branch.id)}
                   />
                 ))}
               </View>
@@ -297,13 +347,15 @@ function SearchPreferencesSheet({
           <Section icon="male-female-outline" title="Género">
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
               <FilterChip active={!genero} icon="apps-outline" label="Todos" onPress={() => setGenero(null)} />
-              <FilterChip active={genero === 'MALE'} icon="male-outline" label="Hombres" onPress={() => setGenero('MALE')} />
-              <FilterChip active={genero === 'FEMALE'} icon="female-outline" label="Mujeres" onPress={() => setGenero('FEMALE')} />
+              <FilterChip active={genero === 'MALE'} icon="male-outline" label="Hombres" onPress={() => setGenero(genero === 'MALE' ? null : 'MALE')} />
+              <FilterChip active={genero === 'FEMALE'} icon="female-outline" label="Mujeres" onPress={() => setGenero(genero === 'FEMALE' ? null : 'FEMALE')} />
             </View>
           </Section>
 
-          <Button icon="shield-outline" label="Personas bloqueadas" onPress={onOpenBlocked} variant="ghost" />
-          <Button icon="checkmark" label="Aplicar filtros" onPress={onClose} />
+          <View style={{ gap: spacing.sm, paddingTop: spacing.xs }}>
+            <Button icon="shield-outline" label="Personas bloqueadas" onPress={onOpenBlocked} variant="ghost" />
+            <Button icon="checkmark" label="Aplicar filtros" onPress={onClose} />
+          </View>
         </View>
       </View>
     </Modal>
@@ -469,10 +521,18 @@ export default function ComunidadScreen() {
   const principal = useAuthStore((state) => state.principal);
 
   // Filtros de descubrimiento
-  const [objetivo, setObjetivo] = useState<string | null>(null);
+  const [objetivos, setObjetivos] = useState<string[]>([]);
+  const safeObjetivos = Array.isArray(objetivos) ? objetivos : [];
   const [sucursalId, setSucursalId] = useState<string | null>(null);
   const [genero, setGenero] = useState<string | null>(null);
   const [categoryPill, setCategoryPill] = useState<'foryou' | 'goal' | 'branch'>('foryou');
+
+  // Recuperación resiliente si Fast Refresh o estado previo dejó `objetivos` como null o undefined
+  useEffect(() => {
+    if (!Array.isArray(objetivos)) {
+      setObjetivos([]);
+    }
+  }, [objetivos]);
 
   const routeParams = useLocalSearchParams<{ openTopGym?: string; openMenu?: string }>();
 
@@ -484,8 +544,13 @@ export default function ComunidadScreen() {
   const [matchedEntry, setMatchedEntry] = useState<GymDirectoryEntry | null>(null);
 
   useEffect(() => {
-    setOverflowVisible(true);
-  }, []);
+    if (routeParams.openTopGym === 'true') {
+      setTopGymVisible(true);
+    }
+    if (routeParams.openMenu === 'true') {
+      setOverflowVisible(true);
+    }
+  }, [routeParams.openTopGym, routeParams.openMenu]);
 
   // Multi-photo state
   const [photoCursor, setPhotoCursor] = useState<{ cardId: string | null; index: number }>({
@@ -514,6 +579,13 @@ export default function ComunidadScreen() {
   });
   const branchList = branchesQuery.data ?? [];
 
+  // User profile for goal alignment
+  const myProfile = useQuery({
+    queryKey: ['profile'],
+    queryFn: () => profileService.get(),
+    staleTime: 5 * 60_000,
+  });
+
   // My photos for match modal
   const myPhotos = useQuery({
     queryKey: ['profile', 'photos'],
@@ -524,15 +596,16 @@ export default function ComunidadScreen() {
   // Deck query filters
   const filters = useMemo(
     () => ({
-      objetivo: objetivo || undefined,
+      objetivo: safeObjetivos.length > 0 ? safeObjetivos.join(',') : undefined,
       sucursalId: sucursalId || undefined,
       genero: genero || undefined,
       limit: DECK_SIZE,
     }),
-    [objetivo, sucursalId, genero],
+    [safeObjetivos, sucursalId, genero],
   );
 
-  const deckKey = `${objetivo ?? ''}|${sucursalId ?? ''}|${genero ?? ''}|${categoryPill}`;
+  const objetivosKey = safeObjetivos.slice().sort().join(',');
+  const deckKey = `${objetivosKey}|${sucursalId ?? ''}|${genero ?? ''}|${categoryPill}`;
   const activeDeckKeyRef = useRef(deckKey);
   const [cardsFilterKey, setCardsFilterKey] = useState(deckKey);
   const acceptDealRef = useRef(true);
@@ -542,7 +615,7 @@ export default function ComunidadScreen() {
   }, [deckKey]);
 
   const deck = useQuery({
-    queryKey: ['social', 'discovery', 'deck', objetivo ?? '', sucursalId ?? '', genero ?? ''],
+    queryKey: ['social', 'discovery', 'deck', objetivosKey, sucursalId ?? '', genero ?? ''],
     queryFn: () => discoveryService.deck(filters),
     gcTime: 0,
     staleTime: 0,
@@ -767,10 +840,8 @@ export default function ComunidadScreen() {
           if (!success) return;
           if (stage.width <= 0 || stage.height <= 0) return;
 
-          // Corner tap for detail profile
-          const insideInfo =
-            event.x >= stage.width - 70 && event.y >= stage.height - 70;
-          if (insideInfo) {
+          // Tap on bottom info section (name, chips, chevron) opens full profile detail
+          if (event.y >= stage.height - 180) {
             runOnJS(setDetailEntry)(visibleCards[0] ?? null);
             return;
           }
@@ -838,10 +909,34 @@ export default function ComunidadScreen() {
             alignItems: 'center',
             justifyContent: 'center',
             borderWidth: 1,
-            borderColor: colors.borderSubtle,
+            borderColor:
+              safeObjetivos.length > 0 || sucursalId !== null || genero !== null
+                ? colors.volt
+                : colors.borderSubtle,
           }}
         >
-          <Ionicons color={colors.text} name="options-outline" size={iconSizes.md} />
+          <Ionicons
+            color={
+              safeObjetivos.length > 0 || sucursalId !== null || genero !== null
+                ? colors.volt
+                : colors.text
+            }
+            name="options-outline"
+            size={iconSizes.md}
+          />
+          {(safeObjetivos.length > 0 || sucursalId !== null || genero !== null) && (
+            <View
+              style={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                width: 7,
+                height: 7,
+                borderRadius: 4,
+                backgroundColor: colors.volt,
+              }}
+            />
+          )}
         </PressableScale>
 
         {/* Center: Category Pills (Tinder-style) */}
@@ -860,7 +955,7 @@ export default function ComunidadScreen() {
           <Pressable
             onPress={() => {
               setCategoryPill('foryou');
-              setObjetivo(null);
+              setObjetivos([]);
             }}
             style={{
               paddingHorizontal: spacing.md,
@@ -883,7 +978,8 @@ export default function ComunidadScreen() {
           <Pressable
             onPress={() => {
               setCategoryPill('goal');
-              setObjetivo('HIPERTROFIA');
+              const userGoal = myProfile.data?.objetivo ?? 'HIPERTROFIA';
+              setObjetivos([userGoal]);
             }}
             style={{
               paddingHorizontal: spacing.md,
@@ -978,6 +1074,22 @@ export default function ComunidadScreen() {
               Cargando compañeros de entreno…
             </Text>
           </View>
+        ) : deck.isError && needsDiscoveryPreferences(deck.error) ? (
+          // Sin preferencias no se recomienda a nadie (nunca se adivina a quién
+          // quiere conocer alguien): se piden aquí mismo, no un error sin salida.
+          <ScrollView
+            contentContainerStyle={{ gap: spacing.md, padding: spacing.lg }}
+            style={{ flex: 1, width: '100%' }}
+          >
+            <Text style={{ color: colors.text, fontSize: fontSizes.lg, fontWeight: '700' }}>
+              Cuéntanos a quién buscas
+            </Text>
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+              Elige con quién quieres entrenar o conocer gente. Solo verás personas que encajen.
+            </Text>
+            <DiscoveryPreferencesEditor />
+            <Button label="Buscar compañeros" onPress={redeal} />
+          </ScrollView>
         ) : deck.isError ? (
           <View style={{ flex: 1, width: '100%', justifyContent: 'center', padding: spacing.lg }}>
             <ErrorState error={deck.error} onRetry={redeal} />
@@ -1039,8 +1151,8 @@ export default function ComunidadScreen() {
                     overflow: 'hidden',
                     backgroundColor: colors.surfaceLow,
                     borderWidth: 1,
-                    borderColor: 'rgba(255, 255, 255, 0.12)',
-                    shadowColor: '#000',
+                    borderColor: alpha(ink.white, 0.12),
+                    shadowColor: ink.black,
                     shadowOffset: { width: 0, height: 10 },
                     shadowOpacity: 0.45,
                     shadowRadius: 20,
@@ -1111,8 +1223,8 @@ export default function ComunidadScreen() {
                             height: 3,
                             borderRadius: radii.full,
                             backgroundColor:
-                              idx === photoIndex ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)',
-                            shadowColor: idx === photoIndex ? '#FFFFFF' : 'transparent',
+                              idx === photoIndex ? ink.white : alpha(ink.white, 0.35),
+                            shadowColor: idx === photoIndex ? ink.white : 'transparent',
                             shadowOffset: { width: 0, height: 1 },
                             shadowOpacity: idx === photoIndex ? 0.6 : 0,
                             shadowRadius: 3,
@@ -1161,8 +1273,8 @@ export default function ComunidadScreen() {
                         <Text
                           numberOfLines={1}
                           style={{
-                            color: '#FFFFFF',
-                            fontSize: 28,
+                            color: ink.white,
+                            fontSize: fontSizes.xl,
                             fontWeight: '800',
                             letterSpacing: -0.6,
                           }}
@@ -1173,8 +1285,8 @@ export default function ComunidadScreen() {
                         {typeof topCard.age === 'number' ? (
                           <Text
                             style={{
-                              color: 'rgba(255, 255, 255, 0.85)',
-                              fontSize: 24,
+                              color: alpha(ink.white, 0.85),
+                              fontSize: fontSizes.heading,
                               fontWeight: '400',
                             }}
                           >
@@ -1183,7 +1295,7 @@ export default function ComunidadScreen() {
                         ) : null}
 
                         {/* Verified Checkmark */}
-                        <Ionicons color="#38BDF8" name="checkmark-circle" size={22} />
+                        <Ionicons color={accentHues.sky} name="checkmark-circle" size={22} />
                       </View>
 
                       {/* Info Chevron Up Button */}
@@ -1197,14 +1309,14 @@ export default function ComunidadScreen() {
                           width: 38,
                           height: 38,
                           borderRadius: radii.full,
-                          backgroundColor: 'rgba(255, 255, 255, 0.18)',
+                          backgroundColor: alpha(ink.white, 0.18),
                           alignItems: 'center',
                           justifyContent: 'center',
                           borderWidth: 1,
-                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                          borderColor: alpha(ink.white, 0.3),
                         }}
                       >
-                        <Ionicons color="#FFFFFF" name="chevron-up" size={18} />
+                        <Ionicons color={ink.white} name="chevron-up" size={18} />
                       </PressableScale>
                     </View>
 
@@ -1219,13 +1331,13 @@ export default function ComunidadScreen() {
                             paddingHorizontal: 10,
                             paddingVertical: 4,
                             borderRadius: radii.full,
-                            backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                            backgroundColor: alpha(colors.background, 0.7),
                             borderWidth: 1,
-                            borderColor: 'rgba(255, 255, 255, 0.14)',
+                            borderColor: alpha(ink.white, 0.14),
                           }}
                         >
-                          <Ionicons color="rgba(255,255,255,0.85)" name="location-outline" size={13} />
-                          <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '600' }}>
+                          <Ionicons color={alpha(ink.white, 0.85)} name="location-outline" size={13} />
+                          <Text style={{ color: ink.white, fontSize: fontSizes.xs, fontWeight: '600' }}>
                             {topCard.branchName}
                           </Text>
                         </View>
@@ -1240,13 +1352,13 @@ export default function ComunidadScreen() {
                             paddingHorizontal: 10,
                             paddingVertical: 4,
                             borderRadius: radii.full,
-                            backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                            backgroundColor: alpha(colors.background, 0.7),
                             borderWidth: 1,
-                            borderColor: 'rgba(255, 255, 255, 0.14)',
+                            borderColor: alpha(ink.white, 0.14),
                           }}
                         >
                           <Ionicons color={colors.volt} name="barbell-outline" size={13} />
-                          <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '600' }}>
+                          <Text style={{ color: ink.white, fontSize: fontSizes.xs, fontWeight: '600' }}>
                             {TRAINING_GOAL_LABEL[topCard.objetivo] ?? topCard.objetivo}
                           </Text>
                         </View>
@@ -1261,13 +1373,13 @@ export default function ComunidadScreen() {
                             paddingHorizontal: 10,
                             paddingVertical: 4,
                             borderRadius: radii.full,
-                            backgroundColor: 'rgba(204, 255, 0, 0.18)',
+                            backgroundColor: alpha(accentHues.volt, 0.18),
                             borderWidth: 1,
-                            borderColor: 'rgba(204, 255, 0, 0.4)',
+                            borderColor: alpha(accentHues.volt, 0.4),
                           }}
                         >
                           <Ionicons color={colors.volt} name="trophy-outline" size={13} />
-                          <Text style={{ color: colors.volt, fontSize: 12, fontWeight: '700', fontVariant: ['tabular-nums'] }}>
+                          <Text style={{ color: colors.volt, fontSize: fontSizes.xs, fontWeight: '700', fontVariant: ['tabular-nums'] }}>
                             {levelTitle(topCard.levelCode)}
                             {typeof topCard.points === 'number' ? ` · ${topCard.points} pts` : ''}
                           </Text>
@@ -1362,22 +1474,22 @@ export default function ComunidadScreen() {
             width: 48,
             height: 48,
             borderRadius: radii.full,
-            backgroundColor: 'rgba(24, 32, 47, 0.85)',
+            backgroundColor: alpha(darkSurfaces.card, 0.85),
             borderWidth: 1.5,
-            borderColor: 'rgba(245, 158, 11, 0.55)',
+            borderColor: alpha(accentHues.amber, 0.55),
             alignItems: 'center',
             justifyContent: 'center',
             opacity: decided.length === 0 || undo.isPending ? 0.35 : 1,
-            shadowColor: '#F59E0B',
+            shadowColor: accentHues.amber,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.2,
             shadowRadius: 8,
           }}
         >
           {undo.isPending ? (
-            <ActivityIndicator color="#F59E0B" size="small" />
+            <ActivityIndicator color={accentHues.amber} size="small" />
           ) : (
-            <Ionicons color="#F59E0B" name="reload-outline" size={22} />
+            <Ionicons color={accentHues.amber} name="reload-outline" size={22} />
           )}
         </PressableScale>
 
@@ -1393,19 +1505,19 @@ export default function ComunidadScreen() {
             width: 64,
             height: 64,
             borderRadius: radii.full,
-            backgroundColor: 'rgba(32, 18, 24, 0.9)',
+            backgroundColor: alpha(darkSurfaces.rewind, 0.9),
             borderWidth: 2,
-            borderColor: '#EF4444',
+            borderColor: accentHues.red,
             alignItems: 'center',
             justifyContent: 'center',
             opacity: !topCard ? 0.4 : 1,
-            shadowColor: '#EF4444',
+            shadowColor: accentHues.red,
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: 0.3,
             shadowRadius: 12,
           }}
         >
-          <Ionicons color="#EF4444" name="close" size={34} />
+          <Ionicons color={accentHues.red} name="close" size={34} />
         </PressableScale>
 
         {/* 3. Super Like / Star Button (Cyan / Blue) */}
@@ -1420,19 +1532,19 @@ export default function ComunidadScreen() {
             width: 50,
             height: 50,
             borderRadius: radii.full,
-            backgroundColor: 'rgba(15, 30, 48, 0.85)',
+            backgroundColor: alpha(darkSurfaces.superLike, 0.85),
             borderWidth: 1.5,
-            borderColor: '#06B6D4',
+            borderColor: accentHues.cyan,
             alignItems: 'center',
             justifyContent: 'center',
             opacity: !topCard ? 0.4 : 1,
-            shadowColor: '#06B6D4',
+            shadowColor: accentHues.cyan,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.25,
             shadowRadius: 8,
           }}
         >
-          <Ionicons color="#06B6D4" name="star" size={24} />
+          <Ionicons color={accentHues.cyan} name="star" size={24} />
         </PressableScale>
 
         {/* 4. Like / Heart Button (Volt / Green) */}
@@ -1447,7 +1559,7 @@ export default function ComunidadScreen() {
             width: 64,
             height: 64,
             borderRadius: radii.full,
-            backgroundColor: 'rgba(25, 38, 18, 0.9)',
+            backgroundColor: alpha(darkSurfaces.like, 0.9),
             borderWidth: 2,
             borderColor: colors.volt,
             alignItems: 'center',
@@ -1476,22 +1588,22 @@ export default function ComunidadScreen() {
             width: 50,
             height: 50,
             borderRadius: radii.full,
-            backgroundColor: 'rgba(30, 20, 48, 0.85)',
+            backgroundColor: alpha(darkSurfaces.boost, 0.85),
             borderWidth: 1.5,
-            borderColor: '#A855F7',
+            borderColor: accentHues.purple,
             alignItems: 'center',
             justifyContent: 'center',
             opacity: !topCard ? 0.4 : 1,
-            shadowColor: '#A855F7',
+            shadowColor: accentHues.purple,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.25,
             shadowRadius: 8,
           }}
         >
           {message.isPending ? (
-            <ActivityIndicator color="#A855F7" size="small" />
+            <ActivityIndicator color={accentHues.purple} size="small" />
           ) : (
-            <Ionicons color="#A855F7" name="flash" size={22} />
+            <Ionicons color={accentHues.purple} name="flash" size={22} />
           )}
         </PressableScale>
       </View>
@@ -1499,6 +1611,7 @@ export default function ComunidadScreen() {
       {/* 3-Dots Menu Sheet (Consolidated Community Menu) */}
       <CommunityOverflowSheet
         onClose={() => setOverflowVisible(false)}
+        onOpenPreferences={() => setPrefsVisible(true)}
         onOpenTopGym={() => setTopGymVisible(true)}
         visible={overflowVisible}
       />
@@ -1509,7 +1622,7 @@ export default function ComunidadScreen() {
       {/* Preferences Sheet */}
       <SearchPreferencesSheet
         branches={branchList}
-        filters={{ objetivo, setObjetivo, sucursalId, setSucursalId, genero, setGenero }}
+        filters={{ objetivos: safeObjetivos, setObjetivos, sucursalId, setSucursalId, genero, setGenero }}
         onClose={() => setPrefsVisible(false)}
         onOpenBlocked={() => {
           setPrefsVisible(false);
@@ -1535,4 +1648,9 @@ export default function ComunidadScreen() {
       />
     </View>
   );
+}
+
+/** El servidor responde 400 cuando el socio aún no guardó sus preferencias de Conocer. */
+function needsDiscoveryPreferences(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 400 && /preferencias/i.test(error.message);
 }

@@ -23,6 +23,7 @@ import { PrizesSection } from '@/components/progression/prizes';
 import { RestDaysSection } from '@/components/progression/rest-days';
 import { StatsSection } from '@/components/progression/stats';
 import { StreakCard } from '@/components/progression/streak';
+import { StrikesCard } from '@/components/progression/strikes';
 import { PointsRulesSheet, usePointRules } from '@/components/points-rules-sheet';
 import { RarityLegend } from '@/components/rarity-legend';
 import { TourTarget, useScreenTour } from '@/components/tour';
@@ -248,6 +249,12 @@ export default function TrayectoriaScreen() {
         {data.streak ? (
           <Section icon="flame-outline" title="Tu racha">
             <StreakCard rules={rules.data} streak={data.streak} />
+          </Section>
+        ) : null}
+
+        {data.strikes ? (
+          <Section icon="shield-checkmark-outline" title="Tus strikes">
+            <StrikesCard points={data.points} strikes={data.strikes} />
           </Section>
         ) : null}
 

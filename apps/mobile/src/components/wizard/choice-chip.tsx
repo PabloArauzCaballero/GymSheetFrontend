@@ -1,10 +1,12 @@
-import { Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Text, View } from 'react-native';
 import { PressableScale } from '@/components/motion';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
 import {
   accentContrast,
   colors,
   fontSizes,
+  iconSizes,
   minTouchTarget,
   motion,
   radii,
@@ -22,6 +24,7 @@ import {
  */
 export function ChoiceChip({
   label,
+  icon,
   selected,
   onSelect,
   accessibilityLabel,
@@ -29,6 +32,7 @@ export function ChoiceChip({
   minWidth,
 }: {
   label: string;
+  icon?: keyof typeof Ionicons.glyphMap;
   selected: boolean;
   onSelect: () => void;
   accessibilityLabel?: string;
@@ -61,15 +65,24 @@ export function ChoiceChip({
       }}
       testID={testID}
     >
-      <Text
-        style={{
-          color: selected ? accentContrast() : colors.text,
-          fontSize: fontSizes.sm,
-          fontWeight: semibold,
-        }}
-      >
-        {label}
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        {icon ? (
+          <Ionicons
+            color={selected ? accentContrast() : colors.textMuted}
+            name={icon}
+            size={iconSizes.sm}
+          />
+        ) : null}
+        <Text
+          style={{
+            color: selected ? accentContrast() : colors.text,
+            fontSize: fontSizes.sm,
+            fontWeight: semibold,
+          }}
+        >
+          {label}
+        </Text>
+      </View>
     </PressableScale>
   );
 }

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { directoryEntitySummarySchema } from './directory';
 
 export const entityPaymentConfigSchema = z.object({
   id: z.string().optional(),
@@ -37,6 +38,7 @@ export const entityPlanSchema = z.object({
   displayOrder: z.number().int(),
   mediaUrls: z.array(z.string()),
   metadata: z.record(z.string(), z.unknown()),
+  entity: directoryEntitySummarySchema.optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });

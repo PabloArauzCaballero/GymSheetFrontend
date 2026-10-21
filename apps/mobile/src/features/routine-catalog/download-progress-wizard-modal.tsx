@@ -2,13 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { BadgePop, PressableScale } from '@/components/motion';
 import { Button } from '@/components/ui';
 import { exportRoutineProgress, RoutineProgressExportFilters } from '@/lib/export-progress';
 import { notify } from '@/notifications';
-import { alpha, colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+import { alpha, colors, fontSizes, ink, radii, semibold, spacing } from '@/theme';
 import { routineService } from '@/api/services';
 
 interface DownloadProgressWizardModalProps {
@@ -79,9 +79,8 @@ export function DownloadProgressWizardModal({
     try {
       const res = await exportRoutineProgress(finalFilters);
       if (res.status === 'saved') {
-        try {
-          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        } catch {}
+        // Sin hápticos (simulador, ajuste del sistema) la descarga sigue igual.
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
         setSuccessResult({
           fileName: res.fileName,
           recordsCount: res.recordsCount,
@@ -371,7 +370,7 @@ export function DownloadProgressWizardModal({
                             }}
                           >
                             <Text
-                              style={{ color: '#000000', fontSize: 10, fontWeight: '800', letterSpacing: 0.3 }}
+                              style={{ color: ink.black, fontSize: fontSizes.micro, fontWeight: '800', letterSpacing: 0.3 }}
                             >
                               {item.badge}
                             </Text>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+
 import { Ionicons } from '@expo/vector-icons';
 import { IconBadge } from '@/components/icon-badge';
 import { IconButton } from '@/components/icon-button';
@@ -25,7 +25,7 @@ import { notificationService } from '@/features/notifications/service';
 import { activeProgramsKey } from '@/features/programs/use-active-programs';
 import { WORKOUT_LABEL, WORKOUT_TONE, formatDuration, formatTimeOfDay, relativeDay, shortName } from '@/lib/format';
 import { useAuthStore } from '@/state/auth-store';
-import { colors, iconSizes, metricColors, spacing } from '@/theme';
+import { accentHues, colors, fontSizes, iconSizes, ink, metricColors, spacing } from '@/theme';
 
 const LONG_DATE = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -128,7 +128,7 @@ export default function HomeScreen() {
         accessibilityLabel="Explorar Directorio Fitness"
         onPress={() => router.push('/directorio')}
         style={{
-          backgroundColor: '#10b981',
+          backgroundColor: accentHues.emerald,
           borderRadius: 14,
           paddingVertical: 14,
           paddingHorizontal: 16,
@@ -138,12 +138,12 @@ export default function HomeScreen() {
           marginBottom: 12,
         }}
       >
-        <Ionicons color="#000" name="storefront" size={24} />
+        <Ionicons color={ink.black} name="storefront" size={24} />
         <View style={{ flex: 1 }}>
-          <Text style={{ color: '#000', fontSize: 15, fontWeight: '700' }}>Directorio & Reseñas App Store</Text>
-          <Text style={{ color: '#064e3b', fontSize: 12, fontWeight: '500' }}>Gimnasios, suplementos, coaches y valoraciones</Text>
+          <Text style={{ color: ink.black, fontSize: fontSizes.sm, fontWeight: '700' }}>Directorio y reseñas</Text>
+          <Text style={{ color: accentHues.emeraldDeep, fontSize: fontSizes.xs, fontWeight: '500' }}>Gimnasios, suplementos, coaches y valoraciones</Text>
         </View>
-        <Ionicons color="#000" name="arrow-forward" size={20} />
+        <Ionicons color={ink.black} name="arrow-forward" size={20} />
       </PressableScale>
 
       {/* Si el acceso no está vigente, eso es lo primero que hay que resolver,

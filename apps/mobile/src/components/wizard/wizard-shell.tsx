@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { WIZARD_STEPS } from '@gymsheet/hooks';
 import { ScreenHeader, ScrollScreen } from '@/components/layout';
 import { BackLink } from '@/components/nav';
 import { WizardProgress } from '@/components/wizard/wizard-progress';
+import { MOBILE_WIZARD_STEPS } from '@/lib/wizard-routes';
 import { spacing } from '@/theme';
 
 /** Alto reservado al final del contenido para que la barra de acciones no lo tape. */
@@ -36,7 +36,7 @@ export function WizardShell({
     <ScrollScreen overlay={actions}>
       <BackLink />
       <View style={{ gap: spacing.lg }}>
-        <WizardProgress actual={paso} pasos={WIZARD_STEPS} />
+        <WizardProgress actual={paso} pasos={MOBILE_WIZARD_STEPS} />
         {header ?? <ScreenHeader detail subtitle={subtitle} title={title} />}
       </View>
       {children}

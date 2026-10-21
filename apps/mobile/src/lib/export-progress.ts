@@ -136,8 +136,10 @@ export async function exportRoutineProgress(
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`El servidor respondió ${response.status} al generar el archivo.`);
+    // El servidor explica qué hacer (p. ej. «filtra por rutina o por fechas»
+    // cuando el progreso es demasiado grande): ese texto es el que se muestra.
+    const body = (await response.json().catch(() => null)) as { error?: { message?: string } } | null;
+    throw new Error(body?.error?.message ?? `El servidor respondió ${response.status} al generar el archivo.`);
   }
 
   const data = (await response.json()) as {
