@@ -276,6 +276,15 @@ export const progressionSchema = z.object({
   strikes: progressionStreakStrikesSchema.optional(),
 });
 
+export const leaderboardBadgeSchema = z.object({
+  code: z.string(),
+  name: z.string(),
+  icon: z.string(),
+  color: z.string(),
+  rarity: z.string().optional(),
+});
+export type LeaderboardBadge = z.infer<typeof leaderboardBadgeSchema>;
+
 export const leaderboardEntrySchema = z.object({
   position: z.number().int(),
   points: z.number().int(),
@@ -284,6 +293,9 @@ export const leaderboardEntrySchema = z.object({
   /** Nombre de pila e inicial: la tabla no es una lista de socios. */
   displayName: z.string(),
   isMe: z.boolean(),
+  userId: z.string().optional(),
+  photoUrl: z.string().nullable().optional(),
+  badges: z.array(leaderboardBadgeSchema).optional().default([]),
 });
 
 export const leaderboardSchema = z.array(leaderboardEntrySchema);

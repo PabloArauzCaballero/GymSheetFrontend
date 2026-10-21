@@ -8,7 +8,7 @@ import { BadgePop, PressableScale } from '@/components/motion';
 import { Button } from '@/components/ui';
 import { exportRoutineProgress, RoutineProgressExportFilters } from '@/lib/export-progress';
 import { notify } from '@/notifications';
-import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+import { alpha, colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
 import { routineService } from '@/api/services';
 
 interface DownloadProgressWizardModalProps {
@@ -144,7 +144,7 @@ export function DownloadProgressWizardModal({
                 width: 76,
                 height: 76,
                 borderRadius: 38,
-                backgroundColor: colors.voltDim,
+                backgroundColor: alpha(colors.volt, 0.16),
                 borderWidth: 2,
                 borderColor: colors.volt,
                 alignItems: 'center',
@@ -250,31 +250,36 @@ export function DownloadProgressWizardModal({
               justifyContent: 'space-between',
               backgroundColor: colors.surfaceHigh,
               paddingHorizontal: spacing.md,
-              paddingVertical: spacing.xs + 2,
-              borderRadius: radii.full,
+              paddingVertical: spacing.sm,
+              borderRadius: radii.xl,
               borderWidth: 1,
-              borderColor: colors.border,
+              borderColor: colors.borderSubtle,
+              gap: spacing.sm,
             }}
           >
-            <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-              ¿Quieres todo sin filtros?
-            </Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: colors.textSecondary, fontSize: fontSizes.xs, fontWeight: '500' }}>
+                ¿Quieres todo sin filtros?
+              </Text>
+            </View>
             <PressableScale
               accessibilityLabel="Descargar todo el historial ahora"
               onPress={handleDownloadAllHistory}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 4,
-                paddingHorizontal: spacing.sm,
-                paddingVertical: 4,
+                gap: 6,
+                paddingHorizontal: spacing.md,
+                paddingVertical: 6,
                 borderRadius: radii.full,
-                backgroundColor: colors.voltDim,
+                backgroundColor: alpha(colors.volt, 0.18),
+                borderWidth: 1,
+                borderColor: alpha(colors.volt, 0.45),
               }}
             >
-              <Ionicons color={colors.volt} name="flash-outline" size={14} />
-              <Text style={{ color: colors.volt, fontSize: fontSizes.xs, fontWeight: '700' }}>
-                Descargar todo el historial
+              <Ionicons color={colors.volt} name="flash" size={14} />
+              <Text style={{ color: colors.accentInk, fontSize: fontSizes.xs, fontWeight: '700' }}>
+                Descargar todo
               </Text>
             </PressableScale>
           </View>
@@ -326,19 +331,30 @@ export function DownloadProgressWizardModal({
                       borderRadius: radii.lg,
                       borderWidth: selected ? 1.5 : 1,
                       borderColor: selected ? colors.volt : colors.border,
-                      backgroundColor: selected ? colors.voltDim : colors.surfaceHigh,
+                      backgroundColor: selected ? alpha(colors.volt, 0.1) : colors.surfaceHigh,
                     }}
                   >
-                    <Ionicons
-                      color={selected ? colors.volt : colors.textMuted}
-                      name={item.icon}
-                      size={24}
-                    />
-                    <View style={{ flex: 1, gap: 2 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                    <View
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: radii.md,
+                        backgroundColor: selected ? alpha(colors.volt, 0.2) : colors.surfaceLowest,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Ionicons
+                        color={selected ? colors.volt : colors.textMuted}
+                        name={item.icon}
+                        size={22}
+                      />
+                    </View>
+                    <View style={{ flex: 1, gap: 3 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexWrap: 'wrap' }}>
                         <Text
                           style={{
-                            color: selected ? colors.volt : colors.text,
+                            color: colors.text,
                             fontSize: fontSizes.sm,
                             fontWeight: semibold,
                           }}
@@ -349,20 +365,20 @@ export function DownloadProgressWizardModal({
                           <View
                             style={{
                               backgroundColor: colors.volt,
-                              paddingHorizontal: 6,
-                              paddingVertical: 1,
+                              paddingHorizontal: 7,
+                              paddingVertical: 2,
                               borderRadius: radii.full,
                             }}
                           >
                             <Text
-                              style={{ color: '#101010', fontSize: 10, fontWeight: '800' }}
+                              style={{ color: '#000000', fontSize: 10, fontWeight: '800', letterSpacing: 0.3 }}
                             >
                               {item.badge}
                             </Text>
                           </View>
                         )}
                       </View>
-                      <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                      <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 17 }}>
                         {item.desc}
                       </Text>
                     </View>
@@ -400,18 +416,29 @@ export function DownloadProgressWizardModal({
                   borderRadius: radii.lg,
                   borderWidth: routineId === 'ALL' ? 1.5 : 1,
                   borderColor: routineId === 'ALL' ? colors.volt : colors.border,
-                  backgroundColor: routineId === 'ALL' ? colors.voltDim : colors.surfaceHigh,
+                  backgroundColor: routineId === 'ALL' ? alpha(colors.volt, 0.1) : colors.surfaceHigh,
                 }}
               >
-                <Ionicons
-                  color={routineId === 'ALL' ? colors.volt : colors.textMuted}
-                  name="albums-outline"
-                  size={22}
-                />
-                <View style={{ flex: 1 }}>
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: radii.md,
+                    backgroundColor: routineId === 'ALL' ? alpha(colors.volt, 0.2) : colors.surfaceLowest,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Ionicons
+                    color={routineId === 'ALL' ? colors.volt : colors.textMuted}
+                    name="albums-outline"
+                    size={22}
+                  />
+                </View>
+                <View style={{ flex: 1, gap: 2 }}>
                   <Text
                     style={{
-                      color: routineId === 'ALL' ? colors.volt : colors.text,
+                      color: colors.text,
                       fontSize: fontSizes.sm,
                       fontWeight: semibold,
                     }}
@@ -444,18 +471,29 @@ export function DownloadProgressWizardModal({
                       borderRadius: radii.lg,
                       borderWidth: selected ? 1.5 : 1,
                       borderColor: selected ? colors.volt : colors.border,
-                      backgroundColor: selected ? colors.voltDim : colors.surfaceHigh,
+                      backgroundColor: selected ? alpha(colors.volt, 0.1) : colors.surfaceHigh,
                     }}
                   >
-                    <Ionicons
-                      color={selected ? colors.volt : colors.textMuted}
-                      name="barbell-outline"
-                      size={22}
-                    />
-                    <View style={{ flex: 1 }}>
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: radii.md,
+                        backgroundColor: selected ? alpha(colors.volt, 0.2) : colors.surfaceLowest,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Ionicons
+                        color={selected ? colors.volt : colors.textMuted}
+                        name="barbell-outline"
+                        size={22}
+                      />
+                    </View>
+                    <View style={{ flex: 1, gap: 2 }}>
                       <Text
                         style={{
-                          color: selected ? colors.volt : colors.text,
+                          color: colors.text,
                           fontSize: fontSizes.sm,
                           fontWeight: semibold,
                         }}
@@ -529,18 +567,29 @@ export function DownloadProgressWizardModal({
                       borderRadius: radii.lg,
                       borderWidth: selected ? 1.5 : 1,
                       borderColor: selected ? colors.volt : colors.border,
-                      backgroundColor: selected ? colors.voltDim : colors.surfaceHigh,
+                      backgroundColor: selected ? alpha(colors.volt, 0.1) : colors.surfaceHigh,
                     }}
                   >
-                    <Ionicons
-                      color={selected ? colors.volt : colors.textMuted}
-                      name={item.icon}
-                      size={22}
-                    />
-                    <View style={{ flex: 1 }}>
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: radii.md,
+                        backgroundColor: selected ? alpha(colors.volt, 0.2) : colors.surfaceLowest,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Ionicons
+                        color={selected ? colors.volt : colors.textMuted}
+                        name={item.icon}
+                        size={22}
+                      />
+                    </View>
+                    <View style={{ flex: 1, gap: 2 }}>
                       <Text
                         style={{
-                          color: selected ? colors.volt : colors.text,
+                          color: colors.text,
                           fontSize: fontSizes.sm,
                           fontWeight: semibold,
                         }}
@@ -616,8 +665,8 @@ export function DownloadProgressWizardModal({
                     padding: spacing.md,
                     borderRadius: radii.lg,
                     borderWidth: 1,
-                    borderColor: dim.active ? colors.border : colors.border,
-                    backgroundColor: colors.surfaceHigh,
+                    borderColor: dim.active ? alpha(colors.volt, 0.6) : colors.border,
+                    backgroundColor: dim.active ? alpha(colors.volt, 0.08) : colors.surfaceHigh,
                   }}
                 >
                   <Ionicons
@@ -625,7 +674,7 @@ export function DownloadProgressWizardModal({
                     name={dim.active ? 'checkbox' : 'square-outline'}
                     size={22}
                   />
-                  <View style={{ flex: 1 }}>
+                  <View style={{ flex: 1, gap: 2 }}>
                     <Text
                       style={{
                         color: colors.text,
@@ -714,6 +763,7 @@ export function DownloadProgressWizardModal({
             alignItems: 'center',
             gap: spacing.sm,
             marginTop: spacing.sm,
+            paddingBottom: spacing.md,
           }}
         >
           {step > 1 && (

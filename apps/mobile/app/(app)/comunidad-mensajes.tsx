@@ -12,6 +12,7 @@ import { Button } from '@/components/ui';
 import { PressableScale } from '@/components/motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { confirm, notify } from '@/notifications';
+import { StoriesBar } from '@/components/stories-bar';
 import { accentContrast, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 type Tab = 'general' | 'solicitudes' | 'conexiones';
@@ -369,7 +370,9 @@ export default function ComunidadMensajesScreen() {
   return (
     <ScrollScreen>
       <BackLink />
-      <ScreenHeader subtitle="Conversaciones, solicitudes y conexiones." title="Mensajes" />
+      <ScreenHeader subtitle="Historias, conversaciones y solicitudes." title="Mensajes" />
+
+      <StoriesBar />
 
       <View
         style={{
