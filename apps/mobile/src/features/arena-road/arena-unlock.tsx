@@ -384,7 +384,7 @@ export function ArenaUnlock({
             style={[styles.plate, { backgroundColor: alpha(tint.b[1], 0.18), borderColor: alpha(tint.b[0], 0.6) }, plateStyle]}
           />
           <Animated.View style={nameStyle}>
-            <Text style={[styles.name, { color: onMedia.text, textShadowColor: alpha(tint.glow, 0.8) }]} variant="display">
+            <Text style={[styles.name, { color: onMedia.text }]} variant="display">
               {arena.name}
             </Text>
           </Animated.View>
@@ -582,10 +582,9 @@ const styles = StyleSheet.create({
     borderRadius: radii.xl,
     borderWidth: 1,
   },
+  // Sin sombra de brillo: escalada, iOS la rasteriza como un recuadro claro.
   name: {
     textAlign: 'center',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 18,
   },
   rankBadge: {
     flexDirection: 'row',

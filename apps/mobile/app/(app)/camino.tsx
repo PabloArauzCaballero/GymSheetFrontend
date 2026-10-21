@@ -241,7 +241,7 @@ export default function CaminoScreen() {
         </View>
       </View>
 
-      <NextBar bottom={insets.bottom} current={current} next={road.next} width={contentWidth} />
+      <NextBar bottom={insets.bottom} current={current} earned={pointsLabel} next={road.next} width={contentWidth} />
 
       {show ? <ArenaUnlock arena={show.arena} intro={show.intro} onClose={dismiss} /> : null}
     </View>
@@ -302,11 +302,14 @@ const ArenaStage = memo(function ArenaStage({
 function NextBar({
   current,
   next,
+  earned,
   bottom,
   width,
 }: {
   current: RoadArena | null;
   next: RoadArena | null;
+  /** Puntos ganados ya formateados: lo que mueve el camino. */
+  earned: string;
   bottom: number;
   width: number;
 }) {
@@ -338,6 +341,9 @@ function NextBar({
           {next ? `faltan ${formatPoints(next.pointsToEnter)} pts` : 'Leyenda'}
         </Text>
       </View>
+      <Text style={{ color: onMedia.textMuted }} tabular variant="caption">
+        {`Llevas ${earned} pts ganados. Canjear puntos no te baja de arena.`}
+      </Text>
       <View style={[styles.nextTrack, { backgroundColor: arenaTrack }]}>
         <Animated.View style={[styles.nextFill, fillStyle]}>
           <LinearGradient
