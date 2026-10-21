@@ -15,7 +15,7 @@ import { cardMaterials, colors, fontSizes, iconSizes, radii, semibold, spacing }
  * Las reglas (servidor, `streak-strikes.ts`): una falta a tu plan se repone
  * entrenando un día de descanso de la misma semana; si no, gasta un strike;
  * sin strikes, cuesta puntos y no protege la racha. Canjear pide confirmación:
- * gasta puntos de verdad, aunque nunca baja de arena.
+ * gasta puntos de verdad, aunque nunca baja de rango ni de arena.
  */
 export function StrikesCard({ strikes, points }: { strikes: ProgressionStreakStrikes; points: number }) {
   const queryClient = useQueryClient();
@@ -39,7 +39,7 @@ export function StrikesCard({ strikes, points }: { strikes: ProgressionStreakStr
   const confirmBuy = () =>
     Alert.alert(
       '¿Canjear un strike?',
-      `Gastas ${strikes.strikeCostPoints} puntos de tu saldo. Tu arena no baja.`,
+      `Gastas ${strikes.strikeCostPoints} puntos de tu saldo. Tu rango y tu arena no bajan.`,
       [
         { text: 'Cancelar', style: 'cancel' },
         { text: `Canjear ${strikes.strikeCostPoints} pts`, onPress: () => buy.mutate() },
