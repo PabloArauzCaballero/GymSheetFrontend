@@ -24,6 +24,26 @@ export type WorkoutSet = {
 export const skipReasons = ['CANSANCIO', 'PRISA', 'DOLOR', 'EQUIPO_OCUPADO', 'TECNICA', 'OTRO'] as const;
 export type SkipReason = (typeof skipReasons)[number];
 
+/** Zonas que se pueden elegir al armar una rutina libre (`POST /workouts/libre`). */
+export const freeWorkoutGroups = ['CHEST', 'BACK', 'SHOULDERS', 'ARMS', 'CORE', 'LEGS', 'GLUTES', 'CALVES'] as const;
+export type FreeWorkoutGroup = (typeof freeWorkoutGroups)[number];
+
+/** Por qué se cambia un ejercicio a mitad de entreno. */
+export const swapReasons = [
+  'MAQUINA_OCUPADA',
+  'SIN_EQUIPO',
+  'MOLESTIA',
+  'MUY_DIFICIL',
+  'MUY_FACIL',
+  'PREFERENCIA',
+  'CAMBIO_DE_PLAN',
+] as const;
+export type SwapReason = (typeof swapReasons)[number];
+
+/** Solo esta sesión, o también la rutina de la que salió. */
+export const swapScopes = ['SESION', 'RUTINA'] as const;
+export type SwapScope = (typeof swapScopes)[number];
+
 /** Serie saltada: no es una fila de `series`; no cuenta para volumen, récords ni puntos. */
 export type SkippedSet = {
   id: string;

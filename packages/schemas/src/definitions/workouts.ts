@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { routineGroupTypes, skipReasons, workoutStatuses } from '@gymsheet/types';
+import { routineGroupTypes, skipReasons, swapReasons, workoutStatuses } from '@gymsheet/types';
 import { exerciseSchema } from './core';
 import { cardioSessionExtrasSchema } from '../cardio';
 import { programSessionExtrasSchema } from '../programs';
@@ -95,6 +95,50 @@ export const restSettingsResultSchema = z.object({
     .optional()
     .default({ guardado: false, rutinaId: null, ejerciciosActualizados: 0, motivo: null }),
 });
+
+/** `POST /workouts/libre`: la sesión propuesta y qué se pidió. */
+export const freeWorkoutSchema = workoutSchema.extend({
+  rutinaLibre: z
+    .object({
+      grupos: z.array(z.string()).default([]),
+      propuestos: z.number().int().default(0),
+      cuerpoCompleto: z.boolean().default(false),
+    })
+    .optional()
+    .default({ grupos: [], propuestos: 0, cuerpoCompleto: false }),
+});
+export type FreeWorkout = z.infer<typeof freeWorkoutSchema>;
+
+/** `GET /workouts/session-exercises/:id/alternatives`: equivalentes ya ordenados. */
+export const exerciseAlternativesSchema = z.object({
+  ejercicioId: z.string(),
+  motivo: z.enum(swapReasons).nullable().catch(null).default(null),
+  alternativas: z.array(
+    z.object({
+      id: z.string().uuid(),
+      nombre: z.string(),
+      grupoMuscular: z.string(),
+      equipo: z.string().nullable().default(null),
+      imagenUrl: z.string().nullable().default(null),
+      musculosPrincipalesCompartidos: z.number().int().default(0),
+    }),
+  ),
+});
+export type ExerciseAlternatives = z.infer<typeof exerciseAlternativesSchema>;
+export type ExerciseAlternative = ExerciseAlternatives['alternativas'][number];
+
+/** `POST /workouts/session-exercises/:id/swap`. */
+export const exerciseSwapResultSchema = z.object({
+  sesion: workoutSchema,
+  sesionEjercicioId: z.string(),
+  conservoSeries: z.boolean().default(false),
+  rutina: z.object({
+    guardado: z.boolean().default(false),
+    rutinaId: z.string().nullable().default(null),
+    motivo: z.string().nullable().default(null),
+  }),
+});
+export type ExerciseSwapResult = z.infer<typeof exerciseSwapResultSchema>;
 
 /**
  * Respuesta de cerrar una sesión: la sesión y lo que movió en la senda.

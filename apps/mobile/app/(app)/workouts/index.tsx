@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { ScrollScreen, ScreenHeader } from '@/components/layout';
@@ -16,23 +16,10 @@ import { spacing } from '@/theme';
 
 export default function WorkoutsScreen() {
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const workouts = useQuery({
     queryKey: ['workouts', 'history'],
     queryFn: () => workoutService.list(30),
-  });
-
-  // Training without a routine has to be possible: most gym sessions are
-  // improvised, and a plan is the exception rather than the entry point.
-  const startFree = useMutation({
-    mutationFn: () => workoutService.start(),
-    onSuccess: async (session) => {
-      await queryClient.invalidateQueries({ queryKey: ['workouts'] });
-      notify.success('Sesión iniciada.');
-      router.push({ pathname: '/workouts/[id]', params: { id: session.id } });
-    },
-    onError: (error: Error) => notify.error(error),
   });
 
   const inProgress = workouts.data?.items.find((item) => item.estado === 'EN_PROGRESO');
@@ -124,13 +111,13 @@ export default function WorkoutsScreen() {
           }
         />
       ) : (
+        // Entrenar sin rutina tiene que ser posible: la mayoría de las sesiones
+        // se improvisan. La pantalla de entreno libre propone ejercicios por
+        // zonas (o cuerpo completo) y deja empezar en blanco.
         <Button
           icon="add-circle-outline"
           label="Empezar entrenamiento"
-          loading={startFree.isPending}
-          onPress={() => {
-            if (!startFree.isPending) startFree.mutate();
-          }}
+          onPress={() => router.push('/workouts/libre')}
         />
       )}
       </TourTarget>

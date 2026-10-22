@@ -23,6 +23,7 @@ import { DoneCard, FocusPage, GroupSwitch, OmittedCard, PageMedia, RestPills, Se
 import { RecordFlash } from '@/features/workout/focus/record-flash';
 import { ReasonSheet, type ReasonSheetMode } from '@/features/workout/focus/reason-sheet';
 import { RestSheet, type RestSheetResult, type RestSheetTarget } from '@/features/workout/focus/rest-sheet';
+import { SwapSheet, type SwapTarget } from '@/features/workout/focus/swap-sheet';
 import { RestOverlay } from '@/features/workout/focus/rest-overlay';
 import { SessionSheet, type OverviewItem, type SessionSheetMode } from '@/features/workout/focus/session-menu';
 import { RirPicker, Stepper } from '@/features/workout/focus/stepper';
@@ -219,6 +220,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
   const [pickerOpen, setPickerOpen] = useState(false);
   const [resumed, setResumed] = useState(false);
   const [reason, setReason] = useState<{ mode: Exclude<ReasonSheetMode, null>; exerciseId: string } | null>(null);
+  const [swapTarget, setSwapTarget] = useState<SwapTarget | null>(null);
   const [restTarget, setRestTarget] = useState<RestSheetTarget | null>(null);
   const [failed, setFailed] = useState<FailedSet | null>(null);
   const [celebrated, setCelebrated] = useState<string | null>(null);
@@ -1109,6 +1111,18 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
             ? () => fromMenu(() => setReason({ mode: { kind: 'exercise', label: nameOf(activeSource) }, exerciseId: activeSource.id }))
             : undefined
         }
+        onSwap={
+          activeSource && !activeOmitted && !active?.done && !activeIsCardio
+            ? () =>
+                fromMenu(() =>
+                  setSwapTarget({
+                    sessionExerciseId: activeSource.id,
+                    name: nameOf(activeSource),
+                    hasSets: activeSource.series.length > 0,
+                  }),
+                )
+            : undefined
+        }
         onOverview={() => setSheet('overview')}
         onRest={activeSource && !activeIsCardio ? () => fromMenu(() => openRest(activeSource)) : undefined}
         onSelect={(item) => {
@@ -1141,6 +1155,30 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
           markSheetClosed();
           setReason(null);
         }}
+      />
+      <SwapSheet
+        canSaveToRoutine={session.routineLink.data?.editable ?? false}
+        onChoose={(choice) => {
+          const current = swapTarget;
+          if (!current || session.swapExercise.isPending) return;
+          session.swapExercise.mutate(
+            { exerciseId: current.sessionExerciseId, ...choice },
+            {
+              onSuccess: () => {
+                markSheetClosed();
+                setSwapTarget(null);
+                void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                AccessibilityInfo.announceForAccessibility(`${current.name} cambiado.`);
+              },
+            },
+          );
+        }}
+        onClose={() => {
+          markSheetClosed();
+          setSwapTarget(null);
+        }}
+        pending={session.swapExercise.isPending}
+        target={swapTarget}
       />
       <RestSheet
         onApply={(result) => {

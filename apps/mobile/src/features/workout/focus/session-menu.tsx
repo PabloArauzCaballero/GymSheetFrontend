@@ -93,6 +93,7 @@ export function SessionSheet({
   onCancel,
   onRest,
   onOmit,
+  onSwap,
   restLabel,
   currentName,
   setsLabel,
@@ -110,6 +111,8 @@ export function SessionSheet({
   onRest?: () => void;
   /** Omitir el ejercicio a la vista; `undefined` si no aplica. */
   onOmit?: () => void;
+  /** Cambiar el ejercicio a la vista por un equivalente; `undefined` si no aplica. */
+  onSwap?: () => void;
   /** «2:30». */
   restLabel?: string;
   currentName?: string;
@@ -191,6 +194,16 @@ export function SessionSheet({
               metric="rest"
               onPress={onRest}
               testID="menu-rest"
+            />
+          ) : null}
+          {onSwap ? (
+            <MenuRow
+              detail={currentName ? `${currentName} · por un equivalente` : 'Por un equivalente'}
+              icon="swap-horizontal"
+              label="Cambiar este ejercicio"
+              metric="weight"
+              onPress={onSwap}
+              testID="menu-swap"
             />
           ) : null}
           <MenuRow detail="Se añade al final" icon="add" label="Añadir ejercicio" metric="reps" onPress={onAdd} testID="menu-add" />
