@@ -70,6 +70,17 @@ Mapa de skills por tarea (usar la que corresponda, no improvisar):
 | Identidad y voz de marca | `brand` |
 | Auditoría final de UI/UX/accesibilidad | `web-design-guidelines` |
 
+### Skills de marketing y crecimiento
+
+`.claude/skills/` incluye además las 51 skills de
+[coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (licencia MIT,
+copia en `.claude/third-party/marketingskills-LICENSE`, commit en `marketingskills-VERSION`).
+Úsalas para lo que no es código de producto: `aso` (ficha de App Store / Play), `onboarding` y
+`signup` (activación), `paywalls` y `pricing` (membresías), `copywriting` y `copy-editing`
+(textos de la app y la web), `launch`, `referrals`, `churn-prevention`, `analytics`, `cro`,
+`seo-audit`, etc. No sustituyen a las skills de diseño: el copy dentro de la app sigue la voz
+de `repp-diseno` (de tú, frases cortas, verbo primero).
+
 Regla de cierre: ningún PR de UI se considera terminado sin una pasada de
 `web-design-guidelines` y sin respetar `prefers-reduced-motion` en todo motion.
 
