@@ -35,12 +35,12 @@ import { notify } from '@/notifications';
 import { accentHues, alpha, colors, darkSurfaces, fontSizes, heroNumberFontSize, ink, radii, semibold, spacing } from '@/theme';
 
 const MARKET_CATEGORIES = [
-  { id: 'all', label: '🏷️ Todo', type: undefined, categoryPath: undefined },
-  { id: 'gyms', label: '🏋️ Gimnasios', type: 'GYM', categoryPath: 'gimnasios' },
-  { id: 'supplements', label: '💊 Suplementos', type: 'STORE', categoryPath: 'tiendas.nutricion' },
-  { id: 'apparel', label: '👕 Indumentaria', type: 'STORE', categoryPath: 'tiendas.indumentaria' },
-  { id: 'passes', label: '🎟️ Pases & Planes', type: undefined, categoryPath: undefined },
-  { id: 'coaches', label: '🥋 Coaches', type: 'COACH', categoryPath: 'coaches' },
+  { id: 'all', label: 'Todo', type: undefined, categoryPath: undefined },
+  { id: 'gyms', label: 'Gimnasios', type: 'GYM', categoryPath: 'gimnasios' },
+  { id: 'supplements', label: 'Suplementos', type: 'STORE', categoryPath: 'tiendas.nutricion' },
+  { id: 'apparel', label: 'Indumentaria', type: 'STORE', categoryPath: 'tiendas.indumentaria' },
+  { id: 'passes', label: 'Pases y planes', type: undefined, categoryPath: undefined },
+  { id: 'coaches', label: 'Coaches', type: 'COACH', categoryPath: 'coaches' },
 ] as const;
 
 export default function DirectorioScreen() {
@@ -381,13 +381,16 @@ export default function DirectorioScreen() {
       <AmbientBackground />
 
       {/* Header */}
+      {/* Volver en su fila y título grande a la izquierda: centrado junto al
+          «Atrás» no cabía y se pisaban en pantallas de 375–390 pt. */}
       <View style={styles.header}>
         <BackLink label="Atrás" />
-        <View style={{ alignItems: 'center' }}>
-          <Text style={styles.title}>Marketplace GymSheet</Text>
-          <Text style={styles.headerSubtitle}>Directorio oficial de gimnasios, tiendas y pases</Text>
-        </View>
-        <View style={{ width: 44 }} />
+        <Text accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit style={styles.title}>
+          Marketplace
+        </Text>
+        <Text numberOfLines={2} style={styles.headerSubtitle}>
+          Gimnasios, tiendas y pases de tu zona
+        </Text>
       </View>
 
       {/* Buscador Marketplace */}
@@ -1410,21 +1413,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingBottom: spacing.md,
+    gap: spacing.xxs,
   },
   title: {
     color: colors.text,
-    fontSize: fontSizes.xl,
+    fontSize: fontSizes['2xl'],
     fontWeight: semibold,
+    letterSpacing: -0.6,
+    marginTop: spacing.xs,
   },
   headerSubtitle: {
     color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    marginTop: 1,
+    fontSize: fontSizes.sm,
   },
   searchContainer: {
     flexDirection: 'row',

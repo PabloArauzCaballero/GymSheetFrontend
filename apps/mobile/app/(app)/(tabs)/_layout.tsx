@@ -37,25 +37,13 @@ const ICONS = {
 >;
 
 /**
- * How far a scene travels on a tab change. Small on purpose: the tab bar is a
- * lateral switch, not a push, so the movement should read as the content
- * settling into place rather than as navigating somewhere else.
- */
-const SCENE_TRAVEL = 28;
-
-/**
- * Directional tab transition.
+ * Cambio de pestaña: un fundido corto, sin viaje ni escala.
  *
- * `progress` is -1 when a screen sits to the left of the active tab, +1 when it
- * sits to the right. Feeding that straight into translateX means each section
- * enters from the side its own icon occupies in the bar: tapping Perfil (last)
- * brings it in from the right, tapping Inicio (first) from the left. The stock
- * `shift` preset moves everything the same way regardless, which is what makes
- * the bar feel like five unrelated screens rather than one strip you slide along.
- *
- * Fade and a slight scale ride along so the change still registers when two
- * sections look alike; travel alone would be nearly invisible between, say,
- * Rutinas and Comunidad.
+ * Antes la escena entera se deslizaba, se escalaba y se fundía a la vez que su
+ * contenido hacía su propia entrada escalonada (`EnterUp`/`Reveal`): dos
+ * animaciones encima de otra, y en iPhone se leía como un tirón. Una barra de
+ * pestañas es un interruptor lateral, no una navegación: lo que cambia es el
+ * contenido, y el fundido basta para que el ojo lo registre.
  */
 const sceneStyleInterpolator = ({ current }: { current: { progress: Animated.Value } }) => ({
   sceneStyle: {
@@ -63,20 +51,6 @@ const sceneStyleInterpolator = ({ current }: { current: { progress: Animated.Val
       inputRange: [-1, 0, 1],
       outputRange: [0, 1, 0],
     }),
-    transform: [
-      {
-        translateX: current.progress.interpolate({
-          inputRange: [-1, 0, 1],
-          outputRange: [-SCENE_TRAVEL, 0, SCENE_TRAVEL],
-        }),
-      },
-      {
-        scale: current.progress.interpolate({
-          inputRange: [-1, 0, 1],
-          outputRange: [0.96, 1, 0.96],
-        }),
-      },
-    ],
   },
 });
 
@@ -238,14 +212,12 @@ export default function TabsLayout() {
         // llegando a la caché y se pintan al volver). Lo que corre en segundo
         // plano —el descanso, su háptico y su aviso— vive en el store, no aquí.
         freezeOnBlur: true,
-        animation: 'shift',
+        animation: 'fade',
         sceneStyleInterpolator,
         transitionSpec: {
           animation: 'timing',
           config: {
-            duration: 280,
-            // Decelerating curve: the incoming section arrives quickly and
-            // settles, instead of drifting in at a constant rate.
+            duration: 180,
             easing: Easing.bezier(0.2, 0, 0, 1),
           },
         },

@@ -370,13 +370,17 @@ function EnterOnMount({
   const reduceMotion = useReducedMotion();
   const shown = useSharedValue(0);
   useEffect(() => {
-    shown.value = withDelay(delay, withTiming(1, { duration: 520, easing: EASE_OUT }));
-  }, [delay, shown]);
+    if (reduceMotion) {
+      shown.value = 1;
+      return;
+    }
+    shown.value = withDelay(delay, withTiming(1, { duration: 420, easing: EASE_OUT }));
+  }, [delay, reduceMotion, shown]);
   const style = useAnimatedStyle(() => ({
     opacity: shown.value,
-    transform: reduceMotion
-      ? []
-      : [{ perspective: 800 }, { translateY: (1 - shown.value) * 26 }, { rotateX: `${(1 - shown.value) * 18}deg` }, { scale: 0.94 + shown.value * 0.06 }],
+    // Solo desplazamiento y escala: el giro 3D con perspectiva rasterizaba
+    // cada escena SVG y parpadeaba (sobre todo en Android).
+    transform: reduceMotion ? [] : [{ translateY: (1 - shown.value) * 20 }, { scale: 0.97 + shown.value * 0.03 }],
   }));
   return (
     <Animated.View onLayout={onLayoutY ? (event) => onLayoutY(event.nativeEvent.layout.y) : undefined} style={style}>

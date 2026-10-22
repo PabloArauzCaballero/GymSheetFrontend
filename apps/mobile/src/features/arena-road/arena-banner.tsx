@@ -8,9 +8,7 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withDelay,
   withRepeat,
-  withSequence,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
@@ -22,7 +20,6 @@ import { formatPoints, type RoadArena } from './road';
 
 const ASPECT = ARENA_ART_HEIGHT / ARENA_ART_WIDTH;
 const EASE_IN_OUT = Easing.bezier(0.45, 0, 0.25, 1);
-const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
 /** La escena es un poco más grande que su ventana: así el paralaje no deja bordes. */
 const ART_BLEED = 1.16;
 const FRAME = 2;
@@ -31,8 +28,8 @@ const FRAME = 2;
  * Una arena del camino: la escena, su número, su nombre y lo que trae.
  *
  * El estado se lee antes que el texto, como en los juegos de arenas:
- * - **la tuya** lleva marco de metal en su color, un halo que late detrás,
- *   brasas en el aire y un destello que la cruza cada pocos segundos;
+ * - **la tuya** lleva marco de metal en su color, una sombra de su tono y
+ *   brasas en el aire;
  * - **la siguiente** enseña cuánto falta y su candado se balancea pidiendo
  *   que lo abras;
  * - **las demás bloqueadas** quedan bajo un velo, con el nombre legible: el
@@ -71,39 +68,19 @@ export const ArenaBanner = memo(function ArenaBanner({
   const reduceMotion = useReducedMotion();
 
   const float = useSharedValue(0.5);
-  const sheen = useSharedValue(-1);
-  const halo = useSharedValue(0);
   const bob = useSharedValue(0);
   useEffect(() => {
     if (reduceMotion) return;
-    if (current) {
-      float.value = withRepeat(withTiming(1, { duration: 3400, easing: EASE_IN_OUT }), -1, true);
-      halo.value = withRepeat(withTiming(1, { duration: 2200, easing: EASE_IN_OUT }), -1, true);
-      sheen.value = withDelay(
-        900,
-        withRepeat(
-          withSequence(
-            withTiming(1, { duration: 1100, easing: EASE_OUT }),
-            withDelay(3800, withTiming(-1, { duration: 0 })),
-          ),
-          -1,
-          false,
-        ),
-      );
-    }
-    if (next) bob.value = withRepeat(withTiming(1, { duration: 1300, easing: EASE_IN_OUT }), -1, true);
-  }, [bob, current, float, halo, next, reduceMotion, sheen]);
+    // Una sola cosa viva por ficha: la escena flota despacio en tu arena. El
+    // halo que latía (pintaba un marco gris translúcido) y el destello
+    // periódico se fueron: eran ruido y batería.
+    if (current) float.value = withRepeat(withTiming(1, { duration: 3400, easing: EASE_IN_OUT }), -1, true);
+    // El candado de la siguiente llama la atención tres veces y se calla.
+    if (next) bob.value = withRepeat(withTiming(1, { duration: 1300, easing: EASE_IN_OUT }), 6, true);
+  }, [bob, current, float, next, reduceMotion]);
 
   const artStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: (parallax?.value ?? 0) + (float.value - 0.5) * 6 }, { scale: ART_BLEED }],
-  }));
-  const sheenStyle = useAnimatedStyle(() => ({
-    opacity: sheen.value > -1 && sheen.value < 1 ? 1 : 0,
-    transform: [{ translateX: sheen.value * width * 1.3 }, { rotate: '20deg' }],
-  }));
-  const haloStyle = useAnimatedStyle(() => ({
-    opacity: 0.45 + halo.value * 0.45,
-    transform: [{ scale: 1 + halo.value * 0.035 }],
   }));
   const lockStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: -bob.value * 5 }, { rotate: `${lockRotation?.value ?? 0}deg` }],
@@ -129,13 +106,6 @@ export const ArenaBanner = memo(function ArenaBanner({
 
   return (
     <View accessibilityLabel={label} accessible style={{ width, height }}>
-      {current ? (
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.halo, { backgroundColor: alpha(tint.glow, 0.32), shadowColor: tint.glow }, haloStyle]}
-        />
-      ) : null}
-
       <LinearGradient
         colors={frameColors}
         end={{ x: 1, y: 1 }}
@@ -149,20 +119,6 @@ export const ArenaBanner = memo(function ArenaBanner({
 
           {current && !reduceMotion ? (
             <Embers colors={[tint.b[0], tint.glow]} count={8} height={height} width={width} />
-          ) : null}
-
-          {current ? (
-            <Animated.View
-              pointerEvents="none"
-              style={[styles.sheen, { height: height * 2, left: -width * 0.55 }, sheenStyle]}
-            >
-              <LinearGradient
-                colors={[alpha(ink.white, 0), alpha(ink.white, 0.34), alpha(ink.white, 0)]}
-                end={{ x: 1, y: 0 }}
-                start={{ x: 0, y: 0 }}
-                style={StyleSheet.absoluteFill}
-              />
-            </Animated.View>
           ) : null}
 
           {locked ? <View style={[StyleSheet.absoluteFill, { backgroundColor: arenaLockedVeil }]} /> : null}
@@ -251,17 +207,6 @@ function statusLabel(arena: RoadArena): string {
 }
 
 const styles = StyleSheet.create({
-  halo: {
-    position: 'absolute',
-    top: -10,
-    left: -10,
-    right: -10,
-    bottom: -10,
-    borderRadius: radii.xxl + 10,
-    shadowOpacity: 0.9,
-    shadowRadius: 26,
-    shadowOffset: { width: 0, height: 0 },
-  },
   frame: {
     flex: 1,
     padding: FRAME,
@@ -275,11 +220,6 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: radii.xxl - FRAME,
     overflow: 'hidden',
-  },
-  sheen: {
-    position: 'absolute',
-    top: '-50%',
-    width: 96,
   },
   topRow: {
     position: 'absolute',

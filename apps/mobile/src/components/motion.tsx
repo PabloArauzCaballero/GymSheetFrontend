@@ -429,6 +429,11 @@ export function EnterUp({
   const reduceMotion = useReduceMotion();
   const delay = Math.min(index, MAX_STAGGERED) * STAGGER_MS;
 
+  // Solo la primera pantalla entra en cascada. En una lista virtualizada las
+  // filas que se montan al desplazarse llegan con índices altos: animarlas las
+  // hacía aparecer tarde y a saltos bajo el dedo.
+  if (index > MAX_STAGGERED) return <View style={style}>{children}</View>;
+
   return (
     <Animated.View
       entering={
