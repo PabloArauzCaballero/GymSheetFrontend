@@ -201,6 +201,24 @@ export const conversationSummarySchema = z.object({
 });
 export type ConversationSummary = z.infer<typeof conversationSummarySchema>;
 
+/**
+ * `GET /me/conversations/pending-replies`: matches cuyo último mensaje es de la
+ * otra persona (o sin mensajes aún). Solo trae al que más espera, y solo su
+ * nombre de pila: lo lee el widget «Matches».
+ */
+export const pendingRepliesSchema = z.object({
+  count: z.number().int().nonnegative(),
+  oldest: z
+    .object({
+      userId: z.string().uuid(),
+      firstName: z.string(),
+      conversationId: z.string().uuid().nullable(),
+      waitingSince: z.string(),
+    })
+    .nullable(),
+});
+export type PendingReplies = z.infer<typeof pendingRepliesSchema>;
+
 /** Duraciones de los mensajes temporales, como en WhatsApp: 24 h, 7 días y 90 días (en segundos). */
 export const disappearingDurations = [86_400, 604_800, 7_776_000] as const;
 export type DisappearingDuration = (typeof disappearingDurations)[number];

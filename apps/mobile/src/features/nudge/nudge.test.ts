@@ -108,3 +108,48 @@ test('cuánto lleva esperando, y la espera crece en la línea de tiempo', () => 
 test('Repi tiene un dibujo por ánimo', () => {
   for (const mood of MASCOT_MOODS) assert.match(mascotXml(mood), /^<svg .*<\/svg>$/su);
 });
+
+test('entrada: último entreno terminado y días con nombre propio', async () => {
+  const { gymInput, matchInput } = await import('./nudge-input.ts');
+  const input = gymInput(
+    at(22, 9),
+    [
+      { estado: 'FINALIZADA', fechaInicio: '2026-10-20T10:00:00Z', fechaFin: '2026-10-20T11:00:00Z' },
+      { estado: 'EN_PROGRESO', fechaInicio: '2026-10-22T08:00:00Z', fechaFin: null },
+      { estado: 'FINALIZADA', fechaInicio: '2026-10-18T10:00:00Z', fechaFin: null },
+    ],
+    [
+      { diaSemana: 1, nombre: 'Pecho' },
+      { diaSemana: 4, nombre: 'Jueves' },
+      { diaSemana: null, nombre: 'Extra' },
+    ],
+    2,
+  );
+  assert.equal(input.lastWorkoutAt?.toISOString(), '2026-10-20T11:00:00.000Z');
+  assert.deepEqual(input.scheduledWeekdays, [1, 4]);
+  assert.deepEqual(input.dayNames, { 1: 'Pecho' });
+  const matches = matchInput(at(22, 9), { count: 1, oldest: { userId: 'u', firstName: 'Ana', conversationId: null, waitingSince: '2026-10-21T10:00:00Z' } }, false);
+  assert.equal(matches.oldest?.name, 'Ana');
+  assert.equal(matchInput(at(22, 9), null, true).pending, 0);
+});
+
+test('notificaciones: una de gym por día, nunca si entrenaste, y la de matches sin nombres', async () => {
+  const { planNotifications } = await import('./nudge.ts');
+  const matches = { now: at(22, 9), pending: 1, oldest: pending, showNames: true };
+  const planned = planNotifications(base, matches);
+  const gym = planned.filter((item) => item.id.startsWith('repi-gym'));
+  assert.ok(gym.length >= 1 && gym.length <= 3);
+  assert.ok(gym.every((item) => item.date.getHours() === 19));
+  const match = planned.find((item) => item.id === 'repi-matches');
+  assert.equal(match?.date.getHours(), 12);
+  assert.doesNotMatch(`${match?.title} ${match?.body}`, /Ana/u);
+
+  const trainedToday = planNotifications({ ...base, lastWorkoutAt: at(22, 7) }, { ...matches, pending: 0 });
+  assert.ok(!trainedToday.some((item) => item.id === 'repi-gym-0'));
+  assert.ok(!trainedToday.some((item) => item.id === 'repi-matches'));
+
+  // Pasadas las 19:00 no se programa la de hoy; pasadas las 12:30, la de matches va mañana.
+  const evening = planNotifications({ ...base, now: at(22, 20) }, { ...matches, now: at(22, 20) });
+  assert.ok(!evening.some((item) => item.id === 'repi-gym-0'));
+  assert.equal(evening.find((item) => item.id === 'repi-matches')?.date.getDate(), 23);
+});

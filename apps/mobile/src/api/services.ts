@@ -7,6 +7,7 @@ import {
   bodyMeasurementSchema,
   connectionSchema,
   conversationSummarySchema,
+  pendingRepliesSchema,
   discoveryPassEntrySchema,
   interactionCountsSchema,
   likeReceivedSchema,
@@ -776,6 +777,9 @@ export const facilitiesService = {
 export const chatService = {
   listConversations: () =>
     apiClient.request('/me/conversations', z.array(conversationSummarySchema), { method: 'GET' }),
+  /** Matches que esperan tu respuesta: lo que lee el widget «Matches». */
+  pendingReplies: () =>
+    apiClient.request('/me/conversations/pending-replies', pendingRepliesSchema, { method: 'GET' }),
   startConversation: (otherUserId: string) =>
     apiClient.request('/me/conversations', startConversationResponseSchema, {
       method: 'POST',

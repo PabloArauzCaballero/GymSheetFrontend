@@ -7,6 +7,7 @@ import { Card, Divider, Row, ScrollScreen, ScreenHeader, Section } from '@/compo
 import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { ReadReceiptChatsSheet, SheetRow } from '@/features/chat/chat-sheets';
+import { useNudgePrefs } from '@/features/nudge/nudge-prefs';
 import { confirm, notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { env } from '@/config/env';
@@ -55,6 +56,9 @@ export default function SettingsScreen() {
     },
   });
   const allEnabled = readReceipts.data?.defaultEnabled;
+  const nudgeNotifications = useNudgePrefs((state) => state.notifications);
+  const showMatchNames = useNudgePrefs((state) => state.showMatchNames);
+  const setNudgePrefs = useNudgePrefs((state) => state.set);
 
   // Signing out drops the session on this device, so it asks first — the same
   // rule the web app applies to irreversible actions.
@@ -125,6 +129,44 @@ export default function SettingsScreen() {
             label="Elegir chats…"
             onPress={() => setChooseChatsOpen(true)}
             testID="settings-read-receipts-choose"
+          />
+        </View>
+      </Section>
+
+      {/* Repi: el recordatorio burlón (widgets, Inicio y notificaciones). */}
+      <Section icon="happy-outline" title="Repi">
+        <View style={{ gap: spacing.sm }}>
+          <SheetRow
+            hint={nudgeNotifications
+              ? 'Como mucho una al día para el gym y una para tus matches. Nunca de noche.'
+              : 'Repi no te mandará avisos. El widget y la tarjeta de Inicio siguen.'}
+            icon="notifications-outline"
+            label="Avisos de Repi"
+            testID="settings-repi-notifications"
+            trailing={(
+              <Switch
+                accessibilityLabel="Avisos de Repi"
+                onValueChange={(enabled) => setNudgePrefs({ notifications: enabled })}
+                thumbColor={colors.text}
+                trackColor={{ false: colors.surfaceLow, true: colors.volt }}
+                value={nudgeNotifications}
+              />
+            )}
+          />
+          <SheetRow
+            hint="En el widget de matches de la pantalla de inicio. La pantalla bloqueada nunca muestra nombres."
+            icon="person-circle-outline"
+            label="Nombres en el widget"
+            testID="settings-repi-names"
+            trailing={(
+              <Switch
+                accessibilityLabel="Mostrar nombres en el widget de matches"
+                onValueChange={(enabled) => setNudgePrefs({ showMatchNames: enabled })}
+                thumbColor={colors.text}
+                trackColor={{ false: colors.surfaceLow, true: colors.volt }}
+                value={showMatchNames}
+              />
+            )}
           />
         </View>
       </Section>

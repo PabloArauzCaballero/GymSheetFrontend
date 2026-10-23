@@ -202,3 +202,38 @@ export function matchTimeline(input: MatchNudgeInput, days = 3): NudgeEntry[] {
   for (let offset = 1; offset <= days; offset += 1) moments.push(addDays(today, offset));
   return moments.map((at) => matchEntry(input, at));
 }
+
+/** Hora de la notificación diaria de gym y de la de matches (fuera de 22:00–08:00). */
+export const GYM_NOTIFY_HOUR = 19;
+export const MATCH_NOTIFY_AT = { hour: 12, minute: 30 } as const;
+/** Margen para no programar algo que ya casi pasó. */
+const NOTIFY_MARGIN_MS = 5 * 60_000;
+
+export type PlannedNotification = Readonly<{ id: string; date: Date; title: string; body: string; url: string }>;
+
+/**
+ * Notificaciones locales de los próximos días, como mucho una de gym al día y
+ * una de matches. Ninguna si ya entrenaste o es día de descanso; la de matches
+ * nunca lleva nombres (se ve con el teléfono bloqueado). Identificadores fijos:
+ * reprogramar sustituye, no acumula.
+ */
+export function planNotifications(gym: GymNudgeInput, matches: MatchNudgeInput, days = 3): PlannedNotification[] {
+  const planned: PlannedNotification[] = [];
+  const earliest = gym.now.getTime() + NOTIFY_MARGIN_MS;
+  const today = startOfDay(gym.now);
+  for (let offset = 0; offset < days; offset += 1) {
+    const day = addDays(today, offset);
+    const at = new Date(day.getFullYear(), day.getMonth(), day.getDate(), GYM_NOTIFY_HOUR);
+    if (at.getTime() < earliest) continue;
+    const entry = gymEntry(gym, at);
+    if (entry.mood === 'proud' || entry.mood === 'resting') continue;
+    planned.push({ id: `repi-gym-${offset}`, date: at, title: entry.title, body: entry.body, url: entry.url });
+  }
+  if (matches.pending > 0) {
+    let at = new Date(today.getFullYear(), today.getMonth(), today.getDate(), MATCH_NOTIFY_AT.hour, MATCH_NOTIFY_AT.minute);
+    if (at.getTime() < earliest) at = addDays(at, 1);
+    const entry = matchEntry({ ...matches, showNames: false }, at);
+    planned.push({ id: 'repi-matches', date: at, title: entry.title, body: entry.body, url: entry.url });
+  }
+  return planned;
+}

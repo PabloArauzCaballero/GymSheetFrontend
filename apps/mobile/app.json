@@ -80,6 +80,67 @@
           "color": "#2E8B7B"
         }
       ],
+      [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "app.gymsheet.mobile.widgets",
+          "groupIdentifier": "group.app.gymsheet.mobile",
+          "widgets": [
+            {
+              "name": "RepiGym",
+              "displayName": "Repi",
+              "description": "Repi te recuerda ir al gym. Con cariño. Más o menos.",
+              "ios": {
+                "supportedFamilies": ["systemSmall", "systemMedium", "accessoryRectangular", "accessoryInline"]
+              }
+            },
+            {
+              "name": "RepiMatches",
+              "displayName": "Matches",
+              "description": "Quién espera tu respuesta. En la pantalla bloqueada, sin nombres.",
+              "ios": {
+                "supportedFamilies": ["systemSmall", "systemMedium", "accessoryRectangular"]
+              }
+            }
+          ]
+        }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "RepiGym",
+              "label": "Repi",
+              "description": "Repi te recuerda ir al gym. Con cariño. Más o menos.",
+              "minWidth": "110dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "maxResizeWidth": "320dp",
+              "maxResizeHeight": "180dp",
+              "resizeMode": "horizontal|vertical",
+              "previewImage": "./assets/mascot/wink.png",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "RepiMatches",
+              "label": "Matches",
+              "description": "Quién espera tu respuesta.",
+              "minWidth": "110dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "maxResizeWidth": "320dp",
+              "maxResizeHeight": "180dp",
+              "resizeMode": "horizontal|vertical",
+              "previewImage": "./assets/mascot/flirty.png",
+              "widgetCategory": "home_screen",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ],
       "./plugins/with-path-spaces-fix",
       "./plugins/with-cleartext-domains",
       [

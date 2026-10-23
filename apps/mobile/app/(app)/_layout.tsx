@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Redirect, Stack } from 'expo-router';
 import { TourOverlay } from '@/components/tour';
+import { NudgeSync } from '@/features/nudge/nudge-sync';
 import { detailStackOptions } from '@/lib/screen-options';
 import { useAuthStore } from '@/state/auth-store';
 import { useTourStore } from '@/state/tour-store';
@@ -77,6 +78,8 @@ export default function AppLayout() {
         <Stack.Screen name="chat" />
       </Stack>
       <TourOverlay />
+      {/* Repi: widgets, tarjeta de Inicio y notificaciones. Solo con sesión. */}
+      {status === 'authenticated' ? <NudgeSync /> : null}
     </>
   );
 }

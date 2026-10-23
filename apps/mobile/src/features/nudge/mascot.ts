@@ -26,7 +26,7 @@ const DROP = 'M60 14C66 30 92 46 92 72C92 90 78 104 60 104C42 104 28 90 28 72C28
 const spark = (x: number, y: number, r: number, fill: string = W) =>
   `<path d="M${x} ${y - r}Q${x} ${y} ${x + r} ${y}Q${x} ${y} ${x} ${y + r}Q${x} ${y} ${x - r} ${y}Q${x} ${y} ${x} ${y - r}Z" fill="${fill}"/>`;
 const ground = `<ellipse cx="60" cy="108" rx="34" ry="4.5" fill="${artShadow}"/>`;
-const line = (d: string, width = 3.5, color = face) =>
+const line = (d: string, width = 3.5, color: string = face) =>
   `<path d="${d}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
 const arm = (d: string) => `${line(d, 8, body.deep)}${line(d, 6, body.main)}`;
 
