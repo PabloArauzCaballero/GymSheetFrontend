@@ -2,6 +2,7 @@
 import { HStack, Image, Spacer, Text, VStack } from '@expo/ui/swift-ui';
 import {
   containerBackground,
+  fixedSize,
   font,
   foregroundStyle,
   frame,
@@ -69,11 +70,11 @@ const RepiLayout = (props: RepiWidgetProps, environment: WidgetEnvironment) => {
   return (
     <VStack alignment="leading" spacing={4} modifiers={[widgetURL(props.url), background]}>
       <HStack>
-        {mascot(58)}
+        {mascot(46)}
         <Spacer />
       </HStack>
       <Spacer />
-      <Text modifiers={[font({ size: 15, weight: 'semibold' }), foregroundStyle(props.text), lineLimit(1)]}>{props.title}</Text>
+      <Text modifiers={[font({ size: 15, weight: 'semibold' }), foregroundStyle(props.text), lineLimit(2), fixedSize({ vertical: true })]}>{props.title}</Text>
       <Text modifiers={[font({ size: 13 }), foregroundStyle(props.muted), lineLimit(3)]}>{props.body}</Text>
     </VStack>
   );

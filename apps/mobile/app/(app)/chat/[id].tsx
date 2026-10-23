@@ -85,6 +85,7 @@ import { useChatSocket, type PresenceUpdate, type TypingUpdate } from '@/hooks/u
 import { BackLink } from '@/components/nav';
 import { ScrollScreen, useResponsive } from '@/components/layout';
 import { CreateTrainingInviteModal } from '@/features/training-invitations/create-training-invite-modal';
+import { pendingRepliesKey } from '@/features/nudge/keys';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { notify } from '@/notifications';
@@ -483,6 +484,16 @@ export default function ChatThreadScreen() {
       joinedRef.current = null;
     };
   }, [conversationId, leaveConversation]);
+
+  // Al salir del hilo quizá ya respondiste: Repi (Inicio y widget) deja de
+  // decir que ese match te espera. Hay demasiados caminos de envío (texto,
+  // foto, ubicación, sticker…) para avisar desde cada uno.
+  useEffect(
+    () => () => {
+      void queryClient.invalidateQueries({ queryKey: pendingRepliesKey });
+    },
+    [conversationId, queryClient],
+  );
 
   useEffect(() => {
     setLiveMessages([]);

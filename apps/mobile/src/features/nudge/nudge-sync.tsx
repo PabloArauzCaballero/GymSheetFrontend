@@ -7,6 +7,7 @@ import { summariseTraining } from '@gymsheet/domain';
 import { chatService, programService, routineService, workoutService } from '@/api/services';
 import { activeProgramsKey } from '@/features/programs/use-active-programs';
 import { colors } from '@/theme';
+import { pendingRepliesKey } from './keys';
 import { gymInput, matchInput } from './nudge-input';
 import { gymTimeline, matchTimeline, planNotifications } from './nudge';
 import { useNudgePrefs } from './nudge-prefs';
@@ -14,7 +15,6 @@ import { scheduleNudges } from './notifications';
 import { currentEntry, storeEntries, type NudgeSnapshot, type StoredEntry, type WidgetPalette } from './snapshot';
 import { publishWidgets } from './widgets';
 
-export const pendingRepliesKey = ['chat', 'pending-replies'] as const;
 
 /** Lo que Repi dice ahora mismo: lo lee la tarjeta de Inicio. */
 export const useRepiNow = create<{ gym: StoredEntry | null; matches: StoredEntry | null }>(() => ({ gym: null, matches: null }));

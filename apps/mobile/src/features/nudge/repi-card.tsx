@@ -10,6 +10,8 @@ import { mascotXml } from './mascot';
 import { useRepiNow } from './nudge-sync';
 import type { StoredEntry } from './snapshot';
 
+const MASCOT_SLOT = 72;
+
 /** `gymsheet:///routines` → `/routines`: la misma ruta que abre el widget. */
 function routeOf(url: string): Href {
   return url.replace(/^gymsheet:\/\//u, '') as Href;
@@ -25,7 +27,12 @@ function RepiRow({ entry, size, testID }: { entry: StoredEntry; size: number; te
       style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd, minHeight: 48 }}
       testID={testID}
     >
-      <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      {/* Hueco fijo: el texto de las dos filas queda alineado aunque Repi cambie de tamaño. */}
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={{ width: MASCOT_SLOT, alignItems: 'center' }}
+      >
         <SvgXml height={size} width={size} xml={mascotXml(entry.mood)} />
       </View>
       <View style={{ flex: 1, gap: spacing.xxs }}>
@@ -50,7 +57,7 @@ export function RepiCard() {
   const waiting = matches?.mood === 'flirty' ? matches : null;
   return (
     <Card list>
-      <RepiRow entry={gym} size={72} testID="repi-gym" />
+      <RepiRow entry={gym} size={MASCOT_SLOT} testID="repi-gym" />
       {waiting ? (
         <>
           <Divider />
