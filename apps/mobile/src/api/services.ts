@@ -61,13 +61,19 @@ import {
   skippedSetSchema,
   workoutRoutineLinkSchema,
   commentAttachmentSchema,
+  exerciseAlternativesSchema,
+  exerciseSwapResultSchema,
+  freeWorkoutSchema,
 } from '@gymsheet/schemas';
 import type {
   AddWorkoutExerciseInput,
   CardioSetInput,
   FitnessGoal,
+  FreeWorkoutGroup,
   RestSettingChange,
   SkipReason,
+  SwapReason,
+  SwapScope,
   TimedWorkoutSetInput,
   TrainingGoal,
   WorkoutSetInput,
@@ -284,6 +290,31 @@ export const workoutService = {
     }),
   unomitExercise: (sessionExerciseId: string) =>
     apiClient.request(`/workouts/session-exercises/${sessionExerciseId}/omit`, looseObject, { method: 'DELETE' }),
+
+  /**
+   * Rutina libre: zonas opcionales (sin zonas, cuerpo completo) y el servidor
+   * propone una sesión editable. `vacia` empieza en blanco.
+   */
+  startFree: (input: { grupos: readonly FreeWorkoutGroup[]; ejercicios?: number; vacia?: boolean }) =>
+    apiClient.request('/workouts/libre', freeWorkoutSchema, { method: 'POST', body: input }),
+
+  /** Equivalentes de un ejercicio de la sesión; el motivo cambia el orden. */
+  alternatives: (sessionExerciseId: string, motivo?: SwapReason) =>
+    apiClient.request(
+      `/workouts/session-exercises/${sessionExerciseId}/alternatives${motivo ? `?motivo=${motivo}` : ''}`,
+      exerciseAlternativesSchema,
+      { method: 'GET' },
+    ),
+
+  /** Cambia un ejercicio por otro con motivo; `RUTINA` lo cambia también en la rutina propia. */
+  swapExercise: (
+    sessionExerciseId: string,
+    input: { ejercicioId: string; motivo: SwapReason; alcance: SwapScope; nota?: string | null },
+  ) =>
+    apiClient.request(`/workouts/session-exercises/${sessionExerciseId}/swap`, exerciseSwapResultSchema, {
+      method: 'POST',
+      body: input,
+    }),
 
   /* D2 · descanso e intervalo a mano (contrato 11a §2). */
   routineLink: (id: string) =>

@@ -70,6 +70,9 @@ export const RoadSegment = memo(function RoadSegment({
   const current = arena.state === 'current';
   const animate = current && !reduceMotion;
   const target = arena.segmentProgress;
+  // El marcador nunca baja de la base del tramo: debajo empieza la ficha de la
+  // arena y lo taparía (con 0 pts quedaba medio escondido).
+  const markerLift = Math.max(target * SEGMENT_HEIGHT, MARKER / 2 + spacing.xs);
 
   const fill = useSharedValue(animate ? 0 : target);
   const marker = useSharedValue(animate ? 0 : 1);
@@ -84,21 +87,23 @@ export const RoadSegment = memo(function RoadSegment({
         if (finished) scheduleOnRN(Haptics.impactAsync, Haptics.ImpactFeedbackStyle.Medium);
       }),
     );
+    // Un solo destello mientras se llena: un bucle infinito aquí era ruido.
     shimmer.value = withDelay(
       ROAD_CUES.fillAt,
-      withRepeat(withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.quad) }), -1, false),
+      withTiming(1, { duration: ROAD_CUES.fillIn, easing: Easing.inOut(Easing.quad) }),
     );
   }, [animate, fill, marker, shimmer, target]);
 
   const fillStyle = useAnimatedStyle(() => ({ height: fill.value * SEGMENT_HEIGHT }));
   const shimmerStyle = useAnimatedStyle(() => ({
+    opacity: shimmer.value < 1 ? 1 : 0,
     transform: [{ translateY: interpolate(shimmer.value, [0, 1], [40, -fill.value * SEGMENT_HEIGHT - 40]) }],
   }));
   // Cae desde 90 pt más arriba con sobreimpulso: aterriza, no aparece.
   const markerStyle = useAnimatedStyle(() => ({
     opacity: Math.min(1, marker.value * 3),
     transform: [
-      { translateY: -target * SEGMENT_HEIGHT - (1 - marker.value) * 90 },
+      { translateY: -markerLift - (1 - marker.value) * 90 },
       { scale: 0.7 + Math.min(marker.value, 1.1) * 0.3 },
     ],
   }));
@@ -142,7 +147,7 @@ export const RoadSegment = memo(function RoadSegment({
       {current ? (
         <>
           {animate ? (
-            <View pointerEvents="none" style={[styles.burstAt, { left: center, bottom: target * SEGMENT_HEIGHT }]}>
+            <View pointerEvents="none" style={[styles.burstAt, { left: center, bottom: markerLift }]}>
               <Shockwave color={tint.glow} delay={landAt} size={MARKER} to={3.2} />
               <SparkBurst
                 colors={[tint.b[0], tint.glow, ink.white]}
@@ -330,6 +335,7 @@ const styles = StyleSheet.create({
   marker: {
     position: 'absolute',
     bottom: -MARKER / 2,
+    zIndex: 2,
     width: MARKER,
     height: MARKER,
     alignItems: 'center',

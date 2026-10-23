@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { ApiError } from '@gymsheet/api-client';
 import { workoutExerciseSchema, workoutSetSchema } from '@gymsheet/schemas';
-import type { RestSettingChange, SkipReason, SkippedSet, TimedWorkoutSetInput, Workout, WorkoutSetInput } from '@gymsheet/types';
+import type { RestSettingChange, SkipReason, SkippedSet, SwapReason, SwapScope, TimedWorkoutSetInput, Workout, WorkoutSetInput } from '@gymsheet/types';
 import { accountService, workoutService } from '@/api/services';
 import { hydrateSessionMarks, mergeMarks, useSessionMarks } from '@/features/workout/session-marks-store';
 import { notify } from '@/notifications';
@@ -207,6 +207,28 @@ export function useWorkoutSession(id: string) {
     },
   });
 
+  /* ── Cambiar un ejercicio por un equivalente, con motivo ─────────────── */
+  const swapExercise = useMutation({
+    mutationFn: (input: {
+      exerciseId: string;
+      ejercicioId: string;
+      motivo: SwapReason;
+      alcance: SwapScope;
+    }) =>
+      workoutService.swapExercise(input.exerciseId, {
+        ejercicioId: input.ejercicioId,
+        motivo: input.motivo,
+        alcance: input.alcance,
+      }),
+    onSuccess: (result) => {
+      queryClient.setQueryData(['workout', id], result.sesion);
+      if (result.rutina.guardado) notify.success('Cambiado también en tu rutina.');
+      else if (result.rutina.motivo === 'SIN_RUTINA') notify.info('Cambiado para hoy: esta sesión no viene de una rutina.');
+      else if (result.rutina.motivo === 'NO_ESTA_EN_RUTINA') notify.info('Cambiado para hoy: ese ejercicio no estaba en tu rutina.');
+    },
+    onError: (error: Error) => notify.error(error),
+  });
+
   const addCardioSet = useMutation({
     mutationFn: (input: { sessionExerciseId: string; set: Parameters<typeof workoutService.addSet>[1] }) =>
       workoutService.addSet(input.sessionExerciseId, input.set),
@@ -303,6 +325,7 @@ export function useWorkoutSession(id: string) {
     resumeExercise,
     routineLink,
     applyRest,
+    swapExercise,
   };
 }
 
