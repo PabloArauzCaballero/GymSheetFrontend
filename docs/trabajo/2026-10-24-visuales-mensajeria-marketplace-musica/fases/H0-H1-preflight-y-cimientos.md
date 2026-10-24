@@ -20,7 +20,7 @@ anti-slop con ≥ 1 línea por pantalla.
 |---|---|---|---|---|
 | H0.S1.M1 | Verificar skills y plugins obligatorios del `CLAUDE.md` (`apple-premium-ui`, `ui-ux-pro-max`, `repp-diseno`, `web-design-guidelines`, plugins `fullstack-dev-skills`, `frontend-design`, `feature-dev`, `code-review`, `context7`). **Hoy `fullstack-dev-skills` no aparece habilitado en la sesión** (`ListPlugins` vacío) → pedir a Pablo instalarlo antes de la primera microtarea de UI, como exige el `CLAUDE.md` | lista con ✓/✗ | `evidencia/baseline/plugins.md` | TODO |
 | H0.S1.M2 | Backend real: `GymSheetBackend` en `:3005` con Postgres `:5433` y migraciones al día (`yarn migration:up`); `/health/ready` 200 | `curl /health/ready` → 200 | salida en `baseline.md` | TODO |
-| H0.S1.M3 | Móvil: `yarn install --frozen-lockfile`, `yarn workspace @gymsheet/mobile type-check`, `lint` (anotar el conteo de `check-theme`), `test` | tres exit codes anotados | `baseline.md` | TODO |
+| H0.S1.M3 | Móvil: `yarn install --frozen-lockfile`, `yarn workspace @gymsheet/mobile type-check`, `lint` (anotar el conteo de `check-theme`), `test` | tres exit codes anotados | `baseline.md` | HECHO — medido, no arreglado: type-check exit 2 (1 error previo en `contrast.test.ts:102`), `expo lint` 0, `check-theme` 0 violaciones, `test` 231/231, `test:theme` 16/16, vitest chat 30/30. Script `lint` BLOQUEADO por entorno (`.bin` ausente). Evidencia: [gates-frontend.md](../evidencia/baseline/gates-frontend.md) |
 | H0.S1.M4 | Web: `yarn turbo run source-check type-check lint test --filter=!@gymsheet/mobile` (sirve de guardia de los `packages/*` que se tocan) | exit 0 o fallos preexistentes listados | `baseline.md` | TODO |
 | H0.S1.M5 | Datos sintéticos: dos cuentas de gimnasios distintos con match, 5 conversaciones (una con media, una de sistema), 25 playlists (10 propias, 15 de comunidad), 1 vendedor completo + 1 mínimo con planes y datos de pago; **declarados sintéticos** en `DATOS_DE_PRUEBA.md` | ambas cuentas inician sesión | `DATOS_DE_PRUEBA.md` | TODO |
 
@@ -44,7 +44,7 @@ grandes necesitan existen **una sola vez** en `src/components`.
 espaciado grande; radios contenidos; profundidad escasa), `repp-diseno` §C5 (rampa 34/22/17/15/12,
 escala 2-4-8-12-16-20-24-32-40, `borderCurve: 'continuous'`), `web-design-guidelines` como
 auditoría final.
-**Kill-test:** `check-theme` con un número > 0, o dos botones volt en la misma pantalla.
+**Kill-test:** `check-theme` con un número > 0 (hoy es 0), un `fontSizes.micro` nuevo, o dos botones volt en la misma pantalla.
 **CA:** Dado cualquier flujo de Maestro existente (01-15), cuando se corre tras H1, entonces pasa
 igual; y dado el inventario de H0, cuando se revisa, entonces los hallazgos BLOQUEANTES están en
 cero.
@@ -59,7 +59,7 @@ antes/después de 8 pantallas representativas; doble revisión.
 | H1.S1.M1 | `theme/type.ts`: rampa objetivo `display 34 · title 22 · body 17 · callout 15 · caption 12` mapeada sobre las variantes de `Text` (sin romper `fontSizes.*` existentes: alias) | `Text variant="title"` mide 22 | `test:theme` verde + captura | TODO |
 | H1.S1.M2 | `theme/spacing.ts`: confirmar escala 2…48 y añadir `spacing.xxl 40` si falta; `shadow.ts`: `elevation.raised/overlay/sheet` (3 niveles) con `shadowColor` por token | 3 niveles documentados | lint | TODO |
 | H1.S1.M3 | `scripts/check-theme.mjs`: nueva regla que prohíbe `fontSizes.micro` fuera de `src/theme` y `fontWeight` literal; ejecutarlo y anotar el total | regla falla en fixture de prueba | `node scripts/check-theme.mjs` | TODO |
-| H1.S1.M4 | Purgar la deuda de hex/rgba fuera de `src/theme` que H0 contó (la skill dice 49 hex + 58 rgba): cada uno → token con contraste comentado | `check-theme` = 0 | lint | TODO |
+| H1.S1.M4 | **Corregida tras medir (H0.S1.M3):** `check-theme` ya está en 0 (hex 0, rgba 0, font-size 0, alpha-concat 0), así que no hay deuda de hex que purgar. Lo que `check-theme` **no** cubre y sí hay que contar y reducir en las pantallas tocadas: usos de `fontSizes.micro` (10 pt), `fontWeight` literal y números de layout sueltos | conteo antes/después por archivo tocado; ninguna pantalla nueva con `micro` ni `fontWeight` literal | `grep -rn "fontSizes.micro\|fontWeight: '" <archivos>` → 0 en lo nuevo | TODO |
 | H1.S1.M5 | `contrast.test.ts`: pares nuevos (texto sobre `musicHero`, línea de estado del chat, precio sobre tarjeta) por inquilino | AA ≥ 4,5:1 | `test:theme` verde | TODO |
 
 ### H1.S2 — Primitivas compartidas

@@ -34,8 +34,9 @@ web es un listado SSR. En el móvil:
 - **Marketplace** es un archivo de **2763 líneas** con 22 estados, 4 modales anidados, filtros por
   subcadena (`'protein'`), categorías hardcodeadas, rating `'5.0'` inventado, imágenes de Unsplash,
   botones «Copiar» que no copian, comprobantes que se envían como `file://` si falla la subida,
-  sin ficha de producto ni perfil de vendedor como rutas, sin «Mis compras», sin favoritos, 150
-  violaciones de tokens y un solo `accessibilityLabel`.
+  sin ficha de producto ni perfil de vendedor como rutas, sin «Mis compras», sin favoritos, unas 150
+  infracciones de la guía de diseño que `check-theme` no detecta (fuentes de 10 pt, pesos y números
+  sueltos; `check-theme` mide 0) y un solo `accessibilityLabel`.
 - **Música** es una cuadrícula de dos pestañas sin buscador, orden, tabla ni ficha; el backend no
   tiene `q`, `tipo`, `sort`, `total` ni `GET /:id`; **ninguna capa** relaciona rutina y playlist.
 
@@ -164,6 +165,7 @@ Backend siempre **antes** que su frontend en cada hito, y siempre compatible con
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
+| **Línea base medida (H0.S1.M3, 2026-10-24):** `type-check` móvil falla hoy con 1 error previo en `src/theme/contrast.test.ts:102` (TEST_BUG de tipos, `test:theme` pasa 16/16); el script `lint` no corre en este contenedor por enlaces `.bin` ausentes (ENVIRONMENT; `expo lint` directo y `check-theme` dan 0) | los DoD «type-check verde» no se pueden cumplir sin tocar ese test | se declara como fallo previo fuera de alcance; el criterio de cada microtarea es «sin errores nuevos respecto de la línea base»; arreglar ese test es una microtarea aparte que Pablo debe aprobar |
 | `fullstack-dev-skills` no está habilitado en la sesión (`CLAUDE.md` lo exige para tocar código) | bloquea H1 en adelante | H0.S1.M1 lo verifica y lo pide; la planificación no lo necesita |
 | Cambiar `ConversationSummary` y `Routine` (contratos consumidos por web y móvil) | romper web | campos opcionales + `regression-auditor` en H6; web tolera ausencia |
 | Borrar `directorio.tsx` (2763 l.) | regresión silenciosa | redirect + borrado solo tras Maestro verde en las 4 pantallas nuevas |

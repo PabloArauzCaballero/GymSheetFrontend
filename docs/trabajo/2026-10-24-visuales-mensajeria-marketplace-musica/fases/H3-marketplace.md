@@ -116,8 +116,7 @@ H3.S1 backend mínimo (cursor, search/sort/precio en plans, GET plan por id ya e
 ---
 
 **CA del hito:** el resultado observable, con cuenta real y vendedor con ≥ 1 plan con datos de pago.
-**DoD del hito:** backend verde; móvil `type-check` + `lint` (check-theme en cero: hoy ~150
-violaciones en esta pantalla); vitest de marketplace verde; Maestro `18-marketplace.yaml`;
+**DoD del hito:** backend verde; móvil `type-check` + `lint` (`check-theme` ya está en 0 y debe seguir en 0; lo que hoy incumple `directorio.tsx` y `check-theme` no ve son ~20 usos de `fontSizes.micro`, 17 `fontWeight` literales y ~114 números sueltos); vitest de marketplace verde; Maestro `18-marketplace.yaml`;
 capturas 375/430 de Marketplace (carga, vacío, error, datos, buscador con recientes, hoja de
 filtros), ficha de producto, pago (copiar, comprobante, éxito), vendedor (3 pestañas), Mis compras;
 mutación `UI → POST order → POST receipt → GET my-orders → recarga → UI` en `evidencia/h3-compra.md`;
