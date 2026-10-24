@@ -28,7 +28,7 @@ anti-slop con ≥ 1 línea por pantalla.
 
 | ID | Microtarea | CA | DoD | Estado |
 |---|---|---|---|---|
-| H0.S2.M1 | Maestro `00-baseline-capturas.yaml`: recorre las 4 pestañas y las ~45 rutas de `app/(app)` capturando en iPhone SE y 15 Pro Max (`takeScreenshot` por pantalla) | ≥ 40 capturas × 2 anchos | `evidencia/baseline/*.png` | TODO |
+| H0.S2.M1 | Maestro `00-baseline-capturas.yaml`: recorre las 4 pestañas y las ~45 rutas de `app/(app)` capturando en iPhone SE y 15 Pro Max (`takeScreenshot` por pantalla) | ≥ 40 capturas × 2 anchos | `evidencia/baseline/*.png` | BLOQUEADO — el contenedor en la nube no tiene simulador iOS/Android ni Maestro. Qué se intentó: auditoría de viabilidad de Expo web ([viabilidad-capturas.md](../evidencia/baseline/viabilidad-capturas.md)): hoy no arranca (falta `react-native-web`, `expo-secure-store` sin implementación web). Qué lo destraba: correr el flujo en el Mac de Pablo con simulador, o aceptar una línea base provisional en Expo web (spike en login, 0,5–1 día; capturas rotuladas «web, aproximación»). Depende de: Pablo. El flujo `.maestro/00-baseline-capturas.yaml` se puede redactar sin ejecutarlo. |
 | H0.S2.M2 | Inventario anti-slop (`repp-diseno` §9 + `apple-premium-ui` «Avoid») por pantalla: volt en exceso, tarjetas planas repetidas, texto < 12, copy hueco, estados faltantes, hex sueltos (`check-theme` por archivo) | tabla pantalla × hallazgo × severidad | `evidencia/baseline/anti-slop.md` | TODO |
 | H0.S2.M3 | Priorizar: las tres áreas pedidas primero; del resto, solo lo BLOQUEANTE entra a H1; lo demás queda listado como deuda con dueño | tabla de prioridad | `anti-slop.md` §Prioridad | TODO |
 
