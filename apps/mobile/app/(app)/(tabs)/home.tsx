@@ -21,6 +21,7 @@ import { homeWeekDots } from '@/features/home/home-week';
 import { MuscleSplit } from '@/features/home/muscle-split';
 import { ProgressStrip } from '@/features/home/progress-strip';
 import { TodayCard } from '@/features/home/today-card';
+import { RepiCard } from '@/features/nudge/repi-card';
 import { notificationService } from '@/features/notifications/service';
 import { activeProgramsKey } from '@/features/programs/use-active-programs';
 import { WORKOUT_LABEL, WORKOUT_TONE, formatDuration, formatTimeOfDay, relativeDay, shortName } from '@/lib/format';
@@ -151,6 +152,9 @@ export default function HomeScreen() {
       {membership.data && !membershipData?.vigenteHoy ? (
         <MembershipGate onRenew={() => router.push('/membership')} projection={membership.data} variant="compact" />
       ) : null}
+
+      {/* Repi: el empujón burlón (y los matches que esperan). La acción de entrenar sigue en «Hoy». */}
+      <RepiCard />
 
       <TodayCard
         assignment={activeAssignment}
