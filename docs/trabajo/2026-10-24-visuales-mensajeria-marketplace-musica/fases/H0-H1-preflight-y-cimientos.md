@@ -29,8 +29,16 @@ anti-slop con ≥ 1 línea por pantalla.
 | ID | Microtarea | CA | DoD | Estado |
 |---|---|---|---|---|
 | H0.S2.M1 | Maestro `00-baseline-capturas.yaml`: recorre las 4 pestañas y las ~45 rutas de `app/(app)` capturando en iPhone SE y 15 Pro Max (`takeScreenshot` por pantalla) | ≥ 40 capturas × 2 anchos | `evidencia/baseline/*.png` | BLOQUEADO — el contenedor en la nube no tiene simulador iOS/Android ni Maestro. Qué se intentó: auditoría de viabilidad de Expo web ([viabilidad-capturas.md](../evidencia/baseline/viabilidad-capturas.md)): hoy no arranca (falta `react-native-web`, `expo-secure-store` sin implementación web). Qué lo destraba: correr el flujo en el Mac de Pablo con simulador, o aceptar una línea base provisional en Expo web (spike en login, 0,5–1 día; capturas rotuladas «web, aproximación»). Depende de: Pablo. El flujo `.maestro/00-baseline-capturas.yaml` se puede redactar sin ejecutarlo. |
-| H0.S2.M2 | Inventario anti-slop (`repp-diseno` §9 + `apple-premium-ui` «Avoid») por pantalla: volt en exceso, tarjetas planas repetidas, texto < 12, copy hueco, estados faltantes, hex sueltos (`check-theme` por archivo) | tabla pantalla × hallazgo × severidad | `evidencia/baseline/anti-slop.md` | TODO |
-| H0.S2.M3 | Priorizar: las tres áreas pedidas primero; del resto, solo lo BLOQUEANTE entra a H1; lo demás queda listado como deuda con dueño | tabla de prioridad | `anti-slop.md` §Prioridad | TODO |
+| H0.S2.M2 | Inventario anti-slop (`repp-diseno` §9 + `apple-premium-ui` «Avoid») por pantalla: volt en exceso, tarjetas planas repetidas, texto < 12, copy hueco, estados faltantes, hex sueltos (`check-theme` por archivo) | tabla pantalla × hallazgo × severidad | `evidencia/baseline/anti-slop.md` | HECHO (por lectura de código, sin capturas: ver H0.S2.M1) — 95 hallazgos fuera de chat/marketplace/música: 18 BLOQUEANTE, 36 MAYOR, 41 MENOR. Evidencia: [anti-slop.md](../evidencia/baseline/anti-slop.md) |
+| H0.S2.M3 | Priorizar: las tres áreas pedidas primero; del resto, solo lo BLOQUEANTE entra a H1; lo demás queda listado como deuda con dueño | tabla de prioridad | `anti-slop.md` §Prioridad | HECHO — §3 de [anti-slop.md](../evidencia/baseline/anti-slop.md): los BLOQUEANTES de estado, accesibilidad y acento entran a H1 (M7–M9 abajo); el resto queda como deuda con dueño propuesto |
+
+---
+
+### Hechos que el baseline cambió en el plan
+
+- **`routinesV2` está apagada en producción** (`eas.json` la enciende solo en `testflight` y `apk-test`): sin `EXPO_PUBLIC_ROUTINES_V2=true` Música **no tiene entrada** (está en el ⋯ de Rutinas). Las capturas y los flujos Maestro de música deben correrse con ella encendida; H4.S3.M10 decide la entrada definitiva.
+- **Cuatro rutas sin ningún enlace interno** (`reels`, `descubrir`, `routines/explore`, `routines/report/[id]`): Maestro no las alcanza tocando; hay que abrirlas por URL. `descubrir.tsx` (1088 líneas) duplica la baraja de Comunidad. Decisión de borrar o enlazar: de Pablo (deuda).
+- `colors.background` como tinta sobre volt en 11 archivos (4,33:1 calculado frente a 5,10:1 con `accentContrast()`): se corrige al tocar cada archivo (H1.S1.M5 añade el par de contraste).
 
 ---
 
@@ -73,6 +81,8 @@ antes/después de 8 pantallas representativas; doble revisión.
 | H1.S2.M5 | `src/components/price.tsx` con `Intl` y `tabularNums` | test verde | test | TODO |
 | H1.S2.M6 | `MediaImage` gana `fallbackIcon` por tipo (producto, playlist, tienda) y `aspectRatio` | sin imagen muestra marcador propio | captura | TODO |
 | H1.S2.M7 | `src/components/segmented-tabs-card.tsx`: tarjeta única con pestañas (regla de fichas del cliente) usada por vendedor (H3) y, después, por fichas futuras | tres pestañas accesibles (`tablist`) | test verde | TODO |
+| H1.S2.M8 | Un único «chip seleccionado» neutro (realce + ✓, nunca relleno volt) en `components/wizard/choice-chip.tsx`, y sustituir los 7 chips caseros (`reels`, `onboarding`, `registrar-peso`, `profile-edit`, `new-routine-screen`, `cardio-modality-card`, `progression/rest-days`) | ninguna de esas pantallas tiene un chip seleccionado en volt (cierra el kill-test «dos rellenos volt» en Reels, Registrar peso, Onboarding, Mis datos, Rutina nueva, Cardio y Senda) | capturas antes/después + grep de `backgroundColor: colors.volt` en esos archivos | TODO |
+| H1.S2.M9 | `DiscoveryPreferencesEditor` (se reusa en Comunidad y Mapa): `FilterChip` + `Checkbox` en lugar de `☑`/`□`, etiquetar los 3 `TextInput`, explicar el botón deshabilitado (AS-45) | lector de pantalla anuncia rol y estado de cada casilla | prueba manual VoiceOver registrada en `evidencia/a11y-h1.md` | TODO |
 
 ### H1.S3 — Pasada «calma» sobre superficies comunes
 
@@ -84,3 +94,6 @@ antes/después de 8 pantallas representativas; doble revisión.
 | H1.S3.M4 | Auditoría de «una acción volt por pantalla» en Inicio, Rutinas, Comunidad, Perfil: los demás a `ghost`/texto | tabla pantalla → acción primaria | `evidencia/h1-acento.md` | TODO |
 | H1.S3.M5 | Estados faltantes BLOQUEANTES del inventario (p. ej. podio de Comunidad devolviendo `null` en error) | cada uno con `EmptyState`/`ErrorState` | capturas | TODO |
 | H1.S3.M6 | Movimiento: `useReducedMotion` en todo bucle o entrada que H0 encontró sin él; `EnterUp` solo en la primera pantalla | grep de `withRepeat` sin guarda = 0 | grep + captura | TODO |
+| H1.S3.M7 | **Honestidad de Comunidad** (decisión A-H1: cuenta como «resto de la app», no como mensajería): quitar la insignia «verificado» incondicional (`comunidad.tsx:1297-1298`) o condicionarla a un dato real; no pintar «Super Like» mientras ejecute lo mismo que «Me interesa» (`:1524-1530`); quitar el objetivo `'HIPERTROFIA'` inventado del filtro (`:981`) | ningún control ni insignia afirma algo que el dato no respalda | capturas + test de la baraja; regla 00 §2 | TODO |
+| H1.S3.M8 | Acento por pantalla: «Conectar» en la cuadrícula de Interacciones pasa a `secondary` (primario solo en la tarjeta ampliada) y «Consultar» de cada plan en Membresía a `ghost` | un solo relleno volt por pantalla en ambas | capturas | TODO |
+| H1.S3.M9 | `settings.tsx:104-106`: rama de error en lugar del spinner infinito; `fontSizes.micro` fuera de `top-gym-sheet.tsx` y `download-progress-wizard-modal.tsx` (el token se borra cuando chat y marketplace dejen de usarlo) | Ajustes ofrece reintento; `micro` = 0 usos fuera de chat/marketplace | capturas + grep | TODO |

@@ -140,7 +140,7 @@ el patrón cliente de URL acepta lo mismo que el servidor.
 | H4.S3.M7 | `features/music/music-search-results.tsx`: agrupa por `tipo`, 6 por grupo + «Ver todos»; `accessibilityLiveRegion` anuncia «12 resultados» | Grupo sin items no aparece | test verde | TODO |
 | H4.S3.M8 | `music-screen.tsx` recompuesto: `ListScreen` con `header` = cabecera; quita las dos pestañas (sustituidas por carriles y chip «Tuyas» en el filtro de alcance) | La pantalla no usa `.map()` para la cuadrícula | revisión de diff + capturas | TODO |
 | H4.S3.M9 | Estados: `EmptyState` por contexto (3 variantes), `ErrorState`, offline, skeleton grid y tabla | Cada uno capturado | capturas | TODO |
-| H4.S3.M10 | Entradas: NavRow «Música» en el perfil (sección de accesos) y acceso en `home.tsx` solo si hay ≥ 1 playlist; se mantiene el ⋯ de Rutinas | Dos entradas nuevas navegan a `/routines/musica` | Maestro `16-musica.yaml` paso 1 | TODO |
+| H4.S3.M10 | **Precondición medida en H0:** con `routinesV2` apagada (valor de producción) Música no tiene ninguna entrada. Entradas: NavRow «Música» en el perfil (sección de accesos) y acceso en `home.tsx` solo si hay ≥ 1 playlist; se mantiene el ⋯ de Rutinas | Dos entradas nuevas navegan a `/routines/musica` | Maestro `16-musica.yaml` paso 1 | TODO |
 
 ### H4.S4 — Ficha de playlist
 

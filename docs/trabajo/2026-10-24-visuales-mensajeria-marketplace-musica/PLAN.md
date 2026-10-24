@@ -5,9 +5,9 @@
 - **Kill-test del conjunto:** tres comprobaciones, una por área: (1) B envía un mensaje y el badge de A no cambia; (2) tocar «Copiar» en el pago y el portapapeles sigue vacío; (3) escribir «cardio» en Música y la lista no filtra. Cualquiera de las tres en rojo = el trabajo no está hecho, por bonitas que sean las pantallas.
 - **Estado de implementación:** TODO (este documento es solo planificación; no se tocó código).
 
-> **Plan escrito: 8 hitos (H0–H7), 30 subtareas, 167 microtareas.** De ellas 155 son del alcance
+> **Plan escrito: 8 hitos (H0–H7), 30 subtareas, 172 microtareas.** De ellas 160 son del alcance
 > pedido (H0–H6) y 12 son paridad web opcional (H7). Cada microtarea tiene CA binario, DoD con
-> comando y estado. El avance **solo** se informa como `HECHO / 167`.
+> comando y estado. El avance **solo** se informa como `HECHO / 172`.
 
 ## Lectura y entregables
 
@@ -86,6 +86,7 @@ Detalle, con `archivo:línea`, en `evidencia/auditoria-*.md`.
 | A-K2 | ¿Una `MEMBERSHIP_PLAN` del propio gimnasio debe ir por la renovación (`membership.tsx`) o por el pedido de marketplace? | Se mantienen separados; la ficha del plan del propio gimnasio enlaza a «Renovar» | H3.S5 |
 | A-M1 | ¿Tabla «paginada» = páginas numeradas o scroll infinito? | Numeradas (`page/pageSize/total`), manteniendo cursor para la cuadrícula | H4.S1.M4, H4.S3.M6 |
 | A-M2 | «Cada rutina se pueda recomendar a una playlist»: ¿rutina → 1 playlist, o una playlist → muchas rutinas? | Rutina tiene **una** playlist recomendada (nullable); una playlist puede ser recomendada por muchas rutinas, y su ficha las lista | H5 |
+| A-H1 | Los tres datos falsos de la baraja de Comunidad (verificado siempre visible, «Super Like» sin acción propia, objetivo inventado): ¿cuentan como «resto de la app» (H1) o como mensajería (H2)? | H1.S3.M7 (resto de la app); son defectos de honestidad, no de estilo | H1.S3.M7 |
 | A-W1 | ¿La paridad web entra en este trabajo? | No; H7 queda planificado y en TODO | H7 |
 
 ## Mapa de skills (qué se carga y cuándo)
@@ -109,7 +110,7 @@ app sigue la voz de REPP (`CLAUDE.md`).
 | Hito | Resultado observable | Depende de | Micro-tareas | Plan |
 |---|---|---|---|---|
 | H0 | Baseline de toda la app capturado, gates medidos, entorno y datos sintéticos listos | — | 8 | [Abrir](fases/H0-H1-preflight-y-cimientos.md) |
-| H1 | Cimientos visuales compartidos: rampa, tokens, guardas, primitivas únicas, pasada «calma» | H0 | 18 | [Abrir](fases/H0-H1-preflight-y-cimientos.md) |
+| H1 | Cimientos visuales compartidos: rampa, tokens, guardas, primitivas únicas, pasada «calma» | H0 | 23 | [Abrir](fases/H0-H1-preflight-y-cimientos.md) |
 | H2 | Mensajes y chat estilo Tinder mejorado, con badge, matches, hilo vacío, estados y moderación | H1 (+ backend H2.S1) | 41 | [Abrir](fases/H2-mensajeria.md) |
 | H3 | Marketplace con buscador, filtros, ficha de producto, vendedor, compra honesta, guardados y Mis compras | H1 (+ backend H3.S1) | 39 | [Abrir](fases/H3-marketplace.md) |
 | H4 | Música con buscador, chips, carriles, cuadrícula, tabla paginada y ficha | H1 (+ backend H4.S1) | 30 | [Abrir](fases/H4-H5-musica.md) |
@@ -171,7 +172,7 @@ Backend siempre **antes** que su frontend en cada hito, y siempre compatible con
 | Cambiar `ConversationSummary` y `Routine` (contratos consumidos por web y móvil) | romper web | campos opcionales + `regression-auditor` en H6; web tolera ausencia |
 | Borrar `directorio.tsx` (2763 l.) | regresión silenciosa | redirect + borrado solo tras Maestro verde en las 4 pantallas nuevas |
 | Dos sockets de chat (lista + hilo) | tickets, duplicados | un socket en `providers` con `join` por conversación |
-| Volumen: 167 microtareas | sesiones múltiples | el archivo de fase es el estado; `REPORTE.md` por sesión; se puede cerrar cualquier hito por separado |
+| Volumen: 172 microtareas | sesiones múltiples | el archivo de fase es el estado; `REPORTE.md` por sesión; se puede cerrar cualquier hito por separado |
 | Decisiones de negocio abiertas (A-C3, A-K2) | botones muertos o flujos confusos | nada se pinta sin decisión; se implementan las ramas definidas |
 | Tablet/apaisado | layouts rotos | `useScreenFrame` en todas las parrillas nuevas; captura en 820 pt para música y marketplace |
 | Spotify oEmbed limitado | tabla sin «N canciones» | columnas solo con datos reales |
