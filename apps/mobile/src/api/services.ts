@@ -261,6 +261,12 @@ export const workoutService = {
       method: 'POST',
       body: input,
     }),
+  /** Cambia el `orden` de un ejercicio de la sesión (único por sesión: ocupado = 409). */
+  reorderExercise: (sessionExerciseId: string, orden: number) =>
+    apiClient.request(`/workouts/session-exercises/${sessionExerciseId}`, looseObject, {
+      method: 'PATCH',
+      body: { orden },
+    }),
   removeExercise: (sessionExerciseId: string) =>
     apiClient.request(`/workouts/session-exercises/${sessionExerciseId}`, deletedSchema, {
       method: 'DELETE',

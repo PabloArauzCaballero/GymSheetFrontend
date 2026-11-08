@@ -56,6 +56,7 @@ export function FinishPage({
   skippedSets = 0,
   omitted = [],
   muscles = [],
+  inSitu = false,
 }: {
   width: number;
   bottomSpace: number;
@@ -73,6 +74,8 @@ export function FinishPage({
   omitted?: readonly string[];
   /** Los ejercicios con series hechas: de ellos sale el maniquí. */
   muscles?: ComponentProps<typeof SessionMuscles>['exercises'];
+  /** Rutina armada sobre la marcha: esta página es el «¿Y ahora qué?» entre ejercicios. */
+  inSitu?: boolean;
 }) {
   return (
     <ScrollView
@@ -89,16 +92,20 @@ export function FinishPage({
             borderRadius: radii.full,
             alignItems: 'center',
             justifyContent: 'center',
-              backgroundColor: complete ? metricColors.record.tint : colors.surfaceHighest,
+              backgroundColor: complete && !inSitu ? metricColors.record.tint : colors.surfaceHighest,
           }}
         >
-          <Ionicons color={complete ? metricColors.record.ink : colors.text} name={complete ? 'trophy' : 'flag-outline'} size={iconSizes.lg} />
+          <Ionicons color={complete && !inSitu ? metricColors.record.ink : colors.text} name={inSitu ? 'add-circle-outline' : complete ? 'trophy' : 'flag-outline'} size={iconSizes.lg} />
         </View>
         <Text accessibilityRole="header" variant="display">
-          {complete ? (skippedSets > 0 || omitted.length > 0 ? 'Llegaste al final' : 'Sesión completa') : sets > 0 ? '¿Lo dejamos aquí?' : 'Aún no has registrado nada'}
+          {inSitu ? '¿Y ahora qué?' : complete ? (skippedSets > 0 || omitted.length > 0 ? 'Llegaste al final' : 'Sesión completa') : sets > 0 ? '¿Lo dejamos aquí?' : 'Aún no has registrado nada'}
         </Text>
         <Text tone="secondary" variant="body">
-          {complete
+          {inSitu
+            ? sets > 0
+              ? 'Añade el siguiente ejercicio, o termina y te ofrecemos guardar lo de hoy como tu rutina.'
+              : 'Tu rutina se arma mientras entrenas: empieza con el primer ejercicio.'
+            : complete
             ? skippedSets > 0 || omitted.length > 0
               ? 'Hoy dejaste pasar algo, y está bien. Finaliza para guardarla y ver tu progreso.'
               : 'Hiciste todo lo que pedía el día. Finaliza para guardarla y ver tu progreso.'
