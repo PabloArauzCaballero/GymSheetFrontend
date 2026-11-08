@@ -14,10 +14,17 @@ y `profileCompletion`/`proudStat` (domain).
 | `(tabs)/profile.tsx` + `profile-edit.tsx` | `/profile` + `/profile/editar` | Hecho |
 | `settings.tsx` | `/settings` | Hecho (sin «Chats»: el BFF no permite `/me/chat/read-receipts`) |
 | `workouts/index.tsx` | `/workouts` | Hecho |
-| `routines` (catálogo) | `/routines` | Hecho: tarjeta, orden y «Tu semana» |
+| `routines` (catálogo) | `/routines` | Hecho |
 | `ejercicios` | `/exercises` | Ya era un port (`ExerciseBrowser`) |
 | `notifications-inbox.tsx` | `/notifications` | Hecho |
-| `comunidad`, `chat`, `descubrir`, `interacciones`, `membership`, `trayectoria`, `camino`, `reels`, `directorio`, `training-invitations`, `onboarding` | — | **Pendiente** |
+| `(tabs)/comunidad.tsx` | `/comunidad` (+ `/comunidad/personas`) | Hecho: baraja, cabecera, botonera de cinco y menú «⋯» |
+| `comunidad-mensajes.tsx` | `/chat` | Hecho: historias + pestañas |
+| `directorio.tsx` (Marketplace) | `/directorio` | Hecho |
+| `membership.tsx` | `/membership` | Hecho (secciones; la renovación sigue por WhatsApp como antes) |
+| `trayectoria.tsx` | `/trayectoria` | Hecho (orden y secciones) |
+| `descubrir.tsx` | `/descubrir` | Comparte baraja con Comunidad |
+| `interacciones.tsx`, `reels.tsx`, `training-invitations.tsx`, `onboarding.tsx` | mismas rutas | Hecho (cabeceras, secciones, preguntas por paso) |
+| Portal de staff (sin equivalente móvil) | `/admin/*` | Lenguaje del móvil: módulos como filas agrupadas, rótulos cortos en la barra, sin versalitas |
 
 **Hallazgo fuera de alcance (no corregido salvo `/programs/*` y `unread-count`)**: unas 60 rutas que
 usan los servicios web no están en el allowlist del BFF (`backend-route-policy.ts`) y responden
