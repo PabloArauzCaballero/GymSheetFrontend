@@ -1,7 +1,8 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Info, Sparkles } from 'lucide-react';
+import { ChevronRight, Flame, Info, LocateFixed, Signpost, Sparkles } from 'lucide-react';
+import { Section } from '@/shared/components/mobile/section';
 import { useState } from 'react';
 import type { Challenge, LeaderboardSortBy, Prize, ProgressionBadge } from '@/shared/api/schemas';
 import { progressionService } from '@/features/progression/services/progression-service';
@@ -12,8 +13,7 @@ import {
   SkeletonScreen,
 } from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
-import { Button } from '@/shared/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { ProgressionCelebration, useLevelUpWatch, useRewardQueue } from './progression-celebration';
 import { BadgeCollection } from './badge-collection';
 import { NearestBadges } from './nearest-badges';
@@ -124,18 +124,20 @@ export function ProgressionClient() {
   }
 
   return (
-    <div className="grid gap-10">
+    // El orden de `trayectoria.tsx` del móvil: rango, «cómo se ganan», el
+    // camino, la carta de rango, retos, premios, racha, descansos, lo más
+    // cerca y la colección. Las estadísticas y el ranking (solo web) al final.
+    <div className="mx-auto grid w-full max-w-[560px] gap-8 lg:max-w-[760px]">
       <PageHeader
         description={
           data.level
             ? `Vas por ${data.level.name}. Sigue subiendo.`
             : `Termina tu primer entreno: +${rules.data?.perSession ?? 50} puntos y tu primera insignia.`
         }
-        eyebrow="Progresión"
         title="Tu senda"
       />
 
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         <div data-tutorial-id="progression:rank">
           <RankHero
             level={data.level}
@@ -145,103 +147,78 @@ export function ProgressionClient() {
             pointsToNextLevel={data.pointsToNextLevel}
           />
         </div>
-        <Button
-          className="justify-self-start"
+        <button
+          className="t-subhead inline-flex min-h-11 w-fit items-center gap-2 font-semibold text-[var(--accent-ink)]"
           data-tutorial-id="progression:rules"
           onClick={() => setRulesOpen(true)}
-          variant="ghost"
+          type="button"
         >
-          <Info aria-hidden className="size-4" />
+          <Info aria-hidden className="size-5" />
           ¿Cómo se ganan los puntos?
-        </Button>
-        {/* Se celebra desde aquí y no convirtiendo `RankHero` en botón: esa
-            cabecera la comparten otras pantallas. */}
-        {level ? (
-          <Button
-            className="justify-self-start"
-            onClick={() => rewards.show([{ kind: 'level', level }])}
-            variant={levelUp ? 'primary' : 'secondary'}
-          >
-            <Sparkles aria-hidden className="size-4" />
-            {levelUp ? `Has subido a ${levelUp.name}` : 'Ver mi carta de rango'}
-          </Button>
-        ) : null}
+        </button>
       </div>
 
       {unlockedNow.length > 0 ? (
-        <Card>
-          <CardHeader
-            description="Se muestran una sola vez. A partir de ahora viven en tu colección."
-            title="Acabas de desbloquear"
-          />
-          <CardContent className="grid gap-3 sm:grid-cols-2">
+        <Section icon={Sparkles} title="Acabas de desbloquear">
+          <div className="grid gap-3 sm:grid-cols-2">
             {unlockedNow.map((badge) => (
               <BadgeTile badge={badge} key={badge.code} onCelebrate={celebrateBadge} />
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </Section>
+      ) : null}
+
+      <Section icon={Signpost} title="El camino">
+        <div className="panel p-5" data-tutorial-id="progression:path">
+          <ol className="grid">
+            {data.path.map((item, index) => (
+              <PathNode isLast={index === data.path.length - 1} key={item.code} level={item} points={data.points} />
+            ))}
+          </ol>
+        </div>
+      </Section>
+
+      {/* La carta de rango: una fila que se toca, como en el móvil. */}
+      {level ? (
+        <button
+          className="panel tap flex items-center gap-4 p-5 text-left"
+          onClick={() => rewards.show([{ kind: 'level', level }])}
+          type="button"
+        >
+          <Sparkles aria-hidden className="size-6 shrink-0 text-[var(--accent-ink)]" />
+          <span className="grid flex-1 gap-0.5">
+            <span className="t-headline">{levelUp ? `Has subido a ${levelUp.name}` : `Rango ${level.name}`}</span>
+            <span className="t-caption text-[var(--text-muted)]">Toca para ver tu carta de rango</span>
+          </span>
+          <ChevronRight aria-hidden className="size-5 text-[var(--text-muted)]" />
+        </button>
       ) : null}
 
       {data.challenges ? <ChallengesCard onOpen={openChallenge} week={data.challenges} /> : null}
 
       <PrizesCard onOpen={openPrize} prizes={data.prizes} />
 
-      {data.streak || data.nearest.length > 0 ? (
-        <div className="grid gap-10 lg:grid-cols-2">
-          {data.streak ? <StreakCard rules={rules.data} streak={data.streak} /> : null}
-          {data.nearest.length > 0 ? (
-            <Card>
-              <CardHeader description="Las insignias que casi tienes." title="Lo más cerca" />
-              <CardContent>
-                <NearestBadges badges={data.nearest} />
-              </CardContent>
-            </Card>
-          ) : null}
-        </div>
+      {data.streak ? (
+        <Section icon={Flame} title="Tu racha">
+          <StreakCard rules={rules.data} streak={data.streak} />
+        </Section>
+      ) : null}
+
+      <RestDaysCard currentRestDays={currentRestDays} onToggle={toggleRestDay} pending={setRestDays.isPending} />
+
+      {data.nearest.length > 0 ? (
+        <Section icon={LocateFixed} title="Lo más cerca">
+          <div className="panel p-5">
+            <NearestBadges badges={data.nearest} />
+          </div>
+        </Section>
       ) : null}
 
       <BadgeCollection badges={data.badges} onCelebrate={celebrateBadge} />
 
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <Card data-tutorial-id="progression:path">
-          <CardHeader
-            description="Todos los rangos, también los que te quedan. Cada uno pide más puntos que el anterior."
-            title="El camino"
-          />
-          <CardContent>
-            <ol className="grid">
-              {data.path.map((level, index) => (
-                <PathNode
-                  isLast={index === data.path.length - 1}
-                  key={level.code}
-                  level={level}
-                  points={data.points}
-                />
-              ))}
-            </ol>
-          </CardContent>
-        </Card>
+      <ProgressionStatsCard rules={rules.data} stats={stats} streakShown={Boolean(data.streak)} />
 
-        <div className="grid content-start gap-10">
-          <ProgressionStatsCard
-            rules={rules.data}
-            stats={stats}
-            streakShown={Boolean(data.streak)}
-          />
-
-          <RestDaysCard
-            currentRestDays={currentRestDays}
-            onToggle={toggleRestDay}
-            pending={setRestDays.isPending}
-          />
-
-          <LeaderboardCard
-            entries={leaderboard.data ?? []}
-            onSortChange={setLeaderboardSort}
-            sortBy={leaderboardSort}
-          />
-        </div>
-      </div>
+      <LeaderboardCard entries={leaderboard.data ?? []} onSortChange={setLeaderboardSort} sortBy={leaderboardSort} />
 
       <PointsRulesDialog
         badges={data.badges}
