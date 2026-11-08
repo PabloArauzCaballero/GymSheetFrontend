@@ -1,5 +1,7 @@
 'use client';
 
+import { CalendarDays, History, MailOpen, RefreshCw } from 'lucide-react';
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRef, useState, useSyncExternalStore } from 'react';
@@ -121,16 +123,17 @@ export function TrainingInvitationsClient({ sessionUserId }: Readonly<{ sessionU
   );
 
   return (
-    <div className="grid gap-8">
+    // «Entrenemos juntos» del móvil (`training-invitations.tsx`): cabecera y
+    // tres secciones, Pendientes, Agenda e Historial.
+    <div className="mx-auto grid w-full max-w-[560px] gap-8 lg:max-w-[760px]">
       <PageHeader
-        actions={
-          <Button onClick={() => invitations.refetch()} size="sm" variant="secondary">
-            Actualizar
+        description="Tus invitaciones y encuentros, en la hora local de este dispositivo."
+        title="Entrenemos juntos"
+        titleAction={
+          <Button aria-label="Actualizar" onClick={() => invitations.refetch()} size="icon" variant="ghost">
+            <RefreshCw aria-hidden className="size-5" />
           </Button>
         }
-        description="Revisa las propuestas vigentes y tus encuentros confirmados. Los horarios se muestran en tu zona local."
-        eyebrow="Comunidad"
-        title="Entrenar juntos"
       />
       {timeZone ? (
         <p className="text-sm text-[var(--text-muted)]">Horarios en {timeZone}.</p>
@@ -152,20 +155,22 @@ export function TrainingInvitationsClient({ sessionUserId }: Readonly<{ sessionU
             </Link>
           }
           description="Invita a una conexión desde su perfil o desde el chat."
-          title="Todavía no tienes invitaciones"
+          title="Sin invitaciones"
         />
       ) : null}
       {invitations.isSuccess && pending.length > 0 ? (
         <section aria-labelledby="pending-training-invitations" className="grid gap-3">
-          <h2 className="text-xl font-semibold" id="pending-training-invitations">
-            Invitaciones pendientes
+          <h2 className="t-headline flex items-center gap-2" id="pending-training-invitations">
+            <MailOpen aria-hidden className="size-4 text-[var(--text-muted)]" />
+            Pendientes
           </h2>
           {pending.map(card)}
         </section>
       ) : null}
       {invitations.isSuccess && agenda.length > 0 ? (
         <section aria-labelledby="training-agenda" className="grid gap-3">
-          <h2 className="text-xl font-semibold" id="training-agenda">
+          <h2 className="t-headline flex items-center gap-2" id="training-agenda">
+            <CalendarDays aria-hidden className="size-4 text-[var(--text-muted)]" />
             Agenda
           </h2>
           {agenda.map(card)}
@@ -173,7 +178,8 @@ export function TrainingInvitationsClient({ sessionUserId }: Readonly<{ sessionU
       ) : null}
       {invitations.isSuccess && history.length > 0 ? (
         <section aria-labelledby="training-history" className="grid gap-3">
-          <h2 className="text-xl font-semibold" id="training-history">
+          <h2 className="t-headline flex items-center gap-2" id="training-history">
+            <History aria-hidden className="size-4 text-[var(--text-muted)]" />
             Historial
           </h2>
           {history.map(card)}

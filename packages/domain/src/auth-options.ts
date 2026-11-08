@@ -138,3 +138,31 @@ export function authErrorMessage(
   if (serverMessage && serverMessage.trim() !== '') return serverMessage;
   return context === 'login' ? authErrors.loginFailed : authErrors.registerFailed;
 }
+
+/**
+ * Una pregunta por paso del onboarding: es el protagonista de cada pantalla.
+ * El último paso celebra y apunta al primer entreno.
+ */
+export const onboardingSteps = [
+  {
+    title: '¿Qué quieres conseguir?',
+    subline: 'Elige uno. Con él te recomendamos rutinas.',
+  },
+  {
+    title: '¿Cuánto pesas y mides?',
+    subline: 'Lo guardamos como tu primera medida. Lo cambias cuando quieras.',
+  },
+  {
+    title: '¿Cómo entrenas?',
+    subline: 'Tu nivel, tus días y dónde lo haces.',
+  },
+] as const;
+
+export function onboardingFinish(firstName: string, atGym: boolean) {
+  return {
+    title: `Ya está, ${firstName}.`,
+    subline: atGym
+      ? 'Tu perfil está listo. Completa y elige la rutina de tu primer entreno.'
+      : 'Marca tu material, completa y elige la rutina de tu primer entreno.',
+  };
+}

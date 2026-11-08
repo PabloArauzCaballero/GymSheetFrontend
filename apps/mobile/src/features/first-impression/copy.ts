@@ -15,33 +15,8 @@ export const registerBenefits: readonly Benefit[] = [
 /** Encabezado del formulario de alta (el de acceso sigue en `authCopy`). */
 export const registerFormTitle = 'Crea tu cuenta';
 
-/**
- * Una pregunta por paso del onboarding: es el protagonista de cada pantalla.
- * El último paso celebra y apunta al primer entreno.
- */
-export const onboardingSteps = [
-  {
-    title: '¿Qué quieres conseguir?',
-    subline: 'Elige uno. Con él te recomendamos rutinas.',
-  },
-  {
-    title: '¿Cuánto pesas y mides?',
-    subline: 'Lo guardamos como tu primera medida. Lo cambias cuando quieras.',
-  },
-  {
-    title: '¿Cómo entrenas?',
-    subline: 'Tu nivel, tus días y dónde lo haces.',
-  },
-] as const;
-
-export function onboardingFinish(firstName: string, atGym: boolean) {
-  return {
-    title: `Ya está, ${firstName}.`,
-    subline: atGym
-      ? 'Tu perfil está listo. Completa y elige la rutina de tu primer entreno.'
-      : 'Marca tu material, completa y elige la rutina de tu primer entreno.',
-  };
-}
+/** Preguntas del onboarding y cierre: viven en `@gymsheet/domain`, compartidos con la web. */
+export { onboardingFinish, onboardingSteps } from '@gymsheet/domain';
 
 export const onboardingDone = 'Ya está. Elige tu primera rutina en Inicio.';
 export const onboardingFinishCta = 'Completar y empezar';

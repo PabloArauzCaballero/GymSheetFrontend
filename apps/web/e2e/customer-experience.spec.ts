@@ -10,7 +10,7 @@ async function login(page: Page, email: string) {
 test('new clients are required to continue onboarding', async ({ page }) => {
   await login(page, 'new.mock@gymsheet.local');
   await expect(page).toHaveURL(/\/onboarding$/u, { timeout: 40_000 });
-  await expect(page.getByRole('heading', { name: 'Personaliza tu experiencia' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '¿Qué quieres conseguir?' })).toBeVisible();
   await expect(page.getByText('Paso 1 de 4')).toBeVisible();
 });
 

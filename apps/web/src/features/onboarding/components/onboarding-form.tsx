@@ -1,5 +1,7 @@
 'use client';
 
+import { onboardingSteps } from '@gymsheet/domain';
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -8,7 +10,7 @@ import { notify } from '@/shared/notifications';
 import type { FitnessGoal } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { Button } from '@/shared/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { Field } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
@@ -19,6 +21,15 @@ import { ChoiceGroup } from './choice-group';
 const today = new Date().toISOString().slice(0, 10);
 
 export type OnboardingState = Awaited<ReturnType<typeof onboardingService.get>>;
+
+/**
+ * Las tres preguntas del móvil (`onboardingSteps`, en `@gymsheet/domain`) y
+ * el paso de material que la web pregunta aparte.
+ */
+const STEP_COPY = [
+  ...onboardingSteps,
+  { title: '¿Con qué material cuentas?', subline: 'Marca lo que tienes. Con eso ajustamos tus ejercicios.' },
+] as const;
 
 export function OnboardingForm({ initial }: Readonly<{ initial: OnboardingState }>) {
   const router = useRouter();
@@ -84,30 +95,25 @@ export function OnboardingForm({ initial }: Readonly<{ initial: OnboardingState 
   const valid = step !== 2 || (weight > 0 && height > 0);
   return (
     <main className="mx-auto grid w-full max-w-2xl gap-6 px-4 py-8 sm:py-12">
-      <div>
-        <p className="data-label text-[var(--text-muted)]">Configuración inicial</p>
-        <h1 className="mt-2 text-3xl font-semibold">Personaliza tu experiencia</h1>
-        <p className="mt-2 text-sm text-[var(--text-muted)]">
-          Paso {step} de 4 · Tu progreso se guarda en tu cuenta.
-        </p>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--surface-high)]">
+      {/* Como el móvil: la pregunta es la protagonista de cada paso. */}
+      <div className="grid gap-2">
+        <div
+          aria-label={`Paso ${step} de 4`}
+          aria-valuemax={4}
+          aria-valuemin={1}
+          aria-valuenow={step}
+          className="h-1.5 overflow-hidden rounded-full bg-[var(--surface-high)]"
+          role="progressbar"
+        >
           <div
-            className="h-full bg-[var(--volt)] transition-[width] duration-[var(--dur-4)] ease-[var(--ease-out)]"
+            className="h-full rounded-full bg-[var(--volt)] transition-[width] duration-[var(--dur-4)] ease-[var(--ease-out)]"
             style={{ width: `${step * 25}%` }}
           />
         </div>
+        <h1 className="display-title mt-3">{STEP_COPY[step - 1]?.title ?? 'Configuración'}</h1>
+        <p className="t-subhead text-[var(--text-muted)] sm:text-[17px]">{STEP_COPY[step - 1]?.subline}</p>
       </div>
       <Card>
-        <CardHeader
-          title={
-            [
-              'Tu objetivo principal',
-              'Medidas actuales',
-              'Cómo quieres entrenar',
-              'Equipo disponible',
-            ][step - 1] ?? 'Configuración'
-          }
-        />
         <CardContent className="grid gap-5">
           {step === 1 ? (
             <div className="grid gap-3 sm:grid-cols-2">
