@@ -64,3 +64,15 @@ export const onMedia = {
   muted: 'rgb(255 255 255 / 0.75)',
   chip: 'rgb(0 0 0 / 0.6)',
 } as const;
+
+/**
+ * Botonera de la baraja de Comunidad (`accentHues` + `darkSurfaces` del
+ * móvil): cada acción con su color, sobre un fondo oscuro de su mismo tono.
+ */
+export const deckActions = {
+  undo: { ink: '#F59E0B', bg: 'rgb(24 32 47 / 0.85)', edge: 'rgb(245 158 11 / 0.55)' },
+  pass: { ink: '#EF4444', bg: 'rgb(32 18 24 / 0.9)', edge: '#EF4444' },
+  star: { ink: '#06B6D4', bg: 'rgb(15 30 48 / 0.85)', edge: '#06B6D4' },
+  like: { ink: 'var(--accent-ink)', bg: 'rgb(25 38 18 / 0.9)', edge: 'var(--volt)' },
+  boost: { ink: '#A855F7', bg: 'rgb(30 20 48 / 0.85)', edge: '#A855F7' },
+} as const;

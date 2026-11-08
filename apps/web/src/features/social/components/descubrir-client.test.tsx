@@ -6,6 +6,8 @@ import { ApiError } from '@/shared/api/api-error';
 import type { GymDirectoryEntry } from '@/shared/api/schemas';
 import { DescubrirClient } from './descubrir-client';
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }) }));
+
 const { deck, swipe, undoSwipe, notifyError } = vi.hoisted(() => ({
   deck: vi.fn(),
   swipe: vi.fn(),
