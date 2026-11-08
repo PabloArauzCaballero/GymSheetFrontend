@@ -93,7 +93,6 @@ export function ProgressionClient() {
       <div className="grid gap-10">
         <PageHeader
           description="Tu camino hacia la imagen que buscas."
-          eyebrow="Progresión"
           title="Tu senda"
         />
         <Card>

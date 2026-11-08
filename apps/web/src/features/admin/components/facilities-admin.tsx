@@ -15,7 +15,6 @@ export function FacilitiesAdmin({ role }: Readonly<{ role: UserRole }>) {
     <div className="grid gap-8">
       <PageHeader
         description="Sedes, salas, puntos de acceso, asignación de activos y mantenimiento con transiciones explícitas."
-        eyebrow="Operaciones físicas"
         title="Instalaciones"
       />
       <Tabs defaultValue="branches">

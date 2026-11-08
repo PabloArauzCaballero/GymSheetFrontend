@@ -1,7 +1,8 @@
-import Link from 'next/link';
 import type { UserRole } from '@/shared/api/contracts';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { adminNavigation, canSee } from '@/shared/components/layout/nav-config';
+import { Divider, ListCard, NavRow } from '@/shared/components/mobile/nav-row';
+import { Section } from '@/shared/components/mobile/section';
 
 /**
  * Los módulos de administración a los que llega esta cuenta.
@@ -21,35 +22,57 @@ export function AdminOverview({
     (module) => module.description && canSee(module, role, permissions),
   );
 
+  // Agrupadas como los ajustes del móvil: filas que navegan dentro de una
+  // tarjeta por grupo, glifo callado, título 17/600 y su descripción.
+  const groups = MODULE_GROUPS.map((group) => ({
+    ...group,
+    items: visibleModules.filter((module) => group.hrefs.includes(module.href)),
+  }));
+  const grouped = new Set(MODULE_GROUPS.flatMap((group) => group.hrefs));
+  const rest = visibleModules.filter((module) => !grouped.has(module.href));
+  if (rest.length) groups.push({ title: 'Más', hrefs: [], items: rest });
+
   return (
-    <div className="grid gap-8">
+    <div className="mx-auto grid w-full max-w-[560px] gap-8 lg:max-w-[1040px]">
       <PageHeader
-        description="Superficie operativa limitada por el rol de cada cuenta. Recepción puede consultar y ejecutar solo las operaciones autorizadas."
-        eyebrow="Operaciones"
+        description="Lo que tu cuenta puede ver y hacer en el gimnasio."
         title="Administración"
         tutorialId="page:admin"
       />
-      <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-        {visibleModules.map((module) => {
-          const Icon = module.icon;
-          return (
-            <Link
-              className="panel group min-h-52 p-6 transition-colors hover:border-[var(--volt)] hover:bg-[var(--surface-low)]"
-              href={module.href}
-              key={module.href}
-            >
-              <Icon className="size-7 text-[var(--text-muted)]" />
-              <h2 className="mt-10 text-2xl font-semibold tracking-[-0.02em]">{module.label}</h2>
-              <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">
-                {module.description}
-              </p>
-              <p className="data-label mt-6 text-[var(--text-muted)] group-hover:text-[var(--text)]">
-                Abrir módulo →
-              </p>
-            </Link>
-          );
-        })}
-      </section>
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
+        {groups
+          .filter((group) => group.items.length > 0)
+          .map((group) => (
+            <Section key={group.title} title={group.title}>
+              <ListCard>
+                {group.items.map((module, index) => {
+                  const Icon = module.icon;
+                  return (
+                    <div key={module.href}>
+                      {index > 0 ? <Divider /> : null}
+                      <NavRow
+                        href={module.href}
+                        leading={<Icon aria-hidden className="size-5 shrink-0 text-[var(--text-muted)]" />}
+                        subtitle={module.description}
+                        title={module.label}
+                      />
+                    </div>
+                  );
+                })}
+              </ListCard>
+            </Section>
+          ))}
+      </div>
     </div>
   );
 }
+
+/** Grupos de módulos: el día a día de recepción primero, la configuración después. */
+const MODULE_GROUPS: { title: string; hrefs: string[] }[] = [
+  {
+    title: 'Día a día',
+    hrefs: ['/admin/operacion', '/admin/usuarios', '/admin/membership', '/admin/people', '/admin/access'],
+  },
+  { title: 'Gimnasio', hrefs: ['/admin/equipment', '/admin/facilities', '/admin/exercises'] },
+  { title: 'Seguridad y control', hrefs: ['/admin/moderacion', '/admin/permissions', '/admin/auditoria'] },
+];

@@ -51,7 +51,6 @@ export function StartWorkoutForm() {
           </ButtonLink>
         }
         description="El backend permite una sola sesión en progreso por usuario."
-        eyebrow="Entrenamiento en vivo"
         title="Iniciar sesión"
         tutorialId="page:workout-new"
       />

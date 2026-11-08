@@ -10,7 +10,14 @@ import { navigationFor, type NavigationItem } from './nav-config';
  *   barra nunca enseñe la aplicación del socio a quien no viene a entrenar.
  */
 /** Rótulos cortos de la barra del móvil (`Tabs.Screen` → `title`). */
-const tabLabels: Record<string, string> = { '/profile': 'Perfil' };
+const tabLabels: Record<string, string> = {
+  '/profile': 'Perfil',
+  // El personal: rótulos de una palabra, que no partan en dos líneas.
+  '/admin/operacion': 'Panel',
+  '/admin': 'Módulos',
+  '/admin/usuarios': 'Usuarios',
+  '/sistema': 'Sistema',
+};
 
 function withTabLabel(item: NavigationItem): NavigationItem {
   const label = tabLabels[item.href];

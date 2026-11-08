@@ -138,7 +138,6 @@ export function ExerciseForm({
           </ButtonLink>
         }
         description="Registra únicamente información verificable. Los campos avanzados son opcionales."
-        eyebrow="Catálogo personal"
         title={editing ? 'Editar ejercicio' : 'Nuevo ejercicio'}
       />
       <form

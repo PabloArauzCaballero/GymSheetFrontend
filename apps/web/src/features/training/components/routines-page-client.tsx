@@ -179,7 +179,6 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
             ? 'Construye planes reutilizables y asígnalos a tus clientes con programación.'
             : 'Construye tus planes de entrenamiento reutilizables.'
         }
-        eyebrow="Planes de entrenamiento"
         title="Rutinas"
       />
 

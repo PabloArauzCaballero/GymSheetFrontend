@@ -82,7 +82,6 @@ export function ModerationQueue() {
     <div className="flex flex-col gap-6">
       <PageHeader
         description="Contenido reportado por la comunidad, lo más urgente primero. Cada tarjeta reúne todas las quejas sobre lo mismo."
-        eyebrow="Comunidad"
         title="Moderación"
       />
 

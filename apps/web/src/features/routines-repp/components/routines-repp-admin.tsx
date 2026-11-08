@@ -92,7 +92,6 @@ export function RoutinesReppAdmin() {
           </Button>
         }
         description="Qué rutinas muestra la plataforma como «Recomendada por REPP». Cada cambio queda en la auditoría."
-        eyebrow="Plataforma"
         title="Rutinas REPP"
       />
 

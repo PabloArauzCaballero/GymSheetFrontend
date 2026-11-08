@@ -136,7 +136,6 @@ export function PersonEnrollment() {
     <div className="grid gap-8">
       <PageHeader
         description="Alta de la persona y registro de su credencial facial con la cámara del computador. La fotografía no se transmite: al servidor solo viaja la referencia de inscripción, el checksum de la toma y la evidencia del consentimiento."
-        eyebrow="Control de acceso"
         title="Registrar persona"
       />
 

@@ -80,7 +80,6 @@ export function TutorialCenter() {
   return (
     <div className="grid gap-8">
       <PageHeader
-        eyebrow="Aprendizaje guiado"
         title="Centro de ayuda"
         tutorialId="page:tutorials"
         description="Recorridos interactivos sobre la aplicación real. Empieza, continúa o repite cada guía a tu ritmo."

@@ -20,7 +20,6 @@ export function MuscleList() {
       </Link>
       <PageHeader
         description="Elige un músculo para ver los ejercicios que lo trabajan."
-        eyebrow="Anatomía"
         title="Todos los músculos"
       />
       <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
