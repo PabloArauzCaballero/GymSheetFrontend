@@ -18,3 +18,4 @@ export * from './chat-system-message';
 export * from './card-materials';
 export * from './rewards';
 export * from './session-labels';
+export * from './profile-completion';
