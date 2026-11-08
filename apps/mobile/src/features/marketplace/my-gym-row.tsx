@@ -18,7 +18,7 @@ export function MyGymRow({
   daysLeft: number | null;
   onPress: () => void;
 }) {
-  const status = daysLeft !== null ? `Membresía activa · ${daysLeft} días` : 'Ver planes y pases';
+  const status = daysLeft !== null ? `Membresía activa · ${daysLeft} ${daysLeft === 1 ? 'día' : 'días'}` : 'Ver planes y pases';
   return (
     <PressableScale
       accessibilityLabel={`Tu gimnasio, ${gym.name}. ${status}`}

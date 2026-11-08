@@ -14,7 +14,8 @@ export function formatPrice(amount: string | number, currency: string, durationD
   } catch {
     text = `${currency} ${Number.isInteger(value) ? value : value.toFixed(2)}`;
   }
-  return durationDays && durationDays > 0 ? `${text} · ${durationDays} días` : text;
+  if (!durationDays || durationDays <= 0) return text;
+  return `${text} · ${durationDays} ${durationDays === 1 ? 'día' : 'días'}`;
 }
 
 const OFFER_KIND: Record<EntityPlan['type'], string> = {
