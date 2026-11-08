@@ -29,10 +29,10 @@ export function InteractionsClient() {
   const data = counts.data ?? null;
 
   return (
-    <div className="grid gap-8">
+    // «Interacciones» del móvil: misma cabecera y las tres pestañas.
+    <div className="mx-auto grid w-full max-w-[560px] gap-6 lg:max-w-[1040px]">
       <PageHeader
-        description="Quién te dio like, quién vio tu perfil y quién te dio next. Todo lo que pasó mientras no mirabas."
-        eyebrow="Comunidad"
+        description="Quién te dio like, quién vio tu perfil y quién pasó de largo."
         title="Interacciones"
         tutorialId="page:interacciones"
       />

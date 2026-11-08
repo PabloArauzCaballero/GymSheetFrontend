@@ -3,6 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { PageHeader } from '@/shared/components/layout/page-header';
+import { Section } from '@/shared/components/mobile/section';
+import { ChoiceChip } from '@/shared/components/ui/choice-chip';
 import { Button } from '@/shared/components/ui/button';
 import { reelsService } from '../services/reels-service';
 import { ReelCard } from './reel-card';
@@ -20,14 +22,13 @@ export function ReelsPageClient({ viewerId }: Readonly<{ viewerId?: string }>) {
   });
 
   return (
-    <main className="grid gap-8">
-      <PageHeader
-        eyebrow="Comunidad"
-        title="Reels"
-        description="Graba un vídeo o elige uno para compartirlo. El servidor valida el vídeo y publica solo reels listos para reproducir."
-      />
+    // «Reels» del móvil: cabecera, «Publicar» y los feeds como chips.
+    <main className="mx-auto grid w-full max-w-[560px] gap-8 lg:max-w-[760px]">
+      <PageHeader description="Publica videos y mira reels de tus conexiones." title="Reels" />
 
-      <ReelUploadSection onRetryFeed={() => void feed.refetch()} />
+      <Section title="Publicar">
+        <ReelUploadSection onRetryFeed={() => void feed.refetch()} />
+      </Section>
 
       <section aria-labelledby="my-reels-title" className="grid gap-4">
         <div className="flex flex-wrap gap-2" aria-label="Feeds de reels">
@@ -38,18 +39,16 @@ export function ReelsPageClient({ viewerId }: Readonly<{ viewerId?: string }>) {
               ['MINE', 'Mis reels'],
             ] as const
           ).map(([tab, label]) => (
-            <Button
-              aria-pressed={feedTab === tab}
+            <ChoiceChip
               key={tab}
               onClick={() => {
                 setFeedTab(tab);
                 setCommentsReel(null);
               }}
-              type="button"
-              variant={feedTab === tab ? 'primary' : 'secondary'}
+              selected={feedTab === tab}
             >
               {label}
-            </Button>
+            </ChoiceChip>
           ))}
         </div>
         <h2 className="text-lg font-semibold" id="my-reels-title">

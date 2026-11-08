@@ -51,13 +51,13 @@ export function ReelUploadSection({ onRetryFeed }: Readonly<{ onRetryFeed: () =>
   return (
     <section
       aria-labelledby="reel-upload-title"
-      className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-low)] p-5 sm:p-7"
+      className="panel grid gap-4 p-5"
     >
       <div>
-        <h2 className="text-lg font-semibold" id="reel-upload-title">
+        <h2 className="sr-only" id="reel-upload-title">
           Publicar un reel
         </h2>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
+        <p className="t-subhead text-[var(--text-muted)]">
           MP4 o QuickTime, hasta 90 segundos.
         </p>
       </div>
