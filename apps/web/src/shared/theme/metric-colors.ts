@@ -39,3 +39,28 @@ export const accentHues = {
   emeraldDeep: '#064E3B',
   ink: '#000000',
 } as const;
+
+/** Estrella de valoración (`ratingStar` del móvil). */
+export const ratingStar = '#f5b94a';
+
+/**
+ * Portada sin imagen: un degradado propio de cada objetivo (`goalGradients`
+ * del móvil), nunca un cuadro gris.
+ */
+export const goalGradients = {
+  HIPERTROFIA: ['#3a1f5c', '#14101f'],
+  FUERZA: ['#5c1f1f', '#1a0f0f'],
+  RESISTENCIA: ['#123d4f', '#0c161c'],
+  PERDIDA_GRASA: ['#5a3412', '#1c120a'],
+  SALUD_GENERAL: ['#1d4a2b', '#0d1810'],
+  RENDIMIENTO_DEPORTIVO: ['#4b3b12', '#17140a'],
+  REHABILITACION: ['#1f3a5c', '#0e1520'],
+  DEFAULT: ['#2b2a26', '#11110f'],
+} as const satisfies Record<string, readonly [string, string]>;
+
+/** Texto sobre una foto o un degradado oscuro (`onMedia` del móvil). */
+export const onMedia = {
+  text: '#ffffff',
+  muted: 'rgb(255 255 255 / 0.75)',
+  chip: 'rgb(0 0 0 / 0.6)',
+} as const;

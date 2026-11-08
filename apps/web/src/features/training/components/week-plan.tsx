@@ -13,10 +13,8 @@ export function WeekPlan({ assignments, onPickRoutine }: Readonly<{
 
   return (
     <section aria-label="Plan semanal" className="panel grid gap-4 p-5">
-      <div>
-        <h2 className="text-lg font-semibold">Tu semana</h2>
-        <p className="text-sm text-[var(--text-muted)]">Toca un día para abrir su rutina.</p>
-      </div>
+      {/* El título «Tu semana» lo pone la `Section` que la envuelve, como en el móvil. */}
+      <p className="t-subhead text-[var(--text-muted)]">Toca un día para abrir su rutina.</p>
       <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
         {WEEKDAY_DISPLAY_ORDER.map((day) => {
           const plans = assignmentsForWeekday(assignments, day);

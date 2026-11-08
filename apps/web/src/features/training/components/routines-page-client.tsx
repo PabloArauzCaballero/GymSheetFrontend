@@ -22,6 +22,7 @@ import {
   SkeletonScreen,
 } from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
+import { Section } from '@/shared/components/mobile/section';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button, ButtonLink } from '@/shared/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from '@/shared/components/ui/dialog';
@@ -183,7 +184,9 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
       />
 
       {assignments.data ? (
-        <WeekPlan assignments={assignments.data} onPickRoutine={(id) => router.push(`/routines/${id}`)} />
+        <Section title="Tu semana">
+          <WeekPlan assignments={assignments.data} onPickRoutine={(id) => router.push(`/routines/${id}`)} />
+        </Section>
       ) : null}
 
       {routines.length ? (

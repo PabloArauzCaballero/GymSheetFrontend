@@ -1,30 +1,18 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Download, FileJson, Plus } from 'lucide-react';
-import Link from 'next/link';
+import { CirclePlay, CirclePlus, FileJson, Flame, Sheet } from 'lucide-react';
 import { useState } from 'react';
 import { notify } from '@/shared/notifications';
 import { workoutService } from '@/features/workouts/services/workout-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
-import { SkeletonList } from '@/shared/components/feedback/skeleton';
-import { setVolumeKg } from '@gymsheet/domain';
+import { Skeleton } from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
-import { Badge } from '@/shared/components/ui/badge';
 import { Button, ButtonLink } from '@/shared/components/ui/button';
-import { Card } from '@/shared/components/ui/card';
 import { Pagination } from '@/shared/components/ui/pagination';
-import { formatDateTime, formatDuration } from '@/shared/lib/date';
-
-function sessionVolume(session: Awaited<ReturnType<typeof workoutService.get>>) {
-  return session.ejercicios.reduce(
-    (total, exercise) =>
-      total + exercise.series.reduce((subtotal, set) => subtotal + setVolumeKg(set), 0),
-    0,
-  );
-}
+import { SessionRow } from './session-row';
 
 export function WorkoutList() {
   const [page, setPage] = useState(1);
@@ -45,94 +33,70 @@ export function WorkoutList() {
     }
   }
 
+  const inProgress = query.data?.items.find((item) => item.estado === 'EN_PROGRESO');
+
   return (
-    <div className="grid gap-8">
+    // «Entrenos» del móvil (`app/(app)/workouts/index.tsx`): cabecera con el
+    // total, las dos exportaciones en fantasma, UNA acción principal que cambia
+    // con el contexto y la lista de sesiones.
+    <div className="mx-auto grid w-full max-w-[560px] gap-6 lg:max-w-[760px]">
       <PageHeader
-        actions={
-          <>
-            <span data-tutorial-id="workouts:export" className="inline-flex gap-2">
-              <Button loading={exporting === 'json'} onClick={() => exportHistory('json')}>
-                <FileJson className="size-4" />
-                JSON
-              </Button>
-              <Button loading={exporting === 'csv'} onClick={() => exportHistory('csv')}>
-                <Download className="size-4" />
-                CSV
-              </Button>
-            </span>
-            <span data-tutorial-id="workouts:new">
-              <ButtonLink href="/workouts/new" variant="primary">
-                <Plus className="size-4" />
-                Nueva sesión
-              </ButtonLink>
-            </span>
-          </>
+        description={
+          query.data
+            ? `${query.data.total} ${query.data.total === 1 ? 'sesión registrada' : 'sesiones registradas'}`
+            : 'Tu historial.'
         }
-        description="Historial propio, paginado y exportable sin cargar datos ilimitados en memoria."
-        eyebrow="Trazabilidad"
-        title="Entrenamientos"
+        title="Entrenos"
         tutorialId="page:workouts"
       />
+
+      <div className="grid grid-cols-2 gap-2" data-tutorial-id="workouts:export">
+        <Button loading={exporting === 'json'} onClick={() => exportHistory('json')} size="sm" variant="ghost">
+          <FileJson aria-hidden className="size-4" />
+          {exporting === 'json' ? 'Generando…' : 'Datos en JSON'}
+        </Button>
+        <Button loading={exporting === 'csv'} onClick={() => exportHistory('csv')} size="sm" variant="ghost">
+          <Sheet aria-hidden className="size-4" />
+          {exporting === 'csv' ? 'Generando…' : 'Datos en CSV'}
+        </Button>
+      </div>
+
+      <span className="grid" data-tutorial-id="workouts:new">
+        {inProgress ? (
+          <ButtonLink href={`/workouts/${inProgress.id}`} variant="primary">
+            <CirclePlay aria-hidden className="size-5" />
+            Continuar sesión en curso
+          </ButtonLink>
+        ) : (
+          <ButtonLink href="/workouts/new" variant="primary">
+            <CirclePlus aria-hidden className="size-5" />
+            Empezar entrenamiento
+          </ButtonLink>
+        )}
+      </span>
+
       {query.isLoading ? (
-        <SkeletonList rows={6} variant="stacked" withAvatar={false} />
+        <div className="grid gap-3">
+          <Skeleton className="h-23 rounded-[var(--radius-xl)]" />
+          <Skeleton className="h-23 rounded-[var(--radius-xl)]" />
+          <Skeleton className="h-23 rounded-[var(--radius-xl)]" />
+        </div>
       ) : query.isError ? (
         <ErrorPanel message={query.error.message} onRetry={() => query.refetch()} />
       ) : query.data?.items.length ? (
         <>
-          <section className="grid gap-3">
+          <section aria-label="Sesiones" className="grid gap-3">
             {query.data.items.map((session) => (
-              <Link href={`/workouts/${session.id}`} key={session.id}>
-                <Card className="grid gap-5 p-5 transition-colors hover:border-[var(--border)] hover:bg-[var(--surface-low)] sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(110px,auto))] sm:items-center">
-                  <div>
-                    <p className="font-semibold">{formatDateTime(session.fechaInicio)}</p>
-                    <p className="mt-1 line-clamp-1 text-sm text-[var(--text-muted)]">
-                      {session.observacion ?? 'Sin observación'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="data-label">Duración</p>
-                    <p className="data-value mt-2">
-                      {formatDuration(session.fechaInicio, session.fechaFin)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="data-label">Volumen</p>
-                    <p className="data-value mt-2">
-                      {Math.round(sessionVolume(session)).toLocaleString('es-BO')} KG
-                    </p>
-                  </div>
-                  <div className="sm:text-right">
-                    <Badge
-                      tone={
-                        session.estado === 'FINALIZADA'
-                          ? 'success'
-                          : session.estado === 'CANCELADA'
-                            ? 'danger'
-                            : 'warning'
-                      }
-                    >
-                      {session.estado}
-                    </Badge>
-                  </div>
-                </Card>
-              </Link>
+              <SessionRow key={session.id} session={session} />
             ))}
           </section>
-          <Pagination
-            onPageChange={setPage}
-            page={query.data.page}
-            totalPages={query.data.totalPages}
-          />
+          <Pagination onPageChange={setPage} page={query.data.page} totalPages={query.data.totalPages} />
         </>
       ) : (
         <EmptyState
-          action={
-            <ButtonLink href="/workouts/new" variant="primary">
-              Iniciar primera sesión
-            </ButtonLink>
-          }
-          description="Tu historial aparecerá aquí después de iniciar una sesión."
-          title="Sin entrenamientos registrados"
+          description="Cuando registres una sesión, quedará aquí con sus series y cargas."
+          icon={<Flame />}
+          title="Todavía sin entrenos"
         />
       )}
     </div>

@@ -450,19 +450,8 @@ export function sessionClock(startIso: string, now: number = Date.now()): string
   return hours > 0 ? `${hours}:${String(minutes).padStart(2, '0')}:${seconds}` : `${minutes}:${seconds}`;
 }
 
-/**
- * Título de la sesión a partir de su nota. Al empezar desde una rutina la nota
- * es «Plan: <rutina> · <día>»: el día es el título y la rutina, el apoyo.
- * Una nota escrita a mano o vacía no da título (se usa «Entrenamiento»).
- */
-export function sessionTitle(observacion: string | null | undefined): { title: string; subtitle: string | null } {
-  const note = observacion?.trim() ?? '';
-  const plan = /^Plan:\s*(.+)$/u.exec(note);
-  if (!plan?.[1]) return { title: 'Entrenamiento', subtitle: null };
-  const parts = plan[1].split(' · ').map((part) => part.trim()).filter(Boolean);
-  if (parts.length < 2) return { title: parts[0] ?? 'Entrenamiento', subtitle: null };
-  return { title: parts[parts.length - 1] ?? 'Entrenamiento', subtitle: parts.slice(0, -1).join(' · ') };
-}
+/** Título de la sesión a partir de su nota: vive en `@gymsheet/domain`, compartido con la web. */
+export { sessionTitle } from '@gymsheet/domain';
 
 /**
  * El peso con el que abre una serie: el de la última serie de hoy, si no la
