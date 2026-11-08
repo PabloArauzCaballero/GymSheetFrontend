@@ -10,7 +10,7 @@ import { accentPolicy, fontSizes, iconSizes, minTouchTarget, semibold, spacing }
  * works for everyone — including screen reader users, for whom a swipe-only
  * path is no path at all.
  */
-export function BackLink({ label = 'Volver', fallbackHref = '/home' }: { label?: string; fallbackHref?: Href }) {
+export function BackLink({ label = 'Volver', fallbackHref = '/comunidad-mensajes' }: { label?: string; fallbackHref?: Href }) {
   const router = useRouter();
   // `router.replace` hacia una pantalla de otro navegador (abrir un entreno
   // desde una rutina o desde cardio) reemplaza la pila entera de pestañas: la

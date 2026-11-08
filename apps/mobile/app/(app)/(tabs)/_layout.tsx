@@ -27,9 +27,10 @@ import { accentContrast, alpha, colors, fontSizes, iconSizes, semibold } from '@
 
 /** Outline when resting, filled when active — the platform convention. */
 const ICONS = {
-  home: ['home-outline', 'home'],
-  routines: ['albums-outline', 'albums'],
+  mensajes: ['chatbubbles-outline', 'chatbubbles'],
   comunidad: ['people-outline', 'people'],
+  marketplace: ['storefront-outline', 'storefront'],
+  routines: ['albums-outline', 'albums'],
   profile: ['person-outline', 'person'],
 } as const satisfies Record<
   string,
@@ -165,7 +166,15 @@ function TabBarWithWorkout(props: BottomTabBarProps) {
 }
 
 /**
- * Four destinations (Inicio · Rutinas · Comunidad · Perfil). Settings is reachable from Profile instead of taking a
+ * Cinco destinos, en este orden por pedido de Pablo (08/11/2026):
+ * Mensajes (historias y chats) · Comunidad · Marketplace · Rutinas · Perfil.
+ * Inicio salió de la barra y vive en la pila padre (`../home.tsx`); la app
+ * abre en Mensajes. Mensajes y Marketplace eran pantallas de la pila
+ * (`comunidad-mensajes`, `directorio`) y se movieron a esta carpeta: un
+ * `Tabs.Screen` tiene que resolver a un archivo de aquí. Las URLs no cambian
+ * porque los grupos no aparecen en la ruta.
+ *
+ * Antes: Inicio · Rutinas · Comunidad · Perfil. Settings is reachable from Profile instead of taking a
  * slot of its own — it is visited rarely and belongs to the account.
  *
  * Comunidad used to be a stack sibling reached only through a NavRow buried
@@ -227,7 +236,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.accentInk,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontSize: fontSizes.xs, fontWeight: semibold },
-        // Cuatro pestañas desde C4 (antes cinco, no seis). Cinco es el techo que este proyecto ya se había
+        // Cinco pestañas desde el 08/11/2026 (en C4 eran cuatro; antes cinco, no seis). Cinco es el techo que este proyecto ya se había
         // fijado —«cinco es el techo de una barra inferior antes de que las
         // etiquetas empiecen a truncarse», en `(app)/_layout.tsx`— y la regla
         // por la que Trayectoria y Descubrir viven en el stack y no aquí.
@@ -263,15 +272,10 @@ export default function TabsLayout() {
         tabBarBackground: TabBarBackground,
       }}
     >
-      <Tabs.Screen name="home" options={{ title: 'Inicio', tabBarIcon: tabIcon('home') }} />
       <Tabs.Screen
-        name="routines"
-        options={{ title: 'Rutinas', tabBarIcon: tabIcon('routines') }}
+        name="comunidad-mensajes"
+        options={{ title: 'Mensajes', tabBarIcon: tabIcon('mensajes') }}
       />
-      {/* Ejercicios dejó de ser pestaña (C4): el catálogo es una herramienta
-          para armar rutinas, no un destino diario. Vive en la pila hermana
-          `../ejercicios/` y se abre desde Rutinas («Explorar ejercicios») y
-          desde Perfil («Mis ejercicios y favoritos»). Cuatro pestañas. */}
       <Tabs.Screen
         name="comunidad"
         options={{
@@ -301,6 +305,14 @@ export default function TabsLayout() {
           },
           tabBarIcon: tabIcon('comunidad'),
         }}
+      />
+      <Tabs.Screen
+        name="directorio"
+        options={{ title: 'Marketplace', tabBarIcon: tabIcon('marketplace') }}
+      />
+      <Tabs.Screen
+        name="routines"
+        options={{ title: 'Rutinas', tabBarIcon: tabIcon('routines') }}
       />
       <Tabs.Screen name="profile" options={{ title: 'Perfil', tabBarIcon: tabIcon('profile') }} />
     </Tabs>
