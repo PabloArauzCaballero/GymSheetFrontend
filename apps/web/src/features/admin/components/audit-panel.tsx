@@ -152,7 +152,7 @@ export function AuditPanel({
                   pueda recorrerla (axe: scrollable-region-focusable). */}
               <table className="w-full min-w-[760px] text-sm">
                 <thead>
-                  <tr className="border-b border-[var(--border-subtle)] text-left text-xs uppercase tracking-wide text-[var(--text-muted)]">
+                  <tr className="border-b border-[var(--border-subtle)] text-left text-xs text-[var(--text-muted)]">
                     <th className="px-5 py-3 font-semibold">Cuándo</th>
                     <th className="px-5 py-3 font-semibold">Quién</th>
                     <th className="px-5 py-3 font-semibold">Qué hizo</th>

@@ -4,7 +4,7 @@ import { cn } from '@/shared/lib/cn';
 type Tone = 'neutral' | 'success' | 'warning' | 'danger' | 'info';
 
 const toneClasses: Record<Tone, string> = {
-  neutral: 'border-[var(--border)] text-[var(--text-muted)]',
+  neutral: 'border-[var(--surface-highest)] bg-[var(--surface-highest)] text-[var(--text)]/80',
   success: 'border-[var(--success-border)] bg-[var(--success-bg)] text-[var(--success-text)]',
   warning: 'border-[var(--warning-border)] bg-[var(--warning-bg)] text-[var(--warning-text)]',
   danger: 'border-[var(--danger-border)] bg-[var(--danger-bg)] text-[var(--danger-text)]',
@@ -33,12 +33,13 @@ export function Badge({
   children,
   tone = 'neutral',
   className,
-  latido = true,
+  latido = false,
 }: Readonly<{ children: ReactNode; tone?: Tone; className?: string; latido?: boolean }>) {
   return (
     <span
       className={cn(
-        'inline-flex min-h-6 items-center rounded-[var(--radius-sm)] border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em]',
+        // Chip del móvil (`Badge`): cápsula, 12/600, sin versalita.
+        'inline-flex min-h-6 items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold',
         toneClasses[tone],
         latido ? HEARTBEAT : null,
         className,

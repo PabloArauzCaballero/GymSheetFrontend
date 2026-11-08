@@ -20,9 +20,9 @@ describe('buildThemeCss', () => {
   });
 
   it('conserva los valores de la paleta tal cual', () => {
-    expect(css).toContain('--background: #000000');
-    expect(css).toContain('--volt: #c3f400');
-    expect(css).toContain('--shadow-lg: 0 40px 120px -40px rgb(0 0 0 / 0.9)');
+    expect(css).toContain('--background: #0F172A');
+    expect(css).toContain('--volt: #2E8B7B');
+    expect(css).toContain('--shadow-lg: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 18px 40px -12px rgb(0 0 0 / 0.7)');
   });
 
   it('declara el esquema de color de cada modo', () => {
@@ -32,7 +32,7 @@ describe('buildThemeCss', () => {
 
   // Sin canales, cada opacidad distinta del acento necesitaría su variable.
   it('descompone en canales los colores que se componen con alfa', () => {
-    expect(css).toContain('--accent-channels: 195 244 0');
+    expect(css).toContain('--accent-channels: 46 139 123');
     expect(css).toContain('--scrim-channels: 0 0 0');
     expect(css).toContain('--sheen-channels: 255 255 255');
   });

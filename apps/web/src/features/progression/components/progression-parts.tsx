@@ -47,7 +47,7 @@ export function RankHero({
           />
         </span>
         <div className="grid min-w-0 gap-0.5">
-          <span className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
+          <span className="text-xs text-[var(--text-muted)]">
             Tu rango
           </span>
           <span className="text-2xl font-semibold tracking-[-0.02em] text-[var(--text)]">

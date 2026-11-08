@@ -22,7 +22,9 @@ export function Tabs({ className, ...props }: ComponentProps<typeof TabsPrimitiv
 export function TabsList({ className, ...props }: ComponentProps<typeof TabsPrimitive.List>) {
   return (
     <TabsPrimitive.List
-      className={cn('flex gap-1 overflow-x-auto border-b border-[var(--border-subtle)]', className)}
+      className={cn(// Píldora segmentada del móvil (`SegmentedPill`): carril `surfaceLow`,
+        // opción activa en `surfaceHighest`, sin subrayado de acento.
+        'nav-scroll inline-flex max-w-full gap-1 overflow-x-auto rounded-full bg-[var(--surface-low)] p-1 shadow-[var(--shadow-sm)]', className)}
       {...props}
     />
   );
@@ -32,9 +34,7 @@ export function TabsTrigger({ className, ...props }: ComponentProps<typeof TabsP
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        'group/tab relative min-h-11 shrink-0 px-4 text-sm font-medium text-[var(--text-muted)] transition-colors duration-[var(--dur-2)] hover:text-[var(--text)] data-[state=active]:font-semibold data-[state=active]:text-[var(--text)]',
-        'after:absolute after:inset-x-2 after:bottom-0 after:h-[2px] after:origin-left after:scale-x-0 after:rounded-full after:bg-[var(--volt)] after:transition-transform after:duration-[var(--dur-3)] after:ease-[var(--ease-out)] after:content-[""]',
-        'data-[state=active]:after:scale-x-100',
+        'group/tab relative min-h-10 shrink-0 rounded-full px-4 text-[15px] font-semibold text-[var(--text-muted)] transition-[background-color,color] duration-[var(--dur-2)] ease-[var(--ease-out)] hover:text-[var(--text)] data-[state=active]:bg-[var(--surface-highest)] data-[state=active]:text-[var(--text)] data-[state=active]:shadow-[0_2px_8px_rgb(0_0_0/0.25)]',
         className,
       )}
       {...props}

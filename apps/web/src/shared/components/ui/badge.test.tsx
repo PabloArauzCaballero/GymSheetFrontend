@@ -3,29 +3,25 @@ import { describe, expect, it } from 'vitest';
 import { Badge } from './badge';
 
 /**
- * El latido es una decisión de producto («los chips laten en toda la
- * aplicación»), no un detalle de esta pantalla, así que vive en el componente
- * compartido. Esto lo fija: si alguien lo quita de aquí para llevárselo a las
- * pantallas una por una, la regla deja de ser cierta en silencio.
+ * El chip sigue al `Badge` del móvil: quieto por defecto. «Nada se mueve solo»
+ * (repp-diseno §7): el latido solo se enciende con una causa explícita.
  */
 describe('Badge', () => {
-  it('late por defecto, y solo con movimiento permitido', () => {
+  it('está quieto por defecto, como en el móvil', () => {
     const view = within(render(<Badge>Activa</Badge>).container);
-    const chip = view.getByText('Activa');
+    expect(view.getByText('Activa').className).not.toContain('chip-heartbeat');
+  });
+
+  it('late solo si se pide, y solo con movimiento permitido', () => {
+    const view = within(render(<Badge latido>Nueva</Badge>).container);
+    const chip = view.getByText('Nueva');
     expect(chip.className).toContain('motion-safe:animate-[chip-heartbeat');
     // Sin `origin-center` el chip escala desde una esquina y cabecea.
     expect(chip.className).toContain('origin-center');
   });
 
-  it('se puede callar donde ya hay movimiento alrededor', () => {
-    const view = within(render(<Badge latido={false}>Quieta</Badge>).container);
-    expect(view.getByText('Quieta').className).not.toContain('chip-heartbeat');
-  });
-
   it('conserva las clases propias de quien lo usa', () => {
     const view = within(render(<Badge className="w-full">Ancha</Badge>).container);
-    const chip = view.getByText('Ancha');
-    expect(chip.className).toContain('w-full');
-    expect(chip.className).toContain('chip-heartbeat');
+    expect(view.getByText('Ancha').className).toContain('w-full');
   });
 });

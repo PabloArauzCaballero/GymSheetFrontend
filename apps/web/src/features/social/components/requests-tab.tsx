@@ -66,7 +66,7 @@ export function RequestsTab() {
     <div className="grid gap-8">
       {received.length ? (
         <section className="grid gap-3">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
+          <h3 className="text-sm font-semibold text-[var(--text-muted)]">
             Te escribieron
           </h3>
           {received.map((connection) => (
@@ -82,7 +82,7 @@ export function RequestsTab() {
       ) : null}
       {sent.length ? (
         <section className="grid gap-3">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
+          <h3 className="text-sm font-semibold text-[var(--text-muted)]">
             Enviadas
           </h3>
           {sent.map((connection) => (

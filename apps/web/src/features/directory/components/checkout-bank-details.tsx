@@ -19,14 +19,14 @@ export function CheckoutBankDetails({
 
   return (
     <>
-      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
+      <div className="p-4 rounded-2xl bg-[color-mix(in_srgb,var(--volt)_12%,transparent)] border border-[color-mix(in_srgb,var(--volt)_20%,transparent)] flex items-center justify-between">
         <div>
-          <span className="text-xs text-amber-700 dark:text-amber-400 font-semibold block">Total a transferir</span>
-          <span className="text-2xl font-black text-neutral-900 dark:text-white">
+          <span className="text-xs text-[var(--accent-ink)] font-semibold block">Total a transferir</span>
+          <span className="text-2xl font-display font-bold text-[var(--text)]">
             {plan.currentPrice} {plan.currency}
           </span>
         </div>
-        <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-neutral-950">
+        <span className="px-3 py-1 rounded-full text-xs font-bold bg-[var(--volt)] text-[var(--accent-contrast)]">
           Tarifa Oficial
         </span>
       </div>
@@ -34,8 +34,8 @@ export function CheckoutBankDetails({
       {paymentConfig ? (
         <div className="space-y-4">
           {/* QR Display */}
-          <div className="flex flex-col items-center justify-center p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50">
-            <div className="w-48 h-48 rounded-2xl bg-white p-3 shadow-md flex items-center justify-center overflow-hidden">
+          <div className="flex flex-col items-center justify-center p-6 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-high)]">
+            <div className="w-48 h-48 rounded-2xl bg-[var(--surface-low)] p-3 shadow-md flex items-center justify-center overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={paymentConfig.qrImageUrl}
@@ -43,31 +43,31 @@ export function CheckoutBankDetails({
                 className="w-full h-full object-contain"
               />
             </div>
-            <span className="text-xs text-neutral-500 dark:text-neutral-400 mt-3 font-medium">
+            <span className="text-xs text-[var(--text-muted)] mt-3 font-medium">
               Escanea este código desde la app de tu banco
             </span>
           </div>
 
           {/* Datos Bancarios Copiables */}
-          <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 p-4 space-y-3 text-xs">
-            <div className="flex justify-between items-center py-1 border-b border-neutral-100 dark:border-neutral-800/60">
-              <span className="text-neutral-500">Banco:</span>
-              <span className="font-bold text-neutral-900 dark:text-white">{paymentConfig.bankName}</span>
+          <div className="rounded-2xl border border-[var(--border-subtle)] p-4 space-y-3 text-xs">
+            <div className="flex justify-between items-center py-1 border-b border-[var(--border-subtle)]">
+              <span className="text-[var(--text-muted)]">Banco:</span>
+              <span className="font-bold text-[var(--text)]">{paymentConfig.bankName}</span>
             </div>
 
-            <div className="flex justify-between items-center py-1 border-b border-neutral-100 dark:border-neutral-800/60">
-              <span className="text-neutral-500">Titular:</span>
-              <span className="font-semibold text-neutral-900 dark:text-white">{paymentConfig.accountHolderName}</span>
+            <div className="flex justify-between items-center py-1 border-b border-[var(--border-subtle)]">
+              <span className="text-[var(--text-muted)]">Titular:</span>
+              <span className="font-semibold text-[var(--text)]">{paymentConfig.accountHolderName}</span>
             </div>
 
-            <div className="flex justify-between items-center py-1 border-b border-neutral-100 dark:border-neutral-800/60">
-              <span className="text-neutral-500">N° de Cuenta:</span>
+            <div className="flex justify-between items-center py-1 border-b border-[var(--border-subtle)]">
+              <span className="text-[var(--text-muted)]">N° de Cuenta:</span>
               <div className="flex items-center gap-2">
-                <span className="font-mono font-bold text-neutral-900 dark:text-white">{paymentConfig.accountNumber}</span>
+                <span className="font-mono font-bold text-[var(--text)]">{paymentConfig.accountNumber}</span>
                 <button
                   type="button"
                   onClick={() => copyToClipboard(paymentConfig.accountNumber, 'acc')}
-                  className="text-[10px] px-2 py-0.5 rounded bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-amber-500 hover:text-black transition-colors"
+                  className="text-[10px] px-2 py-0.5 rounded bg-[var(--surface-highest)] text-[var(--text-muted)] hover:bg-[var(--volt)] hover:text-[var(--text)] transition-colors"
                 >
                   {copiedKey === 'acc' ? '¡Copiado!' : 'Copiar'}
                 </button>
@@ -75,21 +75,21 @@ export function CheckoutBankDetails({
             </div>
 
             {paymentConfig.taxId && (
-              <div className="flex justify-between items-center py-1 border-b border-neutral-100 dark:border-neutral-800/60">
-                <span className="text-neutral-500">NIT / CI / Tax ID:</span>
-                <span className="font-mono text-neutral-900 dark:text-white">{paymentConfig.taxId}</span>
+              <div className="flex justify-between items-center py-1 border-b border-[var(--border-subtle)]">
+                <span className="text-[var(--text-muted)]">NIT / CI / Tax ID:</span>
+                <span className="font-mono text-[var(--text)]">{paymentConfig.taxId}</span>
               </div>
             )}
 
             {paymentConfig.aliasOrPhone && (
-              <div className="flex justify-between items-center py-1 border-b border-neutral-100 dark:border-neutral-800/60">
-                <span className="text-neutral-500">Alias / Móvil:</span>
+              <div className="flex justify-between items-center py-1 border-b border-[var(--border-subtle)]">
+                <span className="text-[var(--text-muted)]">Alias / Móvil:</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-neutral-900 dark:text-white">{paymentConfig.aliasOrPhone}</span>
+                  <span className="font-semibold text-[var(--text)]">{paymentConfig.aliasOrPhone}</span>
                   <button
                     type="button"
                     onClick={() => copyToClipboard(paymentConfig.aliasOrPhone ?? '', 'alias')}
-                    className="text-[10px] px-2 py-0.5 rounded bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-amber-500 hover:text-black transition-colors"
+                    className="text-[10px] px-2 py-0.5 rounded bg-[var(--surface-highest)] text-[var(--text-muted)] hover:bg-[var(--volt)] hover:text-[var(--text)] transition-colors"
                   >
                     {copiedKey === 'alias' ? '¡Copiado!' : 'Copiar'}
                   </button>
@@ -98,7 +98,7 @@ export function CheckoutBankDetails({
             )}
 
             {paymentConfig.instructions && (
-              <div className="pt-2 text-neutral-600 dark:text-neutral-400">
+              <div className="pt-2 text-[var(--text-muted)]">
                 <span className="font-semibold block mb-0.5">Instrucciones del oferente:</span>
                 <p className="leading-relaxed">{paymentConfig.instructions}</p>
               </div>
@@ -106,7 +106,7 @@ export function CheckoutBankDetails({
           </div>
         </div>
       ) : (
-        <div className="p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/40 text-xs text-neutral-600 dark:text-neutral-300 space-y-2">
+        <div className="p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-high)] text-xs text-[var(--text-muted)] space-y-2">
           <p>
             El comercio aún no ha subido un QR automático, pero puedes generar tu orden de compra oficial para coordinar el pago.
           </p>

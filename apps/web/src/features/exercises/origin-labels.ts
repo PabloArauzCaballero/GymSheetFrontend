@@ -13,7 +13,7 @@ export function exerciseOriginLabel(dataSource: string | null | undefined): stri
     case 'EXERCISES_DATASET':
       return 'Base de datos pública de ejercicios';
     case 'CUSTOM':
-      return 'Creado en GymSheet';
+      return 'Creado en REPP';
     default:
       return null;
   }

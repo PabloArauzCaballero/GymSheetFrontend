@@ -123,7 +123,7 @@ export function SessionSummary({
           <DialogPrimitive.Content className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-[var(--surface-lowest)] outline-none">
             <div className="mx-auto grid min-h-full w-full max-w-md content-center gap-8 px-4 pb-[max(3rem,env(safe-area-inset-bottom))] pt-[max(3rem,env(safe-area-inset-top))]">
               <header className="grid gap-2 text-center">
-                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent-ink)]">
+                <span className="text-xs font-semibold text-[var(--accent-ink)]">
                   Buen trabajo
                 </span>
                 <DialogPrimitive.Title className="text-balance text-3xl font-semibold tracking-[-0.02em] text-[var(--text)]">

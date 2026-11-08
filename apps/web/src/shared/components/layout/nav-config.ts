@@ -11,6 +11,7 @@ import {
   Film,
   Gauge,
   GraduationCap,
+  House,
   IdCard,
   KeyRound,
   MessageCircle,
@@ -48,7 +49,8 @@ export type NavigationItem = {
 };
 
 export const primaryNavigation: NavigationItem[] = [
-  { href: '/dashboard', label: 'Panel', icon: Gauge },
+  // «Inicio», como la primera pestaña del móvil.
+  { href: '/dashboard', label: 'Inicio', icon: House },
   // Justo debajo del panel: es la pantalla que responde «¿me estoy acercando a
   // como quiero verme?», y enterrarla al final de la lista la convertiría en
   // una sección que nadie visita.
@@ -277,3 +279,4 @@ export function navigationFor(
   }
   return [{ items: visible(primaryNavigation) }];
 }
+

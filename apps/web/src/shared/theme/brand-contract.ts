@@ -61,12 +61,17 @@ export const fontVariableByKey: Record<BrandFontKey, string> = {
   system: 'var(--font-system)',
 };
 
+/**
+ * Identidad de referencia: REPP, como el móvil (`gymsheetTenant`). El cuerpo va
+ * en la pila del sistema —el móvil usa la del sistema para respetar Dynamic
+ * Type— y los títulos en la display propia (`--font-display`).
+ */
 export const defaultBrand: TenantBrand = {
-  name: 'GymSheet',
-  wordmark: 'GYMSHEET',
-  monogram: 'GS',
+  name: 'REPP',
+  wordmark: 'REPP',
+  monogram: 'R',
   icon: 'dumbbell',
-  font: 'hanken',
+  font: 'system',
 };
 
 /**

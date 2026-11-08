@@ -20,9 +20,11 @@ export function ChoiceChip({
     <button
       aria-pressed={selected}
       className={cn(
-        'inline-flex min-h-11 min-w-11 items-center justify-center rounded-[var(--radius-md)] border px-4 text-sm font-semibold transition-[background-color,border-color,color,transform] duration-[var(--dur-1)] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--volt)]',
+        'inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border px-4 text-[15px] font-semibold transition-[background-color,border-color,color,transform] duration-[var(--dur-1)] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--volt)]',
         selected
-          ? 'border-[var(--volt)] bg-[var(--volt)] text-[var(--accent-contrast)]'
+          ? // Chip de filtro del móvil: seleccionado en blanco sobre navy, nunca
+            // en acento (repp-diseno §2: «nunca volt en chips de filtro»).
+            'border-[var(--text)] bg-[var(--text)] text-[var(--background)]'
           : 'border-[var(--border)] bg-[var(--surface-low)] text-[var(--text)] hover:bg-[var(--surface)]',
         className,
       )}

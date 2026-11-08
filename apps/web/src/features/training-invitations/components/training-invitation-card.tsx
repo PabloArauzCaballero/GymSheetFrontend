@@ -202,7 +202,7 @@ export function InvitationCard({
             Descargar calendario (.ics)
           </Button>
           <p className="text-xs leading-5 text-[var(--text-muted)]">
-            La agenda de GymSheet funciona sin permiso de calendario. Para usar otra app, importa
+            La agenda de REPP funciona sin permiso de calendario. Para usar otra app, importa
             este archivo manualmente. Si lo vuelves a importar, tu app puede ofrecer actualizar el
             evento existente; revisa su aviso antes de guardar.
           </p>

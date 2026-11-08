@@ -1,5 +1,22 @@
 # Estado — registro de sesión
 
+## 2026-11-08 — rediseño web con la identidad visual del móvil
+
+- **Causa raíz**: la web seguía pintando la identidad anterior (negro `#000` + lima `#c3f400`,
+  `default-palette.ts`) mientras el móvil usa REPP (navy `#0F172A` + jade `#2E8B7B`,
+  `apps/mobile/src/theme/palette.ts`). `themeFromCatalog` devolvía esa paleta para REPP.
+- **Hecho**: paleta, elevación (e1/e2/card), radios (6/8/12/16/20/24), display Bricolage
+  Grotesque, isotipo REPP (`packages/design-tokens/src/repp-mark.ts`), botones/campos/chips/
+  pestañas/diálogos como las primitivas del móvil, barra de pestañas inferior + hoja «Más»,
+  login como `AuthShell`, Inicio con «Hola, {nombre}», marketplace sin paletas ajenas
+  (neutral/amber → tokens), sin versalitas en etiquetas, «REPP» en vez de «GymSheet» escrito a mano.
+- **Garantía**: `apps/web/src/shared/theme/mobile-parity.test.ts` compara la web con los
+  archivos del tema del móvil (superficies, texto, acento, sombras, radios, isotipo, marca).
+- **Verificado**: `yarn turbo run source-check type-check lint test --filter=!@gymsheet/mobile`
+  28/28; `yarn workspace @gymsheet/web build` OK; `yarn workspace @gymsheet/mobile type-check` OK.
+  Capturas con un backend de maqueta local (no commiteado). **No** se ejecutó E2E (sin backend
+  ni PostgreSQL); se actualizaron `e2e/auth.spec.ts` y `e2e/tutorials.spec.ts` a los textos nuevos.
+
 ## 2026-09-23 — cierre de la sesión
 
 - **Entrega escrita en `ENTREGA.md`** (fase 11): qué cambió, qué se verificó, qué no se hizo y

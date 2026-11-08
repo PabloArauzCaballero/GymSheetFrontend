@@ -31,22 +31,22 @@ export function DialogContent({
       <div className="pointer-events-none fixed inset-0 z-50 grid place-items-center p-4">
         <DialogPrimitive.Content
           className={cn(
-            'dialog-panel pointer-events-auto relative max-h-[90dvh] w-full max-w-xl overflow-y-auto rounded-[8px] border border-[var(--border)] bg-[var(--surface-lowest)] p-6 shadow-[var(--shadow-dialog)]',
+            'dialog-panel pointer-events-auto relative max-h-[90dvh] w-full max-w-xl overflow-y-auto rounded-[var(--radius-2xl)] border border-transparent bg-[var(--surface-high)] p-6 shadow-[var(--shadow-dialog)]',
             className,
           )}
         >
-          <DialogPrimitive.Title className="pr-10 text-xl font-semibold tracking-[-0.02em]">
+          <DialogPrimitive.Title className="title-text pr-12">
             {title}
           </DialogPrimitive.Title>
           {description ? (
-            <DialogPrimitive.Description className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+            <DialogPrimitive.Description className="mt-2 text-[15px] leading-5 text-[var(--text-muted)]">
               {description}
             </DialogPrimitive.Description>
           ) : null}
           <div className="mt-6">{children}</div>
           <DialogPrimitive.Close
             aria-label="Cerrar"
-            className="absolute right-4 top-4 grid size-9 place-items-center rounded-[4px] border border-transparent text-[var(--text-muted)] hover:border-[var(--border)] hover:text-[var(--text)]"
+            className="absolute right-3 top-3 grid size-11 place-items-center rounded-full bg-[var(--surface-highest)] text-[var(--text)] transition-colors duration-[var(--dur-2)] hover:bg-[var(--border)]"
           >
             <X className="size-4" />
           </DialogPrimitive.Close>

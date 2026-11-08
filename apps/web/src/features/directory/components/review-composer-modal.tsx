@@ -78,22 +78,22 @@ function ReviewComposerForm({
   };
 
   return (
-    <div className="relative w-full max-w-lg rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 md:p-8 space-y-6">
+    <div className="relative w-full max-w-lg rounded-3xl bg-[var(--surface-low)] border border-[var(--border-subtle)] shadow-2xl p-6 md:p-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-neutral-100 dark:border-neutral-800">
+      <div className="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)]">
         <div>
-          <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
+          <h3 className="text-lg font-bold text-[var(--text)]">
             {existingReview ? 'Editar tu reseña' : 'Escribir una reseña'}
           </h3>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-            Para <span className="font-semibold text-neutral-800 dark:text-neutral-200">{entityName}</span>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">
+            Para <span className="font-semibold text-[var(--text)]">{entityName}</span>
           </p>
         </div>
 
         <button
           type="button"
           onClick={onClose}
-          className="p-2 rounded-full text-neutral-400 hover:text-neutral-700 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+          className="p-2 rounded-full text-[var(--text-muted)] hover:text-[var(--text-muted)] hover:bg-[var(--surface-high)] transition-colors"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -103,7 +103,7 @@ function ReviewComposerForm({
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Selector de Estrellas Interactivo */}
-        <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800">
+        <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-[var(--surface-high)] border border-[var(--border-subtle)]">
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -117,8 +117,8 @@ function ReviewComposerForm({
                 <svg
                   className={`w-8 h-8 transition-colors ${
                     star <= currentScore
-                      ? 'fill-amber-400 text-amber-400'
-                      : 'text-neutral-300 dark:text-neutral-700 fill-current'
+                      ? 'fill-[var(--warning)] text-[var(--warning)]'
+                      : 'text-[var(--text-muted)] fill-current'
                   }`}
                   viewBox="0 0 20 20"
                 >
@@ -127,14 +127,14 @@ function ReviewComposerForm({
               </button>
             ))}
           </div>
-          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 mt-2">
+          <span className="text-xs font-semibold text-[var(--accent-ink)] mt-2">
             {RATING_LABELS[currentScore]}
           </span>
         </div>
 
         {/* Título */}
         <div className="space-y-1.5">
-          <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+          <label className="block text-xs font-semibold text-[var(--text-muted)]">
             Título
           </label>
           <input
@@ -143,7 +143,7 @@ function ReviewComposerForm({
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Resume tu experiencia en pocas palabras..."
             maxLength={120}
-            className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-neutral-400"
+            className="w-full px-4 py-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--volt)_22%,transparent)] focus:border-[var(--volt)] transition-all placeholder:text-[var(--text-muted)]"
             required
           />
         </div>
@@ -151,10 +151,10 @@ function ReviewComposerForm({
         {/* Comentario */}
         <div className="space-y-1.5">
           <div className="flex justify-between items-center text-xs">
-            <label className="font-semibold text-neutral-700 dark:text-neutral-300">
+            <label className="font-semibold text-[var(--text-muted)]">
               Reseña
             </label>
-            <span className="text-neutral-400 tabular-nums">
+            <span className="text-[var(--text-muted)] tabular-nums">
               {body.length} / 2000
             </span>
           </div>
@@ -164,31 +164,31 @@ function ReviewComposerForm({
             rows={4}
             placeholder="Cuenta qué tal fue la atención, los productos, la calidad del equipamiento o las instalaciones..."
             maxLength={2000}
-            className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-neutral-400 resize-none"
+            className="w-full px-4 py-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--volt)_22%,transparent)] focus:border-[var(--volt)] transition-all placeholder:text-[var(--text-muted)] resize-none"
             required
           />
         </div>
 
         {error && (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400">
+          <div className="p-3 rounded-xl bg-[var(--danger-bg)] border border-[var(--danger-border)] text-xs text-[var(--danger-text)]">
             {error}
           </div>
         )}
 
         {/* Footer Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-neutral-100 dark:border-neutral-800">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[var(--border-subtle)]">
           <button
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 text-xs font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
+            className="px-4 py-2 text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2.5 rounded-full text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-neutral-950 transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+            className="px-6 py-2.5 rounded-full text-xs font-semibold bg-[var(--volt)] hover:bg-[var(--volt)] text-[var(--accent-contrast)] transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
           >
             {loading ? 'Publicando...' : existingReview ? 'Guardar cambios' : 'Publicar reseña'}
           </button>
@@ -202,7 +202,7 @@ export function ReviewComposerModal(props: ReviewComposerModalProps) {
   if (!props.isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--overlay)] backdrop-blur-sm animate-in fade-in duration-200">
       <ReviewComposerForm
         key={`${props.entityId}-${props.existingReview?.id ?? 'new'}`}
         {...props}

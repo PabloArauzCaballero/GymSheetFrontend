@@ -10,8 +10,13 @@ import {
 import { Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/shared/lib/cn';
 
-const fieldClasses =
-  'h-11 w-full rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-low)] px-3 text-base text-[var(--text)] placeholder:text-[var(--text-disabled)] transition-[border-color,background-color,box-shadow] duration-[var(--dur-2)] hover:border-[var(--border)] focus:border-[var(--volt)] focus:bg-[var(--surface)] focus:shadow-[0_0_0_3px_rgb(var(--accent-channels)/0.14)] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm';
+/**
+ * Campo del móvil (`Input`): alto 48, radio 12, relleno `surface`, borde
+ * `border` en reposo y jade con foco, texto 17 y marcador `textMuted` (el
+ * marcador es una instrucción, no un adorno: debe cumplir AA).
+ */
+export const fieldClasses =
+  'h-12 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-4 text-[17px] text-[var(--text)] placeholder:text-[var(--text-muted)] transition-[border-color,background-color,box-shadow] duration-[var(--dur-2)] hover:border-[var(--text-disabled)] focus:border-[var(--volt)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--volt)_22%,transparent)] focus:outline-none aria-[invalid=true]:border-[var(--danger)] disabled:cursor-not-allowed disabled:opacity-50';
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   function Input({ className, ...props }, ref) {
@@ -40,11 +45,11 @@ export const InputWithIcon = forwardRef<
     <span className="group relative block">
       <span
         aria-hidden
-        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-disabled)] transition-colors duration-[var(--dur-2)] group-focus-within:text-[var(--accent-ink)]"
+        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-disabled)] transition-colors duration-[var(--dur-2)] group-focus-within:text-[var(--accent-ink)]"
       >
         {icon}
       </span>
-      <input ref={ref} className={cn(fieldClasses, 'pl-[2.6rem]', className)} {...props} />
+      <input ref={ref} className={cn(fieldClasses, 'pl-11', className)} {...props} />
     </span>
   );
 });
@@ -87,14 +92,14 @@ export const PasswordInput = forwardRef<
       {icon ? (
         <span
           aria-hidden
-          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-disabled)] transition-colors duration-[var(--dur-2)] group-focus-within:text-[var(--accent-ink)]"
+          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-disabled)] transition-colors duration-[var(--dur-2)] group-focus-within:text-[var(--accent-ink)]"
         >
           {icon}
         </span>
       ) : null}
       <input
         ref={ref}
-        className={cn(fieldClasses, 'pr-11', icon ? 'pl-[2.6rem]' : undefined, className)}
+        className={cn(fieldClasses, 'pr-12', icon ? 'pl-11' : undefined, className)}
         id={inputId}
         type={visible ? 'text' : 'password'}
         {...props}
@@ -112,7 +117,7 @@ export const PasswordInput = forwardRef<
         aria-controls={inputId}
         aria-label={visible ? hideLabel : showLabel}
         aria-pressed={visible}
-        className="absolute right-1 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-[var(--radius-sm)] text-[var(--text-muted)] transition-colors duration-[var(--dur-2)] hover:bg-[var(--surface-high)] hover:text-[var(--text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--volt)]"
+        className="absolute right-1 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full text-[var(--text-muted)] transition-colors duration-[var(--dur-2)] hover:bg-[var(--surface-high)] hover:text-[var(--text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--volt)]"
         onClick={() => setVisible((current) => !current)}
         // Fuera del recorrido de tabulación por teclado no: es alcanzable a
         // propósito. Lo que no debe hacer es enviar el formulario al pulsarlo,

@@ -1,7 +1,8 @@
 import type { CSSProperties } from 'react';
+import { valuePitch } from '@gymsheet/domain';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Activity, ArrowRight, ArrowUpRight, BarChart3, Check, Dumbbell, ShieldCheck, Sparkles, TrendingUp, Users2 } from 'lucide-react';
+import { Activity, ArrowRight, ArrowUpRight, BarChart3, Check, Dumbbell, ShieldCheck, TrendingUp, Users2 } from 'lucide-react';
 import { BranchCard } from '@/features/public-facilities/components/branch-card';
 import { PublicFooter } from '@/features/public-facilities/components/public-footer';
 import { PublicHeader } from '@/features/public-facilities/components/public-header';
@@ -11,7 +12,7 @@ import { Reveal } from '@/shared/components/motion/reveal';
 import { ButtonLink } from '@/shared/components/ui/button';
 
 export const metadata: Metadata = {
-  title: 'GymSheet — Registro de entrenamiento y comunidad de gimnasio',
+  title: 'REPP · La red social de tu gimnasio',
   description:
     'Lleva tu progreso de entrenamiento, conecta con otros socios de tu gimnasio y encuentra la sede más cercana.',
 };
@@ -42,13 +43,13 @@ const PLANS = [
 
 const FAQS = [
   ['¿Necesito pertenecer a un gimnasio asociado?', 'No. Puedes registrar tus entrenamientos desde el primer día. Si tu gimnasio está asociado, también accedes a sus funciones de sede y comunidad.'],
-  ['¿Puedo usar GymSheet mientras entreno?', 'Sí. Los flujos están pensados para registrar una serie en pocos toques, con controles claros y objetivos táctiles amplios.'],
+  ['¿Puedo usar REPP mientras entreno?', 'Sí. Los flujos están pensados para registrar una serie en pocos toques, con controles claros y objetivos táctiles amplios.'],
   ['¿Mis datos están protegidos?', 'La sesión y los permisos se validan en el servidor. Tú decides qué información compartes con la comunidad.'],
 ];
 
 function ProductPreview() {
   return (
-    <div className="relative mx-auto w-full max-w-xl" aria-label="Vista previa de una sesión en GymSheet">
+    <div className="relative mx-auto w-full max-w-xl" aria-label="Vista previa de una sesión en REPP">
       {/* El halo sangraba 32 px por cada lado también en móvil, y a 412 px eso
           empujaba la página 12 px a la derecha: barra de scroll horizontal en la
           portada por un adorno (M-12). Arriba y abajo puede sangrar sin coste; a
@@ -78,9 +79,9 @@ export default async function LandingPage() {
       <main className="flex-1">
         <section className="mx-auto grid max-w-6xl items-center gap-14 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-[0.95fr_1.05fr] lg:py-28">
           <div>
-            <p className="reveal data-label inline-flex items-center gap-2 text-[var(--accent-ink)]"><Sparkles className="size-4" />Tu entrenamiento, por fin conectado</p>
-            <h1 className="reveal display-title text-gradient-volt mt-6 max-w-2xl" style={{ animationDelay: '80ms' } as CSSProperties}>Entrena con precisión. Progresa con propósito.</h1>
-            <p className="reveal mt-6 max-w-xl text-lg leading-8 text-[var(--text-muted)]" style={{ animationDelay: '150ms' } as CSSProperties}>GymSheet convierte cada serie en una historia de progreso y conecta todo lo que vives en tu gimnasio, sin hojas sueltas ni aplicaciones fragmentadas.</p>
+            {/* Mismo mensaje que la ficha de la tienda y la primera pantalla del móvil. */}
+            <h1 className="reveal display-title max-w-2xl" style={{ animationDelay: '80ms' } as CSSProperties}>{valuePitch.headline}</h1>
+            <p className="reveal mt-5 max-w-xl text-[17px] leading-7 text-[var(--text-muted)]" style={{ animationDelay: '150ms' } as CSSProperties}>{valuePitch.subline}</p>
             <div className="reveal mt-8 flex flex-wrap gap-3" style={{ animationDelay: '220ms' } as CSSProperties}><ButtonLink href="/register" size="lg" variant="primary">Empezar gratis <ArrowRight className="size-4" /></ButtonLink><ButtonLink href="#producto" size="lg" variant="secondary">Ver cómo funciona</ButtonLink></div>
             <div className="reveal mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs text-[var(--text-muted)]" style={{ animationDelay: '280ms' } as CSSProperties}>{['Sin tarjeta', 'Listo en minutos', 'Control de tus datos'].map((item) => <span className="inline-flex items-center gap-1.5" key={item}><Check className="size-3.5 text-[var(--accent-ink)]" />{item}</span>)}</div>
           </div>

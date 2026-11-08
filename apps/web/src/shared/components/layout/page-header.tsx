@@ -1,5 +1,10 @@
 import type { ReactNode } from 'react';
 
+/**
+ * Cabecera de pantalla del móvil (`ScreenHeader`): título en la display propia
+ * a 34 (40 en escritorio) y subtítulo `subhead` en tono secundario. Sin raya
+ * inferior: la pantalla se ordena por espacio, como en la app.
+ */
 export function PageHeader({
   eyebrow,
   title,
@@ -17,23 +22,20 @@ export function PageHeader({
   return (
     <header
       data-tutorial-id={tutorialId}
-      className="reveal flex flex-col gap-5 border-b border-[var(--border-subtle)] pb-8 sm:flex-row sm:items-end sm:justify-between"
+      className="reveal flex flex-col gap-5 pb-2 sm:flex-row sm:items-end sm:justify-between"
     >
       {/* `min-w-0` es lo que permite que este bloque se encoja: por defecto un
           elemento flex no baja de su contenido (`min-width: auto`), así que a
           anchuras intermedias —1024px, un portátil cualquiera— el título
           empujaba las acciones fuera de la pantalla y la página entera se
           desplazaba en horizontal. */}
-      <div className="min-w-0 max-w-3xl">
+      <div className="grid min-w-0 max-w-3xl gap-1">
         {eyebrow ? (
-          <p className="data-label mb-3 inline-flex items-center gap-2 text-[var(--text-muted)]">
-            <span aria-hidden className="h-3 w-[3px] rounded-full bg-[var(--volt)]" />
-            {eyebrow}
-          </p>
+          <p className="text-[15px] font-semibold leading-5 text-[var(--accent-ink)]">{eyebrow}</p>
         ) : null}
         <h1 className="display-title">{title}</h1>
         {description ? (
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-muted)] sm:text-base">
+          <p className="mt-1 max-w-2xl text-[15px] leading-5 text-[var(--text-muted)] sm:text-[17px] sm:leading-6">
             {description}
           </p>
         ) : null}

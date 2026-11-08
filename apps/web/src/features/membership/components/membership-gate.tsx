@@ -69,13 +69,10 @@ export function MembershipGate({
   });
 
   return (
-    // Un filo de 2 px a la izquierda, como el `accent` de la tarjeta del móvil:
-    // el aviso se distingue sin teñir la superficie entera, que en un panel de
-    // esta altura sería un bloque de color gritando desde la primera pantalla.
-    // Va en línea y no como utilidad de Tailwind porque `.panel` declara el
-    // borde con la forma corta desde CSS sin capa, y eso gana a cualquier
-    // utilidad: la clase se escribiría y no pintaría nada.
-    <Card style={{ borderLeftWidth: '2px', borderLeftColor: 'var(--warning-border)' }}>
+    // Como el `accent` de la tarjeta del móvil: el contorno entero teñido muy
+    // levemente, nunca una franja lateral. `.panel` vive ya en
+    // `@layer components`, así que la utilidad de borde sí gana.
+    <Card className="border-[color-mix(in_srgb,var(--warning)_33%,transparent)]">
       <CardContent className="grid gap-4">
         <div className="flex items-center gap-3">
           <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--surface-high)] text-[var(--warning-text)]">

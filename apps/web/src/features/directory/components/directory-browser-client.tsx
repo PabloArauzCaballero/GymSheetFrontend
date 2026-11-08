@@ -60,7 +60,7 @@ export function DirectoryBrowserClient({
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1">
           <svg
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400"
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -72,7 +72,7 @@ export function DirectoryBrowserClient({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar gimnasios, suplementos, equipamiento, coaches o ciudades..."
-            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/60 backdrop-blur-sm text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-neutral-400 shadow-sm"
+            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-low)] backdrop-blur-sm text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--volt)_22%,transparent)] focus:border-[var(--volt)] transition-all placeholder:text-[var(--text-muted)] shadow-sm"
           />
         </div>
 
@@ -80,7 +80,7 @@ export function DirectoryBrowserClient({
         <button
           type="button"
           onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
-          className="lg:hidden inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 text-sm font-semibold shadow-sm"
+          className="lg:hidden inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text)] text-sm font-semibold shadow-sm"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
@@ -100,8 +100,8 @@ export function DirectoryBrowserClient({
               onClick={() => setSelectedType(btn.value)}
               className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
                 isSelected
-                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-sm'
-                  : 'bg-white/80 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'
+                  ? 'bg-[var(--text)] text-[var(--background)] shadow-sm'
+                  : 'bg-[var(--surface-low)] border border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--border)]'
               }`}
             >
               {btn.label}
@@ -109,15 +109,15 @@ export function DirectoryBrowserClient({
           );
         })}
 
-        <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 mx-1 shrink-0" />
+        <div className="w-px h-6 bg-[var(--surface-highest)] mx-1 shrink-0" />
 
         <button
           type="button"
           onClick={() => setVerifiedOnly(!verifiedOnly)}
           className={`shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
             verifiedOnly
-              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 ring-1 ring-blue-500/30'
-              : 'bg-white/80 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'
+              ? 'bg-[var(--info-bg)] text-[var(--info-text)] ring-1 ring-[var(--info-border)]'
+              : 'bg-[var(--surface-low)] border border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--border)]'
           }`}
         >
           <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
@@ -130,9 +130,9 @@ export function DirectoryBrowserClient({
       {/* Grid Principal: Sidebar de Categorías + Resultados */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Sidebar Árbol de Categorías Desktop */}
-        <aside className="hidden lg:block lg:col-span-3 sticky top-24 rounded-3xl border border-neutral-200/80 dark:border-neutral-800 bg-white/70 dark:bg-neutral-900/50 backdrop-blur-md p-4 space-y-3">
+        <aside className="hidden lg:block lg:col-span-3 sticky top-24 rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-low)] backdrop-blur-md p-4 space-y-3">
           <div className="px-2 pt-1">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+            <h3 className="text-xs font-boldr text-[var(--text-muted)]">
               Árbol de Categorías
             </h3>
           </div>
@@ -145,16 +145,16 @@ export function DirectoryBrowserClient({
 
         {/* Modal / Sheet móvil de categorías */}
         {isMobileNavOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden flex bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-            <div className="relative w-full max-w-sm rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-6 overflow-y-auto m-auto max-h-[80vh]">
-              <div className="flex items-center justify-between pb-4 border-b border-neutral-100 dark:border-neutral-800 mb-4">
-                <h3 className="font-bold text-neutral-900 dark:text-white text-base">
+          <div className="fixed inset-0 z-50 lg:hidden flex bg-[var(--overlay)] backdrop-blur-sm p-4 animate-in fade-in">
+            <div className="relative w-full max-w-sm rounded-3xl bg-[var(--surface-low)] border border-[var(--border-subtle)] p-6 overflow-y-auto m-auto max-h-[80vh]">
+              <div className="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)] mb-4">
+                <h3 className="font-bold text-[var(--text)] text-base">
                   Categorías
                 </h3>
                 <button
                   type="button"
                   onClick={() => setIsMobileNavOpen(false)}
-                  className="p-1 text-neutral-400 hover:text-neutral-700"
+                  className="p-1 text-[var(--text-muted)] hover:text-[var(--text-muted)]"
                 >
                   ✕
                 </button>
@@ -173,7 +173,7 @@ export function DirectoryBrowserClient({
 
         {/* Listado de Oferentes */}
         <main className="lg:col-span-9 space-y-4">
-          <div className="flex items-center justify-between px-1 text-xs text-neutral-500 dark:text-neutral-400 font-medium">
+          <div className="flex items-center justify-between px-1 text-xs text-[var(--text-muted)] font-medium">
             <span>
               Mostrando {filteredEntities.length}{' '}
               {filteredEntities.length === 1 ? 'oferente' : 'oferentes'}
@@ -187,7 +187,7 @@ export function DirectoryBrowserClient({
                   setSearchQuery('');
                   setVerifiedOnly(false);
                 }}
-                className="text-amber-600 dark:text-amber-400 hover:underline"
+                className="text-[var(--accent-ink)] hover:underline"
               >
                 Limpiar filtros
               </button>
@@ -201,16 +201,16 @@ export function DirectoryBrowserClient({
               ))}
             </div>
           ) : (
-            <div className="rounded-3xl border border-dashed border-neutral-200 dark:border-neutral-800 p-12 text-center space-y-3">
-              <div className="mx-auto w-12 h-12 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-400">
+            <div className="rounded-3xl border border-dashed border-[var(--border-subtle)] p-12 text-center space-y-3">
+              <div className="mx-auto w-12 h-12 rounded-full bg-[var(--surface-high)] flex items-center justify-center text-[var(--text-muted)]">
                 <svg className="w-6 h-6 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
               </div>
-              <h4 className="text-base font-semibold text-neutral-900 dark:text-white">
+              <h4 className="text-base font-semibold text-[var(--text)]">
                 No se encontraron oferentes
               </h4>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-sm mx-auto">
+              <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
                 No hay resultados con los filtros actuales. Prueba cambiando de categoría o borrando el término de búsqueda.
               </p>
             </div>

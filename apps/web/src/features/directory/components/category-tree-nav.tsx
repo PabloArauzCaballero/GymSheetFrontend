@@ -51,8 +51,8 @@ export function CategoryTreeNav({
           tabIndex={0}
           className={`flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all cursor-pointer select-none ${
             isSelected
-              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold'
-              : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
+              ? 'bg-[color-mix(in_srgb,var(--volt)_12%,transparent)] text-[var(--accent-ink)] font-semibold'
+              : 'text-[var(--text-muted)] hover:bg-[var(--surface-high)]'
           }`}
           style={{ paddingLeft: `${Math.max(12, level * 16 + 12)}px` }}
         >
@@ -62,7 +62,7 @@ export function CategoryTreeNav({
             <button
               type="button"
               onClick={(e) => toggleExpand(node.path, e)}
-              className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-transform"
+              className="p-1 hover:bg-[var(--surface-high)] rounded-lg transition-transform"
               aria-label={isExpanded ? 'Contraer subcategorías' : 'Expandir subcategorías'}
             >
               <svg
@@ -80,7 +80,7 @@ export function CategoryTreeNav({
         </div>
 
         {hasChildren && isExpanded && (
-          <div className="space-y-0.5 border-l border-neutral-200 dark:border-neutral-800 ml-4 pl-1">
+          <div className="space-y-0.5 border-l border-[var(--border-subtle)] ml-4 pl-1">
             {node.children.map((child) => renderNode(child, level + 1))}
           </div>
         )}
@@ -96,12 +96,12 @@ export function CategoryTreeNav({
         tabIndex={0}
         className={`flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all cursor-pointer ${
           !activePath
-            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold'
-            : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
+            ? 'bg-[color-mix(in_srgb,var(--volt)_12%,transparent)] text-[var(--accent-ink)] font-semibold'
+            : 'text-[var(--text-muted)] hover:bg-[var(--surface-high)]'
         }`}
       >
         <span>Todos los oferentes</span>
-        <span className="text-xs text-neutral-400">Todo</span>
+        <span className="text-xs text-[var(--text-muted)]">Todo</span>
       </div>
 
       {categories.map((cat) => renderNode(cat))}

@@ -29,7 +29,7 @@ describe('registro de inquilinos', () => {
 
   it('no muta la paleta de referencia', () => {
     parseRegistry(registryJson);
-    expect(defaultTheme.dark.accent).toBe('#c3f400');
+    expect(defaultTheme.dark.accent).toBe('#2E8B7B');
   });
 
   // Servir la marca equivocada es peor que fallar de forma visible.

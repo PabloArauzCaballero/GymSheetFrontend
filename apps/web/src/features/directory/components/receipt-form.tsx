@@ -31,19 +31,19 @@ export function ReceiptForm({
 }: ReceiptFormProps) {
   return (
     <form onSubmit={onSubmit} className="space-y-5">
-      <div className="p-3.5 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-xs flex justify-between items-center">
+      <div className="p-3.5 rounded-2xl bg-[var(--surface-high)] text-xs flex justify-between items-center">
         <div>
-          <span className="text-neutral-400 block text-[10px] uppercase font-bold">Número de Orden</span>
-          <span className="font-mono font-bold text-neutral-900 dark:text-white">{order.orderNumber}</span>
+          <span className="text-[var(--text-muted)] block text-xs font-bold">Número de Orden</span>
+          <span className="font-mono font-bold text-[var(--text)]">{order.orderNumber}</span>
         </div>
         <div className="text-right">
-          <span className="text-neutral-400 block text-[10px] uppercase font-bold">Importe</span>
-          <span className="font-bold text-neutral-900 dark:text-white">{order.amount} {order.currency}</span>
+          <span className="text-[var(--text-muted)] block text-xs font-bold">Importe</span>
+          <span className="font-bold text-[var(--text)]">{order.amount} {order.currency}</span>
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="receipt-url" className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+        <label htmlFor="receipt-url" className="text-xs font-semibold text-[var(--text-muted)]">
           Enlace al comprobante de la transferencia
         </label>
         <input
@@ -52,13 +52,13 @@ export function ReceiptForm({
           value={receiptUrl}
           onChange={(e) => onReceiptUrl(e.target.value)}
           placeholder="https://… (Drive, iCloud o la captura compartida)"
-          className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none"
+          className="w-full px-4 py-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text)] text-xs focus:ring-2 focus:ring-[color-mix(in_srgb,var(--volt)_22%,transparent)] focus:border-[var(--volt)] outline-none"
           required
         />
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+        <label className="text-xs font-semibold text-[var(--text-muted)]">
           N° de Referencia de la Transferencia (Opcional)
         </label>
         <input
@@ -66,12 +66,12 @@ export function ReceiptForm({
           value={receiptReference}
           onChange={(e) => onReceiptReference(e.target.value)}
           placeholder="Ej. TRX-12345678 o código de operación"
-          className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none"
+          className="w-full px-4 py-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text)] text-xs focus:ring-2 focus:ring-[color-mix(in_srgb,var(--volt)_22%,transparent)] focus:border-[var(--volt)] outline-none"
         />
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+        <label className="text-xs font-semibold text-[var(--text-muted)]">
           Notas para el Administrador (Opcional)
         </label>
         <textarea
@@ -79,7 +79,7 @@ export function ReceiptForm({
           onChange={(e) => onAthleteNotes(e.target.value)}
           rows={2}
           placeholder="Indica cualquier detalle adicional..."
-          className="w-full px-4 py-2 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none resize-none"
+          className="w-full px-4 py-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text)] text-xs focus:ring-2 focus:ring-[color-mix(in_srgb,var(--volt)_22%,transparent)] focus:border-[var(--volt)] outline-none resize-none"
         />
       </div>
 
@@ -87,7 +87,7 @@ export function ReceiptForm({
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-400 text-neutral-950 transition-all shadow-md hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+          className="w-full py-3 rounded-full text-xs font-bold bg-[var(--volt)] hover:bg-[var(--volt)] text-[var(--accent-contrast)] transition-all shadow-md hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
         >
           {loading ? 'Subiendo comprobante...' : 'Confirmar y Enviar Comprobante'}
         </button>

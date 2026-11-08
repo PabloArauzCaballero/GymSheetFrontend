@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { useSyncExternalStore } from 'react';
 import { Activity, Bell, CalendarDays, ChevronRight, Dumbbell, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { setVolumeKg } from '@gymsheet/domain';
@@ -45,7 +46,20 @@ function totalVolume(workouts: Awaited<ReturnType<typeof workoutService.list>>['
   );
 }
 
-export function DashboardClient() {
+const subscribeNever = () => () => {};
+
+/** Misma fecha que Inicio en el móvil: «domingo, 8 de noviembre». */
+const LONG_DATE = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+
+export function DashboardClient({ firstName }: Readonly<{ firstName?: string }> = {}) {
+  // La fecha es la del reloj de quien mira, no la del servidor: se calcula
+  // tras montar para no provocar un desajuste de hidratación cerca de medianoche.
+  const today = useSyncExternalStore(
+    subscribeNever,
+    () => LONG_DATE.format(new Date()),
+    () => undefined,
+  );
+
   const workouts = useQuery({
     // La comparación semanal requiere más historial que las cinco filas visibles.
     queryKey: ['workouts', 'dashboard'],
@@ -128,9 +142,9 @@ export function DashboardClient() {
             )}
           </span>
         }
-        description="Tu superficie operativa: entrenamiento activo, progreso reciente y señales que requieren atención."
-        eyebrow="Centro de rendimiento"
-        title="Precisión antes que ruido."
+        // Cabecera de Inicio del móvil: saludo por el nombre y la fecha larga.
+        description={today}
+        title={firstName ? `Hola, ${firstName}` : 'Hola'}
         tutorialId="page:dashboard"
       />
 

@@ -102,7 +102,7 @@ export function UsersPanel({ canViewTraining = false }: Readonly<{ canViewTraini
             <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] text-sm">
                 <thead>
-                  <tr className="border-b border-[var(--border-subtle)] text-left text-xs uppercase tracking-wide text-[var(--text-muted)]">
+                  <tr className="border-b border-[var(--border-subtle)] text-left text-xs text-[var(--text-muted)]">
                     <th className="px-5 py-3 font-semibold">Persona</th>
                     <th className="px-5 py-3 font-semibold">Rol</th>
                     <th className="px-5 py-3 font-semibold">Plan</th>

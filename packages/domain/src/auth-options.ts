@@ -23,6 +23,20 @@ export const genderOptions: ReadonlyArray<{ value: UserGender | ''; label: strin
   { value: 'FEMALE', label: 'Mujer' },
 ];
 
+/**
+ * Lo que dice la primera pantalla de acceso (#124 ASO: continuidad entre la
+ * ficha de la tienda y lo primero que se ve). Una frase dice qué es la app; la
+ * segunda, qué se hace en ella. Compartido por el móvil y la web para que las
+ * dos pantallas de acceso digan lo mismo.
+ *
+ * El nombre del gimnasio no aparece en el titular: lo pone el logotipo justo
+ * encima, y así el texto sirve igual para los gimnasios con marca propia.
+ */
+export const valuePitch = {
+  headline: 'La red social de tu gimnasio.',
+  subline: 'Entrena guiado serie a serie, sigue a tu gente y gana premios por cada sesión.',
+} as const;
+
 /** Textos de las dos pantallas. Un solo sitio para las dos plataformas. */
 export const authCopy = {
   login: {

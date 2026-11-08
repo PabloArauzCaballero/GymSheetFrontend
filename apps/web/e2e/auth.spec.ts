@@ -23,7 +23,7 @@ test('login screen has no automatically detectable accessibility violations', as
 test('beta athlete can log in and reach the dashboard', async ({ context, page }) => {
   await loginAsBetaAthlete(page);
 
-  await expect(page.getByRole('heading', { name: 'Precisión antes que ruido.' })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: /^Hola/u, level: 1 })).toBeVisible({ timeout: 15_000 });
   const sessionCookie = (await context.cookies()).find((cookie) => cookie.name === 'gymsheet_session');
   expect(sessionCookie).toMatchObject({ httpOnly: true, sameSite: 'Lax' });
 });

@@ -89,7 +89,7 @@ export function PathNode({
               leen como un fallo de pintado en vez de como un acento. */}
           {level.current ? (
             <span
-              className="rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider"
+              className="rounded-full px-2 py-0.5 text-xs font-semiboldr"
               style={{ backgroundColor: withAlpha(level.color, 0.18), color: level.color }}
             >
               Estás aquí

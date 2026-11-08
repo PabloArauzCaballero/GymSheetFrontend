@@ -10,7 +10,7 @@ import { EmptyState } from '@/shared/components/feedback/empty-state';
 
 export const metadata: Metadata = {
   title: 'Gimnasios',
-  description: 'Encuentra la sede de GymSheet más cercana y sus servicios.',
+  description: 'Encuentra la sede de REPP más cercana y sus servicios.',
 };
 
 export default async function GimnasiosPage({

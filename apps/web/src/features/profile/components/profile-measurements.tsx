@@ -30,7 +30,7 @@ export function ProfileMeasurements() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="text-[11px] uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                <tr className="text-xs text-[var(--text-muted)]">
                   <th className="pb-3 font-medium">Fecha</th>
                   <th className="pb-3 font-medium">Peso</th>
                   <th className="pb-3 font-medium">Origen</th>

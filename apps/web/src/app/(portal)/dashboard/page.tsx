@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { DashboardClient } from '@/features/dashboard/components/dashboard-client';
 import { requireSession } from '@/shared/server/session';
 
-export const metadata: Metadata = { title: 'Panel' };
+export const metadata: Metadata = { title: 'Inicio' };
 
 /** Personal que atiende un gimnasio concreto; el `COACH` no, porque entrena. */
 const GYM_STAFF_ROLES: readonly UserRole[] = ['ADMIN', 'FRONT_DESK'];
@@ -25,5 +25,6 @@ export default async function DashboardPage() {
   // ahí se le lleva. El panel de socio sigue existiendo para `CLIENTE` y
   // `COACH`, que sí entrenan.
   if (GYM_STAFF_ROLES.includes(session.role)) redirect('/admin/operacion');
-  return <DashboardClient />;
+  const firstName = (session.nombreCompleto ?? '').trim().split(/\s+/u)[0] || undefined;
+  return <DashboardClient firstName={firstName} />;
 }

@@ -87,13 +87,14 @@ export function Field({
       : children;
 
   return (
-    <div className={cn('grid gap-2', className)}>
-      <label className="data-label" htmlFor={controlId}>
+    // Etiqueta del `Input` del móvil: 15, tono secundario, 4 sobre el campo.
+    <div className={cn('grid gap-1.5', className)}>
+      <label className="text-[15px] leading-5 text-[var(--text-muted)]" htmlFor={controlId}>
         {label}
       </label>
       {control}
       {error ? (
-        <p className="text-sm text-[var(--danger-text)]" id={errorId} role="alert">
+        <p className="text-xs text-[var(--danger)]" id={errorId} role="alert">
           {error}
         </p>
       ) : null}
