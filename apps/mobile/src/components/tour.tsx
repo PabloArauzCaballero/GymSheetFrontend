@@ -63,10 +63,9 @@ type TourStep = {
  *
  * Cada paso nombra una pestaña y dice para qué SIRVE, no qué contiene, y señala
  * su icono real de la barra: «aquí están tus rutinas» describe una pantalla,
- * «esto responde qué te toca hoy» describe una razón para abrirla. Son las cuatro
- * pestañas que hay —Entrenos ya no es una: se alcanza desde Inicio y Perfil; y
- * Ejercicios tampoco desde C4: el catálogo se abre desde Rutinas y Perfil y
- * tiene su propio tour (`exercises`) la primera vez que se entra al buscador—.
+ * «esto responde qué te toca hoy» describe una razón para abrirla. Son las cinco
+ * pestañas que hay, en el orden de la barra (08/11/2026): Mensajes · Comunidad ·
+ * Marketplace · Rutinas · Perfil. Inicio ya no es pestaña.
  *
  * `null` en el título significa «rellénalo con el nombre del gimnasio al
  * pintar». Es el único paso que lo menciona, así que no compensa convertir todo
@@ -79,18 +78,10 @@ const WELCOME: readonly TourStep[] = [
     body: 'Tu entrenamiento, tus cargas y tu progreso en un solo sitio. Cada pantalla se explica sola la primera vez que entras.',
   },
   {
-    icon: 'home-outline',
-    title: 'Inicio',
-    body: 'Lo que has movido esta semana, qué músculos trabajaste y tus últimas sesiones.',
-    target: 'tab.home',
-    optional: true,
-    fixed: true,
-  },
-  {
-    icon: 'albums-outline',
-    title: 'Rutinas',
-    body: 'Tu semana de un vistazo: qué toca hoy y qué días entrenas. Desde aquí también exploras el catálogo de ejercicios.',
-    target: 'tab.routines',
+    icon: 'chatbubbles-outline',
+    title: 'Mensajes',
+    body: 'Las historias de tu gimnasio y tus conversaciones, solicitudes y conexiones.',
+    target: 'tab.mensajes',
     optional: true,
     fixed: true,
   },
@@ -99,6 +90,22 @@ const WELCOME: readonly TourStep[] = [
     title: 'Comunidad',
     body: 'Conoce a otros socios, mira el podio de tu gimnasio y escribe a quienes aceptaron tu conexión.',
     target: 'tab.comunidad',
+    optional: true,
+    fixed: true,
+  },
+  {
+    icon: 'storefront-outline',
+    title: 'Marketplace',
+    body: 'Gimnasios, suplementos, coaches y pases, con las reseñas de otros socios.',
+    target: 'tab.marketplace',
+    optional: true,
+    fixed: true,
+  },
+  {
+    icon: 'albums-outline',
+    title: 'Rutinas',
+    body: 'Tu semana de un vistazo: qué toca hoy y qué días entrenas. Desde aquí también exploras el catálogo de ejercicios.',
+    target: 'tab.routines',
     optional: true,
     fixed: true,
   },
