@@ -47,6 +47,10 @@ export default function AppLayout() {
             stack, not something you navigate to. */}
         <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
         <Stack.Screen name="onboarding" />
+        {/* Inicio dejó de ser pestaña (08/11/2026): la barra pasó a Mensajes ·
+            Comunidad · Marketplace · Rutinas · Perfil. La pantalla sigue
+            existiendo en la pila con la misma URL (`/home`). */}
+        <Stack.Screen name="home" />
         <Stack.Screen name="trayectoria" />
         <Stack.Screen name="camino" />
         {/* Entrenos. Era la cuarta pestaña hasta que Comunidad hizo seis y
@@ -68,13 +72,11 @@ export default function AppLayout() {
         <Stack.Screen name="notifications" />
         <Stack.Screen name="notifications-inbox" />
         <Stack.Screen name="reels" />
-        <Stack.Screen name="comunidad-mensajes" />
         <Stack.Screen name="training-invitations" />
         {/* La baraja de descubrimiento: se abre desde Comunidad y se cierra
             volviendo, así que es una hermana del resto de pantallas de detalle
             y no una sexta pestaña. */}
         <Stack.Screen name="descubrir" />
-        <Stack.Screen name="directorio" />
         <Stack.Screen name="chat" />
       </Stack>
       <TourOverlay />
