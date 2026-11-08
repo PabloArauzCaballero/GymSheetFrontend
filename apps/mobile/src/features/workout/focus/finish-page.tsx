@@ -86,6 +86,8 @@ export function FinishPage({
     >
       <View style={{ gap: spacing.sm }}>
         <View
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
           style={{
             width: 56,
             height: 56,
@@ -103,8 +105,8 @@ export function FinishPage({
         <Text tone="secondary" variant="body">
           {inSitu
             ? sets > 0
-              ? 'Añade el siguiente ejercicio, o termina y te ofrecemos guardar lo de hoy como tu rutina.'
-              : 'Tu rutina se arma mientras entrenas: empieza con el primer ejercicio.'
+              ? 'Añade otro ejercicio o termina y guárdala como rutina.'
+              : 'Empieza con el primer ejercicio. La rutina se arma sola.'
             : complete
             ? skippedSets > 0 || omitted.length > 0
               ? 'Hoy dejaste pasar algo, y está bien. Finaliza para guardarla y ver tu progreso.'
@@ -117,7 +119,7 @@ export function FinishPage({
 
       <View style={{ gap: spacing.lg, paddingVertical: spacing.lg, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border }}>
         <View style={{ flexDirection: 'row', gap: spacing.md }}>
-          <Stat icon="barbell-outline" label={`de ${exercisesTotal} ejercicios`} metric="weight" value={exercisesDone} />
+          <Stat icon="barbell-outline" label={exercisesTotal === 1 ? 'de 1 ejercicio' : `de ${exercisesTotal} ejercicios`} metric="weight" value={exercisesDone} />
           <Stat icon="repeat-outline" label={sets === 1 ? 'serie' : 'series'} metric="reps" value={sets} />
         </View>
         <View style={{ flexDirection: 'row', gap: spacing.md }}>

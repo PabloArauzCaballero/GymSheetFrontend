@@ -21,13 +21,14 @@ function Tool({
   return (
     <PressableScale
       accessibilityLabel={label}
+      accessibilityRole="button"
       accessibilityState={{ disabled }}
       disabled={disabled}
       haptic="selection"
       onPress={onPress}
       style={{
-        width: minTouchTarget,
-        height: minTouchTarget,
+        width: minTouchTarget + spacing.xs,
+        height: minTouchTarget + spacing.xs,
         borderRadius: radii.full,
         alignItems: 'center',
         justifyContent: 'center',
@@ -65,7 +66,7 @@ export function ExerciseManager({
   onRemove: (id: string) => void;
 }) {
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm, paddingBottom: spacing.xs }}>
+    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, paddingBottom: spacing.xs }}>
       <Tool disabled={busy || first} icon="arrow-up" label={`Subir ${name}`} onPress={() => onMove(id, -1)} testID={`move-up-${id}`} />
       <Tool disabled={busy || last} icon="arrow-down" label={`Bajar ${name}`} onPress={() => onMove(id, 1)} testID={`move-down-${id}`} />
       <Tool disabled={busy} icon="copy-outline" label={`Repetir ${name} al final`} onPress={() => onRepeat(id)} testID={`repeat-${id}`} />

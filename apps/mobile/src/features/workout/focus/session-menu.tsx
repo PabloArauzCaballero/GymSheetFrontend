@@ -138,7 +138,7 @@ export function SessionSheet({
   return (
     <BottomSheet
       onClose={onClose}
-      subtitle={overview ? (manage ? 'Toca uno para ir a él · ordénalos o quítalos' : 'Toca uno para ir a él') : undefined}
+      subtitle={overview ? (manage ? 'Toca uno para ir a él · usa los botones para ordenar' : 'Toca uno para ir a él') : undefined}
       testID={overview ? 'workout-overview' : 'workout-menu'}
       title={overview ? 'Ejercicios' : 'Tu entreno'}
       visible={mode !== null}
@@ -150,7 +150,7 @@ export function SessionSheet({
             return (
               <View key={item.id}>
               <PressableScale
-                accessibilityLabel={[item.badge, item.name, item.omitted ? 'omitido' : item.done ? 'hecho' : `${item.progress} series`].filter(Boolean).join(', ')}
+                accessibilityLabel={[item.badge, item.name, item.omitted ? 'omitido' : item.done ? 'hecho' : `${item.progress.replace('/', ' de ')} series`].filter(Boolean).join(', ')}
                 accessibilityState={{ selected: here }}
                 haptic="selection"
                 onPress={() => onSelect(item)}

@@ -8,6 +8,8 @@ const MAX_REST_SEC = 7200;
 const MAX_RIR = 10;
 const MAX_TIMED_SEC = 3600;
 const DEFAULT_DURATION_WEEKS = 4;
+const MAX_DAY_NAME = 60;
+const MAX_WEIGHT_KG = 2000;
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
@@ -44,7 +46,7 @@ export function exerciseToRoutine(item: WorkoutExercise): RoutineDayExerciseInpu
     seriesObjetivo: clamp(sets.length, 1, MAX_SETS),
     repsMin: timed || reps.length === 0 ? null : clamp(Math.min(...reps), 1, MAX_REPS),
     repsMax: timed || reps.length === 0 ? null : clamp(Math.max(...reps), 1, MAX_REPS),
-    pesoObjetivoKg: weights.length > 0 && Math.max(...weights) > 0 ? Math.max(...weights) : null,
+    pesoObjetivoKg: weights.length > 0 && Math.max(...weights) > 0 ? Math.min(Math.max(...weights), MAX_WEIGHT_KG) : null,
     rirObjetivo: last.rir === null ? null : clamp(last.rir, 0, MAX_RIR),
     descansoSeg: (() => {
       const rest = median(rests);
@@ -80,7 +82,7 @@ export function routineFromSession(session: Pick<Workout, 'ejercicios'>, name: s
     visibilidad: 'PRIVATE',
     duracionSemanas: DEFAULT_DURATION_WEEKS,
     progresion: { activa: false, descargaCada: null } as unknown as CreateRoutineWithDaysInput['progresion'],
-    dias: [{ diaSemana: null, nombre: title, ejercicios: exercises }],
+    dias: [{ diaSemana: null, nombre: title.slice(0, MAX_DAY_NAME).trim() || null, ejercicios: exercises }],
   };
 }
 

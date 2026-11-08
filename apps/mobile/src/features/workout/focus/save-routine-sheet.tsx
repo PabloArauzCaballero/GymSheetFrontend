@@ -6,7 +6,10 @@ import { Button } from '@/components/ui';
 import { colors, fontSizes, radii, spacing } from '@/theme';
 
 const NAME_MIN = 2;
-const NAME_MAX = 160;
+/** Desde aquí se enseña el contador de letras. */
+const NAME_WARN = 50;
+/** El nombre de la rutina también es el del día, que el servidor limita a 60. */
+const NAME_MAX = 60;
 
 /**
  * Al terminar un entreno armado sobre la marcha: «¿La guardo como rutina?».
@@ -53,7 +56,9 @@ export function SaveRoutineSheet({
           accessibilityLabel="Nombre de la rutina"
           editable={!busy}
           maxLength={NAME_MAX}
+          autoCorrect={false}
           onChangeText={setName}
+          onSubmitEditing={() => valid && !busy && onSave(name.trim())}
           placeholder="Nombre de la rutina"
           placeholderTextColor={colors.textMuted}
           returnKeyType="done"
@@ -70,6 +75,15 @@ export function SaveRoutineSheet({
           testID="save-routine-name"
           value={name}
         />
+        {name.length > 0 && !valid ? (
+          <Text tone="muted" variant="footnote">
+            Mínimo {NAME_MIN} letras.
+          </Text>
+        ) : name.length >= NAME_WARN ? (
+          <Text accessibilityLiveRegion="polite" tone="muted" variant="footnote">
+            {`${name.length}/${NAME_MAX}`}
+          </Text>
+        ) : null}
         {error ? (
           <Text tone="danger" variant="footnote">
             {error}
@@ -84,7 +98,7 @@ export function SaveRoutineSheet({
           size="lg"
           testID="save-routine-confirm"
         />
-        <Button disabled={busy} label="Terminar sin guardar rutina" onPress={onSkip} variant="ghost" testID="save-routine-skip" />
+        <Button disabled={busy} label="Terminar sin guardar" onPress={onSkip} variant="ghost" testID="save-routine-skip" />
       </View>
     </BottomSheet>
   );

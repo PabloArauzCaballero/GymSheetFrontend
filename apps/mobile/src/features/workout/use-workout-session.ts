@@ -294,8 +294,15 @@ export function useWorkoutSession(id: string) {
       const b = list[list.findIndex((item) => item.id === input.id) + input.direction]!;
       const spare = Math.max(...list.map((item) => item.orden)) + 1;
       await workoutService.reorderExercise(a.id, spare);
-      await workoutService.reorderExercise(b.id, a.orden);
-      await workoutService.reorderExercise(a.id, b.orden);
+      try {
+        await workoutService.reorderExercise(b.id, a.orden);
+        await workoutService.reorderExercise(a.id, b.orden);
+      } catch (error) {
+        // Sin dejar el ejercicio colgado al final: se devuelve cada uno a su sitio, en lo posible.
+        await workoutService.reorderExercise(b.id, b.orden).catch(() => undefined);
+        await workoutService.reorderExercise(a.id, a.orden).catch(() => undefined);
+        throw error;
+      }
     },
     onSettled: async () => {
       markListsStale();

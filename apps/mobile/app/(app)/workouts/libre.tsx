@@ -124,13 +124,13 @@ export default function FreeWorkoutScreen() {
         />
       </Section>
 
-      <Section title="O arma tu rutina entrenando">
+      <Section title="O sobre la marcha">
         <Text tone="muted" variant="footnote">
-          Empiezas sin nada: añades un ejercicio, lo haces, y decides el siguiente. Al terminar puedes guardarla como rutina.
+          Añade un ejercicio, hazlo y decide el siguiente. Al terminar, guárdala como rutina.
         </Text>
         <Button
           icon="add-circle-outline"
-          label="Armar sobre la marcha"
+          label="Empezar sin nada"
           loading={start.isPending && start.variables === true}
           onPress={() => {
             if (!start.isPending) start.mutate(true);
