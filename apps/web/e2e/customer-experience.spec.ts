@@ -30,8 +30,8 @@ test('expired members can open an idempotent WhatsApp renewal without gaining ac
 }) => {
   await login(page, 'expired.mock@gymsheet.local');
   await openPage(page, '/membership');
-  await expect(page.getByText('EXPIRED', { exact: true }).first()).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Tienda de membresías' })).toBeVisible();
+  await expect(page.getByText('Vencida', { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Planes disponibles' })).toBeVisible();
   // La confirmación es un diálogo propio de la aplicación, no el `confirm()` del
   // navegador: la prueba esperaba el evento nativo, que nunca llega, mientras la
   // capa del modal —ya abierto— se comía los reintentos del clic.

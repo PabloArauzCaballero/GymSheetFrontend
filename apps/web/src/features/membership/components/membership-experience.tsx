@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { CalendarDays, Check, Clock3, Plus, ShieldCheck } from 'lucide-react';
+import { Check, Flag, History, KeyRound, Play, Plus, ShieldCheck, Tags } from 'lucide-react';
 import { confirm, notify } from '@/shared/notifications';
 import type { MembershipPlan } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -15,11 +15,19 @@ import {
 } from '@/shared/components/feedback/skeleton';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
+import { ListCard } from '@/shared/components/mobile/nav-row';
+import { Section } from '@/shared/components/mobile/section';
 import { formatDate } from '@/shared/lib/date';
 import { membershipService } from '../services/membership-service';
-import { Fact, PlanCard } from './membership-cards';
+import { PlanCard } from './membership-cards';
 import { randomUuid } from '@/shared/lib/uuid';
+
+const STATUS_BADGE = {
+  ACTIVE: { label: 'Activa', tone: 'success' },
+  SUSPENDED: { label: 'Suspendida', tone: 'warning' },
+  CANCELLED: { label: 'Cancelada', tone: 'danger' },
+  EXPIRED: { label: 'Vencida', tone: 'danger' },
+} as const;
 
 export function MembershipExperience({ compact = false }: Readonly<{ compact?: boolean }>) {
   const projection = useQuery({
@@ -90,56 +98,59 @@ export function MembershipExperience({ compact = false }: Readonly<{ compact?: b
   const status = membership?.estado;
   const pending = projection.data?.paymentStatus === 'PENDING_PAYMENT';
   const active = status === 'ACTIVE' && membership?.vigenteHoy;
+  const badge = status ? STATUS_BADGE[status as keyof typeof STATUS_BADGE] : null;
+  const planDays = membership?.plan?.duracionDias ?? null;
   return (
-    <div className="grid gap-6">
-      {membership ? (
-        <Card>
-          <CardHeader
-            description={
-              membership.plan?.descripcion ?? 'Información vigente proporcionada por el backend.'
-            }
-            title={membership.plan?.nombre ?? 'Mi membresía'}
-          />
-          <CardContent className="grid gap-5">
+    // Las secciones de `membership.tsx` del móvil, en su orden: estado actual,
+    // planes disponibles, historial y accesos.
+    <div className="grid gap-8">
+      <Section icon={ShieldCheck} title="Estado actual">
+        {membership ? (
+          <div
+            className={`panel grid gap-3 p-5 ${active ? 'border-[color-mix(in_srgb,var(--volt)_33%,transparent)]' : 'border-[color-mix(in_srgb,var(--warning)_33%,transparent)]'}`}
+          >
+            <h3 className="title-text">{membership.plan?.nombre ?? 'Mi membresía'}</h3>
+            {membership.plan?.descripcion ? (
+              <p className="t-subhead text-[var(--text-muted)]">{membership.plan.descripcion}</p>
+            ) : null}
             <div className="flex flex-wrap gap-2">
-              <Badge
-                tone={
-                  active
-                    ? 'success'
-                    : status === 'EXPIRED' || status === 'CANCELLED'
-                      ? 'warning'
-                      : 'neutral'
-                }
-              >
-                {status}
-              </Badge>
+              {badge ? <Badge tone={badge.tone}>{badge.label}</Badge> : null}
               {pending ? <Badge tone="warning">Pago pendiente</Badge> : null}
-              {membership.diasRestantes <= 7 && active ? (
-                <Badge tone="warning">Próxima a vencer</Badge>
+              {membership.diasRestantes <= 7 && active ? <Badge tone="warning">Próxima a vencer</Badge> : null}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-[var(--radius-lg)] bg-[var(--surface-high)] px-4 py-4">
+                <p className="t-hero">{membership.diasRestantes}</p>
+                <p className="t-caption text-[var(--text-muted)]">Días restantes</p>
+              </div>
+              {planDays ? (
+                <div className="rounded-[var(--radius-lg)] bg-[var(--surface-high)] px-4 py-4">
+                  <p className="t-hero">{planDays}</p>
+                  <p className="t-caption text-[var(--text-muted)]">Duración del plan (días)</p>
+                </div>
               ) : null}
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Fact
-                icon={<CalendarDays className="size-4" />}
-                label="Inicio"
-                value={formatDate(membership.iniciaEl)}
-              />
-              <Fact
-                icon={<CalendarDays className="size-4" />}
-                label="Vencimiento"
-                value={formatDate(membership.venceEl)}
-              />
-              <Fact
-                icon={<Clock3 className="size-4" />}
-                label="Días restantes"
-                value={String(membership.diasRestantes)}
-              />
+            <div className="divide-y divide-[var(--border)]">
+              <p className="t-subhead flex items-center justify-between gap-4 py-3">
+                <span className="inline-flex items-center gap-2 text-[var(--text-muted)]">
+                  <Play aria-hidden className="size-4" />
+                  Inicio
+                </span>
+                <span className="font-medium">{formatDate(membership.iniciaEl)}</span>
+              </p>
+              <p className="t-subhead flex items-center justify-between gap-4 py-3">
+                <span className="inline-flex items-center gap-2 text-[var(--text-muted)]">
+                  <Flag aria-hidden className="size-4" />
+                  Vencimiento
+                </span>
+                <span className="font-medium">{formatDate(membership.venceEl)}</span>
+              </p>
             </div>
             {membership.plan?.beneficios.length ? (
-              <ul className="grid gap-2 border-t border-[var(--border-subtle)] pt-4 text-sm">
+              <ul className="m-0 grid list-none gap-2 p-0">
                 {membership.plan.beneficios.map((benefit) => (
-                  <li className="flex gap-2" key={benefit}>
-                    <Check className="mt-0.5 size-4 shrink-0 text-[var(--text-muted)]" />
+                  <li className="t-subhead flex gap-2" key={benefit}>
+                    <Check aria-hidden className="mt-0.5 size-4 shrink-0 text-[var(--accent-ink)]" />
                     {benefit}
                   </li>
                 ))}
@@ -151,26 +162,24 @@ export function MembershipExperience({ compact = false }: Readonly<{ compact?: b
                 onClick={() => intent.mutate({ plan: membership.plan!, type: 'EXTENSION' })}
                 variant="primary"
               >
-                <Plus className="size-4" />
+                <Plus aria-hidden className="size-4" />
                 Añadir meses
               </Button>
             ) : null}
-          </CardContent>
-        </Card>
-      ) : (
-        <EmptyState
-          description="Elige una opción para comenzar. El acceso solo se concede después de una confirmación válida."
-          title="Aún no tienes membresía"
-        />
-      )}
+          </div>
+        ) : (
+          <EmptyState
+            description="Elige una opción para comenzar. El acceso solo se concede después de una confirmación válida."
+            level={3}
+            title="Aún no tienes membresía"
+          />
+        )}
+      </Section>
       {!compact ? (
         <>
-          <section>
-            <h2 className="mb-4 text-xl font-semibold">
-              {active ? 'Opciones compatibles' : 'Tienda de membresías'}
-            </h2>
+          <Section icon={Tags} title="Planes disponibles">
             {options.data?.plans.length ? (
-              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2">
                 {options.data.plans.map((plan) => (
                   <PlanCard
                     active={Boolean(active)}
@@ -184,62 +193,42 @@ export function MembershipExperience({ compact = false }: Readonly<{ compact?: b
             ) : (
               <EmptyState
                 description="No hay opciones comerciales disponibles en este momento."
-                title="Tienda sin planes"
+                level={3}
+                title="Sin planes publicados"
               />
             )}
-          </section>
-          <section className="grid gap-5 lg:grid-cols-2">
-            <Card>
-              <CardHeader title="Mis accesos" />
-              <CardContent>
-                {accesses.data?.length ? (
-                  <ul className="grid gap-3">
-                    {accesses.data.map((access) => (
-                      <li
-                        className="rounded-lg border border-[var(--border-subtle)] p-3"
-                        key={access.code}
-                      >
-                        <p className="flex items-center gap-2 font-semibold">
-                          <ShieldCheck className="size-4 text-[var(--text-muted)]" />
-                          {access.name}
-                        </p>
-                        <p className="mt-1 text-sm text-[var(--text-muted)]">
-                          {access.description}
-                        </p>
-                        <Badge>{access.source}</Badge>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-[var(--text-muted)]">
-                    No tienes derechos de acceso activos.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader title="Historial" />
-              <CardContent>
-                {projection.data?.history.length ? (
-                  <ul className="grid gap-3">
-                    {projection.data.history.map((item) => (
-                      <li
-                        className="flex flex-col gap-1 border-b border-[var(--border-subtle)] pb-3 sm:flex-row sm:justify-between sm:gap-3"
-                        key={item.id}
-                      >
-                        <span>{item.plan?.nombre ?? 'Plan'}</span>
-                        <span className="text-sm text-[var(--text-muted)] sm:text-right">
-                          {formatDate(item.iniciaEl)} – {formatDate(item.venceEl)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-[var(--text-muted)]">Sin historial de membresías.</p>
-                )}
-              </CardContent>
-            </Card>
-          </section>
+          </Section>
+          <Section icon={History} title="Historial">
+            {projection.data?.history.length ? (
+              <ListCard className="divide-y divide-[var(--border)]">
+                {projection.data.history.map((item) => (
+                  <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between sm:gap-3" key={item.id}>
+                    <span className="t-headline">{item.plan?.nombre ?? 'Plan'}</span>
+                    <span className="t-subhead text-[var(--text-muted)]">
+                      {formatDate(item.iniciaEl)} – {formatDate(item.venceEl)}
+                    </span>
+                  </div>
+                ))}
+              </ListCard>
+            ) : (
+              <EmptyState description="Aquí verás tus membresías anteriores." level={3} title="Sin historial" />
+            )}
+          </Section>
+          <Section icon={KeyRound} title="Accesos">
+            {accesses.data?.length ? (
+              <ListCard className="divide-y divide-[var(--border)]">
+                {accesses.data.map((access) => (
+                  <div className="grid gap-1 py-3" key={access.code}>
+                    <p className="t-headline flex items-center gap-2">{access.name}</p>
+                    <p className="t-subhead text-[var(--text-muted)]">{access.description}</p>
+                    <Badge className="w-fit">{access.source}</Badge>
+                  </div>
+                ))}
+              </ListCard>
+            ) : (
+              <EmptyState description="No tienes derechos de acceso activos." level={3} title="Sin accesos" />
+            )}
+          </Section>
         </>
       ) : null}
     </div>
