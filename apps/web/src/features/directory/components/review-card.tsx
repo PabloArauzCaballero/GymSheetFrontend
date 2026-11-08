@@ -164,7 +164,7 @@ export function ReviewCard({
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-1.5 font-semibold text-[var(--text)]">
               <span>{review.reply.authorName}</span>
-              <span className="text-xs font-boldr px-1.5 py-0.5 rounded bg-[color-mix(in_srgb,var(--volt)_20%,transparent)] text-[var(--accent-ink)]">
+              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-[color-mix(in_srgb,var(--volt)_20%,transparent)] text-[var(--accent-ink)]">
                 Respuesta Oficial
               </span>
             </div>

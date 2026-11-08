@@ -33,7 +33,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 
 /** Alto mínimo 48 en todos los tamaños, como el móvil: 48 · 52 · 56. */
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'min-h-12 rounded-[var(--radius-md)] px-4 text-[15px]',
+  sm: 'min-h-12 rounded-[var(--radius-md)] px-3.5 text-[15px] sm:px-4',
   md: 'min-h-[52px] rounded-[var(--radius-lg)] px-5 text-[17px]',
   lg: 'min-h-14 rounded-[var(--radius-lg)] px-6 text-[17px]',
   icon: 'size-11 rounded-full p-0',
@@ -41,7 +41,7 @@ const sizeClasses: Record<ButtonSize, string> = {
 
 export function buttonClasses(variant: ButtonVariant = 'secondary', size: ButtonSize = 'md') {
   return cn(
-    'relative inline-flex items-center justify-center gap-2 overflow-hidden border font-semibold leading-tight transition-[transform,background-color,border-color,color,filter,box-shadow] duration-[var(--dur-1)] ease-[var(--ease-out)] active:scale-[0.96] motion-reduce:active:scale-100 disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-[var(--surface-high)] disabled:bg-none disabled:text-[var(--text-disabled)] disabled:shadow-none',
+    'relative inline-flex items-center justify-center gap-2 overflow-hidden whitespace-nowrap border font-semibold leading-tight transition-[transform,background-color,border-color,color,filter,box-shadow] duration-[var(--dur-1)] ease-[var(--ease-out)] active:scale-[0.96] motion-reduce:active:scale-100 disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-[var(--surface-high)] disabled:bg-none disabled:text-[var(--text-disabled)] disabled:shadow-none',
     variantClasses[variant],
     sizeClasses[size],
     // Botón de icono del móvil (`IconButton`): círculo de 44 en `surfaceHigh`,

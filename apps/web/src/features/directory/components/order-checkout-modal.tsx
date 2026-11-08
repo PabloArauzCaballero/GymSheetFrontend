@@ -77,7 +77,7 @@ export function OrderCheckoutModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-4">
           <div>
-            <span className="text-xs font-boldr text-[var(--accent-ink)]">
+            <span className="text-xs font-bold text-[var(--accent-ink)]">
               Pago QR & Activación Inmediata
             </span>
             <h3 className="text-xl font-display font-bold text-[var(--text)]">

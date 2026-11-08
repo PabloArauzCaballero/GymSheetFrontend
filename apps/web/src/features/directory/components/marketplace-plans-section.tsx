@@ -34,7 +34,7 @@ export function MarketplacePlansSection({
     <section className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-[var(--border-subtle)] pb-4">
         <div>
-          <span className="text-xs font-boldr text-[var(--accent-ink)]">
+          <span className="text-xs font-bold text-[var(--accent-ink)]">
             Marketplace Oficial
           </span>
           <h2 className="text-xl sm:text-2xl font-display font-bold text-[var(--text)] tracking-tight">
