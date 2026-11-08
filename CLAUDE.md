@@ -72,7 +72,7 @@ Mapa de skills por tarea (usar la que corresponda, no improvisar):
 
 ### Skills de marketing y crecimiento
 
-`.claude/skills/` incluye además las 51 skills de
+`.claude/skills/` incluye además las 53 skills de
 [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (licencia MIT,
 copia en `.claude/third-party/marketingskills-LICENSE`, commit en `marketingskills-VERSION`).
 Úsalas para lo que no es código de producto: `aso` (ficha de App Store / Play), `onboarding` y
