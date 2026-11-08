@@ -1224,7 +1224,8 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
                 onRemove: (exerciseId) => {
                   const picked = ordered.find((item) => item.id === exerciseId);
                   if (!picked) return;
-                  void confirm({
+                  // iOS se traga un Modal abierto sobre otro: cierra la hoja y confirma después.
+                  fromMenu(() => void confirm({
                     title: 'Quitar ejercicio',
                     message: `${nameOf(picked)} saldrá de tu entreno${picked.series.length > 0 ? ' junto con sus series registradas' : ''}.`,
                     severity: 'danger',
@@ -1232,7 +1233,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
                     cancelLabel: 'Volver',
                   }).then((result) => {
                     if (result.confirmed) session.removeExercise.mutate(exerciseId);
-                  });
+                  }));
                 },
               }
             : undefined
