@@ -22,7 +22,19 @@ export function TabBar({ session }: Readonly<{ session: SessionPrincipal }>) {
   const [moreOpen, setMoreOpen] = useState(false);
   const tabs = tabBarFor(session.role, session.permissions);
   const all = navigationFor(session.role, session.permissions).flatMap((group) => group.items);
-  const activeHref = activeHrefFor(pathname, all.map((item) => item.href));
+  const ownHref = activeHrefFor(pathname, all.map((item) => item.href));
+  // Pantallas que en el móvil se abren DESDE una pestaña y la dejan encendida:
+  // Mensajes, Descubrir e Interacciones cuelgan de Comunidad; Entrenos, de Inicio.
+  const parentTab: Record<string, string> = {
+    '/chat': '/comunidad',
+    '/descubrir': '/comunidad',
+    '/interacciones': '/comunidad',
+    '/reels': '/comunidad',
+    '/workouts': '/dashboard',
+    '/exercises': '/routines',
+  };
+  const parent = ownHref ? parentTab[ownHref] : undefined;
+  const activeHref = parent && tabs.some((tab) => tab.href === parent) ? parent : ownHref;
   const tabActive = tabs.some((tab) => tab.href === activeHref);
 
   const tabClasses =

@@ -37,7 +37,7 @@ export function ConversationRow({
   return (
     <li>
       <Link
-        className="flex items-center gap-4 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-lowest)] p-4 transition-colors duration-[var(--dur-2)] hover:border-[var(--border)]"
+        className="tap flex min-h-16 items-center gap-3 rounded-[var(--radius-md)] px-1 py-3 transition-colors duration-[var(--dur-2)] hover:bg-[var(--surface)]"
         href={`/chat/${conversation.conversationId}`}
       >
         <span className="relative shrink-0">
@@ -49,14 +49,14 @@ export function ConversationRow({
           {conversation.otherUserOnline ? (
             <span
               aria-hidden
-              className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-[var(--surface-lowest)] bg-[var(--success-text)]"
+              className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-[var(--surface-low)] bg-[var(--success-text)]"
               title="En línea"
             />
           ) : null}
           {SystemIcon && systemKind ? (
             <span
               aria-hidden
-              className="absolute -left-1 -top-1 grid size-5 place-items-center rounded-full border-2 border-[var(--surface-lowest)] bg-[var(--volt)] text-[var(--accent-contrast)]"
+              className="absolute -left-1 -top-1 grid size-5 place-items-center rounded-full border-2 border-[var(--surface-low)] bg-[var(--volt)] text-[var(--accent-contrast)]"
               title={SYSTEM_LABEL[systemKind]}
             >
               <SystemIcon className="size-2.5" />

@@ -75,7 +75,7 @@ function RoundButton({
 function OverflowSheet({ onPreferences }: Readonly<{ onPreferences: () => void }>) {
   const [open, setOpen] = useState(false);
   const rows: { href: string; icon: LucideIcon; title: string; subtitle: string }[] = [
-    { href: '/comunidad/personas', icon: Users, title: 'Personas del gimnasio', subtitle: 'Stories, el podio y el buscador de socios' },
+    { href: '/comunidad/personas', icon: Users, title: 'Personas del gimnasio', subtitle: 'El podio y el buscador de socios' },
     { href: '/comunidad/personas#podio', icon: Trophy, title: 'Top 15 del Gym', subtitle: 'Los 15 atletas con más puntos, insignias y rachas' },
     { href: '/directorio', icon: Store, title: 'Directorio REPP', subtitle: 'Gimnasios, tiendas de nutrición y coaches verificados' },
     { href: '/comunidad/mapa', icon: MapPin, title: 'Mapa de socios', subtitle: 'Descubre quién está entrenando cerca de ti en el mapa' },

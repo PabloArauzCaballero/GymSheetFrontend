@@ -10,7 +10,6 @@ import {
 } from '@/features/interactions/services/interactions-service';
 import { socialService } from '@/features/social/services/social-service';
 import { connectionKeys } from '@/features/social/services/directory-keys';
-import { StoriesStrip } from '@/features/stories';
 import { ButtonLink } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
@@ -38,10 +37,7 @@ const EMPTY_PREFERENCES: DirectoryPreferences = { objetivo: '', sucursalId: '', 
  * Los filtros son estado de la página y viajan a Descubrir como parámetros de
  * la URL: llegar a la baraja no debería reabrir un gimnasio recién acotado.
  */
-export function CommunityPeopleClient({
-  sessionName,
-  sessionUserId,
-}: Readonly<{ sessionName: string; sessionUserId: string }>) {
+export function CommunityPeopleClient() {
   const [preferences, setPreferences] = useState<DirectoryPreferences>(EMPTY_PREFERENCES);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -73,7 +69,6 @@ export function CommunityPeopleClient({
         preferencesCount={activeFilters}
       />
 
-      <StoriesStrip ownName={sessionName} ownUserId={sessionUserId} />
 
       <div id="podio">
         <PodiumPreview />
