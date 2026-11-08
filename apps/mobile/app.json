@@ -46,6 +46,12 @@
         }
       ],
       [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "REPP usa Face ID para que entres sin escribir tu contrase\u00f1a."
+        }
+      ],
+      [
         "@sentry/react-native/expo",
         {
           "organization": "gymsheet",
