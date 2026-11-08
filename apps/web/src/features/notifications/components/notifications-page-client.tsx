@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, Check } from 'lucide-react';
+import { Bell, CheckCheck } from 'lucide-react';
 import { useState } from 'react';
 import { notify } from '@/shared/notifications';
 import { notificationService } from '@/features/notifications/services/notification-service';
@@ -14,6 +14,7 @@ import {
   SkeletonScreen,
 } from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
+import { Section } from '@/shared/components/mobile/section';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
@@ -41,6 +42,7 @@ export function NotificationsPageClient() {
     },
     onError: (error: Error) => notify.error(error),
   });
+  const unreadCount = notifications.data?.items.filter((item) => !item.leidoEn).length ?? 0;
   if (notifications.isLoading || preference.isLoading) {
     return (
       <SkeletonScreen className="gap-8" label="Cargando tus avisos">
@@ -50,94 +52,68 @@ export function NotificationsPageClient() {
     );
   }
   return (
-    <div className="grid gap-8">
-      <PageHeader
-        description="Avisos propios y consentimiento explícito para canales externos."
-        eyebrow="Centro de avisos"
-        title="Notificaciones"
-      />
-      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)]">
-        <Card>
-          <CardHeader title="Bandeja" />
-          <CardContent className="p-0">
-            {notifications.isError ? (
-              <div className="p-5">
-                <ErrorPanel
-                  message={notifications.error.message}
-                  onRetry={() => notifications.refetch()}
-                />
+    // «Bandeja de avisos» del móvil (`notifications-inbox.tsx`): un aviso por
+    // tarjeta, «Nuevo» en verde y «Marcar como leído» en fantasma. Al lado, lo
+    // que se configura (en el móvil vive en su propia pantalla).
+    <div className="mx-auto grid w-full max-w-[560px] gap-8 xl:max-w-[1040px]">
+      <PageHeader description="Mensajes importantes de tu gimnasio y tus programas." title="Bandeja de avisos" />
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:items-start">
+        <Section title={unreadCount ? `${unreadCount} nuevos en esta página` : 'Todos tus avisos'}>
+          {notifications.isError ? (
+            <ErrorPanel message={notifications.error.message} onRetry={() => notifications.refetch()} />
+          ) : notifications.data?.items.length ? (
+            <>
+              <div className="grid gap-2">
+                {notifications.data.items.map((item) => (
+                  <article className="panel grid min-w-0 gap-2 p-5" key={item.id}>
+                    <div className="flex items-center gap-2">
+                      <h2 className="t-headline min-w-0 flex-1 break-words">{item.asunto}</h2>
+                      {!item.leidoEn ? <Badge tone="success">Nuevo</Badge> : null}
+                    </div>
+                    <p className="text-[17px] leading-6 break-words">{item.mensaje}</p>
+                    <p className="t-footnote text-[var(--text-muted)]">
+                      {formatDateTime(item.creadoEn)} · {item.canal}
+                    </p>
+                    {!item.leidoEn ? (
+                      <Button
+                        className="justify-self-start"
+                        disabled={read.isPending}
+                        loading={read.isPending && read.variables === item.id}
+                        onClick={() => read.mutate(item.id)}
+                        size="sm"
+                        variant="ghost"
+                      >
+                        <CheckCheck aria-hidden className="size-4" />
+                        Marcar como leído
+                      </Button>
+                    ) : null}
+                  </article>
+                ))}
               </div>
-            ) : notifications.data?.items.length ? (
-              <>
-                <div className="divide-y divide-[var(--border-subtle)]">
-                  {notifications.data.items.map((item) => (
-                    <article
-                      className={`p-5 ${item.leidoEn ? '' : 'bg-[var(--surface-low)]'}`}
-                      key={item.id}
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex gap-3">
-                          <span className="mt-1 grid size-9 shrink-0 place-items-center rounded-[4px] border border-[var(--border)]">
-                            <Bell className="size-4 text-[var(--accent-ink)]" />
-                          </span>
-                          {/* `min-w-0`: un hijo flex no baja de su contenido por defecto
-                              (`min-width: auto`), así que un asunto o un mensaje con una
-                              URL larga sin espacios ensanchaba la fila y desplazaba la
-                              página en horizontal. Es el mismo motivo documentado en
-                              `page-header.tsx`. El texto es de difusión: no lo controlamos. */}
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h2 className="break-words font-semibold">{item.asunto}</h2>
-                              {!item.leidoEn ? <Badge tone="success">Nuevo</Badge> : null}
-                            </div>
-                            <p className="mt-2 break-words text-sm leading-6 text-[var(--text-muted)]">
-                              {item.mensaje}
-                            </p>
-                            <p className="mt-3 text-xs text-[var(--text-disabled)]">
-                              {formatDateTime(item.creadoEn)} · {item.canal}
-                            </p>
-                          </div>
-                        </div>
-                        {!item.leidoEn ? (
-                          <Button
-                            aria-label="Marcar como leído"
-                            loading={read.isPending}
-                            onClick={() => read.mutate(item.id)}
-                            size="icon"
-                            variant="ghost"
-                          >
-                            <Check className="size-4" />
-                          </Button>
-                        ) : null}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-                <Pagination
-                  onPageChange={setPage}
-                  page={notifications.data.page}
-                  totalPages={notifications.data.totalPages}
-                />
-              </>
-            ) : (
-              <div className="p-5">
-                <EmptyState
-                  description="No hay avisos pendientes para tu cuenta."
-                  title="Bandeja vacía"
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              <Pagination
+                onPageChange={setPage}
+                page={notifications.data.page}
+                totalPages={notifications.data.totalPages}
+              />
+            </>
+          ) : (
+            <EmptyState
+              description="Cuando recibas un aviso, aparecerá aquí."
+              icon={<Bell />}
+              level={3}
+              title="Tu bandeja está al día"
+            />
+          )}
+        </Section>
         {/* La columna lateral agrupa lo que se CONFIGURA, frente a la bandeja,
             que es lo que se lee: preferencias de canal primero y el opt-in de
             este navegador debajo, porque uno vale para la cuenta entera y el
             otro solo para el equipo que tienes delante. */}
-        <div className="grid content-start gap-5">
+        <Section title="Preferencias">
           <Card>
             <CardHeader
               description="El canal externo exige fecha y versión de consentimiento."
-              title="Preferencias"
+              title="Qué avisos quieres recibir"
             />
             <CardContent>
               {preference.isError ? (
@@ -151,8 +127,8 @@ export function NotificationsPageClient() {
             </CardContent>
           </Card>
           <WebPushCard />
-        </div>
-      </section>
+        </Section>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,32 @@
 # Estado — registro de sesión
 
+## 2026-11-08 (continuación) — web pantalla por pantalla igual que el móvil
+
+Primitivas web con la forma del móvil en `apps/web/src/shared/components/mobile/`
+(`Section`, `ListCard`/`NavRow`/`Divider`, `IconBadge`, `HeroSurface`, `WeekDots`) y la rampa
+tipográfica `t-*` en `components.css`. Lógica pura movida a paquetes y reexportada por el móvil:
+`homeWeekDots` (hooks), `relativeDay`/`formatTimeOfDay`/`sessionDuration`/`shortName`/`sessionTitle`
+y `profileCompletion`/`proudStat` (domain).
+
+| Pantalla móvil | Web | Estado |
+|---|---|---|
+| `(tabs)/home.tsx` | `/dashboard` | Hecho (sin Repi: depende de widgets y avisos locales del teléfono) |
+| `(tabs)/profile.tsx` + `profile-edit.tsx` | `/profile` + `/profile/editar` | Hecho |
+| `settings.tsx` | `/settings` | Hecho (sin «Chats»: el BFF no permite `/me/chat/read-receipts`) |
+| `workouts/index.tsx` | `/workouts` | Hecho |
+| `routines` (catálogo) | `/routines` | Hecho: tarjeta, orden y «Tu semana» |
+| `ejercicios` | `/exercises` | Ya era un port (`ExerciseBrowser`) |
+| `notifications-inbox.tsx` | `/notifications` | Hecho |
+| `comunidad`, `chat`, `descubrir`, `interacciones`, `membership`, `trayectoria`, `camino`, `reels`, `directorio`, `training-invitations`, `onboarding` | — | **Pendiente** |
+
+**Hallazgo fuera de alcance (no corregido salvo `/programs/*` y `unread-count`)**: unas 60 rutas que
+usan los servicios web no están en el allowlist del BFF (`backend-route-policy.ts`) y responden
+«Ruta no permitida». Lista en `trabajo/BFF_RUTAS_SIN_PERMITIR.md`.
+
+**Verificado**: `yarn turbo run source-check type-check lint test --filter=!@gymsheet/mobile` 28/28;
+`yarn workspace @gymsheet/mobile type-check` y `yarn workspace @gymsheet/mobile test` (247/247).
+Capturas con un backend de maqueta local no commiteado. E2E **no** ejecutado (sin backend ni PostgreSQL).
+
 ## 2026-11-08 — rediseño web con la identidad visual del móvil
 
 - **Causa raíz**: la web seguía pintando la identidad anterior (negro `#000` + lima `#c3f400`,
