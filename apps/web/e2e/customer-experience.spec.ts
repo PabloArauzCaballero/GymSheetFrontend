@@ -14,12 +14,12 @@ test('new clients are required to continue onboarding', async ({ page }) => {
   await expect(page.getByText('Paso 1 de 4')).toBeVisible();
 });
 
-test('active members see their plan, entitlements and extension action in Mi perfil', async ({
+test('active members see their plan, entitlements and extension action in Membresía', async ({
   page,
 }) => {
   await login(page, 'active.mock@gymsheet.local');
-  await openPage(page, '/profile');
-  await expect(page.getByRole('heading', { name: 'Mi membresía y accesos' })).toBeVisible();
+  // Como en el móvil, Perfil enlaza a Membresía (fila «Membresía»); el detalle vive allí.
+  await openPage(page, '/membership');
   await expect(page.getByText('Plan mensual · Desarrollo').first()).toBeVisible();
   await expect(page.getByText('Biblioteca de ejercicios').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Añadir meses' }).first()).toBeVisible();
