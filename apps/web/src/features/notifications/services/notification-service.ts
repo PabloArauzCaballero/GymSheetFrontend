@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { apiRequest } from '@/shared/api/api-client';
 import type { Notification, NotificationPreference, Page } from '@/shared/api/contracts';
 import { notificationPreferenceSchema, notificationSchema, pageSchema } from '@/shared/api/schemas';
@@ -13,7 +14,12 @@ export type NotificationPreferenceInput = {
   metadata?: Record<string, unknown>;
 };
 
+const unreadCountSchema = z.object({ count: z.number().int().nonnegative() });
+
 export const notificationService = {
+  /** Avisos sin leer: el número de la campana de Inicio (`GET /notifications/me/unread-count`). */
+  unreadCount: () =>
+    apiRequest<{ count: number }>('/notifications/me/unread-count', unreadCountSchema),
   list: (page = 1) =>
     apiRequest<Page<Notification>>(
       `/notifications/me?page=${page}&pageSize=25`,

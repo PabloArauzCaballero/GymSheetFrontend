@@ -145,6 +145,8 @@ const allowedPathPatterns = [
   /^\/me\/interactions\/(likes-received|likes-sent|passes-received|passes-sent|counts)$/u,
   new RegExp(`^/me/interactions/passes/${resourceId}$`, 'u'),
   /^\/notifications\/me$/u,
+  // Contador de la campana de Inicio, el mismo que usa el móvil.
+  /^\/notifications\/me\/unread-count$/u,
   /^\/notifications\/preferences\/me$/u,
   // Push al navegador (F4): la configuración pública que necesita `PushManager`
   // (`applicationServerKey`) y el alta/baja de la suscripción. El móvil llamaba
@@ -164,6 +166,12 @@ const allowedPathPatterns = [
   /^\/routines$/u,
   /^\/routines\/import$/u,
   /^\/routines\/assignments\/(me|coach)$/u,
+  // Programas de fuerza (`@gymsheet/api-client` → `createProgramServices`):
+  // «Hoy» de Inicio, la activación y las tarjetas de programa los usan, y sin
+  // estas entradas el BFF los rechazaba con «Ruta no permitida».
+  /^\/programs\/active$/u,
+  /^\/programs\/strength\/activate$/u,
+  new RegExp(`^/programs/${resourceId}/(stop|progress|next-loads|close)$`, 'u'),
   new RegExp(`^/routines/exercises/${resourceId}$`, 'u'),
   new RegExp(`^/routines/${resourceId}$`, 'u'),
   new RegExp(`^/routines/${resourceId}/(exercises|assign|start)$`, 'u'),

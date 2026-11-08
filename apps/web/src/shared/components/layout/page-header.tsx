@@ -10,8 +10,11 @@ export function PageHeader({
   title,
   description,
   actions,
+  titleAction,
   tutorialId,
 }: Readonly<{
+  /** Atajo junto al título, como la `action` del `ScreenHeader` del móvil (la campana de Inicio). */
+  titleAction?: ReactNode;
   eyebrow?: string;
   title: string;
   description?: string;
@@ -33,7 +36,14 @@ export function PageHeader({
         {eyebrow ? (
           <p className="text-[15px] font-semibold leading-5 text-[var(--accent-ink)]">{eyebrow}</p>
         ) : null}
-        <h1 className="display-title">{title}</h1>
+        {titleAction ? (
+          <div className="flex items-start gap-2">
+            <h1 className="display-title min-w-0 flex-1">{title}</h1>
+            {titleAction}
+          </div>
+        ) : (
+          <h1 className="display-title">{title}</h1>
+        )}
         {description ? (
           <p className="mt-1 max-w-2xl text-[15px] leading-5 text-[var(--text-muted)] sm:text-[17px] sm:leading-6">
             {description}
