@@ -7,7 +7,10 @@ export function WizardSummary({
   return (
     <dl className="grid gap-px overflow-hidden rounded-[6px] border border-[var(--border)] bg-[var(--border-subtle)] sm:grid-cols-2">
       {items.map((item) => (
-        <div className="grid gap-1 bg-[var(--surface-lowest)] px-4 py-3" key={item.label}>
+        <div
+          className="grid gap-1 bg-[var(--surface-lowest)] px-4 py-3 sm:[&:last-child:nth-child(odd)]:col-span-2"
+          key={item.label}
+        >
           <dt className="data-label">{item.label}</dt>
           <dd className="m-0 break-words text-sm font-semibold">{item.value || '—'}</dd>
         </div>
