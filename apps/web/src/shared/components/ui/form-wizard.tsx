@@ -188,7 +188,7 @@ export function FormWizard({
                   <span
                     className={cn(
                       'h-1 rounded-full transition-colors duration-200',
-                      state === 'upcoming' ? 'bg-[var(--border)]' : 'bg-[var(--volt)]',
+                      state === 'upcoming' ? 'bg-[var(--border)]' : 'bg-[var(--text)]',
                     )}
                   />
                   <span className="flex min-w-0 items-center gap-2">
@@ -196,8 +196,8 @@ export function FormWizard({
                       className={cn(
                         'grid size-6 shrink-0 place-items-center rounded-full border text-[11px] font-bold',
                         state === 'done' &&
-                          'border-[var(--volt)] bg-[var(--volt)] text-[var(--accent-contrast)]',
-                        state === 'current' && 'border-[var(--volt)] text-[var(--accent-ink)]',
+                          'border-[var(--text)] bg-[var(--text)] text-[var(--background)]',
+                        state === 'current' && 'border-[var(--text)] text-[var(--text)]',
                         state === 'upcoming' && 'border-[var(--border)] text-[var(--text-muted)]',
                       )}
                     >

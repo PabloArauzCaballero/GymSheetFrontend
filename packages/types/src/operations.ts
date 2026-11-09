@@ -66,6 +66,8 @@ export type Branch = {
   direccion: string | null;
   latitud: number | null;
   longitud: number | null;
+  /** Radio en metros para verificar rachas por ubicación; nulo = no verifica. */
+  radioGeocercaM: number | null;
   estado: 'ACTIVE' | 'INACTIVE';
   metadata: Record<string, unknown>;
 };

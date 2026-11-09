@@ -6,12 +6,12 @@ import type { Branch } from '@/shared/api/contracts';
 import { MarkersMap, type MapMarker } from '@/shared/components/map';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
+import { Segmented } from '@/shared/components/ui/segmented';
 import { directionsUrl, formatLatLng, pointOf } from '@/shared/lib/geo';
-import { cn } from '@/shared/lib/cn';
 
 type StatusFilter = 'ALL' | 'ACTIVE' | 'INACTIVE';
 
-const filters: { value: StatusFilter; label: string }[] = [
+const filters: readonly { value: StatusFilter; label: string }[] = [
   { value: 'ALL', label: 'Todas' },
   { value: 'ACTIVE', label: 'Activas' },
   { value: 'INACTIVE', label: 'Inactivas' },
@@ -34,6 +34,11 @@ function BranchPopup({ branch }: Readonly<{ branch: Branch }>) {
       <p className="data-value text-xs text-[var(--text-muted)]">
         {point ? formatLatLng(point) : ''} · {branch.zonaHoraria}
       </p>
+      {branch.radioGeocercaM ? (
+        <p className="text-xs text-[var(--text-muted)]">
+          Verifica rachas a {branch.radioGeocercaM} m
+        </p>
+      ) : null}
       {point ? (
         <a
           className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--accent-ink)] underline"
@@ -86,30 +91,16 @@ export function BranchesMap({
   return (
     <section aria-label="Mapa de sedes" className="panel overflow-hidden">
       <div className="flex flex-col gap-3 border-b border-[var(--border-subtle)] p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div
-          className="flex flex-wrap items-center gap-2"
-          role="group"
-          aria-label="Filtrar por estado"
-        >
-          {filters.map((item) => (
-            <button
-              aria-pressed={filter === item.value}
-              className={cn(
-                'h-9 rounded-[4px] border px-3 text-sm font-semibold transition-colors',
-                filter === item.value
-                  ? 'border-[var(--volt)] bg-[var(--volt)] text-[var(--accent-contrast)]'
-                  : 'border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]',
-              )}
-              key={item.value}
-              onClick={() => {
-                setFilter(item.value);
-                onSelect(null);
-              }}
-              type="button"
-            >
-              {item.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <Segmented
+            label="Filtrar por estado"
+            onChange={(next) => {
+              setFilter(next);
+              onSelect(null);
+            }}
+            options={filters}
+            value={filter}
+          />
           <span className="text-sm text-[var(--text-muted)]">
             {markers.length} en el mapa
             {unlocated > 0 ? (

@@ -83,7 +83,9 @@
   height: 28px;
   border: 2px solid var(--surface-lowest);
   border-radius: 50% 50% 50% 0;
-  background: var(--volt);
+  /* Pin neutro: con nueve sedes, nueve pines en acento serían ruido. El
+   * acento marca solo la sede seleccionada y el punto que se está eligiendo. */
+  background: var(--text);
   box-shadow: 0 6px 16px -6px var(--overlay);
   transform: rotate(-45deg);
   transition: transform var(--dur-fast, 150ms) ease-out;
@@ -93,7 +95,7 @@
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--accent-contrast);
+  background: var(--background);
 }
 
 .map-pin--inactive {
@@ -104,8 +106,14 @@
   background: var(--surface-lowest);
 }
 
-.map-pin--draft {
-  background: var(--accent-ink);
+.map-pin--draft,
+.map-pin--selected {
+  background: var(--volt);
+}
+
+.map-pin--draft .map-pin__dot,
+.map-pin--selected .map-pin__dot {
+  background: var(--accent-contrast);
 }
 
 .map-pin--selected {

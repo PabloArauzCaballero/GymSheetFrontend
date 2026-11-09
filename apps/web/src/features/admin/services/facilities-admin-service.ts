@@ -31,6 +31,7 @@ export type BranchInput = {
   direccion?: string | null;
   latitud?: number | null;
   longitud?: number | null;
+  radioGeocercaM?: number | null;
   metadata?: Record<string, unknown>;
 };
 

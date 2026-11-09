@@ -201,7 +201,9 @@ export function LocationPicker({
           <Input
             id="location-lat"
             inputMode="decimal"
+            autoComplete="off"
             name="latitud"
+            spellCheck={false}
             onChange={(event) => {
               setLatText(event.target.value);
               syncFromText(event.target.value, lngText);
@@ -214,7 +216,9 @@ export function LocationPicker({
           <Input
             id="location-lng"
             inputMode="decimal"
+            autoComplete="off"
             name="longitud"
+            spellCheck={false}
             onChange={(event) => {
               setLngText(event.target.value);
               syncFromText(latText, event.target.value);

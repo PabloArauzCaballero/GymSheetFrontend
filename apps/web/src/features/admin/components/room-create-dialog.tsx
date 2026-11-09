@@ -79,7 +79,9 @@ export function RoomCreateDialog({ branches }: Readonly<{ branches: Branch[] }>)
               <Input
                 maxLength={80}
                 minLength={2}
+                autoComplete="off"
                 name="codigo"
+                spellCheck={false}
                 pattern="[A-Za-z0-9._\-]+"
                 placeholder="SALA-1"
                 required

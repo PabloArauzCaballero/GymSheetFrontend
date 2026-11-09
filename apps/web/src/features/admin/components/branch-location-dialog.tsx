@@ -10,6 +10,7 @@ import { Dialog, DialogClose, DialogContent } from '@/shared/components/ui/dialo
 import { pointOf } from '@/shared/lib/geo';
 import { notify } from '@/shared/notifications';
 import { useState } from 'react';
+import { GeofenceField, readGeofence } from './geofence-field';
 
 /**
  * Situar o mover una sede ya registrada. Las sedes anteriores al mapa no tienen
@@ -29,6 +30,7 @@ export function BranchLocationDialog({
         direccion: location.address,
         latitud: location.point?.lat ?? null,
         longitud: location.point?.lng ?? null,
+        radioGeocercaM: readGeofence(values).value,
       });
     },
     onSuccess: async (updated) => {
@@ -71,9 +73,9 @@ export function BranchLocationDialog({
             onSubmit={(event) => {
               event.preventDefault();
               const values = new FormData(event.currentTarget);
-              const location = readLocation(values);
-              setError(location.error);
-              if (!location.error) save.mutate({ id: branch.id, values });
+              const failure = readLocation(values).error ?? readGeofence(values).error;
+              setError(failure);
+              if (!failure) save.mutate({ id: branch.id, values });
             }}
           >
             <LocationPicker
@@ -83,6 +85,7 @@ export function BranchLocationDialog({
               initialCenter={context[0]?.position}
               key={branch.id}
             />
+            <GeofenceField defaultValue={branch.radioGeocercaM} />
             {error ? (
               <p
                 className="rounded-[4px] border border-[var(--danger-border)] bg-[var(--danger-bg)] px-3 py-2 text-sm text-[var(--danger-text)]"

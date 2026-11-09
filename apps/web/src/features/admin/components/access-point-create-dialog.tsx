@@ -109,7 +109,9 @@ export function AccessPointCreateDialog({
             <Input
               maxLength={80}
               minLength={2}
+              autoComplete="off"
               name="codigo"
+              spellCheck={false}
               pattern="[A-Za-z0-9._\-]+"
               placeholder="PUERTA-1"
               required

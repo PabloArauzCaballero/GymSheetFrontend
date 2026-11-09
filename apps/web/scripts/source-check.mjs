@@ -36,7 +36,8 @@ const sourceExtensions = new Set(['.ts', '.tsx', '.css']);
  * permitido, que es justo la forma correcta de componer una opacidad.
  */
 const themeSourceDirectory = 'src/shared/theme/';
-const literalColorPattern = /#[0-9a-fA-F]{3,8}\b|\b(?:rgb|rgba|hsl|hsla)\(\s*[0-9.]/u;
+const literalColorPattern =
+  /#[0-9a-fA-F]{3,8}\b|\b(?:rgb|rgba|hsl|hsla)\(\s*[0-9.]/u;
 const findings = [];
 
 async function walk(directory) {

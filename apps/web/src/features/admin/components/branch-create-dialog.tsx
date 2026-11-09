@@ -22,6 +22,7 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { formatLatLng, pointOf } from '@/shared/lib/geo';
 import { notify } from '@/shared/notifications';
 import { localTimeIn, timeZones } from './facility-labels';
+import { GeofenceField, readGeofence } from './geofence-field';
 
 function TimeZoneStep() {
   const [zone, setZone] = useState<string>(timeZones[0]);
@@ -67,6 +68,7 @@ export function BranchCreateDialog({ branches }: Readonly<{ branches: Branch[] }
         direccion: location.address,
         latitud: location.point?.lat ?? null,
         longitud: location.point?.lng ?? null,
+        radioGeocercaM: readGeofence(values).value,
         metadata: {},
       });
     },
@@ -97,6 +99,7 @@ export function BranchCreateDialog({ branches }: Readonly<{ branches: Branch[] }
                 maxLength={80}
                 minLength={2}
                 name="codigo"
+                spellCheck={false}
                 pattern="[A-Za-z0-9._\-]+"
                 placeholder="SCZ-CENTRO"
                 required
@@ -132,8 +135,15 @@ export function BranchCreateDialog({ branches }: Readonly<{ branches: Branch[] }
     {
       id: 'operation',
       title: 'Operación',
-      description: 'La zona horaria rige los horarios de acceso y los reportes de la sede.',
-      render: () => <TimeZoneStep />,
+      description:
+        'Zona horaria de los horarios y reportes, y verificación de rachas por ubicación.',
+      validate: (values) => readGeofence(values).error,
+      render: () => (
+        <>
+          <TimeZoneStep />
+          <GeofenceField />
+        </>
+      ),
     },
     {
       id: 'review',
@@ -152,6 +162,12 @@ export function BranchCreateDialog({ branches }: Readonly<{ branches: Branch[] }
                 value: location.point ? formatLatLng(location.point) : '',
               },
               { label: 'Dirección', value: location.address },
+              {
+                label: 'Verificación de racha',
+                value: readGeofence(values).value
+                  ? `Radio de ${readGeofence(values).value} m`
+                  : 'Sin verificar',
+              },
               { label: 'Descripción', value: textOf(values, 'descripcion') },
             ]}
           />

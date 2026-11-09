@@ -80,6 +80,11 @@ export const branchSchema = z.object({
     .number()
     .nullish()
     .transform((value) => value ?? null),
+  radioGeocercaM: z
+    .number()
+    .int()
+    .nullish()
+    .transform((value) => value ?? null),
   estado: z.enum(['ACTIVE', 'INACTIVE']),
   metadata: z.record(z.string(), z.unknown()),
 });
