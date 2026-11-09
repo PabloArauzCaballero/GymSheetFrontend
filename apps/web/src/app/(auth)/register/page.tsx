@@ -9,6 +9,7 @@ export const metadata: Metadata = { title: 'Crear cuenta' };
 export default function RegisterPage() {
   return (
     <AuthFrame
+      wide
       description={authCopy.register.description}
       eyebrow={authCopy.register.eyebrow}
       footer={
