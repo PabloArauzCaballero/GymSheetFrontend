@@ -19,23 +19,22 @@ import { tabBarFor } from './tab-bar-config';
 export function TabBar({ session }: Readonly<{ session: SessionPrincipal }>) {
   const pathname = usePathname();
   const interactionAlerts = useInteractionAlerts();
-  const [moreOpen, setMoreOpen] = useState(false);
   const tabs = tabBarFor(session.role, session.permissions);
   const all = navigationFor(session.role, session.permissions).flatMap((group) => group.items);
   const ownHref = activeHrefFor(pathname, all.map((item) => item.href));
   // Pantallas que en el móvil se abren DESDE una pestaña y la dejan encendida:
-  // Mensajes, Descubrir e Interacciones cuelgan de Comunidad; Entrenos, de Inicio.
+  // Descubrir, Interacciones y Reels cuelgan de Comunidad; Ejercicios, de
+  // Rutinas; Entrenos y Ajustes, de Perfil.
   const parentTab: Record<string, string> = {
-    '/chat': '/comunidad',
     '/descubrir': '/comunidad',
     '/interacciones': '/comunidad',
     '/reels': '/comunidad',
-    '/workouts': '/dashboard',
     '/exercises': '/routines',
+    '/workouts': '/profile',
+    '/settings': '/profile',
   };
   const parent = ownHref ? parentTab[ownHref] : undefined;
   const activeHref = parent && tabs.some((tab) => tab.href === parent) ? parent : ownHref;
-  const tabActive = tabs.some((tab) => tab.href === activeHref);
 
   const tabClasses =
     'tap relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 text-xs font-semibold leading-none';
@@ -78,31 +77,32 @@ export function TabBar({ session }: Readonly<{ session: SessionPrincipal }>) {
             </Link>
           );
         })}
-        <DialogPrimitive.Root onOpenChange={setMoreOpen} open={moreOpen}>
+      </div>
+    </nav>
+  );
+}
+
+/**
+ * «Todos los destinos»: en el móvil se llega a todo desde sus pantallas; la
+ * web lo reúne en una hoja que se abre desde la cabecera, para que la barra
+ * de abajo tenga exactamente las cinco pestañas del móvil.
+ */
+export function MoreMenu({ session }: Readonly<{ session: SessionPrincipal }>) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  return (
+    <DialogPrimitive.Root onOpenChange={setMoreOpen} open={moreOpen}>
           <DialogPrimitive.Trigger
-            className={cn(
-              tabClasses,
-              !tabActive && activeHref ? 'text-[var(--accent-ink)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]',
-            )}
+            aria-label="Todos los destinos"
+            className="grid size-11 place-items-center rounded-full bg-[var(--surface-high)] text-[var(--text)] transition-colors duration-[var(--dur-2)] hover:bg-[var(--surface-highest)] lg:hidden"
           >
-            <span className="relative grid h-8 w-14 place-items-center">
-              <span
-                aria-hidden
-                className={cn(
-                  'absolute inset-0 rounded-full bg-[color-mix(in_srgb,var(--volt)_20%,transparent)] transition-opacity duration-[var(--dur-3)]',
-                  !tabActive && activeHref ? 'opacity-100' : 'opacity-0',
-                )}
-              />
-              <Menu aria-hidden className="relative size-6" strokeWidth={1.75} />
-            </span>
-            Más
+            <Menu aria-hidden className="size-5" />
           </DialogPrimitive.Trigger>
           <DialogPrimitive.Portal>
             <DialogPrimitive.Overlay className="dialog-overlay fixed inset-0 z-50 bg-[var(--overlay)]" />
             <DialogPrimitive.Content className="sheet-panel fixed inset-x-0 bottom-0 z-50 max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-[var(--radius-2xl)] bg-[var(--surface-high)] px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 shadow-[var(--shadow-dialog)] focus:outline-none">
               <span aria-hidden className="mx-auto mb-4 block h-1.5 w-10 rounded-full bg-[var(--border)]" />
               <div className="mb-4 flex items-center justify-between gap-3 px-1">
-                <DialogPrimitive.Title className="title-text">Más</DialogPrimitive.Title>
+                <DialogPrimitive.Title className="title-text">Todos los destinos</DialogPrimitive.Title>
                 <DialogPrimitive.Close
                   aria-label="Cerrar"
                   className="grid size-11 place-items-center rounded-full bg-[var(--surface-highest)] text-[var(--text)]"
@@ -117,7 +117,5 @@ export function TabBar({ session }: Readonly<{ session: SessionPrincipal }>) {
             </DialogPrimitive.Content>
           </DialogPrimitive.Portal>
         </DialogPrimitive.Root>
-      </div>
-    </nav>
   );
 }

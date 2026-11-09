@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   Signpost,
   Sparkles,
+  Store,
   Users,
   Users2,
 } from 'lucide-react';
@@ -60,6 +61,8 @@ export const primaryNavigation: NavigationItem[] = [
   { href: '/routines', label: 'Rutinas', icon: ClipboardList },
   { href: '/exercises', label: 'Ejercicios', icon: Dumbbell },
   { href: '/comunidad', label: 'Comunidad', icon: Users2 },
+  // Pestaña del móvil (#74): ofertas y tiendas sin salir del portal.
+  { href: '/marketplace', label: 'Marketplace', icon: Store },
   { href: '/reels', label: 'Reels', icon: Film },
   // La baraja es un destino y no una pestaña de Comunidad: se decide
   // arrastrando y ocupa el ancho entero. Va pegada a Comunidad porque se llega

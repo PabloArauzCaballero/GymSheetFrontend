@@ -14,7 +14,7 @@ import { Brand } from './brand';
 import { LogoutButton } from './logout-button';
 import { NavigationList } from './nav-links';
 import { RouteProgress } from './route-progress';
-import { TabBar } from './tab-bar';
+import { MoreMenu, TabBar } from './tab-bar';
 import { ThemeToggle } from './theme-toggle';
 
 export function PortalShell({
@@ -56,6 +56,7 @@ export function PortalShell({
               <Brand />
             </div>
             <div className="ml-auto flex items-center gap-2">
+              <MoreMenu session={session} />
               <TutorialLauncher />
               <ThemeToggle />
               <LogoutButton />
