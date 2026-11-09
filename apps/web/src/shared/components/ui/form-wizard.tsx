@@ -194,7 +194,7 @@ export function FormWizard({
                   <span className="flex min-w-0 items-center gap-2">
                     <span
                       className={cn(
-                        'grid size-6 shrink-0 place-items-center rounded-full border text-[11px] font-bold',
+                        'grid size-6 shrink-0 place-items-center rounded-full border text-xs font-semibold',
                         state === 'done' &&
                           'border-[var(--text)] bg-[var(--text)] text-[var(--background)]',
                         state === 'current' && 'border-[var(--text)] text-[var(--text)]',
@@ -231,7 +231,7 @@ export function FormWizard({
           tabIndex={-1}
         >
           <header className="grid gap-1">
-            <h3 className="text-base font-bold" id={`${baseId}-${step.id}`}>
+            <h3 className="text-base font-semibold" id={`${baseId}-${step.id}`}>
               {step.title}
             </h3>
             {step.description ? (
