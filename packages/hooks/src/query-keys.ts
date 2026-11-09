@@ -28,6 +28,8 @@ export const queryKeys = {
   messages: (conversationId: string) => ['messages', conversationId] as const,
   admin: {
     branches: (page: number) => ['admin', 'branches', page] as const,
+    /** Todas las sedes (para el mapa); comparte prefijo para invalidarse con la lista. */
+    branchesAll: ['admin', 'branches', 'all'] as const,
     rooms: (page: number) => ['admin', 'rooms', page] as const,
     maintenance: (page: number) => ['admin', 'maintenance', page] as const,
     plans: ['admin', 'plans'] as const,

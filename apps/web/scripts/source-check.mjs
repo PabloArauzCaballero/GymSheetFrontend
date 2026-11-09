@@ -8,6 +8,10 @@ const allowedFetchFiles = new Set([
   'src/shared/api/api-client.ts',
   'src/shared/server/backend.ts',
   'src/shared/server/media-proxy.ts',
+  // Geocodificación de sedes: el servidor consulta Nominatim (destino fijo) y
+  // el navegador solo llama a la ruta BFF `/api/geocode`.
+  'src/shared/server/geocoding.ts',
+  'src/shared/api/geocoding-client.ts',
 ]);
 /**
  * El almacenamiento del navegador está prohibido para datos de sesión. El
@@ -32,8 +36,7 @@ const sourceExtensions = new Set(['.ts', '.tsx', '.css']);
  * permitido, que es justo la forma correcta de componer una opacidad.
  */
 const themeSourceDirectory = 'src/shared/theme/';
-const literalColorPattern =
-  /#[0-9a-fA-F]{3,8}\b|\b(?:rgb|rgba|hsl|hsla)\(\s*[0-9.]/u;
+const literalColorPattern = /#[0-9a-fA-F]{3,8}\b|\b(?:rgb|rgba|hsl|hsla)\(\s*[0-9.]/u;
 const findings = [];
 
 async function walk(directory) {

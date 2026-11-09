@@ -28,6 +28,9 @@ export type BranchInput = {
   nombre: string;
   descripcion?: string | null;
   zonaHoraria?: string;
+  direccion?: string | null;
+  latitud?: number | null;
+  longitud?: number | null;
   metadata?: Record<string, unknown>;
 };
 
@@ -50,12 +53,31 @@ export type MaintenanceInput = {
   metadata?: Record<string, unknown>;
 };
 
+const MAX_BRANCH_PAGES = 10;
+
 export const facilitiesAdminService = {
   listBranches: (page = 1) =>
     apiRequest<Page<Branch>>(
       `/admin/facilities/branches?page=${page}&pageSize=25`,
       pageSchema(branchSchema),
     ),
+  /**
+   * Todas las sedes para el mapa. El backend pagina a 100 como máximo; se
+   * recorren las páginas con un tope para no colgar la pantalla si el total
+   * creciera sin control.
+   */
+  listAllBranches: async (): Promise<Branch[]> => {
+    const items: Branch[] = [];
+    for (let page = 1; page <= MAX_BRANCH_PAGES; page += 1) {
+      const result = await apiRequest<Page<Branch>>(
+        `/admin/facilities/branches?page=${page}&pageSize=100`,
+        pageSchema(branchSchema),
+      );
+      items.push(...result.items);
+      if (result.items.length < 100 || items.length >= result.total) break;
+    }
+    return items;
+  },
   createBranch: (input: BranchInput) =>
     apiRequest<Branch>('/admin/facilities/branches', branchSchema, { method: 'POST', body: input }),
   updateBranch: (
