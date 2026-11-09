@@ -39,6 +39,7 @@ import { MessageMedia, resolveChatMediaUrl, type RevealedMedia } from '@/feature
 import { ScrollToLatestButton } from '@/features/chat/scroll-to-latest';
 import { useMediaAccessToken } from '@/features/chat/use-media-access-token';
 import { useVoiceNote } from '@/features/chat/use-voice-note';
+import { primeChatAudioCache } from '@/features/chat/chat-audio-cache';
 import { MediaPreview, type PickedMedia } from '@/features/chat/media-preview';
 import {
   canDeleteForEveryone,
@@ -50,6 +51,14 @@ import {
 import { applyReactions, myReaction, nextReaction, withReaction } from '@/hooks/chat-reactions';
 import { messagePreviewText, replyAuthorLabel } from '@/hooks/chat-reply';
 import { buildChatRows, rowIndexOf, type ChatRow } from '@/hooks/chat-timeline';
+import {
+  pendingAudioMessage,
+  pendingTextMessage,
+  unconfirmedPending,
+  withoutPending,
+  type PendingMessage,
+} from '@/hooks/chat-pending';
+import { requestId } from '@/lib/request-id';
 import EmojiPicker from 'rn-emoji-keyboard';
 import type { ConversationSummary, Message, MessageReactionsUpdate } from '@gymsheet/schemas';
 import { chatSystemEventMessage, isMessageReadByOther } from '@gymsheet/domain';
@@ -184,7 +193,14 @@ export default function ChatThreadScreen() {
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [reachedStart, setReachedStart] = useState(false);
   const [draft, setDraft] = useState('');
-  const [sending, setSending] = useState(false);
+  /** Burbujas optimistas: se ven al instante y se reemplazan cuando el servidor confirma. */
+  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
+  /** La nota de voz que se está grabando saldrá como «escucha única» (el «1» del modo fijo). */
+  const [voiceViewOnce, setVoiceViewOnce] = useState(false);
+  const voiceViewOnceRef = useRef(false);
+  voiceViewOnceRef.current = voiceViewOnce;
+  /** Notas de voz de escucha única que ya sonaron en esta pantalla. */
+  const [consumedViewOnce, setConsumedViewOnce] = useState<Set<string>>(() => new Set());
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const [livePresence, setLivePresence] = useState<PresenceUpdate | null>(null);
@@ -604,12 +620,18 @@ export default function ChatThreadScreen() {
   const messages = useMemo(() => {
     if (conversationRevoked || isChatHistoryNotFound(history.error) ||
       unavailableConversationRef.current === conversationId) return [];
-    return cachedMessagesWhileAccessPending(dedupeById([
+    const confirmed = dedupeById([
       sanitizeDeletedMessages(olderMessages, deletedMessageIds),
       sanitizeDeletedMessages(history.data ?? [], deletedMessageIds),
       sanitizeDeletedMessages(liveMessages, deletedMessageIds),
-    ]), historyAccessPending);
-  }, [conversationId, conversationRevoked, deletedMessageIds, history.data, history.error, historyAccessPending, liveMessages, olderMessages]);
+    ]);
+    const pending = unconfirmedPending(
+      pendingMessages.filter((message) => message.conversationId === conversationId),
+      confirmed,
+    );
+    return cachedMessagesWhileAccessPending([...confirmed, ...pending], historyAccessPending);
+  }, [conversationId, conversationRevoked, deletedMessageIds, history.data, history.error, historyAccessPending, liveMessages, olderMessages, pendingMessages]);
+  const pendingIds = useMemo(() => new Set(pendingMessages.map((message) => message.id)), [pendingMessages]);
   /** La lista se pinta invertida, así que los datos van del más nuevo al más viejo. */
   const timeline = useMemo(
     () => [...messages].reverse().filter((message) =>
@@ -929,14 +951,16 @@ export default function ChatThreadScreen() {
         [revealed.id]: { mediaUrl: revealed.mediaUrl as string, mediaMimeType: revealed.mediaMimeType },
       }));
       if (revealed.type === 'image') setViewerUri(revealed.mediaUrl);
-      else void Linking.openURL(revealed.mediaUrl);
+      // La nota de voz suena dentro de la burbuja (descargada y reproducida una vez).
+      else if (revealed.type !== 'audio') void Linking.openURL(revealed.mediaUrl);
     },
     onError: (error: Error) => notify.error(error.message),
   });
 
   /** Mantener pulsado el micrófono: pide permiso la primera vez y empieza a grabar. */
   async function startVoiceNote() {
-    if (!canWrite || sending || sendingMedia || voice.recording) return;
+    if (!canWrite || sendingMedia || voice.recording) return;
+    setVoiceViewOnce(false);
     try {
       const result = await voice.start();
       if (result === 'permission-granted') {
@@ -960,34 +984,62 @@ export default function ChatThreadScreen() {
 
   /**
    * Soltar, enviar, papelera o el límite de 2 minutos: para la grabación (si
-   * todavía estaba arrancando, espera a que arranque), espera a que el archivo
-   * quede cerrado y lo sube. Una sola vez aunque lleguen dos órdenes juntas.
+   * todavía estaba arrancando, espera a que arranque) y espera a que el archivo
+   * quede cerrado. Una sola vez aunque lleguen dos órdenes juntas.
+   *
+   * La subida ya no bloquea el redactor: la nota aparece al instante como
+   * burbuja «enviando» que suena desde el archivo local, y se puede grabar la
+   * siguiente mientras sube.
    */
   async function finishVoiceNote(send: boolean) {
     if (finishingVoiceRef.current) return;
     finishingVoiceRef.current = true;
-    if (send) setSendingMedia(true);
+    const viewOnce = voiceViewOnceRef.current;
+    let result: Awaited<ReturnType<typeof voice.stop>>;
     try {
-      const result = await voice.stop(send);
-      if (result.kind === 'too-short') {
-        notify.info('Mantén pulsado el micrófono al menos un segundo para grabar.');
-        return;
-      }
-      if (result.kind !== 'ready') return;
-      if (!conversationId || !canWrite || unavailableConversationRef.current === conversationId) return;
-      const replyToId = replyTarget?.id;
+      result = await voice.stop(send);
+    } catch (error: unknown) {
+      notify.error(error instanceof Error ? error.message : 'No se pudo guardar la nota de voz.');
+      return;
+    } finally {
+      finishingVoiceRef.current = false;
+      setVoiceViewOnce(false);
+    }
+    if (result.kind === 'too-short') {
+      notify.info('Mantén pulsado el micrófono al menos un segundo para grabar.');
+      return;
+    }
+    if (result.kind !== 'ready') return;
+    if (!conversationId || !canWrite || !currentUserId || unavailableConversationRef.current === conversationId) return;
+    const target = replyTarget;
+    const replyToId = target?.id;
+    const clientRequestId = requestId();
+    setPendingMessages((current) => [
+      ...current,
+      pendingAudioMessage({
+        clientRequestId,
+        conversationId,
+        senderId: currentUserId,
+        localUri: result.file.uri,
+        viewOnce,
+        replyTo: target,
+      }),
+    ]);
+    if (replyToId) setReplyTarget(null);
+    scrollToLatest();
+    try {
       const sent = await chatService.sendMediaMessage(conversationId, result.file, {
         type: 'audio',
-        viewOnce: false,
+        viewOnce,
+        clientRequestId,
         ...(replyToId ? { replyToId } : {}),
       });
+      if (!viewOnce) primeChatAudioCache(sent.id, result.file.uri);
       showOwnMessage(sent);
-      if (replyToId) setReplyTarget(null);
     } catch (error: unknown) {
       notify.error(error instanceof Error ? error.message : 'No se pudo enviar el mensaje de voz.');
     } finally {
-      setSendingMedia(false);
-      finishingVoiceRef.current = false;
+      setPendingMessages((current) => withoutPending(current, clientRequestId));
     }
   }
   voiceLimitRef.current = () => void finishVoiceNote(true);
@@ -1082,28 +1134,45 @@ export default function ChatThreadScreen() {
     else openPlacePicker();
   }
 
+  /**
+   * Envío optimista: el texto sale del redactor y aparece como burbuja
+   * «enviando» en el mismo instante, sin esperar la ida y vuelta. El socket
+   * devuelve el mensaje completo en el ack; si no hay socket o tarda, el REST lo
+   * guarda con el mismo `clientRequestId`, así que nunca se duplica.
+   */
   async function handleSend() {
     const body = draft.trim();
-    if (!body || !conversationId || !canWrite) return;
-    const replyToId = replyTarget?.id;
-    setSending(true);
+    if (!body || !conversationId || !canWrite || !currentUserId) return;
+    const target = replyTarget;
+    const replyToId = target?.id;
+    const clientRequestId = requestId();
+    const targetConversationId = conversationId;
     stopTyping();
+    setDraft('');
+    setReplyTarget(null);
+    setPendingMessages((current) => [
+      ...current,
+      pendingTextMessage({ clientRequestId, conversationId, senderId: currentUserId, body, replyTo: target }),
+    ]);
+    scrollToLatest();
     try {
-      const ack = await sendMessage(conversationId, body, replyToId);
-      if (ack.ok) {
-        // El socket devuelve el mensaje por `message:new`; sólo hay que seguirlo.
-        scrollToLatest();
-      } else {
-        // Sin socket el REST es el que guarda el mensaje, y su respuesta es la
-        // única copia que va a existir en esta pantalla: descartarla lo borraba.
-        showOwnMessage(await chatService.sendMessage(conversationId, body, replyToId));
+      const ack = await sendMessage(conversationId, body, replyToId, clientRequestId);
+      const sent = ack.ok && ack.message
+        ? ack.message
+        : ack.ok
+          ? null
+          : await chatService.sendMessage(conversationId, body, replyToId, clientRequestId);
+      if (sent && currentConversationRef.current === targetConversationId) showOwnMessage(sent);
+      if (ack.ok && !ack.message) {
+        // Servidor anterior sin el mensaje en el ack: el historial lo trae si el socket no lo emitió.
+        void queryClient.invalidateQueries({ queryKey: ['chat', 'messages', targetConversationId] });
       }
-      setDraft('');
-      setReplyTarget(null);
     } catch (error: unknown) {
+      // No se perdió lo escrito: vuelve al redactor si el campo sigue vacío.
+      setDraft((current) => (current.length === 0 ? body : current));
       notify.error(error instanceof Error ? error.message : 'No se pudo enviar el mensaje.');
     } finally {
-      setSending(false);
+      setPendingMessages((current) => withoutPending(current, clientRequestId));
     }
   }
 
@@ -1189,6 +1258,7 @@ export default function ChatThreadScreen() {
   }
 
   function receiptFor(message: Message): Receipt {
+    if (pendingIds.has(message.id)) return 'pending';
     if (isMessageReadByOther(message.createdAt, otherLastReadAt, otherReadReceiptsSince)) return 'read';
     return otherLastDeliveredAt && message.createdAt <= otherLastDeliveredAt ? 'delivered' : 'sent';
   }
@@ -1207,8 +1277,10 @@ export default function ChatThreadScreen() {
     const mine = item.senderId === currentUserId;
     const baseline = newestAtOpen.current;
     const tombstone = isTombstone(item, deletedMessageIds);
+    const pending = pendingIds.has(item.id);
     const openActions = () => {
-      if (!currentUserId) return;
+      // Una burbuja «enviando» todavía no existe en el servidor: no admite acciones.
+      if (!currentUserId || pending) return;
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setAttachOpen(false);
       setActionMessage(item);
@@ -1225,7 +1297,7 @@ export default function ChatThreadScreen() {
       <MessageBubble
         animateIn={baseline !== null && item.createdAt > baseline}
         body={body}
-        canReply={canWrite}
+        canReply={canWrite && !pending}
         currentUserId={currentUserId}
         groupedWithNewer={row.groupedWithNewer}
         groupedWithOlder={row.groupedWithOlder}
@@ -1238,8 +1310,10 @@ export default function ChatThreadScreen() {
             onMediaError={onMediaError}
             onOpenImage={setViewerUri}
             onOpenViewOnce={() => viewOnceOpen.mutate(item.id)}
+            onViewOnceFinished={() => setConsumedViewOnce((current) => new Set(current).add(item.id))}
             openingViewOnce={viewOnceOpen.isPending}
             revealed={revealedMedia[item.id]}
+            viewOnceConsumed={consumedViewOnce.has(item.id)}
             token={mediaAccessToken}
             tombstone={tombstone}
           />
@@ -1392,6 +1466,8 @@ export default function ChatThreadScreen() {
                 onToggleAttach={() => setAttachOpen((open) => !open)}
                 onVoiceStart={() => void startVoiceNote()}
                 onVoiceStop={(send) => void finishVoiceNote(send)}
+                onToggleVoiceViewOnce={() => setVoiceViewOnce((current) => !current)}
+                voiceViewOnce={voiceViewOnce}
                 recording={voice.recording}
                 recordingMillis={voice.elapsedMs}
                 replying={replyTarget && replyTarget.type !== 'system' ? {
@@ -1399,7 +1475,7 @@ export default function ChatThreadScreen() {
                   preview: messagePreviewText(replyTarget),
                   ownQuote: replyTarget.senderId === currentUserId,
                 } : null}
-                sending={sending || savingEdit}
+                sending={savingEdit}
               />
             </View>
           ) : (

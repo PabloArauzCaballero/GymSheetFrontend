@@ -20,6 +20,7 @@ import { useReduceMotion } from '@/notifications/use-reduce-motion';
 import { notify } from '@/notifications';
 import { accentContrast, chatColors, colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
 import { ChatAttachMenu, type AttachKind } from './chat-attach-menu';
+import { OnceBadge } from './message-content';
 
 /** Cuánto hay que arrastrar el micrófono para cancelar (izquierda) o fijar la grabación (arriba). */
 const CANCEL_DISTANCE = 110;
@@ -119,6 +120,8 @@ export function ChatComposer({
   onVoiceStop,
   busy,
   focusRequest = 0,
+  voiceViewOnce = false,
+  onToggleVoiceViewOnce,
 }: {
   draft: string;
   onChangeDraft: (value: string) => void;
@@ -140,6 +143,9 @@ export function ChatComposer({
   busy: boolean;
   /** Cambiarlo enfoca el campo y abre el teclado (p. ej. al elegir «Editar», como WhatsApp). */
   focusRequest?: number;
+  /** La nota que se graba saldrá como «escucha única». */
+  voiceViewOnce?: boolean;
+  onToggleVoiceViewOnce?: () => void;
 }) {
   const [holding, setHolding] = useState(false);
   const [locked, setLocked] = useState(false);
@@ -251,8 +257,32 @@ export function ChatComposer({
           <Text style={{ color: colors.text, fontSize: fontSizes.md, fontVariant: ['tabular-nums'] }}>
             {formatClock(recordingMillis)}
           </Text>
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>Grabando…</Text>
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+            {voiceViewOnce ? 'Escucha única' : 'Grabando…'}
+          </Text>
         </View>
+        {onToggleVoiceViewOnce ? (
+          <PressableScale
+            accessibilityHint="La nota de voz se podrá escuchar una sola vez"
+            accessibilityLabel="Escucha única"
+            accessibilityRole="switch"
+            accessibilityState={{ checked: voiceViewOnce }}
+            haptic="light"
+            onPress={onToggleVoiceViewOnce}
+            scaleTo={0.9}
+            style={{
+              width: ROUND_BUTTON,
+              height: ROUND_BUTTON,
+              borderRadius: radii.full,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: voiceViewOnce ? colors.volt : 'transparent',
+            }}
+            testID="chat-voice-view-once"
+          >
+            <OnceBadge color={voiceViewOnce ? accentContrast() : colors.textMuted} size={22} />
+          </PressableScale>
+        ) : null}
         <RoundButton icon="send" label="Enviar nota de voz" onPress={() => stop(true)} />
       </Animated.View>
     );
