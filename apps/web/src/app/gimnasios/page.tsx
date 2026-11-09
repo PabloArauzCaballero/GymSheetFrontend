@@ -25,8 +25,7 @@ export default async function GimnasiosPage({
       <PublicHeader />
       <main className="mx-auto grid w-full max-w-6xl flex-1 gap-8 px-5 py-14 sm:px-8">
         <div className="reveal">
-          <p className="data-label mb-3 text-[var(--accent-ink)]">Directorio</p>
-          <h1 className="display-title text-gradient-volt">Gimnasios</h1>
+          <h1 className="display-title">Gimnasios</h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--text-muted)] sm:text-base">
             Todas las sedes activas, con sus servicios y equipamiento disponible.
           </p>

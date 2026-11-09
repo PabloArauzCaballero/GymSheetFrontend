@@ -77,8 +77,7 @@ export default async function GimnasioDetailPage({
               </span>
             ) : null}
             <div>
-              <p className="data-label mb-2 text-[var(--accent-ink)]">Gimnasio</p>
-              <h1 className="display-title text-gradient-volt">{branch.nombre}</h1>
+              <h1 className="display-title">{branch.nombre}</h1>
             </div>
           </div>
           {branch.descripcion ? (
