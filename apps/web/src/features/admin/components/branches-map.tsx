@@ -23,7 +23,7 @@ function BranchPopup({ branch }: Readonly<{ branch: Branch }>) {
     <div className="grid gap-2">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-bold">{branch.nombre}</p>
+          <p className="font-semibold">{branch.nombre}</p>
           <p className="text-xs text-[var(--text-muted)]">{branch.codigo}</p>
         </div>
         <Badge tone={branch.estado === 'ACTIVE' ? 'success' : 'neutral'}>
