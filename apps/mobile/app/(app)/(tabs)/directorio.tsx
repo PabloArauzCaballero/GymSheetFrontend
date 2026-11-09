@@ -406,8 +406,9 @@ export default function DirectorioScreen() {
       <StatusBar barStyle="light-content" />
       <AmbientBackground />
 
+      {/* Título grande a la izquierda. Es pestaña: no lleva «Volver». */}
       <View style={styles.header}>
-        <Text accessibilityRole="header" numberOfLines={1} style={styles.title}>
+        <Text accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit style={styles.title}>
           Marketplace
         </Text>
       </View>

@@ -6,6 +6,7 @@ import { BottomSheet } from '@/components/bottom-sheet';
 import { ExerciseImage } from '@/components/media';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
+import { ExerciseManager } from '@/features/workout/focus/exercise-manager';
 import { colors, iconSizes, metricColors, minTouchTarget, radii, spacing, thumbSizes, type MetricKey } from '@/theme';
 
 function MenuRow({
@@ -100,6 +101,7 @@ export function SessionSheet({
   items,
   currentPage,
   onSelect,
+  manage,
 }: {
   mode: SessionSheetMode;
   onClose: () => void;
@@ -121,6 +123,13 @@ export function SessionSheet({
   items: readonly OverviewItem[];
   currentPage: number;
   onSelect: (item: OverviewItem) => void;
+  /** Rutina in situ: subir, bajar, repetir y quitar ejercicios desde la lista. */
+  manage?: {
+    busy: boolean;
+    onMove: (id: string, direction: -1 | 1) => void;
+    onRepeat: (id: string) => void;
+    onRemove: (id: string) => void;
+  };
 }) {
   // Mientras se cierra, la hoja conserva lo último que enseñaba (no parpadea a la otra vista).
   const [shown, setShown] = useState<'menu' | 'overview'>('menu');
@@ -129,21 +138,21 @@ export function SessionSheet({
   return (
     <BottomSheet
       onClose={onClose}
-      subtitle={overview ? 'Toca uno para ir a él' : undefined}
+      subtitle={overview ? (manage ? 'Toca uno para ir a él · usa los botones para ordenar' : 'Toca uno para ir a él') : undefined}
       testID={overview ? 'workout-overview' : 'workout-menu'}
       title={overview ? 'Ejercicios' : 'Tu entreno'}
       visible={mode !== null}
     >
       {overview ? (
         <View style={{ gap: spacing.xs }}>
-          {items.map((item) => {
+          {items.map((item, index) => {
             const here = item.page === currentPage;
             return (
+              <View key={item.id}>
               <PressableScale
-                accessibilityLabel={[item.badge, item.name, item.omitted ? 'omitido' : item.done ? 'hecho' : `${item.progress} series`].filter(Boolean).join(', ')}
+                accessibilityLabel={[item.badge, item.name, item.omitted ? 'omitido' : item.done ? 'hecho' : `${item.progress.replace('/', ' de ')} series`].filter(Boolean).join(', ')}
                 accessibilityState={{ selected: here }}
                 haptic="selection"
-                key={item.id}
                 onPress={() => onSelect(item)}
                 style={{
                   flexDirection: 'row',
@@ -180,6 +189,19 @@ export function SessionSheet({
                   </Text>
                 )}
               </PressableScale>
+              {manage ? (
+                <ExerciseManager
+                  busy={manage.busy}
+                  first={index === 0}
+                  id={item.id}
+                  last={index === items.length - 1}
+                  name={item.name}
+                  onMove={manage.onMove}
+                  onRemove={manage.onRemove}
+                  onRepeat={manage.onRepeat}
+                />
+              ) : null}
+              </View>
             );
           })}
         </View>
