@@ -1,0 +1,134 @@
+/*
+ * Mapas (Leaflet). Todo color sale del tema: el mapa debe leerse como parte de
+ * la consola, en claro y en oscuro.
+ */
+.map-frame {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-low);
+}
+
+.map-frame .leaflet-container {
+  height: 100%;
+  width: 100%;
+  background: var(--surface-low);
+  font: inherit;
+}
+
+.map-frame .leaflet-control-zoom a,
+.map-frame .leaflet-bar a {
+  border-color: var(--border);
+  background: var(--surface-lowest);
+  color: var(--text);
+}
+
+.map-frame .leaflet-control-zoom a:hover {
+  background: var(--surface);
+}
+
+.map-frame .leaflet-container .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--surface-lowest) 80%, transparent);
+  color: var(--text-muted);
+}
+
+.map-frame .leaflet-container .leaflet-control-attribution a {
+  color: var(--text-muted);
+  text-decoration: underline;
+}
+
+.map-frame .leaflet-popup-content-wrapper,
+.map-frame .leaflet-popup-tip {
+  border: 1px solid var(--border);
+  background: var(--surface-lowest);
+  color: var(--text);
+  box-shadow: var(--shadow-dialog);
+}
+
+.map-frame .leaflet-popup-content-wrapper {
+  border-radius: 6px;
+}
+
+.map-frame .leaflet-popup-content {
+  margin: 14px 16px;
+  min-width: 200px;
+  line-height: 1.5;
+}
+
+.map-frame .leaflet-popup-close-button {
+  color: var(--text-muted);
+}
+
+.map-frame .leaflet-container a.leaflet-popup-close-button:hover {
+  color: var(--text);
+}
+
+.map-frame--picking .leaflet-container {
+  cursor: crosshair;
+}
+
+/* Pin: gota con punto central, anclada por la punta. */
+.map-pin-host {
+  background: none;
+  border: 0;
+}
+
+.map-pin {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--surface-lowest);
+  border-radius: 50% 50% 50% 0;
+  /* Pin neutro: con nueve sedes, nueve pines en acento serían ruido. El
+   * acento marca solo la sede seleccionada y el punto que se está eligiendo. */
+  background: var(--text);
+  box-shadow: 0 6px 16px -6px var(--overlay);
+  transform: rotate(-45deg);
+  transition: transform var(--dur-fast, 150ms) ease-out;
+}
+
+.map-pin__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--background);
+}
+
+.map-pin--inactive {
+  background: var(--text-disabled);
+}
+
+.map-pin--inactive .map-pin__dot {
+  background: var(--surface-lowest);
+}
+
+.map-pin--draft,
+.map-pin--selected {
+  background: var(--volt);
+}
+
+.map-pin--draft .map-pin__dot,
+.map-pin--selected .map-pin__dot {
+  background: var(--accent-contrast);
+}
+
+.map-pin--selected {
+  transform: rotate(-45deg) scale(1.2);
+  outline: 3px solid color-mix(in srgb, var(--volt) 45%, transparent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-pin {
+    transition: none;
+  }
+}
+
+/* Leaflet separa los párrafos del popup 17 px; el contenido ya trae su ritmo. */
+.map-frame .leaflet-popup-content p {
+  margin: 0;
+}

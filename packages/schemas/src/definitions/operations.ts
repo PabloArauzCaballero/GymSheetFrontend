@@ -66,6 +66,25 @@ export const branchSchema = z.object({
   nombre: z.string(),
   descripcion: z.string().nullable(),
   zonaHoraria: z.string(),
+  // Opcionales en la lectura: un backend anterior a la ubicación en mapa no
+  // los envía y la lista de sedes no debe romperse por ello.
+  direccion: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? null),
+  latitud: z
+    .number()
+    .nullish()
+    .transform((value) => value ?? null),
+  longitud: z
+    .number()
+    .nullish()
+    .transform((value) => value ?? null),
+  radioGeocercaM: z
+    .number()
+    .int()
+    .nullish()
+    .transform((value) => value ?? null),
   estado: z.enum(['ACTIVE', 'INACTIVE']),
   metadata: z.record(z.string(), z.unknown()),
 });

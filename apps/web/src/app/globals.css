@@ -5,6 +5,8 @@
 @import './contraste.css';
 /* Ayudantes de composición (`panel`, `glass`, `display-title`…), en `@layer components`. */
 @import './components.css';
+@import './map.css';
+@import './forms.css';
 
 /* ----------------------------------------------------------------------------
  * Esta hoja no contiene ni un color.

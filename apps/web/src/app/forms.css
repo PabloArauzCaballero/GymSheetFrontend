@@ -1,0 +1,42 @@
+/*
+ * Tarjeta de opción (`ChoiceCards`): un radio nativo oculto dentro de un
+ * <label>. El estado elegido y el foco de teclado se leen con `:has()` sobre el
+ * input real, así que no hay estado duplicado en React.
+ */
+.choice-card {
+  position: relative;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-low);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast, 150ms) ease-out,
+    background-color var(--dur-fast, 150ms) ease-out,
+    box-shadow var(--dur-fast, 150ms) ease-out;
+}
+
+.choice-card:hover {
+  border-color: var(--text-disabled);
+}
+
+.choice-card:has(input:checked) {
+  /* Como `ChoiceChip`: lo elegido se marca en el tono del texto, nunca en
+   * acento (repp-diseno §2); el acento queda para la acción principal. */
+  border-color: var(--text);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--text);
+}
+
+.choice-card:has(input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choice-card {
+    transition: none;
+  }
+}

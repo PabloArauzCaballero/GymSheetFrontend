@@ -1,23 +1,17 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
-import { useState } from 'react';
 import { notify } from '@/shared/notifications';
 import { facilitiesAdminService } from '@/features/admin/services/facilities-admin-service';
-import { roomTypes } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
-import { Button } from '@/shared/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogTrigger } from '@/shared/components/ui/dialog';
-import { Field } from '@/shared/components/ui/field';
-import { Input } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
 import { Table, TableCell, TableContainer, TableHead } from '@/shared/components/ui/table';
+import { roomTypeLabels } from './facility-labels';
+import { RoomCreateDialog } from './room-create-dialog';
 
 export function RoomPanel({ canManage }: Readonly<{ canManage: boolean }>) {
-  const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const branches = useQuery({
     queryKey: queryKeys.admin.branches(1),
@@ -27,24 +21,10 @@ export function RoomPanel({ canManage }: Readonly<{ canManage: boolean }>) {
     queryKey: queryKeys.admin.rooms(1),
     queryFn: () => facilitiesAdminService.listRooms(1),
   });
+  const branchNames = new Map(
+    (branches.data?.items ?? []).map((branch) => [branch.id, branch.nombre]),
+  );
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['admin', 'rooms'] });
-  const create = useMutation({
-    mutationFn: (form: FormData) =>
-      facilitiesAdminService.createRoom({
-        sedeId: String(form.get('sedeId')),
-        codigo: String(form.get('codigo')),
-        nombre: String(form.get('nombre')),
-        tipoSala: String(form.get('tipoSala')) as (typeof roomTypes)[number],
-        capacidad: form.get('capacidad') ? Number(form.get('capacidad')) : null,
-        metadata: {},
-      }),
-    onSuccess: async () => {
-      await refresh();
-      setOpen(false);
-      notify.success('Sala creada.');
-    },
-    onError: (error: Error) => notify.error(error),
-  });
   const update = useMutation({
     mutationFn: ({
       id,
@@ -68,57 +48,7 @@ export function RoomPanel({ canManage }: Readonly<{ canManage: boolean }>) {
             Capacidad, tipo y estado de cada espacio.
           </p>
         </div>
-        {canManage ? (
-          <Dialog onOpenChange={setOpen} open={open}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="size-4" />
-                Nueva sala
-              </Button>
-            </DialogTrigger>
-            <DialogContent title="Registrar sala">
-              <form action={(form) => create.mutate(form)} className="grid gap-5">
-                <Field label="Sede">
-                  <Select name="sedeId" required>
-                    {branches.data?.items.map((branch) => (
-                      <option key={branch.id} value={branch.id}>
-                        {branch.nombre}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Código">
-                  <Input name="codigo" required />
-                </Field>
-                <Field label="Nombre">
-                  <Input name="nombre" required />
-                </Field>
-                <Field label="Tipo">
-                  <Select name="tipoSala">
-                    {roomTypes.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Capacidad">
-                  <Input min="1" name="capacidad" type="number" />
-                </Field>
-                <div className="flex flex-wrap justify-end gap-2">
-                  <DialogClose asChild>
-                    <Button type="button" variant="ghost">
-                      Cancelar
-                    </Button>
-                  </DialogClose>
-                  <Button loading={create.isPending} type="submit" variant="primary">
-                    Guardar
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        ) : null}
+        {canManage ? <RoomCreateDialog branches={branches.data?.items ?? []} /> : null}
       </div>
       {rooms.isError ? (
         <ErrorPanel message={rooms.error.message} onRetry={() => rooms.refetch()} />
@@ -139,14 +69,16 @@ export function RoomPanel({ canManage }: Readonly<{ canManage: boolean }>) {
                   <tr key={room.id}>
                     <TableCell>
                       <p className="font-semibold">{room.nombre}</p>
-                      <p className="mt-1 text-xs text-[var(--text-muted)]">{room.codigo}</p>
+                      <p className="mt-1 text-xs text-[var(--text-muted)]">
+                        {room.codigo}
+                        {branchNames.get(room.sedeId) ? ` · ${branchNames.get(room.sedeId)}` : ''}
+                      </p>
                     </TableCell>
-                    <TableCell>{room.tipoSala}</TableCell>
+                    <TableCell>{roomTypeLabels[room.tipoSala]}</TableCell>
                     <TableCell>{room.capacidad ?? '—'}</TableCell>
                     <TableCell>
                       {canManage ? (
                         <Select
-                          aria-label={`Estado de ${room.nombre}`}
                           disabled={update.isPending}
                           onChange={(event) =>
                             update.mutate({

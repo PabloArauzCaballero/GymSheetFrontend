@@ -189,11 +189,26 @@ test.describe('consola de administración', () => {
     await dialog.locator('input[name="codigo"]').fill(`SEDE-${run}`);
     await dialog.locator('input[name="nombre"]').fill(`Sede E2E ${run}`);
     await shot(page, 'sedes-alta-dialogo');
-    await dialog.getByRole('button', { name: 'Guardar' }).click();
+    await dialog.getByRole('button', { name: /Siguiente/u }).click();
 
-    await expect(page.getByRole('row').filter({ hasText: `Sede E2E ${run}` })).toBeVisible({
-      timeout: 20_000,
-    });
+    // Paso de ubicación: sin punto no se puede avanzar; se marca con un clic
+    // en el mapa del propio diálogo.
+    await dialog.getByRole('button', { name: /Siguiente/u }).click();
+    await expect(dialog.getByRole('alert')).toContainText('Marca la ubicación');
+    const map = dialog.locator('.leaflet-container');
+    await expect(map).toBeVisible({ timeout: 15_000 });
+    await map.click({ position: { x: 200, y: 140 } });
+    await expect(dialog.getByLabel('Latitud')).not.toHaveValue('');
+    await shot(page, 'sedes-alta-ubicacion');
+    await dialog.getByRole('button', { name: /Siguiente/u }).click();
+    await dialog.getByRole('button', { name: /Siguiente/u }).click();
+    await dialog.getByRole('button', { name: 'Registrar sede' }).click();
+
+    const row = page.getByRole('row').filter({ hasText: `Sede E2E ${run}` });
+    await expect(row).toBeVisible({ timeout: 20_000 });
+    // La sede creada con ubicación queda en el mapa y no como «Sin ubicar».
+    await expect(row).not.toContainText('Sin ubicar');
+    await expect(row.getByRole('button', { name: /^Ver / })).toBeVisible();
     await shot(page, 'sedes-creada');
   });
 
@@ -220,7 +235,9 @@ test.describe('consola de administración', () => {
     await dialog
       .locator('textarea[name="beneficios"]')
       .fill('Acceso libre a sala\nEvaluación inicial');
-    await dialog.locator('textarea[name="descripcion"]').fill('Plan creado por la verificación E2E.');
+    await dialog
+      .locator('textarea[name="descripcion"]')
+      .fill('Plan creado por la verificación E2E.');
     await shot(page, 'planes-alta-dialogo');
     await dialog.getByRole('button', { name: 'Guardar' }).click();
 
