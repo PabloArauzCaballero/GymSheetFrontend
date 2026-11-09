@@ -4,6 +4,7 @@ import { sessionPrincipalSchema } from '@gymsheet/schemas';
 import { setActiveTenant } from '@/theme';
 import { initialSessionState, type SessionState } from '@gymsheet/auth';
 import type { LoginInput } from '@gymsheet/schemas';
+import { ApiError } from '@gymsheet/api-client';
 import { apiClient, setSessionLostHandler } from '@/api/client';
 import { secureStoreAuthStorage } from '@/storage/secure-store';
 
@@ -42,6 +43,13 @@ const authPayloadSchema = z
     }),
   }));
 
+/**
+ * Cuánto espera el arranque a `/auth/me`. La pantalla de inicio está esperando
+ * esta respuesta: con el tope por defecto del cliente (15 s) una red lenta
+ * dejaba la app quince segundos en el arranque.
+ */
+export const HYDRATE_TIMEOUT_MS = 4000;
+
 interface AuthState extends Pick<SessionState, 'status' | 'principal'> {
   hydrate: () => Promise<void>;
   login: (input: LoginInput) => Promise<void>;
@@ -53,19 +61,37 @@ export const useAuthStore = create<AuthState>((set) => ({
   principal: initialSessionState.principal,
 
   async hydrate() {
-    const token = await secureStoreAuthStorage.getAccessToken();
+    let token: string | null;
+    try {
+      token = await secureStoreAuthStorage.getAccessToken();
+    } catch {
+      // Un llavero ilegible (Keystore de Android tras restaurar un respaldo,
+      // Keychain de iOS antes del primer desbloqueo) hacía que esta promesa
+      // fallara y el estado se quedara en `loading`: la app colgada en el
+      // arranque para siempre. Sin token legible se arranca sin sesión.
+      token = null;
+    }
     if (!token) {
       set({ status: 'unauthenticated', principal: null });
       return;
     }
     try {
-      const user = await apiClient.request('/auth/me', sessionPrincipalSchema, { method: 'GET' });
+      const user = await apiClient.request('/auth/me', sessionPrincipalSchema, {
+        method: 'GET',
+        timeoutMs: HYDRATE_TIMEOUT_MS,
+      });
       // La marca acompaña a la sesión: se aplica al restaurarla para que la
       // primera pantalla ya salga con los colores del gimnasio del usuario.
       setActiveTenant(user.tenantId);
       set({ status: 'authenticated', principal: user });
-    } catch {
-      await secureStoreAuthStorage.clearTokens();
+    } catch (error) {
+      // Solo un rechazo del servidor invalida la sesión. Antes cualquier fallo
+      // borraba el token: abrir la app sin señal, o con el servidor caído un
+      // momento, cerraba la sesión del usuario. Ante un fallo de red se pide
+      // entrar, pero el token se conserva para el próximo arranque.
+      const rejected =
+        error instanceof ApiError && (error.kind === 'unauthorized' || error.kind === 'forbidden');
+      if (rejected) await secureStoreAuthStorage.clearTokens();
       setActiveTenant(null);
       set({ status: 'unauthenticated', principal: null });
     }

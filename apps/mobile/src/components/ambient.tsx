@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useContext, useEffect, useState } from 'react';
+import { Image, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { NavigationContext } from '@react-navigation/native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -208,9 +208,17 @@ function Band({ spec, width, height, moving, energy }: {
  * screen should look like it is lit from somewhere, not tinted.
  */
 const GLOW = [
-  { colors: ['rgba(195,244,0,0.09)', 'rgba(195,244,0,0)'] as const, size: 1.35, x: -0.22, y: -0.12, px: 41000, py: 52000 },
-  { colors: ['rgba(120,110,255,0.08)', 'rgba(120,110,255,0)'] as const, size: 1.2, x: 0.42, y: 0.55, px: 58000, py: 44000 },
+  { color: 'rgb(195,244,0)', opacity: 0.11, size: 1.35, x: -0.22, y: -0.12, px: 41000, py: 52000 },
+  { color: 'rgb(120,110,255)', opacity: 0.1, size: 1.2, x: 0.42, y: 0.55, px: 58000, py: 44000 },
 ];
+
+/**
+ * A pre-rendered radial falloff, tinted per light. The lights used to be discs
+ * filled with a top-to-bottom linear gradient, which left the rim of the disc
+ * visible as a hard arc across the screen — the backdrop read as two cut-out
+ * circles rather than as light. A true radial falloff has no edge to see.
+ */
+const GLOW_IMAGE = require('../../assets/glow.png');
 
 function Glow({ index, width, moving }: { index: number; width: number; moving: boolean }) {
   const spec = GLOW[index]!;
@@ -238,14 +246,41 @@ function Glow({ index, width, moving }: { index: number; width: number; moving: 
         animated,
       ]}
     >
-      <LinearGradient
-        colors={spec.colors}
-        end={{ x: 0.5, y: 1 }}
-        start={{ x: 0.5, y: 0 }}
-        style={{ flex: 1, borderRadius: diameter / 2 }}
+      <Image
+        source={GLOW_IMAGE}
+        style={{ width: diameter, height: diameter, tintColor: spec.color, opacity: spec.opacity }}
       />
     </Animated.View>
   );
+}
+
+/**
+ * Whether the screen that owns this backdrop is the one on display.
+ *
+ * Every screen mounts its own backdrop, and the tab navigator keeps visited
+ * tabs mounted. Each band is ~50 bars with a worklet that runs on every frame,
+ * so five visited tabs meant ~450 animated views per frame, all but ~90 of
+ * them hidden behind the active screen. That was the app feeling slow and the
+ * tab switches stuttering. Hidden screens now drop their bars entirely.
+ *
+ * Read through the context, not `useIsFocused`: that hook throws when a
+ * screen is rendered outside a navigator (an error boundary, a test), and a
+ * decorative background must never take a screen down with it.
+ */
+function useScreenFocused(): boolean {
+  const navigation = useContext(NavigationContext);
+  const [focused, setFocused] = useState(() => navigation?.isFocused() ?? true);
+  useEffect(() => {
+    if (!navigation) return;
+    setFocused(navigation.isFocused());
+    const offFocus = navigation.addListener('focus', () => setFocused(true));
+    const offBlur = navigation.addListener('blur', () => setFocused(false));
+    return () => {
+      offFocus();
+      offBlur();
+    };
+  }, [navigation]);
+  return focused;
 }
 
 /**
@@ -261,6 +296,13 @@ export function AmbientBackground() {
   // the room visibly changes when training starts, not so much that the wave
   // starts competing with the numbers the user is reading off the screen.
   const energy = intensity === 'active' ? 1.9 : 1;
+  const focused = useScreenFocused();
+
+  // A hidden screen keeps only the flat black: its bars would be covered by
+  // the active screen anyway, and they are the expensive part.
+  if (!focused) {
+    return <View pointerEvents="none" style={StyleSheet.absoluteFill} />;
+  }
 
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>

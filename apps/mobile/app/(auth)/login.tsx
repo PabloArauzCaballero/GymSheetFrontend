@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginInput } from '@gymsheet/schemas';
 import { ApiError } from '@gymsheet/api-client';
 import { Link } from 'expo-router';
-import { View } from 'react-native';
+import { Image, View } from 'react-native';
 import { Screen, AppText, Button, Input } from '@/components/ui';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
@@ -38,6 +38,14 @@ export default function LoginScreen() {
   return (
     <Screen>
       <View style={{ gap: spacing.xs, marginBottom: spacing.lg }}>
+        {/* La misma baldosa de la intro: quien llega desde el arranque ve la
+            marca quedarse, no desaparecer para reaparecer como texto. */}
+        <Image
+          accessibilityIgnoresInvertColors
+          accessible={false}
+          source={require('../../assets/brand-mark.png')}
+          style={{ width: 56, height: 56, marginBottom: spacing.md }}
+        />
         <AppText variant="title">GymSheet</AppText>
         <AppText variant="muted">Inicia sesión para continuar</AppText>
       </View>
