@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { isTimedSet, longestTimedSet, previousPerformance, topSet } from '@gymsheet/domain';
 import { secondsLabel } from '@gymsheet/hooks';
 import type { RestSettingChange, SkipReason, SkippedSet, TimedWorkoutSetInput, Workout, WorkoutExercise, WorkoutSetInput } from '@gymsheet/types';
+import { routineBuilderService } from '@/api/services';
 import { useExerciseMedia } from '@/api/use-exercise-media';
 import { ExercisePicker } from '@/components/exercise-picker';
 import { PressableScale } from '@/components/motion';
@@ -21,6 +22,8 @@ import { FinishPage } from '@/features/workout/focus/finish-page';
 import { FocusHeader } from '@/features/workout/focus/focus-header';
 import { DoneCard, FocusPage, GroupSwitch, OmittedCard, PageMedia, RestPills, SetTrack } from '@/features/workout/focus/focus-page';
 import { RecordFlash } from '@/features/workout/focus/record-flash';
+import { SaveRoutineSheet } from '@/features/workout/focus/save-routine-sheet';
+import { routineExerciseCount, routineFromSession, suggestedRoutineName } from '@/features/workout/in-situ';
 import { ReasonSheet, type ReasonSheetMode } from '@/features/workout/focus/reason-sheet';
 import { RestSheet, type RestSheetResult, type RestSheetTarget } from '@/features/workout/focus/rest-sheet';
 import { SwapSheet, type SwapTarget } from '@/features/workout/focus/swap-sheet';
@@ -218,6 +221,22 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
   const [drafts, setDrafts] = useState<Record<string, SetDraft>>({});
   const [sheet, setSheet] = useState<SessionSheetMode>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const inSitu = session.inSitu;
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  /** Guards síncronos: un segundo toque no crea otra rutina ni cierra dos veces. */
+  const savingRoutine = useRef(false);
+  const routineSaved = useRef(false);
+  const finishing = useRef(false);
+  // Rutina in situ sin nada aún: lo primero es elegir el primer ejercicio, sin pasos de más.
+  const autoPicked = useRef(false);
+  useEffect(() => {
+    if (inSitu && data.ejercicios.length === 0 && !autoPicked.current) {
+      autoPicked.current = true;
+      setPickerOpen(true);
+    }
+  }, [inSitu, data.ejercicios.length]);
   const [resumed, setResumed] = useState(false);
   const [reason, setReason] = useState<{ mode: Exclude<ReasonSheetMode, null>; exerciseId: string } | null>(null);
   const [swapTarget, setSwapTarget] = useState<SwapTarget | null>(null);
@@ -250,6 +269,11 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
     },
     [finishPage, reduceMotion, scrollRef, width],
   );
+
+  // Tras quitar ejercicios (rutina in situ) la página puede quedar fuera de rango: al resumen.
+  useEffect(() => {
+    if (page > finishPage) goTo(finishPage, page);
+  }, [finishPage, goTo, page]);
 
   // D6: un segundo toque mientras la página viaja (o mientras se guarda) no hace nada.
   const navLockedUntil = useRef(0);
@@ -577,8 +601,63 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
     );
   };
 
+  /** Cierra la sesión: descanso fuera, ubicación para la racha y a finalizar. */
+  const finishNow = async () => {
+    // Guard síncrono: `isPending` tarda en activarse (espera el permiso de ubicación).
+    if (finishing.current) return;
+    finishing.current = true;
+    skipRest();
+    // El permiso de ubicación se pide después de confirmar, no antes.
+    const location = await captureStreakLocation();
+    session.finish.mutate(location ?? undefined, {
+      onError: () => {
+        finishing.current = false;
+      },
+    });
+  };
+
+  /** Rutina in situ: guarda lo de hoy como rutina privada y, si salió, termina. */
+  const saveRoutineAndFinish = async (name: string) => {
+    if (finishing.current || savingRoutine.current) return;
+    // Ya se guardó en un intento anterior (el cierre falló): solo se reintenta cerrar.
+    if (routineSaved.current) {
+      setSaveOpen(false);
+      void finishNow();
+      return;
+    }
+    const body = routineFromSession(data, name);
+    if (!body) {
+      setSaveOpen(false);
+      void finishNow();
+      return;
+    }
+    savingRoutine.current = true;
+    setSaveBusy(true);
+    setSaveError(null);
+    try {
+      await routineBuilderService.createWithDays(body);
+      routineSaved.current = true;
+    } catch (error) {
+      // No se pierde el entreno: se avisa y se puede reintentar o terminar sin guardar.
+      setSaveError(error instanceof Error ? error.message : 'No se pudo guardar la rutina.');
+      setSaveBusy(false);
+      return;
+    } finally {
+      savingRoutine.current = false;
+    }
+    setSaveBusy(false);
+    setSaveOpen(false);
+    notify.success('Rutina guardada en «Mis rutinas».');
+    void finishNow();
+  };
+
   const onFinish = async () => {
-    if (session.finish.isPending) return;
+    if (session.finish.isPending || finishing.current) return;
+    if (inSitu && !routineSaved.current && routineExerciseCount(data) > 0) {
+      setSaveError(null);
+      setSaveOpen(true);
+      return;
+    }
     const result = await confirm({
       title: 'Finalizar sesión',
       message:
@@ -589,10 +668,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
       cancelLabel: 'Seguir',
     });
     if (!result.confirmed || session.finish.isPending) return;
-    skipRest();
-    // El permiso de ubicación se pide después de confirmar, no antes.
-    const location = await captureStreakLocation();
-    session.finish.mutate(location ?? undefined);
+    void finishNow();
   };
 
   const onCancel = async () => {
@@ -795,8 +871,29 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
 
   const footer =
     page >= finishPage ? (
-      blocks.length === 0 ? (
-        <Button icon="add" label="Añadir ejercicio" onPress={() => setPickerOpen(true)} size="lg" style={{ flex: 1 }} testID="empty-add" />
+      blocks.length === 0 || inSitu ? (
+        <>
+          {blocks.length > 0 ? (
+            <Button
+              icon="flag"
+              label="Terminar"
+              loading={session.finish.isPending}
+              onPress={() => void onFinish()}
+              size="lg"
+              style={{ flex: 1 }}
+              testID="finish-primary"
+              variant="secondary"
+            />
+          ) : null}
+          <Button
+            icon="add"
+            label="Añadir ejercicio"
+            onPress={() => setPickerOpen(true)}
+            size="lg"
+            style={{ flex: 1.6 }}
+            testID="empty-add"
+          />
+        </>
       ) : (
         <Button
           icon="flag"
@@ -821,6 +918,18 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
       <>
         {/* Saltar la serie, a la vista y al alcance del pulgar, pero sin competir con registrar.
             Solo donde hay series que saltar: un ejercicio añadido a mano no tiene objetivo. */}
+        {inSitu && activeSource && activeSource.seriesObjetivo == null && activeSource.series.length > 0 ? (
+          <Button
+            accessibilityHint="Pasa al resumen para añadir otro ejercicio o terminar"
+            icon="arrow-forward"
+            label="Siguiente"
+            onPress={() => navigate(finishPage)}
+            size="lg"
+            style={{ flex: 1 }}
+            testID="in-situ-done"
+            variant="secondary"
+          />
+        ) : null}
         {activeSource?.seriesObjetivo == null ? null : (
         <PressableScale
           accessibilityHint="Te pregunta el motivo"
@@ -857,7 +966,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
           loading={session.addSet.isPending}
           onPress={logSet}
           size="lg"
-          style={{ flex: 1 }}
+          style={{ flex: inSitu && activeSource && activeSource.seriesObjetivo == null && activeSource.series.length > 0 ? 1.5 : 1 }}
           testID="log-set"
         />
       </>
@@ -1062,6 +1171,7 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
         })}
         <FinishPage
           bottomSpace={bottomSpace}
+          inSitu={inSitu}
           complete={blocks.length > 0 && pendingStep === null}
           exercisesDone={exercisesDone}
           exercisesTotal={ordered.length}
@@ -1102,6 +1212,32 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
         currentPage={page}
         items={overview}
         mode={sheet}
+        manage={
+          inSitu
+            ? {
+                busy: session.moveExercise.isPending || session.removeExercise.isPending || session.addExercise.isPending,
+                onMove: (exerciseId, direction) => session.moveExercise.mutate({ id: exerciseId, direction }),
+                onRepeat: (exerciseId) => {
+                  const picked = ordered.find((item) => item.id === exerciseId)?.ejercicio;
+                  if (picked) session.addExercise.mutate(picked.id);
+                },
+                onRemove: (exerciseId) => {
+                  const picked = ordered.find((item) => item.id === exerciseId);
+                  if (!picked) return;
+                  // iOS se traga un Modal abierto sobre otro: cierra la hoja y confirma después.
+                  fromMenu(() => void confirm({
+                    title: 'Quitar ejercicio',
+                    message: `${nameOf(picked)} saldrá de tu entreno${picked.series.length > 0 ? ' junto con sus series registradas' : ''}.`,
+                    severity: 'danger',
+                    confirmLabel: 'Quitar',
+                    cancelLabel: 'Volver',
+                  }).then((result) => {
+                    if (result.confirmed) session.removeExercise.mutate(exerciseId);
+                  }));
+                },
+              }
+            : undefined
+        }
         onAdd={() => fromMenu(() => setPickerOpen(true))}
         onCancel={() => fromMenu(() => void onCancel())}
         onClose={closeSheet}
@@ -1190,6 +1326,19 @@ export function WorkoutFocus({ id, data, session }: { id: string; data: Workout;
           setRestTarget(null);
         }}
         target={restTarget}
+      />
+      <SaveRoutineSheet
+        busy={saveBusy}
+        defaultName={suggestedRoutineName()}
+        error={saveError}
+        exercises={routineExerciseCount(data)}
+        onClose={() => setSaveOpen(false)}
+        onSave={(name) => void saveRoutineAndFinish(name)}
+        onSkip={() => {
+          setSaveOpen(false);
+          void finishNow();
+        }}
+        visible={saveOpen}
       />
       <ExercisePicker
         onClose={() => setPickerOpen(false)}

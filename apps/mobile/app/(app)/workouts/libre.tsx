@@ -11,6 +11,7 @@ import { BackLink } from '@/components/nav';
 import { StickyFooter, StickyFooterSpacer } from '@/components/sticky-footer';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
+import { useInSituSessions } from '@/features/workout/in-situ-store';
 import { notify } from '@/notifications';
 import { colors, minTouchTarget, radii, spacing } from '@/theme';
 
@@ -51,7 +52,9 @@ export default function FreeWorkoutScreen() {
   const start = useMutation({
     mutationFn: (empty: boolean) =>
       workoutService.startFree({ grupos: empty ? [] : groups, ejercicios: Number(size), vacia: empty }),
-    onSuccess: async (session) => {
+    onSuccess: async (session, empty) => {
+      // En blanco = rutina in situ: se arma ejercicio a ejercicio mientras se entrena.
+      if (empty) useInSituSessions.getState().mark(session.id);
       await queryClient.invalidateQueries({ queryKey: ['workouts'] });
       if (!session.rutinaLibre.cuerpoCompleto && session.rutinaLibre.grupos.length > 0 && session.rutinaLibre.propuestos === 0) {
         notify.info('No encontramos ejercicios para esas zonas: empieza añadiendo los tuyos.');
@@ -121,17 +124,21 @@ export default function FreeWorkoutScreen() {
         />
       </Section>
 
-      <Button
-        label="Prefiero empezar en blanco"
-        loading={start.isPending && start.variables === true}
-        onPress={() => {
-          if (!start.isPending) start.mutate(true);
-        }}
-        size="sm"
-        style={{ alignSelf: 'center' }}
-        testID="free-empty"
-        variant="ghost"
-      />
+      <Section title="O sobre la marcha">
+        <Text tone="muted" variant="footnote">
+          Añade un ejercicio, hazlo y decide el siguiente. Al terminar, guárdala como rutina.
+        </Text>
+        <Button
+          icon="add-circle-outline"
+          label="Empezar sin nada"
+          loading={start.isPending && start.variables === true}
+          onPress={() => {
+            if (!start.isPending) start.mutate(true);
+          }}
+          testID="free-empty"
+          variant="secondary"
+        />
+      </Section>
       <StickyFooterSpacer />
     </ScrollScreen>
   );
