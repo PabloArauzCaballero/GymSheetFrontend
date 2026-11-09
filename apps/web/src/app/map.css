@@ -118,7 +118,9 @@
 
 .map-pin--selected {
   transform: rotate(-45deg) scale(1.2);
-  outline: 3px solid color-mix(in srgb, var(--volt) 45%, transparent);
+  /* ADR-0003: el acento no se usa como borde ni halo; el realce sale de la
+   * escala y de un contorno neutro. */
+  outline: 2px solid var(--text);
   outline-offset: 2px;
 }
 
