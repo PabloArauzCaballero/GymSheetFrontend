@@ -1,30 +1,28 @@
-# Rutas que la web llama y el BFF rechaza (2026-11-08)
+# Rutas del BFF habilitadas (2026-11-09)
 
 Auditoría: cada ruta literal de los servicios web y de `@gymsheet/api-client` pasada por
-`resolveAllowedBackendPath` (`apps/web/src/shared/server/backend-route-policy.ts`). Las que salen aquí
-responden «Ruta no permitida» en el navegador aunque el backend las tenga. Ya añadidas en esta
-sesión: `/programs/active`, `/programs/strength/activate`, `/programs/:id/(stop|progress|next-loads|close)`
-y `/notifications/me/unread-count`.
+`resolveAllowedBackendPath` (`apps/web/src/shared/server/backend-route-policy.ts`).
 
-Pendientes de decidir (el allowlist es una defensa en profundidad: cada entrada debe revisarse contra
-la autorización del backend antes de abrirla):
+**Resultado: 55 rutas que la web llamaba y el BFF rechazaba («Ruta no permitida») quedan
+habilitadas.** Criterio por ruta:
 
-- Admin: `/admin/permissions/:id/:id`, `/admin/routines`, `/admin/routines/:id/(insights|official)`,
-  `/admin/support/programs/:id/recompute-week`, `/admin/support/users/:id/training`
-- Cardio: `/cardio-plans`, `/cardio-plans/:id`, `/programs/cardio/activate`
-- Comentarios y valoraciones: `/comments/:id`, `/comments/:id/:id`, `/comments/:id/like`,
-  `/comments/gifs`, `/ratings/:id/:id`
-- Directorio: `/directory/payments/orders`, `/directory/payments/orders/:id/receipt`,
-  `/directory/payments/orders/my-orders`, `/public/directory/entities/:id/(payment-config|plans)`
-- Ejercicios y músculos: `/exercises/:id/like`, `/exercises/:id/muscles`, `/muscles/:id`,
-  `/muscles/:id/exercises`, `/me/exercises/:id/preference`
-- Social: `/me/blocks`, `/me/blocks/:id`, `/me/social-discovery-settings`,
-  `/me/social-map/(areas|cities|gyms|location)`, `/me/social-map/cells/:id/people`
-- Chat: `/me/chat/read-receipts`, `/me/conversations/:id/messages/:id`
-- Progresión: `/me/progression/prizes`, `/me/progression/strikes/buy`
-- Reels: `/me/reels/:id`, `/me/reels/:id/(comments|like|repost|save)`, `/me/reels/:id/comments/:id`,
-  `/me/reels/saved`
-- Rutinas: `/routine-shares/:id/(accept|decline)`, `/routines/:id/(copy|publish|schedule|shares|structure)`,
-  `/routines/:id/shares/:id`
+1. La web la llama (servicio en `apps/web/src/features/*/services` o `@gymsheet/api-client`).
+2. Existe en el backend: verificada contra los controladores de `GymSheetBackend` rama `dev`
+   (`57f6f58`), que es quien autoriza (roles, propiedad, `UuidParamPipe`).
+3. Patrón lo más estrecho posible: enums cerrados para tipos de contenido
+   (`ROUTINE|EXERCISE|DIRECTORY_ENTITY|DIRECTORY_PRODUCT`), formato de código de músculo
+   (`[A-Z0-9_]+`) y UUID estricto donde un id convive con rutas hermanas de palabra
+   (`/me/reels/saved`, `/comments/gifs`).
 
-La lista se cortó a 60 entradas en la salida de la auditoría; puede haber alguna más.
+Grupos habilitados: administración (rutinas REPP, soporte de entrenamiento), cardio, comentarios
+y valoraciones, pedidos y planes del Marketplace, ejercicios y anatomía, bloqueos, ajustes de
+descubrimiento, mapa social, confirmaciones de lectura, editar/borrar mensajes, premios y strikes,
+reels (guardados, me gusta, repost, guardar, comentarios) y rutinas (compartir, copiar,
+publicar, calendario, semanas, estructura, sincronizar, aplicar sesión).
+
+Decisión revisada: `/me/reels/:id/comments` estaba bloqueada a propósito «hasta acordar más
+endpoints»; el backend ya los tiene (GET/POST/PATCH) y la web los usa, así que se permite.
+
+Las 8 entradas que la auditoría sigue listando son artefactos del script (rutas montadas con
+`${...}` para la query o la clave de permiso codificada dos veces) y se comprobaron a mano: todas
+pasan. Pruebas en `backend-route-policy.test.ts` (casos permitidos y bloqueados por grupo).

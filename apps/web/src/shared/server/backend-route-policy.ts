@@ -1,4 +1,10 @@
 const resourceId = '[A-Za-z0-9-]+';
+// Código de músculo del catálogo anatómico (`BICEPS_BRACHII`): mayúsculas y guion bajo.
+const muscleCode = '[A-Z0-9_]+';
+// UUID estricto: donde un id convive con rutas hermanas de palabra (`/me/reels/saved`).
+const uuid = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
+// Qué se comenta o valora (`contentKinds` en `@gymsheet/types`, enum cerrado).
+const contentKind = 'ROUTINE|EXERCISE|DIRECTORY_ENTITY|DIRECTORY_PRODUCT';
 // Clave de permiso granular, p. ej. `admin-access:manage` o `moderation:read`
 // (dominio:acción, `admin-permission.catalog.ts`). Va URL-encodeada en el
 // segmento (`encodeURIComponent` convierte `:` en `%3A`), así que el patrón
@@ -193,6 +199,52 @@ const allowedPathPatterns = [
   new RegExp(`^/directory/reviews/${resourceId}$`, 'u'),
   new RegExp(`^/directory/reviews/${resourceId}/helpful$`, 'u'),
   new RegExp(`^/directory/reviews/${resourceId}/reply$`, 'u'),
+  // ── Rutas que la web ya llamaba y el BFF rechazaba (auditoría 2026-11-09). ──
+  // Cada una existe en el backend (`GymSheetBackend`, rama `dev`, controlador
+  // indicado) y lo autoriza ahí: este allowlist es defensa en profundidad.
+  // Administración (roles ADMIN/FRONT_DESK/SYSTEM_ADMIN en el backend).
+  /^\/admin\/routines$/u,
+  new RegExp(`^/admin/routines/${resourceId}/(insights|official)$`, 'u'),
+  new RegExp(`^/admin/support/programs/${resourceId}/recompute-week$`, 'u'),
+  new RegExp(`^/admin/support/users/${resourceId}/training$`, 'u'),
+  // Cardio (`cardio-plans`, `programs/cardio/activate`).
+  /^\/cardio-plans$/u,
+  new RegExp(`^/cardio-plans/${resourceId}$`, 'u'),
+  /^\/programs\/cardio\/activate$/u,
+  // Comentarios y valoraciones de contenido.
+  /^\/comments\/gifs$/u,
+  new RegExp(`^/comments/${uuid}(/like)?$`, 'u'),
+  new RegExp(`^/comments/(${contentKind})/${resourceId}$`, 'u'),
+  new RegExp(`^/ratings/(${contentKind})/${resourceId}$`, 'u'),
+  // Marketplace: pedidos y comprobantes propios, planes y datos de cobro públicos.
+  /^\/directory\/payments\/orders(\/my-orders)?$/u,
+  new RegExp(`^/directory/payments/orders/${resourceId}/receipt$`, 'u'),
+  new RegExp(`^/public/directory/entities/${resourceId}/(plans|payment-config)$`, 'u'),
+  /^\/public\/directory\/plans$/u,
+  // Ejercicios y anatomía.
+  new RegExp(`^/exercises/${resourceId}/(like|muscles)$`, 'u'),
+  new RegExp(`^/me/exercises/${resourceId}/preference$`, 'u'),
+  new RegExp(`^/muscles/${muscleCode}(/exercises)?$`, 'u'),
+  // Social: bloqueos, descubrimiento, mapa y confirmaciones de lectura.
+  /^\/me\/blocks$/u,
+  new RegExp(`^/me/blocks/${resourceId}$`, 'u'),
+  /^\/me\/social-discovery-settings$/u,
+  /^\/me\/social-map\/(areas|cities|gyms|location)$/u,
+  new RegExp(`^/me/social-map/cells/${resourceId}/people$`, 'u'),
+  /^\/me\/chat\/read-receipts$/u,
+  new RegExp(`^/me/conversations/${resourceId}/messages/${resourceId}$`, 'u'),
+  // Progresión: premios y compra de strikes.
+  /^\/me\/progression\/(prizes|strikes\/buy)$/u,
+  // Reels: guardados, borrar, me gusta, repost, guardar y comentarios.
+  /^\/me\/reels\/saved$/u,
+  new RegExp(`^/me/reels/${uuid}(/(like|repost|save|comments))?$`, 'u'),
+  new RegExp(`^/me/reels/${uuid}/comments/${resourceId}$`, 'u'),
+  // Rutinas: compartir, copiar, publicar, calendario, semanas y estructura.
+  /^\/me\/routine-invitations$/u,
+  new RegExp(`^/routine-shares/${resourceId}/(accept|decline)$`, 'u'),
+  new RegExp(`^/routines/${resourceId}/(copy|publish|unpublish|schedule|shares|structure|sync-from-source|calendar)$`, 'u'),
+  new RegExp(`^/routines/${resourceId}/(shares|weeks)/${resourceId}$`, 'u'),
+  new RegExp(`^/workouts/${resourceId}/apply-to-routine$`, 'u'),
 ];
 
 export function resolveAllowedBackendPath(parts: string[]) {
