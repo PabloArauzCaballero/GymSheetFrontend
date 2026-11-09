@@ -1,11 +1,27 @@
 'use client';
 
 import { roleLabel } from '@/shared/lib/roles';
-import { Info, Moon, Palette, ShieldCheck, Sun, UserRound } from 'lucide-react';
+import {
+  CircleUserRound,
+  IdCard,
+  KeyRound,
+  Mail,
+  MonitorSmartphone,
+  Moon,
+  Palette,
+  PersonStanding,
+  ShieldCheck,
+  Sun,
+  Tag,
+  UserRound,
+  type LucideIcon,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import { AnatomyCredit } from '@/features/anatomy/components/anatomy-credit';
 import { LogoutButton } from '@/shared/components/layout/logout-button';
 import { PageHeader } from '@/shared/components/layout/page-header';
+import { ListCard } from '@/shared/components/mobile/nav-row';
+import { Section } from '@/shared/components/mobile/section';
 import { Segmented } from '@/shared/components/ui/segmented';
 import { useTheme } from '@/shared/theme/theme-provider';
 
@@ -14,23 +30,24 @@ const THEME_OPTIONS = [
   { value: 'light', label: 'Claro' },
 ] as const;
 
-function Group({ icon, title, children }: Readonly<{ icon: ReactNode; title: string; children: ReactNode }>) {
+/** `Section` + `Card list` del móvil: título 17/600 con glifo y filas separadas por divisor. */
+function Group({ icon: Icon, title, children }: Readonly<{ icon: LucideIcon; title: string; children: ReactNode }>) {
   return (
-    <section aria-label={title} className="grid content-start gap-3">
-      <h2 className="data-label inline-flex items-center gap-2 text-[var(--text-muted)]">
-        {icon}
-        {title}
-      </h2>
-      <div className="panel divide-y divide-[var(--border-subtle)]">{children}</div>
-    </section>
+    <Section icon={Icon} title={title}>
+      <ListCard className="divide-y divide-[var(--border)]">{children}</ListCard>
+    </Section>
   );
 }
 
-function Row({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
+/** `Row` del móvil: glifo + etiqueta 15 apagada a la izquierda, valor 15 a la derecha. */
+function Row({ icon: Icon, label, children }: Readonly<{ icon: LucideIcon; label: string; children: ReactNode }>) {
   return (
-    <div className="flex min-h-14 flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-3">
-      <span className="text-sm text-[var(--text-muted)]">{label}</span>
-      <span className="min-w-0 text-right text-sm font-medium">{children}</span>
+    <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-6 gap-y-1 py-3">
+      <span className="t-subhead inline-flex items-center gap-2 text-[var(--text-muted)]">
+        <Icon aria-hidden className="size-4" />
+        {label}
+      </span>
+      <span className="t-subhead min-w-0 text-right font-medium">{children}</span>
     </div>
   );
 }
@@ -50,52 +67,49 @@ export function SettingsPage({
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="grid gap-8">
-      <PageHeader description="Tu cuenta, la apariencia y la información de la aplicación." title="Ajustes" />
-      <div className="grid gap-8 lg:grid-cols-2">
-        <Group icon={<UserRound aria-hidden className="size-4" />} title="Cuenta">
-          {name ? <Row label="Nombre">{name}</Row> : null}
-          <Row label="Correo">
-            <span className="break-all">{email}</span>
-          </Row>
-          <Row label="Tipo de cuenta">{roleLabel(role)}</Row>
-          <Row label="Sesión">
-            <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck aria-hidden className="size-4 text-[var(--success)]" />
-              Protegida en una cookie segura
-            </span>
-          </Row>
-        </Group>
+    <div className="mx-auto grid w-full max-w-[560px] gap-8">
+      <PageHeader title="Ajustes" />
 
-        <Group icon={<Palette aria-hidden className="size-4" />} title="Apariencia">
-          <Row label="Tema">
-            <span className="inline-flex items-center gap-3">
-              {theme === 'light' ? (
-                <Sun aria-hidden className="size-4 text-[var(--text-muted)]" />
-              ) : (
-                <Moon aria-hidden className="size-4 text-[var(--text-muted)]" />
-              )}
-              <Segmented label="Tema" onChange={setTheme} options={THEME_OPTIONS} value={theme} />
-            </span>
+      <Group icon={UserRound} title="Cuenta">
+        {name ? (
+          <Row icon={CircleUserRound} label="Nombre">
+            {name}
           </Row>
-        </Group>
+        ) : null}
+        <Row icon={Mail} label="Correo">
+          <span className="break-all">{email}</span>
+        </Row>
+        <Row icon={IdCard} label="Tipo de cuenta">
+          {roleLabel(role)}
+        </Row>
+        <Row icon={KeyRound} label="Sesión">
+          <span className="inline-flex items-center gap-1.5">
+            <ShieldCheck aria-hidden className="size-4 text-[var(--success)]" />
+            Protegida en una cookie segura
+          </span>
+        </Row>
+      </Group>
 
-        <Group icon={<Info aria-hidden className="size-4" />} title="Aplicación">
-          <Row label="Versión">{version}</Row>
-          <div className="grid gap-2 px-5 py-4">
-            <span className="text-sm text-[var(--text-muted)]">Créditos</span>
-            <AnatomyCredit className="text-sm" />
-          </div>
-        </Group>
+      <Group icon={Palette} title="Apariencia">
+        <Row icon={theme === 'light' ? Sun : Moon} label="Tema">
+          <Segmented label="Tema" onChange={setTheme} options={THEME_OPTIONS} value={theme} />
+        </Row>
+      </Group>
 
-        <section aria-label="Sesión" className="grid content-start gap-3">
-          <h2 className="data-label text-[var(--text-muted)]">Sesión</h2>
-          <div className="panel flex flex-wrap items-center justify-between gap-4 px-5 py-4">
-            <p className="text-sm text-[var(--text-muted)]">Sal de tu cuenta en este navegador.</p>
-            <LogoutButton withLabel />
-          </div>
-        </section>
-      </div>
+      <Group icon={MonitorSmartphone} title="Aplicación">
+        <Row icon={Tag} label="Versión">
+          {version}
+        </Row>
+      </Group>
+
+      <Section icon={PersonStanding} title="Créditos">
+        <div className="panel p-5">
+          <AnatomyCredit className="t-subhead" />
+        </div>
+      </Section>
+
+      {/* Como en el móvil: cerrar sesión al final, a lo ancho y en rojo. */}
+      <LogoutButton block withLabel />
     </div>
   );
 }

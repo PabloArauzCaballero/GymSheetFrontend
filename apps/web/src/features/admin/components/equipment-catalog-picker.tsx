@@ -121,7 +121,7 @@ export function EquipmentCatalogPicker() {
               return (
                 <section className="flex flex-col gap-2" key={zone.zona}>
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                    <h3 className="text-sm font-semibold text-[var(--text-muted)]">
                       {zone.zona}
                     </h3>
                     <button

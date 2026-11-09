@@ -15,9 +15,9 @@ function Section({ title, children }: Readonly<{ title: string; children: React.
 export default function TermsPage() {
   return (
     <LegalDocument title="Términos y condiciones" updatedAt="25 de agosto de 2026">
-      <Section title="1. Qué es GymSheet">
+      <Section title="1. Qué es REPP">
         <p>
-          GymSheet es una aplicación de registro de entrenamiento, progresión y funciones sociales
+          REPP es una aplicación de registro de entrenamiento, progresión y funciones sociales
           entre socios de un mismo gimnasio. Al crear una cuenta aceptas estos términos y la{' '}
           <a
             className="font-medium text-[var(--text)] underline decoration-[var(--volt)] underline-offset-4"

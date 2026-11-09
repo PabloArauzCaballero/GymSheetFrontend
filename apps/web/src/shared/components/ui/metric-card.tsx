@@ -23,8 +23,9 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        'panel relative flex min-h-32 flex-col justify-between p-5',
-        accent && 'border-[color-mix(in_srgb,var(--volt)_22%,transparent)]',
+        // `StatTile` del móvil: tarjeta e1, glifo arriba, cifra a 34 y etiqueta 12.
+        'panel relative flex min-h-32 flex-col justify-between px-4 py-6',
+        accent && 'border-[color-mix(in_srgb,var(--volt)_33%,transparent)]',
         className,
       )}
     >
@@ -40,7 +41,7 @@ export function MetricCard({
         {icon ? (
           <span
             className={cn(
-              'grid size-9 place-items-center rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-low)]',
+              'grid size-9 place-items-center rounded-full bg-[var(--surface-highest)]',
               accent ? 'text-[var(--accent-ink)]' : 'text-[var(--text-muted)]',
             )}
           >
@@ -50,7 +51,7 @@ export function MetricCard({
       </div>
       <div
         className={cn(
-          'data-value mt-5 text-3xl font-semibold tracking-[-0.02em] sm:text-4xl',
+          'data-value mt-4 text-[34px] font-semibold leading-none tracking-[-0.045em]',
           accent && 'text-[var(--accent-ink)]',
         )}
       >

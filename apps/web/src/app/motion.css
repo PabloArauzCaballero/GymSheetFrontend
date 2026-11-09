@@ -87,6 +87,24 @@
   animation: dialog-out 0.2s ease-in;
 }
 
+/* Hoja inferior («Más»): sube desde el borde, como `BottomSheet` del móvil.
+ * Salir es más rápido que entrar (180 frente a 280). El kill-switch global de
+ * `prefers-reduced-motion` en `animations.css` la deja sin viaje. */
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.sheet-panel[data-state='open'] {
+  animation: sheet-in 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sheet-panel[data-state='closed'] {
+  animation: sheet-in 0.18s ease-in reverse;
+}
+
 /* Realce al presionar para tarjetas de acción. */
 .pressable {
   transition:

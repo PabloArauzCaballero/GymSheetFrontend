@@ -264,6 +264,8 @@ export const chatMessageSchema = z.object({
   id: z.string().uuid(),
   conversationId: z.string().uuid(),
   senderId: z.string().uuid(),
+  /** El id que generó la app al enviar: casa la burbuja «enviando…» con el mensaje real. */
+  clientRequestId: z.string().uuid().nullable().optional(),
   body: z.string().nullable(),
   type: z.enum(messageTypes),
   storyReference: z.object({ storyId: z.string().uuid(), available: z.boolean() }).nullable(),

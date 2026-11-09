@@ -4,6 +4,8 @@ import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DescubrirClient } from './descubrir-client';
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }) }));
+
 const { backendFetch } = vi.hoisted(() => ({ backendFetch: vi.fn() }));
 
 vi.stubGlobal('fetch', backendFetch);

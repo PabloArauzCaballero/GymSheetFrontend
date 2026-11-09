@@ -165,3 +165,4 @@ export type DurationToken = keyof typeof durations;
 export type EasingToken = keyof typeof easings;
 export type Theme = typeof theme;
 export * from './tenants';
+export * from './repp-mark';

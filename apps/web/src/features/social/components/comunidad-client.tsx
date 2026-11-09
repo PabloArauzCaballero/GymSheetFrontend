@@ -1,236 +1,60 @@
 'use client';
 
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useQuery } from '@tanstack/react-query';
-import { Flame, Heart, MapPin, MessagesSquare, Search, ShieldBan, SlidersHorizontal } from 'lucide-react';
-import Link from 'next/link';
-import { useMemo, useState, type ReactNode } from 'react';
 import {
-  interactionKeys,
-  interactionsService,
-} from '@/features/interactions/services/interactions-service';
+  Ellipsis,
+  Heart,
+  LifeBuoy,
+  MapPin,
+  MessagesSquare,
+  ShieldBan,
+  SlidersHorizontal,
+  Store,
+  Trophy,
+  Users,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
+import Link from 'next/link';
+import { useState, type ReactNode } from 'react';
+import { interactionKeys, interactionsService } from '@/features/interactions/services/interactions-service';
+import { profileService } from '@/features/profile/services/profile-service';
 import { socialService } from '@/features/social/services/social-service';
 import { connectionKeys } from '@/features/social/services/directory-keys';
-import { StoriesStrip } from '@/features/stories';
-import { ButtonLink } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
-import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
-import { DirectoryBrowser } from './directory-browser';
-import { PodiumPreview } from './podium-preview';
+import { queryKeys } from '@/shared/api/query-keys';
+import { Divider, ListCard, NavRow } from '@/shared/components/mobile/nav-row';
+import { cn } from '@/shared/lib/cn';
+import { DescubrirClient } from './descubrir-client';
 import { SearchPreferencesDialog, type DirectoryPreferences } from './search-preferences-dialog';
 
 const EMPTY_PREFERENCES: DirectoryPreferences = { objetivo: '', sucursalId: '', genero: '' };
 
-/**
- * Comunidad.
- *
- * Antes de esto la página aterrizaba en un panel de tres pestañas —Descubrir,
- * Solicitudes, Mis conexiones— antes de enseñar a una sola persona, y su
- * pestaña «Descubrir» era la baraja: el directorio del gimnasio no se podía
- * recorrer desde el navegador. Es la forma que el móvil ya había dejado atrás.
- *
- * Ahora la gente aparece de entrada: stories, el podio, un buscador y el
- * directorio. Lo que no es «quién hay» vive detrás de los iconos de la esquina
- * —preferencias, interacciones y mensajes—, que son las dos bandejas de entrada
- * de la parte social más el ajuste de a quién ves. La baraja es un destino
- * propio (`/descubrir`), no un modo de esta pantalla: se decide arrastrando y
- * ocupa el ancho entero.
- *
- * Los filtros son estado de la página y viajan a Descubrir como parámetros de
- * la URL: llegar a la baraja no debería reabrir un gimnasio recién acotado.
- */
-export function ComunidadClient({
-  sessionName,
-  sessionUserId,
-}: Readonly<{ sessionName: string; sessionUserId: string }>) {
-  const [preferences, setPreferences] = useState<DirectoryPreferences>(EMPTY_PREFERENCES);
-  const [preferencesOpen, setPreferencesOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  /**
-   * El campo conserva `search` para que el teclado responda a cada tecla; lo
-   * que viaja a la API es este valor retrasado, porque si no cada pulsación
-   * cambiaría la `queryKey` y saldría una petición por letra.
-   */
-  const debouncedSearch = useDebouncedValue(search.trim(), 250);
+type Pill = 'foryou' | 'goal';
 
-  const activeFilters = useMemo(
-    () => Object.values(preferences).filter(Boolean).length,
-    [preferences],
-  );
-
-  const discoverHref = useMemo(() => {
-    const params = new URLSearchParams();
-    if (preferences.objetivo) params.set('objetivo', preferences.objetivo);
-    if (preferences.sucursalId) params.set('sucursalId', preferences.sucursalId);
-    if (preferences.genero) params.set('genero', preferences.genero);
-    const query = params.toString();
-    return query ? `/descubrir?${query}` : '/descubrir';
-  }, [preferences]);
-
-  return (
-    <div className="grid gap-8">
-      <CommunityHeader
-        onOpenPreferences={() => setPreferencesOpen(true)}
-        preferencesCount={activeFilters}
-      />
-
-      <StoriesStrip ownName={sessionName} ownUserId={sessionUserId} />
-
-      <PodiumPreview />
-
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-0 flex-1">
-          <Search
-            aria-hidden
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]"
-          />
-          <Input
-            aria-label="Buscar un socio por su nombre"
-            autoComplete="off"
-            className="pl-9"
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Nombre de un socio…"
-            type="search"
-            value={search}
-          />
-        </div>
-        {/* Tercera forma de mirar el mismo catálogo, pero no un modo de esta
-            pantalla: la baraja se decide arrastrando y ocupa el ancho entero,
-            así que es un destino. Se lleva los filtros puestos. */}
-        <ButtonLink href={discoverHref} variant="secondary">
-          <Flame aria-hidden className="size-4 text-[var(--accent-ink)]" />
-          Descubrir
-        </ButtonLink>
-      </div>
-
-      <DirectoryBrowser preferences={preferences} query={debouncedSearch} />
-
-      <SearchPreferencesDialog
-        onChange={setPreferences}
-        onClose={() => setPreferencesOpen(false)}
-        open={preferencesOpen}
-        value={preferences}
-      />
-    </div>
-  );
-}
-
-/**
- * La cabecera: el título y, en la esquina, los tres accesos.
- *
- * No son un menú. Interacciones y Mensajes son las dos bandejas de entrada de
- * la parte social —lo que han hecho contigo y lo que te han escrito— y van
- * donde ya se mira, no detrás de una lista que habría que abrir para descubrir
- * que hay algo nuevo. Las dos llevan aviso, con una diferencia deliberada:
- * en interacciones un número, porque «alguien te dio like» y «siete personas te
- * dieron like» piden entrar con urgencias distintas; en mensajes un punto,
- * porque ahí sólo importa que hay algo nuevo.
- */
-function CommunityHeader({
-  onOpenPreferences,
-  preferencesCount,
-}: Readonly<{ onOpenPreferences: () => void; preferencesCount: number }>) {
-  // El fallo se traga: son indicadores, no contenido. Si la consulta revienta
-  // lo correcto es que el aviso no aparezca, no que la página salude con un
-  // error sobre algo que el usuario no vino a buscar.
-  const counts = useQuery({
-    queryKey: interactionKeys.counts,
-    queryFn: () => interactionsService.counts().catch(() => null),
-    staleTime: 60_000,
-  });
-  const alerts = counts.data ? counts.data.likesReceived + counts.data.profileViewsNew : 0;
-
-  const pending = useQuery({
-    queryKey: connectionKeys.byStatus('PENDING'),
-    queryFn: () => socialService.listConnections('PENDING').catch(() => null),
-    staleTime: 30_000,
-  });
-  const hasPendingReceived = (pending.data ?? []).some(
-    (connection) => connection.direction === 'RECEIVED',
-  );
-
-  return (
-    <header className="reveal grid gap-5 border-b border-[var(--border-subtle)] pb-8">
-      <div className="flex justify-end gap-2">
-        <HeaderAction badge={null} href="/comunidad/mapa" label="Explorar personas y gimnasios en el mapa">
-          <MapPin aria-hidden className="size-5" />
-        </HeaderAction>
-        <HeaderAction badge={null} href="/comunidad/bloqueados" label="Personas bloqueadas">
-          <ShieldBan aria-hidden className="size-5" />
-        </HeaderAction>
-        <HeaderAction
-          badge={
-            preferencesCount > 0 ? (
-              <CountBadge label={`${preferencesCount} filtros activos`} value={preferencesCount} />
-            ) : null
-          }
-          label={
-            preferencesCount > 0
-              ? `Preferencias de búsqueda, ${preferencesCount} activas`
-              : 'Preferencias de búsqueda'
-          }
-          onClick={onOpenPreferences}
-        >
-          <SlidersHorizontal aria-hidden className="size-5" />
-        </HeaderAction>
-        <HeaderAction
-          badge={alerts > 0 ? <CountBadge label={`${alerts} novedades`} value={alerts} /> : null}
-          href="/interacciones"
-          label={
-            alerts > 0
-              ? `Interacciones, ${alerts} ${alerts === 1 ? 'novedad' : 'novedades'}`
-              : 'Interacciones'
-          }
-        >
-          <Heart aria-hidden className="size-5" />
-        </HeaderAction>
-        <HeaderAction
-          badge={
-            hasPendingReceived ? (
-              <span
-                aria-hidden
-                className="absolute right-1.5 top-1.5 size-2.5 rounded-full border-2 border-[var(--background)] bg-[var(--volt)]"
-              />
-            ) : null
-          }
-          href="/chat"
-          label={
-            hasPendingReceived
-              ? 'Mensajes y solicitudes, con solicitudes pendientes'
-              : 'Mensajes y solicitudes'
-          }
-        >
-          <MessagesSquare aria-hidden className="size-5" />
-        </HeaderAction>
-      </div>
-
-      <div className="max-w-2xl">
-        <h1 className="display-title" data-tutorial-id="page:comunidad">
-          Comunidad
-        </h1>
-        <p className="mt-4 text-sm leading-7 text-[var(--text-muted)] sm:text-base">
-          Socios de tu gimnasio, filtrados por lo que buscas. Comparte tu día y decide con quién
-          entrenas.
-        </p>
-      </div>
-    </header>
-  );
-}
-
-function HeaderAction({
-  badge,
-  children,
-  href,
+/** Botón redondo de la cabecera (42 en el móvil, 44 aquí por el mínimo táctil). */
+function RoundButton({
   label,
+  active = false,
+  dot = false,
   onClick,
+  href,
+  children,
 }: Readonly<{
-  badge: ReactNode;
-  children: ReactNode;
-  href?: string;
   label: string;
+  active?: boolean;
+  dot?: boolean;
   onClick?: () => void;
+  href?: string;
+  children: ReactNode;
 }>) {
-  const className =
-    'tap hover-lift relative grid size-11 place-items-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text)] transition-colors duration-[var(--dur-2)] hover:border-[var(--border)]';
+  const className = cn(
+    'tap relative grid size-11 place-items-center rounded-full border bg-[var(--surface-high)] transition-colors duration-[var(--dur-2)] hover:bg-[var(--surface-highest)]',
+    active ? 'border-[var(--volt)] text-[var(--accent-ink)]' : 'border-[var(--border-subtle)] text-[var(--text)]',
+  );
+  const badge = dot ? (
+    <span aria-hidden className="absolute right-2 top-2 size-[7px] rounded-full bg-[var(--volt)]" />
+  ) : null;
   if (href) {
     return (
       <Link aria-label={label} className={className} href={href}>
@@ -247,14 +71,175 @@ function HeaderAction({
   );
 }
 
-function CountBadge({ label, value }: Readonly<{ label: string; value: number }>) {
+/** Menú «⋯» de Comunidad (`community-overflow-sheet.tsx` del móvil), como hoja inferior. */
+function OverflowSheet({ onPreferences }: Readonly<{ onPreferences: () => void }>) {
+  const [open, setOpen] = useState(false);
+  const rows: { href: string; icon: LucideIcon; title: string; subtitle: string }[] = [
+    { href: '/comunidad/personas', icon: Users, title: 'Personas del gimnasio', subtitle: 'El podio y el buscador de socios' },
+    { href: '/comunidad/personas#podio', icon: Trophy, title: 'Top 15 del Gym', subtitle: 'Los 15 atletas con más puntos, insignias y rachas' },
+    { href: '/directorio', icon: Store, title: 'Directorio REPP', subtitle: 'Gimnasios, tiendas de nutrición y coaches verificados' },
+    { href: '/comunidad/mapa', icon: MapPin, title: 'Mapa de socios', subtitle: 'Descubre quién está entrenando cerca de ti en el mapa' },
+    { href: '/interacciones', icon: Heart, title: 'Tus interacciones', subtitle: 'Likes recibidos, visitas a tu perfil y solicitudes' },
+    { href: '/comunidad/bloqueados', icon: ShieldBan, title: 'Personas bloqueadas', subtitle: 'Privacidad y control de usuarios bloqueados' },
+    { href: '/tutorials', icon: LifeBuoy, title: 'Tour de Comunidad', subtitle: 'Aprende cómo deslizar, hacer match y conectar' },
+  ];
   return (
-    <span
-      aria-hidden
-      className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full border-2 border-[var(--background)] bg-[var(--volt)] px-1 text-[10px] font-semibold tabular-nums text-[var(--accent-contrast)]"
-      title={label}
-    >
-      {value > 99 ? '99+' : value}
-    </span>
+    <DialogPrimitive.Root onOpenChange={setOpen} open={open}>
+      <DialogPrimitive.Trigger
+        aria-label="Opciones de Comunidad"
+        className="tap grid size-11 place-items-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-high)] hover:bg-[var(--surface-highest)]"
+      >
+        <Ellipsis aria-hidden className="size-5" />
+      </DialogPrimitive.Trigger>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="dialog-overlay fixed inset-0 z-50 bg-[var(--overlay)]" />
+        <DialogPrimitive.Content className="sheet-panel fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85dvh] max-w-xl overflow-y-auto overscroll-contain rounded-t-[var(--radius-2xl)] bg-[var(--surface-high)] px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 shadow-[var(--shadow-dialog)] focus:outline-none">
+          <span aria-hidden className="mx-auto mb-4 block h-1.5 w-10 rounded-full bg-[var(--border)]" />
+          <div className="mb-3 flex items-center justify-between px-1">
+            <DialogPrimitive.Title className="title-text">Comunidad</DialogPrimitive.Title>
+            <DialogPrimitive.Close
+              aria-label="Cerrar"
+              className="grid size-11 place-items-center rounded-full bg-[var(--surface-highest)]"
+            >
+              <X aria-hidden className="size-5" />
+            </DialogPrimitive.Close>
+          </div>
+          <DialogPrimitive.Description className="sr-only">Destinos y ajustes de Comunidad.</DialogPrimitive.Description>
+          <ListCard className="bg-[var(--surface)]">
+            <button
+              className="tap flex min-h-12 w-full items-center gap-3 py-2 text-left"
+              onClick={() => {
+                setOpen(false);
+                onPreferences();
+              }}
+              type="button"
+            >
+              <SlidersHorizontal aria-hidden className="size-5 text-[var(--text-muted)]" />
+              <span className="grid flex-1 gap-0.5">
+                <span className="t-headline">Preferencias de búsqueda</span>
+                <span className="t-subhead text-[var(--text-muted)]">Filtra por objetivos, sedes y género</span>
+              </span>
+            </button>
+            {rows.map((row) => (
+              <div key={row.href}>
+                <Divider />
+                <NavRow
+                  href={row.href}
+                  leading={<row.icon aria-hidden className="size-5 shrink-0 text-[var(--text-muted)]" />}
+                  subtitle={row.subtitle}
+                  title={row.title}
+                />
+              </div>
+            ))}
+          </ListCard>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  );
+}
+
+/**
+ * Comunidad, la misma pestaña que `apps/mobile/app/(app)/(tabs)/comunidad.tsx`:
+ * la baraja es la pantalla. Arriba, los filtros a la izquierda, «Para ti /
+ * Mismo objetivo» en el centro, y mensajes y «⋯» a la derecha. El directorio
+ * de personas, el podio, el mapa y lo demás viven en el «⋯», como en el móvil.
+ */
+export function ComunidadClient() {
+  const [preferences, setPreferences] = useState<DirectoryPreferences>(EMPTY_PREFERENCES);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [pill, setPill] = useState<Pill>('foryou');
+
+  const profile = useQuery({
+    queryKey: queryKeys.profile,
+    queryFn: () => profileService.getProfile().catch(() => null),
+    retry: false,
+  });
+  const counts = useQuery({
+    queryKey: interactionKeys.counts,
+    queryFn: () => interactionsService.counts().catch(() => null),
+    staleTime: 60_000,
+  });
+  const pending = useQuery({
+    queryKey: connectionKeys.byStatus('PENDING'),
+    queryFn: () => socialService.listConnections('PENDING').catch(() => null),
+    staleTime: 30_000,
+  });
+  const hasPendingReceived = (pending.data ?? []).some((connection) => connection.direction === 'RECEIVED');
+  const alerts = counts.data ? counts.data.likesReceived + counts.data.profileViewsNew : 0;
+  const filtersActive = Object.values(preferences).some(Boolean);
+  const goal = pill === 'goal' ? (profile.data?.objetivo ?? 'HIPERTROFIA') : preferences.objetivo;
+
+  return (
+    <div className="mx-auto grid w-full max-w-xl gap-5">
+      <h1 className="sr-only">Comunidad</h1>
+      <div className="flex items-center justify-between gap-2">
+        <RoundButton
+          active={filtersActive}
+          dot={filtersActive}
+          label="Preferencias de búsqueda"
+          onClick={() => setPreferencesOpen(true)}
+        >
+          <SlidersHorizontal aria-hidden className="size-5" />
+        </RoundButton>
+
+        <div
+          aria-label="Qué baraja ver"
+          className="flex items-center gap-0.5 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-low)] p-[3px]"
+          role="radiogroup"
+        >
+          {(
+            [
+              ['foryou', 'Para ti'],
+              ['goal', 'Mismo objetivo'],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              aria-checked={pill === value}
+              className={cn(
+                'min-h-9 whitespace-nowrap rounded-full px-3 text-xs transition-colors sm:px-4 duration-[var(--dur-2)]',
+                pill === value
+                  ? 'bg-[var(--surface-high)] font-bold text-[var(--text)]'
+                  : 'font-medium text-[var(--text-muted)] hover:text-[var(--text)]',
+              )}
+              key={value}
+              onClick={() => setPill(value)}
+              role="radio"
+              type="button"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1">
+          <RoundButton
+            dot={hasPendingReceived || alerts > 0}
+            href="/chat"
+            label={hasPendingReceived ? 'Mensajes y solicitudes, con solicitudes pendientes' : 'Mensajes y solicitudes'}
+          >
+            <MessagesSquare aria-hidden className="size-5" />
+          </RoundButton>
+          <OverflowSheet onPreferences={() => setPreferencesOpen(true)} />
+        </div>
+      </div>
+
+      <DescubrirClient
+        embedded
+        genero={preferences.genero}
+        key={`${pill}-${goal}`}
+        objetivo={goal}
+        sucursalId={preferences.sucursalId}
+      />
+
+      <SearchPreferencesDialog
+        onChange={(next) => {
+          setPreferences(next);
+          setPill('foryou');
+        }}
+        onClose={() => setPreferencesOpen(false)}
+        open={preferencesOpen}
+        value={preferences}
+      />
+    </div>
   );
 }

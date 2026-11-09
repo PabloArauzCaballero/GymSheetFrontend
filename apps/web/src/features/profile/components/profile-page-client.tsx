@@ -1,44 +1,65 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Ruler, Save, Scale, ShieldCheck, UserRound } from 'lucide-react';
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { notify } from '@/shared/notifications';
-import { goalLabels, profileFormSchema, type ProfileFormValues } from '@/features/profile/components/profile-form-schema';
+import { completionMessage, profileCompletion, proudStat, roleLabel } from '@gymsheet/domain';
+import { useQuery } from '@tanstack/react-query';
+import {
+  Bell,
+  ChevronRight,
+  CircleUserRound,
+  CreditCard,
+  Dumbbell,
+  LifeBuoy,
+  MessageCircle,
+  Scale,
+  Settings,
+  Share2,
+  SquarePen,
+  Star,
+  Users,
+} from 'lucide-react';
+import Link from 'next/link';
+import { membershipService } from '@/features/membership/services/membership-service';
+import { onboardingService } from '@/features/onboarding/services/onboarding-service';
+import { profilePhotosService } from '@/features/profile/services/profile-photos-service';
 import { profileService } from '@/features/profile/services/profile-service';
-import * as birthDate from '@/features/profile/lib/birth-date';
 import { ProfilePhotoGallery } from '@/features/profile/components/profile-photo-gallery';
-import { SocialStatusCard } from '@/features/social/components/social-status-card';
-import { SocialDiscoverySettingsCard } from '@/features/social/components/social-discovery-settings-card';
-import { DiscoveryPreferencesCard } from '@/features/social/components/discovery-preferences-card';
-import { MembershipExperience } from '@/features/membership/components/membership-experience';
-import { ProfileMeasurements } from '@/features/profile/components/profile-measurements';
 import { GenderPreferenceField } from '@/features/progression/components/gender-preference-field';
+import { progressionService } from '@/features/progression/services/progression-service';
+import { DiscoveryPreferencesCard } from '@/features/social/components/discovery-preferences-card';
+import { SocialDiscoverySettingsCard } from '@/features/social/components/social-discovery-settings-card';
+import { SocialStatusCard } from '@/features/social/components/social-status-card';
 import { WeightIncrementField } from '@/features/workouts/components/weight-increment-field';
 import { ApiError } from '@/shared/api/api-error';
-import { trainingGoals } from '@/shared/api/contracts';
+import { goalLabels } from '@/features/profile/components/profile-form-schema';
 import { queryKeys } from '@/shared/api/query-keys';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
-import {
-  SkeletonDetail,
-  SkeletonPageHeader,
-  SkeletonScreen,
-} from '@/shared/components/feedback/skeleton';
+import { Skeleton } from '@/shared/components/feedback/skeleton';
+import { LogoutButton } from '@/shared/components/layout/logout-button';
 import { PageHeader } from '@/shared/components/layout/page-header';
+import { Divider, NavRow } from '@/shared/components/mobile/nav-row';
+import { Section } from '@/shared/components/mobile/section';
 import { Badge } from '@/shared/components/ui/badge';
-import { Button } from '@/shared/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
-import { Field } from '@/shared/components/ui/field';
-import { Input } from '@/shared/components/ui/input';
-import { Select } from '@/shared/components/ui/select';
-import { formatDateTime } from '@/shared/lib/date';
+import { Button, ButtonLink } from '@/shared/components/ui/button';
+import { formatDate } from '@/shared/lib/date';
+import { HeroStats, ProfileHero, plural } from './profile-hero';
+import { RowGlyph, RowGroup, initialsOf, shareProfile } from './profile-rows';
 
+const MEMBERSHIP_BADGE = {
+  ACTIVE: { label: 'Activa', tone: 'success' },
+  SUSPENDED: { label: 'Suspendida', tone: 'warning' },
+  CANCELLED: { label: 'Cancelada', tone: 'danger' },
+  EXPIRED: { label: 'Vencida', tone: 'danger' },
+} as const;
+
+/**
+ * Perfil, la misma pantalla que `apps/mobile/app/(app)/(tabs)/profile.tsx`:
+ * un héroe de identidad —foto con aro, nombre, rango y tres cifras reales—,
+ * el empujón para completar el perfil y dos listas calladas (tu actividad, tu
+ * cuenta). El correo es privado: va al pie, no al héroe. Los datos se editan
+ * en `/profile/editar`.
+ */
 export function ProfilePageClient() {
-  const queryClient = useQueryClient();
   const user = useQuery({ queryKey: ['user', 'me'], queryFn: profileService.getUser });
-
   const profile = useQuery({
     queryKey: queryKeys.profile,
     queryFn: async () => {
@@ -51,231 +72,219 @@ export function ProfilePageClient() {
     },
     retry: false,
   });
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: { fechaNacimiento: '', pesoKg: 70, estaturaCm: 170, objetivo: 'SALUD_GENERAL' },
-  });
-  useEffect(() => {
-    if (profile.data)
-      form.reset({
-        fechaNacimiento: profile.data.fechaNacimiento ?? '',
-        pesoKg: profile.data.pesoKg,
-        estaturaCm: profile.data.estaturaCm,
-        objetivo: profile.data.objetivo,
-      });
-  }, [form, profile.data]);
-  const save = useMutation({
-    mutationFn: ({ fechaNacimiento, ...values }: ProfileFormValues) => {
-      const hadBirthDate = Boolean(profile.data?.fechaNacimiento);
-      const input = { ...values, ...birthDate.birthDatePayload(fechaNacimiento, hadBirthDate) };
-      return profile.data
-        ? profileService.updateProfile(input)
-        : profileService.createProfile(input);
-    },
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.profile }),
-        // El peso guardado aquí también queda en el histórico desde ahora;
-        // sin esto la tabla de abajo no mostraría el registro recién creado
-        // hasta recargar la página.
-        queryClient.invalidateQueries({ queryKey: queryKeys.bodyMeasurements }),
-      ]);
-      notify.success('Perfil actualizado.');
-    },
-    onError: (error: Error) => form.setError('root', { message: error.message }),
-  });
-  if (profile.isLoading || user.isLoading) {
-    return (
-      <SkeletonScreen className="gap-8" label="Cargando tu perfil">
-        <SkeletonPageHeader />
-        <SkeletonDetail />
-      </SkeletonScreen>
-    );
-  }
+  const measurements = useQuery({ queryKey: queryKeys.bodyMeasurements, queryFn: onboardingService.measurements });
+  const membership = useQuery({ queryKey: queryKeys.membership, queryFn: membershipService.getMine, retry: false });
+  const photos = useQuery({ queryKey: queryKeys.profilePhotos, queryFn: profilePhotosService.list, staleTime: 60_000 });
+  const progression = useQuery({ queryKey: ['progression', 'me'], queryFn: progressionService.get, retry: false });
 
-  /* El formulario se inicializa con los datos del perfil. Si la petición falla
-     se renderizaba igualmente, en blanco y editable: guardar desde ahí habría
-     sobrescrito el perfil real con campos vacíos. */
-  if (profile.isError || user.isError) {
+  const me = user.data;
+  const missingProfile = profile.isSuccess && profile.data === null;
+  const avatarUrl = photos.data?.[0]?.url ?? null;
+  const progress = progression.data;
+  const earned = (progress?.badges ?? []).filter((badge) => badge.earned).length;
+  const rank = progress?.level?.name ?? null;
+  const points = progress?.points ?? 0;
+  const streak = progress ? (progress.streak?.current ?? progress.stats.currentStreakDays) : 0;
+  const sessions = progress?.stats.totalSessions ?? 0;
+  const member = membership.data?.membership;
+  const ordered = [...(measurements.data ?? [])].sort((a, b) => b.measuredOn.localeCompare(a.measuredOn));
+  const lastWeight = ordered[0];
+  const firstWeight = ordered[ordered.length - 1];
+  const weightTrend =
+    lastWeight && firstWeight && lastWeight.id !== firstWeight.id
+      ? `${lastWeight.weight - firstWeight.weight > 0 ? '+' : '−'}${Math.abs(lastWeight.weight - firstWeight.weight).toLocaleString('es-ES', { maximumFractionDigits: 1 })} ${lastWeight.unit.toLowerCase()} desde ${formatDate(firstWeight.measuredOn)}`
+      : null;
+
+  const completion = profileCompletion({
+    profileKnown: profile.isSuccess,
+    hasProfile: Boolean(profile.data),
+    photosKnown: Boolean(photos.data),
+    hasPhoto: Boolean(photos.data?.length),
+    measurementsKnown: Boolean(measurements.data),
+    hasMeasurement: Boolean(measurements.data?.length),
+  });
+  const completionText = completionMessage(completion.missing);
+
+  const dataSubtitle = profile.isPending
+    ? 'Cargando…'
+    : missingProfile
+      ? 'Completa tu perfil: peso, estatura y objetivo'
+      : profile.data
+        ? `${profile.data.pesoKg.toLocaleString('es-ES')} kg · ${profile.data.estaturaCm} cm · ${goalLabels[profile.data.objetivo]}`
+        : 'No se pudieron cargar tus datos';
+
+  if (user.isPending) {
     return (
-      <ErrorPanel
-        message={(profile.error ?? user.error)?.message ?? 'No se pudo cargar tu perfil.'}
-        onRetry={() => {
-          void profile.refetch();
-          void user.refetch();
-        }}
-      />
+      <div className="mx-auto grid w-full max-w-[560px] gap-8">
+        <Skeleton className="h-12 w-40" />
+        <Skeleton className="h-72 rounded-[var(--radius-2xl)]" />
+      </div>
     );
   }
+  if (user.isError) return <ErrorPanel message={user.error.message} onRetry={() => void user.refetch()} />;
+
+  const role = me ? roleLabel(me.rol) : '—';
 
   return (
-    <div className="grid gap-8">
+    <div className="mx-auto grid w-full max-w-[560px] gap-8 lg:max-w-[1040px]">
       <PageHeader
-        description="Datos antropométricos propios con unidades canónicas del backend: kilogramos y centímetros."
-        eyebrow="Cuenta"
         title="Perfil"
+        titleAction={
+          <Link
+            aria-label="Ajustes"
+            className="grid size-11 place-items-center rounded-full bg-[var(--surface-high)] transition-colors duration-[var(--dur-2)] hover:bg-[var(--surface-highest)]"
+            href="/settings"
+          >
+            <Settings aria-hidden className="size-5" />
+          </Link>
+        }
         tutorialId="page:profile"
       />
-      <nav aria-label="Secciones del perfil" className="flex gap-2 overflow-x-auto pb-2 text-sm">
-        {[
-          ['#personal', 'Información personal'],
-          ['#progress', 'Progreso corporal'],
-          ['#membership', 'Mi membresía y accesos'],
-        ].map(([href, label]) => (
-          <a
-            className="whitespace-nowrap rounded-full border border-[var(--border-subtle)] px-4 py-2 text-[var(--text-muted)] transition-colors duration-[var(--dur-2)] hover:text-[var(--text)]"
-            href={href}
-            key={href}
+
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
+        <div className="grid gap-8">
+          <ProfileHero
+            initials={initialsOf(me?.nombreCompleto, me?.email)}
+            meta={me && me.rol !== 'CLIENTE' ? <Badge>{role}</Badge> : null}
+            name={me?.nombreCompleto ?? 'Tu perfil'}
+            photoUrl={avatarUrl}
+            rank={progress ? (rank ?? 'Sin empezar') : null}
           >
-            {label}
-          </a>
-        ))}
-      </nav>
-      <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]" id="personal">
-        <form onSubmit={form.handleSubmit((values) => save.mutate(values))}>
-          <Card>
-            <CardHeader
-              description="Estos valores son utilizados por el dominio para describir tu perfil, no para emitir diagnóstico médico."
-              title="Datos antropométricos"
-            />
-            <CardContent className="grid gap-5 sm:grid-cols-2">
-              <Field
-                error={form.formState.errors.fechaNacimiento?.message}
-                htmlFor="fechaNacimiento"
-                label="Fecha de nacimiento"
-              >
-                <Input
-                  id="fechaNacimiento"
-                  max={birthDate.isoYearsAgo(birthDate.MIN_AGE)}
-                  min={birthDate.isoYearsAgo(birthDate.MAX_AGE + 1)}
-                  type="date"
-                  {...form.register('fechaNacimiento')}
+            {/* La senda: el dato que se gana entrenando; tocarla abre el detalle. */}
+            {progression.isPending ? (
+              <Skeleton className="h-24" tone="high" />
+            ) : progression.isError || !progress ? (
+              <ErrorPanel message="No se pudo cargar tu senda." onRetry={() => void progression.refetch()} />
+            ) : (
+              <Link className="grid gap-3" href="/trayectoria">
+                <HeroStats
+                  stats={[
+                    { key: 'points', value: points, label: 'puntos' },
+                    { key: 'streak', value: streak, label: plural(streak, 'día de racha', 'días de racha') },
+                    { key: 'sessions', value: sessions, label: plural(sessions, 'sesión', 'sesiones') },
+                  ]}
                 />
-              </Field>
-              <Field
-                error={form.formState.errors.pesoKg?.message}
-                htmlFor="pesoKg"
-                label="Peso (kg)"
-              >
-                <Input
-                  id="pesoKg"
-                  max="400"
-                  min="1"
-                  step="0.1"
-                  type="number"
-                  {...form.register('pesoKg', { valueAsNumber: true })}
-                />
-              </Field>
-              <Field
-                error={form.formState.errors.estaturaCm?.message}
-                htmlFor="estaturaCm"
-                label="Estatura (cm)"
-              >
-                <Input
-                  id="estaturaCm"
-                  max="250"
-                  min="80"
-                  type="number"
-                  {...form.register('estaturaCm', { valueAsNumber: true })}
-                />
-              </Field>
-              <Field
-                error={form.formState.errors.objetivo?.message}
-                htmlFor="objetivo"
-                label="Objetivo"
-              >
-                <Select id="objetivo" {...form.register('objetivo')}>
-                  {trainingGoals.map((goal) => (
-                    <option key={goal} value={goal}>
-                      {goalLabels[goal]}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-              {form.formState.errors.root?.message ? (
-                <p className="text-sm text-[var(--danger-text)] sm:col-span-2" role="alert">
-                  {form.formState.errors.root.message}
-                </p>
-              ) : null}
+                <span aria-hidden className="block h-1.5 overflow-hidden rounded-full bg-[var(--surface-highest)]">
+                  <span
+                    className="block h-full rounded-full bg-[var(--text-muted)]"
+                    style={{ width: `${Math.round(progress.levelProgress * 100)}%` }}
+                  />
+                </span>
+                <span className="t-footnote flex items-center gap-1 text-[var(--text-muted)]">
+                  <span className="flex-1">
+                    {[
+                      progress.nextLevel && progress.pointsToNextLevel !== null
+                        ? `Faltan ${progress.pointsToNextLevel.toLocaleString('es-ES')} para ${progress.nextLevel.name}`
+                        : 'Senda completa',
+                      earned === 1 ? '1 insignia' : `${earned} insignias`,
+                    ].join(' · ')}
+                  </span>
+                  <ChevronRight aria-hidden className="size-4" />
+                </span>
+              </Link>
+            )}
+            {progress && rank && me ? (
               <Button
-                className="sm:col-span-2"
-                loading={save.isPending}
-                size="lg"
-                type="submit"
-                variant="primary"
+                className="justify-self-start"
+                onClick={() => void shareProfile(me.id, rank, proudStat({ streak, sessions, points }))}
+                size="sm"
+                variant={missingProfile ? 'ghost' : 'primary'}
               >
-                <Save className="size-4" />
-                Guardar perfil
+                <Share2 aria-hidden className="size-4" />
+                Compartir mi perfil
               </Button>
-            </CardContent>
-          </Card>
-        </form>
-        <div className="grid content-start gap-5">
+            ) : null}
+          </ProfileHero>
+
+          {/* Empujón para completar el perfil, solo con lo que ya se sabe. */}
+          {completionText ? (
+            <div className="grid gap-2">
+              <p className="t-subhead text-[var(--text-muted)]">{completionText}</p>
+              <span aria-hidden className="block h-1 overflow-hidden rounded-full bg-[var(--surface-highest)]">
+                <span
+                  className="block h-full rounded-full bg-[var(--text-muted)]"
+                  style={{ width: `${Math.round(completion.ratio * 100)}%` }}
+                />
+              </span>
+              {missingProfile ? (
+                <ButtonLink className="justify-self-start" href="/profile/editar" size="sm" variant="primary">
+                  <SquarePen aria-hidden className="size-4" />
+                  Completar mi perfil
+                </ButtonLink>
+              ) : null}
+            </div>
+          ) : null}
+
+          <Section title="Tu actividad">
+            <RowGroup>
+              {[
+                <NavRow href="/workouts" key="entrenos" leading={<RowGlyph icon={Dumbbell} />} subtitle="Todas tus sesiones, con sus series" title="Mis entrenos" />,
+                <NavRow href="/exercises" key="ejercicios" leading={<RowGlyph icon={Star} />} subtitle="Tus favoritos ☆ y el catálogo completo" title="Mis ejercicios y favoritos" />,
+                <NavRow href="/chat" key="chat" leading={<RowGlyph icon={MessageCircle} />} subtitle="Habla con tus conexiones" title="Chat" />,
+                <NavRow href="/entrenar-juntos" key="juntos" leading={<RowGlyph icon={Users} />} subtitle="Invitaciones recibidas y encuentros" title="Entrenar juntos" />,
+              ]}
+            </RowGroup>
+          </Section>
+
+          {/* Cuenta y app en una sola lista: una tarjeta menos. */}
+          <Section title="Tu cuenta">
+            <RowGroup>
+              {[
+                <NavRow href="/profile/editar" key="datos" leading={<RowGlyph icon={CircleUserRound} />} subtitle={dataSubtitle} title="Mis datos" />,
+                <NavRow
+                  href="/profile/editar#progress"
+                  key="peso"
+                  leading={<RowGlyph icon={Scale} />}
+                  subtitle={
+                    measurements.isError
+                      ? 'No se pudo cargar tu evolución'
+                      : lastWeight
+                        ? `Último: ${lastWeight.weight.toLocaleString('es-ES')} ${lastWeight.unit.toLowerCase()}${weightTrend ? ` · ${weightTrend}` : ''}`
+                        : 'Anota tu primer pesaje'
+                  }
+                  title="Registrar peso"
+                />,
+                <NavRow
+                  href="/membership"
+                  key="membresia"
+                  leading={<RowGlyph icon={CreditCard} />}
+                  meta={member ? <Badge tone={MEMBERSHIP_BADGE[member.estado].tone}>{MEMBERSHIP_BADGE[member.estado].label}</Badge> : undefined}
+                  subtitle={
+                    membership.isPending
+                      ? 'Cargando…'
+                      : member
+                        ? `${member.plan?.nombre ?? 'Plan actual'} · vence ${formatDate(member.venceEl)}`
+                        : 'Sin membresía asociada'
+                  }
+                  title="Membresía"
+                />,
+                <NavRow href="/notifications" key="avisos" leading={<RowGlyph icon={Bell} />} subtitle="Qué avisos quieres recibir" title="Notificaciones" />,
+                <NavRow href="/tutorials" key="tour" leading={<RowGlyph icon={LifeBuoy} />} subtitle="Vuelve a ver la bienvenida y las guías de cada pantalla" title="Ver tutorial" />,
+                <NavRow href="/settings" key="ajustes" leading={<RowGlyph icon={Settings} />} subtitle="Cuenta, versión y cierre de sesión" title="Ajustes" />,
+              ]}
+            </RowGroup>
+          </Section>
+        </div>
+
+        <div className="grid gap-5">
           <ProfilePhotoGallery />
-          {/* El estado social vive aquí y no en Comunidad: es lo que TÚ muestras,
-              no una forma de mirar a los demás. Estaba en Comunidad, entre las
-              stories y el directorio, que es la única pantalla de la parte social
-              que no habla de uno mismo. El móvil ya lo tenía en Perfil. */}
           <SocialStatusCard />
+          <div className="panel grid gap-4 p-5">
+            <GenderPreferenceField value={me?.genero ?? null} />
+            <Divider />
+            <WeightIncrementField value={me?.pesoIncrementoKg} />
+          </div>
           <SocialDiscoverySettingsCard />
           <DiscoveryPreferencesCard />
-          <Card>
-            <CardHeader title="Identidad" />
-            <CardContent className="grid gap-4">
-              <div className="flex items-center gap-3">
-                <UserRound className="size-5 shrink-0 text-[var(--text-muted)]" />
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{user.data?.nombreCompleto ?? 'Usuario'}</p>
-                  <p className="truncate text-sm text-[var(--text-muted)]">{user.data?.email}</p>
-                </div>
-              </div>
-              <div className="flex justify-between border-t border-[var(--border-subtle)] pt-4">
-                <span className="text-sm text-[var(--text-muted)]">Rol</span>
-                <Badge>{user.data?.rol ?? '—'}</Badge>
-              </div>
-              <div className="border-t border-[var(--border-subtle)] pt-4">
-                <GenderPreferenceField value={user.data?.genero ?? null} />
-              </div>
-              <div className="border-t border-[var(--border-subtle)] pt-4">
-                <WeightIncrementField value={user.data?.pesoIncrementoKg} />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader title="Estado del perfil" />
-            <CardContent className="grid gap-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-[var(--text-muted)]">
-                  <Scale className="size-4" />
-                  Peso
-                </span>
-                <span className="data-value">{profile.data?.pesoKg ?? '—'} kg</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-[var(--text-muted)]">
-                  <Ruler className="size-4" />
-                  Estatura
-                </span>
-                <span className="data-value">{profile.data?.estaturaCm ?? '—'} cm</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-[var(--text-muted)]">
-                  <ShieldCheck className="size-4" />
-                  Actualizado
-                </span>
-                <span>{formatDateTime(profile.data?.fechaActualizacion)}</span>
-              </div>
-            </CardContent>
-          </Card>
         </div>
-      </section>
-      <section id="progress">
-        <ProfileMeasurements />
-      </section>
-      <section className="grid gap-4" id="membership">
-        <h2 className="text-2xl font-semibold">Mi membresía y accesos</h2>
-        <MembershipExperience />
-      </section>
+      </div>
+
+      <div className="mx-auto grid w-full max-w-[560px] gap-2">
+        {me?.email ? (
+          <p className="t-footnote truncate text-center text-[var(--text-muted)]">{`${role} · ${me.email}`}</p>
+        ) : null}
+        <LogoutButton block withLabel />
+      </div>
     </div>
   );
 }

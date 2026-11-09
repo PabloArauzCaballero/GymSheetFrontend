@@ -10,16 +10,16 @@ async function login(page: Page, email: string) {
 test('new clients are required to continue onboarding', async ({ page }) => {
   await login(page, 'new.mock@gymsheet.local');
   await expect(page).toHaveURL(/\/onboarding$/u, { timeout: 40_000 });
-  await expect(page.getByRole('heading', { name: 'Personaliza tu experiencia' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '¿Qué quieres conseguir?' })).toBeVisible();
   await expect(page.getByText('Paso 1 de 4')).toBeVisible();
 });
 
-test('active members see their plan, entitlements and extension action in Mi perfil', async ({
+test('active members see their plan, entitlements and extension action in Membresía', async ({
   page,
 }) => {
   await login(page, 'active.mock@gymsheet.local');
-  await openPage(page, '/profile');
-  await expect(page.getByRole('heading', { name: 'Mi membresía y accesos' })).toBeVisible();
+  // Como en el móvil, Perfil enlaza a Membresía (fila «Membresía»); el detalle vive allí.
+  await openPage(page, '/membership');
   await expect(page.getByText('Plan mensual · Desarrollo').first()).toBeVisible();
   await expect(page.getByText('Biblioteca de ejercicios').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Añadir meses' }).first()).toBeVisible();
@@ -30,8 +30,8 @@ test('expired members can open an idempotent WhatsApp renewal without gaining ac
 }) => {
   await login(page, 'expired.mock@gymsheet.local');
   await openPage(page, '/membership');
-  await expect(page.getByText('EXPIRED', { exact: true }).first()).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Tienda de membresías' })).toBeVisible();
+  await expect(page.getByText('Vencida', { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Planes disponibles' })).toBeVisible();
   // La confirmación es un diálogo propio de la aplicación, no el `confirm()` del
   // navegador: la prueba esperaba el evento nativo, que nunca llega, mientras la
   // capa del modal —ya abierto— se comía los reintentos del clic.

@@ -41,7 +41,6 @@ export function SupportTrainingPanel({
     <div className="flex flex-col gap-8">
       <PageHeader
         description="Programas, semanas, bonos, invitaciones y últimas sesiones de esta persona."
-        eyebrow="Soporte"
         title={displayName ? `Entrenamiento de ${displayName}` : 'Entrenamiento del socio'}
       />
 

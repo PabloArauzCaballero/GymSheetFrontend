@@ -19,7 +19,6 @@ export function ExerciseList() {
           </span>
         }
         description="Catálogo global y ejercicios personales visibles para tu cuenta."
-        eyebrow="Biblioteca técnica"
         title="Ejercicios"
         tutorialId="page:exercises"
       />

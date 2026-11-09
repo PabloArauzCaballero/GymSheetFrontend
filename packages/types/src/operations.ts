@@ -62,6 +62,12 @@ export type Branch = {
   nombre: string;
   descripcion: string | null;
   zonaHoraria: string;
+  /** Ubicación de la sede. Nula en sedes anteriores a la ubicación en mapa. */
+  direccion: string | null;
+  latitud: number | null;
+  longitud: number | null;
+  /** Radio en metros para verificar rachas por ubicación; nulo = no verifica. */
+  radioGeocercaM: number | null;
   estado: 'ACTIVE' | 'INACTIVE';
   metadata: Record<string, unknown>;
 };

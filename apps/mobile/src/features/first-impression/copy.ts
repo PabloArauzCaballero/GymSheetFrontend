@@ -1,18 +1,7 @@
 import type { Ionicons } from '@expo/vector-icons';
 
-/**
- * Lo que dice la primera pantalla a quien llega desde la App Store (#124 ASO:
- * continuidad entre la ficha y lo primero que se ve). Una frase dice qué es la
- * app; la segunda, qué se hace en ella. Sin cifras: no hay ninguna real que dar
- * todavía, y una inventada se nota.
- *
- * El nombre del gimnasio no aparece en el titular: lo pone el logotipo justo
- * encima, y así el texto sirve igual para los gimnasios con marca propia.
- */
-export const valuePitch = {
-  headline: 'La red social de tu gimnasio.',
-  subline: 'Entrena guiado serie a serie, sigue a tu gente y gana premios por cada sesión.',
-} as const;
+/** Titular y subtítulo de la primera pantalla: viven en `@gymsheet/domain`, compartidos con la web. */
+export { valuePitch } from '@gymsheet/domain';
 
 export type Benefit = { icon: keyof typeof Ionicons.glyphMap; label: string };
 
@@ -26,33 +15,8 @@ export const registerBenefits: readonly Benefit[] = [
 /** Encabezado del formulario de alta (el de acceso sigue en `authCopy`). */
 export const registerFormTitle = 'Crea tu cuenta';
 
-/**
- * Una pregunta por paso del onboarding: es el protagonista de cada pantalla.
- * El último paso celebra y apunta al primer entreno.
- */
-export const onboardingSteps = [
-  {
-    title: '¿Qué quieres conseguir?',
-    subline: 'Elige uno. Con él te recomendamos rutinas.',
-  },
-  {
-    title: '¿Cuánto pesas y mides?',
-    subline: 'Lo guardamos como tu primera medida. Lo cambias cuando quieras.',
-  },
-  {
-    title: '¿Cómo entrenas?',
-    subline: 'Tu nivel, tus días y dónde lo haces.',
-  },
-] as const;
-
-export function onboardingFinish(firstName: string, atGym: boolean) {
-  return {
-    title: `Ya está, ${firstName}.`,
-    subline: atGym
-      ? 'Tu perfil está listo. Completa y elige la rutina de tu primer entreno.'
-      : 'Marca tu material, completa y elige la rutina de tu primer entreno.',
-  };
-}
+/** Preguntas del onboarding y cierre: viven en `@gymsheet/domain`, compartidos con la web. */
+export { onboardingFinish, onboardingSteps } from '@gymsheet/domain';
 
 export const onboardingDone = 'Ya está. Elige tu primera rutina en Inicio.';
 export const onboardingFinishCta = 'Completar y empezar';

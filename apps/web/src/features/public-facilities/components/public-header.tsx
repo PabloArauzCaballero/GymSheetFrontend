@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { BrandLockup } from '@/shared/components/brand/brand-mark';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useBrand } from '@/shared/theme/brand-provider';
@@ -33,18 +34,15 @@ export function PublicHeader() {
       className={cn(
         'sticky top-0 z-50 border-b transition-[background-color,border-color,box-shadow] duration-300',
         scrolled
-          ? 'border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--background)_82%,transparent)] shadow-[0_1px_0_var(--border-subtle),0_16px_32px_-24px_rgb(0_0_0/0.5)] backdrop-blur-md'
+          ? 'border-[var(--border-subtle)] glass-bar'
           : 'border-transparent bg-transparent',
       )}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
-        <Link className="group inline-flex items-center gap-2.5" href="/">
-          <span className="grid size-8 place-items-center rounded-[var(--radius-md)] bg-[var(--volt)] text-xs font-semibold text-[var(--accent-contrast)]">
-            {brand.monogram}
-          </span>
-          <span className="text-lg font-semibold tracking-[-0.02em] text-[var(--text)]">
-            {brand.wordmark}
-          </span>
+        {/* El mismo logotipo que el móvil (`ReppLogo`); un gimnasio con marca
+            propia conserva su emblema y su rótulo. */}
+        <Link aria-label={`${brand.name}, inicio`} className="group inline-flex items-center" href="/">
+          <BrandLockup size={28} />
         </Link>
         <nav aria-label="Principal" className="flex items-center gap-1 sm:gap-3">
           {NAV_LINKS.map((link) => {

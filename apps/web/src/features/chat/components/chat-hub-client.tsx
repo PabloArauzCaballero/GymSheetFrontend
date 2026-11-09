@@ -8,6 +8,7 @@ import { profileViewsService } from '@/features/interactions/services/profile-vi
 import { interactionKeys } from '@/features/interactions/services/interactions-service';
 import { ConnectionsTab } from '@/features/social/components/connections-tab';
 import { RequestsTab } from '@/features/social/components/requests-tab';
+import { StoriesStrip } from '@/features/stories';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
@@ -26,15 +27,16 @@ import { ConversationRow } from './conversation-row';
  * y dos pestañas de Comunidad, así que aceptar una solicitud y escribir a esa
  * persona eran dos pantallas distintas.
  */
-export function ChatHubClient() {
+export function ChatHubClient({
+  sessionName,
+  sessionUserId,
+}: Readonly<{ sessionName: string; sessionUserId: string }>) {
   return (
-    <div className="grid gap-8">
-      <PageHeader
-        description="Habla con tus conexiones, responde a quien te escribió y revisa con quién estás conectado."
-        eyebrow="Comunidad"
-        title="Mensajes"
-        tutorialId="page:chat"
-      />
+    // «Mensajes» del móvil (`comunidad-mensajes.tsx`): historias arriba y las
+    // tres pestañas debajo, conversaciones en una sola tarjeta de filas.
+    <div className="mx-auto grid w-full max-w-[560px] gap-6 lg:max-w-[760px]">
+      <PageHeader description="Historias, conversaciones y solicitudes." title="Mensajes" tutorialId="page:chat" />
+      <StoriesStrip ownName={sessionName} ownUserId={sessionUserId} />
       <ProfileVisitsNotice />
       <Tabs defaultValue="general">
         <TabsList>
@@ -80,7 +82,7 @@ function ConversationsTab() {
     );
   }
   return (
-    <ul className="grid gap-2">
+    <ul className="panel m-0 grid list-none divide-y divide-[var(--border)] p-0 px-3">
       {conversations.data.map((conversation) => (
         <ConversationRow conversation={conversation} key={conversation.conversationId} />
       ))}

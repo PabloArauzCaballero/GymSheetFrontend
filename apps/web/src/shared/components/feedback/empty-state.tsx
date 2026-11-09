@@ -27,15 +27,15 @@ export function EmptyState({
 }>) {
   const Heading = level === 3 ? 'h3' : 'h2';
   return (
-    <div className="reveal grid min-h-56 place-items-center rounded-[var(--radius-lg)] border border-dashed border-[var(--border)] bg-[var(--surface-lowest)] p-8 text-center">
-      <div className="grid max-w-md justify-items-center gap-3">
-        <div className="grid size-14 place-items-center rounded-full border border-[var(--border)] bg-[var(--surface-low)] text-[var(--text-muted)]">
-          {icon ?? <Inbox className="size-6" />}
-        </div>
-        <Heading className="mt-1 text-lg font-semibold tracking-[-0.02em]">{title}</Heading>
-        <p className="text-sm leading-6 text-[var(--text-muted)]">{description}</p>
-        {action ? <div className="mt-2">{action}</div> : null}
-      </div>
+    // `EmptyState` del móvil (`CenteredState`): tarjeta e1 centrada, glifo de
+    // 32 en tono apagado, título `headline` y mensaje `subhead`.
+    <div className="panel grid justify-items-center gap-2 px-6 py-8 text-center">
+      <span aria-hidden className="text-[var(--text-muted)] [&>svg]:size-8">
+        {icon ?? <Inbox />}
+      </span>
+      <Heading className="t-headline">{title}</Heading>
+      <p className="t-subhead max-w-md text-[var(--text-muted)]">{description}</p>
+      {action ? <div className="mt-1">{action}</div> : null}
     </div>
   );
 }

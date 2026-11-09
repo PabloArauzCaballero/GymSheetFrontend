@@ -132,7 +132,7 @@ export function CatalogList({
       ) : (
         <ul
           aria-label="Rutinas"
-          className="stagger grid list-none gap-4 sm:grid-cols-2 xl:grid-cols-3"
+          className="stagger grid list-none gap-8 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3"
           data-testid="routine-list"
         >
           {[...pending, ...rest].map((routine) => (

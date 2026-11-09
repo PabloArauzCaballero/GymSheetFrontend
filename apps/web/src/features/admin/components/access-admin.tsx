@@ -12,7 +12,6 @@ export function AccessAdmin({ role }: Readonly<{ role: UserRole }>) {
     <div className="grid gap-8">
       <PageHeader
         description="Dispositivos, referencias de credenciales y decisiones del motor de políticas. El simulador mock no se publica en producción."
-        eyebrow="Seguridad física"
         title="Control de acceso"
       />
       <Tabs defaultValue="devices">

@@ -291,7 +291,7 @@ describe('TrainingInvitationsClient', () => {
       </QueryClientProvider>,
     );
 
-    expect(await screen.findByText('Todavía no tienes invitaciones')).toBeInTheDocument();
+    expect(await screen.findByText('Sin invitaciones')).toBeInTheDocument();
     expect(screen.queryByText('Parque Central')).not.toBeInTheDocument();
     expect(trainingInvitationsService.list).toHaveBeenCalledTimes(2);
   });

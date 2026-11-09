@@ -46,6 +46,7 @@ export const knownRoutes = new Set([
   'exercises',
   'entrenar-juntos',
   'interacciones',
+  'marketplace',
   'membership',
   'notifications',
   'onboarding',

@@ -153,7 +153,6 @@ export function ExerciseAdmin() {
           </>
         }
         description="Catálogo global y ejecución segura de la importación externa en modo de prueba. La importación real depende de la configuración de licencia del backend."
-        eyebrow="Administración"
         title="Catálogo global"
       />
       <Card>

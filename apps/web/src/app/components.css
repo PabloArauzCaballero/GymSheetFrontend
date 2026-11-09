@@ -1,0 +1,160 @@
+/* ----------------------------------------------------------------------------
+ * Ayudantes de composición — en `@layer components`, por debajo de las
+ * utilidades y por la misma razón que los reinicios de arriba.
+ *
+ * Sueltos ganaban a las clases que los acompañan, de modo que
+ * `class="data-label text-[var(--accent-ink)]"` pintaba la etiqueta en gris: el
+ * `color` de `.data-label` se imponía al que pedía la pantalla. En `components`
+ * el ayudante pone la base y la utilidad ajusta lo que necesite, que es cómo se
+ * espera que funcione la pareja.
+ * -------------------------------------------------------------------------- */
+@layer components {
+  .tech-grid {
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  /* Tarjeta del móvil (`layout.tsx` → `Card`): se separa del lienzo por tono
+   * y sombra (e1), no por un borde de 1,19:1. El borde se queda transparente
+   * para que una utilidad `border-*` pueda teñirlo sin mover el layout. */
+  .panel {
+    border: 1px solid transparent;
+    border-radius: var(--radius-xl);
+    background: var(--surface-low);
+    box-shadow: var(--shadow-sm);
+  }
+
+
+  /* Superficie translúcida para cromo flotante (barras fijas, popovers sobre
+   * contenido que hace scroll). Separa por luminancia + blur, no por sombra. */
+  .glass {
+    background: color-mix(in srgb, var(--surface) 72%, transparent);
+    backdrop-filter: blur(var(--blur-2));
+    -webkit-backdrop-filter: blur(var(--blur-2));
+  }
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass {
+      background: var(--surface);
+    }
+  }
+
+  /* Cromo fijo (cabecera y barra de pestañas): el material oscuro translúcido
+   * de la barra del móvil (`BlurView tint="systemChromeMaterialDark"`). */
+  .glass-bar {
+    background: var(--header-bg);
+    backdrop-filter: saturate(1.6) blur(var(--blur-3));
+    -webkit-backdrop-filter: saturate(1.6) blur(var(--blur-3));
+  }
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass-bar {
+      background: var(--surface-sidebar);
+    }
+  }
+
+  /* Etiqueta de dato: versalita ancha y ligera. En negrita competía con el valor
+   * que rotula, y una etiqueta nunca debe pesar más que su contenido. */
+  /* Etiqueta de dato como el móvil (`footnote` 13/18): minúscula tipográfica,
+   * sin versalita ni tracking ancho — la versalita gris en cada bloque era
+   * ruido (repp-diseno §9). */
+  .data-label {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.125rem;
+    text-transform: none;
+  }
+
+  /* Título de pantalla.
+   *
+   * A este tamaño el peso 850 con -0.045em de apretado no se lee como carácter
+   * sino como volumen: las letras se tocan y el conjunto grita. Bajar el peso y
+   * abrir la letra deja ver el dibujo de la tipografía, que es de donde viene la
+   * sensación de calidad; el tamaño sigue haciendo la jerarquía. */
+  .display-title {
+    /* Título de pantalla del móvil (`ScreenHeader`): Bricolage 700 a 34 con
+     * −2 % de tracking e interlineado 1,12. En escritorio crece hasta 40. */
+    font-family: var(--font-display);
+    font-size: clamp(2.125rem, 2.6vw + 1rem, 2.5rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+    text-wrap: balance;
+  }
+
+  /* `title` del móvil: Bricolage a 22, para títulos de tarjeta y hoja. */
+  .title-text {
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+
+  .text-gradient-volt {
+    background: linear-gradient(100deg, var(--text) 0%, var(--text) 45%, var(--accent-ink) 130%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Rampa del móvil (`apps/mobile/src/theme/type.ts` → `textVariants`):
+   * headline 17/22 600 · subhead 15/20 · footnote 13/18 · caption 12/16 ·
+   * hero 52 display · numeric 22 display 600. Prefijo `t-` para no chocar con
+   * las utilidades `text-*` de Tailwind. */
+  .t-headline {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.375rem;
+  }
+  .t-subhead {
+    font-size: 0.9375rem;
+    line-height: 1.25rem;
+  }
+  .t-footnote {
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+  }
+  .t-caption {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+  .t-hero {
+    font-family: var(--font-display);
+    font-size: 3.25rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.035em;
+    line-height: 1.04;
+  }
+  .t-numeric {
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+  }
+
+  .data-value {
+    font-variant-numeric: tabular-nums;
+    font-weight: 580;
+    letter-spacing: 0.01em;
+  }
+
+  .scrollbar-thin {
+    scrollbar-color: var(--surface-highest) transparent;
+    scrollbar-width: thin;
+  }
+
+  .nav-scroll {
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+    scroll-padding-inline: 1rem;
+  }
+
+  .nav-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}

@@ -24,7 +24,6 @@ export default async function SistemaPage() {
     <div className="grid gap-8">
       <PageHeader
         description="Operación por encima de los gimnasios: actividad administrativa de toda la plataforma."
-        eyebrow="Plataforma"
         title="Sistema"
       />
 

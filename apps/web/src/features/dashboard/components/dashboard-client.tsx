@@ -1,277 +1,277 @@
 'use client';
 
+import { formatVolume, overloadDelta, summariseTraining, relativeDay, formatTimeOfDay, sessionDuration } from '@gymsheet/domain';
+import { homeWeekDots } from '@gymsheet/hooks';
 import { useQuery } from '@tanstack/react-query';
-import { Activity, Bell, CalendarDays, ChevronRight, Dumbbell, TrendingUp } from 'lucide-react';
+import { ArrowRight, Award, Bell, CreditCard, Dumbbell, Flame, Store } from 'lucide-react';
 import Link from 'next/link';
-import { setVolumeKg } from '@gymsheet/domain';
-import { accessService } from '@/features/access/services/access-service';
-import { exerciseService } from '@/features/exercises/services/exercise-service';
+import { useSyncExternalStore } from 'react';
+import { TodayCard } from '@/features/home/components/today-card';
+import { MuscleSplit } from '@/features/home/components/muscle-split';
+import { ProgressStrip } from '@/features/home/components/progress-strip';
 import { MembershipGate } from '@/features/membership/components/membership-gate';
-import { MembershipSummaryCard } from '@/features/membership/components/membership-summary-card';
 import { membershipService } from '@/features/membership/services/membership-service';
 import { notificationService } from '@/features/notifications/services/notification-service';
-import { BodyWeightCard } from '@/features/profile/components/body-weight-card';
-import { SendaCard } from '@/features/progression/components/senda-card';
 import { progressionService } from '@/features/progression/services/progression-service';
+import { programKeys } from '@/features/routines-v2/keys';
+import { programService } from '@/features/routines-v2/services';
+import { trainingService } from '@/features/training/services/training-service';
 import { workoutService } from '@/features/workouts/services/workout-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
-import {
-  SkeletonCardGrid,
-  SkeletonMetricRow,
-  SkeletonPageHeader,
-  SkeletonScreen,
-} from '@/shared/components/feedback/skeleton';
+import { Skeleton } from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
+import { IconBadge } from '@/shared/components/mobile/icon-badge';
+import { Divider, ListCard, NavRow } from '@/shared/components/mobile/nav-row';
+import { Section } from '@/shared/components/mobile/section';
+import { WeekDots } from '@/shared/components/mobile/week-dots';
 import { Badge } from '@/shared/components/ui/badge';
 import { ButtonLink } from '@/shared/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
-import { MetricCard } from '@/shared/components/ui/metric-card';
-import { formatDateTime, formatDuration } from '@/shared/lib/date';
-import { DashboardTrainingSummary } from './dashboard-training-summary';
+import { accentHues, metricInk } from '@/shared/theme/metric-colors';
 
-function totalVolume(workouts: Awaited<ReturnType<typeof workoutService.list>>['items']) {
-  return workouts.reduce(
-    (total, workout) =>
-      total +
-      workout.ejercicios.reduce(
-        (exerciseTotal, exercise) =>
-          exerciseTotal +
-          exercise.series.reduce((setTotal, set) => setTotal + setVolumeKg(set), 0),
-        0,
-      ),
-    0,
-  );
-}
+/** Misma fecha que Inicio en el móvil: «domingo, 8 de noviembre». */
+const LONG_DATE = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+const subscribeNever = () => () => {};
 
-export function DashboardClient() {
-  const workouts = useQuery({
-    // La comparación semanal requiere más historial que las cinco filas visibles.
-    queryKey: ['workouts', 'dashboard'],
-    queryFn: () => workoutService.list(1, 40),
-  });
-  const favorites = useQuery({
-    queryKey: queryKeys.favorites,
-    queryFn: exerciseService.listFavorites,
-  });
-  const membership = useQuery({
-    queryKey: queryKeys.membership,
-    queryFn: membershipService.getMine,
-    retry: false,
-  });
-  const notifications = useQuery({
-    queryKey: queryKeys.notifications(1),
-    queryFn: () => notificationService.list(1),
-    retry: false,
-  });
-  const access = useQuery({
-    queryKey: queryKeys.accessHistory(1),
-    queryFn: () => accessService.getHistory(1),
-    retry: false,
-  });
-  const progression = useQuery({
-    queryKey: ['progression', 'me'],
-    queryFn: progressionService.get,
-    retry: false,
-  });
+const WORKOUT_BADGE = {
+  EN_PROGRESO: { label: 'En progreso', tone: 'info' },
+  CANCELADA: { label: 'Cancelada', tone: 'danger' },
+} as const;
 
-  if (workouts.isLoading || favorites.isLoading) {
-    return (
-      <SkeletonScreen className="gap-10" label="Cargando tu panel">
-        <SkeletonPageHeader withActions />
-        <SkeletonMetricRow />
-        <SkeletonCardGrid count={3} />
-      </SkeletonScreen>
-    );
-  }
+/**
+ * Inicio, la misma pantalla que `apps/mobile/app/(app)/(tabs)/home.tsx`.
+ *
+ * Un protagonista: «Hoy» en `HeroSurface`, con su única acción en acento.
+ * Antes, si hace falta, la franja de membresía. Después UNA cifra orgullosa
+ * (entrenos de la semana), con la racha y la carga de apoyo; al final las
+ * sesiones y una lista callada con la senda y la membresía. Los avisos van a
+ * la campana de la cabecera.
+ *
+ * Lo que el móvil tiene y la web no: Repi (la mascota de los widgets y
+ * recordatorios locales), que depende del sistema de avisos del teléfono.
+ */
+export function DashboardClient({ firstName }: Readonly<{ firstName?: string }> = {}) {
+  // La fecha es la del reloj de quien mira, no la del servidor.
+  const today = useSyncExternalStore(subscribeNever, () => LONG_DATE.format(new Date()), () => undefined);
 
-  /* Sin esta rama el panel trataba un fallo de red como «no tienes nada»:
-     `data?.items ?? []` deja `sessions` vacío y abajo se pinta el estado vacío.
-     El usuario concluía que había perdido sus sesiones. Las consultas
-     secundarias (membresía, notificaciones, accesos) sí pueden fallar en
-     silencio porque son adornos; estas dos son la página. */
-  if (workouts.isError || favorites.isError) {
-    return (
-      <ErrorPanel
-        message={
-          (workouts.error ?? favorites.error)?.message ?? 'No se pudo cargar tu actividad reciente.'
-        }
-        onRetry={() => {
-          void workouts.refetch();
-          void favorites.refetch();
-        }}
-      />
-    );
-  }
+  const unreadQuery = useQuery({
+    queryKey: ['notifications', 'unread-count'],
+    queryFn: notificationService.unreadCount,
+    staleTime: 60_000,
+  });
+  const membership = useQuery({ queryKey: queryKeys.membership, queryFn: membershipService.getMine, retry: false });
+  const workouts = useQuery({ queryKey: ['workouts', 'recent'], queryFn: () => workoutService.list(1, 40) });
+  const assignments = useQuery({ queryKey: ['routines', 'assignments', 'me'], queryFn: trainingService.myAssignments });
+  const progression = useQuery({ queryKey: ['progression', 'me'], queryFn: progressionService.get, retry: false });
+  const programs = useQuery({ queryKey: programKeys.active, queryFn: programService.active, staleTime: 30_000 });
+  const strength = programs.data?.fuerza ?? null;
+  const routine = useQuery({
+    queryKey: ['routine', strength?.rutinaId],
+    queryFn: () => trainingService.get(strength?.rutinaId ?? ''),
+    enabled: Boolean(strength?.rutinaId),
+  });
 
   const sessions = workouts.data?.items ?? [];
-  const active = sessions.find((session) => session.estado === 'EN_PROGRESO');
-  const latest = sessions[0];
-  const unread = notifications.data?.items.filter((item) => !item.leidoEn).length ?? 0;
-  const projection = membership.data ?? null;
-  const membershipActive = projection?.membership?.vigenteHoy ?? false;
+  const openSession = sessions.find((session) => session.estado === 'EN_PROGRESO');
+  const activeAssignment = assignments.data?.find((item) => item.estado === 'ACTIVE');
+  const training = summariseTraining(sessions);
+  const overload = overloadDelta(training);
+  const week = homeWeekDots(sessions, routine.data);
+  const todayLoading =
+    programs.isPending || (Boolean(strength?.rutinaId) && routine.isPending) || assignments.isPending;
+  const todayError = programs.error ?? routine.error ?? null;
+  const membershipData = membership.data?.membership;
+  const unread = unreadQuery.data?.count ?? 0;
+  const streak = training.streakWeeks;
+  const level = progression.data?.level;
 
   return (
-    <div className="grid gap-10">
+    <div className="mx-auto grid w-full max-w-[560px] gap-8 lg:max-w-[1040px]">
       <PageHeader
-        actions={
-          <span data-tutorial-id="dashboard:start-workout">
-            {active ? (
-              <ButtonLink href={`/workouts/${active.id}`} variant="primary">
-                Continuar sesión
-              </ButtonLink>
-            ) : (
-              <ButtonLink href="/workouts/new" variant="primary">
-                Iniciar entrenamiento
-              </ButtonLink>
-            )}
-          </span>
+        titleAction={
+          <Link
+            aria-label={unread ? `Centro de avisos, ${unread} nuevos` : 'Centro de avisos'}
+            className="relative grid size-11 place-items-center rounded-full bg-[var(--surface-high)] text-[var(--text)] transition-colors duration-[var(--dur-2)] hover:bg-[var(--surface-highest)]"
+            href="/notifications"
+          >
+            <Bell aria-hidden className="size-5" />
+            {unread ? (
+              <span className="absolute -right-1 -top-1">
+                <Badge tone="success">{unread > 99 ? '99+' : unread}</Badge>
+              </span>
+            ) : null}
+          </Link>
         }
-        description="Tu superficie operativa: entrenamiento activo, progreso reciente y señales que requieren atención."
-        eyebrow="Centro de rendimiento"
-        title="Precisión antes que ruido."
+        description={today}
+        title={firstName ? `Hola, ${firstName}` : 'Hola'}
         tutorialId="page:dashboard"
       />
 
-      {/* Antes que nada: si la membresía no está vigente, eso es lo que la
-          persona necesita ver y resolver, no su carga semanal. Mismo orden que
-          Inicio en el móvil. */}
-      {projection && !membershipActive ? <MembershipGate projection={projection} /> : null}
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
+        <div className="grid gap-3">
+          {/* La franja del directorio, como en el móvil. */}
+          <Link
+            className="tap flex items-center gap-3 rounded-[14px] px-4 py-3.5 transition-[filter] duration-[var(--dur-2)] hover:brightness-105"
+            href="/directorio"
+            style={{ background: accentHues.emerald, color: accentHues.ink }}
+          >
+            <Store aria-hidden className="size-6 shrink-0" />
+            <span className="grid min-w-0 flex-1">
+              <span className="text-[15px] font-bold">Directorio y reseñas</span>
+              <span className="text-xs font-medium" style={{ color: accentHues.emeraldDeep }}>
+                Gimnasios, suplementos, coaches y valoraciones
+              </span>
+            </span>
+            <ArrowRight aria-hidden className="size-5 shrink-0" />
+          </Link>
 
-      {/* La senda, antes que los indicadores.
-          Es la única tarjeta que responde «¿me estoy acercando a como quiero
-          verme?», que es la razón por la que alguien vuelve. El resto del panel
-          informa; esta tira. Es el reflejo exacto de la tarjeta de Inicio en el
-          móvil: mismo rango, misma barra, mismo texto de distancia. */}
-      {progression.data?.level ? (
-        <SendaCard progression={progression.data} />
-      ) : null}
+          {/* Si el acceso no está vigente, eso es lo primero que hay que resolver,
+              pero en una franja: el valor de la pantalla tiene que verse igual. */}
+          {membership.data && !membershipData?.vigenteHoy ? (
+            <MembershipGate projection={membership.data} variant="compact" />
+          ) : null}
 
-      <DashboardTrainingSummary workouts={sessions} />
+          <span data-tutorial-id="dashboard:start-workout">
+            <TodayCard
+              assignment={activeAssignment}
+              error={todayError}
+              loading={todayLoading}
+              onRetry={() => {
+                void programs.refetch();
+                void routine.refetch();
+                void assignments.refetch();
+              }}
+              openSession={openSession}
+              program={strength}
+              routine={routine.data}
+            />
+          </span>
+        </div>
 
-      <section
-        aria-label="Indicadores"
-        data-tutorial-id="dashboard:metrics"
-        className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
-      >
-        <MetricCard
-          accent
-          icon={<Activity className="size-5" />}
-          label="Sesiones recientes"
-          value={sessions.length}
-        />
-        <MetricCard
-          icon={<TrendingUp className="size-5" />}
-          label="Volumen registrado"
-          suffix="KG"
-          value={Math.round(totalVolume(sessions)).toLocaleString('es-BO')}
-        />
-        <MetricCard
-          icon={<Dumbbell className="size-5" />}
-          label="Ejercicios frecuentes"
-          value={favorites.data?.length ?? 0}
-        />
-        <MetricCard icon={<Bell className="size-5" />} label="Avisos sin leer" value={unread} />
-      </section>
-
-      <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
-        <Card>
-          <CardHeader
-            action={
-              <ButtonLink href="/workouts" size="sm" variant="ghost">
-                Ver historial
-              </ButtonLink>
-            }
-            description="Las últimas sesiones registradas por tu cuenta."
-            title="Actividad reciente"
-          />
-          <CardContent className="p-0">
-            {sessions.length === 0 ? (
-              <div className="p-5">
-                <EmptyState
-                  description="Inicia una sesión para construir un historial verificable."
-                  title="Todavía no hay entrenamientos"
-                />
-              </div>
+        <div className="grid gap-8">
+          {/* La semana es UNA cifra orgullosa; lo demás, de apoyo. */}
+          <Section title="Tu semana">
+            {workouts.isPending ? (
+              <Skeleton className="h-42 rounded-[var(--radius-xl)]" />
             ) : (
-              <div className="stagger divide-y divide-[var(--border-subtle)]">
-                {sessions.slice(0, 5).map((session) => (
-                  <Link
-                    className="tap group flex items-center gap-4 p-5 hover:bg-[var(--surface-low)]"
-                    href={`/workouts/${session.id}`}
-                    key={session.id}
-                  >
-                    <span className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text-muted)]">
-                      <Activity className="size-4" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold">{formatDateTime(session.fechaInicio)}</p>
-                      <p className="mt-1 text-sm text-[var(--text-muted)]">
-                        {session.ejercicios.length} ejercicios ·{' '}
-                        {formatDuration(session.fechaInicio, session.fechaFin)}
+              <div className="grid gap-4">
+                {workouts.isError ? null : sessions.length === 0 ? (
+                  <p className="t-subhead text-[var(--text-muted)]">
+                    Tu primer entreno enciende el primer día. Desde ahí, cada semana cuenta.
+                  </p>
+                ) : (
+                  <div className="grid gap-0.5">
+                    <p className="flex items-baseline gap-2">
+                      <span className="t-hero">{week.done}</span>
+                      <span className="title-text tabular-nums text-[var(--text-muted)]">
+                        {week.planned > 0 ? `de ${week.planned} entrenos` : week.done === 1 ? 'entreno' : 'entrenos'}
+                      </span>
+                    </p>
+                    {streak > 0 ? (
+                      <p className="t-footnote flex items-center gap-1 tabular-nums text-[var(--text-muted)]">
+                        <Flame aria-hidden className="size-4" style={{ color: metricInk.streak }} />
+                        {`${streak} ${streak === 1 ? 'semana seguida' : 'semanas seguidas'}`}
                       </p>
-                    </div>
-                    <Badge
-                      tone={
-                        session.estado === 'FINALIZADA'
-                          ? 'success'
-                          : session.estado === 'CANCELADA'
-                            ? 'danger'
-                            : 'warning'
-                      }
-                    >
-                      {session.estado}
-                    </Badge>
-                    <ChevronRight className="size-4 shrink-0 text-[var(--text-disabled)] transition-colors duration-[var(--dur-2)] group-hover:text-[var(--text-muted)]" />
-                  </Link>
-                ))}
+                    ) : null}
+                  </div>
+                )}
+                <WeekDots days={week.days} quiet />
+                {workouts.isError ? (
+                  <ErrorPanel message={workouts.error.message} onRetry={() => void workouts.refetch()} />
+                ) : (
+                  <ProgressStrip
+                    figures={[
+                      {
+                        key: 'carga',
+                        value: formatVolume(training.thisWeek.volumeKg),
+                        label: 'Carga esta semana',
+                        delta: overload,
+                      },
+                      { key: 'mes', value: `${training.recentSessions}`, label: 'Sesiones en 4 semanas' },
+                    ]}
+                  />
+                )}
+                {workouts.data ? <MuscleSplit week={training.thisWeek} /> : null}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </Section>
 
-        <div className="grid gap-5">
-          {/* Sólo cuando está vigente: si no lo está, el aviso de arriba ya es
-              la única palabra sobre el estado de la membresía. */}
-          {projection?.membership && membershipActive ? (
-            <MembershipSummaryCard membership={projection.membership} />
+          <Section title="Últimas sesiones">
+            {workouts.isPending ? (
+              <Skeleton className="h-36 rounded-[var(--radius-xl)]" />
+            ) : workouts.isError ? null : sessions.length === 0 ? (
+              <EmptyState
+                description="Cada entreno queda aquí con su duración y sus ejercicios, listo para repetirlo o superarlo."
+                icon={<Dumbbell />}
+                level={3}
+                title="Tu historial empieza hoy"
+              />
+            ) : (
+              <ListCard>
+                {sessions.slice(0, 3).map((session, index) => {
+                  const duration = sessionDuration(session.fechaInicio, session.fechaFin);
+                  const startTime = formatTimeOfDay(session.fechaInicio);
+                  const count = session.ejercicios.length;
+                  const badge = session.estado === 'FINALIZADA' ? null : WORKOUT_BADGE[session.estado];
+                  return (
+                    <div key={session.id}>
+                      {index > 0 ? <Divider /> : null}
+                      <NavRow
+                        href={`/workouts/${session.id}`}
+                        meta={badge ? <Badge tone={badge.tone}>{badge.label}</Badge> : undefined}
+                        subtitle={`${count} ${count === 1 ? 'ejercicio' : 'ejercicios'}${duration ? ` · ${duration}` : ''}`}
+                        title={`${relativeDay(session.fechaInicio)}${startTime ? ` · ${startTime}` : ''}`}
+                      />
+                    </div>
+                  );
+                })}
+              </ListCard>
+            )}
+            {sessions.length > 3 ? (
+              <ButtonLink className="justify-self-start" href="/workouts" size="sm" variant="ghost">
+                Ver todos mis entrenos <ArrowRight aria-hidden className="size-4" />
+              </ButtonLink>
+            ) : null}
+          </Section>
+
+          {/* La senda y la membresía vigente: una sola lista callada al final. */}
+          {level || membershipData?.vigenteHoy ? (
+            <ListCard>
+              {level && progression.data ? (
+                <Link className="tap grid gap-1 py-3" href="/trayectoria">
+                  <span className="flex items-center gap-3">
+                    <IconBadge icon={Award} size={36} tone="record" />
+                    <span className="grid min-w-0 flex-1 gap-0.5">
+                      <span className="t-headline truncate">{level.name}</span>
+                      <span className="t-footnote tabular-nums text-[var(--text-muted)]">
+                        {progression.data.nextLevel && progression.data.pointsToNextLevel !== null
+                          ? `${progression.data.points.toLocaleString('es-ES')} pts · faltan ${progression.data.pointsToNextLevel.toLocaleString('es-ES')} para ${progression.data.nextLevel.name}`
+                          : `${progression.data.points.toLocaleString('es-ES')} pts · senda completa`}
+                      </span>
+                    </span>
+                  </span>
+                  <span aria-hidden className="block h-1.5 overflow-hidden rounded-full bg-[var(--surface-highest)]">
+                    <span
+                      className="block h-full rounded-full bg-[var(--text-muted)]"
+                      style={{ width: `${Math.round(progression.data.levelProgress * 100)}%` }}
+                    />
+                  </span>
+                </Link>
+              ) : null}
+              {level && membershipData?.vigenteHoy ? <Divider /> : null}
+              {membershipData?.vigenteHoy ? (
+                <NavRow
+                  href="/membership"
+                  leading={<IconBadge icon={CreditCard} size={36} tone="record" />}
+                  subtitle={`${membershipData.diasRestantes} ${membershipData.diasRestantes === 1 ? 'día restante' : 'días restantes'}`}
+                  title={membershipData.plan?.nombre ?? 'Tu membresía'}
+                />
+              ) : null}
+            </ListCard>
           ) : null}
-          {/* Pesarse es un hábito semanal, y un hábito que hay que ir a buscar
-              tres pantallas más adentro no se mantiene. */}
-          <BodyWeightCard />
-          <Card>
-            <CardHeader title="Último acceso" />
-            <CardContent>
-              {access.data?.items[0] ? (
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">
-                      {formatDateTime(access.data.items[0].decididoEn)}
-                    </p>
-                    <p className="mt-1 text-sm text-[var(--text-muted)]">
-                      {access.data.items[0].razon}
-                    </p>
-                  </div>
-                  <Badge tone={access.data.items[0].resultado === 'GRANTED' ? 'success' : 'danger'}>
-                    {access.data.items[0].resultado}
-                  </Badge>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3 text-sm text-[var(--text-muted)]">
-                  <CalendarDays className="size-4" /> Sin eventos recientes
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
-      </section>
-
-      {latest ? (
-        <p className="text-xs text-[var(--text-disabled)]">
-          Última actualización visible: {formatDateTime(latest.fechaInicio)}
-        </p>
-      ) : null}
+      </div>
     </div>
   );
 }

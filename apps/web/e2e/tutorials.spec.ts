@@ -29,7 +29,7 @@ test('the help center lists tutorials and shows progress', async ({ page }) => {
   await dismissAnyTour(page);
   await expect(page.getByRole('heading', { name: 'Centro de ayuda', exact: true })).toBeVisible();
   await expect(page.getByText('Avance general')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Bienvenido a GymSheet' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Bienvenido a REPP' })).toBeVisible();
 });
 
 test('a tutorial can be started and advanced over the real UI', async ({ page }) => {

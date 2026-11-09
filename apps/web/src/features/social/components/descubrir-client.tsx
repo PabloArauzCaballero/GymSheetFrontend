@@ -3,18 +3,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import { chatService } from '@/features/chat/services/chat-service';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { interactionKeys } from '@/features/interactions/services/interactions-service';
 import { discoveryService } from '@/features/social/services/discovery-service';
 import { directoryKeys } from '@/features/social/services/directory-keys';
 import { ApiError } from '@/shared/api/api-error';
 import type { GymDirectoryEntry, SwipeDirection, UndoSwipeResult } from '@/shared/api/schemas';
 import { queryKeys } from '@/shared/api/query-keys';
-import { EmptyState } from '@/shared/components/feedback/empty-state';
-import { ErrorPanel } from '@/shared/components/feedback/error-panel';
-import { Skeleton, SkeletonScreen } from '@/shared/components/feedback/skeleton';
 import { Button } from '@/shared/components/ui/button';
 import { notify } from '@/shared/notifications';
+import { DeckSurface } from './deck-surface';
 import { DirectorySwipeDeck } from './directory-swipe-deck';
 import { MatchCelebration } from './match-celebration';
 import { MemberDetailSheet } from './member-detail-sheet';
@@ -43,8 +43,22 @@ export function DescubrirClient({
   genero,
   objetivo,
   sucursalId,
-}: Readonly<{ genero: string; objetivo: string; sucursalId: string }>) {
+  embedded = false,
+}: Readonly<{
+  genero: string;
+  objetivo: string;
+  sucursalId: string;
+  /** Dentro de Comunidad (como en el móvil): sin cabecera propia ni «volver». */
+  embedded?: boolean;
+}>) {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  // El rayo de la botonera: chat directo con la persona de arriba, como en el móvil.
+  const message = useMutation({
+    mutationFn: (entry: GymDirectoryEntry) => chatService.startConversation(entry.userId),
+    onSuccess: (conversation) => router.push(`/chat/${conversation.conversationId}`),
+    onError: (error: Error) => notify.error(error),
+  });
   const [queue, setQueue] = useState<GymDirectoryEntry[]>([]);
   const [history, setHistory] = useState<GymDirectoryEntry[]>([]);
   const [match, setMatch] = useState<FilteredEntry | null>(null);
@@ -174,6 +188,7 @@ export function DescubrirClient({
 
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
+      {embedded ? null : (
       <header className="grid gap-2">
         <Link
           className="inline-flex w-fit items-center gap-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
@@ -189,6 +204,7 @@ export function DescubrirClient({
           Arrastra a la derecha si te interesa, a la izquierda si no.
         </p>
       </header>
+      )}
 
       <DeckSurface
         deckError={deck.isError ? deck.error.message : null}
@@ -218,6 +234,8 @@ export function DescubrirClient({
           entries={visibleQueue}
           onDecide={(entry, direction) => decide.mutate({ entry, direction, filterKey })}
           onInfo={(entry) => setDetail({ entry, filterKey })}
+          onMessage={(entry) => message.mutate(entry)}
+          messagePending={message.isPending}
           onUndo={() => undo.mutate({ filterKey })}
           undoPending={undo.isPending}
         />
@@ -233,50 +251,4 @@ export function DescubrirClient({
       />
     </div>
   );
-}
-
-/**
- * Los cuatro estados de la baraja en un solo sitio.
- *
- * Importa distinguir «no hay nadie más» de «no pudimos preguntar»: si la red
- * falla y pintamos el vacío, el usuario concluye que su gimnasio está desierto.
- */
-function DeckSurface({
-  children,
-  deckError,
-  empty,
-  emptyAction,
-  loading,
-  onRefetch,
-}: Readonly<{
-  children: ReactNode;
-  deckError: string | null;
-  empty: boolean;
-  emptyAction: ReactNode;
-  loading: boolean;
-  onRefetch: () => void;
-}>) {
-  if (loading) {
-    return (
-      <SkeletonScreen className="justify-items-center" label="Cargando la baraja">
-        <Skeleton className="h-[28rem] w-full max-w-md rounded-[var(--radius-xl)] sm:h-[34rem]" />
-        <div className="flex gap-4">
-          <Skeleton className="size-16 rounded-full" />
-          <Skeleton className="size-12 rounded-full" />
-          <Skeleton className="size-16 rounded-full" />
-        </div>
-      </SkeletonScreen>
-    );
-  }
-  if (deckError) return <ErrorPanel message={deckError} onRetry={onRefetch} />;
-  if (empty) {
-    return (
-      <EmptyState
-        action={emptyAction}
-        description="No hay personas que coincidan con estos filtros por ahora. Cámbialos en Comunidad o vuelve más tarde."
-        title="No quedan cartas"
-      />
-    );
-  }
-  return <>{children}</>;
 }

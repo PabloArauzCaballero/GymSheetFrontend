@@ -47,11 +47,11 @@ export function ReviewCard({
   };
 
   return (
-    <article className="rounded-2xl border border-neutral-200/80 dark:border-neutral-800 bg-white/60 dark:bg-neutral-900/40 p-5 md:p-6 transition-all space-y-4">
+    <article className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-low)] p-5 md:p-6 transition-all space-y-4">
       {/* Header: Autor, Estrellas y Fecha */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 shrink-0 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden flex items-center justify-center font-bold text-neutral-600 dark:text-neutral-300 text-sm">
+          <div className="h-10 w-10 shrink-0 rounded-full bg-[var(--surface-highest)] overflow-hidden flex items-center justify-center font-bold text-[var(--text-muted)] text-sm">
             {review.author.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -66,12 +66,12 @@ export function ReviewCard({
 
           <div>
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-semibold text-sm text-neutral-900 dark:text-white">
+              <span className="font-semibold text-sm text-[var(--text)]">
                 {review.author.displayName}
               </span>
 
               {review.isVerifiedAthlete && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[var(--success-bg)] text-[var(--success)]">
                   <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
@@ -81,12 +81,12 @@ export function ReviewCard({
             </div>
 
             <div className="flex items-center gap-2 mt-1">
-              <div className="flex text-amber-400">
+              <div className="flex text-[var(--warning)]">
                 {[1, 2, 3, 4, 5].map((s) => (
                   <svg
                     key={s}
                     className={`w-3.5 h-3.5 ${
-                      s <= review.rating ? 'fill-current' : 'text-neutral-300 dark:text-neutral-700 fill-current'
+                      s <= review.rating ? 'fill-current' : 'text-[var(--text-muted)] fill-current'
                     }`}
                     viewBox="0 0 20 20"
                   >
@@ -95,7 +95,7 @@ export function ReviewCard({
                 ))}
               </div>
 
-              <span className="text-xs text-neutral-400">
+              <span className="text-xs text-[var(--text-muted)]">
                 {formatDate(review.createdAt)}
                 {review.editedAt && ' · Editado'}
               </span>
@@ -110,7 +110,7 @@ export function ReviewCard({
               <button
                 type="button"
                 onClick={() => onEdit(review)}
-                className="text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white"
+                className="text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
               >
                 Editar
               </button>
@@ -119,7 +119,7 @@ export function ReviewCard({
               <button
                 type="button"
                 onClick={() => onDelete(review.id)}
-                className="text-xs font-medium text-rose-500 hover:text-rose-600"
+                className="text-xs font-medium text-[var(--danger)] hover:brightness-110"
               >
                 Eliminar
               </button>
@@ -130,10 +130,10 @@ export function ReviewCard({
 
       {/* Título y Contenido */}
       <div className="space-y-1">
-        <h4 className="font-bold text-neutral-900 dark:text-white text-base">
+        <h4 className="font-bold text-[var(--text)] text-base">
           {review.title}
         </h4>
-        <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-line">
+        <p className="text-sm text-[var(--text-muted)] leading-relaxed whitespace-pre-line">
           {review.body}
         </p>
       </div>
@@ -146,8 +146,8 @@ export function ReviewCard({
           disabled={Boolean(isAuthor)}
           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all ${
             hasVoted
-              ? 'border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold'
-              : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+              ? 'border-[color-mix(in_srgb,var(--volt)_40%,transparent)] bg-[color-mix(in_srgb,var(--volt)_12%,transparent)] text-[var(--accent-ink)] font-semibold'
+              : 'border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--surface-high)]'
           } ${isAuthor ? 'opacity-60 cursor-not-allowed' : ''}`}
         >
           <svg className="w-3.5 h-3.5 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
@@ -160,17 +160,17 @@ export function ReviewCard({
 
       {/* Respuesta Oficial del Desarrollador / Propietario (App Store Style) */}
       {review.reply && (
-        <div className="mt-4 rounded-xl bg-neutral-100/80 dark:bg-neutral-800/60 p-4 border-l-4 border-amber-500 space-y-1.5">
+        <div className="mt-4 rounded-xl bg-[var(--surface-high)] p-4 border-l-4 border-[var(--volt)] space-y-1.5">
           <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5 font-semibold text-neutral-900 dark:text-white">
+            <div className="flex items-center gap-1.5 font-semibold text-[var(--text)]">
               <span>{review.reply.authorName}</span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400">
+              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-[color-mix(in_srgb,var(--volt)_20%,transparent)] text-[var(--accent-ink)]">
                 Respuesta Oficial
               </span>
             </div>
-            <span className="text-neutral-400">{formatDate(review.reply.createdAt)}</span>
+            <span className="text-[var(--text-muted)]">{formatDate(review.reply.createdAt)}</span>
           </div>
-          <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed whitespace-pre-line">
+          <p className="text-xs text-[var(--text-muted)] leading-relaxed whitespace-pre-line">
             {review.reply.replyText}
           </p>
         </div>

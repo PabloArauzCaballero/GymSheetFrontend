@@ -15,10 +15,10 @@ export function FacilitiesAdmin({ role }: Readonly<{ role: UserRole }>) {
     <div className="grid gap-8">
       <PageHeader
         description="Sedes, salas, puntos de acceso, asignación de activos y mantenimiento con transiciones explícitas."
-        eyebrow="Operaciones físicas"
         title="Instalaciones"
       />
-      <Tabs defaultValue="branches">
+      {/* `min-w-0`: con cinco pestañas, la barra desplazable no debe ensanchar la página en móvil. */}
+      <Tabs className="min-w-0" defaultValue="branches">
         <TabsList>
           <TabsTrigger value="branches">Sedes</TabsTrigger>
           <TabsTrigger value="rooms">Salas</TabsTrigger>

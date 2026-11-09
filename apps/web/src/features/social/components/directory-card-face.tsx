@@ -1,10 +1,9 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, Info, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Dumbbell, Info, MapPin, Trophy, User } from 'lucide-react';
 import { useState } from 'react';
 import type { GymDirectoryEntry } from '@/shared/api/schemas';
 import { DomainImage } from '@/shared/components/media/domain-image';
-import { chipHeartbeat } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/lib/cn';
 import { experienceLevelLabels, trainingGoalLabels } from './directory-labels';
 
@@ -78,7 +77,6 @@ export function DirectoryCardFace({
   const experience = entry.experienceLevel
     ? (experienceLevelLabels[entry.experienceLevel] ?? entry.experienceLevel)
     : null;
-  const meta = [objetivo, entry.branchName].filter(Boolean).join(' · ');
 
   return (
     <div className={cn('relative overflow-hidden bg-[var(--surface-high)]', fill ? 'size-full' : 'aspect-[4/5] w-full')}>
@@ -150,22 +148,32 @@ export function DirectoryCardFace({
             <span className="ml-2 font-normal opacity-90">{entry.age}</span>
           ) : null}
         </p>
-        {meta ? <p className="truncate text-sm opacity-90">{meta}</p> : null}
-        {/* Este chip no puede ser `Badge`: va sobre la foto, con la paleta
-            invertida del degradado. Toma de allí solo el latido, para que sea
-            literalmente el mismo movimiento que el del resto de la aplicación.
-            Late sólo el de la carta de encima: algo latiendo en un montón de
-            cartas apiladas parece un fallo de pintado, no un acento. */}
-        {experience ? (
-          <span
-            className={cn(
-              'w-fit rounded-[var(--radius-sm)] border border-white/30 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em]',
-              interactive ? chipHeartbeat : '',
-            )}
-          >
-            {experience}
-          </span>
-        ) : null}
+        {/* Chips del móvil sobre la foto: sede, objetivo y puntos (este en acento). */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {entry.branchName ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--background)_70%,transparent)] px-2.5 py-1 text-xs font-semibold">
+              <MapPin aria-hidden className="size-3 opacity-85" />
+              {entry.branchName}
+            </span>
+          ) : null}
+          {objetivo ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--background)_70%,transparent)] px-2.5 py-1 text-xs font-semibold">
+              <Dumbbell aria-hidden className="size-3 text-[var(--accent-ink)]" />
+              {objetivo}
+            </span>
+          ) : null}
+          {typeof entry.points === 'number' ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--volt)_18%,transparent)] px-2.5 py-1 text-xs font-bold tabular-nums text-[var(--accent-ink)]">
+              <Trophy aria-hidden className="size-3" />
+              {`${entry.points.toLocaleString('es-ES')} pts`}
+            </span>
+          ) : null}
+          {experience ? (
+            <span className="rounded-full bg-[color-mix(in_srgb,var(--background)_70%,transparent)] px-2.5 py-1 text-xs font-semibold">
+              {experience}
+            </span>
+          ) : null}
+        </div>
       </div>
 
       {onInfo && interactive ? (

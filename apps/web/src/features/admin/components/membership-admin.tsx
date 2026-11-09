@@ -14,7 +14,6 @@ export function MembershipAdmin({ role }: Readonly<{ role: UserRole }>) {
     <div className="grid gap-8">
       <PageHeader
         description="Operaciones transaccionales de clientes, planes, membresías y personal."
-        eyebrow="Gestión comercial"
         title="Membresías y clientes"
       />
       <Tabs defaultValue={admin ? 'plans' : 'customers'}>

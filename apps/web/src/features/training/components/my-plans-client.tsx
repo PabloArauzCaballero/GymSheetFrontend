@@ -51,7 +51,6 @@ export function MyPlansClient() {
     <div className="grid gap-8">
       <PageHeader
         description="Planes de entrenamiento que tu coach te asignó, con su programación."
-        eyebrow="Programación"
         title="Mis planes"
       />
       {assignments.length ? (

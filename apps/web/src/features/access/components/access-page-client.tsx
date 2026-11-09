@@ -46,7 +46,6 @@ export function AccessPageClient() {
     <div className="grid gap-8">
       <PageHeader
         description="Credenciales no sensibles y decisiones de acceso registradas para tu cuenta."
-        eyebrow="Seguridad física"
         title="Acceso"
       />
       <section className="grid gap-5 lg:grid-cols-[0.75fr_1.25fr]">

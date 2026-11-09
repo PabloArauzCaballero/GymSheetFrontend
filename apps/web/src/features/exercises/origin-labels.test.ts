@@ -7,7 +7,7 @@ describe('origin-labels', () => {
     expect(exerciseTypeLabel('PERSONAL')).toBe('Personal');
     expect(exerciseStatusLabel('ACTIVO')).toBe('Activo');
     expect(exerciseOriginLabel('EXERCISES_DATASET')).toBe('Base de datos pública de ejercicios');
-    expect(exerciseOriginLabel('CUSTOM')).toBe('Creado en GymSheet');
+    expect(exerciseOriginLabel('CUSTOM')).toBe('Creado en REPP');
     expect(exerciseOriginLabel(undefined)).toBeNull();
     expect(exerciseOriginLabel('OTRO')).toBeNull();
   });

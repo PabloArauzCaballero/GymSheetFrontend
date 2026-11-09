@@ -99,3 +99,13 @@ export const getEntityPaymentConfig = cache(
   }
 );
 
+
+/**
+ * Ofertas de todo el Marketplace (`GET /public/directory/plans`), las mismas
+ * que la pestaña «Ofertas» del móvil. `null` = el backend no respondió o el
+ * contrato no encaja: la pestaña lo dice, no se confunde con «no hay ofertas».
+ */
+export async function listMarketplacePlans(limit = 50): Promise<EntityPlan[] | null> {
+  const response = await backendRequest(`/public/directory/plans?limit=${limit}`);
+  return readData(response, z.array(entityPlanSchema));
+}

@@ -1,5 +1,56 @@
 # Estado — registro de sesión
 
+## 2026-11-08 (continuación) — web pantalla por pantalla igual que el móvil
+
+Primitivas web con la forma del móvil en `apps/web/src/shared/components/mobile/`
+(`Section`, `ListCard`/`NavRow`/`Divider`, `IconBadge`, `HeroSurface`, `WeekDots`) y la rampa
+tipográfica `t-*` en `components.css`. Lógica pura movida a paquetes y reexportada por el móvil:
+`homeWeekDots` (hooks), `relativeDay`/`formatTimeOfDay`/`sessionDuration`/`shortName`/`sessionTitle`
+y `profileCompletion`/`proudStat` (domain).
+
+| Pantalla móvil | Web | Estado |
+|---|---|---|
+| `(tabs)/home.tsx` | `/dashboard` | Hecho (sin Repi: depende de widgets y avisos locales del teléfono) |
+| `(tabs)/profile.tsx` + `profile-edit.tsx` | `/profile` + `/profile/editar` | Hecho |
+| `settings.tsx` | `/settings` | Hecho (sin «Chats»: el BFF no permite `/me/chat/read-receipts`) |
+| `workouts/index.tsx` | `/workouts` | Hecho |
+| `routines` (catálogo) | `/routines` | Hecho |
+| `ejercicios` | `/exercises` | Ya era un port (`ExerciseBrowser`) |
+| `notifications-inbox.tsx` | `/notifications` | Hecho |
+| `(tabs)/comunidad.tsx` | `/comunidad` (+ `/comunidad/personas`) | Hecho: baraja, cabecera, botonera de cinco y menú «⋯» |
+| `comunidad-mensajes.tsx` | `/chat` | Hecho: historias + pestañas |
+| `directorio.tsx` (Marketplace) | `/directorio` | Hecho |
+| `membership.tsx` | `/membership` | Hecho (secciones; la renovación sigue por WhatsApp como antes) |
+| `trayectoria.tsx` | `/trayectoria` | Hecho (orden y secciones) |
+| `descubrir.tsx` | `/descubrir` | Comparte baraja con Comunidad |
+| `interacciones.tsx`, `reels.tsx`, `training-invitations.tsx`, `onboarding.tsx` | mismas rutas | Hecho (cabeceras, secciones, preguntas por paso) |
+| Portal de staff (sin equivalente móvil) | `/admin/*` | Lenguaje del móvil: módulos como filas agrupadas, rótulos cortos en la barra, sin versalitas |
+
+**Hallazgo fuera de alcance (no corregido salvo `/programs/*` y `unread-count`)**: unas 60 rutas que
+usan los servicios web no están en el allowlist del BFF (`backend-route-policy.ts`) y responden
+«Ruta no permitida». Lista en `trabajo/BFF_RUTAS_SIN_PERMITIR.md`.
+
+**Verificado**: `yarn turbo run source-check type-check lint test --filter=!@gymsheet/mobile` 28/28;
+`yarn workspace @gymsheet/mobile type-check` y `yarn workspace @gymsheet/mobile test` (247/247).
+Capturas con un backend de maqueta local no commiteado. E2E **no** ejecutado (sin backend ni PostgreSQL).
+
+## 2026-11-08 — rediseño web con la identidad visual del móvil
+
+- **Causa raíz**: la web seguía pintando la identidad anterior (negro `#000` + lima `#c3f400`,
+  `default-palette.ts`) mientras el móvil usa REPP (navy `#0F172A` + jade `#2E8B7B`,
+  `apps/mobile/src/theme/palette.ts`). `themeFromCatalog` devolvía esa paleta para REPP.
+- **Hecho**: paleta, elevación (e1/e2/card), radios (6/8/12/16/20/24), display Bricolage
+  Grotesque, isotipo REPP (`packages/design-tokens/src/repp-mark.ts`), botones/campos/chips/
+  pestañas/diálogos como las primitivas del móvil, barra de pestañas inferior + hoja «Más»,
+  login como `AuthShell`, Inicio con «Hola, {nombre}», marketplace sin paletas ajenas
+  (neutral/amber → tokens), sin versalitas en etiquetas, «REPP» en vez de «GymSheet» escrito a mano.
+- **Garantía**: `apps/web/src/shared/theme/mobile-parity.test.ts` compara la web con los
+  archivos del tema del móvil (superficies, texto, acento, sombras, radios, isotipo, marca).
+- **Verificado**: `yarn turbo run source-check type-check lint test --filter=!@gymsheet/mobile`
+  28/28; `yarn workspace @gymsheet/web build` OK; `yarn workspace @gymsheet/mobile type-check` OK.
+  Capturas con un backend de maqueta local (no commiteado). **No** se ejecutó E2E (sin backend
+  ni PostgreSQL); se actualizaron `e2e/auth.spec.ts` y `e2e/tutorials.spec.ts` a los textos nuevos.
+
 ## 2026-09-23 — cierre de la sesión
 
 - **Entrega escrita en `ENTREGA.md`** (fase 11): qué cambió, qué se verificó, qué no se hizo y

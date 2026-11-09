@@ -164,7 +164,6 @@ export function EquipmentAdmin({ canManage }: Readonly<{ canManage: boolean }>) 
           </div>
         }
         description="La lista pública del backend devuelve únicamente equipos disponibles. Al cambiar a mantenimiento o inactivo, el registro deja de aparecer en esta vista."
-        eyebrow="Activos físicos"
         title="Equipamiento"
       />
       {query.isError ? (

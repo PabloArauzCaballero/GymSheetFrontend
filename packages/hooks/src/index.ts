@@ -22,3 +22,6 @@ export * from './routine-catalog';
 
 /** Programas de fuerza y cardio: activación, metas, propuesta RF-20 y cálculo de zonas. */
 export * from './programs';
+
+/** La semana de Inicio: días hechos, de entreno y de descanso (sin React). */
+export * from './home';

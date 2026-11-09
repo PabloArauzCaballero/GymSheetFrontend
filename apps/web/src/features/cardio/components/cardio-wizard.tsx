@@ -144,7 +144,6 @@ export function CardioWizard() {
       </div>
       <PageHeader
         description="Registro manual: tú anotas minutos, distancia y esfuerzo. Convive con tu programa de pesas."
-        eyebrow="Plan de cardio"
         title="Crea tu plan de cardio"
       />
       <form

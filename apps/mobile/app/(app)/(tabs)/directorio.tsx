@@ -31,8 +31,14 @@ import { AmbientBackground } from '@/components/ambient';
 import { EmptyState, ErrorState } from '@/components/feedback';
 import { PressableScale } from '@/components/motion';
 import { Button } from '@/components/ui';
+import { FilterChip } from '@/components/filter-chip';
+import { useDebouncedValue } from '@/features/marketplace/use-debounced-value';
+import { MarketplaceTabs, type MarketplaceTab } from '@/features/marketplace/tabs';
+import { OfferCard } from '@/features/marketplace/offer-card';
+import { SellerCard } from '@/features/marketplace/seller-card';
+import { MyGymRow } from '@/features/marketplace/my-gym-row';
 import { notify } from '@/notifications';
-import { accentHues, alpha, colors, darkSurfaces, fontSizes, heroNumberFontSize, ink, radii, semibold, spacing } from '@/theme';
+import { accentHues, alpha, colors, fontSizes, heroNumberFontSize, ink, radii, semibold, spacing } from '@/theme';
 
 const MARKET_CATEGORIES = [
   { id: 'all', label: 'Todo', type: undefined, categoryPath: undefined },
@@ -54,9 +60,11 @@ export default function DirectorioScreen() {
   const principal = useAuthStore((s) => s.principal);
   const userTenantId = principal?.tenantId || 'default';
 
-  const [viewMode, setViewMode] = useState<'OFFERS' | 'ENTITIES'>('OFFERS');
+  const [viewMode, setViewMode] = useState<MarketplaceTab>('OFFERS');
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedPillId, setSelectedPillId] = useState<string>('all');
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search);
   const [selectedEntitySlug, setSelectedEntitySlug] = useState<string | null>(null);
 
   const activeCategoryConfig = MARKET_CATEGORIES.find((c) => c.id === selectedPillId);
@@ -92,12 +100,12 @@ export default function DirectorioScreen() {
     error: entitiesError,
     refetch: refetchEntities,
   } = useQuery<DirectoryEntitySummary[]>({
-    queryKey: ['directory-entities', selectedType, selectedCategoryPath, search],
+    queryKey: ['directory-entities', selectedType, selectedCategoryPath, debouncedSearch],
     queryFn: () =>
       directoryService.entities({
         type: selectedType,
         categoryPath: selectedCategoryPath,
-        search: search.trim() || undefined,
+        search: debouncedSearch.trim() || undefined,
         limit: 50,
       }),
   });
@@ -145,8 +153,8 @@ export default function DirectorioScreen() {
       if (plan.type !== 'SERVICE' && plan.entity?.entityType !== 'COACH') return false;
     }
 
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.trim().toLowerCase();
       const matchName = plan.name.toLowerCase().includes(q);
       const matchDesc = plan.description.toLowerCase().includes(q);
       const matchSeller = plan.entity?.name.toLowerCase().includes(q);
@@ -380,103 +388,69 @@ export default function DirectorioScreen() {
     });
   };
 
+  const refreshActive = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([refetchOffers(), refetchEntities()]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const emptyMessage = debouncedSearch.trim()
+    ? `No hay resultados para «${debouncedSearch.trim()}». Prueba con otra palabra.`
+    : 'Prueba con otra categoría.';
+
   return (
     <View style={[styles.screen, { paddingTop: Math.max(insets.top, spacing.md) + spacing.xs }]}>
       <StatusBar barStyle="light-content" />
       <AmbientBackground />
 
-      {/* Header */}
       {/* Título grande a la izquierda. Es pestaña: no lleva «Volver». */}
       <View style={styles.header}>
         <Text accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit style={styles.title}>
           Marketplace
         </Text>
-        <Text numberOfLines={2} style={styles.headerSubtitle}>
-          Gimnasios, tiendas y pases de tu zona
-        </Text>
       </View>
 
-      {/* Buscador Marketplace */}
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={18} color={colors.textMuted} />
         <TextInput
-          placeholder="Buscar ofertas, marcas, suplementos, gyms..."
+          accessibilityLabel="Buscar en Marketplace"
+          autoCorrect={false}
+          placeholder="Busca un plan, producto o tienda"
           placeholderTextColor={colors.textMuted}
+          returnKeyType="search"
           value={search}
           onChangeText={setSearch}
           style={styles.searchInput}
         />
         {search.length > 0 && (
-          <PressableScale onPress={() => setSearch('')}>
+          <PressableScale accessibilityLabel="Borrar búsqueda" hitSlop={12} onPress={() => setSearch('')}>
             <Ionicons name="close-circle" size={18} color={colors.textMuted} />
           </PressableScale>
         )}
       </View>
 
-      {/* Píldoras de Categorías Estilo Marketplace (Fila única limpia) */}
       <View style={styles.pillsWrapper}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillsScroll}>
-          {MARKET_CATEGORIES.map((cat) => {
-            const isSelected = selectedPillId === cat.id;
-            return (
-              <PressableScale
-                key={cat.id}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setSelectedPillId(cat.id);
-                }}
-                style={[styles.pill, isSelected && styles.pillSelected]}
-              >
-                <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
-                  {cat.label}
-                </Text>
-              </PressableScale>
-            );
-          })}
+          {MARKET_CATEGORIES.map((cat) => (
+            <FilterChip
+              key={cat.id}
+              label={cat.label}
+              selected={selectedPillId === cat.id}
+              onPress={() => setSelectedPillId(cat.id)}
+            />
+          ))}
         </ScrollView>
       </View>
 
-      {/* Selector Segmentado: Ofertas & Catálogo vs Tiendas & Gimnasios */}
-      <View style={styles.segmentContainer}>
-        <PressableScale
-          onPress={() => {
-            Haptics.selectionAsync();
-            setViewMode('OFFERS');
-          }}
-          style={[styles.segmentButton, viewMode === 'OFFERS' && styles.segmentButtonActive]}
-        >
-          <Ionicons
-            name="pricetags"
-            size={15}
-            color={viewMode === 'OFFERS' ? ink.black : colors.textMuted}
-          />
-          <Text style={[styles.segmentText, viewMode === 'OFFERS' && styles.segmentTextActive]}>
-            Ofertas ({filteredOffers.length})
-          </Text>
-        </PressableScale>
+      <MarketplaceTabs value={viewMode} onChange={setViewMode} />
+      <View style={styles.tabsDivider} />
 
-        <PressableScale
-          onPress={() => {
-            Haptics.selectionAsync();
-            setViewMode('ENTITIES');
-          }}
-          style={[styles.segmentButton, viewMode === 'ENTITIES' && styles.segmentButtonActive]}
-        >
-          <Ionicons
-            name="business"
-            size={15}
-            color={viewMode === 'ENTITIES' ? ink.black : colors.textMuted}
-          />
-          <Text style={[styles.segmentText, viewMode === 'ENTITIES' && styles.segmentTextActive]}>
-            Tiendas & Gyms ({filteredEntities.length})
-          </Text>
-        </PressableScale>
-      </View>
-
-      {/* Contenido Principal en Cuadrícula Marketplace */}
       {loadingEntities || loadingOffers ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.volt} />
+          <ActivityIndicator size="large" color={colors.textMuted} />
         </View>
       ) : viewMode === 'OFFERS' && offersError ? (
         // Un fallo de red no es «sin ofertas»: se dice y se puede reintentar.
@@ -488,13 +462,9 @@ export default function DirectorioScreen() {
           <ErrorState error={entitiesError} onRetry={() => void refetchEntities()} />
         </View>
       ) : viewMode === 'OFFERS' ? (
-        /* VISTA MARKETPLACE: OFERTAS & PRODUCTOS */
         filteredOffers.length === 0 ? (
           <View style={{ flex: 1, padding: spacing.xl }}>
-            <EmptyState
-              title="Sin ofertas encontradas"
-              message="No encontramos artículos con esos filtros. Prueba con otro término de búsqueda o categoría."
-            />
+            <EmptyState title="Nada por aquí todavía" message={emptyMessage} />
           </View>
         ) : (
           <FlatList
@@ -504,264 +474,46 @@ export default function DirectorioScreen() {
             keyExtractor={(item) => item.id}
             contentContainerStyle={gridContent}
             columnWrapperStyle={styles.gridRow}
+            refreshing={refreshing}
+            onRefresh={() => void refreshActive()}
             ListHeaderComponent={
-              /* Card Destacado: TU GIMNASIO ACTUAL (Siempre al tope) */
               myGym && (selectedPillId === 'all' || selectedPillId === 'gyms' || selectedPillId === 'passes') ? (
-                <PressableScale
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setSelectedEntitySlug(myGym.slug);
-                  }}
-                  style={styles.myGymSpotlightCard}
-                >
-                  <View style={styles.myGymCoverWrapper}>
-                    <Image source={{ uri: myGym.coverUrl ?? undefined }} style={styles.myGymCover} />
-                    <View style={styles.myGymGradientOverlay} />
-                    <View style={styles.myGymTopBadges}>
-                      <View style={styles.myGymVoltBadge}>
-                        <Ionicons name="flash" size={12} color={ink.black} />
-                        <Text style={styles.myGymVoltBadgeText}>TU GIMNASIO ACTUAL</Text>
-                      </View>
-                      <View style={styles.myGymActiveBadge}>
-                        <Ionicons name="checkmark-circle" size={12} color={colors.accentInk} />
-                        <Text style={styles.myGymActiveBadgeText}>
-                          {myMembership?.membership?.estado === 'ACTIVE'
-                            ? `Socio Activo (${myMembership.membership.diasRestantes}d)`
-                            : 'Sede Principal'}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  <View style={styles.myGymBody}>
-                    <View style={styles.myGymInfoRow}>
-                      {myGym.logoUrl ? (
-                        <Image source={{ uri: myGym.logoUrl }} style={styles.myGymLogo} />
-                      ) : (
-                        <View style={[styles.myGymLogo, styles.cardLogoPlaceholder]}>
-                          <Text style={styles.logoInitials}>{myGym.name.slice(0, 2).toUpperCase()}</Text>
-                        </View>
-                      )}
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text style={styles.myGymName} numberOfLines={1}>
-                          {myGym.name}
-                        </Text>
-                        <Text style={styles.myGymHeadline} numberOfLines={1}>
-                          {myGym.headline ?? myGym.city}
-                        </Text>
-                        <View style={styles.myGymRatingRow}>
-                          <Ionicons name="star" size={12} color={accentHues.amber} />
-                          <Text style={styles.myGymRatingText}>
-                            {myGym.ratingAverage > 0 ? myGym.ratingAverage.toFixed(1) : '5.0'} ({myGym.ratingCount})
-                          </Text>
-                          <Text style={styles.myGymDot}>·</Text>
-                          <Ionicons name="location-outline" size={12} color={colors.textMuted} />
-                          <Text style={styles.myGymLocationText}>{myGym.city ?? 'La Paz'}</Text>
-                        </View>
-                      </View>
-                    </View>
-
-                    <View style={styles.myGymActionsRow}>
-                      <PressableScale
-                        onPress={() => {
-                          Haptics.selectionAsync();
-                          setSelectedEntitySlug(myGym.slug);
-                        }}
-                        style={styles.myGymCtaPrimary}
-                      >
-                        <Ionicons name="qr-code-outline" size={14} color={ink.black} />
-                        <Text style={styles.myGymCtaPrimaryText}>Planes & QR</Text>
-                      </PressableScale>
-
-                      <PressableScale
-                        onPress={() => {
-                          Haptics.selectionAsync();
-                          setSelectedEntitySlug(myGym.slug);
-                        }}
-                        style={styles.myGymCtaSecondary}
-                      >
-                        <Ionicons name="eye-outline" size={14} color={colors.text} />
-                        <Text style={styles.myGymCtaSecondaryText}>Ver Ficha</Text>
-                      </PressableScale>
-                    </View>
-                  </View>
-                </PressableScale>
+                <MyGymRow
+                  gym={myGym}
+                  daysLeft={
+                    myMembership?.membership?.estado === 'ACTIVE' ? myMembership.membership.diasRestantes : null
+                  }
+                  onPress={() => setSelectedEntitySlug(myGym.slug)}
+                />
               ) : null
             }
-            renderItem={({ item }) => {
-              const itemIsFromMyGym = isGymOfUser({ tenantId: item.entity?.tenantId });
-              const displayImage =
-                (item.mediaUrls && item.mediaUrls[0]) ||
-                item.entity?.coverUrl ||
-                item.entity?.logoUrl ||
-                'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=600';
-
-              return (
-                <PressableScale
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    if (item.entity?.slug) {
-                      setSelectedEntitySlug(item.entity.slug);
-                    } else {
-                      checkoutMutation.mutate(item);
-                    }
-                  }}
-                  style={styles.marketCard}
-                >
-                  <View style={styles.marketCardImageWrapper}>
-                    <Image source={{ uri: displayImage }} style={styles.marketCardImage} contentFit="cover" />
-                    <View style={styles.marketCardTypeTag}>
-                      <Text style={styles.marketCardTypeTagText}>
-                        {item.type === 'MEMBERSHIP_PLAN'
-                          ? 'Membresía'
-                          : item.type === 'PASS'
-                          ? 'Pase'
-                          : item.type === 'PRODUCT'
-                          ? 'Producto'
-                          : 'Servicio'}
-                      </Text>
-                    </View>
-                    {itemIsFromMyGym && (
-                      <View style={styles.marketCardMyGymTag}>
-                        <Text style={styles.marketCardMyGymTagText}>TU GYM</Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <View style={styles.marketCardContent}>
-                    <Text style={styles.marketCardPrice}>
-                      {item.currency} {Number(item.currentPrice).toFixed(2)}
-                    </Text>
-
-                    <Text style={styles.marketCardTitle} numberOfLines={2}>
-                      {item.name}
-                    </Text>
-
-                    {item.entity?.name ? (
-                      <View style={styles.marketCardSellerRow}>
-                        <Ionicons name="checkmark-circle" size={11} color={colors.volt} />
-                        <Text style={styles.marketCardSellerName} numberOfLines={1}>
-                          {item.entity.name}
-                        </Text>
-                      </View>
-                    ) : null}
-
-                    <View style={styles.marketCardLocationRow}>
-                      <Ionicons name="location-outline" size={11} color={colors.textMuted} />
-                      <Text style={styles.marketCardLocationText} numberOfLines={1}>
-                        {item.entity?.city ?? 'Bolivia'}
-                      </Text>
-                    </View>
-
-                    <PressableScale
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                        checkoutMutation.mutate(item);
-                      }}
-                      style={styles.marketCardBuyBtn}
-                    >
-                      <Ionicons name="qr-code-outline" size={12} color={colors.accentInk} />
-                      <Text style={styles.marketCardBuyBtnText}>Comprar QR</Text>
-                    </PressableScale>
-                  </View>
-                </PressableScale>
-              );
-            }}
+            renderItem={({ item }) => (
+              <OfferCard
+                plan={item}
+                onPress={() => {
+                  if (item.entity?.slug) setSelectedEntitySlug(item.entity.slug);
+                  else checkoutMutation.mutate(item);
+                }}
+              />
+            )}
           />
         )
+      ) : filteredEntities.length === 0 ? (
+        <View style={{ flex: 1, padding: spacing.xl }}>
+          <EmptyState title="Ninguna tienda por aquí" message={emptyMessage} />
+        </View>
       ) : (
-        /* VISTA MARKETPLACE: TIENDAS & GIMNASIOS */
-        filteredEntities.length === 0 ? (
-          <View style={{ flex: 1, padding: spacing.xl }}>
-            <EmptyState
-              title="Sin establecimientos"
-              message="No encontramos comercios con esos filtros. Prueba cambiando de categoría o búsqueda."
-            />
-          </View>
-        ) : (
-          <FlatList
-            key="marketplace-grid-entities"
-            data={filteredEntities}
-            numColumns={2}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={gridContent}
-            columnWrapperStyle={styles.gridRow}
-            renderItem={({ item }) => {
-              const itemIsMyGym = isGymOfUser(item);
-              const coverImg = item.coverUrl || 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800';
-
-              return (
-                <PressableScale
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    setSelectedEntitySlug(item.slug);
-                  }}
-                  style={[styles.entityMarketCard, itemIsMyGym && styles.entityMarketCardMyGym]}
-                >
-                  <View style={styles.entityCardCoverWrapper}>
-                    <Image source={{ uri: coverImg }} style={styles.entityCardCover} contentFit="cover" />
-                    {itemIsMyGym && (
-                      <View style={styles.marketCardMyGymTag}>
-                        <Text style={styles.marketCardMyGymTagText}>TU GYM</Text>
-                      </View>
-                    )}
-                    <View style={styles.entityCardTypeBadge}>
-                      <Text style={styles.entityCardTypeBadgeText}>
-                        {item.entityType === 'GYM'
-                          ? 'Gimnasio'
-                          : item.entityType === 'STORE'
-                          ? 'Tienda'
-                          : item.entityType === 'COACH'
-                          ? 'Coach'
-                          : 'Centro'}
-                      </Text>
-                    </View>
-
-                    {/* Logo superpuesto */}
-                    {item.logoUrl ? (
-                      <Image source={{ uri: item.logoUrl }} style={styles.entityCardLogoOverlap} />
-                    ) : (
-                      <View style={[styles.entityCardLogoOverlap, styles.cardLogoPlaceholder]}>
-                        <Text style={styles.logoInitialsSmall}>{item.name.slice(0, 2).toUpperCase()}</Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <View style={styles.entityCardBody}>
-                    <Text style={styles.entityCardName} numberOfLines={2}>
-                      {item.name}
-                    </Text>
-
-                    <View style={styles.entityCardRatingRow}>
-                      <Ionicons name="star" size={11} color={accentHues.amber} />
-                      <Text style={styles.entityCardRatingText}>
-                        {item.ratingAverage > 0 ? item.ratingAverage.toFixed(1) : '5.0'} ({item.ratingCount})
-                      </Text>
-                      <Text style={styles.myGymDot}>·</Text>
-                      <Ionicons name="location-outline" size={11} color={colors.textMuted} />
-                      <Text style={styles.entityCardLocationText} numberOfLines={1}>
-                        {item.city ?? 'Bolivia'}
-                      </Text>
-                    </View>
-
-                    {item.headline ? (
-                      <Text style={styles.entityCardHeadline} numberOfLines={2}>
-                        {item.headline}
-                      </Text>
-                    ) : null}
-
-                    {item.isVerified && (
-                      <View style={styles.entityVerifiedRow}>
-                        <Ionicons name="checkmark-circle" size={11} color={colors.volt} />
-                        <Text style={styles.entityVerifiedText}>Verificado</Text>
-                      </View>
-                    )}
-                  </View>
-                </PressableScale>
-              );
-            }}
-          />
-        )
+        <FlatList
+          key="marketplace-grid-entities"
+          data={filteredEntities}
+          numColumns={2}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={gridContent}
+          columnWrapperStyle={styles.gridRow}
+          refreshing={refreshing}
+          onRefresh={() => void refreshActive()}
+          renderItem={({ item }) => <SellerCard seller={item} onPress={() => setSelectedEntitySlug(item.slug)} />}
+        />
       )}
 
       {/* Modal / BottomSheet de Detalle de Entidad y Reseñas App Store */}
@@ -1427,10 +1179,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
     marginTop: spacing.xs,
   },
-  headerSubtitle: {
-    color: colors.textMuted,
-    fontSize: fontSizes.sm,
-  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1449,7 +1197,13 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.sm,
   },
   pillsWrapper: {
-    marginVertical: spacing.sm,
+    marginTop: spacing.smd,
+    marginBottom: spacing.md,
+  },
+  tabsDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
+    marginBottom: spacing.md,
   },
   pillsScroll: {
     paddingHorizontal: spacing.lg,
@@ -1463,460 +1217,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  pillSelected: {
-    backgroundColor: alpha(colors.volt, 0.16),
-    borderColor: colors.volt,
-    borderWidth: 1.5,
-  },
-  pillText: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    fontWeight: semibold,
-  },
-  pillTextSelected: {
-    color: colors.text,
-    fontWeight: '800',
-  },
-  segmentContainer: {
-    flexDirection: 'row',
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    backgroundColor: colors.surfaceLow,
-    borderRadius: radii.xl,
-    padding: 3,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  segmentButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.lg,
-  },
-  segmentButtonActive: {
-    backgroundColor: colors.volt,
-  },
-  segmentText: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    fontWeight: semibold,
-  },
-  segmentTextActive: {
-    color: ink.black,
-    fontWeight: '800',
-  },
   gridContent: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing['2xl'],
   },
   gridRow: {
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
     gap: spacing.md,
-  },
-  myGymSpotlightCard: {
-    backgroundColor: colors.surfaceHigh,
-    borderRadius: radii.xl,
-    borderWidth: 1.5,
-    borderColor: colors.volt,
-    overflow: 'hidden',
-    marginBottom: spacing.md,
-  },
-  myGymCoverWrapper: {
-    height: 110,
-    width: '100%',
-    position: 'relative',
-    backgroundColor: colors.surfaceLow,
-  },
-  myGymCover: {
-    width: '100%',
-    height: '100%',
-  },
-  myGymGradientOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: alpha(darkSurfaces.abyss, 0.55),
-  },
-  myGymTopBadges: {
-    position: 'absolute',
-    top: spacing.sm,
-    left: spacing.sm,
-    right: spacing.sm,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  myGymVoltBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: colors.volt,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radii.full,
-  },
-  myGymVoltBadgeText: {
-    color: ink.black,
-    fontSize: fontSizes.micro,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  myGymActiveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: alpha(darkSurfaces.abyss, 0.75),
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radii.full,
-    borderWidth: 1,
-    borderColor: alpha(colors.volt, 0.4),
-  },
-  myGymActiveBadgeText: {
-    color: colors.accentInk,
-    fontSize: fontSizes.micro,
-    fontWeight: semibold,
-  },
-  myGymBody: {
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  myGymInfoRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    alignItems: 'center',
-  },
-  myGymLogo: {
-    width: 44,
-    height: 44,
-    borderRadius: radii.md,
-    backgroundColor: colors.surfaceLow,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  myGymName: {
-    color: colors.text,
-    fontSize: fontSizes.md,
-    fontWeight: '800',
-  },
-  myGymHeadline: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    marginTop: 1,
-  },
-  myGymRatingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
-  },
-  myGymRatingText: {
-    color: colors.text,
-    fontSize: fontSizes.micro,
-    fontWeight: semibold,
-  },
-  myGymDot: {
-    color: colors.textMuted,
-    fontSize: fontSizes.micro,
-  },
-  myGymLocationText: {
-    color: colors.textMuted,
-    fontSize: fontSizes.micro,
-  },
-  myGymActionsRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: 4,
-  },
-  myGymCtaPrimary: {
-    flex: 1.3,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: colors.volt,
-    paddingVertical: 8,
-    borderRadius: radii.md,
-  },
-  myGymCtaPrimaryText: {
-    color: ink.black,
-    fontSize: fontSizes.xs,
-    fontWeight: '800',
-  },
-  myGymCtaSecondary: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: colors.surfaceLow,
-    paddingVertical: 8,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  myGymCtaSecondaryText: {
-    color: colors.text,
-    fontSize: fontSizes.xs,
-    fontWeight: semibold,
-  },
-  marketCard: {
-    flex: 1,
-    backgroundColor: colors.surfaceHigh,
-    borderRadius: radii.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  marketCardImageWrapper: {
-    width: '100%',
-    aspectRatio: 1,
-    backgroundColor: colors.surfaceLow,
-    position: 'relative',
-  },
-  marketCardImage: {
-    width: '100%',
-    height: '100%',
-  },
-  marketCardTypeTag: {
-    position: 'absolute',
-    top: 6,
-    left: 6,
-    backgroundColor: alpha(darkSurfaces.abyss, 0.75),
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: radii.sm,
-    borderWidth: 1,
-    borderColor: alpha(ink.white, 0.15),
-  },
-  marketCardTypeTagText: {
-    color: colors.text,
-    fontSize: fontSizes.micro,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  marketCardMyGymTag: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    backgroundColor: colors.volt,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: radii.sm,
-  },
-  marketCardMyGymTagText: {
-    color: ink.black,
-    fontSize: fontSizes.micro,
-    fontWeight: '800',
-  },
-  marketCardContent: {
-    padding: spacing.sm,
-    gap: 3,
-  },
-  marketCardPrice: {
-    color: colors.accentInk,
-    fontSize: fontSizes.md,
-    fontWeight: '800',
-  },
-  marketCardTitle: {
-    color: colors.text,
-    fontSize: fontSizes.xs,
-    fontWeight: semibold,
-    lineHeight: 16,
-    minHeight: 32,
-  },
-  marketCardSellerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    marginTop: 2,
-  },
-  marketCardSellerName: {
-    color: colors.textMuted,
-    fontSize: fontSizes.micro,
-    fontWeight: semibold,
-    flex: 1,
-  },
-  marketCardLocationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    marginTop: 1,
-  },
-  marketCardLocationText: {
-    color: colors.textMuted,
-    fontSize: fontSizes.micro,
-  },
-  marketCardBuyBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    backgroundColor: alpha(colors.volt, 0.16),
-    borderWidth: 1,
-    borderColor: alpha(colors.volt, 0.35),
-    paddingVertical: 6,
-    borderRadius: radii.md,
-    marginTop: 4,
-  },
-  marketCardBuyBtnText: {
-    color: colors.accentInk,
-    fontSize: fontSizes.micro,
-    fontWeight: '700',
-  },
-  entityMarketCard: {
-    flex: 1,
-    backgroundColor: colors.surfaceHigh,
-    borderRadius: radii.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  entityMarketCardMyGym: {
-    borderColor: colors.volt,
-    borderWidth: 1.5,
-  },
-  entityCardCoverWrapper: {
-    width: '100%',
-    height: 95,
-    backgroundColor: colors.surfaceLow,
-    position: 'relative',
-  },
-  entityCardCover: {
-    width: '100%',
-    height: '100%',
-  },
-  entityCardTypeBadge: {
-    position: 'absolute',
-    top: 6,
-    left: 6,
-    backgroundColor: alpha(darkSurfaces.abyss, 0.75),
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: radii.sm,
-    borderWidth: 1,
-    borderColor: alpha(ink.white, 0.15),
-  },
-  entityCardTypeBadgeText: {
-    color: colors.text,
-    fontSize: fontSizes.micro,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  entityCardLogoOverlap: {
-    position: 'absolute',
-    bottom: -16,
-    left: 8,
-    width: 36,
-    height: 36,
-    borderRadius: radii.md,
-    backgroundColor: colors.surfaceHigh,
-    borderWidth: 2,
-    borderColor: colors.surfaceHigh,
-  },
-  logoInitialsSmall: {
-    color: colors.volt,
-    fontSize: fontSizes.xs,
-    fontWeight: semibold,
-  },
-  entityCardBody: {
-    padding: spacing.sm,
-    paddingTop: 18,
-    gap: 2,
-  },
-  entityCardName: {
-    color: colors.text,
-    fontSize: fontSizes.xs,
-    fontWeight: '800',
-  },
-  entityCardRatingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    marginTop: 2,
-  },
-  entityCardRatingText: {
-    color: colors.text,
-    fontSize: fontSizes.micro,
-    fontWeight: semibold,
-  },
-  entityCardLocationText: {
-    color: colors.textMuted,
-    fontSize: fontSizes.micro,
-  },
-  entityCardHeadline: {
-    color: colors.textMuted,
-    fontSize: fontSizes.micro,
-    marginTop: 2,
-    lineHeight: 14,
-  },
-  entityVerifiedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    marginTop: 4,
-  },
-  entityVerifiedText: {
-    color: colors.volt,
-    fontSize: fontSizes.micro,
-    fontWeight: semibold,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  listContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing['2xl'],
-    gap: spacing.md,
-  },
-  entityCard: {
-    backgroundColor: colors.surfaceHigh,
-    borderRadius: radii.xl,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.sm,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  cardLogo: {
-    width: 60,
-    height: 60,
-    borderRadius: radii.lg,
-    backgroundColor: colors.surfaceLow,
-  },
-  cardLogoPlaceholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  logoInitials: {
-    color: colors.volt,
-    fontSize: fontSizes.lg,
-    fontWeight: semibold,
-  },
-  cardBadges: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    marginBottom: 2,
-  },
-  categoryBadge: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    textTransform: 'uppercase',
-    fontWeight: semibold,
-    flexShrink: 1,
   },
   verifiedBadge: {
     flexDirection: 'row',
@@ -1933,48 +1245,6 @@ const styles = StyleSheet.create({
     color: colors.volt,
     fontSize: fontSizes.xs,
     fontWeight: semibold,
-  },
-  cardName: {
-    color: colors.text,
-    fontSize: fontSizes.md,
-    fontWeight: semibold,
-  },
-  cardHeadline: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    marginTop: 2,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    flex: 1,
-  },
-  locationText: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-  },
-  ratingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  ratingText: {
-    color: colors.text,
-    fontSize: fontSizes.xs,
-    fontWeight: semibold,
-  },
-  ratingCount: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
   },
   modalContainer: {
     flex: 1,

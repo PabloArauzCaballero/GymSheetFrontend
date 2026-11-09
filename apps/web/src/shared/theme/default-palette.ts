@@ -2,7 +2,7 @@ import { defaultBrand } from './brand-contract';
 import type { ModePalette, TenantTheme } from './color-contract';
 
 /**
- * Identidad GymSheet: oscuro "volt" de alto contraste y su contrapartida clara.
+ * Identidad REPP: la misma superficie navy y el mismo jade que la app móvil.
  *
  * Los valores son los que vivían escritos a mano en `globals.css`, trasladados
  * uno a uno. Es la paleta de referencia y también el respaldo cuando un
@@ -11,106 +11,108 @@ import type { ModePalette, TenantTheme } from './color-contract';
 const dark: ModePalette = {
   colorScheme: 'dark',
 
-  background: '#000000',
-  surfaceLowest: '#080808',
-  surfaceLow: '#0d0d0d',
-  surface: '#131313',
-  surfaceHigh: '#1f1f1f',
-  surfaceHighest: '#2a2a2a',
-  surfaceSidebar: '#050505',
+  // Rampa navy del móvil (`apps/mobile/src/theme/palette.ts` → `neutral`).
+  // La web y el móvil pintan la misma superficie: `mobile-parity.test.ts`
+  // falla si una de las dos cambia sin la otra.
+  background: '#0F172A',
+  surfaceLowest: '#141E31',
+  surfaceLow: '#172235',
+  surface: '#1A253A',
+  surfaceHigh: '#1D283D',
+  surfaceHighest: '#243247',
+  surfaceSidebar: '#0F172A',
 
-  borderSubtle: '#1a1a1a',
-  border: '#262626',
+  borderSubtle: '#202C42',
+  border: '#2C3A52',
 
-  text: '#f5f5f5',
-  textMuted: '#8c8c8c',
-  textDisabled: '#4d4d4d',
+  text: '#F5F8FA',
+  textMuted: '#A9B6C2',
+  textDisabled: '#718091',
 
-  accent: '#c3f400',
-  accentDim: '#abd600',
-  accentInk: '#c3f400',
-  // Texto e iconos que van encima del relleno de acento.
+  // Jade REPP (`gymsheetTenant.colors` en `@gymsheet/design-tokens`).
+  accent: '#2E8B7B',
+  accentDim: '#2E8B7B',
+  accentInk: '#74CFBE',
   accentContrast: '#000000',
 
-  danger: '#ff6b63',
-  warning: '#d7a944',
-  success: '#c3f400',
+  danger: '#ff8577',
+  warning: '#f2b85b',
+  success: '#62D99C',
 
-  successBg: '#182000',
-  successBorder: '#526800',
-  successText: '#c3f400',
+  // Chips de estado: los tonos `dark` compartidos; el éxito se deriva del
+  // verde de la marca como en `apps/mobile/src/theme/colors.ts`.
+  successBg: 'rgb(98 217 156 / 0.12)',
+  successBorder: 'rgb(98 217 156 / 0.35)',
+  successText: '#62D99C',
   warningBg: '#241c0c',
   warningBorder: '#5b4820',
   warningText: '#e0b65f',
   dangerBg: '#241211',
   dangerBorder: '#63302c',
   dangerText: '#ffb4ab',
-  dangerSurface: '#160c0b',
+  dangerSurface: '#1c1416',
   infoBg: '#111b21',
   infoBorder: '#344654',
   infoText: '#a8d4ee',
 
-  headerBg: 'rgb(0 0 0 / 0.72)',
-  overlay: 'rgb(0 0 0 / 0.8)',
-  focusRing: '#ffffff',
-  gridLine: 'rgb(255 255 255 / 0.02)',
-  // Realce de página: un levantamiento neutro apenas perceptible en el borde
-  // superior. El acento ya no tiñe el cromo (ver ADR-0003) — grita solo donde
-  // hay que actuar, no de fondo.
-  pageGlow: 'rgb(255 255 255 / 0.022)',
-  sheen: 'rgb(255 255 255 / 0.45)',
-  // Color base del destello; su alfa se compone en cada uso.
+  // Cromo translúcido como la barra de pestañas del móvil (BlurView oscuro).
+  headerBg: 'rgb(15 23 42 / 0.72)',
+  overlay: 'rgb(0 0 0 / 0.72)',
+  focusRing: '#74CFBE',
+  // Sin trama: el lienzo del móvil es liso.
+  gridLine: 'rgb(255 255 255 / 0)',
+  pageGlow: 'rgb(46 139 123 / 0.08)',
+  sheen: 'rgb(255 255 255 / 0.28)',
   sheenBase: '#ffffff',
-  // Velo que oscurece la media bajo el texto de una tarjeta.
   scrim: '#000000',
 
-  // Aurora: decoración de páginas públicas, no cromo de producto. Opacidades
-  // rebajadas y sin el orbe púrpura (nada de degradados IA azul/violeta).
-  aurora1: 'rgb(195 244 0 / 0.07)',
-  aurora2: 'rgb(56 189 172 / 0.05)',
-  aurora3: 'rgb(140 140 140 / 0.04)',
-  auroraSpot: 'rgb(195 244 0 / 0.05)',
-  noiseOpacity: 0.02,
+  aurora1: 'rgb(46 139 123 / 0.08)',
+  aurora2: 'rgb(56 189 172 / 0.04)',
+  aurora3: 'rgb(132 150 170 / 0.04)',
+  auroraSpot: 'rgb(46 139 123 / 0.05)',
+  noiseOpacity: 0.015,
   ambientStrength: 1,
 
-  shadowSm: '0 1px 2px rgb(0 0 0 / 0.4)',
-  shadowMd: '0 12px 32px -18px rgb(0 0 0 / 0.7)',
-  shadowLg: '0 40px 120px -40px rgb(0 0 0 / 0.9)',
-  // Los diálogos llevan hoy la misma sombra en claro y en oscuro; se conserva
-  // como token propio para no alterar el aspecto al abstraer los colores.
-  shadowDialog: '0 40px 120px -40px rgb(0 0 0 / 0.9)',
+  // Elevación del móvil (`apps/mobile/src/theme/shadow.ts`): las tarjetas se
+  // separan por tono y sombra, no por bordes. sm = e1, md = e2, lg = card.
+  shadowSm: 'inset 0 1px 0 rgb(255 255 255 / 0.04), 0 1px 2px rgb(0 0 0 / 0.4)',
+  shadowMd: 'inset 0 1px 0 rgb(255 255 255 / 0.05), 0 12px 32px rgb(0 0 0 / 0.45)',
+  shadowLg: 'inset 0 1px 0 rgb(255 255 255 / 0.07), 0 18px 40px -12px rgb(0 0 0 / 0.7)',
+  shadowDialog: 'inset 0 1px 0 rgb(255 255 255 / 0.06), 0 -8px 24px rgb(0 0 0 / 0.5), 0 40px 120px -40px rgb(0 0 0 / 0.9)',
 };
 
 const light: ModePalette = {
   colorScheme: 'light',
 
-  background: '#f3f4f0',
-  surfaceLowest: '#ffffff',
-  surfaceLow: '#fafbf8',
-  surface: '#ffffff',
-  surfaceHigh: '#f0f1ec',
-  surfaceHighest: '#e6e8e0',
-  surfaceSidebar: '#ffffff',
+  // Contrapartida clara de `@gymsheet/design-tokens` (`lightColors`). El móvil
+  // solo es oscuro; la web la ofrece con el mismo jade y la misma geometría.
+  background: '#E9EEF2',
+  surfaceLowest: '#FFFFFF',
+  surfaceLow: '#FFFFFF',
+  surface: '#FFFFFF',
+  surfaceHigh: '#F1F4F6',
+  surfaceHighest: '#E3E9EE',
+  surfaceSidebar: '#E9EEF2',
 
-  borderSubtle: '#e8e9e3',
-  border: '#d5d7ce',
+  borderSubtle: '#D6DEE5',
+  border: '#AAB8C4',
 
-  text: '#14160e',
-  textMuted: '#5c6053',
-  textDisabled: '#a6a99d',
+  text: '#18212B',
+  textMuted: '#53616D',
+  textDisabled: '#77838D',
 
-  accent: '#c3f400',
-  accentDim: '#b4e300',
-  accentInk: '#55730a',
+  accent: '#2E8B7B',
+  accentDim: '#2E8B7B',
+  accentInk: '#22685D',
   accentContrast: '#000000',
 
-  danger: '#c23b30',
+  danger: '#b23a30',
   warning: '#8a6410',
-  success: '#4d6b00',
+  success: '#216B46',
 
-  successBg: '#eef6cf',
-  successBorder: '#c0d766',
-  successText: '#4d6b00',
+  successBg: '#e7f5ec',
+  successBorder: '#92c7a8',
+  successText: '#216B46',
   warningBg: '#fbf1d6',
   warningBorder: '#e6cd82',
   warningText: '#8a6410',
@@ -122,28 +124,26 @@ const light: ModePalette = {
   infoBorder: '#aacdee',
   infoText: '#235d88',
 
-  headerBg: 'rgb(255 255 255 / 0.82)',
-  overlay: 'rgb(20 22 14 / 0.4)',
-  focusRing: '#14160e',
-  gridLine: 'rgb(20 22 14 / 0.04)',
-  pageGlow: 'rgb(195 244 0 / 0.12)',
+  headerBg: 'rgb(233 238 242 / 0.8)',
+  overlay: 'rgb(15 23 42 / 0.4)',
+  focusRing: '#22685D',
+  gridLine: 'rgb(24 33 43 / 0)',
+  pageGlow: 'rgb(46 139 123 / 0.1)',
   sheen: 'rgb(255 255 255 / 0.65)',
   sheenBase: '#ffffff',
   scrim: '#000000',
 
-  // Aurora en modo claro: más pastel y con menor opacidad para no ensuciar el
-  // lienzo claro ni comprometer la legibilidad.
-  aurora1: 'rgb(154 196 0 / 0.16)',
-  aurora2: 'rgb(45 160 148 / 0.1)',
-  aurora3: 'rgb(120 110 255 / 0.08)',
-  auroraSpot: 'rgb(120 150 0 / 0.08)',
-  noiseOpacity: 0.02,
+  aurora1: 'rgb(46 139 123 / 0.12)',
+  aurora2: 'rgb(45 160 148 / 0.08)',
+  aurora3: 'rgb(132 150 170 / 0.08)',
+  auroraSpot: 'rgb(46 139 123 / 0.06)',
+  noiseOpacity: 0.015,
   ambientStrength: 1,
 
-  shadowSm: '0 1px 2px rgb(20 22 14 / 0.08)',
-  shadowMd: '0 12px 32px -18px rgb(20 22 14 / 0.18)',
-  shadowLg: '0 40px 120px -40px rgb(20 22 14 / 0.26)',
-  shadowDialog: '0 40px 120px -40px rgb(0 0 0 / 0.9)',
+  shadowSm: '0 1px 2px rgb(15 23 42 / 0.06), 0 4px 12px -6px rgb(15 23 42 / 0.1)',
+  shadowMd: '0 12px 32px -12px rgb(15 23 42 / 0.18)',
+  shadowLg: '0 18px 40px -12px rgb(15 23 42 / 0.22)',
+  shadowDialog: '0 40px 120px -40px rgb(15 23 42 / 0.45)',
 };
 
 export const defaultTheme: TenantTheme = {

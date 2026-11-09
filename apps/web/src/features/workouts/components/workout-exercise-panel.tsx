@@ -109,7 +109,7 @@ export function WorkoutExercisePanel({
       <div
         className={cn(
           SET_GRID_COLS,
-          'bg-[var(--surface-low)] px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]',
+          'bg-[var(--surface-low)] px-3 py-3 text-center text-xs font-semibold text-[var(--text-muted)]',
         )}
       >
         <span>Set</span>

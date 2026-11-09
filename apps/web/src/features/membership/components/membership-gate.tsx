@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { CreditCard, Lock, MessageCircle } from 'lucide-react';
+import { CreditCard, Lock, MessageCircle, TriangleAlert } from 'lucide-react';
 import type { MembershipProjection } from '@/shared/api/contracts';
 import { Button, ButtonLink } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -27,7 +27,16 @@ import { membershipService } from '../services/membership-service';
  */
 export function MembershipGate({
   projection,
-}: Readonly<{ projection: MembershipProjection }>) {
+  variant = 'full',
+}: Readonly<{
+  projection: MembershipProjection;
+  /**
+   * `compact`: la franja de Inicio del móvil —icono, título, «Renovar» y
+   * debajo, en fantasma, «Ya pagué por otro medio»—. Avisa primero sin tapar
+   * el valor de la pantalla. `full`: la tarjeta con toda la explicación.
+   */
+  variant?: 'full' | 'compact';
+}>) {
   const membership = projection.membership;
   const vencio = membership ? !membership.vigenteHoy : false;
 
@@ -68,14 +77,46 @@ export function MembershipGate({
     onError: (error: Error) => notify.error(error),
   });
 
+  if (variant === 'compact') {
+    return (
+      <div className="grid gap-0.5 rounded-[var(--radius-lg)] border border-[var(--warning-border)] bg-[var(--warning-bg)] px-4 py-2">
+        <div className="flex items-center gap-3">
+          <TriangleAlert aria-hidden className="size-5 shrink-0 text-[var(--warning)]" />
+          <div className="grid min-w-0 flex-1 gap-0.5">
+            <p className="t-headline line-clamp-2">
+              {membership ? (vencio ? 'Tu membresía venció' : 'Membresía no vigente') : 'Aún no tienes membresía'}
+            </p>
+            <p className="t-footnote line-clamp-2 text-[var(--text-muted)]">
+              {vencio && membership
+                ? `Desde el ${formatDate(membership.venceEl)}. Tu historial sigue aquí.`
+                : 'Tus rutinas y tu historial siguen aquí.'}
+            </p>
+          </div>
+          <ButtonLink aria-label="Renovar en la app" href="/membership" size="sm" variant="secondary">
+            Renovar
+          </ButtonLink>
+        </div>
+        {contacto ? (
+          <Button
+            className="ml-8 justify-self-start"
+            loading={pedirActivacion.isPending}
+            onClick={() => pedirActivacion.mutate()}
+            size="sm"
+            variant="ghost"
+          >
+            <MessageCircle aria-hidden className="size-4" />
+            Ya pagué por otro medio
+          </Button>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
-    // Un filo de 2 px a la izquierda, como el `accent` de la tarjeta del móvil:
-    // el aviso se distingue sin teñir la superficie entera, que en un panel de
-    // esta altura sería un bloque de color gritando desde la primera pantalla.
-    // Va en línea y no como utilidad de Tailwind porque `.panel` declara el
-    // borde con la forma corta desde CSS sin capa, y eso gana a cualquier
-    // utilidad: la clase se escribiría y no pintaría nada.
-    <Card style={{ borderLeftWidth: '2px', borderLeftColor: 'var(--warning-border)' }}>
+    // Como el `accent` de la tarjeta del móvil: el contorno entero teñido muy
+    // levemente, nunca una franja lateral. `.panel` vive ya en
+    // `@layer components`, así que la utilidad de borde sí gana.
+    <Card className="border-[color-mix(in_srgb,var(--warning)_33%,transparent)]">
       <CardContent className="grid gap-4">
         <div className="flex items-center gap-3">
           <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--surface-high)] text-[var(--warning-text)]">

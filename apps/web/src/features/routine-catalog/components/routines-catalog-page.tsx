@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { HeartPulse, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/shared/components/layout/page-header';
+import { Section } from '@/shared/components/mobile/section';
 import { ButtonLink } from '@/shared/components/ui/button';
 import { ChoiceChip } from '@/shared/components/ui/choice-chip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
@@ -43,7 +44,7 @@ export function RoutinesCatalogPage() {
   const pendingCount = invitations.data?.length ?? 0;
 
   return (
-    <div className="grid gap-8">
+    <div className="mx-auto grid w-full max-w-[560px] gap-8 sm:max-w-none">
       <PageHeader
         actions={
           <div className="flex flex-wrap gap-2" data-tutorial-id="routines:actions">
@@ -58,17 +59,18 @@ export function RoutinesCatalogPage() {
             </ButtonLink>
           </div>
         }
-        description="Explora rutinas de la comunidad y de REPP, copia las que te gusten y activa la tuya como programa."
-        eyebrow="Planes de entrenamiento"
         title="Rutinas"
         tutorialId="page:routines"
       />
 
-      <ProgramCards />
-
+      {/* Mismo orden que el móvil: primero «Tu semana», luego los programas activos. */}
       {assignments.data ? (
-        <WeekPlan assignments={assignments.data} onPickRoutine={(id) => router.push(`/routines/${id}`)} />
+        <Section title="Tu semana">
+          <WeekPlan assignments={assignments.data} onPickRoutine={(id) => router.push(`/routines/${id}`)} />
+        </Section>
       ) : null}
+
+      <ProgramCards />
 
       <Tabs onValueChange={(value) => update({ tab: value as CatalogTab })} value={state.tab}>
         <TabsList aria-label="Tipos de rutinas">

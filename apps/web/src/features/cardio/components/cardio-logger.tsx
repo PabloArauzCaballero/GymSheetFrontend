@@ -79,7 +79,7 @@ export function CardioLogger() {
     const cardio = result.cardio;
     return (
       <div className="mx-auto grid w-full max-w-2xl gap-6" data-testid="cardio-result">
-        <PageHeader eyebrow="Cardio" title="Sesión guardada" />
+        <PageHeader title="Sesión guardada" />
         <section aria-label="Resultado" className="panel grid gap-3 p-6">
           {cardio ? (
             <>
@@ -122,7 +122,7 @@ export function CardioLogger() {
           Volver a rutinas
         </ButtonLink>
       </div>
-      <PageHeader description="Cronometra tu sesión o escribe los minutos a mano." eyebrow="Cardio" title="Registrar una sesión" />
+      <PageHeader description="Cronometra tu sesión o escribe los minutos a mano." title="Registrar una sesión" />
       <form
         className="grid gap-6"
         onSubmit={(event) => {
