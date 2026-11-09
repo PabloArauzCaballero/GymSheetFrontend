@@ -10,7 +10,7 @@ export function messagePreviewText(message: Message): string {
     case 'video':
       return message.viewOnce ? 'Video de vista única' : message.body || 'Video';
     case 'audio':
-      return 'Nota de voz';
+      return message.viewOnce ? 'Nota de voz de escucha única' : 'Nota de voz';
     case 'location':
       return message.locationLabel || 'Ubicación';
     default:

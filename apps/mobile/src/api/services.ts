@@ -792,10 +792,16 @@ export const chatService = {
       { method: 'GET' },
     ),
   /** `replyToId`: el mensaje que se cita al responder (deslizar la burbuja a la derecha). */
-  sendMessage: (conversationId: string, body: string, replyToId?: string) =>
+  /** `clientRequestId` hace el envío idempotente: el respaldo REST de un envío por socket no lo duplica. */
+  sendMessage: (conversationId: string, body: string, replyToId?: string, clientRequestId?: string) =>
     apiClient.request(`/me/conversations/${conversationId}/messages`, messageSchema, {
       method: 'POST',
-      body: { type: 'text', body, ...(replyToId ? { replyToId } : {}) },
+      body: {
+        type: 'text',
+        body,
+        ...(replyToId ? { replyToId } : {}),
+        ...(clientRequestId ? { clientRequestId } : {}),
+      },
     }),
   /** `label` es el nombre del lugar elegido en el mapa; sin él, es «mi ubicación actual». */
   sendLocationMessage: (
@@ -836,14 +842,16 @@ export const chatService = {
   sendMediaMessage: async (
     conversationId: string,
     file: LocalFile,
-    options: { type: 'image' | 'video' | 'audio'; body?: string; viewOnce?: boolean; replyToId?: string },
+    options: { type: 'image' | 'video' | 'audio'; body?: string; viewOnce?: boolean; replyToId?: string; clientRequestId?: string },
   ) => {
     const form = new FormData();
-    await appendLocalFile(form, 'file', file);
+    // Los campos antes que el archivo: multer los tiene listos al llegar el binario.
     form.append('type', options.type);
     if (options.body) form.append('body', options.body);
     form.append('viewOnce', options.viewOnce ? 'true' : 'false');
     if (options.replyToId) form.append('replyToId', options.replyToId);
+    if (options.clientRequestId) form.append('clientRequestId', options.clientRequestId);
+    await appendLocalFile(form, 'file', file);
     return apiClient.upload(`/me/conversations/${conversationId}/messages/media`, messageSchema, form);
   },
   /** Revela la URL real de un mensaje de vista única — una sola vez por mensaje, para quien sea. */

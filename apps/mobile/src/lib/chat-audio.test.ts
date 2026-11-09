@@ -6,8 +6,11 @@ import {
   chatAudioFileForUpload,
   chatAudioPlayerAccessibilityLabel,
   chatAudioPlaybackTimeLabel,
+  chatAudioCacheFileName,
   chatAudioPlayerSource,
   chatAudioRecordingDurationLabel,
+  isLocalAudioUri,
+  shouldRewindBeforePlay,
   isChatAudioDurationValid,
   isMicrophonePermissionPermanentlyDenied,
   createSerialQueue,
@@ -104,4 +107,28 @@ test('audio session operations never overlap and a failure does not block the ne
   await assert.rejects(second);
   assert.equal(await third, 3);
   assert.deepEqual(order, ['start-1', 'end-1', 'run-2', 'run-3']);
+});
+
+test('a finished voice note rewinds before playing again', () => {
+  assert.equal(shouldRewindBeforePlay(12, 12), true);
+  assert.equal(shouldRewindBeforePlay(11.9, 12), true);
+  assert.equal(shouldRewindBeforePlay(3, 12, true), true);
+  assert.equal(shouldRewindBeforePlay(3, 12), false);
+  assert.equal(shouldRewindBeforePlay(0, 0), false);
+  assert.equal(shouldRewindBeforePlay(0, Number.NaN), false);
+});
+
+test('local recordings play from disk without the bearer header', () => {
+  assert.equal(isLocalAudioUri('file:///var/mobile/nota.m4a'), true);
+  assert.equal(isLocalAudioUri('/me/conversations/x/messages/y/media'), false);
+  assert.deepEqual(chatAudioPlayerSource('file:///var/mobile/nota.m4a', 'https://api.test/api/v1', 'token'), {
+    uri: 'file:///var/mobile/nota.m4a',
+  });
+});
+
+test('cached voice notes get a stable, path-safe file name per message', () => {
+  const id = '00000000-0000-4000-8000-000000000001';
+  assert.equal(chatAudioCacheFileName(id, false), `chat-audio-${id}.m4a`);
+  assert.equal(chatAudioCacheFileName(id, true), `chat-audio-once-${id}.m4a`);
+  assert.equal(chatAudioCacheFileName('../../etc', false), 'chat-audio-etc.m4a');
 });

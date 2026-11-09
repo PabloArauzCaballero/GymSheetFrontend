@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import type { Message, MessageReactionsUpdate } from '@gymsheet/schemas';
+import { messageSchema, type Message, type MessageReactionsUpdate } from '@gymsheet/schemas';
 import { env } from '@/config/env';
 import { chatService } from '@/api/services';
 import type { MessageDeletedEvent } from './chat-message-deletion';
@@ -10,7 +10,16 @@ export type ChatSocketConnectionState = 'connecting' | 'connected' | 'disconnect
 
 type JoinAck = { joined: boolean };
 type LeaveAck = { left: boolean };
-type SendAck = { ok: boolean; error?: string };
+/** `message`: el servidor devuelve el mensaje guardado en el ack (sin esperar a `message:new`). */
+type SendAck = { ok: boolean; error?: string; message?: Message };
+
+/**
+ * Cuánto se espera el ack del socket antes de pasar al REST. Socket.IO encola
+ * los `emit` mientras no hay conexión y el ack podía no llegar nunca: el
+ * mensaje se quedaba «enviando» indefinidamente. Con el `clientRequestId` el
+ * REST es idempotente, así que si el socket también lo entrega no se duplica.
+ */
+export const SEND_ACK_TIMEOUT_MS = 5_000;
 export type PresenceUpdate = { userId: string; online: boolean; lastSeenAt: string | null };
 /** `userId` es quien entregó/leyó — el check de mis propios mensajes se pinta comparando contra esto. */
 /** «Escribiendo…»: el servidor solo lo reenvía a la otra persona de la sala, nunca a quien escribe. */
@@ -174,17 +183,33 @@ export function useChatSocket(
     });
   }, []);
 
-  const sendMessage = useCallback((conversationId: string, body: string, replyToId?: string): Promise<SendAck> => {
+  const sendMessage = useCallback((
+    conversationId: string,
+    body: string,
+    replyToId?: string,
+    clientRequestId?: string,
+  ): Promise<SendAck> => {
     return new Promise((resolve) => {
-      if (!socketRef.current) {
+      const socket = socketRef.current;
+      // Sin conexión real no se encola: el REST lo guarda ya, sin esperar a que reconecte.
+      if (!socket || !socket.connected) {
         resolve({ ok: false, error: 'disconnected' });
         return;
       }
-      socketRef.current.emit(
-        'message:send',
-        { conversationId, body, ...(replyToId ? { replyToId } : {}) },
-        (ack: SendAck) => resolve(ack),
-      );
+      socket
+        .timeout(SEND_ACK_TIMEOUT_MS)
+        .emit(
+          'message:send',
+          { conversationId, body, ...(replyToId ? { replyToId } : {}), ...(clientRequestId ? { clientRequestId } : {}) },
+          (error: Error | null, ack: SendAck) => {
+            if (error) {
+              resolve({ ok: false, error: 'timeout' });
+              return;
+            }
+            const parsed = ack?.message ? messageSchema.safeParse(ack.message) : null;
+            resolve({ ok: Boolean(ack?.ok), ...(ack?.error ? { error: ack.error } : {}), ...(parsed?.success ? { message: parsed.data } : {}) });
+          },
+        );
     });
   }, []);
 

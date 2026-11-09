@@ -42,6 +42,7 @@ export function chatAudioFileForUpload(uri: string) {
 }
 
 export function chatAudioPlayerSource(mediaUrl: string, apiUrl: string, accessToken: string) {
+  if (isLocalAudioUri(mediaUrl)) return { uri: mediaUrl };
   const uri = /^https?:\/\//i.test(mediaUrl)
     ? mediaUrl
     : `${apiUrl.replace(/\/+$/, '')}/${mediaUrl.replace(/^\/+/, '')}`;
@@ -97,4 +98,32 @@ export function createSerialQueue() {
     tail = run.catch(() => undefined);
     return run;
   };
+}
+
+/** Una nota recién grabada (o ya descargada) se reproduce del disco, sin token ni red. */
+export function isLocalAudioUri(uri: string): boolean {
+  return /^file:\/\//i.test(uri);
+}
+
+/**
+ * `expo-audio` no rebobina solo: al terminar, el reproductor queda parado en
+ * el último segundo y `play()` no hace nada, que es por lo que una nota de voz
+ * «no se podía volver a escuchar». Antes de reproducir, si está al final (o
+ * acaba de terminar), hay que volver a 0.
+ */
+export function shouldRewindBeforePlay(currentSeconds: number, durationSeconds: number, didJustFinish = false): boolean {
+  if (didJustFinish) return true;
+  if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) return false;
+  return currentSeconds >= durationSeconds - 0.25;
+}
+
+/**
+ * Nombre del archivo en la caché del dispositivo para una nota de voz. Se
+ * descarga una vez y se reproduce local: arranca al instante, se puede volver
+ * a escuchar sin red y no depende del token de 15 minutos. La de escucha única
+ * va a un nombre propio que se borra al terminar de oírla.
+ */
+export function chatAudioCacheFileName(messageId: string, viewOnce: boolean): string {
+  const safeId = messageId.replace(/[^a-zA-Z0-9-]/g, '');
+  return viewOnce ? `chat-audio-once-${safeId}.m4a` : `chat-audio-${safeId}.m4a`;
 }

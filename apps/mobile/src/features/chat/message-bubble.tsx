@@ -40,7 +40,8 @@ const SMALL = 6;
 const TAIL_W = 8;
 const TAIL_H = 13;
 
-export type Receipt = 'sent' | 'delivered' | 'read';
+/** `pending`: la burbuja optimista, todavía sin confirmar por el servidor (reloj, como WhatsApp). */
+export type Receipt = 'pending' | 'sent' | 'delivered' | 'read';
 
 function Tail({ mine, color }: { mine: boolean; color: string }) {
   return (
@@ -56,6 +57,9 @@ function Tail({ mine, color }: { mine: boolean; color: string }) {
 }
 
 function ReceiptTicks({ receipt }: { receipt: Receipt }) {
+  if (receipt === 'pending') {
+    return <Ionicons accessibilityLabel="Enviando" color={chatColors.metaOnMine} name="time-outline" size={13} />;
+  }
   const label = receipt === 'read' ? 'Leído' : receipt === 'delivered' ? 'Entregado' : 'Enviado';
   return (
     <Ionicons
