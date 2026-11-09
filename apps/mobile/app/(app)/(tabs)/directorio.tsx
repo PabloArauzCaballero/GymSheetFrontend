@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BottomTabBarHeightContext } from 'expo-router/build/react-navigation/bottom-tabs';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -29,7 +30,6 @@ import { useAuthStore } from '@/state/auth-store';
 import { AmbientBackground } from '@/components/ambient';
 import { EmptyState, ErrorState } from '@/components/feedback';
 import { PressableScale } from '@/components/motion';
-import { BackLink } from '@/components/nav';
 import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
 import { accentHues, alpha, colors, darkSurfaces, fontSizes, heroNumberFontSize, ink, radii, semibold, spacing } from '@/theme';
@@ -45,6 +45,11 @@ const MARKET_CATEGORIES = [
 
 export default function DirectorioScreen() {
   const insets = useSafeAreaInsets();
+  // Ahora es pestaña y la barra flota sobre el contenido (`position:
+  // absolute`): la cuadrícula reserva su alto para que la última fila no
+  // quede debajo del vidrio. Mismo criterio que `ScrollScreen`.
+  const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
+  const gridContent = [styles.gridContent, { paddingBottom: tabBarHeight + spacing['2xl'] }];
   const queryClient = useQueryClient();
   const principal = useAuthStore((s) => s.principal);
   const userTenantId = principal?.tenantId || 'default';
@@ -381,10 +386,8 @@ export default function DirectorioScreen() {
       <AmbientBackground />
 
       {/* Header */}
-      {/* Volver en su fila y título grande a la izquierda: centrado junto al
-          «Atrás» no cabía y se pisaban en pantallas de 375–390 pt. */}
+      {/* Título grande a la izquierda. Es pestaña: no lleva «Volver». */}
       <View style={styles.header}>
-        <BackLink label="Atrás" />
         <Text accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit style={styles.title}>
           Marketplace
         </Text>
@@ -499,7 +502,7 @@ export default function DirectorioScreen() {
             data={filteredOffers}
             numColumns={2}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.gridContent}
+            contentContainerStyle={gridContent}
             columnWrapperStyle={styles.gridRow}
             ListHeaderComponent={
               /* Card Destacado: TU GIMNASIO ACTUAL (Siempre al tope) */
@@ -681,7 +684,7 @@ export default function DirectorioScreen() {
             data={filteredEntities}
             numColumns={2}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.gridContent}
+            contentContainerStyle={gridContent}
             columnWrapperStyle={styles.gridRow}
             renderItem={({ item }) => {
               const itemIsMyGym = isGymOfUser(item);

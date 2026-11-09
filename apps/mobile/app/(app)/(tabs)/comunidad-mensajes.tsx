@@ -5,7 +5,6 @@ import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { chatService, profileViewsService, socialService } from '@/api/services';
 import { refreshSocialRelationship } from '@/api/social-cache';
-import { BackLink } from '@/components/nav';
 import { Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { ChatConversationRow } from '@/components/chat-conversation-row';
 import { Button } from '@/components/ui';
@@ -340,8 +339,9 @@ function ConexionesTab() {
 }
 
 /**
- * Detrás del ícono de mensaje de Comunidad: conversaciones, solicitudes y
- * conexiones en un solo lugar, cambiando de pestaña sin salir de la pantalla.
+ * Primera pestaña de la barra (y pantalla de arranque): historias,
+ * conversaciones, solicitudes y conexiones en un solo lugar. Al ser pestaña no
+ * lleva «Volver».
  */
 export default function ComunidadMensajesScreen() {
   const [tab, setTab] = useState<Tab>('general');
@@ -369,7 +369,6 @@ export default function ComunidadMensajesScreen() {
 
   return (
     <ScrollScreen>
-      <BackLink />
       <ScreenHeader subtitle="Historias, conversaciones y solicitudes." title="Mensajes" />
 
       <StoriesBar />
