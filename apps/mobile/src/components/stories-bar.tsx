@@ -17,7 +17,7 @@ import { useAuthStore } from '@/state/auth-store';
 import { initialsOf } from '@/lib/format';
 import { requestId } from '@/lib/request-id';
 import { canSubmitStoryAudience, toggleStoryAudienceRecipient } from '@/lib/story-audience-selection';
-import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, semibold, spacing } from '@/theme';
 
 const AVATAR_SIZE = 60;
 /** Diámetro del botón «+» sobre el avatar propio. */
@@ -580,6 +580,46 @@ export function StoriesBar() {
               )}
             </PressableScale>
           </View>
+
+          {/* Tira vacía (ni tu story ni la de nadie): el hueco junto a «Tu
+              historia» invita a la acción que la tira existe para ofrecer, en
+              vez de quedar en blanco. Abre la misma hoja que el «+». */}
+          {!myEntry && otherEntries.length === 0 && !upload.isPending ? (
+            <PressableScale
+              accessibilityHint="Abre la cámara o la galería"
+              accessibilityLabel="Comparte tu entreno en tu story"
+              haptic="light"
+              onPress={openSourceSheet}
+              style={{
+                alignSelf: 'flex-start',
+                marginTop: spacing.sm,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.smd,
+                paddingVertical: spacing.smd,
+                paddingHorizontal: spacing.md,
+                borderRadius: radii.xl,
+                borderCurve: 'continuous',
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: overlay.glass,
+                backgroundColor: colors.surfaceLow,
+              }}
+            >
+              <Ionicons
+                accessibilityElementsHidden
+                color={accentPolicy.ink}
+                importantForAccessibility="no-hide-descendants"
+                name="camera-outline"
+                size={iconSizes.lg}
+              />
+              <View style={{ gap: 2 }}>
+                <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
+                  Comparte tu entreno
+                </Text>
+                <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>Una foto o un vídeo de hoy.</Text>
+              </View>
+            </PressableScale>
+          ) : null}
 
           {otherEntries.map((entry) => (
             <PressableScale

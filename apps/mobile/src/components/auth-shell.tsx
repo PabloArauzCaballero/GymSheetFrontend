@@ -129,8 +129,9 @@ export function BrandEmblem({ size = EMBLEM }: { size?: number }) {
  * **Scroll**: el alta tiene seis campos y no cabe en un teléfono pequeño con el
  * teclado abierto; sin scroll, «Crear cuenta» quedaba fuera de alcance.
  *
- * Movimiento: cinco `EnterUp` como mucho (logo, titular, línea, beneficios,
- * tarjeta), sin bucles. El fondo ambiental queda exactamente como estaba.
+ * Movimiento: una cascada en orden de lectura (logo, titular, línea, las tres
+ * filas de beneficios, tarjeta), sin bucles. El fondo ambiental queda
+ * exactamente como estaba.
  */
 export function AuthShell({
   title,
@@ -205,15 +206,17 @@ export function AuthShell({
                 {valuePitch.subline}
               </AppText>
             </EnterUp>
+            {/* Mismo ancho que la tarjeta del formulario: las dos piezas
+                comparten columna. Cada fila entra por su cuenta (3, 4, 5). */}
             {benefits ? (
-              <EnterUp index={3} style={{ marginTop: spacing.sm }}>
-                <BenefitList items={benefits} />
-              </EnterUp>
+              <View style={{ alignSelf: 'stretch', marginTop: spacing.smd }}>
+                <BenefitList items={benefits} startIndex={3} />
+              </View>
             ) : null}
           </View>
 
           <EnterUp
-            index={benefits ? 4 : 3}
+            index={benefits ? 3 + benefits.length : 3}
             style={{
               backgroundColor: colors.surfaceLow,
               borderRadius: radii.lg,
