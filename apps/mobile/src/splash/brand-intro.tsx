@@ -14,11 +14,13 @@ import { PREMIUM_EASING } from '@/components/motion';
 import { colors, getActiveTenant, radii, spacing } from '@/theme';
 import {
   BAR_LOADS,
+  HANDOFF_SETTLE_FRAMES,
   SPLASH_TIMING,
   barFrame,
   initialClock,
   monogramFrame,
   rulingFrame,
+  sealOpacity,
   shouldHandOff,
   wordmarkFrame,
 } from './sequence';
@@ -35,6 +37,7 @@ const METRICS = {
   /** Radio 6 sobre 36 en la web → 12 sobre 72. */
   tileRadius: radii.md * 2,
   monogramSize: 30,
+  monogramLine: 36,
   monogramTracking: -1,
   wordmarkSize: 17,
   wordmarkTracking: 5,
@@ -85,8 +88,9 @@ function LoadBar({
  *
  * Se monta encima de la aplicación, no en su lugar: la sesión se restaura y las
  * rutas se resuelven por debajo mientras tanto, así que esta capa no retrasa
- * nada. Su primer cuadro es el fondo liso del splash nativo, sin nada dibujado,
- * de modo que el relevo entre nativo y JavaScript no se nota.
+ * nada. Su primer cuadro es un fondo liso del mismo color que el splash nativo,
+ * sin nada dibujado; esa igualdad de color es lo único que hace invisible el
+ * relevo entre nativo y JavaScript (ver `app/_layout.tsx`).
  *
  * La coreografía completa está en `./sequence`; aquí solo se dibuja. Un único
  * reloj corre en el hilo de interfaz y cada pieza deriva de él su `transform` y
@@ -101,7 +105,7 @@ export function BrandIntro({
 }: {
   /** Hay una primera pantalla lista debajo. */
   appReady: boolean;
-  /** El primer cuadro ya está en pantalla: se puede soltar el splash nativo. */
+  /** El primer cuadro de la capa ya pasó por diseño y está en pantalla. */
   onFirstFrame: () => void;
   /** La capa se desvaneció del todo y puede desmontarse. */
   onDone: () => void;
@@ -148,9 +152,28 @@ export function BrandIntro({
     return () => clearTimeout(cap);
   }, []);
 
+  const handOff = shouldHandOff({ introDone, appReady, capReached });
+
   useEffect(() => {
-    if (exiting || !shouldHandOff({ introDone, appReady, capReached })) return;
-    setExiting(true);
+    if (exiting || !handOff) return;
+    // Antes de fundir se dejan pasar unos cuadros: la pantalla de debajo acaba
+    // de enterarse de la sesión y todavía está pintando su destino.
+    let frame = 0;
+    let remaining = HANDOFF_SETTLE_FRAMES;
+    const settle = () => {
+      if (remaining > 0) {
+        remaining -= 1;
+        frame = requestAnimationFrame(settle);
+        return;
+      }
+      setExiting(true);
+    };
+    frame = requestAnimationFrame(settle);
+    return () => cancelAnimationFrame(frame);
+  }, [exiting, handOff]);
+
+  useEffect(() => {
+    if (!exiting) return;
     exit.value = withTiming(
       1,
       {
@@ -164,13 +187,15 @@ export function BrandIntro({
         if (finished) runOnJS(onDone)();
       },
     );
-  }, [appReady, capReached, exit, exiting, introDone, onDone, reduceMotion]);
+  }, [exit, exiting, onDone, reduceMotion]);
 
   const overlayStyle = useAnimatedStyle(() => ({ opacity: 1 - exit.value }));
 
   const lockupStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: reduceMotion ? 0 : -METRICS.exitLift * exit.value }],
   }));
+
+  const sealStyle = useAnimatedStyle(() => ({ opacity: sealOpacity(clock.value) }));
 
   const monogramStyle = useAnimatedStyle(() => {
     const frame = monogramFrame(clock.value);
@@ -194,7 +219,12 @@ export function BrandIntro({
     <Animated.View
       accessibilityLabel={tenant.name}
       accessibilityRole="image"
+      // Mientras tapa la pantalla, el lector no debe poder enfocar lo que hay
+      // debajo: en iOS la capa se declara modal; en Android se marca como
+      // importante y la raíz oculta el árbol de la aplicación (`_layout`).
+      accessibilityViewIsModal={!exiting}
       accessible
+      importantForAccessibility={exiting ? 'no-hide-descendants' : 'yes'}
       onLayout={start}
       // Mientras se desvanece ya no intercepta toques: la pantalla de debajo
       // responde desde el primer instante en que se ve.
@@ -206,6 +236,9 @@ export function BrandIntro({
           {BAR_LOADS.map((_, index) => (
             <LoadBar clock={clock} color={tenant.colors.accent} index={index} key={index} />
           ))}
+          <Animated.View
+            style={[styles.tileFill, { backgroundColor: tenant.colors.accent }, sealStyle]}
+          />
           <Animated.View style={[styles.monogramLayer, monogramStyle]}>
             <Text
               allowFontScaling={false}
@@ -239,7 +272,7 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     // El mismo valor que `splash.backgroundColor` en app.json (hay una prueba
-    // que lo exige): el primer cuadro de JavaScript es el del splash nativo.
+    // que lo exige). La continuidad con el splash nativo depende de esto.
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
@@ -252,9 +285,13 @@ const styles = StyleSheet.create({
     height: METRICS.tile,
     borderRadius: METRICS.tileRadius,
     flexDirection: 'row',
-    // Recorta las columnas a la forma del recuadro: al cerrarse, el bloque ya
-    // tiene las esquinas de la marca sin dibujar una vista más.
+    // Recorta las columnas a la forma del recuadro mientras suben. Las esquinas
+    // del bloque final no dependen de este recorte: las pone `tileFill`.
     overflow: 'hidden',
+  },
+  tileFill: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: METRICS.tileRadius,
   },
   bar: {
     width: BAR_WIDTH,
@@ -268,7 +305,12 @@ const styles = StyleSheet.create({
   monogram: {
     fontSize: METRICS.monogramSize,
     fontWeight: '800',
+    lineHeight: METRICS.monogramLine,
     letterSpacing: METRICS.monogramTracking,
+    // El espaciado negativo también recorta tras la última letra y deja el
+    // monograma medio punto a la derecha; este margen lo devuelve al centro.
+    paddingRight: -METRICS.monogramTracking,
+    textAlign: 'center',
     includeFontPadding: false,
   },
   wordmarkWindow: {

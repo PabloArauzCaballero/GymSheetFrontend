@@ -33,6 +33,12 @@ export const SPLASH_TIMING = {
   /** Cierre en bloque. Arranca 30 ms antes de que asiente la última columna. */
   lockStart: 560,
   lockDuration: 260,
+  /**
+   * Relevo de las columnas al recuadro macizo, en el tramo final del cierre.
+   * Termina con él: a partir de ahí la marca es una sola vista con sus esquinas.
+   */
+  sealStart: 720,
+  sealDuration: 100,
   /** El monograma entra con el bloque casi cerrado, no después. */
   monogramStart: 740,
   monogramDuration: 200,
@@ -49,8 +55,8 @@ export const SPLASH_TIMING = {
   reducedHold: 600,
   reducedExitDuration: 160,
   /**
-   * Tope de espera por la sesión. Pasado este tiempo la marca entrega aunque la
-   * restauración de sesión siga en curso: una red lenta no debe dejar al
+   * Tope de espera. Pasado este tiempo la marca entrega pase lo que pase, aunque
+   * la restauración de sesión siga en curso: una red lenta no debe dejar al
    * usuario mirando un logotipo inmóvil sin saber si la aplicación responde.
    */
   handoffCap: 2600,
@@ -116,6 +122,25 @@ export function barStartAt(index: number): number {
   return SPLASH_TIMING.barsStart + index * SPLASH_TIMING.barStagger;
 }
 
+/** Instante en que el recuadro macizo ha sustituido del todo a las columnas. */
+export function sealEndAt(): number {
+  'worklet';
+  return SPLASH_TIMING.sealStart + SPLASH_TIMING.sealDuration;
+}
+
+/**
+ * Opacidad del recuadro macizo de marca.
+ *
+ * Las columnas, al cerrarse, ya ocupan todo el recuadro; este funde encima una
+ * única vista con fondo y radio propios. Así las esquinas finales no dependen
+ * de que el sistema recorte bien unos hijos transformados, que es justo lo que
+ * falla en algunos Android.
+ */
+export function sealOpacity(clock: number): number {
+  'worklet';
+  return easeOut(segment(clock, SPLASH_TIMING.sealStart, SPLASH_TIMING.sealDuration));
+}
+
 export type BarFrame = {
   /** Altura como fracción del recuadro. */
   readonly scaleY: number;
@@ -138,7 +163,9 @@ export function barFrame(clock: number, index: number): BarFrame {
   return {
     scaleY: height < MIN_SCALE ? MIN_SCALE : height > 1 ? 1 : height,
     scaleX: mix(BAR_OPEN_SCALE, BAR_SEALED_SCALE, lock),
-    opacity: rise > 0 ? 1 : 0,
+    // Sellado el recuadro, las columnas ya no se dibujan: debajo de un bloque
+    // opaco solo costarían composición.
+    opacity: rise > 0 && clock <= sealEndAt() ? 1 : 0,
   };
 }
 
@@ -209,10 +236,24 @@ export type HandoffInput = {
 /**
  * ¿Toca entregar a la aplicación?
  *
- * La entrada nunca se corta a medias, y nunca espera más que la carga real: si
- * la aplicación ya está lista cuando termina, entrega en el acto. Si no, la
- * marca espera quieta hasta que lo esté o hasta el tope.
+ * La entrada no se corta a medias, y no espera más que la carga real: si la
+ * aplicación ya está lista cuando termina, entrega en el acto. Si no, la marca
+ * espera quieta hasta que lo esté.
+ *
+ * El tope manda sobre todo lo demás, también sobre `introDone`: es la salida
+ * de emergencia, y no puede depender de que la animación llegue a avisar de
+ * que terminó. Si ese aviso se pierde, la capa se retira igualmente.
  */
 export function shouldHandOff({ introDone, appReady, capReached }: HandoffInput): boolean {
-  return introDone && (appReady || capReached);
+  return capReached || (introDone && appReady);
 }
+
+/**
+ * Cuadros que se dejan pasar entre «toca entregar» y el inicio del fundido.
+ *
+ * Al resolverse la sesión la aplicación de debajo todavía está pintando su
+ * redirección —y, si la cuenta es de otro gimnasio, remontando el árbol con la
+ * nueva marca—. Dos cuadros bastan para que el fundido descubra la pantalla de
+ * destino y no ese paso intermedio.
+ */
+export const HANDOFF_SETTLE_FRAMES = 2;

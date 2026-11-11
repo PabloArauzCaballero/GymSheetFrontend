@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Button } from '@/components/ui';
 import { PressableScale } from '@/components/motion';
+import { useIntroStore } from '@/state/intro-store';
 import { useTourStore } from '@/state/tour-store';
 import { colors, fontSizes, iconSizes, radii, spacing } from '@/theme';
 
@@ -65,7 +66,11 @@ const STEPS: readonly TourStep[] = [
  * place — which at this size is nearly invisible.
  */
 export function TourOverlay() {
-  const visible = useTourStore((state) => state.visible);
+  const requested = useTourStore((state) => state.visible);
+  // El tutorial es un `<Modal>` nativo y se dibujaría por encima de la entrada
+  // de marca. Espera a que termine; después se comporta exactamente igual.
+  const introFinished = useIntroStore((state) => state.finished);
+  const visible = requested && introFinished;
   const complete = useTourStore((state) => state.complete);
   const [step, setStep] = useState(0);
   const reduceMotion = useReducedMotion();

@@ -18,6 +18,7 @@ import {
   BAR_LOADS,
   BAR_OPEN_SCALE,
   BAR_SEALED_SCALE,
+  HANDOFF_SETTLE_FRAMES,
   MONOGRAM_FROM_SCALE,
   SPLASH_TIMING,
   barFrame,
@@ -28,6 +29,8 @@ import {
   introDuration,
   monogramFrame,
   rulingFrame,
+  sealEndAt,
+  sealOpacity,
   segment,
   shouldHandOff,
   totalDuration,
@@ -127,9 +130,26 @@ describe('columnas', () => {
       const frame = barFrame(closed, index);
       expect(frame.scaleY).toBe(1);
       expect(frame.scaleX).toBe(BAR_SEALED_SCALE);
-      expect(frame.opacity).toBe(1);
     }
     expect(BAR_SEALED_SCALE).toBeGreaterThan(1);
+  });
+
+  it('el recuadro macizo releva a las columnas sin dejar un cuadro vacío', () => {
+    expect(sealOpacity(0)).toBe(0);
+    expect(sealOpacity(T.sealStart)).toBe(0);
+    expect(T.sealStart).toBeGreaterThan(T.lockStart);
+    expect(sealEndAt()).toBe(T.lockStart + T.lockDuration);
+    // Mientras el macizo no es opaco, las columnas siguen debajo.
+    for (const ms of everyMs) {
+      if (ms <= barStartAt(BAR_COUNT - 1)) continue;
+      const covered = sealOpacity(ms) === 1;
+      for (const index of bars) {
+        if (!covered) expect(barFrame(ms, index).opacity).toBe(1);
+      }
+    }
+    // Sellado, las columnas dejan de dibujarse.
+    expect(sealOpacity(sealEndAt())).toBe(1);
+    for (const index of bars) expect(barFrame(sealEndAt() + 1, index).opacity).toBe(0);
   });
 
   it('nunca bajan, nunca rebasan el recuadro y nunca llegan a escala 0', () => {
@@ -193,13 +213,8 @@ describe('orquestación', () => {
 describe('reducir movimiento', () => {
   it('la marca nace completa y quieta', () => {
     const clock = initialClock(true);
-    for (const index of bars) {
-      expect(barFrame(clock, index)).toEqual({
-        scaleY: 1,
-        scaleX: BAR_SEALED_SCALE,
-        opacity: 1,
-      });
-    }
+    expect(sealOpacity(clock)).toBe(1);
+    for (const index of bars) expect(barFrame(clock, index).opacity).toBe(0);
     expect(monogramFrame(clock)).toEqual({ opacity: 1, scale: 1 });
     expect(wordmarkFrame(clock)).toEqual({ sunk: 0, opacity: 1 });
     expect(initialClock(false)).toBe(0);
@@ -215,7 +230,6 @@ describe('reducir movimiento', () => {
 describe('entrega a la aplicación', () => {
   it('no corta la entrada a medias aunque la aplicación ya esté lista', () => {
     expect(shouldHandOff({ introDone: false, appReady: true, capReached: false })).toBe(false);
-    expect(shouldHandOff({ introDone: false, appReady: true, capReached: true })).toBe(false);
   });
 
   it('entrega en cuanto termina si la aplicación está lista', () => {
@@ -229,5 +243,15 @@ describe('entrega a la aplicación', () => {
   it('pasado el tope entrega igualmente: una red lenta no la retiene', () => {
     expect(shouldHandOff({ introDone: true, appReady: false, capReached: true })).toBe(true);
     expect(T.handoffCap).toBeGreaterThan(totalDuration(false));
+  });
+
+  it('el tope entrega por sí solo aunque la entrada nunca avise de que terminó', () => {
+    expect(shouldHandOff({ introDone: false, appReady: false, capReached: true })).toBe(true);
+    expect(shouldHandOff({ introDone: false, appReady: true, capReached: true })).toBe(true);
+  });
+
+  it('deja asentar la pantalla de debajo uno o dos cuadros antes del fundido', () => {
+    expect(HANDOFF_SETTLE_FRAMES).toBeGreaterThanOrEqual(1);
+    expect(HANDOFF_SETTLE_FRAMES).toBeLessThanOrEqual(2);
   });
 });
