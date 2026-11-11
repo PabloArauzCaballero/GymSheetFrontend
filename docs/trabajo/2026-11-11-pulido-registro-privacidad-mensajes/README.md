@@ -78,3 +78,13 @@ Validación ejecutada: `yarn workspace @gymsheet/mobile type-check` OK, `lint` (
   «Hace 2 h» que cabe junto a aceptar y rechazar.
 - Registro: notas bajo el botón alineadas a la izquierda, una línea cada una.
 - Evidencia: `evidencia/pasada-4/`. Validación: type-check, lint y test (258/258) OK.
+
+## Pasada 5 — los dos documentos legales, al mismo nivel
+
+- Nueva primitiva `src/components/legal-document.tsx` (`LegalDocument`): emblema, fecha, «Lo esencial»,
+  cláusulas en tarjetas que se encienden al leer y barra de lectura. Privacidad y Términos la usan.
+- Términos deja de ser un muro de texto; su texto legal no cambia.
+- La barra de lectura aparece al empezar a desplazarse (antes tapaba la primera cláusula al abrir).
+- **Hallazgo sin corregir (texto legal, decisión de negocio):** Términos dice «Puedes cerrar tu cuenta
+  en cualquier momento desde el perfil» y Privacidad «contactando al gimnasio». Se contradicen.
+- Evidencia: `evidencia/pasada-5/`. Validación: type-check, lint y test (258/258) OK.
