@@ -118,7 +118,16 @@ function RestProgress({ endsAt, totalMs }: { endsAt: number; totalMs: number }) 
  * un toque para volver al entreno. Va por encima de la barra, nunca encima del
  * contenido: las pestañas suman su alto al que reservan las pantallas.
  */
-export function ActiveWorkoutBar({ active, bottom }: { active: ActiveWorkout; bottom: number }) {
+export function ActiveWorkoutBar({
+  active,
+  bottom,
+  side = spacing.smd,
+}: {
+  active: ActiveWorkout;
+  bottom: number;
+  /** Margen lateral: el mismo que la cápsula de pestañas, para que las dos piezas compartan columna. */
+  side?: number;
+}) {
   const router = useRouter();
   // Sin tic aquí: la barra (con BlurView) solo se repinta al empezar, ajustar
   // o acabar el descanso; la cifra y la barra de progreso van por su cuenta.
@@ -129,7 +138,7 @@ export function ActiveWorkoutBar({ active, bottom }: { active: ActiveWorkout; bo
   return (
     <View
       pointerEvents="box-none"
-      style={{ position: 'absolute', left: spacing.smd, right: spacing.smd, bottom: bottom + spacing.sm }}
+      style={{ position: 'absolute', left: side, right: side, bottom: bottom + spacing.sm }}
     >
       <PressableScale
         accessibilityHint="Vuelve al entreno"

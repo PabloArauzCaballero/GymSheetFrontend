@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginDefaults, loginSchema, type LoginInput } from '@gymsheet/schemas';
 import { authCopy, authErrorMessage } from '@gymsheet/domain';
 import { ApiError } from '@gymsheet/api-client';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { Alert, Text, View } from 'react-native';
 import { Button, Input, textLinkStyle } from '@/components/ui';
 import { AuthAlert, AuthShell } from '@/components/auth-shell';
 import { accountEmailTextProps } from '@/lib/credential-input';
+import { EmailSuggestion } from '@/features/first-impression/field-hint';
+import { emailTypoSuggestion } from '@/features/first-impression/signup-hints';
 import { useAuthStore } from '@/state/auth-store';
 import { colors, fontSizes, spacing } from '@/theme';
 import {
@@ -25,6 +27,7 @@ import {
 
 export default function LoginScreen() {
   const login = useAuthStore((state) => state.login);
+  const router = useRouter();
   /**
    * El fallo del servidor se guarda aquí y se pinta junto al botón, no se manda
    * al sistema de avisos flotantes: un aviso que se desvanece a los pocos
@@ -34,6 +37,7 @@ export default function LoginScreen() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -41,6 +45,11 @@ export default function LoginScreen() {
       ? { email: 'athlete.mock@gymsheet.local', password: 'MockLocal2026!' }
       : loginDefaults,
   });
+
+  // Una errata en el dominio es la causa más tonta de un acceso fallido: se
+  // avisa antes de enviar, igual que en el alta.
+  const email = useWatch({ control, name: 'email' });
+  const suggestion = emailTypoSuggestion(email ?? '');
 
   const [bioKind, setBioKind] = useState<BiometricKind | null>(null);
   const [bioReady, setBioReady] = useState(false);
@@ -126,19 +135,18 @@ export default function LoginScreen() {
   return (
     <AuthShell
       footer={
-        <>
-          <Link href="/(auth)/recover-password" style={textLinkStyle()}>
-            {authCopy.login.forgotPassword}
-          </Link>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-              {authCopy.login.switchPrompt}
-            </Text>
-            <Link href="/(auth)/register" style={textLinkStyle()}>
-              {authCopy.login.switchAction}
-            </Link>
-          </View>
-        </>
+        // Crear cuenta como botón secundario, no como enlace al final de una
+        // frase: quien llega aquí sin cuenta tiene que verlo sin buscarlo.
+        <View style={{ alignSelf: 'stretch', alignItems: 'center', gap: spacing.sm }}>
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{authCopy.login.switchPrompt}</Text>
+          <Button
+            icon="person-add-outline"
+            label="Crear cuenta"
+            onPress={() => router.push('/(auth)/register')}
+            style={{ alignSelf: 'stretch' }}
+            variant="secondary"
+          />
+        </View>
       }
       title={authCopy.login.title}
     >
@@ -161,6 +169,12 @@ export default function LoginScreen() {
           />
         )}
       />
+      {suggestion && !errors.email ? (
+        <EmailSuggestion
+          onAccept={() => setValue('email', suggestion, { shouldValidate: true })}
+          suggestion={suggestion}
+        />
+      ) : null}
       <Controller
         control={control}
         name="password"
@@ -173,6 +187,7 @@ export default function LoginScreen() {
             label={authCopy.fields.password.label}
             onBlur={onBlur}
             onChangeText={onChange}
+            placeholder="Tu contraseña"
             // El ojo lo gestiona el propio campo, igual que en la web.
             revealable
             revealLabel={authCopy.showPassword}
@@ -181,6 +196,14 @@ export default function LoginScreen() {
           />
         )}
       />
+
+      {/* Junto al campo que se olvida, alineado a la derecha: donde se busca. */}
+      <Link
+        href="/(auth)/recover-password"
+        style={[textLinkStyle(), { alignSelf: 'flex-end', marginTop: -spacing.xs, paddingVertical: spacing.xs }]}
+      >
+        {authCopy.login.forgotPassword}
+      </Link>
 
       {failure ? <AuthAlert message={failure} /> : null}
 

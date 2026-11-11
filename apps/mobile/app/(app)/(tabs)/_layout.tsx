@@ -1,14 +1,18 @@
 import { use, useCallback, useEffect, useState } from 'react';
-import { Animated, Easing, StyleSheet, type ColorValue } from 'react-native';
+import { Animated, Easing, StyleSheet, View, useWindowDimensions, type ColorValue } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Tabs } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import {
   BottomTabBar,
   BottomTabBarHeightCallbackContext,
+  type BottomTabBarButtonProps,
   type BottomTabBarProps,
 } from 'expo-router/build/react-navigation/bottom-tabs';
+import { PlatformPressable } from 'expo-router/build/react-navigation/elements';
 import ReAnimated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -17,13 +21,13 @@ import ReAnimated, {
   withSpring,
 } from 'react-native-reanimated';
 import {
-  formatBadgeCount,
   interactionsAlertTotal,
   useInteractionCounts,
 } from '@/components/interactions-counts';
 import { TourTarget } from '@/components/tour';
+import { socialService } from '@/api/services';
 import { ACTIVE_BAR_SPACE, ActiveWorkoutBar, useActiveWorkout } from '@/features/workout/active-workout-bar';
-import { accentContrast, alpha, colors, fontSizes, iconSizes, semibold } from '@/theme';
+import { accentContrast, alpha, colors, fontSizes, iconSizes, overlay, radii, semibold, shadows, spacing } from '@/theme';
 
 /** Outline when resting, filled when active — the platform convention. */
 const ICONS = {
@@ -36,6 +40,35 @@ const ICONS = {
   string,
   readonly [keyof typeof Ionicons.glyphMap, keyof typeof Ionicons.glyphMap]
 >;
+
+/**
+ * El número en la barra: hasta 9, y «9+» a partir de ahí. La insignia vive
+ * dentro del hueco del icono (31 pt) y recorta lo que no cabe: con 120
+ * solicitudes «99+» se leía «9…». Mismo tope que el selector de Mensajes.
+ */
+function tabBadge(count: number): string {
+  return count > 9 ? '9+' : String(count);
+}
+
+/** Alto de la cápsula flotante (área táctil de 48 + aire). */
+const FLOATING_BAR_HEIGHT = 64;
+/** Ancho máximo de la cápsula: en tableta no se estira de borde a borde. */
+const FLOATING_BAR_MAX_WIDTH = 440;
+
+/**
+ * Dónde flota la barra: separada de los lados y del borde inferior, por encima
+ * del indicador de inicio. `offset` es el hueco bajo la cápsula; las pantallas
+ * reservan `offset + alto` (ver `TabBarWithWorkout`).
+ */
+function useFloatingTabBar() {
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const side = Math.max(spacing.mdl, (width - FLOATING_BAR_MAX_WIDTH) / 2);
+  // Con indicador de inicio (34 pt) la cápsula se apoya justo encima; sin él,
+  // un margen propio para que no toque el borde.
+  const offset = insets.bottom > 0 ? Math.max(insets.bottom - spacing.smd, spacing.sm) : spacing.smd;
+  return { side, offset, height: FLOATING_BAR_HEIGHT };
+}
 
 /**
  * Cambio de pestaña: un fundido corto, sin viaje ni escala.
@@ -124,7 +157,7 @@ function tabIcon(screen: keyof typeof ICONS) {
         <ReAnimated.View
           pointerEvents="none"
           style={[
-            { position: 'absolute', top: -4, bottom: -4, left: -16, right: -16, borderRadius: 999, backgroundColor: alpha(colors.volt, 0.2) },
+            { position: 'absolute', top: -8, bottom: -8, left: -18, right: -18, borderRadius: radii.full, backgroundColor: alpha(colors.volt, 0.22) },
             pill,
           ]}
         />
@@ -136,8 +169,28 @@ function tabIcon(screen: keyof typeof ICONS) {
   };
 }
 
+/**
+ * El vidrio de la cápsula. El recorte va aquí y no en la barra: con
+ * `overflow: 'hidden'` en la barra se perdería su sombra. El velo tintado
+ * garantiza contraste para los iconos donde no hay desenfoque (Android viejo,
+ * web) y con «Reducir transparencia».
+ */
+/**
+ * El botón de cada pestaña, centrado. El de la librería alinea su contenido
+ * arriba (deja sitio a la etiqueta de debajo); sin etiqueta, el icono quedaba
+ * pegado al techo de la cápsula.
+ */
+function TabBarButton(props: BottomTabBarButtonProps) {
+  return <PlatformPressable {...props} style={[props.style, { justifyContent: 'center' }]} />;
+}
+
 function TabBarBackground() {
-  return <BlurView intensity={60} style={StyleSheet.absoluteFill} tint="systemChromeMaterialDark" />;
+  return (
+    <View style={[StyleSheet.absoluteFill, { borderRadius: radii.full, overflow: 'hidden' }]}>
+      <BlurView intensity={60} style={StyleSheet.absoluteFill} tint="systemChromeMaterialDark" />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: alpha(colors.surfaceHigh, 0.9) }]} />
+    </View>
+  );
 }
 
 /**
@@ -150,17 +203,22 @@ function TabBarWithWorkout(props: BottomTabBarProps) {
   const report = use(BottomTabBarHeightCallbackContext);
   const [height, setHeight] = useState(0);
   const active = useActiveWorkout();
+  const floating = useFloatingTabBar();
   const extra = active ? ACTIVE_BAR_SPACE : 0;
   const onHeight = useCallback((next: number) => setHeight(next), []);
+  // La barra flota: lo que tapa es su alto MÁS el hueco que la separa del
+  // borde. Sin sumarlo, la última fila de cada lista quedaba bajo la cápsula.
   useEffect(() => {
-    if (height > 0) report?.(height + extra);
-  }, [extra, height, report]);
+    if (height > 0) report?.(height + floating.offset + extra);
+  }, [extra, floating.offset, height, report]);
   return (
     <>
       <BottomTabBarHeightCallbackContext.Provider value={onHeight}>
         <BottomTabBar {...props} />
       </BottomTabBarHeightCallbackContext.Provider>
-      {active && height > 0 ? <ActiveWorkoutBar active={active} bottom={height} /> : null}
+      {active && height > 0 ? (
+        <ActiveWorkoutBar active={active} bottom={height + floating.offset} side={floating.side} />
+      ) : null}
     </>
   );
 }
@@ -203,6 +261,26 @@ export default function TabsLayout() {
    */
   const counts = useInteractionCounts();
   const alerts = interactionsAlertTotal(counts.data);
+  const floating = useFloatingTabBar();
+  /**
+   * Quien quiere conectar contigo, en el icono de Mensajes. Misma clave que la
+   * vista de Solicitudes: el número sale de la caché que esa pantalla ya
+   * mantiene, y una solicitud respondida lo baja en los dos sitios a la vez.
+   * Sin él, con la barra solo de iconos, una solicitud nueva no se veía hasta
+   * entrar a buscarla.
+   */
+  const pending = useQuery({
+    queryKey: ['social', 'connections', 'PENDING'],
+    queryFn: () => socialService.listConnections('PENDING'),
+    staleTime: 60_000,
+  });
+  const requests = (pending.data ?? []).filter((connection) => connection.direction === 'RECEIVED').length;
+  const badgeStyle = {
+    backgroundColor: colors.volt,
+    color: accentContrast(),
+    fontSize: fontSizes.xs,
+    fontWeight: semibold,
+  } as const;
 
   return (
     <Tabs
@@ -235,7 +313,16 @@ export default function TabsLayout() {
         // es texto de 10 pt, justo donde el contraste no se puede regatear.
         tabBarActiveTintColor: colors.accentInk,
         tabBarInactiveTintColor: colors.textMuted,
+        // Solo iconos (pedido del 11/11/2026). El nombre sigue siendo la
+        // etiqueta accesible que compone el navegador —«Rutinas, tab, 4 of 5»—,
+        // así que VoiceOver y los selectores de prueba no pierden nada. Y se
+        // acaba el «Marketpl…»: cinco etiquetas no cabían en un iPhone.
+        tabBarShowLabel: false,
+        // Una cápsula flotante encima del teclado tapa justo el campo en el que
+        // se escribe: con el teclado abierto, la barra se aparta.
+        tabBarHideOnKeyboard: true,
         tabBarLabelStyle: { fontSize: fontSizes.xs, fontWeight: semibold },
+        tabBarItemStyle: { height: floating.height, justifyContent: 'center', paddingVertical: 0 },
         // Cinco pestañas desde el 08/11/2026 (en C4 eran cuatro; antes cinco, no seis). Cinco es el techo que este proyecto ya se había
         // fijado —«cinco es el techo de una barra inferior antes de que las
         // etiquetas empiecen a truncarse», en `(app)/_layout.tsx`— y la regla
@@ -262,19 +349,46 @@ export default function TabsLayout() {
         // sigue viéndose, desenfocada, al pasar por debajo, que es lo que da
         // profundidad sin añadir ningún elemento. `Screen` reserva su altura
         // al final del scroll para que nada quede tapado.
+        //
+        // Desde el 11/11/2026 la barra es una cápsula flotante: separada de
+        // los lados y del borde inferior, con radio completo y sombra e2. El
+        // contenido pasa por debajo y alrededor, y la barra se lee como un
+        // objeto sobre la pantalla en vez de como el suelo de la pantalla.
         tabBarStyle: {
           position: 'absolute',
-          backgroundColor: 'transparent',
-          borderTopColor: colors.borderSubtle,
+          left: floating.side,
+          right: floating.side,
+          bottom: floating.offset,
+          height: floating.height,
+          paddingTop: 0,
+          paddingBottom: 0,
+          paddingHorizontal: spacing.sm,
+          borderRadius: radii.full,
+          borderCurve: 'continuous',
+          borderWidth: StyleSheet.hairlineWidth,
           borderTopWidth: StyleSheet.hairlineWidth,
+          borderColor: overlay.glass,
+          borderTopColor: overlay.glass,
+          backgroundColor: 'transparent',
+          boxShadow: shadows.e2,
           elevation: 0,
         },
         tabBarBackground: TabBarBackground,
+        tabBarButton: TabBarButton,
       }}
     >
       <Tabs.Screen
         name="comunidad-mensajes"
-        options={{ title: 'Mensajes', tabBarIcon: tabIcon('mensajes') }}
+        options={{
+          title: 'Mensajes',
+          tabBarAccessibilityLabel:
+            requests > 0
+              ? `Mensajes, ${requests} ${requests === 1 ? 'solicitud' : 'solicitudes'} por responder, tab`
+              : undefined,
+          tabBarBadge: requests > 0 ? tabBadge(requests) : undefined,
+          tabBarBadgeStyle: badgeStyle,
+          tabBarIcon: tabIcon('mensajes'),
+        }}
       />
       <Tabs.Screen
         name="comunidad"
@@ -293,16 +407,11 @@ export default function TabsLayout() {
             alerts > 0
               ? `Comunidad, ${alerts} ${alerts === 1 ? 'novedad' : 'novedades'}, tab`
               : undefined,
-          tabBarBadge: alerts > 0 ? formatBadgeCount(alerts) : undefined,
+          tabBarBadge: alerts > 0 ? tabBadge(alerts) : undefined,
           // Relleno de acento con la tinta de contraste de la marca. El rojo
           // por defecto de React Navigation significa «error» en el resto de
           // la app, y aquí no hay nada roto: hay gente esperando.
-          tabBarBadgeStyle: {
-            backgroundColor: colors.volt,
-            color: accentContrast(),
-            fontSize: fontSizes.xs,
-            fontWeight: semibold,
-          },
+          tabBarBadgeStyle: badgeStyle,
           tabBarIcon: tabIcon('comunidad'),
         }}
       />
