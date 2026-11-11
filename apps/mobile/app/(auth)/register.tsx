@@ -134,7 +134,9 @@ export default function RegisterScreen() {
             label={authCopy.fields.password.label}
             onBlur={onBlur}
             onChangeText={onChange}
-            placeholder={authCopy.fields.password.placeholder}
+            // El requisito ya lo dice en vivo la línea de debajo; repetirlo aquí
+            // cortaba el texto en un iPhone SE («Mínimo 8 cara»).
+            placeholder="Tu contraseña"
             revealable
             revealLabel={authCopy.showPassword}
             textContentType="newPassword"
@@ -160,7 +162,7 @@ export default function RegisterScreen() {
             label={authCopy.fields.confirmation.label}
             onBlur={onBlur}
             onChangeText={onChange}
-            placeholder={authCopy.fields.confirmation.placeholder}
+            placeholder="Repítela"
             revealable
             revealLabel={authCopy.showPassword}
             textContentType="newPassword"
@@ -213,12 +215,20 @@ export default function RegisterScreen() {
             {errors.acceptedTerms.message}
           </Text>
         ) : null}
-        <View style={{ flexDirection: 'row', gap: spacing.lg }}>
-          <Link href="/(auth)/terminos" style={textLinkStyle()}>
-            {authCopy.terms.readTerms}
+        {/* «Términos» y «Privacidad» a secas: la casilla de encima ya los nombra
+            enteros, y en un iPhone SE «Leer términos» partía en dos líneas. El
+            lector de pantalla oye la versión larga. */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.lg, rowGap: spacing.xs }}>
+          <Link accessibilityLabel={authCopy.terms.readTerms} href="/(auth)/terminos" numberOfLines={1} style={[textLinkStyle(), { flexShrink: 0 }]}>
+            Términos
           </Link>
-          <Link href="/(auth)/privacidad" style={textLinkStyle()}>
-            {authCopy.terms.readPrivacy}
+          <Link
+            accessibilityLabel={authCopy.terms.readPrivacy}
+            href="/(auth)/privacidad"
+            numberOfLines={1}
+            style={[textLinkStyle(), { flexShrink: 0 }]}
+          >
+            Privacidad
           </Link>
         </View>
       </View>

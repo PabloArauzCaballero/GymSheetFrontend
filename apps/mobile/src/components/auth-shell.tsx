@@ -139,7 +139,14 @@ export function AuthShell({
   benefits,
   children,
   footer,
+  pitch = true,
 }: {
+  /**
+   * El titular y la línea de qué es la app. Sí en acceso y alta (embudo desde
+   * la tienda); no en recuperar contraseña, donde quien llega ya sabe qué es la
+   * app y solo quiere volver a entrar: ahí basta el logotipo.
+   */
+  pitch?: boolean;
   /** Encabezado del formulario, dentro de la tarjeta. */
   title: string;
   description?: string;
@@ -196,16 +203,20 @@ export function AuthShell({
                 </>
               )}
             </EnterUp>
-            <EnterUp index={1}>
-              <AppText accessibilityRole="header" style={{ textAlign: 'center' }} variant="display">
-                {valuePitch.headline}
-              </AppText>
-            </EnterUp>
-            <EnterUp index={2} style={{ maxWidth: 340 }}>
-              <AppText style={{ textAlign: 'center' }} tone="secondary" variant="subhead">
-                {valuePitch.subline}
-              </AppText>
-            </EnterUp>
+            {pitch ? (
+              <>
+                <EnterUp index={1}>
+                  <AppText accessibilityRole="header" style={{ textAlign: 'center' }} variant="display">
+                    {valuePitch.headline}
+                  </AppText>
+                </EnterUp>
+                <EnterUp index={2} style={{ maxWidth: 340 }}>
+                  <AppText style={{ textAlign: 'center' }} tone="secondary" variant="subhead">
+                    {valuePitch.subline}
+                  </AppText>
+                </EnterUp>
+              </>
+            ) : null}
             {/* Mismo ancho que la tarjeta del formulario: las dos piezas
                 comparten columna. Cada fila entra por su cuenta (3, 4, 5). */}
             {benefits ? (
