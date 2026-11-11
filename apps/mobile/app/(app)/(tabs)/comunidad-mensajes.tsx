@@ -8,6 +8,7 @@ import { refreshSocialRelationship } from '@/api/social-cache';
 import { Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { ChatConversationRow } from '@/components/chat-conversation-row';
 import { PersonAvatar } from '@/components/person-avatar';
+import { Button } from '@/components/ui';
 import { SegmentedPill } from '@/components/motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { confirm, notify } from '@/notifications';
@@ -126,9 +127,18 @@ function GeneralTab() {
     return (
       <EmptyState
         icon="chatbubbles-outline"
-        message="Conecta con un socio y envíale un mensaje desde Comunidad."
-        title="Sin conversaciones"
-      />
+        message="Conecta con alguien de tu gimnasio y escríbele desde aquí."
+        title="Aún no tienes chats"
+      >
+        <Button
+          icon="people-outline"
+          label="Buscar gente"
+          onPress={() => router.push('/comunidad')}
+          size="sm"
+          style={{ marginTop: spacing.xs }}
+          variant="secondary"
+        />
+      </EmptyState>
     );
   }
   return (
@@ -147,6 +157,7 @@ function GeneralTab() {
 }
 
 function SolicitudesTab() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const pending = useQuery({
     queryKey: ['social', 'connections', 'PENDING'],
@@ -180,7 +191,18 @@ function SolicitudesTab() {
   const sent = (pending.data ?? []).filter((connection) => connection.direction === 'SENT');
 
   if (!received.length && !sent.length) {
-    return <EmptyState icon="mail-open-outline" message="No tienes solicitudes pendientes." title="Sin solicitudes" />;
+    return (
+      <EmptyState icon="mail-open-outline" message="Cuando alguien quiera conectar contigo, aparecerá aquí." title="Sin solicitudes">
+        <Button
+          icon="compass-outline"
+          label="Descubrir gente"
+          onPress={() => router.push('/descubrir')}
+          size="sm"
+          style={{ marginTop: spacing.xs }}
+          variant="secondary"
+        />
+      </EmptyState>
+    );
   }
 
   return (
@@ -299,9 +321,18 @@ function ConexionesTab() {
     return (
       <EmptyState
         icon="people-outline"
-        message="Conecta con otros socios desde Comunidad."
+        message="Conecta con gente de tu gimnasio para entrenar y chatear juntos."
         title="Aún no tienes conexiones"
-      />
+      >
+        <Button
+          icon="compass-outline"
+          label="Descubrir gente"
+          onPress={() => router.push('/descubrir')}
+          size="sm"
+          style={{ marginTop: spacing.xs }}
+          variant="secondary"
+        />
+      </EmptyState>
     );
   }
   return (
@@ -333,6 +364,16 @@ function ConexionesTab() {
       ))}
     </Card>
   );
+}
+
+/**
+ * El subtítulo dice lo que espera respuesta, si hay algo; si no, qué hay aquí.
+ * Una línea fija que nunca cambia deja de leerse a la segunda visita.
+ */
+function headerSubtitle(received: number): string {
+  if (received === 1) return '1 persona quiere conectar contigo.';
+  if (received > 1) return `${received} personas quieren conectar contigo.`;
+  return 'Tus chats, historias y solicitudes.';
 }
 
 /**
@@ -373,7 +414,7 @@ export default function ComunidadMensajesScreen() {
 
   return (
     <ScrollScreen>
-      <ScreenHeader subtitle="Historias, conversaciones y solicitudes." title="Mensajes" />
+      <ScreenHeader subtitle={headerSubtitle(receivedCount)} title="Mensajes" />
 
       <StoriesBar />
 
