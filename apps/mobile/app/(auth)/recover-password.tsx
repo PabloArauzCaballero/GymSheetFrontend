@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ApiError } from '@gymsheet/api-client';
-import { useRouter } from 'expo-router';
-import { View } from 'react-native';
+import { Link, useRouter } from 'expo-router';
 import { z } from 'zod';
-import { Screen, AppText, Button, Input } from '@/components/ui';
-import { Checkbox } from '@/components/checkbox';
+import { authCopy } from '@gymsheet/domain';
+import { authLimits } from '@gymsheet/schemas';
+import { Button, Input, textLinkStyle } from '@/components/ui';
+import { AuthShell } from '@/components/auth-shell';
+import { EmailSuggestion, FieldHint } from '@/features/first-impression/field-hint';
+import { emailTypoSuggestion, passwordChecks } from '@/features/first-impression/signup-hints';
 import { StepProgress, type FlowStep } from '@/components/step-flow';
 import { apiClient } from '@/api/client';
 import { notify } from '@/notifications';
-import { spacing } from '@/theme';
 import { numericInputProps } from '@/components/keyboard';
 import { accountEmailTextProps } from '@/lib/credential-input';
 
@@ -47,7 +49,6 @@ export default function RecoverPasswordScreen() {
   /** 0 pedir el código · 1 canjearlo · 2 hecho. */
   const [step, setStep] = useState(0);
   const [email, setEmail] = useState('');
-  const [passwordVisible, setPasswordVisible] = useState(false);
 
   const requestForm = useForm<RequestValues>({
     resolver: zodResolver(requestSchema),
@@ -57,6 +58,8 @@ export default function RecoverPasswordScreen() {
     resolver: zodResolver(confirmSchema),
     defaultValues: { pin: '', password: '' },
   });
+  const watchedEmail = useWatch({ control: requestForm.control, name: 'email' });
+  const watchedPassword = useWatch({ control: confirmForm.control, name: 'password' });
 
   const onRequest = requestForm.handleSubmit(async (values) => {
     try {
@@ -101,31 +104,44 @@ export default function RecoverPasswordScreen() {
     setStep(2);
   });
 
-  return (
-    <Screen>
-      <AppText variant="title">Recuperar contraseña</AppText>
+  const typo = emailTypoSuggestion(watchedEmail ?? '');
+  const longEnough = passwordChecks(watchedPassword ?? '', '').longEnough;
+  const title = step === 2 ? 'Contraseña cambiada' : step === 1 ? 'Escribe el código' : 'Recupera tu acceso';
+  const description =
+    step === 2
+      ? 'Ya puedes entrar con tu contraseña nueva.'
+      : step === 1
+        ? `Lo enviamos a ${email}. Caduca en unos minutos.`
+        : 'Te enviamos un código de seis cifras al correo de tu cuenta.';
 
+  return (
+    // El mismo marco que el acceso y el alta (antes era una pantalla suelta, sin
+    // marca ni salida). Sin titular comercial: quien llega aquí ya sabe qué es
+    // la app y solo quiere volver a entrar.
+    <AuthShell
+      description={description}
+      footer={
+        step === 2 ? null : (
+          <Link href="/(auth)/login" style={textLinkStyle()}>
+            Volver a iniciar sesión
+          </Link>
+        )
+      }
+      pitch={false}
+      title={title}
+    >
       {step === 2 ? (
-        <>
-          <AppText variant="muted">
-            Listo. Ya puedes entrar con tu contraseña nueva.
-          </AppText>
-          <Button
-            icon="log-in-outline"
-            label="Ir a iniciar sesión"
-            onPress={() => router.replace('/(auth)/login')}
-          />
-        </>
+        <Button
+          icon="log-in-outline"
+          label="Ir a iniciar sesión"
+          onPress={() => router.replace('/(auth)/login')}
+        />
       ) : (
         <>
-          <View style={{ height: spacing.xs }} />
           <StepProgress current={step} steps={RESET_STEPS} />
 
           {step === 0 ? (
             <>
-              <AppText variant="muted">
-                Te enviamos un código de seis cifras al correo de tu cuenta.
-              </AppText>
               <Controller
                 control={requestForm.control}
                 name="email"
@@ -133,6 +149,7 @@ export default function RecoverPasswordScreen() {
                   <Input
                     {...accountEmailTextProps}
                     error={requestForm.formState.errors.email?.message}
+                    icon="mail-outline"
                     label="Correo electrónico"
                     onBlur={onBlur}
                     onChangeText={onChange}
@@ -142,11 +159,18 @@ export default function RecoverPasswordScreen() {
                     // pequeño queda debajo-- es un paso que no tiene por qué
                     // existir.
                     onSubmitEditing={() => void onRequest()}
+                    placeholder="tu@correo.com"
                     returnKeyType="send"
                     value={value}
                   />
                 )}
               />
+              {typo && !requestForm.formState.errors.email ? (
+                <EmailSuggestion
+                  onAccept={() => requestForm.setValue('email', typo, { shouldValidate: true })}
+                  suggestion={typo}
+                />
+              ) : null}
               <Button
                 icon="paper-plane-outline"
                 label="Enviar código"
@@ -156,20 +180,19 @@ export default function RecoverPasswordScreen() {
             </>
           ) : (
             <>
-              <AppText variant="muted">
-                {`Escribe el código que enviamos a ${email} y elige tu contraseña nueva. Caduca en unos minutos.`}
-              </AppText>
               <Controller
                 control={confirmForm.control}
                 name="pin"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <Input
                     error={confirmForm.formState.errors.pin?.message}
+                    icon="keypad-outline"
                     keyboardType="number-pad"
                     label="Código"
                     maxLength={6}
                     onBlur={onBlur}
                     onChangeText={onChange}
+                    placeholder="6 cifras"
                     // Autorrelleno del código que iOS ofrece sobre el teclado
                     // en cuanto llega: teclear seis cifras a mano es el paso
                     // donde la gente se equivoca.
@@ -183,24 +206,27 @@ export default function RecoverPasswordScreen() {
                 control={confirmForm.control}
                 name="password"
                 render={({ field: { onChange, onBlur, value } }) => (
+                  // El ojo del propio campo, como en el acceso y el alta (antes,
+                  // una casilla «Mostrar contraseña» aparte).
                   <Input
                     autoComplete="new-password"
                     error={confirmForm.formState.errors.password?.message}
+                    hideLabel={authCopy.hidePassword}
+                    icon="lock-closed-outline"
                     label="Contraseña nueva"
                     onBlur={onBlur}
                     onChangeText={onChange}
-                    secureTextEntry={!passwordVisible}
+                    placeholder="Tu contraseña nueva"
+                    revealable
+                    revealLabel={authCopy.showPassword}
                     textContentType="newPassword"
                     value={value}
                   />
                 )}
               />
-              <Checkbox
-                accessibilityHint="Muestra la contraseña en texto legible"
-                checked={passwordVisible}
-                label="Mostrar contraseña"
-                onChange={setPasswordVisible}
-              />
+              {confirmForm.formState.errors.password ? null : (
+                <FieldHint label={`${authLimits.passwordMin} caracteres o más`} state={longEnough ? 'ok' : 'pending'} />
+              )}
               <Button
                 icon="checkmark-circle-outline"
                 label="Cambiar contraseña"
@@ -217,6 +243,6 @@ export default function RecoverPasswordScreen() {
           )}
         </>
       )}
-    </Screen>
+    </AuthShell>
   );
 }

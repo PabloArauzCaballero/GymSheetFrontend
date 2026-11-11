@@ -120,3 +120,12 @@ Validación ejecutada: `yarn workspace @gymsheet/mobile type-check` OK, `lint` (
   acotada al ancho; «Enviadas» sin repetir «Enviada».
 - `src/features/messages/since.ts` con tests (antes «Hace 12 oct 2025» era posible).
 - Evidencia: `evidencia/pasada-8/` (iPhone SE). Validación: type-check, lint y test (266/266) OK.
+
+## Pasada 9 — el embudo de acceso, sin cabos sueltos
+
+- Recuperar contraseña pasa a `AuthShell` (nuevo `pitch={false}`: solo logotipo), con títulos por paso,
+  iconos y placeholders, sugerencia ante erratas, ojo en la contraseña con requisito en vivo y salida
+  «Volver a iniciar sesión». La lógica (endpoints, pasos, errores) no cambia.
+- Registro: placeholders cortos («Tu contraseña», «Repítela») que no repiten el requisito y caben en un
+  iPhone SE; «Términos» / «Privacidad» en una fila con etiqueta accesible larga.
+- Evidencia: `evidencia/pasada-9/` (iPhone SE). Validación: type-check, lint y test (266/266) OK.
