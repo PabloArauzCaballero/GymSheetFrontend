@@ -88,3 +88,12 @@ Validación ejecutada: `yarn workspace @gymsheet/mobile type-check` OK, `lint` (
 - **Hallazgo sin corregir (texto legal, decisión de negocio):** Términos dice «Puedes cerrar tu cuenta
   en cualquier momento desde el perfil» y Privacidad «contactando al gimnasio». Se contradicen.
 - Evidencia: `evidencia/pasada-5/`. Validación: type-check, lint y test (258/258) OK.
+
+## Pasada 6 — el login
+
+- Título compartido «Vuelve a entrenar.» (`packages/domain`, móvil y web; `apps/web/e2e/auth.spec.ts`
+  actualizado al texto nuevo).
+- Sugerencia ante erratas del correo (misma pieza que el alta), placeholder en la contraseña,
+  «¿Olvidaste tu contraseña?» junto al campo y «Crear cuenta» como botón secundario.
+- Evidencia: `evidencia/pasada-6/`. Validación: móvil type-check, lint y test (258/258); web y domain
+  type-check y test OK. E2E web no ejecutado (sin backend).

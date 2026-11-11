@@ -41,7 +41,7 @@ export const valuePitch = {
 export const authCopy = {
   login: {
     eyebrow: 'Acceso seguro',
-    title: 'Vuelve al trabajo.',
+    title: 'Vuelve a entrenar.',
     description: 'Accede a tu entrenamiento, historial y operaciones según tu rol.',
     submit: 'Iniciar sesión',
     forgotPassword: '¿Olvidaste tu contraseña?',
