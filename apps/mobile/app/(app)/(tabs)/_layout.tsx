@@ -21,7 +21,6 @@ import ReAnimated, {
   withSpring,
 } from 'react-native-reanimated';
 import {
-  formatBadgeCount,
   interactionsAlertTotal,
   useInteractionCounts,
 } from '@/components/interactions-counts';
@@ -41,6 +40,15 @@ const ICONS = {
   string,
   readonly [keyof typeof Ionicons.glyphMap, keyof typeof Ionicons.glyphMap]
 >;
+
+/**
+ * El número en la barra: hasta 9, y «9+» a partir de ahí. La insignia vive
+ * dentro del hueco del icono (31 pt) y recorta lo que no cabe: con 120
+ * solicitudes «99+» se leía «9…». Mismo tope que el selector de Mensajes.
+ */
+function tabBadge(count: number): string {
+  return count > 9 ? '9+' : String(count);
+}
 
 /** Alto de la cápsula flotante (área táctil de 48 + aire). */
 const FLOATING_BAR_HEIGHT = 64;
@@ -377,7 +385,7 @@ export default function TabsLayout() {
             requests > 0
               ? `Mensajes, ${requests} ${requests === 1 ? 'solicitud' : 'solicitudes'} por responder, tab`
               : undefined,
-          tabBarBadge: requests > 0 ? formatBadgeCount(requests) : undefined,
+          tabBarBadge: requests > 0 ? tabBadge(requests) : undefined,
           tabBarBadgeStyle: badgeStyle,
           tabBarIcon: tabIcon('mensajes'),
         }}
@@ -399,7 +407,7 @@ export default function TabsLayout() {
             alerts > 0
               ? `Comunidad, ${alerts} ${alerts === 1 ? 'novedad' : 'novedades'}, tab`
               : undefined,
-          tabBarBadge: alerts > 0 ? formatBadgeCount(alerts) : undefined,
+          tabBarBadge: alerts > 0 ? tabBadge(alerts) : undefined,
           // Relleno de acento con la tinta de contraste de la marca. El rojo
           // por defecto de React Navigation significa «error» en el resto de
           // la app, y aquí no hay nada roto: hay gente esperando.

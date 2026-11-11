@@ -108,3 +108,15 @@ Validación ejecutada: `yarn workspace @gymsheet/mobile type-check` OK, `lint` (
 - Se probó y retiró un aviso tocable de solicitudes: empujaba la lista y repetía el dato de los
   contadores. El subtítulo vuelve a ser fijo.
 - Evidencia: `evidencia/pasada-7/` (maqueta con datos). Validación: type-check, lint y test (258/258) OK.
+
+## Pasada 8 — el peor caso, en un iPhone SE
+
+- Contraste medido (no a ojo) de los pares nuevos: tinte de «Lo esencial», emblema, contadores, ayudas
+  del alta y «Tu lectura», en REPP y TOP Fitness. Todos pasan AA; quedan fijados en
+  `src/theme/contrast.test.ts`.
+- Peor caso (nombres larguísimos, emojis, chat de sistema, 120 solicitudes, conexión de hace > 1 año):
+  acciones compactas (36 pt + hitSlop a 44) y nombres en dos líneas en Solicitudes; 20 solicitudes y
+  «Ver más» en vez de 120 filas; contador de la barra «9+»; «Desde oct 2025»; tarjeta de historias
+  acotada al ancho; «Enviadas» sin repetir «Enviada».
+- `src/features/messages/since.ts` con tests (antes «Hace 12 oct 2025» era posible).
+- Evidencia: `evidencia/pasada-8/` (iPhone SE). Validación: type-check, lint y test (266/266) OK.

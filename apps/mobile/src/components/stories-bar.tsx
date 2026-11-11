@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -11,6 +11,7 @@ import { PressableScale } from '@/components/motion';
 import { StoryViewer } from '@/components/story-viewer';
 import { StoryComposer } from '@/components/story-composer';
 import { ErrorState, Skeleton } from '@/components/feedback';
+import { useScreenFrame } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
@@ -500,6 +501,10 @@ export function StoriesBar() {
     return [...mine, ...others];
   }, [currentUserId, feed.data]);
   const myEntry = entries.find((entry) => entry.userId === currentUserId);
+  const frame = useScreenFrame();
+  const { width: screenWidth } = useWindowDimensions();
+  const promptMaxWidth =
+    screenWidth - 2 * frame.gutter - frame.insets.left - frame.insets.right - COLUMN_WIDTH - spacing.md;
   const otherEntries = entries.filter((entry) => entry.userId !== currentUserId);
 
   /**
@@ -592,6 +597,9 @@ export function StoriesBar() {
               onPress={openSourceSheet}
               style={{
                 alignSelf: 'flex-start',
+                // En una tira horizontal nada encoge solo: en un iPhone SE la
+                // tarjeta se salía por el borde. Ocupa lo que queda de pantalla.
+                maxWidth: promptMaxWidth,
                 marginTop: spacing.sm,
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -612,11 +620,13 @@ export function StoriesBar() {
                 name="camera-outline"
                 size={iconSizes.lg}
               />
-              <View style={{ gap: 2 }}>
-                <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
+              <View style={{ gap: 2, flexShrink: 1 }}>
+                <Text numberOfLines={2} style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
                   Comparte tu entreno
                 </Text>
-                <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>Una foto o un vídeo de hoy.</Text>
+                <Text numberOfLines={2} style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                  Una foto o un vídeo de hoy.
+                </Text>
               </View>
             </PressableScale>
           ) : null}
