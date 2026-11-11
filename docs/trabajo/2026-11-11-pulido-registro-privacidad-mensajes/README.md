@@ -49,3 +49,14 @@ Validación ejecutada: `yarn workspace @gymsheet/mobile type-check` OK, `lint` (
   vendemos tus datos a terceros.» (cláusula 2 de la política).
 - Lógica pura en `src/features/first-impression/signup-hints.ts` con tests; el contrato con la API no
   cambia. Evidencia: `evidencia/pasada-1/`. Validación: type-check, lint y test (258/258) OK.
+
+## Pasada 2 — Mensajes sin callejones sin salida (skills `onboarding`, `copywriting`)
+
+- Tira de historias vacía: «Comparte tu entreno · Una foto o un vídeo de hoy.» abre la misma hoja que
+  el «+» (`src/components/stories-bar.tsx`).
+- Estados vacíos con salida: «Buscar gente» (→ Comunidad) en General, «Descubrir gente» (→ Descubrir)
+  en Solicitudes y Conexiones. Botones secundarios.
+- Subtítulo contextual: «N personas quieren conectar contigo.» cuando hay solicitudes recibidas.
+- Pendiente visto en la captura: con la mini-barra del entreno abierta, el botón del estado vacío de
+  General queda bajo ella hasta desplazar. Evidencia: `evidencia/pasada-2/`. Validación: type-check,
+  lint y test (258/258) OK.
