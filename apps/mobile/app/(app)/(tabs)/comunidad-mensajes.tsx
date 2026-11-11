@@ -13,7 +13,7 @@ import { PressableScale, SegmentedPill } from '@/components/motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { confirm, notify } from '@/notifications';
 import { StoriesBar } from '@/components/stories-bar';
-import { relativeTimeEs } from '@/features/routine-community/relative-time';
+import { connectedSince, sinceLabel } from '@/features/messages/since';
 import { accentContrast, alpha, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 type Tab = 'general' | 'solicitudes' | 'conexiones';
@@ -27,6 +27,7 @@ function IconButton({
   loading = false,
   onPress,
   accessibilityLabel,
+  compact = false,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   background: string;
@@ -36,17 +37,24 @@ function IconButton({
   loading?: boolean;
   onPress: () => void;
   accessibilityLabel: string;
+  /**
+   * 36 pt dibujados con el área táctil llevada a 44 por `hitSlop`: en filas con
+   * dos acciones, en un iPhone SE, el nombre se quedaba en 5 letras.
+   */
+  compact?: boolean;
 }) {
+  const size = compact ? 36 : minTouchTarget;
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel}
+      hitSlop={compact ? (minTouchTarget - size) / 2 : undefined}
       accessibilityRole="button"
       accessibilityState={{ disabled: disabled || loading, busy: loading }}
       disabled={disabled || loading}
       onPress={onPress}
       style={({ pressed }) => ({
-        width: minTouchTarget,
-        height: minTouchTarget,
+        width: size,
+        height: size,
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: radii.full,
@@ -59,17 +67,7 @@ function IconButton({
   );
 }
 
-/** «Conectados hace 3 sem»: un dato de la relación, no una instrucción repetida en cada fila. */
-function connectedSince(iso: string): string {
-  const since = relativeTimeEs(iso);
-  return since === 'ahora' ? 'Conectados ahora' : `Conectados hace ${since}`;
-}
 
-/** «Hace 2 h» / «Ahora»: lo que cabe junto a dos botones sin cortarse. */
-function sinceLabel(iso: string): string {
-  const since = relativeTimeEs(iso);
-  return since === 'ahora' ? 'Ahora' : `Hace ${since}`;
-}
 
 /**
  * Las tres vistas de Mensajes, solo con icono. El nombre no desaparece: viaja
@@ -95,6 +93,7 @@ function PersonRow({
   children,
   onPress,
   accessibilityHint,
+  nameLines = 1,
 }: {
   id: string;
   name: string;
@@ -103,12 +102,14 @@ function PersonRow({
   /** La fila entera hace la acción principal (abrir el chat); las de `children` quedan aparte. */
   onPress?: () => void;
   accessibilityHint?: string;
+  /** Dos líneas donde las acciones dejan poco ancho: un nombre en 5 letras no se reconoce. */
+  nameLines?: 1 | 2;
 }) {
   const identity = (
     <>
       <PersonAvatar id={id} name={name} size={44} />
       <View style={{ flex: 1, gap: 2 }}>
-        <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
+        <Text numberOfLines={nameLines} style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
           {name}
         </Text>
         {detail ? (
@@ -185,8 +186,14 @@ function GeneralTab() {
   );
 }
 
+/** Solicitudes recibidas que se pintan de entrada; el resto, a demanda. */
+const RECEIVED_PAGE = 20;
+
 function SolicitudesTab() {
   const router = useRouter();
+  // Con 120 solicitudes se montaban 120 filas de golpe dentro de un ScrollView
+  // (sin virtualizar): se ven 20 y «Ver más» abre las siguientes.
+  const [receivedShown, setReceivedShown] = useState(RECEIVED_PAGE);
   const queryClient = useQueryClient();
   const pending = useQuery({
     queryKey: ['social', 'connections', 'PENDING'],
@@ -239,15 +246,17 @@ function SolicitudesTab() {
       {received.length ? (
         <Section icon="person-add-outline" title="Quieren conectar">
           <Card list>
-            {received.map((connection, index) => (
+            {received.slice(0, receivedShown).map((connection, index) => (
               <View key={connection.id}>
                 {index > 0 ? <Divider /> : null}
                 <PersonRow
                   detail={sinceLabel(connection.createdAt)}
+                  nameLines={2}
                   id={connection.otherUserId}
                   name={connection.otherUserName}
                 >
                   <IconButton
+                    compact
                     accessibilityLabel={`Aceptar la solicitud de ${connection.otherUserName}`}
                     background={colors.volt}
                     disabled={respond.isPending}
@@ -257,6 +266,7 @@ function SolicitudesTab() {
                     tint={accentContrast()}
                   />
                   <IconButton
+                    compact
                     accessibilityLabel={`Rechazar la solicitud de ${connection.otherUserName}`}
                     background={colors.surfaceHigh}
                     disabled={respond.isPending}
@@ -269,6 +279,16 @@ function SolicitudesTab() {
               </View>
             ))}
           </Card>
+          {received.length > receivedShown ? (
+            <Button
+              icon="chevron-down"
+              label={`Ver ${Math.min(RECEIVED_PAGE, received.length - receivedShown)} más de ${received.length - receivedShown}`}
+              onPress={() => setReceivedShown((shown) => shown + RECEIVED_PAGE)}
+              size="sm"
+              style={{ alignSelf: 'center' }}
+              variant="ghost"
+            />
+          ) : null}
         </Section>
       ) : null}
 
@@ -279,13 +299,14 @@ function SolicitudesTab() {
               <View key={connection.id}>
                 {index > 0 ? <Divider /> : null}
                 <PersonRow
-                  detail={`Enviada · ${relativeTimeEs(connection.createdAt)}`}
+                  detail={sinceLabel(connection.createdAt)}
                   id={connection.otherUserId}
                   name={connection.otherUserName}
                 >
                   {/* Retirar es secundario y reversible: icono sobre superficie,
                       no un botón de contorno a media fila. */}
                   <IconButton
+                    compact
                     accessibilityLabel={`Retirar la solicitud a ${connection.otherUserName}`}
                     background={colors.surfaceHigh}
                     disabled={withdraw.isPending}
