@@ -13,13 +13,15 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 import { BackLink } from '@/components/nav';
-import { ScrollScreen } from '@/components/layout';
+import { ScrollScreen, useScreenFrame } from '@/components/layout';
+import { Button } from '@/components/ui';
 import { useScrollY } from '@/components/hero-bar';
 import { EnterUp } from '@/components/motion';
 import { Text } from '@/components/text';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
-import { accentPolicy, alpha, colors, iconSizes, overlay, radii, shadows, spacing } from '@/theme';
+import { accentPolicy, alpha, colors, iconSizes, overlay, radii, screenGap, shadows, spacing } from '@/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -231,11 +233,79 @@ function ClauseCard({
   );
 }
 
+/**
+ * Lo leído y la salida, fijos abajo: una línea que se llena con el
+ * desplazamiento (atada al scroll, no al reloj) y «Entendido», que devuelve al
+ * alta. Quien llega aquí desde el registro tiene un siguiente paso, y verlo
+ * cerca evita que la lectura se sienta como un callejón (efecto de cierre).
+ */
+function ReadingBar({ maxScroll }: { maxScroll: SharedValue<number> }) {
+  const router = useRouter();
+  const scrollY = useScrollY();
+  const fill = useAnimatedStyle(() => ({
+    transform: [{ scaleX: interpolate(scrollY.value, [0, Math.max(1, maxScroll.value)], [0.04, 1], 'clamp') }],
+  }));
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+        paddingVertical: spacing.sm,
+        paddingLeft: spacing.mdl,
+        paddingRight: spacing.sm,
+        borderRadius: radii.full,
+        borderCurve: 'continuous',
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: overlay.glass,
+        backgroundColor: alpha(colors.surfaceHigh, 0.94),
+        boxShadow: shadows.e2,
+      }}
+    >
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={{ flex: 1, gap: spacing.xs }}
+      >
+        <Text tone="muted" variant="caption">
+          Tu lectura
+        </Text>
+        <View style={{ height: 4, borderRadius: radii.full, overflow: 'hidden', backgroundColor: alpha(colors.text, 0.1) }}>
+          <Animated.View
+            style={[
+              { height: 4, width: '100%', borderRadius: radii.full, backgroundColor: colors.accentInk, transformOrigin: 'left' },
+              fill,
+            ]}
+          />
+        </View>
+      </View>
+      <Button
+        icon="checkmark"
+        label="Entendido"
+        onPress={() => (router.canGoBack() ? router.back() : router.replace('/(auth)/register'))}
+        size="sm"
+      />
+    </View>
+  );
+}
+
 export default function PrivacidadScreen() {
   const listTop = useSharedValue(0);
+  const frame = useScreenFrame();
+  const { height: viewport } = useWindowDimensions();
+  // Desplazamiento máximo: alto del contenido más los rellenos de la pantalla,
+  // menos lo que se ve. Se mide, no se supone.
+  const maxScroll = useSharedValue(0);
 
   return (
-    <ScrollScreen>
+    <ScrollScreen overlay={<ReadingBar maxScroll={maxScroll} />}>
+      <View
+        onLayout={(event) => {
+          const padding = (frame.contentPadding.paddingTop as number) + (frame.contentPadding.paddingBottom as number);
+          maxScroll.value = event.nativeEvent.layout.height + padding - viewport;
+        }}
+        style={{ gap: screenGap }}
+      >
       <BackLink />
 
       <View style={{ gap: spacing.md }}>
@@ -305,13 +375,18 @@ export default function PrivacidadScreen() {
 
       <View
         onLayout={(event) => {
-          listTop.value = event.nativeEvent.layout.y;
+          // `y` dentro del envoltorio; el desplazamiento cuenta desde el borde
+          // del contenido, que empieza un relleno superior más arriba.
+          listTop.value = event.nativeEvent.layout.y + (frame.contentPadding.paddingTop as number);
         }}
         style={{ gap: spacing.smd }}
       >
         {SECTIONS.map((section, index) => (
           <ClauseCard key={section.title} index={index} listTop={listTop} {...section} />
         ))}
+      </View>
+      {/* Aire para la barra fija de abajo: sin él, la última cláusula quedaba bajo ella. */}
+      <View style={{ height: spacing['2xl'] }} />
       </View>
     </ScrollScreen>
   );
