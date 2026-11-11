@@ -10,7 +10,7 @@ import test from 'node:test';
 import { tenantCatalog } from '../../../../packages/design-tokens/src/tenants.ts';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { contrastRatio, metricInk, mobileBrand, neutral } from './palette.ts';
+import { contrastRatio, metricInk, mixHex, mobileBrand, neutral } from './palette.ts';
 
 const surfaces = {
   background: neutral.background,
@@ -133,3 +133,30 @@ for (const tenant of Object.values(tenantCatalog)) {
 test('color por magnitud del entreno: cada tinta cumple AA como texto en todas las superficies', () => {
   for (const [name, color] of Object.entries(metricInk)) eachSurface(color, TEXT_AA, `metricInk.${name}`);
 });
+
+/**
+ * Pares que crearon las pasadas de pulido de registro, documentos legales y
+ * Mensajes (11/11/2026): tintes sobre el lienzo y contadores sobre el acento.
+ * `mixHex(fg, bg, alfa)` reproduce el `alpha(fg, alfa)` pintado encima de `bg`.
+ */
+for (const tenant of Object.values(tenantCatalog)) {
+  const brand = mobileBrand(tenant.id, tenant.colors);
+  const ink = brand.accentInkOnDark;
+
+  test(`${tenant.id}: «Lo esencial» y su emblema se leen sobre su tinte`, () => {
+    const essentials = mixHex(ink, neutral.background, 0.07);
+    assert.ok(contrastRatio(ink, essentials) >= TEXT_AA, 'título en acento sobre «Lo esencial»');
+    assert.ok(contrastRatio(neutral.text, essentials) >= TEXT_AA, 'texto sobre «Lo esencial»');
+    assert.ok(contrastRatio(ink, mixHex(ink, neutral.background, 0.16)) >= NON_TEXT_AA, 'glifo del emblema');
+  });
+
+  test(`${tenant.id}: el número de los contadores se lee en reposo y activo`, () => {
+    assert.ok(contrastRatio(brand.accentContrast, brand.accent) >= TEXT_AA);
+  });
+
+  test(`${tenant.id}: las ayudas del alta cumplen AA sobre la tarjeta`, () => {
+    assert.ok(contrastRatio(ink, neutral.surfaceLow) >= TEXT_AA, 'requisito cumplido');
+    assert.ok(contrastRatio(neutral.warning, neutral.surfaceLow) >= TEXT_AA, 'aún no coinciden');
+    assert.ok(contrastRatio(neutral.textMuted, mixHex(neutral.surfaceHigh, neutral.background, 0.94)) >= TEXT_AA, 'Tu lectura');
+  });
+}
