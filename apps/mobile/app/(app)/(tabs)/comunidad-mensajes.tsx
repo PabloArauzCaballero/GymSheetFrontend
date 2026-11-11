@@ -1,18 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { chatService, profileViewsService, socialService } from '@/api/services';
 import { refreshSocialRelationship } from '@/api/social-cache';
 import { Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { ChatConversationRow } from '@/components/chat-conversation-row';
-import { Button } from '@/components/ui';
-import { PressableScale } from '@/components/motion';
+import { PersonAvatar } from '@/components/person-avatar';
+import { SegmentedPill } from '@/components/motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { confirm, notify } from '@/notifications';
 import { StoriesBar } from '@/components/stories-bar';
-import { accentContrast, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { relativeTimeEs } from '@/features/routine-community/relative-time';
+import { accentContrast, alpha, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
 type Tab = 'general' | 'solicitudes' | 'conexiones';
 
@@ -22,6 +23,7 @@ function IconButton({
   background,
   tint,
   disabled,
+  loading = false,
   onPress,
   accessibilityLabel,
 }: {
@@ -29,6 +31,8 @@ function IconButton({
   background: string;
   tint: string;
   disabled?: boolean;
+  /** Mientras la petición está en vuelo: el glifo cede el sitio a un indicador. */
+  loading?: boolean;
   onPress: () => void;
   accessibilityLabel: string;
 }) {
@@ -36,7 +40,8 @@ function IconButton({
     <Pressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
-      disabled={disabled}
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
+      disabled={disabled || loading}
       onPress={onPress}
       style={({ pressed }) => ({
         width: minTouchTarget,
@@ -48,42 +53,61 @@ function IconButton({
         opacity: disabled ? 0.5 : pressed ? 0.75 : 1,
       })}
     >
-      <Ionicons color={tint} name={icon} size={iconSizes.md} />
+      {loading ? <ActivityIndicator color={tint} size="small" /> : <Ionicons color={tint} name={icon} size={iconSizes.md} />}
     </Pressable>
   );
 }
 
-function TabChip({
-  label,
-  icon,
-  active,
-  onPress,
+/**
+ * Las tres vistas de Mensajes, solo con icono. El nombre no desaparece: viaja
+ * como etiqueta accesible («Solicitudes, pestaña») y como encabezado de cada
+ * vista. Con texto, «Solicitudes» y «Conexiones» llenaban la cápsula de borde a
+ * borde y la píldora activa tocaba a sus vecinas.
+ */
+const TABS: readonly { value: Tab; label: string; icon: keyof typeof Ionicons.glyphMap; activeIcon: keyof typeof Ionicons.glyphMap }[] = [
+  { value: 'general', label: 'General', icon: 'chatbubbles-outline', activeIcon: 'chatbubbles' },
+  { value: 'solicitudes', label: 'Solicitudes', icon: 'mail-unread-outline', activeIcon: 'mail-unread' },
+  { value: 'conexiones', label: 'Conexiones', icon: 'people-outline', activeIcon: 'people' },
+];
+
+/**
+ * Una persona en una lista de Mensajes: avatar, nombre y sus acciones de icono.
+ * El nombre cede (una línea, `flex: 1`) y las acciones no: antes un nombre
+ * largo como «GymSheet Administrator» empujaba «Retirar» fuera de la tarjeta.
+ */
+function PersonRow({
+  id,
+  name,
+  detail,
+  children,
 }: {
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  active: boolean;
-  onPress: () => void;
+  id: string;
+  name: string;
+  detail?: string;
+  children: ReactNode;
 }) {
   return (
-    <PressableScale
-      accessibilityLabel={label}
-      onPress={onPress}
+    <View
       style={{
-        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: spacing.xs,
-        paddingVertical: spacing.sm,
-        borderRadius: radii.full,
-        backgroundColor: active ? colors.volt : 'transparent',
+        gap: spacing.smd,
+        paddingVertical: spacing.smd,
       }}
     >
-      <Ionicons color={active ? colors.background : colors.textMuted} name={icon} size={iconSizes.sm} />
-      <Text style={{ color: active ? colors.background : colors.textMuted, fontSize: fontSizes.sm, fontWeight: semibold }}>
-        {label}
-      </Text>
-    </PressableScale>
+      <PersonAvatar id={id} name={name} size={44} />
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
+          {name}
+        </Text>
+        {detail ? (
+          <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+            {detail}
+          </Text>
+        ) : null}
+      </View>
+      <View style={{ flexDirection: 'row', gap: spacing.sm }}>{children}</View>
+    </View>
   );
 }
 
@@ -163,44 +187,34 @@ function SolicitudesTab() {
     <View style={{ gap: spacing.lg }}>
       {received.length ? (
         <Section icon="mail-unread-outline" title="Te escribieron">
-          <Card>
+          <Card list>
             {received.map((connection, index) => (
               <View key={connection.id}>
                 {index > 0 ? <Divider /> : null}
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: spacing.sm,
-                    paddingVertical: spacing.sm,
-                  }}
+                <PersonRow
+                  detail={`Quiere conectar · ${relativeTimeEs(connection.createdAt)}`}
+                  id={connection.otherUserId}
+                  name={connection.otherUserName}
                 >
-                  <Text
-                    numberOfLines={1}
-                    style={{ color: colors.text, flex: 1, fontSize: fontSizes.md, fontWeight: semibold }}
-                  >
-                    {connection.otherUserName}
-                  </Text>
-                  <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-                    <IconButton
-                      accessibilityLabel="Aceptar solicitud"
-                      background={colors.volt}
-                      disabled={respond.isPending}
-                      icon="checkmark"
-                      onPress={() => respond.mutate({ id: connection.id, action: 'ACCEPT' })}
-                      tint={accentContrast()}
-                    />
-                    <IconButton
-                      accessibilityLabel="Rechazar solicitud"
-                      background={colors.danger}
-                      disabled={respond.isPending}
-                      icon="close"
-                      onPress={() => respond.mutate({ id: connection.id, action: 'REJECT' })}
-                      tint={colors.background}
-                    />
-                  </View>
-                </View>
+                  <IconButton
+                    accessibilityLabel={`Aceptar la solicitud de ${connection.otherUserName}`}
+                    background={colors.volt}
+                    disabled={respond.isPending}
+                    icon="checkmark"
+                    loading={respond.isPending && respond.variables?.id === connection.id && respond.variables.action === 'ACCEPT'}
+                    onPress={() => respond.mutate({ id: connection.id, action: 'ACCEPT' })}
+                    tint={accentContrast()}
+                  />
+                  <IconButton
+                    accessibilityLabel={`Rechazar la solicitud de ${connection.otherUserName}`}
+                    background={colors.surfaceHigh}
+                    disabled={respond.isPending}
+                    icon="close"
+                    loading={respond.isPending && respond.variables?.id === connection.id && respond.variables.action === 'REJECT'}
+                    onPress={() => respond.mutate({ id: connection.id, action: 'REJECT' })}
+                    tint={colors.danger}
+                  />
+                </PersonRow>
               </View>
             ))}
           </Card>
@@ -209,30 +223,27 @@ function SolicitudesTab() {
 
       {sent.length ? (
         <Section icon="paper-plane-outline" title="Enviadas">
-          <Card>
+          <Card list>
             {sent.map((connection, index) => (
               <View key={connection.id}>
                 {index > 0 ? <Divider /> : null}
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingVertical: spacing.sm,
-                    gap: spacing.sm,
-                  }}
+                <PersonRow
+                  detail={`Enviada · ${relativeTimeEs(connection.createdAt)}`}
+                  id={connection.otherUserId}
+                  name={connection.otherUserName}
                 >
-                  <Text style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
-                    {connection.otherUserName}
-                  </Text>
-                  <Button
-                    icon="close-circle-outline"
-                    label="Retirar"
+                  {/* Retirar es secundario y reversible: icono sobre superficie,
+                      no un botón de contorno a media fila. */}
+                  <IconButton
+                    accessibilityLabel={`Retirar la solicitud a ${connection.otherUserName}`}
+                    background={colors.surfaceHigh}
+                    disabled={withdraw.isPending}
+                    icon="close"
                     loading={withdraw.isPending && withdraw.variables === connection.id}
                     onPress={() => withdraw.mutate(connection.id)}
-                    variant="ghost"
+                    tint={colors.textSecondary}
                   />
-                </View>
+                </PersonRow>
               </View>
             ))}
           </Card>
@@ -294,44 +305,30 @@ function ConexionesTab() {
     );
   }
   return (
-    <Card>
+    <Card list>
       {connections.data.map((connection, index) => (
         <View key={connection.id}>
           {index > 0 ? <Divider /> : null}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: spacing.sm,
-              paddingVertical: spacing.sm,
-            }}
-          >
-            <Text
-              numberOfLines={1}
-              style={{ color: colors.text, flex: 1, fontSize: fontSizes.md, fontWeight: semibold }}
-            >
-              {connection.otherUserName}
-            </Text>
-            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <IconButton
-                accessibilityLabel="Enviar mensaje"
-                background={colors.surfaceHigh}
-                disabled={message.isPending && message.variables === connection.otherUserId}
-                icon="chatbubble-outline"
-                onPress={() => message.mutate(connection.otherUserId)}
-                tint={colors.text}
-              />
-              <IconButton
-                accessibilityLabel="Desconectar"
-                background={colors.surfaceHigh}
-                disabled={remove.isPending && remove.variables === connection.id}
-                icon="person-remove-outline"
-                onPress={() => void disconnect(connection.id)}
-                tint={colors.textMuted}
-              />
-            </View>
-          </View>
+          <PersonRow id={connection.otherUserId} name={connection.otherUserName}>
+            <IconButton
+              accessibilityLabel={`Enviar un mensaje a ${connection.otherUserName}`}
+              background={alpha(colors.accentInk, 0.16)}
+              disabled={message.isPending}
+              icon="chatbubble"
+              loading={message.isPending && message.variables === connection.otherUserId}
+              onPress={() => message.mutate(connection.otherUserId)}
+              tint={colors.accentInk}
+            />
+            <IconButton
+              accessibilityLabel={`Desconectar de ${connection.otherUserName}`}
+              background={colors.surfaceHigh}
+              disabled={remove.isPending}
+              icon="person-remove-outline"
+              loading={remove.isPending && remove.variables === connection.id}
+              onPress={() => void disconnect(connection.id)}
+              tint={colors.textMuted}
+            />
+          </PersonRow>
         </View>
       ))}
     </Card>
@@ -346,6 +343,13 @@ function ConexionesTab() {
 export default function ComunidadMensajesScreen() {
   const [tab, setTab] = useState<Tab>('general');
   const shownRef = useRef(false);
+  // Misma clave que la vista de Solicitudes: el contador sale de la caché, sin
+  // una petición más.
+  const pending = useQuery({
+    queryKey: ['social', 'connections', 'PENDING'],
+    queryFn: () => socialService.listConnections('PENDING'),
+  });
+  const receivedCount = (pending.data ?? []).filter((connection) => connection.direction === 'RECEIVED').length;
 
   const visitsSummary = useQuery({
     queryKey: ['profile-views', 'summary'],
@@ -373,34 +377,74 @@ export default function ComunidadMensajesScreen() {
 
       <StoriesBar />
 
-      <View
-        style={{
-          flexDirection: 'row',
-          gap: spacing.xs,
-          backgroundColor: colors.surfaceHigh,
-          borderRadius: radii.full,
-          padding: 4,
+      <SegmentedPill<Tab>
+        fill
+        onChange={setTab}
+        options={TABS.map((item) => ({
+          value: item.value,
+          accessibilityLabel:
+            item.value === 'solicitudes' && receivedCount > 0
+              ? `${item.label}, ${receivedCount} ${receivedCount === 1 ? 'pendiente' : 'pendientes'}`
+              : item.label,
+        }))}
+        itemStyle={{ height: 48, alignItems: 'center', justifyContent: 'center' }}
+        pillColor={colors.volt}
+        renderItem={(option, active) => {
+          const item = TABS.find((entry) => entry.value === option.value);
+          if (!item) return null;
+          const badge = option.value === 'solicitudes' && receivedCount > 0 ? receivedCount : 0;
+          return (
+            <View>
+              <Ionicons
+                accessibilityElementsHidden
+                color={active ? accentContrast() : colors.textMuted}
+                importantForAccessibility="no-hide-descendants"
+                name={active ? item.activeIcon : item.icon}
+                size={iconSizes.lg}
+              />
+              {badge ? (
+                <View
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                  style={{
+                    position: 'absolute',
+                    top: -6,
+                    right: -10,
+                    minWidth: 20,
+                    height: 20,
+                    paddingHorizontal: 4,
+                    borderRadius: radii.full,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: active ? accentContrast() : colors.volt,
+                    borderWidth: 2,
+                    borderColor: active ? colors.volt : colors.surfaceHigh,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: active ? colors.volt : accentContrast(),
+                      fontSize: fontSizes.xs,
+                      fontWeight: semibold,
+                      lineHeight: 14,
+                    }}
+                  >
+                    {badge > 9 ? '9+' : badge}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          );
         }}
-      >
-        <TabChip
-          active={tab === 'general'}
-          icon="chatbubbles-outline"
-          label="General"
-          onPress={() => setTab('general')}
-        />
-        <TabChip
-          active={tab === 'solicitudes'}
-          icon="mail-unread-outline"
-          label="Solicitudes"
-          onPress={() => setTab('solicitudes')}
-        />
-        <TabChip
-          active={tab === 'conexiones'}
-          icon="people-outline"
-          label="Conexiones"
-          onPress={() => setTab('conexiones')}
-        />
-      </View>
+        style={{
+          padding: spacing.xs,
+          borderRadius: radii.full,
+          backgroundColor: colors.surfaceHigh,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: alpha(colors.text, 0.08),
+        }}
+        value={tab}
+      />
 
       {tab === 'general' ? <GeneralTab /> : tab === 'solicitudes' ? <SolicitudesTab /> : <ConexionesTab />}
     </ScrollScreen>
