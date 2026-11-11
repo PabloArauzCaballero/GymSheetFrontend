@@ -3,8 +3,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { AppLockOverlay } from '@/components/app-lock-overlay';
 import { AppProviders } from '@/providers/app-providers';
+import { useAppLockLifecycle } from '@/state/app-lock-store';
 import { useAuthStore } from '@/state/auth-store';
+import { startSessionKeepAlive } from '@/state/session-keep-alive';
 import { colors, useActiveTenant } from '@/theme';
 
 export default function RootLayout() {
@@ -18,6 +21,18 @@ export default function RootLayout() {
   useEffect(() => {
     void hydrate();
   }, [hydrate]);
+
+  // Mientras haya sesión, se renueva sola (antes de vencer y al volver a la app).
+  const status = useAuthStore((state) => state.status);
+  useEffect(() => {
+    if (status !== 'authenticated') return undefined;
+    return startSessionKeepAlive(() => {
+      void useAuthStore.getState().logout();
+    });
+  }, [status]);
+
+  // Face ID / huella: bloquea al abrir con la sesión guardada y al volver tras un rato.
+  useAppLockLifecycle();
 
   const tenant = useActiveTenant();
 
@@ -35,6 +50,7 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(app)" />
       </Stack>
+      <AppLockOverlay />
     </AppProviders>
   );
 }

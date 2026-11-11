@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Card, Divider, Row, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
+import { BiometricLockSetting } from '@/components/biometric-lock-setting';
 import { Button } from '@/components/ui';
 import { confirm, notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
@@ -43,7 +44,13 @@ export default function SettingsScreen() {
         <Card>
           <Row label="Correo" value={principal?.email ?? '—'} />
           <Divider />
-          <Row label="Sesión" value="Guardada en el llavero del dispositivo" />
+          <Row label="Sesión" value="Se renueva sola; vence tras 90 días sin uso" />
+        </Card>
+      </Section>
+
+      <Section title="Seguridad">
+        <Card>
+          <BiometricLockSetting />
         </Card>
       </Section>
 

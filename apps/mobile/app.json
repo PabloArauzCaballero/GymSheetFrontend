@@ -28,6 +28,12 @@
       "expo-router",
       "expo-secure-store",
       [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "GymSheet usa Face ID para abrirse sin contraseña y cuidar tus datos."
+        }
+      ],
+      [
         "@sentry/react-native/expo",
         {
           "organization": "gymsheet",

@@ -14,9 +14,19 @@ export type ApiClientConfig = {
   fetchImpl?: typeof fetch;
   /** Default per-request timeout in milliseconds. */
   timeoutMs?: number;
-  /** Called when the backend answers 401 so the caller can trigger a refresh or logout. */
+  /** Called when the backend answers 401 and the session could not be renewed. */
   onUnauthorized?: () => void | Promise<void>;
+  /**
+   * Renews the session after a 401 (bearer clients only). `refreshed` retries
+   * the request once with the new token; `rejected` ends the session
+   * (`onUnauthorized`); `unavailable` keeps it and reports a network error.
+   */
+  refreshSession?: () => Promise<'refreshed' | 'rejected' | 'unavailable'>;
+  /** Paths that never trigger a refresh (credentials, the refresh itself). */
+  noRefreshPaths?: readonly string[];
 };
+
+const DEFAULT_NO_REFRESH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'];
 
 export type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown;
@@ -80,10 +90,21 @@ export function createApiClient(config: ApiClientConfig) {
     });
   }
 
+  const noRefreshPaths = config.noRefreshPaths ?? DEFAULT_NO_REFRESH_PATHS;
+
   async function request<T>(
     path: string,
     schema: z.ZodType<T>,
     options: RequestOptions = {},
+  ): Promise<T> {
+    return send(path, schema, options, false);
+  }
+
+  async function send<T>(
+    path: string,
+    schema: z.ZodType<T>,
+    options: RequestOptions,
+    isRetry: boolean,
   ): Promise<T> {
     const { body, timeoutMs, signal: externalSignal, ...init } = options;
     const controller = new AbortController();
@@ -98,7 +119,26 @@ export function createApiClient(config: ApiClientConfig) {
         body: body === undefined ? undefined : JSON.stringify(body),
         signal: controller.signal,
       });
-      if (response.status === 401) await config.onUnauthorized?.();
+      if (response.status === 401) {
+        const refreshSession = config.refreshSession;
+        const canRefresh =
+          !isRetry && !noRefreshPaths.some((noRefreshPath) => path.startsWith(noRefreshPath));
+        if (refreshSession && canRefresh) {
+          const outcome = await refreshSession();
+          if (outcome === 'refreshed') {
+            clearTimeout(timeout);
+            return await send(path, schema, options, true);
+          }
+          if (outcome === 'unavailable') {
+            throw new ApiError({
+              message: 'No se pudo renovar la sesión. Revisa tu conexión.',
+              status: 0,
+              kind: 'network',
+            });
+          }
+        }
+        await config.onUnauthorized?.();
+      }
       if (!response.ok) throw await readError(response);
       const envelope = successEnvelopeSchema.safeParse(await response.json());
       if (!envelope.success) {

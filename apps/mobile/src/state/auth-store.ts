@@ -4,8 +4,9 @@ import { sessionPrincipalSchema } from '@gymsheet/schemas';
 import { setActiveTenant } from '@/theme';
 import { initialSessionState, type SessionState } from '@gymsheet/auth';
 import type { LoginInput } from '@gymsheet/schemas';
+import { ApiError } from '@gymsheet/api-client';
 import { apiClient, setSessionLostHandler } from '@/api/client';
-import { secureStoreAuthStorage } from '@/storage/secure-store';
+import { principalCache, secureStoreAuthStorage } from '@/storage/secure-store';
 
 /**
  * Backend mobile-auth contract (bearer flow) as the API actually serves it today
@@ -14,9 +15,10 @@ import { secureStoreAuthStorage } from '@/storage/secure-store';
  * - `POST /auth/login` names the role `rol`, while `GET /auth/me` and the shared
  *   `sessionPrincipalSchema` use `role`; normalised here so the rest of the app
  *   only ever sees the shared contract.
- * - No refresh token is issued yet (backend requirement #2, still pending), so
- *   it is optional: the session lasts as long as the access token until
- *   `POST /auth/refresh` exists.
+ * - `refreshToken` (backend SEC-02): single-use, rotated by `POST /auth/refresh`
+ *   on every renewal; the session lasts 90 days WITHOUT use. Still optional in
+ *   the schema so an older API that does not send it keeps working (the
+ *   session then lasts as long as the access token, as before).
  */
 const authPayloadSchema = z
   .object({
@@ -53,19 +55,36 @@ export const useAuthStore = create<AuthState>((set) => ({
   principal: initialSessionState.principal,
 
   async hydrate() {
-    const token = await secureStoreAuthStorage.getAccessToken();
-    if (!token) {
+    const [token, refreshToken] = await Promise.all([
+      secureStoreAuthStorage.getAccessToken(),
+      secureStoreAuthStorage.getRefreshToken(),
+    ]);
+    if (!token && !refreshToken) {
       set({ status: 'unauthenticated', principal: null });
       return;
     }
     try {
+      // An expired access token is renewed by the client (401 → refresh → retry).
       const user = await apiClient.request('/auth/me', sessionPrincipalSchema, { method: 'GET' });
       // La marca acompaña a la sesión: se aplica al restaurarla para que la
       // primera pantalla ya salga con los colores del gimnasio del usuario.
       setActiveTenant(user.tenantId);
+      await principalCache.save(user);
       set({ status: 'authenticated', principal: user });
-    } catch {
+    } catch (error: unknown) {
+      // Sin señal o con el servidor caído la sesión sigue valiendo: abrir la app
+      // en el sótano del gimnasio no puede mandarte al login. Se entra con la
+      // última cuenta conocida y la primera petición con red renueva el par.
+      const unreachable =
+        error instanceof ApiError && (error.kind === 'network' || error.status >= 500);
+      const cached = unreachable ? await principalCache.read() : null;
+      if (cached && (await secureStoreAuthStorage.getRefreshToken())) {
+        setActiveTenant(cached.tenantId);
+        set({ status: 'authenticated', principal: cached });
+        return;
+      }
       await secureStoreAuthStorage.clearTokens();
+      await principalCache.clear();
       setActiveTenant(null);
       set({ status: 'unauthenticated', principal: null });
     }
@@ -77,17 +96,27 @@ export const useAuthStore = create<AuthState>((set) => ({
       body: input,
     });
     await secureStoreAuthStorage.saveTokens(payload.accessToken, payload.refreshToken);
+    await principalCache.save(payload.user);
     setActiveTenant(payload.user.tenantId);
     set({ status: 'authenticated', principal: payload.user });
   },
 
   async logout() {
-    try {
-      await apiClient.request('/auth/logout', z.object({}).passthrough(), { method: 'POST' });
-    } catch {
-      // Best-effort remote logout; local tokens are always cleared below.
+    const refreshToken = await secureStoreAuthStorage.getRefreshToken();
+    if (refreshToken) {
+      try {
+        // Revoca la sesión en el servidor: el refresh token deja de servir
+        // aunque alguien lo hubiera copiado de este teléfono.
+        await apiClient.request('/auth/logout', z.object({}).passthrough(), {
+          method: 'POST',
+          body: { refreshToken },
+        });
+      } catch {
+        // Best-effort remote logout; local tokens are always cleared below.
+      }
     }
     await secureStoreAuthStorage.clearTokens();
+    await principalCache.clear();
     setActiveTenant(null);
     set({ status: 'unauthenticated', principal: null });
   },
@@ -100,6 +129,7 @@ export const useAuthStore = create<AuthState>((set) => ({
  */
 setSessionLostHandler(() => {
   if (useAuthStore.getState().status === 'unauthenticated') return;
+  void principalCache.clear();
   setActiveTenant(null);
   useAuthStore.setState({ status: 'unauthenticated', principal: null });
 });
