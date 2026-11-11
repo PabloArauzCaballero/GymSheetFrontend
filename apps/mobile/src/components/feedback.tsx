@@ -137,6 +137,7 @@ function CenteredState({
   children,
   style,
   onLayout,
+  compact = false,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
@@ -144,7 +145,9 @@ function CenteredState({
   children?: React.ReactNode;
   style?: ViewProps['style'];
   onLayout?: ViewProps['onLayout'];
+  compact?: boolean;
 }) {
+  if (compact) return <CompactState icon={icon} message={message} title={title}>{children}</CompactState>;
   return (
     <View
       onLayout={onLayout}
@@ -183,6 +186,63 @@ function CenteredState({
 }
 
 /**
+ * La misma información en horizontal: glifo en ficha a la izquierda, texto
+ * alineado a la izquierda y la acción debajo. Para un estado vacío que vive
+ * bajo otras piezas (cabecera, tira de historias, selector): en vertical, con
+ * el glifo grande arriba, su botón caía bajo la barra del entreno y no se veía
+ * sin desplazar.
+ */
+function CompactState({
+  icon,
+  title,
+  message,
+  children,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  message: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <View
+      style={{
+        gap: spacing.smd,
+        borderRadius: radii.xl,
+        borderCurve: 'continuous',
+        backgroundColor: colors.surfaceLow,
+        boxShadow: shadows.e1,
+        padding: spacing.mdl,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
+        <View
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: radii.md,
+            borderCurve: 'continuous',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: colors.surfaceHigh,
+          }}
+        >
+          <Ionicons color={colors.textMuted} name={icon} size={iconSizes.lg} />
+        </View>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text variant="headline">{title}</Text>
+          <Text selectable tone="muted" variant="subhead">
+            {message}
+          </Text>
+        </View>
+      </View>
+      {children ? <View style={{ alignItems: 'flex-start' }}>{children}</View> : null}
+    </View>
+  );
+}
+
+/**
  * `style` y `onLayout` existen por las listas invertidas (el chat): React Native
  * inyecta ahí la transformación que deshace la inversión del
  * `ListEmptyComponent`. Si no se aplican, la tarjeta se pinta cabeza abajo.
@@ -194,6 +254,7 @@ export function EmptyState({
   children,
   style,
   onLayout,
+  compact = false,
 }: {
   icon?: keyof typeof Ionicons.glyphMap;
   title: string;
@@ -201,9 +262,11 @@ export function EmptyState({
   children?: React.ReactNode;
   style?: ViewProps['style'];
   onLayout?: ViewProps['onLayout'];
+  /** Horizontal y más bajo; ver `CompactState`. */
+  compact?: boolean;
 }) {
   return (
-    <CenteredState icon={icon} message={message} onLayout={onLayout} style={style} title={title}>
+    <CenteredState compact={compact} icon={icon} message={message} onLayout={onLayout} style={style} title={title}>
       {children}
     </CenteredState>
   );
