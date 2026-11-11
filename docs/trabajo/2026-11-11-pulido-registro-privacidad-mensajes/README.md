@@ -40,3 +40,12 @@ Límites honestos:
 
 Validación ejecutada: `yarn workspace @gymsheet/mobile type-check` OK, `lint` (incluye
 `check-theme`) OK, `test` 255/255.
+
+## Pasada 1 — el registro ayuda mientras se escribe (skills `signup`, `marketing-psychology`)
+
+- Sugerencia ante erratas de dominio («¿Quisiste decir pablo@gmail.com?»), un toque corrige.
+- «8 caracteres o más» y «Las contraseñas coinciden» en vivo, con glifo además de color.
+- Junto al botón: «Después: 3 preguntas y tu primera rutina.» (sale de `onboardingSteps`) y «No
+  vendemos tus datos a terceros.» (cláusula 2 de la política).
+- Lógica pura en `src/features/first-impression/signup-hints.ts` con tests; el contrato con la API no
+  cambia. Evidencia: `evidencia/pasada-1/`. Validación: type-check, lint y test (258/258) OK.

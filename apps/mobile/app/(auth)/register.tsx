@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   registerDefaults,
@@ -12,19 +12,24 @@ import {
   authDestination,
   authErrorMessage,
   genderOptions,
+  onboardingSteps,
 } from '@gymsheet/domain';
 import type { UserGender } from '@gymsheet/types';
 import { ApiError } from '@gymsheet/api-client';
 import { Link, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 import { Button, Input, textLinkStyle } from '@/components/ui';
 import { AuthAlert, AuthShell } from '@/components/auth-shell';
 import { Checkbox } from '@/components/checkbox';
 import { Select } from '@/components/select';
 import { registerBenefits, registerFormTitle } from '@/features/first-impression/copy';
+import { EmailSuggestion, FieldHint } from '@/features/first-impression/field-hint';
+import { emailTypoSuggestion, passwordChecks } from '@/features/first-impression/signup-hints';
 import { accountEmailTextProps } from '@/lib/credential-input';
 import { useAuthStore } from '@/state/auth-store';
-import { colors, fontSizes, spacing } from '@/theme';
+import { authLimits } from '@gymsheet/schemas';
+import { colors, fontSizes, iconSizes, spacing } from '@/theme';
 
 export default function RegisterScreen() {
   const register = useAuthStore((state) => state.register);
@@ -33,11 +38,16 @@ export default function RegisterScreen() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: registerDefaults,
   });
+  // Lo que el envío va a exigir, adelantado mientras se escribe.
+  const [email, password, confirmation] = useWatch({ control, name: ['email', 'password', 'confirmation'] });
+  const suggestion = emailTypoSuggestion(email ?? '');
+  const checks = passwordChecks(password ?? '', confirmation ?? '');
 
   const onSubmit = handleSubmit(async (values) => {
     setFailure(null);
@@ -106,6 +116,12 @@ export default function RegisterScreen() {
           />
         )}
       />
+      {suggestion && !errors.email ? (
+        <EmailSuggestion
+          onAccept={() => setValue('email', suggestion, { shouldValidate: true })}
+          suggestion={suggestion}
+        />
+      ) : null}
       <Controller
         control={control}
         name="password"
@@ -126,6 +142,12 @@ export default function RegisterScreen() {
           />
         )}
       />
+      {errors.password ? null : (
+        <FieldHint
+          label={`${authLimits.passwordMin} caracteres o más`}
+          state={checks.longEnough ? 'ok' : 'pending'}
+        />
+      )}
       <Controller
         control={control}
         name="confirmation"
@@ -146,6 +168,12 @@ export default function RegisterScreen() {
           />
         )}
       />
+      {checks.matches === null || errors.confirmation ? null : (
+        <FieldHint
+          label={checks.matches ? 'Las contraseñas coinciden' : 'Aún no coinciden'}
+          state={checks.matches ? 'ok' : 'off'}
+        />
+      )}
 
       <Controller
         control={control}
@@ -198,6 +226,35 @@ export default function RegisterScreen() {
       {failure ? <AuthAlert message={failure} /> : null}
 
       <Button icon="person-add-outline" label={authCopy.register.submit} loading={isSubmitting} onPress={onSubmit} />
+
+      {/* Qué pasa después y qué pasa con tus datos, junto al botón que decide
+          (skill `signup`: quitar incertidumbre). Las dos frases son ciertas
+          por construcción: el número sale de `onboardingSteps` y la segunda
+          es la cláusula 2 de la política. */}
+      <View style={{ gap: spacing.xs, alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+          <Ionicons
+            accessibilityElementsHidden
+            color={colors.textMuted}
+            importantForAccessibility="no-hide-descendants"
+            name="flash-outline"
+            size={iconSizes.sm}
+          />
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+            {`Después: ${onboardingSteps.length} preguntas y tu primera rutina.`}
+          </Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+          <Ionicons
+            accessibilityElementsHidden
+            color={colors.textMuted}
+            importantForAccessibility="no-hide-descendants"
+            name="lock-closed-outline"
+            size={iconSizes.sm}
+          />
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>No vendemos tus datos a terceros.</Text>
+        </View>
+      </View>
     </AuthShell>
   );
 }
