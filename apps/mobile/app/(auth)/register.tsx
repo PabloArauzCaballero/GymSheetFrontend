@@ -231,7 +231,7 @@ export default function RegisterScreen() {
           (skill `signup`: quitar incertidumbre). Las dos frases son ciertas
           por construcción: el número sale de `onboardingSteps` y la segunda
           es la cláusula 2 de la política. */}
-      <View style={{ gap: spacing.xs, alignItems: 'center' }}>
+      <View style={{ gap: spacing.xs, alignSelf: 'stretch' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
           <Ionicons
             accessibilityElementsHidden
@@ -240,8 +240,8 @@ export default function RegisterScreen() {
             name="flash-outline"
             size={iconSizes.sm}
           />
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-            {`Después: ${onboardingSteps.length} preguntas y tu primera rutina.`}
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, flex: 1 }}>
+            {`Luego, ${onboardingSteps.length} preguntas y eliges tu rutina.`}
           </Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
@@ -252,7 +252,7 @@ export default function RegisterScreen() {
             name="lock-closed-outline"
             size={iconSizes.sm}
           />
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>No vendemos tus datos a terceros.</Text>
+          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, flex: 1 }}>No vendemos tus datos a terceros.</Text>
         </View>
       </View>
     </AuthShell>

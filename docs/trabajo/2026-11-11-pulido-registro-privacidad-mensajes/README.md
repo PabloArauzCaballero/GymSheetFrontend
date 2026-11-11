@@ -69,3 +69,12 @@ Validación ejecutada: `yarn workspace @gymsheet/mobile type-check` OK, `lint` (
   etiqueta accesible con la cuenta, y la cápsula se oculta con el teclado abierto.
 - Evidencia: `evidencia/pasada-3/` (maqueta con una solicitud recibida en las dos columnas).
   Validación: type-check, lint y test (258/258) OK.
+
+## Pasada 4 — lo que quedaba pendiente
+
+- `EmptyState` gana una variante `compact` opcional (horizontal, más baja). Mensajes la usa: el botón
+  del estado vacío ya no queda bajo la mini-barra del entreno (pendiente de la pasada 2, resuelto).
+- Solicitudes: sección «Quieren conectar» (antes «Te escribieron», que no era cierto) y antigüedad
+  «Hace 2 h» que cabe junto a aceptar y rechazar.
+- Registro: notas bajo el botón alineadas a la izquierda, una línea cada una.
+- Evidencia: `evidencia/pasada-4/`. Validación: type-check, lint y test (258/258) OK.

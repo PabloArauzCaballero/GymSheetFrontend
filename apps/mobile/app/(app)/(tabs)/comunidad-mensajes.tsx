@@ -59,6 +59,12 @@ function IconButton({
   );
 }
 
+/** «Hace 2 h» / «Ahora»: lo que cabe junto a dos botones sin cortarse. */
+function sinceLabel(iso: string): string {
+  const since = relativeTimeEs(iso);
+  return since === 'ahora' ? 'Ahora' : `Hace ${since}`;
+}
+
 /**
  * Las tres vistas de Mensajes, solo con icono. El nombre no desaparece: viaja
  * como etiqueta accesible («Solicitudes, pestaña») y como encabezado de cada
@@ -126,6 +132,7 @@ function GeneralTab() {
   if (!conversations.data?.length) {
     return (
       <EmptyState
+        compact
         icon="chatbubbles-outline"
         message="Conecta con alguien de tu gimnasio y escríbele desde aquí."
         title="Aún no tienes chats"
@@ -192,7 +199,7 @@ function SolicitudesTab() {
 
   if (!received.length && !sent.length) {
     return (
-      <EmptyState icon="mail-open-outline" message="Cuando alguien quiera conectar contigo, aparecerá aquí." title="Sin solicitudes">
+      <EmptyState compact icon="mail-open-outline" message="Cuando alguien quiera conectar contigo, aparecerá aquí." title="Sin solicitudes">
         <Button
           icon="compass-outline"
           label="Descubrir gente"
@@ -208,13 +215,13 @@ function SolicitudesTab() {
   return (
     <View style={{ gap: spacing.lg }}>
       {received.length ? (
-        <Section icon="mail-unread-outline" title="Te escribieron">
+        <Section icon="person-add-outline" title="Quieren conectar">
           <Card list>
             {received.map((connection, index) => (
               <View key={connection.id}>
                 {index > 0 ? <Divider /> : null}
                 <PersonRow
-                  detail={`Quiere conectar · ${relativeTimeEs(connection.createdAt)}`}
+                  detail={sinceLabel(connection.createdAt)}
                   id={connection.otherUserId}
                   name={connection.otherUserName}
                 >
@@ -320,6 +327,7 @@ function ConexionesTab() {
   if (!connections.data?.length) {
     return (
       <EmptyState
+        compact
         icon="people-outline"
         message="Conecta con gente de tu gimnasio para entrenar y chatear juntos."
         title="Aún no tienes conexiones"
