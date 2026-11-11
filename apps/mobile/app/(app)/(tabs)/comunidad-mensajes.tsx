@@ -9,7 +9,7 @@ import { Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components
 import { ChatConversationRow } from '@/components/chat-conversation-row';
 import { PersonAvatar } from '@/components/person-avatar';
 import { Button } from '@/components/ui';
-import { SegmentedPill } from '@/components/motion';
+import { PressableScale, SegmentedPill } from '@/components/motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { confirm, notify } from '@/notifications';
 import { StoriesBar } from '@/components/stories-bar';
@@ -59,6 +59,12 @@ function IconButton({
   );
 }
 
+/** «Conectados hace 3 sem»: un dato de la relación, no una instrucción repetida en cada fila. */
+function connectedSince(iso: string): string {
+  const since = relativeTimeEs(iso);
+  return since === 'ahora' ? 'Conectados ahora' : `Conectados hace ${since}`;
+}
+
 /** «Hace 2 h» / «Ahora»: lo que cabe junto a dos botones sin cortarse. */
 function sinceLabel(iso: string): string {
   const since = relativeTimeEs(iso);
@@ -87,21 +93,19 @@ function PersonRow({
   name,
   detail,
   children,
+  onPress,
+  accessibilityHint,
 }: {
   id: string;
   name: string;
   detail?: string;
   children: ReactNode;
+  /** La fila entera hace la acción principal (abrir el chat); las de `children` quedan aparte. */
+  onPress?: () => void;
+  accessibilityHint?: string;
 }) {
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.smd,
-        paddingVertical: spacing.smd,
-      }}
-    >
+  const identity = (
+    <>
       <PersonAvatar id={id} name={name} size={44} />
       <View style={{ flex: 1, gap: 2 }}>
         <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSizes.md, fontWeight: semibold }}>
@@ -113,6 +117,24 @@ function PersonRow({
           </Text>
         ) : null}
       </View>
+    </>
+  );
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd, paddingVertical: spacing.smd }}>
+      {/* Pulsable y acciones son hermanos, no uno dentro de otro: en Android el
+          padre se queda con el toque destinado al hijo (ver StoriesBar). */}
+      {onPress ? (
+        <PressableScale
+          accessibilityHint={accessibilityHint}
+          accessibilityLabel={detail ? `${name}. ${detail}` : name}
+          onPress={onPress}
+          style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.smd, minHeight: minTouchTarget }}
+        >
+          {identity}
+        </PressableScale>
+      ) : (
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>{identity}</View>
+      )}
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>{children}</View>
     </View>
   );
@@ -348,21 +370,27 @@ function ConexionesTab() {
       {connections.data.map((connection, index) => (
         <View key={connection.id}>
           {index > 0 ? <Divider /> : null}
-          <PersonRow id={connection.otherUserId} name={connection.otherUserName}>
+          {/* Tocar la fila abre el chat, que es a lo que se viene. Desconectar
+              es raro y destructivo: va detrás de un «⋯» discreto y de su
+              confirmación, no al lado de «mensaje» con el mismo peso. */}
+          <PersonRow
+            accessibilityHint="Abre el chat"
+            detail={
+              message.isPending && message.variables === connection.otherUserId
+                ? 'Abriendo el chat…'
+                : connectedSince(connection.createdAt)
+            }
+            id={connection.otherUserId}
+            name={connection.otherUserName}
+            onPress={() => {
+              if (!message.isPending) message.mutate(connection.otherUserId);
+            }}
+          >
             <IconButton
-              accessibilityLabel={`Enviar un mensaje a ${connection.otherUserName}`}
-              background={alpha(colors.accentInk, 0.16)}
-              disabled={message.isPending}
-              icon="chatbubble"
-              loading={message.isPending && message.variables === connection.otherUserId}
-              onPress={() => message.mutate(connection.otherUserId)}
-              tint={colors.accentInk}
-            />
-            <IconButton
-              accessibilityLabel={`Desconectar de ${connection.otherUserName}`}
-              background={colors.surfaceHigh}
+              accessibilityLabel={`Más opciones con ${connection.otherUserName}`}
+              background="transparent"
               disabled={remove.isPending}
-              icon="person-remove-outline"
+              icon="ellipsis-horizontal"
               loading={remove.isPending && remove.variables === connection.id}
               onPress={() => void disconnect(connection.id)}
               tint={colors.textMuted}
@@ -374,15 +402,6 @@ function ConexionesTab() {
   );
 }
 
-/**
- * El subtítulo dice lo que espera respuesta, si hay algo; si no, qué hay aquí.
- * Una línea fija que nunca cambia deja de leerse a la segunda visita.
- */
-function headerSubtitle(received: number): string {
-  if (received === 1) return '1 persona quiere conectar contigo.';
-  if (received > 1) return `${received} personas quieren conectar contigo.`;
-  return 'Tus chats, historias y solicitudes.';
-}
 
 /**
  * Primera pestaña de la barra (y pantalla de arranque): historias,
@@ -422,7 +441,10 @@ export default function ComunidadMensajesScreen() {
 
   return (
     <ScrollScreen>
-      <ScreenHeader subtitle={headerSubtitle(receivedCount)} title="Mensajes" />
+      {/* Quien quiere conectar ya se ve dos veces —el «1» en Solicitudes y en la
+          barra inferior—; un aviso aparte empujaba la lista y repetía el dato. */}
+      <ScreenHeader subtitle="Tus chats, historias y solicitudes." title="Mensajes" />
+
 
       <StoriesBar />
 

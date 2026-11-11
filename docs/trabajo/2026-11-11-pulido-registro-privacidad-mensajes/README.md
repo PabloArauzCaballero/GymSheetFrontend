@@ -97,3 +97,14 @@ Validación ejecutada: `yarn workspace @gymsheet/mobile type-check` OK, `lint` (
   «¿Olvidaste tu contraseña?» junto al campo y «Crear cuenta» como botón secundario.
 - Evidencia: `evidencia/pasada-6/`. Validación: móvil type-check, lint y test (258/258); web y domain
   type-check y test OK. E2E web no ejecutado (sin backend).
+
+## Pasada 7 — Mensajes con datos reales
+
+- `ChatConversationRow` (General y `/chat`): `PersonAvatar` con color por persona (antes relleno de
+  acento, contra `accentPolicy`), nombre y hora en una línea, vista previa a todo el ancho (2 líneas),
+  sin flecha.
+- Conexiones: la fila abre el chat; «Desconectar» pasa a un «⋯» discreto con su confirmación; detalle
+  «Conectados hace N».
+- Se probó y retiró un aviso tocable de solicitudes: empujaba la lista y repetía el dato de los
+  contadores. El subtítulo vuelve a ser fijo.
+- Evidencia: `evidencia/pasada-7/` (maqueta con datos). Validación: type-check, lint y test (258/258) OK.
