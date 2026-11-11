@@ -15,7 +15,7 @@ test('unauthenticated users are redirected to login', async ({ page }) => {
 
 test('login screen has no automatically detectable accessibility violations', async ({ page }) => {
   await page.goto('/login');
-  await expect(page.getByRole('heading', { name: 'Vuelve al trabajo.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Vuelve a entrenar.' })).toBeVisible();
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
 });
