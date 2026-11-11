@@ -60,3 +60,12 @@ Validación ejecutada: `yarn workspace @gymsheet/mobile type-check` OK, `lint` (
 - Pendiente visto en la captura: con la mini-barra del entreno abierta, el botón del estado vacío de
   General queda bajo ella hasta desplazar. Evidencia: `evidencia/pasada-2/`. Validación: type-check,
   lint y test (258/258) OK.
+
+## Pasada 3 — privacidad con cierre y barra que avisa (skills `marketing-psychology`, `onboarding`)
+
+- Privacidad: barra fija «Tu lectura» que se llena con el desplazamiento y «Entendido» que vuelve al
+  alta; aire al final para que la última cláusula no quede debajo.
+- Barra inferior: contador de solicitudes recibidas en Mensajes (misma caché que Solicitudes),
+  etiqueta accesible con la cuenta, y la cápsula se oculta con el teclado abierto.
+- Evidencia: `evidencia/pasada-3/` (maqueta con una solicitud recibida en las dos columnas).
+  Validación: type-check, lint y test (258/258) OK.

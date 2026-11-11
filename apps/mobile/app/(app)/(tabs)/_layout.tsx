@@ -5,6 +5,7 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Tabs } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import {
   BottomTabBar,
   BottomTabBarHeightCallbackContext,
@@ -25,6 +26,7 @@ import {
   useInteractionCounts,
 } from '@/components/interactions-counts';
 import { TourTarget } from '@/components/tour';
+import { socialService } from '@/api/services';
 import { ACTIVE_BAR_SPACE, ActiveWorkoutBar, useActiveWorkout } from '@/features/workout/active-workout-bar';
 import { accentContrast, alpha, colors, fontSizes, iconSizes, overlay, radii, semibold, shadows, spacing } from '@/theme';
 
@@ -252,6 +254,25 @@ export default function TabsLayout() {
   const counts = useInteractionCounts();
   const alerts = interactionsAlertTotal(counts.data);
   const floating = useFloatingTabBar();
+  /**
+   * Quien quiere conectar contigo, en el icono de Mensajes. Misma clave que la
+   * vista de Solicitudes: el número sale de la caché que esa pantalla ya
+   * mantiene, y una solicitud respondida lo baja en los dos sitios a la vez.
+   * Sin él, con la barra solo de iconos, una solicitud nueva no se veía hasta
+   * entrar a buscarla.
+   */
+  const pending = useQuery({
+    queryKey: ['social', 'connections', 'PENDING'],
+    queryFn: () => socialService.listConnections('PENDING'),
+    staleTime: 60_000,
+  });
+  const requests = (pending.data ?? []).filter((connection) => connection.direction === 'RECEIVED').length;
+  const badgeStyle = {
+    backgroundColor: colors.volt,
+    color: accentContrast(),
+    fontSize: fontSizes.xs,
+    fontWeight: semibold,
+  } as const;
 
   return (
     <Tabs
@@ -289,6 +310,9 @@ export default function TabsLayout() {
         // así que VoiceOver y los selectores de prueba no pierden nada. Y se
         // acaba el «Marketpl…»: cinco etiquetas no cabían en un iPhone.
         tabBarShowLabel: false,
+        // Una cápsula flotante encima del teclado tapa justo el campo en el que
+        // se escribe: con el teclado abierto, la barra se aparta.
+        tabBarHideOnKeyboard: true,
         tabBarLabelStyle: { fontSize: fontSizes.xs, fontWeight: semibold },
         tabBarItemStyle: { height: floating.height, justifyContent: 'center', paddingVertical: 0 },
         // Cinco pestañas desde el 08/11/2026 (en C4 eran cuatro; antes cinco, no seis). Cinco es el techo que este proyecto ya se había
@@ -347,7 +371,16 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="comunidad-mensajes"
-        options={{ title: 'Mensajes', tabBarIcon: tabIcon('mensajes') }}
+        options={{
+          title: 'Mensajes',
+          tabBarAccessibilityLabel:
+            requests > 0
+              ? `Mensajes, ${requests} ${requests === 1 ? 'solicitud' : 'solicitudes'} por responder, tab`
+              : undefined,
+          tabBarBadge: requests > 0 ? formatBadgeCount(requests) : undefined,
+          tabBarBadgeStyle: badgeStyle,
+          tabBarIcon: tabIcon('mensajes'),
+        }}
       />
       <Tabs.Screen
         name="comunidad"
@@ -370,12 +403,7 @@ export default function TabsLayout() {
           // Relleno de acento con la tinta de contraste de la marca. El rojo
           // por defecto de React Navigation significa «error» en el resto de
           // la app, y aquí no hay nada roto: hay gente esperando.
-          tabBarBadgeStyle: {
-            backgroundColor: colors.volt,
-            color: accentContrast(),
-            fontSize: fontSizes.xs,
-            fontWeight: semibold,
-          },
+          tabBarBadgeStyle: badgeStyle,
           tabBarIcon: tabIcon('comunidad'),
         }}
       />
