@@ -599,24 +599,36 @@ export function StoriesBar() {
                 state={!myEntry ? 'none' : myEntry.hasUnviewed ? 'unviewed' : 'viewed'}
               />
             </PressableScale>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-              <Text
-                accessibilityLiveRegion="polite"
-                numberOfLines={1}
-                style={{ color: colors.textMuted, fontSize: fontSizes.xs, maxWidth: COLUMN_WIDTH - 22 }}
-              >
-                {upload.isPending ? 'Publicando…' : 'Tu historia'}
-              </Text>
-              <Pressable
-                accessibilityLabel="Ajustes de story"
-                accessibilityRole="button"
-                disabled={upload.isPending}
-                hitSlop={10}
-                onPress={openSettingsSheet}
-              >
-                <Ionicons color={colors.textMuted} name="ellipsis-horizontal" size={16} />
-              </Pressable>
-            </View>
+            <Text
+              accessibilityLiveRegion="polite"
+              numberOfLines={1}
+              style={{ color: colors.textMuted, fontSize: fontSizes.xs, maxWidth: COLUMN_WIDTH }}
+            >
+              {upload.isPending ? 'Publicando…' : 'Tu historia'}
+            </Text>
+            {/* Ajustes de story: esquina superior del anillo, simétrica al «+». */}
+            <PressableScale
+              accessibilityLabel="Ajustes de story"
+              disabled={upload.isPending}
+              hitSlop={10}
+              onPress={openSettingsSheet}
+              scaleTo={0.88}
+              style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                width: ADD_BADGE_SIZE,
+                height: ADD_BADGE_SIZE,
+                borderRadius: radii.full,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: colors.surfaceHighest,
+                borderWidth: 2,
+                borderColor: colors.background,
+              }}
+            >
+              <Ionicons color={colors.text} name="ellipsis-horizontal" size={12} />
+            </PressableScale>
             {uploadFailed ? (
               <Pressable accessibilityRole="button" onPress={retryUpload}>
                 <Text style={{ color: colors.volt, fontSize: fontSizes.xs, fontWeight: '700', textDecorationLine: 'underline' }}>
