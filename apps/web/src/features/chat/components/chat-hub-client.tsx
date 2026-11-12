@@ -35,14 +35,14 @@ export function ChatHubClient({
     // «Mensajes» del móvil (`comunidad-mensajes.tsx`): historias arriba y las
     // tres pestañas debajo, conversaciones en una sola tarjeta de filas.
     <div className="mx-auto grid w-full max-w-[560px] gap-6 lg:max-w-[760px]">
-      <PageHeader description="Historias, conversaciones y solicitudes." title="Mensajes" tutorialId="page:chat" />
+      <PageHeader title="Mensajes" tutorialId="page:chat" />
       <StoriesStrip ownName={sessionName} ownUserId={sessionUserId} />
       <ProfileVisitsNotice />
       <Tabs defaultValue="general">
-        <TabsList>
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="solicitudes">Solicitudes</TabsTrigger>
-          <TabsTrigger value="conexiones">Mis conexiones</TabsTrigger>
+        <TabsList className="flex w-full gap-0 rounded-none border-b border-[var(--border-subtle)] bg-transparent p-0 shadow-none">
+          <TabsTrigger className="flex-1 rounded-none border-b-2 border-transparent bg-transparent text-base data-[state=active]:border-[var(--text)] data-[state=active]:bg-transparent data-[state=active]:font-bold data-[state=active]:shadow-none" value="general">Chats</TabsTrigger>
+          <TabsTrigger className="flex-1 rounded-none border-b-2 border-transparent bg-transparent text-base data-[state=active]:border-[var(--text)] data-[state=active]:bg-transparent data-[state=active]:font-bold data-[state=active]:shadow-none" value="solicitudes">Solicitudes</TabsTrigger>
+          <TabsTrigger className="flex-1 rounded-none border-b-2 border-transparent bg-transparent text-base data-[state=active]:border-[var(--text)] data-[state=active]:bg-transparent data-[state=active]:font-bold data-[state=active]:shadow-none" value="conexiones">Conexiones</TabsTrigger>
         </TabsList>
         <TabsContent value="general">
           <ConversationsTab />

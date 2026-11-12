@@ -7,7 +7,6 @@ import {
   Heart,
   LifeBuoy,
   MapPin,
-  MessagesSquare,
   ShieldBan,
   SlidersHorizontal,
   Store,
@@ -18,12 +17,10 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
-import { interactionKeys, interactionsService } from '@/features/interactions/services/interactions-service';
 import { profileService } from '@/features/profile/services/profile-service';
-import { socialService } from '@/features/social/services/social-service';
-import { connectionKeys } from '@/features/social/services/directory-keys';
 import { queryKeys } from '@/shared/api/query-keys';
 import { Divider, ListCard, NavRow } from '@/shared/components/mobile/nav-row';
+import { BrandLockup } from '@/shared/components/brand/brand-mark';
 import { cn } from '@/shared/lib/cn';
 import { DescubrirClient } from './descubrir-client';
 import { SearchPreferencesDialog, type DirectoryPreferences } from './search-preferences-dialog';
@@ -154,72 +151,58 @@ export function ComunidadClient() {
     queryFn: () => profileService.getProfile().catch(() => null),
     retry: false,
   });
-  const counts = useQuery({
-    queryKey: interactionKeys.counts,
-    queryFn: () => interactionsService.counts().catch(() => null),
-    staleTime: 60_000,
-  });
-  const pending = useQuery({
-    queryKey: connectionKeys.byStatus('PENDING'),
-    queryFn: () => socialService.listConnections('PENDING').catch(() => null),
-    staleTime: 30_000,
-  });
-  const hasPendingReceived = (pending.data ?? []).some((connection) => connection.direction === 'RECEIVED');
-  const alerts = counts.data ? counts.data.likesReceived + counts.data.profileViewsNew : 0;
   const filtersActive = Object.values(preferences).some(Boolean);
   const goal = pill === 'goal' ? (profile.data?.objetivo ?? 'HIPERTROFIA') : preferences.objetivo;
 
   return (
     <div className="mx-auto grid w-full max-w-xl gap-5">
       <h1 className="sr-only">Comunidad</h1>
-      <div className="flex items-center justify-between gap-2">
-        <RoundButton
-          active={filtersActive}
-          dot={filtersActive}
-          label="Preferencias de búsqueda"
-          onClick={() => setPreferencesOpen(true)}
-        >
-          <SlidersHorizontal aria-hidden className="size-5" />
-        </RoundButton>
-
-        <div
-          aria-label="Qué baraja ver"
-          className="flex items-center gap-0.5 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-low)] p-[3px]"
-          role="radiogroup"
-        >
-          {(
-            [
-              ['foryou', 'Para ti'],
-              ['goal', 'Mismo objetivo'],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              aria-checked={pill === value}
-              className={cn(
-                'min-h-9 whitespace-nowrap rounded-full px-3 text-xs transition-colors sm:px-4 duration-[var(--dur-2)]',
-                pill === value
-                  ? 'bg-[var(--surface-high)] font-bold text-[var(--text)]'
-                  : 'font-medium text-[var(--text-muted)] hover:text-[var(--text)]',
-              )}
-              key={value}
-              onClick={() => setPill(value)}
-              role="radio"
-              type="button"
+      <div className="grid gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <BrandLockup size={26} />
+          <div className="flex items-center gap-1">
+            <RoundButton
+              active={filtersActive}
+              dot={filtersActive}
+              label="Preferencias de búsqueda"
+              onClick={() => setPreferencesOpen(true)}
             >
-              {label}
-            </button>
-          ))}
-        </div>
+              <SlidersHorizontal aria-hidden className="size-5" />
+            </RoundButton>
 
-        <div className="flex items-center gap-1">
-          <RoundButton
-            dot={hasPendingReceived || alerts > 0}
-            href="/chat"
-            label={hasPendingReceived ? 'Mensajes y solicitudes, con solicitudes pendientes' : 'Mensajes y solicitudes'}
+            <OverflowSheet onPreferences={() => setPreferencesOpen(true)} />
+          </div>
+        </div>
+        <div className="flex justify-center">
+          <div
+            aria-label="Qué baraja ver"
+            className="flex items-center gap-0.5 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-low)] p-[3px]"
+            role="radiogroup"
           >
-            <MessagesSquare aria-hidden className="size-5" />
-          </RoundButton>
-          <OverflowSheet onPreferences={() => setPreferencesOpen(true)} />
+            {(
+              [
+                ['foryou', 'Para ti'],
+                ['goal', 'Mismo objetivo'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                aria-checked={pill === value}
+                className={cn(
+                  'min-h-9 whitespace-nowrap rounded-full px-3 text-xs transition-colors sm:px-4 duration-[var(--dur-2)]',
+                  pill === value
+                    ? 'bg-[var(--surface-high)] font-bold text-[var(--text)]'
+                    : 'font-medium text-[var(--text-muted)] hover:text-[var(--text)]',
+                )}
+                key={value}
+                onClick={() => setPill(value)}
+                role="radio"
+                type="button"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
         </div>
       </div>
 

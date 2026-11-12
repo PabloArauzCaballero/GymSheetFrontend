@@ -1,7 +1,23 @@
 'use client';
 
-import { formatPrice, initials, offerKindLabel, ratingLabel, sellerKindLabel } from '@gymsheet/domain';
-import { BadgeCheck, CircleX, CreditCard, Dumbbell, Search, ShoppingBag, Tag, Ticket } from 'lucide-react';
+import {
+  DEFAULT_MARKETPLACE_FILTERS,
+  MARKETPLACE_CATEGORIES,
+  MARKETPLACE_SORTS,
+  MARKETPLACE_TOP_RATING,
+  filterEntities,
+  filterPlans,
+  formatPrice,
+  hasActiveFilters,
+  initials,
+  offerKindLabel,
+  ratingLabel,
+  sellerKindLabel,
+  type MarketplaceFilters,
+  type MarketplaceSort,
+} from '@gymsheet/domain';
+import { ArrowDownUp, BadgeCheck, CircleX, CreditCard, Dumbbell, Search, ShieldCheck, ShoppingBag, Star, Tag, Ticket } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import type { DirectoryEntitySummary, EntityPlan } from '@/shared/api/schemas';
@@ -9,18 +25,36 @@ import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { DomainImage } from '@/shared/components/media/domain-image';
 import { cn } from '@/shared/lib/cn';
 
-/** Las píldoras del móvil (`MARKET_CATEGORIES` en `directorio.tsx`). */
-const CATEGORIES = [
-  { id: 'all', label: 'Todo', type: undefined, path: undefined },
-  { id: 'gyms', label: 'Gimnasios', type: 'GYM', path: 'gimnasios' },
-  { id: 'supplements', label: 'Suplementos', type: 'STORE', path: 'tiendas.nutricion' },
-  { id: 'apparel', label: 'Indumentaria', type: 'STORE', path: 'tiendas.indumentaria' },
-  { id: 'passes', label: 'Pases y planes', type: undefined, path: undefined },
-  { id: 'coaches', label: 'Coaches', type: 'COACH', path: 'coaches' },
-] as const;
-
-type CategoryId = (typeof CATEGORIES)[number]['id'];
 type Tab = 'OFFERS' | 'ENTITIES';
+
+const CATEGORY_IMAGE: Record<string, string> = {
+  all: 'todo',
+  gyms: 'gimnasios',
+  supplements: 'suplementos',
+  apparel: 'indumentaria',
+  equipment: 'equipamiento',
+  coaches: 'coaches',
+  centers: 'centros',
+  passes: 'pases',
+};
+
+function FilterChipButton({ active, children, onClick }: Readonly<{ active: boolean; children: React.ReactNode; onClick: () => void }>) {
+  return (
+    <button
+      aria-pressed={active}
+      className={cn(
+        'tap inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-[15px] font-semibold transition-colors duration-[var(--dur-2)]',
+        active
+          ? 'border-[var(--text)] bg-[var(--text)] text-[var(--background)]'
+          : 'border-[var(--border)] bg-[var(--surface-low)] text-[var(--text-muted)] hover:text-[var(--text)]',
+      )}
+      onClick={onClick}
+      type="button"
+    >
+      {children}
+    </button>
+  );
+}
 
 const KIND_ICON = {
   MEMBERSHIP_PLAN: CreditCard,
@@ -89,37 +123,12 @@ export function MarketplaceClient({
   plans,
 }: Readonly<{ entities: DirectoryEntitySummary[]; plans: EntityPlan[] | null }>) {
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<CategoryId>('all');
+  const [filters, setFilters] = useState<MarketplaceFilters>(DEFAULT_MARKETPLACE_FILTERS);
   const [tab, setTab] = useState<Tab>('OFFERS');
-  const config = CATEGORIES.find((item) => item.id === category) ?? CATEGORIES[0];
   const query = search.trim().toLowerCase();
-
-  const sellers = useMemo(
-    () =>
-      entities.filter((entity) => {
-        if (config.type && entity.entityType !== config.type) return false;
-        if (config.path && !entity.primaryCategory.path.startsWith(config.path)) return false;
-        if (!query) return true;
-        return [entity.name, entity.headline, entity.city, entity.primaryCategory.name]
-          .filter(Boolean)
-          .some((value) => value!.toLowerCase().includes(query));
-      }),
-    [config, entities, query],
-  );
-
-  const offers = useMemo(
-    () =>
-      (plans ?? []).filter((plan) => {
-        if (category === 'passes' && plan.type !== 'PASS' && plan.type !== 'MEMBERSHIP_PLAN') return false;
-        if (config.type && plan.entity && plan.entity.entityType !== config.type) return false;
-        if (config.path && plan.entity && !plan.entity.primaryCategory.path.startsWith(config.path)) return false;
-        if (!query) return true;
-        return [plan.name, plan.entity?.name, plan.entity?.city]
-          .filter(Boolean)
-          .some((value) => value!.toLowerCase().includes(query));
-      }),
-    [category, config, plans, query],
-  );
+  const applied = useMemo(() => ({ ...filters, search }), [filters, search]);
+  const sellers = useMemo(() => filterEntities(entities, applied), [entities, applied]);
+  const offers = useMemo(() => filterPlans(plans ?? [], applied), [plans, applied]);
 
   const emptyMessage = query
     ? 'Prueba con otra palabra o quita el filtro.'
@@ -146,23 +155,76 @@ export function MarketplaceClient({
         ) : null}
       </label>
 
-      <div aria-label="Categorías" className="nav-scroll -mx-1 flex gap-2 overflow-x-auto px-1" role="group">
-        {CATEGORIES.map((item) => (
+      <div aria-label="Categorías" className="nav-scroll -mx-1 flex gap-4 overflow-x-auto px-1 pb-1" role="group">
+        {MARKETPLACE_CATEGORIES.map((item) => {
+          const selected = filters.category === item.id;
+          return (
+            <button
+              aria-pressed={selected}
+              className="tap grid w-[5.5rem] shrink-0 justify-items-center gap-1.5"
+              key={item.id}
+              onClick={() => setFilters((current) => ({ ...current, category: item.id }))}
+              type="button"
+            >
+              <span
+                className={cn(
+                  'relative block size-[5.25rem] overflow-hidden rounded-[1.4rem] bg-[var(--surface-low)] transition-[box-shadow] duration-[var(--dur-2)]',
+                  selected ? 'ring-2 ring-[var(--text)]' : 'ring-1 ring-[var(--border)]',
+                )}
+              >
+                <Image alt="" className="object-cover" fill sizes="84px" src={`/marketplace/categories/${CATEGORY_IMAGE[item.id]}.png`} />
+              </span>
+              <span className={cn('text-xs', selected ? 'font-bold text-[var(--text)]' : 'font-medium text-[var(--text-muted)]')}>
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div aria-label="Filtros" className="nav-scroll -mx-1 flex items-center gap-2 overflow-x-auto px-1" role="group">
+        <label
+          className={cn(
+            'relative inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-[15px] font-semibold',
+            filters.sort !== 'relevance'
+              ? 'border-[var(--text)] bg-[var(--text)] text-[var(--background)]'
+              : 'border-[var(--border)] bg-[var(--surface-low)] text-[var(--text-muted)]',
+          )}
+        >
+          <ArrowDownUp aria-hidden className="size-4" />
+          <select
+            aria-label="Ordenar por"
+            className="cursor-pointer appearance-none bg-transparent pr-1 outline-none"
+            onChange={(event) => setFilters((current) => ({ ...current, sort: event.target.value as MarketplaceSort }))}
+            value={filters.sort}
+          >
+            {MARKETPLACE_SORTS.map((option) => (
+              <option className="text-[var(--text)]" key={option.id} value={option.id}>
+                {option.id === 'relevance' ? 'Ordenar' : option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <FilterChipButton active={filters.topRated} onClick={() => setFilters((current) => ({ ...current, topRated: !current.topRated }))}>
+          <Star aria-hidden className="size-4" />
+          {String(MARKETPLACE_TOP_RATING).replace('.', ',')} o más
+        </FilterChipButton>
+        <FilterChipButton active={filters.verifiedOnly} onClick={() => setFilters((current) => ({ ...current, verifiedOnly: !current.verifiedOnly }))}>
+          <ShieldCheck aria-hidden className="size-4" />
+          Verificados
+        </FilterChipButton>
+        {hasActiveFilters(applied) ? (
           <button
-            aria-pressed={category === item.id}
-            className={cn(
-              'tap min-h-10 shrink-0 rounded-full border px-4 text-[15px] font-semibold transition-colors duration-[var(--dur-2)]',
-              category === item.id
-                ? 'border-[var(--text)] bg-[var(--text)] text-[var(--background)]'
-                : 'border-[var(--border)] bg-[var(--surface-low)] text-[var(--text-muted)] hover:text-[var(--text)]',
-            )}
-            key={item.id}
-            onClick={() => setCategory(item.id)}
+            className="shrink-0 px-2 text-sm text-[var(--text-muted)] underline"
+            onClick={() => {
+              setFilters(DEFAULT_MARKETPLACE_FILTERS);
+              setSearch('');
+            }}
             type="button"
           >
-            {item.label}
+            Borrar
           </button>
-        ))}
+        ) : null}
       </div>
 
       <div className="grid">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { Ellipsis, Plus } from 'lucide-react';
 import { useRef, useState, type ReactNode } from 'react';
 import { socialService } from '@/features/social/services/social-service';
 import { connectionKeys } from '@/features/social/services/directory-keys';
@@ -30,6 +30,7 @@ export function StoriesStrip({
   const [startUserId, setStartUserId] = useState<string | null>(null);
   const [audienceMode, setAudienceMode] = useState<'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS'>('ALL_CONNECTIONS');
   const [recipientIds, setRecipientIds] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadAttemptRef = useRef<{
     file: File;
     requestId: string;
@@ -87,10 +88,19 @@ export function StoriesStrip({
     if (attempt && !upload.isPending) upload.mutate(attempt);
   }
 
-  function openComposer() {
-    setAudienceMode('ALL_CONNECTIONS');
-    setRecipientIds([]);
+  /** Los tres puntos: ajustes de la story (audiencia). */
+  function openSettings() {
     setPicking(true);
+  }
+
+  /** Toque principal: directo al selector de archivos con la audiencia actual. */
+  function startStory() {
+    if (upload.isPending) return;
+    if (audienceMode === 'SELECTED_CONNECTIONS' && recipientIds.length === 0) {
+      setPicking(true);
+      return;
+    }
+    fileInputRef.current?.click();
   }
 
   const entries = feed.data ?? [];
@@ -121,7 +131,7 @@ export function StoriesStrip({
             <StoryRing
               hasUnviewed={own?.hasUnviewed ?? false}
               muted={!own}
-              onClick={() => (own ? setStartUserId(own.userId) : openComposer())}
+              onClick={() => (own ? setStartUserId(own.userId) : startStory())}
               label={own ? 'Ver tu story' : 'Subir tu primera story'}
             >
               <PersonAvatar name={ownName} photoUrl={own?.photoUrl ?? null} size="md" />
@@ -130,15 +140,39 @@ export function StoriesStrip({
               aria-label="Subir una story"
               className="tap absolute -bottom-0.5 -right-0.5 grid size-8 place-items-center rounded-full border-2 border-[var(--background)] bg-[var(--volt)] text-[var(--accent-contrast)] disabled:opacity-60"
               disabled={upload.isPending}
-              onClick={openComposer}
+              onClick={startStory}
               type="button"
             >
               <Plus aria-hidden className="size-4" />
             </button>
+            <input
+              accept="image/*,video/*"
+              aria-hidden
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = '';
+                if (file) submitUpload(file);
+              }}
+              ref={fileInputRef}
+              tabIndex={-1}
+              type="file"
+            />
           </div>
-          <p className="w-full truncate text-center text-xs text-[var(--text-muted)]">
-            {upload.isPending ? 'Subiendo…' : 'Tu story'}
-          </p>
+          <div className="flex w-full items-center justify-center gap-0.5">
+            <p className="truncate text-center text-xs text-[var(--text-muted)]">
+              {upload.isPending ? 'Subiendo…' : 'Tu historia'}
+            </p>
+            <button
+              aria-label="Ajustes de story"
+              className="tap grid size-5 place-items-center text-[var(--text-muted)] disabled:opacity-60"
+              disabled={upload.isPending}
+              onClick={openSettings}
+              type="button"
+            >
+              <Ellipsis aria-hidden className="size-4" />
+            </button>
+          </div>
           {uploadFailed ? (
             <button className="text-xs font-semibold underline" onClick={retryUpload} type="button">
               Reintentar subida
@@ -181,7 +215,7 @@ export function StoriesStrip({
         onOpenChange={setPicking}
         onPick={submitUpload}
         open={picking}
-        title="Añadir una story"
+        title="Ajustes de story"
       >
         <fieldset className="grid gap-2 rounded-xl border border-[var(--border)] p-3">
           <legend className="px-1 text-sm font-semibold">Quién puede verla</legend>

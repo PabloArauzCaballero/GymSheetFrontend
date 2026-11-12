@@ -132,7 +132,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
   if (hasSessionCookie && (isPublicAuthRoute || isLandingRoute)) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('/comunidad', request.url));
   }
   return NextResponse.next();
 }
