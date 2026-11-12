@@ -464,7 +464,13 @@ export function StoriesBar() {
   function startStory() {
     // Una subida a la vez: sin esto, pulsar «+» tres veces lanza tres stories.
     if (upload.isPending) return;
-    if (audienceMode === 'SELECTED_CONNECTIONS' && recipientIds.length === 0) {
+    const prefs = useStoryPrefs.getState();
+    // Sin los ajustes cargados no se sabe a quién iría: no se publica a ciegas.
+    if (!prefs.hydrated) {
+      void prefs.hydrate();
+      return;
+    }
+    if (prefs.audienceMode === 'SELECTED_CONNECTIONS' && recipientIds.length === 0) {
       setSourceVisible(true);
       return;
     }
@@ -475,9 +481,15 @@ export function StoriesBar() {
     const asset = result.canceled ? null : result.assets?.[0];
     if (!asset) return;
     const file = fileFromAsset(asset);
-    if (!reviewBeforePublish) {
+    // Se lee del store al enviar, no del cierre del render: lo que cuenta es la elección vigente.
+    const { audienceMode: mode, reviewBeforePublish: review } = useStoryPrefs.getState();
+    if (mode === 'SELECTED_CONNECTIONS' && recipientIds.length === 0) {
+      setSourceVisible(true);
+      return;
+    }
+    if (!review) {
       // Sin vista previa: aceptar la foto es publicar (toque mínimo).
-      const attempt = { file, requestId: requestId(), mode: audienceMode, recipients: [...recipientIds], caption: null };
+      const attempt = { file, requestId: requestId(), mode, recipients: [...recipientIds], caption: null };
       uploadAttemptRef.current = attempt;
       setUploadFailed(false);
       upload.mutate(attempt);
@@ -486,7 +498,7 @@ export function StoriesBar() {
     setDraft({
       file,
       isVideo: file.mimeType.startsWith('video/'),
-      mode: audienceMode,
+      mode,
       recipients: [...recipientIds],
     });
   }
