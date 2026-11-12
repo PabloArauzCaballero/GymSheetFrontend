@@ -172,7 +172,7 @@ export function MarketplaceClient({
                   selected ? 'ring-2 ring-[var(--text)]' : 'ring-1 ring-[var(--border)]',
                 )}
               >
-                <Image alt="" className="object-cover" fill sizes="84px" src={`/marketplace/categories/${CATEGORY_IMAGE[item.id]}.png`} />
+                <Image alt="" className="object-cover" fill sizes="84px" unoptimized src={`/marketplace/categories/${CATEGORY_IMAGE[item.id]}.png`} />
               </span>
               <span className={cn('text-xs', selected ? 'font-bold text-[var(--text)]' : 'font-medium text-[var(--text-muted)]')}>
                 {item.label}

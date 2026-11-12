@@ -193,11 +193,6 @@ export function StoriesStrip({
             </p>
           </div>
         ))}
-        {ordered.length === 0 ? (
-          <p className="self-center text-sm text-[var(--text-muted)]">
-            Cuando tus matches publiquen algo, aparecerá aquí.
-          </p>
-        ) : null}
       </div>
       <MediaSourceDialog
         // Imagen o vídeo: los dos visores saben reproducirlos (el móvil, desde

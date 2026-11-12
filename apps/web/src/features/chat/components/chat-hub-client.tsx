@@ -82,7 +82,7 @@ function ConversationsTab() {
     );
   }
   return (
-    <ul className="panel m-0 grid list-none divide-y divide-[var(--border)] p-0 px-3">
+    <ul className="m-0 grid list-none divide-y divide-[var(--border-subtle)] p-0">
       {conversations.data.map((conversation) => (
         <ConversationRow conversation={conversation} key={conversation.conversationId} />
       ))}
