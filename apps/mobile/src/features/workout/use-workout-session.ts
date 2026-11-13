@@ -5,6 +5,8 @@ import { ApiError } from '@gymsheet/api-client';
 import { workoutExerciseSchema, workoutSetSchema } from '@gymsheet/schemas';
 import type { RestSettingChange, SkipReason, SkippedSet, SwapReason, SwapScope, TimedWorkoutSetInput, Workout, WorkoutSetInput } from '@gymsheet/types';
 import { accountService, workoutService } from '@/api/services';
+import { hydrateInSituSessions, useInSituSessions } from '@/features/workout/in-situ-store';
+import { moveExercise as moveInList } from '@/features/workout/in-situ';
 import { hydrateSessionMarks, mergeMarks, useSessionMarks } from '@/features/workout/session-marks-store';
 import { notify } from '@/notifications';
 import { formatDuration } from '@/lib/format';
@@ -108,6 +110,10 @@ export function useWorkoutSession(id: string) {
   const marks = useSessionMarks((state) => state.sessions[id]);
   useEffect(() => {
     void hydrateSessionMarks();
+  }, []);
+  const inSitu = useInSituSessions((state) => state.sessions.includes(id));
+  useEffect(() => {
+    void hydrateInSituSessions();
   }, []);
   const data = useMemo(() => (workout.data ? mergeMarks(workout.data, marks) : undefined), [workout.data, marks]);
 
@@ -255,7 +261,8 @@ export function useWorkoutSession(id: string) {
       workoutService.addExercise(id, {
         ejercicioId: exerciseId,
         // Al final: el orden de una sesión en vivo es el orden en que se entrenó.
-        orden: (workout.data?.ejercicios.length ?? 0) + 1,
+        // El máximo, no la cuenta: tras quitar uno, la cuenta chocaría con un orden ocupado.
+        orden: Math.max(0, ...(workout.data?.ejercicios.map((item) => item.orden) ?? [])) + 1,
       }),
     onSuccess: async () => {
       // La respuesta no trae la ficha del ejercicio (nombre, foto): se pide la sesión.
@@ -266,11 +273,52 @@ export function useWorkoutSession(id: string) {
     onError: (error: Error) => notify.error(error),
   });
 
+  /** Quitar un ejercicio de la sesión en curso (con sus series, si las tenía). */
+  const removeExercise = useMutation({
+    mutationFn: (sessionExerciseId: string) => workoutService.removeExercise(sessionExerciseId),
+    onSuccess: async () => {
+      markListsStale();
+      await refetchSession();
+    },
+    onError: (error: Error) => notify.error(error),
+  });
+
+  /**
+   * Sube o baja un ejercicio una posición. `orden` es único por sesión, así que
+   * es un intercambio en tres pasos con un orden libre de por medio.
+   */
+  const moveExercise = useMutation({
+    mutationFn: async (input: { id: string; direction: -1 | 1 }) => {
+      const list = [...(workout.data?.ejercicios ?? [])].sort((a, b) => a.orden - b.orden);
+      const next = moveInList(list, input.id, input.direction);
+      if (!next) return;
+      const a = list.find((item) => item.id === input.id)!;
+      const b = list[list.findIndex((item) => item.id === input.id) + input.direction]!;
+      const spare = Math.max(...list.map((item) => item.orden)) + 1;
+      await workoutService.reorderExercise(a.id, spare);
+      try {
+        await workoutService.reorderExercise(b.id, a.orden);
+        await workoutService.reorderExercise(a.id, b.orden);
+      } catch (error) {
+        // Sin dejar el ejercicio colgado al final: se devuelve cada uno a su sitio, en lo posible.
+        await workoutService.reorderExercise(b.id, b.orden).catch(() => undefined);
+        await workoutService.reorderExercise(a.id, a.orden).catch(() => undefined);
+        throw error;
+      }
+    },
+    onSettled: async () => {
+      markListsStale();
+      await refetchSession();
+    },
+    onError: (error: Error) => notify.error(error),
+  });
+
   const finish = useMutation({
     mutationFn: (location?: { latitude: number; longitude: number }) => workoutService.finish(id, location),
     onSuccess: async (session) => {
       endSession(id);
       marksStore.getState().clear(id);
+      useInSituSessions.getState().clear(id);
       await refreshAll();
       void queryClient.invalidateQueries({ queryKey: ['progression'] });
       void queryClient.invalidateQueries({ queryKey: ['programs'] });
@@ -302,6 +350,7 @@ export function useWorkoutSession(id: string) {
     onSuccess: async () => {
       endSession(id);
       marksStore.getState().clear(id);
+      useInSituSessions.getState().clear(id);
       await refreshAll();
       notify.success('Sesión cancelada.');
       router.back();
@@ -324,6 +373,10 @@ export function useWorkoutSession(id: string) {
     addCardioSet,
     removeSet,
     addExercise,
+    removeExercise,
+    moveExercise,
+    /** Esta sesión se está armando sobre la marcha (rutina in situ). */
+    inSitu,
     finish,
     cancel,
     skipSet,
