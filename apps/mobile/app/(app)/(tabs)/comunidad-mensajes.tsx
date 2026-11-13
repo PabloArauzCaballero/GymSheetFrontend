@@ -200,7 +200,7 @@ function TextTabs<T extends string>({
                     backgroundColor: colors.volt,
                   }}
                 >
-                  <Text style={{ color: accentContrast(), fontSize: 11, fontWeight: '700', lineHeight: 14 }}>
+                  <Text style={{ color: accentContrast(), fontSize: fontSizes.xs, fontWeight: '700', lineHeight: 15 }}>
                     {badge > 9 ? '9+' : badge}
                   </Text>
                 </View>

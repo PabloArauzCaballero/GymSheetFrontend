@@ -168,8 +168,10 @@ export function MarketplaceClient({
             >
               <span
                 className={cn(
-                  'relative block size-[5.25rem] overflow-hidden rounded-[1.4rem] bg-[var(--surface-low)] transition-[box-shadow] duration-[var(--dur-2)]',
-                  selected ? 'ring-2 ring-[var(--text)]' : 'ring-1 ring-[var(--border)]',
+                  'relative block size-[5.25rem] overflow-hidden rounded-[1.4rem] bg-[var(--surface-low)] transition-[box-shadow,transform] duration-[var(--dur-2)] motion-reduce:transition-none',
+                  selected
+                    ? '-translate-y-0.5 ring-2 ring-[var(--volt)] shadow-[0_8px_18px_color-mix(in_srgb,var(--volt)_35%,transparent)]'
+                    : 'ring-1 ring-[color-mix(in_srgb,var(--text)_10%,transparent)] shadow-[0_3px_8px_rgb(0_0_0/0.35)]',
                 )}
               >
                 <Image alt="" className="object-cover" fill sizes="84px" unoptimized src={`/marketplace/categories/${CATEGORY_IMAGE[item.id]}.png`} />
