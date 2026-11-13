@@ -26,7 +26,7 @@ export function OnboardingGuard({
     if (!query.isLoading && requiresOnboarding && pathname !== '/onboarding')
       router.replace('/onboarding');
     if (!query.isLoading && !requiresOnboarding && pathname === '/onboarding')
-      router.replace('/dashboard');
+      router.replace('/comunidad');
   }, [pathname, query.isLoading, requiresOnboarding, router]);
   if (role !== 'CLIENTE') return children;
   if (query.isLoading || (requiresOnboarding && pathname !== '/onboarding'))

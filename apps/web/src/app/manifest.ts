@@ -13,7 +13,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     name: theme.brand.name,
     short_name: theme.brand.name,
     description: 'Registro técnico de entrenamiento y operaciones de gimnasio.',
-    start_url: '/dashboard',
+    start_url: '/comunidad',
     display: 'standalone',
     background_color: theme.dark.background,
     theme_color: theme.dark.accent,

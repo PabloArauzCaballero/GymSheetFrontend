@@ -106,13 +106,14 @@ export const authErrors = {
  * Las rutas no coinciden literalmente —la web usa `/dashboard` y el móvil
  * `/home` para la misma pantalla— pero **la intención sí** debe coincidir, y es
  * lo que se declara aquí: tras un alta se va a completar el onboarding, tras un
- * acceso se va al inicio. Antes la web mandaba al panel y dejaba que un guardia
- * la rebotara al onboarding, de modo que la cuenta recién creada veía un panel
- * a medio pintar antes del cuestionario que el móvil abría directamente.
+ * acceso se va a Comunidad, la primera pestaña (12/11/2026). Antes el acceso
+ * llevaba a Inicio, que ya no es pestaña: se entraba por una pantalla a la que
+ * luego no había forma de volver, y al reabrir la app se caía en Comunidad.
+ * El personal del gimnasio no se queda ahí: `/comunidad` lo manda a su panel.
  */
 export const authDestination = {
-  web: { afterLogin: '/dashboard', afterRegister: '/onboarding' },
-  mobile: { afterLogin: '/home', afterRegister: '/onboarding' },
+  web: { afterLogin: '/comunidad', afterRegister: '/onboarding' },
+  mobile: { afterLogin: '/comunidad', afterRegister: '/onboarding' },
 } as const;
 
 /**

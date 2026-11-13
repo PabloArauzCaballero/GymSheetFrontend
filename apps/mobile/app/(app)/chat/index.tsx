@@ -50,6 +50,7 @@ export default function ChatListScreen() {
       ) : (
         <EmptyState
           icon="chatbubbles-outline"
+          mascot="wink"
           message="Conecta con un socio y envíale un mensaje desde Comunidad."
           title="Sin conversaciones"
         />

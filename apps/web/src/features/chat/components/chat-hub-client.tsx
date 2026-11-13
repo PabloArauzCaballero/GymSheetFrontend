@@ -71,7 +71,7 @@ function ConversationsTab() {
   if (!conversations.data?.length) {
     return (
       <EmptyState
-        flat
+        mascot="wink"
         action={
           <ButtonLink href="/comunidad" variant="primary">
             Ir a Comunidad

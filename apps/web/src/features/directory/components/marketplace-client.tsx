@@ -261,7 +261,7 @@ export function MarketplaceClient({
         plans === null ? (
           <EmptyState flat description="No pudimos cargar las ofertas. Vuelve a intentarlo en un momento." level={2} title="Ofertas no disponibles" />
         ) : offers.length === 0 ? (
-          <EmptyState flat description={emptyMessage} level={2} title="Nada por aquí todavía" />
+          <EmptyState description={emptyMessage} level={2} mascot="asleep" title="Nada por aquí todavía" />
         ) : (
           <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-4">
             {offers.map((plan) => (
@@ -270,7 +270,7 @@ export function MarketplaceClient({
           </div>
         )
       ) : sellers.length === 0 ? (
-        <EmptyState flat description={emptyMessage} level={2} title="Ninguna tienda por aquí" />
+        <EmptyState description={emptyMessage} level={2} mascot="asleep" title="Ninguna tienda por aquí" />
       ) : (
         <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-4">
           {sellers.map((seller) => (

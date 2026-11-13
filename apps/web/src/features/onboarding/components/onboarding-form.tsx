@@ -87,7 +87,7 @@ export function OnboardingForm({ initial }: Readonly<{ initial: OnboardingState 
     mutationFn: onboardingService.complete,
     onSuccess: async (result) => {
       queryClient.setQueryData(queryKeys.onboarding, result);
-      router.replace('/dashboard');
+      router.replace('/comunidad');
       router.refresh();
     },
     onError: (error: Error) => notify.error(error),

@@ -13,6 +13,7 @@ import { PressableScale } from '@/components/motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { confirm, notify } from '@/notifications';
 import { StoriesBar } from '@/components/stories-bar';
+import { RepiMatchesCard } from '@/features/nudge/repi-card';
 import { connectedSince, sinceLabel } from '@/features/messages/since';
 import { accentContrast, alpha, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
@@ -239,7 +240,7 @@ function GeneralTab() {
     return (
       <EmptyState
         icon="chatbubbles-outline"
-        style={{ backgroundColor: 'transparent', boxShadow: 'none', paddingVertical: spacing['2xl'] }}
+        mascot="wink"
         message="Conecta con alguien de tu gimnasio y escríbele desde aquí."
         title="Aún no tienes chats"
       >
@@ -311,7 +312,7 @@ function SolicitudesTab() {
 
   if (!received.length && !sent.length) {
     return (
-      <EmptyState icon="mail-open-outline" message="Cuando alguien quiera conectar contigo, aparecerá aquí." style={{ backgroundColor: 'transparent', boxShadow: 'none', paddingVertical: spacing['2xl'] }} title="Sin solicitudes">
+      <EmptyState icon="mail-open-outline" mascot="resting" message="Cuando alguien quiera conectar contigo, aparecerá aquí." title="Sin solicitudes">
         <Button
           icon="compass-outline"
           label="Descubrir gente"
@@ -454,7 +455,7 @@ function ConexionesTab() {
     return (
       <EmptyState
         icon="people-outline"
-        style={{ backgroundColor: 'transparent', boxShadow: 'none', paddingVertical: spacing['2xl'] }}
+        mascot="impatient"
         message="Conecta con gente de tu gimnasio para entrenar y chatear juntos."
         title="Aún no tienes conexiones"
       >
@@ -549,6 +550,8 @@ export default function ComunidadMensajesScreen() {
           barra inferior—; un aviso aparte empujaba la lista y repetía el dato. */}
       <ScreenHeader title="Mensajes" />
 
+      {/* Repi solo aparece si un match espera respuesta: si no, no ocupa sitio. */}
+      <RepiMatchesCard />
 
       {/* Historias y pestañas forman un bloque: entre ellas un respiro corto, no el hueco de sección. */}
       <View style={{ gap: spacing.sm }}>

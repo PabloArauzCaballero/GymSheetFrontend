@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, CheckCheck } from 'lucide-react';
+import { CheckCheck } from 'lucide-react';
 import { useState } from 'react';
 import { notify } from '@/shared/notifications';
 import { notificationService } from '@/features/notifications/services/notification-service';
@@ -99,8 +99,8 @@ export function NotificationsPageClient() {
           ) : (
             <EmptyState
               description="Cuando recibas un aviso, aparecerá aquí."
-              icon={<Bell />}
               level={3}
+              mascot="proud"
               title="Tu bandeja está al día"
             />
           )}

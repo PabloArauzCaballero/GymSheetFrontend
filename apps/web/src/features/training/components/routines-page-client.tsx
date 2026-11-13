@@ -21,6 +21,7 @@ import {
   SkeletonPageHeader,
   SkeletonScreen,
 } from '@/shared/components/feedback/skeleton';
+import { RepiCard } from '@/features/nudge/components/repi-card';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Section } from '@/shared/components/mobile/section';
 import { Badge } from '@/shared/components/ui/badge';
@@ -181,8 +182,12 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
         }
         title="Rutinas"
       />
+      {/* Repi: qué toca hoy (solo a quien entrena; el staff no tiene racha que cuidar). */}
+      {staff ? null : <RepiCard here="routines" />}
 
-      {assignments.data ? (
+      {/* Como el móvil: sin nada asignado no hay semana que enseñar (y un «Hoy: descanso»
+          desmentía a Repi, que con la semana vacía cuenta cualquier día como día de entreno). */}
+      {assignments.data?.length ? (
         <Section title="Tu semana">
           <WeekPlan assignments={assignments.data} onPickRoutine={(id) => router.push(`/routines/${id}`)} />
         </Section>
