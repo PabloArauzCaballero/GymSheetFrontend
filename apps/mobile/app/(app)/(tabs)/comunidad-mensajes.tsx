@@ -238,8 +238,8 @@ function GeneralTab() {
   if (!conversations.data?.length) {
     return (
       <EmptyState
-        compact
         icon="chatbubbles-outline"
+        style={{ backgroundColor: 'transparent', boxShadow: 'none', paddingVertical: spacing['2xl'] }}
         message="Conecta con alguien de tu gimnasio y escríbele desde aquí."
         title="Aún no tienes chats"
       >
@@ -311,7 +311,7 @@ function SolicitudesTab() {
 
   if (!received.length && !sent.length) {
     return (
-      <EmptyState compact icon="mail-open-outline" message="Cuando alguien quiera conectar contigo, aparecerá aquí." title="Sin solicitudes">
+      <EmptyState icon="mail-open-outline" message="Cuando alguien quiera conectar contigo, aparecerá aquí." style={{ backgroundColor: 'transparent', boxShadow: 'none', paddingVertical: spacing['2xl'] }} title="Sin solicitudes">
         <Button
           icon="compass-outline"
           label="Descubrir gente"
@@ -453,8 +453,8 @@ function ConexionesTab() {
   if (!connections.data?.length) {
     return (
       <EmptyState
-        compact
         icon="people-outline"
+        style={{ backgroundColor: 'transparent', boxShadow: 'none', paddingVertical: spacing['2xl'] }}
         message="Conecta con gente de tu gimnasio para entrenar y chatear juntos."
         title="Aún no tienes conexiones"
       >

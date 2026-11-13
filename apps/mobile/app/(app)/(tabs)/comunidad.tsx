@@ -1408,7 +1408,9 @@ export default function ComunidadScreen() {
         )}
       </View>
 
-      {/* Tinder Bottom 5-Action Floating Bar (Matching Image 2) */}
+      {/* Barra de acciones: solo con una tarjeta delante. Sin preferencias, cargando o con el mazo
+          vacío no hay a quién deshacer, rechazar ni dar like: botones ahí son promesas rotas. */}
+      {topCard ? (
       <View
         style={{
           flexDirection: 'row',
@@ -1565,6 +1567,10 @@ export default function ComunidadScreen() {
           )}
         </PressableScale>
       </View>
+      ) : (
+        // Reserva el alto de la barra flotante para que nada quede debajo del vidrio.
+        <View style={{ height: 84 }} />
+      )}
 
       {/* 3-Dots Menu Sheet (Consolidated Community Menu) */}
       <CommunityOverflowSheet

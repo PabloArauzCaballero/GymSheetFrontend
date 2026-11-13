@@ -18,18 +18,21 @@ export function EmptyState({
   action,
   icon,
   level = 2,
+  flat = false,
 }: Readonly<{
   title: string;
   description: string;
   action?: ReactNode;
   icon?: ReactNode;
   level?: 2 | 3;
+  /** Sin tarjeta: el estado vacío vive directo sobre el fondo (como el móvil plano). */
+  flat?: boolean;
 }>) {
   const Heading = level === 3 ? 'h3' : 'h2';
   return (
     // `EmptyState` del móvil (`CenteredState`): tarjeta e1 centrada, glifo de
     // 32 en tono apagado, título `headline` y mensaje `subhead`.
-    <div className="panel grid justify-items-center gap-2 px-6 py-8 text-center">
+    <div className={flat ? 'grid justify-items-center gap-2 px-6 py-12 text-center' : 'panel grid justify-items-center gap-2 px-6 py-8 text-center'}>
       <span aria-hidden className="text-[var(--text-muted)] [&>svg]:size-8">
         {icon ?? <Inbox />}
       </span>
