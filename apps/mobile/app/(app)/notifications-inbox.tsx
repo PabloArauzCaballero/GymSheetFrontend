@@ -133,6 +133,7 @@ export default function NotificationInboxScreen() {
         ) : (
           <EmptyState
             icon="notifications-outline"
+            mascot="proud"
             message="Cuando recibas un aviso, aparecerá aquí."
             title="Tu bandeja está al día"
           />

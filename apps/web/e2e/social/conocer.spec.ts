@@ -82,10 +82,10 @@ test('H5.S1.M2 renders the empty deck state and points to Community', async ({ p
   await signIn(page, athlete);
   await openPage(page, '/descubrir');
 
-  await expect(page.getByRole('heading', { name: 'No quedan cartas' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Ya viste a todos por hoy' })).toBeVisible();
   await expect(
     page.getByText(
-      'No hay personas que coincidan con estos filtros por ahora. Cámbialos en Comunidad o vuelve más tarde.',
+      'Repi también se quedó sin perfiles. Vuelve mañana o cambia los filtros de objetivo y sede.',
     ),
   ).toBeVisible();
   await expect(page.getByRole('main').getByRole('link', { name: 'Comunidad' })).toHaveAttribute(
@@ -128,13 +128,13 @@ test('H5.S1.M4 requests a fresh cursor-free deck after returning from a successf
   );
   await page.getByRole('button', { name: 'Me interesa Ana de prueba' }).click();
   await expect((await swipeResponse).status()).toBe(200);
-  await expect(page.getByRole('heading', { name: 'No quedan cartas' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Ya viste a todos por hoy' })).toBeVisible();
   await expect.poll(() => deckRequests).toBeGreaterThan(1);
   const requestsBeforeReturn = deckRequests;
 
   await openPage(page, '/comunidad');
   await openPage(page, '/descubrir');
-  await expect(page.getByRole('heading', { name: 'No quedan cartas' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Ya viste a todos por hoy' })).toBeVisible();
   await expect(page.getByText('Ana de prueba')).toHaveCount(0);
   await expect.poll(() => deckRequests).toBeGreaterThan(requestsBeforeReturn);
   expect(deckUrls.at(-1)?.searchParams.has('cursor')).toBe(false);

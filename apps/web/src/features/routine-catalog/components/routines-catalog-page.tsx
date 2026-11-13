@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { HeartPulse, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { RepiCard } from '@/features/nudge/components/repi-card';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { Section } from '@/shared/components/mobile/section';
 import { ButtonLink } from '@/shared/components/ui/button';
@@ -62,9 +63,13 @@ export function RoutinesCatalogPage() {
         title="Rutinas"
         tutorialId="page:routines"
       />
+      {/* Repi: qué toca hoy. El mismo motor que el widget del móvil. */}
+      <RepiCard here="routines" />
 
       {/* Mismo orden que el móvil: primero «Tu semana», luego los programas activos. */}
-      {assignments.data ? (
+      {/* Como el móvil: sin nada asignado no hay semana que enseñar (y un «Hoy: descanso»
+          desmentía a Repi, que con la semana vacía cuenta cualquier día como día de entreno). */}
+      {assignments.data?.length ? (
         <Section title="Tu semana">
           <WeekPlan assignments={assignments.data} onPickRoutine={(id) => router.push(`/routines/${id}`)} />
         </Section>

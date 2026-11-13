@@ -7,6 +7,7 @@ import { ArrowRight, Award, Bell, CreditCard, Dumbbell, Flame, Store } from 'luc
 import Link from 'next/link';
 import { useSyncExternalStore } from 'react';
 import { TodayCard } from '@/features/home/components/today-card';
+import { RepiCard } from '@/features/nudge/components/repi-card';
 import { MuscleSplit } from '@/features/home/components/muscle-split';
 import { ProgressStrip } from '@/features/home/components/progress-strip';
 import { MembershipGate } from '@/features/membership/components/membership-gate';
@@ -48,8 +49,8 @@ const WORKOUT_BADGE = {
  * sesiones y una lista callada con la senda y la membresía. Los avisos van a
  * la campana de la cabecera.
  *
- * Lo que el móvil tiene y la web no: Repi (la mascota de los widgets y
- * recordatorios locales), que depende del sistema de avisos del teléfono.
+ * Repi (la mascota) habla aquí con el mismo motor que el widget del móvil; lo
+ * que la web no tiene son los widgets y los avisos locales del teléfono.
  */
 export function DashboardClient({ firstName }: Readonly<{ firstName?: string }> = {}) {
   // La fecha es la del reloj de quien mira, no la del servidor.
@@ -135,6 +136,8 @@ export function DashboardClient({ firstName }: Readonly<{ firstName?: string }> 
           {membership.data && !membershipData?.vigenteHoy ? (
             <MembershipGate projection={membership.data} variant="compact" />
           ) : null}
+
+          <RepiCard />
 
           <span data-tutorial-id="dashboard:start-workout">
             <TodayCard

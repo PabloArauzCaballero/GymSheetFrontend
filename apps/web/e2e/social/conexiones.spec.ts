@@ -181,7 +181,7 @@ test('H3.S2.M3 deshacer un paso devuelve la carta y conserva los bloqueos', asyn
   await openPage(page, '/descubrir');
   await expect(page.getByRole('button', { name: 'Pasar de Ana de prueba' })).toBeVisible();
   await page.getByRole('button', { name: 'Pasar de Ana de prueba' }).click();
-  await expect(page.getByRole('heading', { name: 'No quedan cartas' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Ya viste a todos por hoy' })).toBeVisible();
   const undoButton = page.getByRole('button', { name: 'Deshacer la última' });
   await expect(undoButton).toBeVisible();
   await expect(undoButton).toBeEnabled();

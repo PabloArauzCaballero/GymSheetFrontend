@@ -21,3 +21,4 @@ export * from './session-labels';
 export * from './profile-completion';
 export * from './marketplace-labels';
 export * from './marketplace-categories';
+export * from './discovery-preferences';

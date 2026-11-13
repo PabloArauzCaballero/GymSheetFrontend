@@ -138,7 +138,11 @@ export function SocialDiscoverySettingsEditor() {
 }
 
 /** Preferencias explícitas, separadas del permiso para aparecer en descubrimiento. */
-export function DiscoveryPreferencesEditor() {
+/**
+ * `embedded`: dentro de Comunidad, sin la cabecera (la pantalla ya pregunta
+ * «a quién buscas») y con un solo botón que guarda y reparte la baraja.
+ */
+export function DiscoveryPreferencesEditor({ embedded = false, onSaved }: { embedded?: boolean; onSaved?: () => void } = {}) {
   const queryClient = useQueryClient();
   const preferences = useQuery({ queryKey: ['social', 'discovery-preferences'], queryFn: socialService.getDiscoveryPreferences });
   const [genders, setGenders] = useState<('MALE' | 'FEMALE')[]>([]);
@@ -160,6 +164,7 @@ export function DiscoveryPreferencesEditor() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['social', 'discovery-preferences'] });
       notify.success('Preferencias de Conocer guardadas.');
+      onSaved?.();
     },
     onError: (error: Error) => notify.error(error.message),
   });
@@ -172,67 +177,72 @@ export function DiscoveryPreferencesEditor() {
     </Text>
   );
 
+  const form = (
+    <View style={{ gap: spacing.lg }}>
+      {embedded ? null : (
+        <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
+          Elige a quién quieres conocer. Sin esto, la baraja no adivina por ti.
+        </Text>
+      )}
+
+      <View style={{ gap: spacing.sm }}>
+        {fieldLabel('Quiero conocer')}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+          <FilterChip label="Hombres" onPress={() => toggle(genders, 'MALE', setGenders)} selected={genders.includes('MALE')} />
+          <FilterChip label="Mujeres" onPress={() => toggle(genders, 'FEMALE', setGenders)} selected={genders.includes('FEMALE')} />
+        </View>
+      </View>
+
+      <View style={{ gap: spacing.sm }}>
+        {fieldLabel('Busco')}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+          <FilterChip icon="barbell-outline" label="Entrenar" onPress={() => toggle(intents, 'TRAINING', setIntents)} selected={intents.includes('TRAINING')} />
+          <FilterChip icon="people-outline" label="Amistad" onPress={() => toggle(intents, 'FRIENDSHIP', setIntents)} selected={intents.includes('FRIENDSHIP')} />
+          <FilterChip icon="heart-outline" label="Citas" onPress={() => toggle(intents, 'DATING', setIntents)} selected={intents.includes('DATING')} />
+        </View>
+      </View>
+
+      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+        {([[minAge, setMinAge, 'Edad mín.'], [maxAge, setMaxAge, 'Edad máx.'], [radiusKm, setRadiusKm, 'Radio (km)']] as const).map(([value, setter, label]) => (
+          <View key={label} style={{ flex: 1, gap: spacing.xs }}>
+            {fieldLabel(label)}
+            <TextInput
+              accessibilityLabel={label}
+              keyboardType="number-pad"
+              onChangeText={setter}
+              style={{
+                color: colors.text,
+                fontSize: fontSizes.md,
+                fontWeight: semibold,
+                textAlign: 'center',
+                backgroundColor: colors.surfaceLow,
+                borderColor: colors.border,
+                borderWidth: 1,
+                borderRadius: radii.lg,
+                borderCurve: 'continuous',
+                paddingVertical: spacing.smd,
+              }}
+              value={value}
+            />
+          </View>
+        ))}
+      </View>
+
+      <View style={{ gap: spacing.xs }}>
+        <Checkbox checked={flexibleAge} label="Ampliar un poco la edad si hay pocas personas" onChange={setFlexibleAge} />
+        <Checkbox checked={flexibleDistance} label="Ampliar un poco la distancia si hay pocas personas" onChange={setFlexibleDistance} />
+      </View>
+
+      <Button label={embedded ? 'Buscar compañeros' : 'Guardar preferencias'} loading={save.isPending} disabled={!genders.length || !intents.length || Number(minAge) < 18 || Number(maxAge) < Number(minAge) || Number(radiusKm) < 1 || Number(radiusKm) > 500} onPress={() => save.mutate({
+        genders, intents, minAge: Number(minAge), maxAge: Number(maxAge), radiusKm: Number(radiusKm), flexibleAge, flexibleDistance, expectedVersion: version,
+      })} />
+    </View>
+  );
+
+  if (embedded) return <Card>{form}</Card>;
   return (
     <Section icon="options-outline" title="Preferencias de Conocer">
-      <Card>
-        <View style={{ gap: spacing.lg }}>
-          <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
-            Elige a quién quieres conocer. Sin esto, la baraja no adivina por ti.
-          </Text>
-
-          <View style={{ gap: spacing.sm }}>
-            {fieldLabel('Quiero conocer')}
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-              <FilterChip label="Hombres" onPress={() => toggle(genders, 'MALE', setGenders)} selected={genders.includes('MALE')} />
-              <FilterChip label="Mujeres" onPress={() => toggle(genders, 'FEMALE', setGenders)} selected={genders.includes('FEMALE')} />
-            </View>
-          </View>
-
-          <View style={{ gap: spacing.sm }}>
-            {fieldLabel('Busco')}
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-              <FilterChip icon="barbell-outline" label="Entrenar" onPress={() => toggle(intents, 'TRAINING', setIntents)} selected={intents.includes('TRAINING')} />
-              <FilterChip icon="people-outline" label="Amistad" onPress={() => toggle(intents, 'FRIENDSHIP', setIntents)} selected={intents.includes('FRIENDSHIP')} />
-              <FilterChip icon="heart-outline" label="Citas" onPress={() => toggle(intents, 'DATING', setIntents)} selected={intents.includes('DATING')} />
-            </View>
-          </View>
-
-          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            {([[minAge, setMinAge, 'Edad mín.'], [maxAge, setMaxAge, 'Edad máx.'], [radiusKm, setRadiusKm, 'Radio (km)']] as const).map(([value, setter, label]) => (
-              <View key={label} style={{ flex: 1, gap: spacing.xs }}>
-                {fieldLabel(label)}
-                <TextInput
-                  accessibilityLabel={label}
-                  keyboardType="number-pad"
-                  onChangeText={setter}
-                  style={{
-                    color: colors.text,
-                    fontSize: fontSizes.md,
-                    fontWeight: semibold,
-                    textAlign: 'center',
-                    backgroundColor: colors.surfaceLow,
-                    borderColor: colors.border,
-                    borderWidth: 1,
-                    borderRadius: radii.lg,
-                    borderCurve: 'continuous',
-                    paddingVertical: spacing.smd,
-                  }}
-                  value={value}
-                />
-              </View>
-            ))}
-          </View>
-
-          <View style={{ gap: spacing.xs }}>
-            <Checkbox checked={flexibleAge} label="Ampliar un poco la edad si hay pocas personas" onChange={setFlexibleAge} />
-            <Checkbox checked={flexibleDistance} label="Ampliar un poco la distancia si hay pocas personas" onChange={setFlexibleDistance} />
-          </View>
-
-          <Button label="Guardar preferencias" loading={save.isPending} disabled={!genders.length || !intents.length || Number(minAge) < 18 || Number(maxAge) < Number(minAge) || Number(radiusKm) < 1 || Number(radiusKm) > 500} onPress={() => save.mutate({
-            genders, intents, minAge: Number(minAge), maxAge: Number(maxAge), radiusKm: Number(radiusKm), flexibleAge, flexibleDistance, expectedVersion: version,
-          })} />
-        </View>
-      </Card>
+      <Card>{form}</Card>
     </Section>
   );
 }

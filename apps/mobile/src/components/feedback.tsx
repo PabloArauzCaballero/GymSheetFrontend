@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { SvgXml } from 'react-native-svg';
+import { mascotXml, type MascotMood } from '@gymsheet/design-tokens/repi';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -130,8 +132,21 @@ export function RowsSkeleton({ rows = 4, thumb = 64 }: { rows?: number; thumb?: 
 
 type ViewProps = React.ComponentProps<typeof View>;
 
+/** Repi en un vacío: protagonista, pero sin empujar la acción fuera de pantalla. */
+const MASCOT_EMPTY_SIZE = 112;
+
+/** Repi en un estado vacío: decorativa, el título y el mensaje ya lo dicen. */
+function Mascot({ mood, size }: { mood: MascotMood; size: number }) {
+  return (
+    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <SvgXml height={size} width={size} xml={mascotXml(mood)} />
+    </View>
+  );
+}
+
 function CenteredState({
   icon,
+  mascot,
   title,
   message,
   children,
@@ -140,6 +155,7 @@ function CenteredState({
   compact = false,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
+  mascot?: MascotMood;
   title: string;
   message: string;
   children?: React.ReactNode;
@@ -147,7 +163,7 @@ function CenteredState({
   onLayout?: ViewProps['onLayout'];
   compact?: boolean;
 }) {
-  if (compact) return <CompactState icon={icon} message={message} title={title}>{children}</CompactState>;
+  if (compact) return <CompactState icon={icon} mascot={mascot} message={message} title={title}>{children}</CompactState>;
   return (
     <View
       onLayout={onLayout}
@@ -162,18 +178,24 @@ function CenteredState({
           paddingVertical: spacing.xl,
           paddingHorizontal: spacing.lg,
         },
+        // Con Repi la ilustración ya hace de superficie: sin tarjeta debajo.
+        mascot ? { backgroundColor: 'transparent', boxShadow: 'none', paddingVertical: spacing.lg } : null,
         style,
       ]}
     >
       {/* Decorative: the title and message already carry the meaning, so the
           glyph is hidden from the accessibility tree instead of read aloud. */}
-      <Ionicons
-        accessibilityElementsHidden
-        color={colors.textMuted}
-        importantForAccessibility="no-hide-descendants"
-        name={icon}
-        size={iconSizes.xl}
-      />
+      {mascot ? (
+        <Mascot mood={mascot} size={MASCOT_EMPTY_SIZE} />
+      ) : (
+        <Ionicons
+          accessibilityElementsHidden
+          color={colors.textMuted}
+          importantForAccessibility="no-hide-descendants"
+          name={icon}
+          size={iconSizes.xl}
+        />
+      )}
       <Text style={{ textAlign: 'center' }} variant="headline">
         {title}
       </Text>
@@ -194,11 +216,13 @@ function CenteredState({
  */
 function CompactState({
   icon,
+  mascot,
   title,
   message,
   children,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
+  mascot?: MascotMood;
   title: string;
   message: string;
   children?: React.ReactNode;
@@ -215,7 +239,7 @@ function CompactState({
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd }}>
-        <View
+        {mascot ? <Mascot mood={mascot} size={56} /> : <View
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
           style={{
@@ -229,7 +253,7 @@ function CompactState({
           }}
         >
           <Ionicons color={colors.textMuted} name={icon} size={iconSizes.lg} />
-        </View>
+        </View>}
         <View style={{ flex: 1, gap: 2 }}>
           <Text variant="headline">{title}</Text>
           <Text selectable tone="muted" variant="subhead">
@@ -249,6 +273,7 @@ function CompactState({
  */
 export function EmptyState({
   icon = 'sparkles-outline',
+  mascot,
   title,
   message,
   children,
@@ -257,6 +282,8 @@ export function EmptyState({
   compact = false,
 }: {
   icon?: keyof typeof Ionicons.glyphMap;
+  /** Repi en lugar del glifo, con el ánimo que pida el vacío. */
+  mascot?: MascotMood;
   title: string;
   message: string;
   children?: React.ReactNode;
@@ -266,7 +293,7 @@ export function EmptyState({
   compact?: boolean;
 }) {
   return (
-    <CenteredState compact={compact} icon={icon} message={message} onLayout={onLayout} style={style} title={title}>
+    <CenteredState compact={compact} icon={icon} mascot={mascot} message={message} onLayout={onLayout} style={style} title={title}>
       {children}
     </CenteredState>
   );
