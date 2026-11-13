@@ -8,6 +8,7 @@ import {
   bumpSeconds,
   buildFlowBlocks,
   currentStep,
+  isSameLocalDay,
   isStaleSession,
   openingWeight,
   pageAfterLogging,
@@ -294,4 +295,13 @@ test('mejor que la última vez: más peso, o el mismo con más repeticiones', ()
   // Primera vez o sin carga: no hay marca.
   assert.equal(beatsReference({ pesoKg: 60, repeticiones: 8 }, null), false);
   assert.equal(beatsReference({ pesoKg: 0, repeticiones: 20 }, { pesoKg: 0, repeticiones: 12 }), false);
+});
+
+describe('isSameLocalDay', () => {
+  it('reconoce el mismo día y descarta el de ayer', () => {
+    const now = new Date(2026, 10, 12, 15, 0).getTime();
+    assert.equal(isSameLocalDay(new Date(2026, 10, 12, 6, 30).toISOString(), now), true);
+    assert.equal(isSameLocalDay(new Date(2026, 10, 11, 23, 59).toISOString(), now), false);
+    assert.equal(isSameLocalDay('no-es-fecha', now), false);
+  });
 });

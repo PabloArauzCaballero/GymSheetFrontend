@@ -23,5 +23,5 @@ export default function Index() {
     return <View style={{ flex: 1, backgroundColor: colors.background }} />;
   }
 
-  return <Redirect href={status === 'authenticated' ? '/comunidad-mensajes' : '/(auth)/login'} />;
+  return <Redirect href={status === 'authenticated' ? '/comunidad' : '/(auth)/login'} />;
 }

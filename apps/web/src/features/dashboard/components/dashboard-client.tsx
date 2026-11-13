@@ -73,7 +73,11 @@ export function DashboardClient({ firstName }: Readonly<{ firstName?: string }> 
   });
 
   const sessions = workouts.data?.items ?? [];
-  const openSession = sessions.find((session) => session.estado === 'EN_PROGRESO');
+  // «En curso» es el entreno de hoy: uno abierto ayer ya no es el de ahora (misma regla que la barra del móvil).
+  const openSession = sessions.find(
+    (session) =>
+      session.estado === 'EN_PROGRESO' && new Date(session.fechaInicio).toDateString() === new Date().toDateString(),
+  );
   const activeAssignment = assignments.data?.find((item) => item.estado === 'ACTIVE');
   const training = summariseTraining(sessions);
   const overload = overloadDelta(training);

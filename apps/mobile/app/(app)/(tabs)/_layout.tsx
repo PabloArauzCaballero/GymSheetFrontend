@@ -224,10 +224,10 @@ function TabBarWithWorkout(props: BottomTabBarProps) {
 }
 
 /**
- * Cinco destinos, en este orden por pedido de Pablo (08/11/2026):
- * Mensajes (historias y chats) · Comunidad · Marketplace · Rutinas · Perfil.
+ * Cinco destinos, en este orden por pedido de Pablo (12/11/2026):
+ * Comunidad · Mensajes (historias y chats) · Marketplace · Rutinas · Perfil.
  * Inicio salió de la barra y vive en la pila padre (`../home.tsx`); la app
- * abre en Mensajes. Mensajes y Marketplace eran pantallas de la pila
+ * abre en Comunidad (la cabecera lleva el logo REPP; Mensajes es su propia pestaña). Mensajes y Marketplace eran pantallas de la pila
  * (`comunidad-mensajes`, `directorio`) y se movieron a esta carpeta: un
  * `Tabs.Screen` tiene que resolver a un archivo de aquí. Las URLs no cambian
  * porque los grupos no aparecen en la ruta.
@@ -378,19 +378,6 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="comunidad-mensajes"
-        options={{
-          title: 'Mensajes',
-          tabBarAccessibilityLabel:
-            requests > 0
-              ? `Mensajes, ${requests} ${requests === 1 ? 'solicitud' : 'solicitudes'} por responder, tab`
-              : undefined,
-          tabBarBadge: requests > 0 ? tabBadge(requests) : undefined,
-          tabBarBadgeStyle: badgeStyle,
-          tabBarIcon: tabIcon('mensajes'),
-        }}
-      />
-      <Tabs.Screen
         name="comunidad"
         options={{
           title: 'Comunidad',
@@ -413,6 +400,19 @@ export default function TabsLayout() {
           // la app, y aquí no hay nada roto: hay gente esperando.
           tabBarBadgeStyle: badgeStyle,
           tabBarIcon: tabIcon('comunidad'),
+        }}
+      />
+      <Tabs.Screen
+        name="comunidad-mensajes"
+        options={{
+          title: 'Mensajes',
+          tabBarAccessibilityLabel:
+            requests > 0
+              ? `Mensajes, ${requests} ${requests === 1 ? 'solicitud' : 'solicitudes'} por responder, tab`
+              : undefined,
+          tabBarBadge: requests > 0 ? tabBadge(requests) : undefined,
+          tabBarBadgeStyle: badgeStyle,
+          tabBarIcon: tabIcon('mensajes'),
         }}
       />
       <Tabs.Screen
