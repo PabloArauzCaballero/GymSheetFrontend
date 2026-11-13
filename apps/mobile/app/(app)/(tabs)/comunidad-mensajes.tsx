@@ -550,14 +550,17 @@ export default function ComunidadMensajesScreen() {
       <ScreenHeader title="Mensajes" />
 
 
-      <StoriesBar />
+      {/* Historias y pestañas forman un bloque: entre ellas un respiro corto, no el hueco de sección. */}
+      <View style={{ gap: spacing.sm }}>
+        <StoriesBar />
 
-      <TextTabs
-        badges={{ solicitudes: receivedCount }}
-        onChange={setTab}
-        tabs={TABS.map((item) => ({ value: item.value, label: item.label }))}
-        value={tab}
-      />
+        <TextTabs
+          badges={{ solicitudes: receivedCount }}
+          onChange={setTab}
+          tabs={TABS.map((item) => ({ value: item.value, label: item.label }))}
+          value={tab}
+        />
+      </View>
 
       {tab === 'general' ? <GeneralTab /> : tab === 'solicitudes' ? <SolicitudesTab /> : <ConexionesTab />}
     </ScrollScreen>
