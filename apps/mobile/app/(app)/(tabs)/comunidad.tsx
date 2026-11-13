@@ -11,6 +11,8 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { SvgXml } from 'react-native-svg';
+import { mascotXml } from '@gymsheet/design-tokens/repi';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,6 +33,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { GymDirectoryEntry, SwipeDirection, PublicBranchSummary } from '@gymsheet/schemas';
 import { ApiError } from '@gymsheet/api-client';
+import { needsDiscoveryPreferences } from '@gymsheet/domain';
 import { trainingGoals } from '@gymsheet/types';
 import {
   chatService,
@@ -1039,14 +1042,16 @@ export default function ComunidadScreen() {
             contentContainerStyle={{ gap: spacing.md, padding: spacing.lg }}
             style={{ flex: 1, width: '100%' }}
           >
-            <Text style={{ color: colors.text, fontSize: fontSizes.lg, fontWeight: '700' }}>
+            <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ alignItems: 'center' }}>
+              <SvgXml height={96} width={96} xml={mascotXml('flirty')} />
+            </View>
+            <Text style={{ color: colors.text, fontSize: fontSizes.lg, fontWeight: '700', textAlign: 'center' }}>
               Cuéntanos a quién buscas
             </Text>
-            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, textAlign: 'center' }}>
               Elige con quién quieres entrenar o conocer gente. Solo verás personas que encajen.
             </Text>
-            <DiscoveryPreferencesEditor />
-            <Button label="Buscar compañeros" onPress={redeal} />
+            <DiscoveryPreferencesEditor embedded onSaved={redeal} />
           </ScrollView>
         ) : deck.isError ? (
           <View style={{ flex: 1, width: '100%', justifyContent: 'center', padding: spacing.lg }}>
@@ -1361,19 +1366,9 @@ export default function ComunidadScreen() {
               gap: spacing.lg,
             }}
           >
-            <View
-              style={{
-                width: 96,
-                height: 96,
-                borderRadius: radii.full,
-                backgroundColor: colors.surfaceHigh,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 2,
-                borderColor: colors.volt,
-              }}
-            >
-              <Ionicons color={colors.volt} name="sparkles" size={42} />
+            {/* Repi descansa: el mazo se acabó, no es un error. */}
+            <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              <SvgXml height={128} width={128} xml={mascotXml('resting')} />
             </View>
 
             <View style={{ alignItems: 'center', gap: spacing.xs }}>
@@ -1385,7 +1380,7 @@ export default function ComunidadScreen() {
                   textAlign: 'center',
                 }}
               >
-                ¡Has visto a todos por ahora!
+                Ya viste a todos por hoy
               </Text>
               <Text
                 style={{
@@ -1396,7 +1391,7 @@ export default function ComunidadScreen() {
                   maxWidth: 280,
                 }}
               >
-                Ajusta tus filtros de objetivo o sede para encontrar a más deportistas listos para entrenar.
+                Repi también se quedó sin perfiles. Vuelve mañana o abre los filtros de objetivo y sede.
               </Text>
             </View>
 
@@ -1615,6 +1610,3 @@ export default function ComunidadScreen() {
 }
 
 /** El servidor responde 400 cuando el socio aún no guardó sus preferencias de Conocer. */
-function needsDiscoveryPreferences(error: unknown): boolean {
-  return error instanceof ApiError && error.status === 400 && /preferencias/i.test(error.message);
-}

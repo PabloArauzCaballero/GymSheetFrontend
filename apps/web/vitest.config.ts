@@ -40,6 +40,10 @@ export default defineConfig({
       { find: /^react\/(.*)$/u, replacement: `${reactDir}/$1` },
       { find: /^react-dom$/u, replacement: reactDomDir },
       { find: /^react-dom\/(.*)$/u, replacement: `${reactDomDir}/$1` },
+      // Subrutas antes que el paquete: el alias de cadena se comería el prefijo.
+      { find: '@gymsheet/design-tokens/repi', replacement: fileURLToPath(new URL('../../packages/design-tokens/src/repi.ts', import.meta.url)) },
+      { find: '@gymsheet/design-tokens/art', replacement: fileURLToPath(new URL('../../packages/design-tokens/src/art.ts', import.meta.url)) },
+      { find: '@gymsheet/domain/nudge', replacement: fileURLToPath(new URL('../../packages/domain/src/nudge/index.ts', import.meta.url)) },
       { find: '@gymsheet/types', replacement: pkg('types') },
       { find: '@gymsheet/schemas', replacement: pkg('schemas') },
       { find: '@gymsheet/api-client', replacement: pkg('api-client') },

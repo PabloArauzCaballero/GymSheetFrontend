@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { CirclePlay, CirclePlus, FileJson, Flame, Sheet } from 'lucide-react';
+import { CirclePlay, CirclePlus, FileJson, Sheet } from 'lucide-react';
 import { useState } from 'react';
 import { notify } from '@/shared/notifications';
 import { workoutService } from '@/features/workouts/services/workout-service';
@@ -95,7 +95,7 @@ export function WorkoutList() {
       ) : (
         <EmptyState
           description="Cuando registres una sesión, quedará aquí con sus series y cargas."
-          icon={<Flame />}
+          mascot="wink"
           title="Todavía sin entrenos"
         />
       )}

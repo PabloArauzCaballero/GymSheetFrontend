@@ -133,6 +133,7 @@ export default function WorkoutsScreen() {
       ) : sessions.length === 0 ? (
         <EmptyState
           icon="flame-outline"
+          mascot="wink"
           message="Cuando registres una sesión, quedará aquí con sus series y cargas."
           title="Todavía sin entrenos"
         />

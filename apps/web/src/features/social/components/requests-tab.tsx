@@ -59,7 +59,7 @@ export function RequestsTab() {
   const sent = (pending.data ?? []).filter((connection) => connection.direction === 'SENT');
 
   if (!received.length && !sent.length) {
-    return <EmptyState description="No tienes solicitudes pendientes." title="Sin solicitudes" />;
+    return <EmptyState description="Cuando alguien quiera conectar contigo, aparecerá aquí." mascot="resting" title="Sin solicitudes" />;
   }
 
   return (

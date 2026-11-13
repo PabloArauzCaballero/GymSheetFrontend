@@ -72,10 +72,10 @@ describe('DescubrirClient contract errors', () => {
 
     renderDiscover();
 
-    expect(await screen.findByRole('heading', { name: 'No quedan cartas' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Ya viste a todos por hoy' })).toBeTruthy();
     expect(
       screen.getByText(
-        'No hay personas que coincidan con estos filtros por ahora. Cámbialos en Comunidad o vuelve más tarde.',
+        'Repi también se quedó sin perfiles. Vuelve mañana o cambia los filtros de objetivo y sede.',
       ),
     ).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Comunidad' })).toHaveAttribute('href', '/comunidad');
