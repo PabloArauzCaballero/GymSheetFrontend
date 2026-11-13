@@ -93,12 +93,6 @@
     line-height: 1.2;
   }
 
-  .text-gradient-volt {
-    background: linear-gradient(100deg, var(--text) 0%, var(--text) 45%, var(--accent-ink) 130%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
 
   /* Rampa del móvil (`apps/mobile/src/theme/type.ts` → `textVariants`):
    * headline 17/22 600 · subhead 15/20 · footnote 13/18 · caption 12/16 ·

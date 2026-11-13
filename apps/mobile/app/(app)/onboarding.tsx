@@ -194,7 +194,7 @@ export default function OnboardingScreen() {
       void queryClient.invalidateQueries({ queryKey: ['profile'] });
       void queryClient.invalidateQueries({ queryKey: ['routines'] });
       notify.success(onboardingDone);
-      router.replace('/comunidad-mensajes');
+      router.replace('/comunidad');
     },
     onError: (error: Error) => notify.error(error),
   });

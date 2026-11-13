@@ -166,3 +166,10 @@ export function onboardingFinish(firstName: string, atGym: boolean) {
       : 'Marca tu material, completa y elige la rutina de tu primer entreno.',
   };
 }
+
+/** Lo que se lleva quien se registra: tres filas de 4–6 palabras (alta del móvil y portada web). */
+export const registerBenefitLabels = [
+  'Rutinas guiadas, serie a serie',
+  'Entrena y chatea con tu gente',
+  'Rachas, insignias y cartas de premio',
+] as const;

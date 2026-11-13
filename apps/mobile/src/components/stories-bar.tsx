@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -11,14 +11,14 @@ import { PressableScale } from '@/components/motion';
 import { StoryViewer } from '@/components/story-viewer';
 import { StoryComposer } from '@/components/story-composer';
 import { ErrorState, Skeleton } from '@/components/feedback';
-import { useScreenFrame } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
+import { useStoryPrefs } from '@/state/story-prefs-store';
 import { useAuthStore } from '@/state/auth-store';
 import { initialsOf } from '@/lib/format';
 import { requestId } from '@/lib/request-id';
 import { canSubmitStoryAudience, toggleStoryAudienceRecipient } from '@/lib/story-audience-selection';
-import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, semibold, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, spacing } from '@/theme';
 
 const AVATAR_SIZE = 60;
 /** Diámetro del botón «+» sobre el avatar propio. */
@@ -174,7 +174,11 @@ function StorySourceSheet({
   recipientIds,
   onRecipientsChange,
   disabled,
+  reviewBeforePublish,
+  onReviewChange,
 }: {
+  reviewBeforePublish: boolean;
+  onReviewChange: (next: boolean) => void;
   visible: boolean;
   onClose: () => void;
   onCamera: () => void;
@@ -220,7 +224,7 @@ function StorySourceSheet({
               accessibilityRole="header"
               style={{ flex: 1, color: colors.text, fontSize: fontSizes.lg, fontWeight: '700', letterSpacing: -0.5 }}
             >
-              Nueva story
+              Ajustes de story
             </Text>
             <Pressable
               accessibilityLabel="Cerrar"
@@ -308,6 +312,23 @@ function StorySourceSheet({
             </ScrollView>
           ) : null}
 
+          <Pressable
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: reviewBeforePublish }}
+            onPress={() => onReviewChange(!reviewBeforePublish)}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: minTouchTarget }}
+          >
+            <Ionicons
+              color={reviewBeforePublish ? accentPolicy.ink : colors.textMuted}
+              name={reviewBeforePublish ? 'checkbox' : 'square-outline'}
+              size={iconSizes.md}
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: '600' }}>Revisar antes de publicar</Text>
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>Añade un texto antes de compartir. Apagado, publica al aceptar la foto.</Text>
+            </View>
+          </Pressable>
+
           <Button disabled={disabled || selectionIncomplete} icon="camera-outline" label="Hacer una foto o un vídeo" onPress={onCamera} />
           <Button disabled={disabled || selectionIncomplete} icon="images-outline" label="Elegir de la galería" onPress={onLibrary} variant="ghost" />
         </View>
@@ -364,7 +385,14 @@ export function StoriesBar() {
   /** Por quién se abre el visor; `null` es «cerrado». */
   const [openUserId, setOpenUserId] = useState<string | null>(null);
   const [sourceVisible, setSourceVisible] = useState(false);
-  const [audienceMode, setAudienceMode] = useState<'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS'>('ALL_CONNECTIONS');
+  const audienceMode = useStoryPrefs((state) => state.audienceMode);
+  const reviewBeforePublish = useStoryPrefs((state) => state.reviewBeforePublish);
+  const setPrefs = useStoryPrefs((state) => state.set);
+  const hydratePrefs = useStoryPrefs((state) => state.hydrate);
+  useEffect(() => {
+    void hydratePrefs();
+  }, [hydratePrefs]);
+  const setAudienceMode = useCallback((mode: 'ALL_CONNECTIONS' | 'SELECTED_CONNECTIONS') => setPrefs({ audienceMode: mode }), [setPrefs]);
   const [recipientIds, setRecipientIds] = useState<string[]>([]);
   const uploadAttemptRef = useRef<{
     file: { uri: string; name: string; mimeType: string };
@@ -422,22 +450,55 @@ export function StoriesBar() {
     if (attempt && !upload.isPending) upload.mutate(attempt);
   }
 
-  function openSourceSheet() {
+  /** Los tres puntos: ajustes de publicación (audiencia, galería, vista previa). */
+  function openSettingsSheet() {
+    if (upload.isPending) return;
+    setSourceVisible(true);
+  }
+
+  /**
+   * El toque principal: directo a la cámara con los ajustes recordados. Si la
+   * audiencia es «personas elegidas» y no hay ninguna marcada, no se puede
+   * publicar a nadie: se abren los ajustes en vez de fallar después.
+   */
+  function startStory() {
     // Una subida a la vez: sin esto, pulsar «+» tres veces lanza tres stories.
     if (upload.isPending) return;
-    setAudienceMode('ALL_CONNECTIONS');
-    setRecipientIds([]);
-    setSourceVisible(true);
+    const prefs = useStoryPrefs.getState();
+    // Sin los ajustes cargados no se sabe a quién iría: no se publica a ciegas.
+    if (!prefs.hydrated) {
+      void prefs.hydrate();
+      return;
+    }
+    if (prefs.audienceMode === 'SELECTED_CONNECTIONS' && recipientIds.length === 0) {
+      setSourceVisible(true);
+      return;
+    }
+    void handleFromCamera();
   }
 
   function submitPicked(result: ImagePicker.ImagePickerResult) {
     const asset = result.canceled ? null : result.assets?.[0];
     if (!asset) return;
     const file = fileFromAsset(asset);
+    // Se lee del store al enviar, no del cierre del render: lo que cuenta es la elección vigente.
+    const { audienceMode: mode, reviewBeforePublish: review } = useStoryPrefs.getState();
+    if (mode === 'SELECTED_CONNECTIONS' && recipientIds.length === 0) {
+      setSourceVisible(true);
+      return;
+    }
+    if (!review) {
+      // Sin vista previa: aceptar la foto es publicar (toque mínimo).
+      const attempt = { file, requestId: requestId(), mode, recipients: [...recipientIds], caption: null };
+      uploadAttemptRef.current = attempt;
+      setUploadFailed(false);
+      upload.mutate(attempt);
+      return;
+    }
     setDraft({
       file,
       isVideo: file.mimeType.startsWith('video/'),
-      mode: audienceMode,
+      mode,
       recipients: [...recipientIds],
     });
   }
@@ -501,10 +562,6 @@ export function StoriesBar() {
     return [...mine, ...others];
   }, [currentUserId, feed.data]);
   const myEntry = entries.find((entry) => entry.userId === currentUserId);
-  const frame = useScreenFrame();
-  const { width: screenWidth } = useWindowDimensions();
-  const promptMaxWidth =
-    screenWidth - 2 * frame.gutter - frame.insets.left - frame.insets.right - COLUMN_WIDTH - spacing.md;
   const otherEntries = entries.filter((entry) => entry.userId !== currentUserId);
 
   /**
@@ -533,7 +590,7 @@ export function StoriesBar() {
             <PressableScale
               accessibilityLabel={myEntry ? 'Ver tu story' : 'Publicar una story'}
               haptic="none"
-              onPress={() => (myEntry ? setOpenUserId(myEntry.userId) : openSourceSheet())}
+              onPress={() => (myEntry ? setOpenUserId(myEntry.userId) : startStory())}
               scaleTo={0.94}
             >
               <StoryRing
@@ -549,6 +606,29 @@ export function StoriesBar() {
             >
               {upload.isPending ? 'Publicando…' : 'Tu historia'}
             </Text>
+            {/* Ajustes de story: esquina superior del anillo, simétrica al «+». */}
+            <PressableScale
+              accessibilityLabel="Ajustes de story"
+              disabled={upload.isPending}
+              hitSlop={10}
+              onPress={openSettingsSheet}
+              scaleTo={0.88}
+              style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                width: ADD_BADGE_SIZE,
+                height: ADD_BADGE_SIZE,
+                borderRadius: radii.full,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: colors.surfaceHighest,
+                borderWidth: 2,
+                borderColor: colors.background,
+              }}
+            >
+              <Ionicons color={colors.text} name="ellipsis-horizontal" size={12} />
+            </PressableScale>
             {uploadFailed ? (
               <Pressable accessibilityRole="button" onPress={retryUpload}>
                 <Text style={{ color: colors.volt, fontSize: fontSizes.xs, fontWeight: '700', textDecorationLine: 'underline' }}>
@@ -561,7 +641,7 @@ export function StoriesBar() {
               accessibilityState={{ disabled: upload.isPending, busy: upload.isPending }}
               disabled={upload.isPending}
               hitSlop={ADD_BADGE_HIT_SLOP}
-              onPress={openSourceSheet}
+              onPress={startStory}
               scaleTo={0.88}
               style={{
                 position: 'absolute',
@@ -585,51 +665,6 @@ export function StoriesBar() {
               )}
             </PressableScale>
           </View>
-
-          {/* Tira vacía (ni tu story ni la de nadie): el hueco junto a «Tu
-              historia» invita a la acción que la tira existe para ofrecer, en
-              vez de quedar en blanco. Abre la misma hoja que el «+». */}
-          {!myEntry && otherEntries.length === 0 && !upload.isPending ? (
-            <PressableScale
-              accessibilityHint="Abre la cámara o la galería"
-              accessibilityLabel="Comparte tu entreno en tu story"
-              haptic="light"
-              onPress={openSourceSheet}
-              style={{
-                alignSelf: 'flex-start',
-                // En una tira horizontal nada encoge solo: en un iPhone SE la
-                // tarjeta se salía por el borde. Ocupa lo que queda de pantalla.
-                maxWidth: promptMaxWidth,
-                marginTop: spacing.sm,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: spacing.smd,
-                paddingVertical: spacing.smd,
-                paddingHorizontal: spacing.md,
-                borderRadius: radii.xl,
-                borderCurve: 'continuous',
-                borderWidth: StyleSheet.hairlineWidth,
-                borderColor: overlay.glass,
-                backgroundColor: colors.surfaceLow,
-              }}
-            >
-              <Ionicons
-                accessibilityElementsHidden
-                color={accentPolicy.ink}
-                importantForAccessibility="no-hide-descendants"
-                name="camera-outline"
-                size={iconSizes.lg}
-              />
-              <View style={{ gap: 2, flexShrink: 1 }}>
-                <Text numberOfLines={2} style={{ color: colors.text, fontSize: fontSizes.sm, fontWeight: semibold }}>
-                  Comparte tu entreno
-                </Text>
-                <Text numberOfLines={2} style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-                  Una foto o un vídeo de hoy.
-                </Text>
-              </View>
-            </PressableScale>
-          ) : null}
 
           {otherEntries.map((entry) => (
             <PressableScale
@@ -661,6 +696,8 @@ export function StoriesBar() {
         onCamera={() => void handleFromCamera()}
         onClose={() => setSourceVisible(false)}
         onAudienceModeChange={setAudienceMode}
+        onReviewChange={(next) => setPrefs({ reviewBeforePublish: next })}
+        reviewBeforePublish={reviewBeforePublish}
         onRecipientsChange={setRecipientIds}
         onLibrary={() => void handleFromLibrary()}
         recipientIds={recipientIds}

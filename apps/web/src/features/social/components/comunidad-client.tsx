@@ -7,7 +7,6 @@ import {
   Heart,
   LifeBuoy,
   MapPin,
-  MessagesSquare,
   ShieldBan,
   SlidersHorizontal,
   Store,
@@ -18,10 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
-import { interactionKeys, interactionsService } from '@/features/interactions/services/interactions-service';
 import { profileService } from '@/features/profile/services/profile-service';
-import { socialService } from '@/features/social/services/social-service';
-import { connectionKeys } from '@/features/social/services/directory-keys';
 import { queryKeys } from '@/shared/api/query-keys';
 import { Divider, ListCard, NavRow } from '@/shared/components/mobile/nav-row';
 import { cn } from '@/shared/lib/cn';
@@ -154,18 +150,6 @@ export function ComunidadClient() {
     queryFn: () => profileService.getProfile().catch(() => null),
     retry: false,
   });
-  const counts = useQuery({
-    queryKey: interactionKeys.counts,
-    queryFn: () => interactionsService.counts().catch(() => null),
-    staleTime: 60_000,
-  });
-  const pending = useQuery({
-    queryKey: connectionKeys.byStatus('PENDING'),
-    queryFn: () => socialService.listConnections('PENDING').catch(() => null),
-    staleTime: 30_000,
-  });
-  const hasPendingReceived = (pending.data ?? []).some((connection) => connection.direction === 'RECEIVED');
-  const alerts = counts.data ? counts.data.likesReceived + counts.data.profileViewsNew : 0;
   const filtersActive = Object.values(preferences).some(Boolean);
   const goal = pill === 'goal' ? (profile.data?.objetivo ?? 'HIPERTROFIA') : preferences.objetivo;
 
@@ -211,16 +195,7 @@ export function ComunidadClient() {
           ))}
         </div>
 
-        <div className="flex items-center gap-1">
-          <RoundButton
-            dot={hasPendingReceived || alerts > 0}
-            href="/chat"
-            label={hasPendingReceived ? 'Mensajes y solicitudes, con solicitudes pendientes' : 'Mensajes y solicitudes'}
-          >
-            <MessagesSquare aria-hidden className="size-5" />
-          </RoundButton>
-          <OverflowSheet onPreferences={() => setPreferencesOpen(true)} />
-        </div>
+        <OverflowSheet onPreferences={() => setPreferencesOpen(true)} />
       </div>
 
       <DescubrirClient

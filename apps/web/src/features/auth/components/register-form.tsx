@@ -51,66 +51,72 @@ export function RegisterForm() {
 
   return (
     <form className="grid gap-5" method="post" onSubmit={form.handleSubmit(submit)} noValidate>
-      <Field
-        error={form.formState.errors.nombreCompleto?.message}
-        htmlFor="nombreCompleto"
-        label={authCopy.fields.fullName.label}
-      >
-        <InputWithIcon
-          autoComplete="name"
-          icon={<UserRound className="size-4" />}
-          id="nombreCompleto"
-          placeholder={authCopy.fields.fullName.placeholder}
-          {...form.register('nombreCompleto')}
-        />
-      </Field>
+      {/* En escritorio, de dos en dos: el alta cabe en una pantalla. */}
+      <div className="grid gap-5 lg:grid-cols-2 lg:gap-4">
+        <Field
+          error={form.formState.errors.nombreCompleto?.message}
+          htmlFor="nombreCompleto"
+          label={authCopy.fields.fullName.label}
+        >
+          <InputWithIcon
+            autoComplete="name"
+            icon={<UserRound className="size-4" />}
+            id="nombreCompleto"
+            placeholder={authCopy.fields.fullName.placeholder}
+            {...form.register('nombreCompleto')}
+          />
+        </Field>
 
-      <Field
-        error={form.formState.errors.email?.message}
-        htmlFor="email"
-        label={authCopy.fields.email.label}
-      >
-        <InputWithIcon
-          autoComplete="email"
-          icon={<AtSign className="size-4" />}
-          id="email"
-          placeholder={authCopy.fields.email.placeholder}
-          type="email"
-          {...form.register('email')}
-        />
-      </Field>
+        <Field
+          error={form.formState.errors.email?.message}
+          htmlFor="email"
+          label={authCopy.fields.email.label}
+        >
+          <InputWithIcon
+            autoComplete="email"
+            icon={<AtSign className="size-4" />}
+            id="email"
+            placeholder={authCopy.fields.email.placeholder}
+            type="email"
+            {...form.register('email')}
+          />
+        </Field>
+      </div>
 
-      <Field
-        error={form.formState.errors.password?.message}
-        htmlFor="password"
-        label={authCopy.fields.password.label}
-      >
-        <PasswordInput
-          autoComplete="new-password"
-          hideLabel={authCopy.hidePassword}
-          icon={<LockKeyhole className="size-4" />}
-          id="password"
-          placeholder={authCopy.fields.password.placeholder}
-          showLabel={authCopy.showPassword}
-          {...form.register('password')}
-        />
-      </Field>
+      {/* En escritorio, de dos en dos: el alta cabe en una pantalla. */}
+      <div className="grid gap-5 lg:grid-cols-2 lg:gap-4">
+        <Field
+          error={form.formState.errors.password?.message}
+          htmlFor="password"
+          label={authCopy.fields.password.label}
+        >
+          <PasswordInput
+            autoComplete="new-password"
+            hideLabel={authCopy.hidePassword}
+            icon={<LockKeyhole className="size-4" />}
+            id="password"
+            placeholder={authCopy.fields.password.placeholder}
+            showLabel={authCopy.showPassword}
+            {...form.register('password')}
+          />
+        </Field>
 
-      <Field
-        error={form.formState.errors.confirmation?.message}
-        htmlFor="confirmation"
-        label={authCopy.fields.confirmation.label}
-      >
-        <PasswordInput
-          autoComplete="new-password"
-          hideLabel={authCopy.hidePassword}
-          icon={<ShieldCheck className="size-4" />}
-          id="confirmation"
-          placeholder={authCopy.fields.confirmation.placeholder}
-          showLabel={authCopy.showPassword}
-          {...form.register('confirmation')}
-        />
-      </Field>
+        <Field
+          error={form.formState.errors.confirmation?.message}
+          htmlFor="confirmation"
+          label={authCopy.fields.confirmation.label}
+        >
+          <PasswordInput
+            autoComplete="new-password"
+            hideLabel={authCopy.hidePassword}
+            icon={<ShieldCheck className="size-4" />}
+            id="confirmation"
+            placeholder={authCopy.fields.confirmation.placeholder}
+            showLabel={authCopy.showPassword}
+            {...form.register('confirmation')}
+          />
+        </Field>
+      </div>
 
       <Field
         error={form.formState.errors.genero?.message}

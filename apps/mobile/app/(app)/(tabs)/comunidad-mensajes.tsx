@@ -9,7 +9,7 @@ import { Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components
 import { ChatConversationRow } from '@/components/chat-conversation-row';
 import { PersonAvatar } from '@/components/person-avatar';
 import { Button } from '@/components/ui';
-import { PressableScale, SegmentedPill } from '@/components/motion';
+import { PressableScale } from '@/components/motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { confirm, notify } from '@/notifications';
 import { StoriesBar } from '@/components/stories-bar';
@@ -76,7 +76,7 @@ function IconButton({
  * borde y la píldora activa tocaba a sus vecinas.
  */
 const TABS: readonly { value: Tab; label: string; icon: keyof typeof Ionicons.glyphMap; activeIcon: keyof typeof Ionicons.glyphMap }[] = [
-  { value: 'general', label: 'General', icon: 'chatbubbles-outline', activeIcon: 'chatbubbles' },
+  { value: 'general', label: 'Chats', icon: 'chatbubbles-outline', activeIcon: 'chatbubbles' },
   { value: 'solicitudes', label: 'Solicitudes', icon: 'mail-unread-outline', activeIcon: 'mail-unread' },
   { value: 'conexiones', label: 'Conexiones', icon: 'people-outline', activeIcon: 'people' },
 ];
@@ -141,6 +141,89 @@ function PersonRow({
   );
 }
 
+/**
+ * Pestañas de texto con subrayado, como las de Mensajes de Instagram: el
+ * activo en tinta plena con una raya del acento; el resto, apagado. Sin
+ * contenedor ni relleno: la jerarquía la da el peso, no una caja.
+ */
+function TextTabs<T extends string>({
+  tabs,
+  value,
+  onChange,
+  badges,
+}: {
+  tabs: ReadonlyArray<{ value: T; label: string }>;
+  value: T;
+  onChange: (next: T) => void;
+  badges?: Partial<Record<T, number>>;
+}) {
+  return (
+    <View
+      accessibilityRole="tablist"
+      style={{
+        flexDirection: 'row',
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: alpha(colors.text, 0.12),
+      }}
+    >
+      {tabs.map((item) => {
+        const active = item.value === value;
+        const badge = badges?.[item.value] ?? 0;
+        return (
+          <Pressable
+            accessibilityLabel={badge > 0 ? `${item.label}, ${badge} ${badge === 1 ? 'pendiente' : 'pendientes'}` : item.label}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
+            key={item.value}
+            onPress={() => onChange(item.value)}
+            style={{ flex: 1, alignItems: 'center', paddingTop: spacing.smd, paddingBottom: spacing.smd + 2 }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text
+                style={{
+                  color: active ? colors.text : colors.textMuted,
+                  fontSize: fontSizes.md,
+                  fontWeight: active ? '700' : '500',
+                }}
+              >
+                {item.label}
+              </Text>
+              {badge > 0 ? (
+                <View
+                  style={{
+                    minWidth: 18,
+                    height: 18,
+                    paddingHorizontal: 5,
+                    borderRadius: radii.full,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: colors.volt,
+                  }}
+                >
+                  <Text style={{ color: accentContrast(), fontSize: fontSizes.xs, fontWeight: '700', lineHeight: 15 }}>
+                    {badge > 9 ? '9+' : badge}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+            <View
+              style={{
+                position: 'absolute',
+                bottom: -StyleSheet.hairlineWidth,
+                left: spacing.md,
+                right: spacing.md,
+                height: 2,
+                borderRadius: 1,
+                backgroundColor: active ? colors.text : 'transparent',
+              }}
+            />
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 function GeneralTab() {
   const router = useRouter();
   const conversations = useQuery({
@@ -155,8 +238,8 @@ function GeneralTab() {
   if (!conversations.data?.length) {
     return (
       <EmptyState
-        compact
         icon="chatbubbles-outline"
+        style={{ backgroundColor: 'transparent', boxShadow: 'none', paddingVertical: spacing['2xl'] }}
         message="Conecta con alguien de tu gimnasio y escríbele desde aquí."
         title="Aún no tienes chats"
       >
@@ -172,7 +255,7 @@ function GeneralTab() {
     );
   }
   return (
-    <Card>
+    <View>
       {conversations.data.map((conversation, index) => (
         <View key={conversation.conversationId}>
           {index > 0 ? <Divider /> : null}
@@ -182,7 +265,7 @@ function GeneralTab() {
           />
         </View>
       ))}
-    </Card>
+    </View>
   );
 }
 
@@ -228,7 +311,7 @@ function SolicitudesTab() {
 
   if (!received.length && !sent.length) {
     return (
-      <EmptyState compact icon="mail-open-outline" message="Cuando alguien quiera conectar contigo, aparecerá aquí." title="Sin solicitudes">
+      <EmptyState icon="mail-open-outline" message="Cuando alguien quiera conectar contigo, aparecerá aquí." style={{ backgroundColor: 'transparent', boxShadow: 'none', paddingVertical: spacing['2xl'] }} title="Sin solicitudes">
         <Button
           icon="compass-outline"
           label="Descubrir gente"
@@ -370,8 +453,8 @@ function ConexionesTab() {
   if (!connections.data?.length) {
     return (
       <EmptyState
-        compact
         icon="people-outline"
+        style={{ backgroundColor: 'transparent', boxShadow: 'none', paddingVertical: spacing['2xl'] }}
         message="Conecta con gente de tu gimnasio para entrenar y chatear juntos."
         title="Aún no tienes conexiones"
       >
@@ -464,79 +547,20 @@ export default function ComunidadMensajesScreen() {
     <ScrollScreen>
       {/* Quien quiere conectar ya se ve dos veces —el «1» en Solicitudes y en la
           barra inferior—; un aviso aparte empujaba la lista y repetía el dato. */}
-      <ScreenHeader subtitle="Tus chats, historias y solicitudes." title="Mensajes" />
+      <ScreenHeader title="Mensajes" />
 
 
-      <StoriesBar />
+      {/* Historias y pestañas forman un bloque: entre ellas un respiro corto, no el hueco de sección. */}
+      <View style={{ gap: spacing.sm }}>
+        <StoriesBar />
 
-      <SegmentedPill<Tab>
-        fill
-        onChange={setTab}
-        options={TABS.map((item) => ({
-          value: item.value,
-          accessibilityLabel:
-            item.value === 'solicitudes' && receivedCount > 0
-              ? `${item.label}, ${receivedCount} ${receivedCount === 1 ? 'pendiente' : 'pendientes'}`
-              : item.label,
-        }))}
-        itemStyle={{ height: 48, alignItems: 'center', justifyContent: 'center' }}
-        pillColor={colors.volt}
-        renderItem={(option, active) => {
-          const item = TABS.find((entry) => entry.value === option.value);
-          if (!item) return null;
-          const badge = option.value === 'solicitudes' && receivedCount > 0 ? receivedCount : 0;
-          return (
-            <View>
-              <Ionicons
-                accessibilityElementsHidden
-                color={active ? accentContrast() : colors.textMuted}
-                importantForAccessibility="no-hide-descendants"
-                name={active ? item.activeIcon : item.icon}
-                size={iconSizes.lg}
-              />
-              {badge ? (
-                <View
-                  accessibilityElementsHidden
-                  importantForAccessibility="no-hide-descendants"
-                  style={{
-                    position: 'absolute',
-                    top: -6,
-                    right: -10,
-                    minWidth: 20,
-                    height: 20,
-                    paddingHorizontal: 4,
-                    borderRadius: radii.full,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: active ? accentContrast() : colors.volt,
-                    borderWidth: 2,
-                    borderColor: active ? colors.volt : colors.surfaceHigh,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: active ? colors.volt : accentContrast(),
-                      fontSize: fontSizes.xs,
-                      fontWeight: semibold,
-                      lineHeight: 14,
-                    }}
-                  >
-                    {badge > 9 ? '9+' : badge}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-          );
-        }}
-        style={{
-          padding: spacing.xs,
-          borderRadius: radii.full,
-          backgroundColor: colors.surfaceHigh,
-          borderWidth: StyleSheet.hairlineWidth,
-          borderColor: alpha(colors.text, 0.08),
-        }}
-        value={tab}
-      />
+        <TextTabs
+          badges={{ solicitudes: receivedCount }}
+          onChange={setTab}
+          tabs={TABS.map((item) => ({ value: item.value, label: item.label }))}
+          value={tab}
+        />
+      </View>
 
       {tab === 'general' ? <GeneralTab /> : tab === 'solicitudes' ? <SolicitudesTab /> : <ConexionesTab />}
     </ScrollScreen>

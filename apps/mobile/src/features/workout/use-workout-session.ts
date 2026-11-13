@@ -60,6 +60,8 @@ export function useWorkoutSession(id: string) {
 
   /** Al cerrar (terminar o cancelar): la sesión y todas las listas, de verdad. */
   const refreshAll = async () => {
+    // La mini-barra lee esta clave: se vacía ya, sin esperar a que vuelva la lista.
+    queryClient.setQueryData(['workouts', 'active'], null);
     await queryClient.invalidateQueries({ queryKey: ['workout', id] });
     void queryClient.invalidateQueries({ queryKey: ['workouts'] });
   };
@@ -353,7 +355,12 @@ export function useWorkoutSession(id: string) {
       notify.success('Sesión cancelada.');
       router.back();
     },
-    onError: (error: Error) => notify.error(error),
+    onError: (error: Error) => {
+      // Si el servidor sí la canceló y falló solo la respuesta, que la barra no se quede mintiendo.
+      void queryClient.invalidateQueries({ queryKey: ['workouts'] });
+      void refetchSession();
+      notify.error(error);
+    },
   });
 
   return {

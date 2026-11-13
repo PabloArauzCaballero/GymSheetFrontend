@@ -20,7 +20,7 @@ export function LegalDocument({
       >
         ← Volver al registro
       </Link>
-      <h1 className="mt-6 text-3xl font-semibold tracking-[-0.02em] text-[var(--text)]">
+      <h1 className="display-title mt-6">
         {title}
       </h1>
       <p className="mt-2 text-sm text-[var(--text-muted)]">Última actualización: {updatedAt}</p>
