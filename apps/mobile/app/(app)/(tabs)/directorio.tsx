@@ -428,7 +428,7 @@ export default function DirectorioScreen() {
       ) : viewMode === 'OFFERS' ? (
         filteredOffers.length === 0 ? (
           <View style={{ flex: 1, padding: spacing.xl }}>
-            <EmptyState icon="storefront-outline" title="Nada por aquí todavía" message={emptyMessage} style={{ backgroundColor: 'transparent', boxShadow: 'none', paddingVertical: spacing['2xl'] }} />
+            <EmptyState icon="storefront-outline" mascot="asleep" title="Nada por aquí todavía" message={emptyMessage} />
           </View>
         ) : (
           <FlatList
@@ -464,7 +464,7 @@ export default function DirectorioScreen() {
         )
       ) : filteredEntities.length === 0 ? (
         <View style={{ flex: 1, padding: spacing.xl }}>
-          <EmptyState icon="storefront-outline" title="Ninguna tienda por aquí" message={emptyMessage} style={{ backgroundColor: 'transparent', boxShadow: 'none', paddingVertical: spacing['2xl'] }} />
+          <EmptyState icon="storefront-outline" mascot="asleep" title="Ninguna tienda por aquí" message={emptyMessage} />
         </View>
       ) : (
         <FlatList

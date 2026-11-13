@@ -20,6 +20,7 @@ import { usePullRefresh } from '@/hooks/use-pull-refresh';
 import { EmptyState, ErrorState } from '@/components/feedback';
 import { FilterChip } from '@/components/filter-chip';
 import { ScrollScreen, ScreenHeader, Section } from '@/components/layout';
+import { RepiCard } from '@/features/nudge/repi-card';
 import { BadgePop, EnterUp, PressableScale } from '@/components/motion';
 import { Text as AppText } from '@/components/text';
 import { TourTarget, useScreenTour } from '@/components/tour';
@@ -44,9 +45,14 @@ import { colors, fontSizes, iconSizes, radii, spacing } from '@/theme';
 type PickableSession = WeekSession & { open: () => void };
 
 const EMPTY_COPY: Record<string, { title: string; message: string }> = {
+  // «Con estos filtros» solo si hay filtros: sin ninguno, el catálogo está vacío y punto.
+  filtered: {
+    title: 'Ninguna rutina con estos filtros',
+    message: 'Prueba con otro objetivo o quita algún filtro.',
+  },
   all: {
-    title: 'Aún no hay rutinas con estos filtros',
-    message: 'Prueba con otro objetivo, quita algún filtro o crea la tuya.',
+    title: 'Aún no hay rutinas',
+    message: 'Crea la tuya o pídesela a tu entrenador.',
   },
   shared: {
     title: 'Aún no hay rutinas compartidas',
@@ -268,6 +274,8 @@ export function RoutinesCatalogScreen() {
         title="Rutinas"
       />
       <MoreSheet actions={menu} onClose={() => setMenuOpen(false)} title="Rutinas" visible={menuOpen} />
+      {/* Repi: qué toca hoy (y si un match espera). Inicio ya no es pestaña: aquí es donde se ve. */}
+      <RepiCard here="routines" />
       <DownloadProgressWizardModal
         onClose={() => setDownloadWizardOpen(false)}
         visible={downloadWizardOpen}
@@ -386,8 +394,8 @@ export function RoutinesCatalogScreen() {
       ) : cards.length === 0 ? (
         <EmptyState
           icon="albums-outline"
-          message={EMPTY_COPY[tab]?.message ?? ''}
-          title={EMPTY_COPY[tab]?.title ?? 'Sin rutinas'}
+          message={EMPTY_COPY[tab === 'all' && hasActiveFilters(applied) ? 'filtered' : tab]?.message ?? ''}
+          title={EMPTY_COPY[tab === 'all' && hasActiveFilters(applied) ? 'filtered' : tab]?.title ?? 'Sin rutinas'}
         >
           {tab === 'all' && hasActiveFilters(applied) ? (
             <Button

@@ -60,7 +60,8 @@ export function ConnectionsTab() {
   if (!connections.data?.length) {
     return (
       <EmptyState
-        description="Conecta con otros socios desde el directorio."
+        description="Conecta con gente de tu gimnasio para entrenar y chatear juntos."
+        mascot="impatient"
         title="Aún no tienes conexiones"
       />
     );

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Repi en PNG: `node --experimental-strip-types scripts/render-mascot.mjs [dir]`.
+ * Repi en PNG: `node --import ./scripts/register-ts-extension.mjs --experimental-strip-types scripts/render-mascot.mjs [dir]`.
  *
  * Sin argumento escribe los PNG que empaqueta la app para los widgets
  * (`assets/mascot/<ánimo>.png`, 360 px = 120 pt @3x). Con un directorio escribe
@@ -9,7 +9,7 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { MASCOT_MOODS, mascotXml } from '../src/features/nudge/mascot.ts';
+import { MASCOT_MOODS, mascotXml } from '../../../packages/design-tokens/src/repi.ts';
 
 const assets = new URL('../assets/mascot/', import.meta.url).pathname;
 mkdirSync(assets, { recursive: true });

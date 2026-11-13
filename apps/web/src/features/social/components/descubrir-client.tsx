@@ -9,6 +9,7 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { interactionKeys } from '@/features/interactions/services/interactions-service';
 import { discoveryService } from '@/features/social/services/discovery-service';
 import { directoryKeys } from '@/features/social/services/directory-keys';
+import { needsDiscoveryPreferences } from '@gymsheet/domain';
 import { ApiError } from '@/shared/api/api-error';
 import type { GymDirectoryEntry, SwipeDirection, UndoSwipeResult } from '@/shared/api/schemas';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -208,6 +209,7 @@ export function DescubrirClient({
 
       <DeckSurface
         deckError={deck.isError ? deck.error.message : null}
+        needsPreferences={deck.isError && needsDiscoveryPreferences(deck.error)}
         empty={visibleQueue.length === 0}
         emptyAction={
           <div className="flex flex-wrap justify-center gap-2">

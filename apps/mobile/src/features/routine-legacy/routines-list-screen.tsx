@@ -9,6 +9,7 @@ import { TourTarget, useScreenTour } from '@/components/tour';
 import { routineService } from '@/api/services';
 import { ExploreExercisesButton } from '@/features/exercise-browser/explore-exercises-button';
 import { Button } from '@/components/ui';
+import { RepiCard } from '@/features/nudge/repi-card';
 import { GOAL_LABEL } from '@/lib/format';
 import { spacing } from '@/theme';
 
@@ -35,6 +36,8 @@ export function LegacyRoutinesScreen() {
       refreshing={refreshing}
     >
       <ScreenHeader subtitle="Tus planes de entrenamiento." title="Rutinas" tourKey="routines" />
+      {/* Repi: qué toca hoy (y si un match espera). Inicio ya no es pestaña: aquí es donde se ve. */}
+      <RepiCard here="routines" />
       <ExploreExercisesButton />
 
       <TourTarget id="routines.create">
