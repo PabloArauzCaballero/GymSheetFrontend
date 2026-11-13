@@ -7,7 +7,16 @@ import { cn } from '@/shared/lib/cn';
  * relleno de acento —hecho = relleno de control con ✓ en tinta de acento,
  * entreno = contorno—, para pantallas donde el acento ya es de otra pieza.
  */
-export function WeekDots({ days, quiet = false }: Readonly<{ days: readonly WeekDot[]; quiet?: boolean }>) {
+export function WeekDots({
+  days,
+  quiet = false,
+  compact = false,
+}: Readonly<{
+  days: readonly WeekDot[];
+  quiet?: boolean;
+  /** 40 en vez de 44: solo en ilustraciones no interactivas (la portada), donde no rige el mínimo táctil. */
+  compact?: boolean;
+}>) {
   return (
     <ul className="m-0 flex list-none justify-between gap-1 p-0">
       {days.map((day) => {
@@ -17,7 +26,7 @@ export function WeekDots({ days, quiet = false }: Readonly<{ days: readonly Week
           <li
             aria-label={`${day.label}${day.today ? ', hoy' : ''}${done ? ', hecho' : ''}`}
             className={cn(
-              'grid size-11 place-items-center rounded-full',
+              compact ? 'grid size-10 place-items-center rounded-full' : 'grid size-11 place-items-center rounded-full',
               quiet
                 ? done
                   ? 'bg-[var(--surface-highest)]'

@@ -440,6 +440,18 @@ export function isStaleSession(startIso: string, now: number = Date.now(), hours
   return Number.isFinite(start) && now - start > hours * 3_600_000;
 }
 
+/** ¿La sesión se abrió hoy, en la hora local del teléfono? Una de ayer ya no es «el entreno en curso». */
+export function isSameLocalDay(startIso: string, now: number = Date.now()): boolean {
+  const start = new Date(startIso);
+  if (Number.isNaN(start.getTime())) return false;
+  const today = new Date(now);
+  return (
+    start.getFullYear() === today.getFullYear() &&
+    start.getMonth() === today.getMonth() &&
+    start.getDate() === today.getDate()
+  );
+}
+
 /** Cronómetro de la sesión: «4:07», «1:02:33». Nunca negativo. */
 export function sessionClock(startIso: string, now: number = Date.now()): string {
   const start = new Date(startIso).getTime();

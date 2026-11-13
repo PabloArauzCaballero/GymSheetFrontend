@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { AppState, StyleSheet, View } from 'react-native';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { workoutService } from '@/api/services';
+import { isSameLocalDay } from '@/features/workout/workout-flow';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
@@ -27,9 +28,23 @@ export const ACTIVE_BAR_SPACE = ACTIVE_BAR_HEIGHT + spacing.sm * 2;
  * La sesión abierta, para la mini-barra: la del store (la pantalla del
  * entreno la mantiene al día) y, en un arranque en frío, la que diga el
  * servidor. Si el servidor responde que no hay ninguna, no se enseña.
+ *
+ * Una sesión que no se abrió hoy (hora local) tampoco se enseña: el entreno
+ * en curso es el de ahora, no uno olvidado de ayer. Al volver a la app se
+ * vuelve a preguntar al servidor y se recalcula el día.
  */
 export function useActiveWorkout(): ActiveWorkout | null {
   const active = useWorkoutStore((state) => state.active);
+  const queryClient = useQueryClient();
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') return;
+      setNow(Date.now());
+      void queryClient.invalidateQueries({ queryKey: ['workouts', 'active'] });
+    });
+    return () => sub.remove();
+  }, [queryClient]);
   const open = useQuery({
     queryKey: ['workouts', 'active'],
     queryFn: async () => {
@@ -37,9 +52,10 @@ export function useActiveWorkout(): ActiveWorkout | null {
       return page.items.find((item) => item.estado === 'EN_PROGRESO') ?? null;
     },
     staleTime: 60_000,
+    refetchOnMount: 'always',
   });
   if (open.isSuccess) {
-    if (!open.data) return null;
+    if (!open.data || !isSameLocalDay(open.data.fechaInicio, now)) return null;
     return active?.id === open.data.id ? active : { id: open.data.id, current: null, progress: null };
   }
   return active;

@@ -27,7 +27,7 @@ function withTabLabel(item: NavigationItem): NavigationItem {
   return label ? { ...item, label } : item;
 }
 
-const memberTabs = ['/chat', '/comunidad', '/marketplace', '/routines', '/profile'] as const;
+const memberTabs = ['/comunidad', '/chat', '/marketplace', '/routines', '/profile'] as const;
 
 export function tabBarFor(role: UserRole, permissions?: readonly string[]): NavigationItem[] {
   const all = navigationFor(role, permissions).flatMap((group) => group.items);

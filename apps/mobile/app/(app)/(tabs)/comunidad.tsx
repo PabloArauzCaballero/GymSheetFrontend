@@ -16,6 +16,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
+import { ReppLogo } from '@/components/brand/repp-mark';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -37,7 +38,6 @@ import {
   facilitiesService,
   profilePhotosService,
   profileService,
-  socialService,
 } from '@/api/services';
 import { refreshSocialRelationship } from '@/api/social-cache';
 import { CommunityOverflowSheet } from '@/components/community-overflow-sheet';
@@ -561,16 +561,6 @@ export default function ComunidadScreen() {
   // Stage size for card tap calculations
   const [stage, setStage] = useState({ width: 0, height: 0 });
 
-  // Notifications: Pending connections query
-  const pendingConnections = useQuery({
-    queryKey: ['social', 'connections', 'PENDING'],
-    queryFn: () => socialService.listConnections('PENDING'),
-    staleTime: 30_000,
-  });
-  const hasPendingReceived = (pendingConnections.data ?? []).some(
-    (c) => c.direction === 'RECEIVED',
-  );
-
   // Sedes del gimnasio
   const branchesQuery = useQuery({
     queryKey: ['facilities', 'my-branches'],
@@ -885,155 +875,60 @@ export default function ComunidadScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Tinder Top Header Bar */}
+      {/* Cabecera: marca REPP + acciones, y debajo el selector del mazo */}
       <View
         style={{
           paddingTop: Math.max(insets.top, spacing.sm),
           paddingHorizontal: spacing.md,
           paddingBottom: spacing.xs,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          gap: spacing.sm,
           zIndex: 10,
         }}
       >
-        {/* Left: Preferences Filters Icon */}
-        <PressableScale
-          accessibilityLabel="Preferencias de búsqueda"
-          onPress={() => setPrefsVisible(true)}
-          style={{
-            width: 42,
-            height: 42,
-            borderRadius: radii.full,
-            backgroundColor: colors.surfaceHigh,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 1,
-            borderColor:
-              safeObjetivos.length > 0 || sucursalId !== null || genero !== null
-                ? colors.volt
-                : colors.borderSubtle,
-          }}
-        >
-          <Ionicons
-            color={
-              safeObjetivos.length > 0 || sucursalId !== null || genero !== null
-                ? colors.volt
-                : colors.text
-            }
-            name="options-outline"
-            size={iconSizes.md}
-          />
-          {(safeObjetivos.length > 0 || sucursalId !== null || genero !== null) && (
-            <View
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <ReppLogo height={26} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <PressableScale
+              accessibilityLabel="Preferencias de búsqueda"
+              onPress={() => setPrefsVisible(true)}
               style={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                width: 7,
-                height: 7,
-                borderRadius: 4,
-                backgroundColor: colors.volt,
-              }}
-            />
-          )}
-        </PressableScale>
-
-        {/* Center: Category Pills (Tinder-style) */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            backgroundColor: colors.surfaceLow,
-            padding: 3,
-            borderRadius: radii.full,
-            borderWidth: 1,
-            borderColor: colors.borderSubtle,
-            gap: 2,
-          }}
-        >
-          <Pressable
-            onPress={() => {
-              setCategoryPill('foryou');
-              setObjetivos([]);
-            }}
-            style={{
-              paddingHorizontal: spacing.md,
-              paddingVertical: 6,
-              borderRadius: radii.full,
-              backgroundColor: categoryPill === 'foryou' ? colors.surfaceHigh : 'transparent',
-            }}
-          >
-            <Text
-              style={{
-                color: categoryPill === 'foryou' ? colors.text : colors.textMuted,
-                fontSize: fontSizes.xs,
-                fontWeight: categoryPill === 'foryou' ? '700' : '500',
+                width: 42,
+                height: 42,
+                borderRadius: radii.full,
+                backgroundColor: colors.surfaceHigh,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 1,
+                borderColor:
+                  safeObjetivos.length > 0 || sucursalId !== null || genero !== null
+                    ? colors.volt
+                    : colors.borderSubtle,
               }}
             >
-              Para ti
-            </Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => {
-              setCategoryPill('goal');
-              const userGoal = myProfile.data?.objetivo ?? 'HIPERTROFIA';
-              setObjetivos([userGoal]);
-            }}
-            style={{
-              paddingHorizontal: spacing.md,
-              paddingVertical: 6,
-              borderRadius: radii.full,
-              backgroundColor: categoryPill === 'goal' ? colors.surfaceHigh : 'transparent',
-            }}
-          >
-            <Text
-              style={{
-                color: categoryPill === 'goal' ? colors.text : colors.textMuted,
-                fontSize: fontSizes.xs,
-                fontWeight: categoryPill === 'goal' ? '700' : '500',
-              }}
-            >
-              Mismo objetivo
-            </Text>
-          </Pressable>
-        </View>
-
-        {/* Right: Messages + 3-dots Menu */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-          {/* Chat Icon with Unread Badge */}
-          <PressableScale
-            accessibilityLabel="Mensajes y Solicitudes"
-            onPress={() => router.push('/comunidad-mensajes')}
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: radii.full,
-              backgroundColor: colors.surfaceHigh,
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderWidth: 1,
-              borderColor: colors.borderSubtle,
-            }}
-          >
-            <Ionicons color={colors.text} name="chatbubble-ellipses-outline" size={iconSizes.md} />
-            {hasPendingReceived ? (
-              <View
-                style={{
-                  position: 'absolute',
-                  top: 7,
-                  right: 7,
-                  width: 9,
-                  height: 9,
-                  borderRadius: radii.full,
-                  backgroundColor: colors.volt,
-                  borderWidth: 2,
-                  borderColor: colors.background,
-                }}
+              <Ionicons
+                color={
+                  safeObjetivos.length > 0 || sucursalId !== null || genero !== null
+                    ? colors.volt
+                    : colors.text
+                }
+                name="options-outline"
+                size={iconSizes.md}
               />
-            ) : null}
-          </PressableScale>
+              {(safeObjetivos.length > 0 || sucursalId !== null || genero !== null) && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    width: 7,
+                    height: 7,
+                    borderRadius: 4,
+                    backgroundColor: colors.volt,
+                  }}
+                />
+              )}
+            </PressableScale>
+
 
           {/* 3-Dots Menu Button */}
           <PressableScale
@@ -1052,6 +947,69 @@ export default function ComunidadScreen() {
           >
             <Ionicons color={colors.text} name="ellipsis-horizontal" size={iconSizes.md} />
           </PressableScale>
+          </View>
+        </View>
+        <View style={{ alignItems: 'center' }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: colors.surfaceLow,
+              padding: 3,
+              borderRadius: radii.full,
+              borderWidth: 1,
+              borderColor: colors.borderSubtle,
+              gap: 2,
+            }}
+          >
+            <Pressable
+              onPress={() => {
+                setCategoryPill('foryou');
+                setObjetivos([]);
+              }}
+              style={{
+                paddingHorizontal: spacing.md,
+                paddingVertical: 6,
+                borderRadius: radii.full,
+                backgroundColor: categoryPill === 'foryou' ? colors.surfaceHigh : 'transparent',
+              }}
+            >
+              <Text
+                style={{
+                  color: categoryPill === 'foryou' ? colors.text : colors.textMuted,
+                  fontSize: fontSizes.xs,
+                  fontWeight: categoryPill === 'foryou' ? '700' : '500',
+                }}
+              >
+                Para ti
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                setCategoryPill('goal');
+                const userGoal = myProfile.data?.objetivo ?? 'HIPERTROFIA';
+                setObjetivos([userGoal]);
+              }}
+              style={{
+                paddingHorizontal: spacing.md,
+                paddingVertical: 6,
+                borderRadius: radii.full,
+                backgroundColor: categoryPill === 'goal' ? colors.surfaceHigh : 'transparent',
+              }}
+            >
+              <Text
+                style={{
+                  color: categoryPill === 'goal' ? colors.text : colors.textMuted,
+                  fontSize: fontSizes.xs,
+                  fontWeight: categoryPill === 'goal' ? '700' : '500',
+                }}
+              >
+                Mismo objetivo
+              </Text>
+            </Pressable>
+          </View>
+
         </View>
       </View>
 
@@ -1450,7 +1408,9 @@ export default function ComunidadScreen() {
         )}
       </View>
 
-      {/* Tinder Bottom 5-Action Floating Bar (Matching Image 2) */}
+      {/* Barra de acciones: solo con una tarjeta delante. Sin preferencias, cargando o con el mazo
+          vacío no hay a quién deshacer, rechazar ni dar like: botones ahí son promesas rotas. */}
+      {topCard ? (
       <View
         style={{
           flexDirection: 'row',
@@ -1607,6 +1567,10 @@ export default function ComunidadScreen() {
           )}
         </PressableScale>
       </View>
+      ) : (
+        // Reserva el alto de la barra flotante para que nada quede debajo del vidrio.
+        <View style={{ height: 84 }} />
+      )}
 
       {/* 3-Dots Menu Sheet (Consolidated Community Menu) */}
       <CommunityOverflowSheet

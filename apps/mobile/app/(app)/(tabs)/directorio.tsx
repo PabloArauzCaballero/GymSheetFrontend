@@ -31,7 +31,15 @@ import { AmbientBackground } from '@/components/ambient';
 import { EmptyState, ErrorState } from '@/components/feedback';
 import { PressableScale } from '@/components/motion';
 import { Button } from '@/components/ui';
-import { FilterChip } from '@/components/filter-chip';
+import {
+  DEFAULT_MARKETPLACE_FILTERS,
+  categoryById,
+  filterEntities,
+  filterPlans,
+  type MarketplaceFilters,
+} from '@gymsheet/domain';
+import { CategoryTiles } from '@/features/marketplace/category-tiles';
+import { FilterBar } from '@/features/marketplace/filter-bar';
 import { useDebouncedValue } from '@/features/marketplace/use-debounced-value';
 import { MarketplaceTabs, type MarketplaceTab } from '@/features/marketplace/tabs';
 import { OfferCard } from '@/features/marketplace/offer-card';
@@ -39,15 +47,6 @@ import { SellerCard } from '@/features/marketplace/seller-card';
 import { MyGymRow } from '@/features/marketplace/my-gym-row';
 import { notify } from '@/notifications';
 import { accentHues, alpha, colors, fontSizes, heroNumberFontSize, ink, radii, semibold, spacing } from '@/theme';
-
-const MARKET_CATEGORIES = [
-  { id: 'all', label: 'Todo', type: undefined, categoryPath: undefined },
-  { id: 'gyms', label: 'Gimnasios', type: 'GYM', categoryPath: 'gimnasios' },
-  { id: 'supplements', label: 'Suplementos', type: 'STORE', categoryPath: 'tiendas.nutricion' },
-  { id: 'apparel', label: 'Indumentaria', type: 'STORE', categoryPath: 'tiendas.indumentaria' },
-  { id: 'passes', label: 'Pases y planes', type: undefined, categoryPath: undefined },
-  { id: 'coaches', label: 'Coaches', type: 'COACH', categoryPath: 'coaches' },
-] as const;
 
 export default function DirectorioScreen() {
   const insets = useSafeAreaInsets();
@@ -62,14 +61,15 @@ export default function DirectorioScreen() {
 
   const [viewMode, setViewMode] = useState<MarketplaceTab>('OFFERS');
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedPillId, setSelectedPillId] = useState<string>('all');
+  const [filters, setFilters] = useState<MarketplaceFilters>(DEFAULT_MARKETPLACE_FILTERS);
+  const selectedPillId = filters.category;
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search);
   const [selectedEntitySlug, setSelectedEntitySlug] = useState<string | null>(null);
 
-  const activeCategoryConfig = MARKET_CATEGORIES.find((c) => c.id === selectedPillId);
-  const selectedType = activeCategoryConfig?.type;
-  const selectedCategoryPath = activeCategoryConfig?.categoryPath;
+  const activeCategoryConfig = categoryById(filters.category);
+  const selectedType = activeCategoryConfig.entityType;
+  const selectedCategoryPath = activeCategoryConfig.path;
 
   // Estados para modal de reseña
   const [isComposerOpen, setIsComposerOpen] = useState(false);
@@ -134,43 +134,9 @@ export default function DirectorioScreen() {
 
   const myGym = entities.find((e) => isGymOfUser(e));
 
-  const filteredOffers = marketplaceOffers.filter((plan) => {
-    if (selectedPillId === 'gyms') {
-      if (plan.type !== 'MEMBERSHIP_PLAN' && plan.type !== 'PASS') return false;
-    } else if (selectedPillId === 'supplements') {
-      const lower = (plan.name + ' ' + plan.description).toLowerCase();
-      if (!lower.includes('protein') && !lower.includes('creatina') && !lower.includes('workout') && !lower.includes('nutri')) {
-        return false;
-      }
-    } else if (selectedPillId === 'apparel') {
-      const lower = (plan.name + ' ' + plan.description).toLowerCase();
-      if (!lower.includes('cintur') && !lower.includes('strap') && !lower.includes('polera') && !lower.includes('indumentaria')) {
-        return false;
-      }
-    } else if (selectedPillId === 'passes') {
-      if (plan.type !== 'PASS' && plan.type !== 'MEMBERSHIP_PLAN') return false;
-    } else if (selectedPillId === 'coaches') {
-      if (plan.type !== 'SERVICE' && plan.entity?.entityType !== 'COACH') return false;
-    }
-
-    if (debouncedSearch.trim()) {
-      const q = debouncedSearch.trim().toLowerCase();
-      const matchName = plan.name.toLowerCase().includes(q);
-      const matchDesc = plan.description.toLowerCase().includes(q);
-      const matchSeller = plan.entity?.name.toLowerCase().includes(q);
-      if (!matchName && !matchDesc && !matchSeller) return false;
-    }
-
-    return true;
-  });
-
-  const filteredEntities = entities.filter((item) => {
-    if (selectedPillId === 'gyms' && item.entityType !== 'GYM') return false;
-    if (selectedPillId === 'supplements' && item.primaryCategory?.slug !== 'tiendas-nutricion' && item.primaryCategory?.slug !== 'tiendas') return false;
-    if (selectedPillId === 'apparel' && item.primaryCategory?.slug !== 'tiendas-indumentaria' && item.primaryCategory?.slug !== 'tiendas') return false;
-    if (selectedPillId === 'coaches' && item.entityType !== 'COACH') return false;
-    return true;
-  });
+  const appliedFilters = { ...filters, search: debouncedSearch };
+  const filteredOffers = filterPlans(marketplaceOffers, appliedFilters);
+  const filteredEntities = filterEntities(entities, appliedFilters);
 
   // 3. Cargar detalle de entidad seleccionada
   const { data: entityDetail, isLoading: loadingDetail } = useQuery<DirectoryEntityDetail | null>({
@@ -432,17 +398,16 @@ export default function DirectorioScreen() {
         )}
       </View>
 
-      <View style={styles.pillsWrapper}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillsScroll}>
-          {MARKET_CATEGORIES.map((cat) => (
-            <FilterChip
-              key={cat.id}
-              label={cat.label}
-              selected={selectedPillId === cat.id}
-              onPress={() => setSelectedPillId(cat.id)}
-            />
-          ))}
-        </ScrollView>
+      <View style={{ gap: spacing.smd, marginTop: spacing.smd, marginBottom: spacing.md }}>
+        <CategoryTiles onChange={(category) => setFilters((current) => ({ ...current, category }))} value={filters.category} />
+        <FilterBar
+          filters={filters}
+          onChange={(patch) => setFilters((current) => ({ ...current, ...patch }))}
+          onReset={() => {
+            setFilters(DEFAULT_MARKETPLACE_FILTERS);
+            setSearch('');
+          }}
+        />
       </View>
 
       <MarketplaceTabs value={viewMode} onChange={setViewMode} />
@@ -464,7 +429,7 @@ export default function DirectorioScreen() {
       ) : viewMode === 'OFFERS' ? (
         filteredOffers.length === 0 ? (
           <View style={{ flex: 1, padding: spacing.xl }}>
-            <EmptyState title="Nada por aquí todavía" message={emptyMessage} />
+            <EmptyState icon="storefront-outline" title="Nada por aquí todavía" message={emptyMessage} style={{ backgroundColor: 'transparent', boxShadow: 'none', paddingVertical: spacing['2xl'] }} />
           </View>
         ) : (
           <FlatList
@@ -500,7 +465,7 @@ export default function DirectorioScreen() {
         )
       ) : filteredEntities.length === 0 ? (
         <View style={{ flex: 1, padding: spacing.xl }}>
-          <EmptyState title="Ninguna tienda por aquí" message={emptyMessage} />
+          <EmptyState icon="storefront-outline" title="Ninguna tienda por aquí" message={emptyMessage} style={{ backgroundColor: 'transparent', boxShadow: 'none', paddingVertical: spacing['2xl'] }} />
         </View>
       ) : (
         <FlatList
