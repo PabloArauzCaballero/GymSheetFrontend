@@ -47,3 +47,54 @@ export function proudStat({ streak, sessions, points }: { streak: number; sessio
   if (sessions > 0) return sessions === 1 ? '1 sesión entrenada' : `${sessions.toLocaleString('es-ES')} sesiones entrenadas`;
   return `${points.toLocaleString('es-ES')} pts`;
 }
+
+/**
+ * Lo que devuelve `GET /me/progression/profile-completion`, solo con los campos
+ * que leen estas funciones: el servidor decide qué vale cada dato y si ya está
+ * pagado; aquí solo se ordena y se dice.
+ */
+export type ProfileCompletionItemLike = {
+  code: string;
+  label: string;
+  hint: string;
+  points: number;
+  done: boolean;
+  awarded: boolean;
+};
+
+/** Lo que falta y todavía da puntos, de más a menos valioso (orden del servidor). */
+export function pendingProfileItems<T extends ProfileCompletionItemLike>(items: readonly T[]): T[] {
+  return items.filter((item) => !item.done && !item.awarded);
+}
+
+/** «Completa tu perfil y gana +190 puntos». Sin puntos pendientes no hay promesa. */
+export function profileNudgeTitle(pointsAvailable: number): string | null {
+  if (pointsAvailable <= 0) return null;
+  return `Completa tu perfil y gana +${pointsAvailable.toLocaleString('es-ES')} puntos`;
+}
+
+/** «+50». Lo que vale un dato, listo para una ficha. */
+export function pointsChip(points: number): string {
+  return `+${points.toLocaleString('es-ES')}`;
+}
+
+/**
+ * El nombre tal como sale en la carta de Conocer: nombre de pila e inicial del
+ * segundo token. Mismo criterio que `shortenName` del backend, para que «Ver
+ * como te ven» no enseñe un nombre que nadie más ve.
+ */
+export function cardDisplayName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/);
+  const first = parts[0] ?? '';
+  const initial = parts.length > 1 && parts[1] ? `${parts[1].charAt(0).toUpperCase()}.` : '';
+  return [first, initial].filter(Boolean).join(' ');
+}
+
+export const experienceLevelLabels: Record<'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED', string> = {
+  BEGINNER: 'Principiante',
+  INTERMEDIATE: 'Intermedio',
+  ADVANCED: 'Avanzado',
+};
+
+/** Largo máximo de la bio: el mismo que valida el servidor. */
+export const BIO_MAX_LENGTH = 160;

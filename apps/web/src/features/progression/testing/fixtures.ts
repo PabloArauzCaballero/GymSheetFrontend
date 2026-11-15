@@ -113,6 +113,7 @@ export const sessionReward = (extra: Partial<SessionReward> = {}): SessionReward
     progress: 0,
     penalties: 0,
     strikePurchases: 0,
+    profile: 0,
   },
   leveledUp: false,
   levelBefore: null,

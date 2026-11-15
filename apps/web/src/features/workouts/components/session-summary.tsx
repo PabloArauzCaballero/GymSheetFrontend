@@ -34,7 +34,7 @@ import {
  */
 
 const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
-const BREAKDOWN_ORDER: ReadonlyArray<PointRuleLine['key'] | 'challenges' | 'progress'> = [
+const BREAKDOWN_ORDER: ReadonlyArray<PointRuleLine['key'] | 'challenges' | 'progress' | 'profile'> = [
   'session',
   'sets',
   'volume',
@@ -42,6 +42,7 @@ const BREAKDOWN_ORDER: ReadonlyArray<PointRuleLine['key'] | 'challenges' | 'prog
   'progress',
   'badges',
   'challenges',
+  'profile',
 ];
 /** Pausa tras la última cifra antes de abrir las cartas solas. */
 const AUTO_OPEN_PAUSE_MS = 600;

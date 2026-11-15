@@ -46,8 +46,15 @@ export function GenderPreferenceField({ value }: Readonly<{ value: UserGender | 
         disabled={save.isPending}
         id="genero"
         onChange={(event) => save.mutate(event.target.value as UserGender)}
-        value={value ?? 'UNSPECIFIED'}
+        // Null means «not asked yet»: show an empty choice instead of claiming
+        // «Prefiero no decirlo», which also made that answer impossible to pick.
+        value={value ?? ''}
       >
+        {value === null ? (
+          <option disabled value="">
+            Elige una opción
+          </option>
+        ) : null}
         <option value="UNSPECIFIED">Prefiero no decirlo</option>
         <option value="MALE">Hombre</option>
         <option value="FEMALE">Mujer</option>

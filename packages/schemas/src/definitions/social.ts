@@ -124,6 +124,8 @@ export const gymDirectoryEntrySchema = z.object({
   age: z.number().int().nullable(),
   gender: z.enum(["MALE", "FEMALE", "UNSPECIFIED"]).nullable(),
   experienceLevel: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).nullable(),
+  /** Unas líneas que la persona escribió sobre sí misma. Ausente en servidores anteriores. */
+  bio: z.string().nullable().optional(),
   points: z.number().nullable(),
   levelCode: z.string().nullable(),
 });

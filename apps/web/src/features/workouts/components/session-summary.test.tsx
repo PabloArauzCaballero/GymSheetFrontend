@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { BREAKDOWN_LABEL } from '@gymsheet/domain';
+import { pointsBreakdownSchema } from '@gymsheet/schemas';
 import {
   badge,
   challenge,
@@ -32,6 +34,7 @@ describe('resumen de sesión con premios', () => {
         progress: 0,
         penalties: 0,
         strikePurchases: 0,
+        profile: 0,
       },
       challenges: week(items),
       challengesCompletedNow: [items[0]!],
@@ -53,5 +56,29 @@ describe('resumen de sesión con premios', () => {
     expect(screen.getByText('14 días · 1 comodín · ¡hito de 14!')).toBeTruthy();
     expect(screen.getByText('Te esperan 2 cartas')).toBeTruthy();
     expect(screen.getByText(/Reto F · Batido gratis/)).toBeTruthy();
+  });
+});
+
+describe('desglose de la sesión', () => {
+  it('tiene etiqueta para cada partida del servidor, también la del perfil', () => {
+    expect(Object.keys(BREAKDOWN_LABEL).sort()).toEqual(Object.keys(pointsBreakdownSchema.shape).sort());
+    expect(BREAKDOWN_LABEL.profile).toBe('Por tu perfil');
+  });
+
+  it('lee un desglose de un servidor antiguo, sin la partida del perfil, como 0', () => {
+    const legacy = { session: 50, sets: 0, volume: 0, streak: 0, badges: 0 };
+    expect(pointsBreakdownSchema.parse(legacy).profile).toBe(0);
+  });
+
+  it('enseña «Por tu perfil» cuando la partida llega, para que las filas sumen el total', () => {
+    const reward = sessionReward({
+      pointsEarned: 90,
+      breakdown: {
+        session: 50, sets: 0, volume: 0, streak: 0, badges: 0, modes: 0,
+        challenges: 0, progress: 0, penalties: 0, strikePurchases: 0, profile: 40,
+      },
+    });
+    render(<SessionSummary duration="45 min" onClose={vi.fn()} reward={reward} sets={3} />);
+    expect(screen.getByText('Por tu perfil')).toBeTruthy();
   });
 });

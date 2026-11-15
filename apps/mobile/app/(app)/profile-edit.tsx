@@ -1,435 +1,127 @@
-import { useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
-import { Controller, useForm } from 'react-hook-form';
-import { Pressable, Text, View } from 'react-native';
-import { z } from 'zod';
-import { ApiError } from '@gymsheet/api-client';
-import { trainingGoals, type TrainingGoal } from '@gymsheet/types';
-import { profileService, type ProfileInput } from '@/api/services';
-import { ErrorState, Skeleton } from '@/components/feedback';
-import { numericInputProps } from '@/components/keyboard';
-import { Card, ScreenHeader, ScrollScreen } from '@/components/layout';
-import { StepProgress, type FlowStep } from '@/components/step-flow';
+import { useQueryClient } from '@tanstack/react-query';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { type ReactNode, useEffect, useState } from 'react';
+import { View } from 'react-native';
+import { GenderPreference } from '@/components/gender-preference';
+import { Card, ScreenHeader, ScrollScreen, Section } from '@/components/layout';
+import { NavRow } from '@/components/list';
+import { SegmentedPill } from '@/components/motion';
 import { BackLink } from '@/components/nav';
-import { Button, Input } from '@/components/ui';
-import { BIRTH_DATE_PARTS, birthDateError, toIsoBirthDate } from '@/lib/birth-date';
+import { ProfilePhotoGallery } from '@/components/profile-photo-gallery';
+import { SocialStatusEditor } from '@/components/social-status-editor';
+import { Text } from '@/components/text';
+import { Skeleton } from '@/components/feedback';
+import { BioEditor } from '@/features/profile-edit/bio-editor';
+import { PendingPoints } from '@/features/profile-edit/pending-points';
+import { ProfilePreview } from '@/features/profile-edit/profile-preview';
+import { TrainingEditor } from '@/features/profile-edit/training-editor';
+import { PROFILE_COMPLETION_KEY, useOwnProfile } from '@/features/profile-hero/use-own-profile';
 import { GOAL_LABEL } from '@/lib/format';
-import { notify } from '@/notifications';
-import { colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { colors, minTouchTarget, radii, spacing } from '@/theme';
+
+type Tab = 'edit' | 'preview';
+type SectionKey = 'photos' | 'about' | 'training' | 'data' | 'senda' | 'social';
+
+/** Qué sección abre cada dato del empujón: la pedida sube arriba del todo. */
+const SECTION_OF: Record<string, SectionKey> = {
+  FOTO: 'photos',
+  FOTOS_3: 'photos',
+  BIO: 'about',
+  NIVEL: 'training',
+  INTERESES: 'training',
+  GENERO: 'senda',
+};
 
 /**
- * A numeric keypad offers both separators depending on the locale, and a user
- * typing their weight will use whichever their phone shows — so `72,5` and
- * `72.5` have to mean the same number.
+ * Editar perfil (a lo Tinder): «Editar» y «Vista previa» en dos pestañas. En
+ * «Editar» cada sección guarda por su cuenta y dice cuántos puntos le quedan
+ * por dar; en «Vista previa» está tu carta tal como la ve el resto.
  */
-function toNumber(value: string): number {
-  return Number(value.replace(',', '.'));
-}
-
-/** `1996-03-15` → the three fields the form edits. */
-function splitBirthDate(isoDate: string | null | undefined) {
-  const [anio = '', mes = '', dia = ''] = isoDate ? isoDate.split('-') : [];
-  return { dia, mes, anio };
-}
-
-/**
- * The form speaks strings (that is what a `TextInput` produces) and parses to
- * the numbers the API expects, so `z.input` is the shape bound to the fields and
- * `z.output` the payload sent to the backend.
- *
- * Ranges are physiological bounds, not business rules: they exist to catch a
- * missed decimal point (`725` kg) before it reaches the server.
- */
-const profileFormSchema = z.object({
-  pesoKg: z
-    .string()
-    .trim()
-    .min(1, 'Ingresa tu peso.')
-    .transform(toNumber)
-    .refine((value) => Number.isFinite(value), 'Usa solo números, por ejemplo 72,5.')
-    .refine((value) => value >= 20 && value <= 400, 'El peso debe estar entre 20 y 400 kg.'),
-  estaturaCm: z
-    .string()
-    .trim()
-    .min(1, 'Ingresa tu estatura.')
-    .transform(toNumber)
-    .refine((value) => Number.isInteger(value), 'Usa centímetros enteros, por ejemplo 178.')
-    .refine((value) => value >= 80 && value <= 260, 'La estatura debe estar entre 80 y 260 cm.'),
-  // Optional: three empty fields are "no lo digo", not an error, and travel as null.
-  fechaNacimiento: z
-    .object({ dia: z.string().trim(), mes: z.string().trim(), anio: z.string().trim() })
-    .superRefine(({ dia, mes, anio }, ctx) => {
-      const message = birthDateError(dia, mes, anio);
-      if (message) ctx.addIssue({ code: 'custom', message });
-    })
-    .transform((parts) =>
-      parts.dia === '' && parts.mes === '' && parts.anio === '' ? null : toIsoBirthDate(parts),
-    ),
-  objetivo: z.enum(trainingGoals),
-});
-
-type ProfileFormValues = z.input<typeof profileFormSchema>;
-type ProfileFormPayload = z.output<typeof profileFormSchema>;
-
-/** One goal chip. Chips beat a native picker here: six options, all visible. */
-function GoalOption({
-  goal,
-  selected,
-  onSelect,
-}: {
-  goal: TrainingGoal;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      // `selected` is what a screen reader announces for a chip group; without
-      // it the volt fill is the only cue, which is no cue at all when unseen.
-      accessibilityState={{ selected }}
-      onPress={onSelect}
-      style={({ pressed }) => ({
-        justifyContent: 'center',
-        minHeight: minTouchTarget,
-        borderRadius: radii.md,
-        borderWidth: 1,
-        borderColor: selected ? colors.volt : colors.border,
-        backgroundColor: selected ? colors.volt : colors.surface,
-        paddingHorizontal: spacing.md,
-        opacity: pressed ? 0.75 : 1,
-      })}
-    >
-      <Text
-        style={{
-          color: selected ? colors.background : colors.text,
-          fontSize: fontSizes.sm,
-          fontWeight: semibold,
-        }}
-      >
-        {GOAL_LABEL[goal]}
-      </Text>
-    </Pressable>
-  );
-}
-
-/**
- * The four questions of the profile, asked one at a time.
- *
- * As a single long form this was a wall of inputs the user scrolled past and
- * abandoned; the data is short enough that one question per screen costs no
- * extra taps and turns filling it in into something with a visible end. The
- * rail at the top is what makes that end visible.
- */
-const PROFILE_STEPS: readonly FlowStep[] = [
-  { label: 'Peso', icon: 'barbell-outline' },
-  { label: 'Estatura', icon: 'resize-outline' },
-  { label: 'Nacimiento', icon: 'calendar-outline' },
-  { label: 'Objetivo', icon: 'flag-outline' },
-];
-
-/** The field validated before each step is allowed to advance. */
-const STEP_FIELD = ['pesoKg', 'estaturaCm', 'fechaNacimiento', 'objetivo'] as const;
-
-function StepHeading({
-  icon,
-  question,
-  hint,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  question: string;
-  hint: string;
-}) {
-  return (
-    <View style={{ alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.sm }}>
-      <Ionicons color={colors.volt} name={icon} size={iconSizes.xl} />
-      <Text
-        style={{
-          color: colors.text,
-          fontSize: fontSizes.lg,
-          fontWeight: semibold,
-          textAlign: 'center',
-        }}
-      >
-        {question}
-      </Text>
-      <Text
-        style={{
-          color: colors.textMuted,
-          fontSize: fontSizes.sm,
-          textAlign: 'center',
-          lineHeight: 20,
-        }}
-      >
-        {hint}
-      </Text>
-    </View>
-  );
-}
-
-function ProfileForm({
-  defaults,
-  isNew,
-  hadBirthDate,
-}: {
-  defaults: ProfileFormValues;
-  isNew: boolean;
-  hadBirthDate: boolean;
-}) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const [step, setStep] = useState(0);
-  const {
-    control,
-    handleSubmit,
-    trigger,
-    formState: { errors },
-  } = useForm<ProfileFormValues, unknown, ProfileFormPayload>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: defaults,
-  });
-
-  const save = useMutation({
-    // A user without a profile yet has to POST it: PATCH would 404 on nothing.
-    mutationFn: (input: ProfileInput) =>
-      isNew ? profileService.create(input) : profileService.update(input),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['profile', 'me'] }),
-        // El peso guardado aquí también queda en el histórico desde ahora;
-        // sin esto la pantalla de evolución no mostraría el registro nuevo
-        // hasta reabrir la aplicación.
-        queryClient.invalidateQueries({ queryKey: ['profile', 'body-measurements'] }),
-      ]);
-      notify.success('Perfil actualizado.');
-      router.back();
-    },
-    onError: (error: unknown) => {
-      notify.error(error);
-    },
-  });
-
-  const onSubmit = handleSubmit(({ fechaNacimiento, ...values }) => {
-    // Vacío solo borra una fecha que ya existía. Si nunca la hubo se omite, y la
-    // edad que guardó una versión anterior de la app no se pierde al editar el peso.
-    save.mutate(
-      fechaNacimiento === null && !hadBirthDate ? values : { ...values, fechaNacimiento },
-    );
-  });
-
-  /**
-   * Validates only the field on screen before moving on. Running the whole
-   * schema would flag questions the user has not reached yet, which reads as
-   * the form accusing them of mistakes they have not had a chance to make.
-   */
-  const goNext = async () => {
-    const field = STEP_FIELD[step];
-    if (!field) return;
-    const valid = await trigger(field);
-    if (valid) setStep((current) => Math.min(current + 1, PROFILE_STEPS.length - 1));
-  };
-
-  return (
-    <Card style={{ gap: spacing.lg, paddingVertical: spacing.xl }}>
-      <StepProgress current={step} steps={PROFILE_STEPS} />
-
-      {step === 0 ? (
-        <>
-          <StepHeading
-            hint="Lo usamos para calcular el volumen de tus sesiones."
-            icon="barbell-outline"
-            question="¿Cuánto pesas?"
-          />
-          <Controller
-            control={control}
-            name="pesoKg"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                error={errors.pesoKg?.message}
-                keyboardType="numeric"
-                {...numericInputProps}
-                label="Peso (kg)"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                placeholder="72,5"
-                value={value}
-              />
-            )}
-          />
-        </>
-      ) : null}
-
-      {step === 1 ? (
-        <>
-          <StepHeading
-            hint="Junto al peso permite seguir tu composición a lo largo del tiempo."
-            icon="resize-outline"
-            question="¿Cuánto mides?"
-          />
-          <Controller
-            control={control}
-            name="estaturaCm"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                error={errors.estaturaCm?.message}
-                keyboardType="numeric"
-                {...numericInputProps}
-                label="Estatura (cm)"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                placeholder="178"
-                value={value}
-              />
-            )}
-          />
-        </>
-      ) : null}
-
-      {step === 2 ? (
-        <>
-          <StepHeading
-            hint="Opcional. Con ella calculamos tu edad, que así se mantiene al día sola."
-            icon="calendar-outline"
-            question="¿Cuándo naciste?"
-          />
-          <Controller
-            control={control}
-            name="fechaNacimiento"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View style={{ gap: spacing.xs }}>
-                <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-                  {BIRTH_DATE_PARTS.map((part) => (
-                    <View key={part.key} style={{ flex: part.flex }}>
-                      <Input
-                        keyboardType="number-pad"
-                        {...numericInputProps}
-                        label={part.label}
-                        maxLength={part.maxLength}
-                        onBlur={onBlur}
-                        onChangeText={(text) =>
-                          onChange({ ...value, [part.key]: text.replace(/\D/g, '') })
-                        }
-                        placeholder={part.placeholder}
-                        value={value[part.key]}
-                      />
-                    </View>
-                  ))}
-                </View>
-                {errors.fechaNacimiento?.message ? (
-                  <Text style={{ color: colors.danger, fontSize: fontSizes.xs }}>
-                    {errors.fechaNacimiento.message}
-                  </Text>
-                ) : null}
-              </View>
-            )}
-          />
-        </>
-      ) : null}
-
-      {step === 3 ? (
-        <>
-          <StepHeading
-            hint="Ajusta las rutinas y las cargas que te sugerimos."
-            icon="flag-outline"
-            question="¿Cuál es tu objetivo?"
-          />
-          <Controller
-            control={control}
-            name="objetivo"
-            render={({ field: { onChange, value } }) => (
-              <View style={{ gap: spacing.xs }}>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-                  {trainingGoals.map((goal) => (
-                    <GoalOption
-                      goal={goal}
-                      key={goal}
-                      onSelect={() => onChange(goal)}
-                      selected={value === goal}
-                    />
-                  ))}
-                </View>
-                {errors.objetivo?.message ? (
-                  <Text style={{ color: colors.danger, fontSize: fontSizes.xs }}>
-                    {errors.objetivo.message}
-                  </Text>
-                ) : null}
-              </View>
-            )}
-          />
-        </>
-      ) : null}
-
-      {step < PROFILE_STEPS.length - 1 ? (
-        <Button icon="arrow-forward" iconPosition="end" label="Continuar" onPress={() => void goNext()} />
-      ) : (
-        <Button icon="checkmark" label="Guardar cambios" loading={save.isPending} onPress={onSubmit} />
-      )}
-      {step > 0 ? (
-        <Button icon="arrow-back" label="Volver" onPress={() => setStep((current) => current - 1)} variant="ghost" />
-      ) : null}
-    </Card>
-  );
-}
-
 export default function ProfileEditScreen() {
-  const profile = useQuery({
-    queryKey: ['profile', 'me'],
-    queryFn: () => profileService.get(),
-    // A 404 means "not onboarded yet", which this screen exists to fix: retrying
-    // it would only delay the empty form.
-    retry: (failureCount, error) =>
-      !(error instanceof ApiError && error.kind === 'not-found') && failureCount < 1,
-  });
+  const router = useRouter();
+  const params = useLocalSearchParams<{ tab?: string; section?: string }>();
+  const [tab, setTab] = useState<Tab>(params.tab === 'preview' ? 'preview' : 'edit');
+  const own = useOwnProfile();
+  const queryClient = useQueryClient();
+  const completion = own.completion.data;
 
-  const isNew = profile.error instanceof ApiError && profile.error.kind === 'not-found';
+  // The photo gallery only refreshes its own list: re-read completion after it changes.
+  const photosVersion = own.photos.dataUpdatedAt;
+  useEffect(() => {
+    if (photosVersion) void queryClient.invalidateQueries({ queryKey: PROFILE_COMPLETION_KEY });
+  }, [photosVersion, queryClient]);
 
-  if (profile.isPending) {
-    return (
-      <ScrollScreen>
-        <BackLink />
-        <Skeleton height={90} />
-        <Skeleton height={220} />
-      </ScrollScreen>
-    );
-  }
-
-  if (profile.isError && !isNew) {
-    return (
-      <ScrollScreen>
-        <BackLink />
-        <ErrorState error={profile.error} onRetry={() => void profile.refetch()} />
-      </ScrollScreen>
-    );
-  }
-
-  const current = profile.data;
+  const profile = own.profile.data;
+  const sections: Record<SectionKey, ReactNode> = {
+    photos: (
+      <View key="photos" style={{ gap: spacing.sm }}>
+        <ProfilePhotoGallery />
+        <PendingPoints codes={['FOTO', 'FOTOS_3']} completion={completion} />
+      </View>
+    ),
+    about: <BioEditor bio={own.bio} footer={<PendingPoints codes={['BIO']} completion={completion} />} key={`about-${own.bio ?? ''}`} />,
+    training: (
+      <TrainingEditor
+        footer={<PendingPoints codes={['NIVEL', 'INTERESES']} completion={completion} />}
+        interests={own.onboarding.data?.trainingPreferences ?? []}
+        key={`training-${own.onboarding.data?.experienceLevel ?? ''}|${(own.onboarding.data?.trainingPreferences ?? []).join('|')}`}
+        level={own.onboarding.data?.experienceLevel ?? null}
+      />
+    ),
+    data: (
+      <Section key="data" title="Tus datos">
+        <Card list>
+          <PendingPoints codes={['DATOS', 'NACIMIENTO']} completion={completion} />
+          <NavRow
+            onPress={() => router.push('/profile-data')}
+            subtitle={profile ? `${profile.pesoKg.toLocaleString('es-ES')} kg · ${profile.estaturaCm} cm · ${GOAL_LABEL[profile.objetivo]}` : 'Añade peso, estatura y objetivo'}
+            testID="profile-edit-data"
+            title="Peso, estatura, nacimiento y objetivo"
+          />
+        </Card>
+      </Section>
+    ),
+    senda: (
+      <View key="senda" style={{ gap: spacing.sm }}>
+        <GenderPreference />
+        <PendingPoints codes={['GENERO']} completion={completion} />
+      </View>
+    ),
+    social: <SocialStatusEditor key="social" />,
+  };
+  const first = SECTION_OF[params.section ?? ''];
+  const order: SectionKey[] = ['photos', 'about', 'training', 'data', 'senda', 'social'];
+  const ordered = first ? [first, ...order.filter((key) => key !== first)] : order;
 
   return (
-    // `center` porque esta pantalla es el formulario entero: dejaba la tarjeta
-    // arriba con dos tercios de negro debajo, que es justo lo que se pidio
-    // evitar. Centrada, el asistente ocupa la pantalla en vez de flotar en ella.
-    <ScrollScreen center>
+    <ScrollScreen>
       <BackLink />
       <ScreenHeader
-        subtitle={
-          isNew
-            ? 'Completa tus datos para personalizar tus entrenos.'
-            : 'Mantén tus datos al día para seguir tu progreso.'
-        }
-        title={isNew ? 'Completar perfil' : 'Editar perfil'}
+        subtitle={completion ? `Perfil al ${completion.percent} % · ${completion.pointsEarned} de ${completion.pointsTotal} puntos ganados` : 'Lo que ven los demás y lo que ajusta tus entrenos.'}
+        title="Editar perfil"
       />
-      <ProfileForm
-        defaults={{
-          pesoKg: current ? String(current.pesoKg) : '',
-          estaturaCm: current ? String(current.estaturaCm) : '',
-          fechaNacimiento: splitBirthDate(current?.fechaNacimiento),
-          objetivo: current?.objetivo ?? 'HIPERTROFIA',
-        }}
-        hadBirthDate={Boolean(current?.fechaNacimiento)}
-        isNew={isNew}
+      <SegmentedPill
+        fill
+        onChange={setTab}
+        options={[
+          { value: 'edit', accessibilityLabel: 'Editar' },
+          { value: 'preview', accessibilityLabel: 'Vista previa' },
+        ]}
+        pillColor={colors.surfaceHighest}
+        renderItem={(option, active) => (
+          <Text strong={active} tone={active ? 'default' : 'secondary'} variant="subhead">
+            {option.value === 'edit' ? 'Editar' : 'Vista previa'}
+          </Text>
+        )}
+        style={{ backgroundColor: colors.surfaceLow, borderRadius: radii.full, padding: spacing.xs }}
+        itemStyle={{ minHeight: minTouchTarget, alignItems: 'center', justifyContent: 'center' }}
+        value={tab}
       />
+      {tab === 'preview' ? (
+        own.cardEntry && !own.photos.isPending ? <ProfilePreview entry={own.cardEntry} /> : <Skeleton height={420} />
+      ) : (
+        ordered.map((key) => sections[key])
+      )}
     </ScrollScreen>
   );
 }

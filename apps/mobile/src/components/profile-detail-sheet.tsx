@@ -57,9 +57,9 @@ type DetailSection = {
  * Las secciones que la persona ha rellenado. Nada más.
  *
  * Una sección vacía con un guion dentro no informa de nada y deja la hoja llena
- * de huecos esperando datos que este backend no tiene: aquí no hay biografía,
- * ni ubicación, ni distancia, ni intereses, así que tampoco hay sitios
- * reservados para ellos.
+ * de huecos esperando datos que este backend no tiene: no hay ubicación, ni
+ * distancia, así que tampoco hay sitios reservados para ellos. La bio sale en
+ * «Sobre» solo si la persona la escribió.
  */
 function sectionsOf(entry: GymDirectoryEntry): DetailSection[] {
   const training: DetailSection['rows'] = [];
@@ -100,6 +100,9 @@ function sectionsOf(entry: GymDirectoryEntry): DetailSection[] {
   }
 
   const about: DetailSection['rows'] = [];
+  if (entry.bio) {
+    about.push({ icon: 'chatbubble-ellipses-outline', label: 'Bio', value: entry.bio });
+  }
   if (entry.gender) {
     about.push({
       icon: 'person-outline',

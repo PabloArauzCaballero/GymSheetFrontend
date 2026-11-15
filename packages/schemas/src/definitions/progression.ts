@@ -446,6 +446,8 @@ export const pointsBreakdownSchema = z.object({
   penalties: z.number().int().default(0),
   /** Puntos intercambiados por strikes mensuales. Ausente en servidores antiguos. */
   strikePurchases: z.number().int().default(0),
+  /** Datos del perfil completados (se pagan una vez). Ausente en servidores antiguos. */
+  profile: z.number().int().default(0),
 });
 
 export const sessionRewardSchema = z.object({
@@ -488,7 +490,36 @@ export const pointRulesSchema = z.object({
   penaltyMissedSession: z.number().int().optional(),
   strikeCost: z.number().int().optional(),
   monthlyStrikes: z.number().int().optional(),
+  /** Cuánto vale cada dato del perfil la primera vez que se completa. */
+  profileItems: z.array(z.object({ code: z.string(), points: z.number().int() })).optional(),
 });
+
+/**
+ * `GET /me/progression/profile-completion`: qué le falta al perfil y cuánto
+ * vale cada dato. El servidor es la autoridad: leerlo otorga lo recién
+ * completado, así que `pointsEarned` ya está en el saldo de la senda.
+ */
+export const profileCompletionItemSchema = z.object({
+  code: z.string(),
+  label: z.string(),
+  hint: z.string(),
+  points: z.number().int(),
+  done: z.boolean(),
+  awarded: z.boolean(),
+  awardedAt: z.string().nullable(),
+});
+export const profileCompletionSchema = z.object({
+  items: z.array(profileCompletionItemSchema),
+  completed: z.number().int(),
+  total: z.number().int(),
+  percent: z.number().int(),
+  pointsEarned: z.number().int(),
+  pointsAvailable: z.number().int(),
+  pointsTotal: z.number().int(),
+  awardedNow: z.array(z.string()).default([]),
+});
+export type ProfileCompletionItem = z.infer<typeof profileCompletionItemSchema>;
+export type ProfileCompletion = z.infer<typeof profileCompletionSchema>;
 export type PointsBreakdown = z.infer<typeof pointsBreakdownSchema>;
 export type SessionReward = z.infer<typeof sessionRewardSchema>;
 export type PointRules = z.infer<typeof pointRulesSchema>;

@@ -63,6 +63,7 @@ const BREAKDOWN_ORDER: readonly (keyof PointsBreakdown)[] = [
   'challenges',
   'badges',
   'modes',
+  'profile',
   'penalties',
   'strikePurchases',
 ];
@@ -81,6 +82,7 @@ const BREAKDOWN_GLYPH: Readonly<
   challenges: { icon: 'flag', metric: 'time' },
   penalties: { icon: 'alert-circle', metric: 'skipped' },
   strikePurchases: { icon: 'shield', metric: 'effort' },
+  profile: { icon: 'person-circle', metric: 'reps' },
 };
 
 /** Las cartas que esperan, bocabajo y en abanico: se ve cuántas y de qué rareza, no cuáles. */

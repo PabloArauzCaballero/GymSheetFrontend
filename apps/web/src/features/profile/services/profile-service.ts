@@ -1,6 +1,7 @@
 import { apiRequest } from '@/shared/api/api-client';
-import type { Profile, TrainingGoal, User, UserGender } from '@/shared/api/contracts';
-import { profileSchema, userSchema } from '@/shared/api/schemas';
+import type { OnboardingState, Profile, TrainingGoal, User, UserGender } from '@/shared/api/contracts';
+import type { ProfileCompletion } from '@/shared/api/schemas';
+import { onboardingSchema, profileCompletionSchema, profileSchema, userSchema } from '@/shared/api/schemas';
 
 export type ProfileInput = {
   /** `YYYY-MM-DD`; `null` borra la fecha guardada. */
@@ -32,4 +33,23 @@ export const profileService = {
       method: 'PATCH',
       body: { pesoIncrementoKg },
     }),
+  /** Unas líneas sobre ti (160 como máximo); vacía o `null` la borra. */
+  updateBio: (bio: string | null) =>
+    apiRequest<User>('/users/me', userSchema, { method: 'PATCH', body: { bio } }),
+  /**
+   * Nivel e intereses desde el perfil. `PATCH`, no el `PUT` del cuestionario:
+   * aquel devuelve el alta a «en curso» y el portal volvería a encerrar a la
+   * persona en `/onboarding`.
+   */
+  updateTrainingProfile: (input: {
+    experienceLevel?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+    trainingPreferences?: string[];
+  }) =>
+    apiRequest<OnboardingState>('/me/onboarding/preferences', onboardingSchema, { method: 'PATCH', body: input }),
+  /**
+   * Qué le falta al perfil y cuántos puntos vale cada dato. El servidor es la
+   * autoridad: leerlo otorga lo recién completado, una vez por dato.
+   */
+  getCompletion: () =>
+    apiRequest<ProfileCompletion>('/me/progression/profile-completion', profileCompletionSchema),
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, Flag, GraduationCap, Heart, Trophy, User } from 'lucide-react';
+import { Building2, Flag, GraduationCap, Heart, MessageSquareText, Trophy, User } from 'lucide-react';
 import { Fragment, type ReactNode } from 'react';
 import type { GymDirectoryEntry } from '@/shared/api/schemas';
 import { DomainImage } from '@/shared/components/media/domain-image';
@@ -66,6 +66,9 @@ export function detailSectionsOf(entry: GymDirectoryEntry): DetailSection[] {
   }
 
   const about: DetailRow[] = [];
+  if (entry.bio) {
+    about.push({ icon: <MessageSquareText aria-hidden className="size-4" />, label: 'Bio', value: entry.bio });
+  }
   if (entry.gender) {
     about.push({
       icon: <User aria-hidden className="size-4" />,

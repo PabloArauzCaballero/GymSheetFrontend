@@ -86,7 +86,7 @@ const allowedPathPatterns = [
   /^\/me\/accesses$/u,
   // La senda: estado, confirmación de novedades y clasificación del gimnasio.
   /^\/me\/progression$/u,
-  /^\/me\/progression\/(acknowledge|leaderboard|rest-days|rules)$/u,
+  /^\/me\/progression\/(acknowledge|leaderboard|rest-days|rules|profile-completion)$/u,
   /^\/me\/photos$/u,
   new RegExp(`^/me/photos/${resourceId}$`, 'u'),
   // Denunciar contenido (H01): el botón en perfil ajeno, chat y stories.

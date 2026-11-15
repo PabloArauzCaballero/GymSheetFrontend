@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { chatMessageSchema, readReceiptSettingsSchema, setDisappearingMessagesResponseSchema, setMessageReactionResponseSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema, musicPlaylistSchema, musicPlaylistPageSchema } from '@gymsheet/schemas';
+import { profileCompletionSchema, chatMessageSchema, readReceiptSettingsSchema, setDisappearingMessagesResponseSchema, setMessageReactionResponseSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema, musicPlaylistSchema, musicPlaylistPageSchema } from '@gymsheet/schemas';
 import type { RoutineVisibility } from '@gymsheet/types';
 import type { MusicVisibility, SocialMapBounds, SocialMapCoordinates } from '@gymsheet/schemas';
 import {
@@ -183,6 +183,12 @@ export const onboardingService = {
       method: 'PUT',
       body: input,
     }),
+  /** Nivel e intereses desde el perfil: no reabre el alta (`PATCH`, no `PUT`). */
+  updateTrainingProfile: (input: {
+    experienceLevel?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+    trainingPreferences?: string[];
+  }) =>
+    apiClient.request('/me/onboarding/preferences', onboardingSchema, { method: 'PATCH', body: input }),
   saveEquipment: (availableEquipment: string[]) =>
     apiClient.request('/me/onboarding/equipment', onboardingSchema, {
       method: 'PUT',
@@ -638,6 +644,18 @@ export const accountService = {
       method: 'PATCH',
       body: { pesoIncrementoKg },
     }),
+  /** Unas líneas sobre ti (160 como máximo); vacía o `null` la borra. */
+  setBio: (bio: string | null) =>
+    apiClient.request('/users/me', userSchema, { method: 'PATCH', body: { bio } }),
+};
+
+/**
+ * Qué le falta al perfil y cuántos puntos vale cada dato. El servidor es la
+ * autoridad: leerlo otorga lo recién completado, una vez por dato.
+ */
+export const profileCompletionService = {
+  get: () =>
+    apiClient.request('/me/progression/profile-completion', profileCompletionSchema, { method: 'GET' }),
 };
 
 function socialQueryString(filters: Record<string, string | number | undefined>): string {

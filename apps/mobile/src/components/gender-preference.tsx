@@ -44,7 +44,9 @@ export function GenderPreference() {
     onError: (error: Error) => notify.error(error.message),
   });
 
-  const current = account.data?.genero ?? 'UNSPECIFIED';
+  // Nothing is preselected until the person answers: showing «Prefiero no
+  // decirlo» ticked for a null value claimed an answer nobody gave.
+  const current = account.data?.genero ?? null;
 
   return (
     <Section title="Rangos de tu senda">

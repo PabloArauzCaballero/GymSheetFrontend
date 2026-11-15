@@ -30,6 +30,8 @@ export type User = {
   genero?: UserGender | null;
   /** Cuánto suma cada chip rápido al registrar una serie. 2.5 por defecto. */
   pesoIncrementoKg?: number;
+  /** Unas líneas sobre ti (160 como máximo). */
+  bio?: string | null;
 };
 
 export type SessionPrincipal = {

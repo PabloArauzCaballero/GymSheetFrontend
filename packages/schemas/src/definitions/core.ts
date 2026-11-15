@@ -33,6 +33,8 @@ export const userSchema = z.object({
   genero: z.enum(userGenders).nullable().optional(),
   /** Cuánto suma cada chip rápido al registrar una serie. 2.5 por defecto. */
   pesoIncrementoKg: z.number().positive().optional(),
+  /** Unas líneas sobre ti (160 como máximo). Ausente en servidores anteriores. */
+  bio: z.string().nullable().optional(),
 });
 
 export const sessionPrincipalSchema = z.object({
