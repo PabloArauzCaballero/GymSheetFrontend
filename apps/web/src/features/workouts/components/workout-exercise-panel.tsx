@@ -124,7 +124,11 @@ export function WorkoutExercisePanel({
         ))
       ) : (
         <p className="border-t border-[var(--border-subtle)] p-5 text-center text-sm text-[var(--text-muted)]">
-          Aún no se registraron series.
+          {editable
+            ? 'Aún no se registraron series.'
+            : item.omitido
+              ? 'Omitido.'
+              : 'Sin series registradas.'}
         </p>
       )}
       {editable ? (

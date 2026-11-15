@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState, type ReactNode } from 'react';
-import { View, type LayoutChangeEvent } from 'react-native';
+import { useEffect, type ReactNode } from 'react';
+import { View } from 'react-native';
 import Animated, {
   FadeIn,
   useAnimatedStyle,
@@ -11,17 +11,25 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { Text } from '@/components/text';
+import type { NodeState } from '@/features/workout/review-state';
 import { accentContrast, alpha, colors, iconSizes, radii, spacing, stagger } from '@/theme';
 
-const NODE = 30;
+export type { NodeState } from '@/features/workout/review-state';
 
-export type NodeState = 'done' | 'partial' | 'empty';
+const NODE = 30;
+/** Gap between the circle and the start of the connector. */
+const RAIL_OFFSET = NODE + 2;
 
 /**
  * Un nodo del flujo: círculo en el raíl izquierdo, el contenido a la derecha y
  * un trazo jade que baja hasta el siguiente nodo y se dibuja al entrar. El
  * estado se lee por forma (✓ lleno · número con aro · número tenue), no solo
  * por color.
+ *
+ * The connector is absolutely positioned inside the rail column, which
+ * stretches to the row height set by the content. It must never be sized from
+ * a measured height of this same row: that feeds back (the line makes the row
+ * taller, the taller row makes the line taller…) and the page grows forever.
  */
 export function FlowNode({
   index,
@@ -38,16 +46,12 @@ export function FlowNode({
   children: ReactNode;
 }) {
   const reduceMotion = useReducedMotion();
-  const [height, setHeight] = useState(0);
   const draw = useSharedValue(reduceMotion ? 1 : 0);
   const last = index === total - 1;
-  const onLayout = (event: LayoutChangeEvent) => {
-    const next = Math.round(event.nativeEvent.layout.height);
-    if (next !== height) {
-      setHeight(next);
-      if (!reduceMotion) draw.value = withDelay(index * stagger * 2, withTiming(1, { duration: 420, easing: Easing.out(Easing.cubic) }));
-    }
-  };
+  useEffect(() => {
+    if (reduceMotion) draw.value = 1;
+    else draw.value = withDelay(index * stagger * 2, withTiming(1, { duration: 420, easing: Easing.out(Easing.cubic) }));
+  }, [draw, index, reduceMotion]);
   const lineStyle = useAnimatedStyle(() => ({ transform: [{ scaleY: draw.value }] }));
   const filled = state === 'done';
   const ink = filled ? accentContrast() : state === 'partial' ? colors.volt : colors.textMuted;
@@ -55,11 +59,10 @@ export function FlowNode({
   return (
     <Animated.View
       entering={reduceMotion ? undefined : FadeIn.delay(index * stagger).duration(260)}
-      onLayout={onLayout}
       style={{ flexDirection: 'row', gap: spacing.sm }}
       testID={`review-node-${index}`}
     >
-      <View style={{ width: NODE, alignItems: 'center' }}>
+      <View style={{ width: NODE, alignItems: 'center', overflow: 'hidden' }}>
         <View
           style={{
             width: NODE,
@@ -82,13 +85,16 @@ export function FlowNode({
             </Text>
           )}
         </View>
-        {!last && height > NODE ? (
+        {!last ? (
           <Animated.View
+            pointerEvents="none"
             style={[
               {
+                position: 'absolute',
+                top: RAIL_OFFSET,
+                bottom: 0,
+                left: (NODE - 2) / 2,
                 width: 2,
-                height: height - NODE + spacing.sm,
-                marginTop: 2,
                 borderRadius: 1,
                 backgroundColor: alpha(colors.volt, state === 'empty' ? 0.25 : 0.7),
                 transformOrigin: 'top',

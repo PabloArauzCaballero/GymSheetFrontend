@@ -15,15 +15,9 @@ import { buildFlowBlocks, progressLabel, type FlowBlock } from '@/features/worko
 import { WORKOUT_LABEL, WORKOUT_TONE, formatDuration, relativeDay } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { SessionMuscles } from '@/features/body-map/session-muscles';
-import { FlowNode, type NodeState } from '@/features/workout/review-flow';
+import { FlowNode } from '@/features/workout/review-flow';
+import { reviewNodeState, unloggedNote } from '@/features/workout/review-state';
 import { spacing } from '@/theme';
-
-/** ✓ si todo lo prescrito se hizo, aro si quedó a medias, tenue si no se tocó. */
-function stateOf(sources: readonly Workout['ejercicios'][number][]): NodeState {
-  const done = sources.filter((source) => source.series.length >= (source.seriesObjetivo ?? 1)).length;
-  if (done === sources.length) return 'done';
-  return sources.some((source) => source.series.length > 0) ? 'partial' : 'empty';
-}
 
 /**
  * Una sesión ya cerrada (o cancelada), para repasarla: todos los ejercicios
@@ -42,6 +36,7 @@ export function WorkoutReview({ data, onRefresh, refreshing }: { data: Workout; 
 
   const renderItem = (block: FlowBlock<Item>, item: Item) => {
     const source = item.source;
+    const missing = unloggedNote(item);
     return (
       <CurrentExercise
         badge={badgeOf(block, item)}
@@ -55,7 +50,13 @@ export function WorkoutReview({ data, onRefresh, refreshing }: { data: Workout; 
         sets={source.series}
         target={targetOf(source)}
         testID={`workout-exercise-${item.id}`}
-      />
+      >
+        {missing ? (
+          <Text testID={`workout-exercise-${item.id}-unlogged`} tone="muted" variant="footnote">
+            {missing}
+          </Text>
+        ) : null}
+      </CurrentExercise>
     );
   };
 
@@ -89,7 +90,7 @@ export function WorkoutReview({ data, onRefresh, refreshing }: { data: Workout; 
 
       <View>
         {blocks.map((block, index) => {
-          const state = stateOf(block.items.map((item) => item.source));
+          const state = reviewNodeState(block);
           const key = block.items.map((item) => item.id).join('+');
           if (block.kind === 'single') {
             const item = block.items[0];
