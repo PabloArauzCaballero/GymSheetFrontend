@@ -48,3 +48,15 @@ describe('knownRoutes', () => {
     expect(missing).toEqual([]);
   });
 });
+
+describe('public assets', () => {
+  // A `public/` folder named like a page route (e.g. `marketplace/`) sends its files
+  // through the login wall: anonymous visitors of a public page got broken images.
+  it('no top-level public folder shares its name with a route', () => {
+    const publicDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
+    const clashing = readdirSync(publicDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && knownRoutes.has(entry.name))
+      .map((entry) => entry.name);
+    expect(clashing).toEqual([]);
+  });
+});
