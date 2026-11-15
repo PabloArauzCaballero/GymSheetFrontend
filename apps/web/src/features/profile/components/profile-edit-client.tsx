@@ -91,9 +91,9 @@ export function ProfileEditClient() {
         own.cardEntry ? <ProfilePreview entry={own.cardEntry} /> : null
       ) : (
         <>
-          <section className="grid scroll-mt-24 gap-3" id="fotos">
-            <ProfilePhotoGallery />
-            <PendingPoints codes={['FOTO', 'FOTOS_3']} completion={completion} />
+          {/* Every section says what it still pays in the same place: the first row of its card. */}
+          <section className="scroll-mt-24" id="fotos">
+            <ProfilePhotoGallery header={<PendingPoints codes={['FOTO', 'FOTOS_3']} completion={completion} />} />
           </section>
           <section className="scroll-mt-24" id="sobre-ti">
             <Section title="Sobre ti">
@@ -114,10 +114,10 @@ export function ProfileEditClient() {
             <ProfileDataForm footer={<PendingPoints codes={['DATOS', 'NACIMIENTO']} completion={completion} />} profile={own.profile.data ?? null} />
           </section>
           <section className="scroll-mt-24" id="senda">
-            <Section title="Tu senda">
+            <Section title="Rangos de tu senda">
               <div className="panel grid gap-3 p-5">
-                <GenderPreferenceField value={own.user.data?.genero ?? null} />
                 <PendingPoints codes={['GENERO']} completion={completion} />
+                <GenderPreferenceField value={own.user.data?.genero ?? null} />
               </div>
             </Section>
           </section>

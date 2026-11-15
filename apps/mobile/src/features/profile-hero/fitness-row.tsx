@@ -1,3 +1,4 @@
+import { noOrphan } from '@gymsheet/domain';
 import type { Progression } from '@gymsheet/schemas';
 import { View } from 'react-native';
 import { Skeleton } from '@/components/feedback';
@@ -48,8 +49,8 @@ export function FitnessRow({ progress, pending }: { progress: Progression | unde
               {stat.value === null ? '—' : stat.value.toLocaleString('es-ES')}
             </Text>
           )}
-          <Text numberOfLines={2} style={{ textAlign: 'center' }} tone="secondary" variant="footnote">
-            {stat.label}
+          <Text style={{ textAlign: 'center' }} tone="secondary" variant="footnote">
+            {noOrphan(stat.label)}
           </Text>
         </View>
       ))}

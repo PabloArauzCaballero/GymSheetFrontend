@@ -3,8 +3,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Save } from 'lucide-react';
-import { useEffect, type ReactNode } from 'react';
-import { useForm } from 'react-hook-form';
+import { formatDecimalInput, parseDecimalInput } from '@gymsheet/domain';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { goalLabels, profileFormSchema, type ProfileFormValues } from '@/features/profile/components/profile-form-schema';
 import * as birthDate from '@/features/profile/lib/birth-date';
 import { profileService } from '@/features/profile/services/profile-service';
@@ -17,6 +18,28 @@ import { Field } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
 import { notify } from '@/shared/notifications';
+
+/**
+ * A weight typed the Spanish way («63,5», a dot works too). Shows the text as
+ * typed and hands the form a number, so the API payload stays numeric.
+ */
+function DecimalInput({ field, id }: Readonly<{ field: { value: number; onChange: (value: number) => void; onBlur: () => void; name: string }; id: string }>) {
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <Input
+      id={id}
+      inputMode="decimal"
+      name={field.name}
+      onBlur={field.onBlur}
+      onChange={(event) => {
+        setDraft(event.target.value);
+        field.onChange(parseDecimalInput(event.target.value));
+      }}
+      type="text"
+      value={draft ?? formatDecimalInput(field.value)}
+    />
+  );
+}
 
 /**
  * Peso, estatura, nacimiento y objetivo (antes era toda la página de edición).
@@ -65,7 +88,8 @@ export function ProfileDataForm({ profile, footer }: Readonly<{ profile: Profile
             <Input id="fechaNacimiento" max={birthDate.isoYearsAgo(birthDate.MIN_AGE)} min={birthDate.isoYearsAgo(birthDate.MAX_AGE + 1)} type="date" {...form.register('fechaNacimiento')} />
           </Field>
           <Field error={form.formState.errors.pesoKg?.message} htmlFor="pesoKg" label="Peso (kg)">
-            <Input id="pesoKg" max="400" min="1" step="0.1" type="number" {...form.register('pesoKg', { valueAsNumber: true })} />
+            {/* Keyed by the saved weight: a reload of the profile resets the typed text. */}
+            <Controller control={form.control} key={profile?.pesoKg ?? 'new'} name="pesoKg" render={({ field }) => <DecimalInput field={field} id="pesoKg" />} />
           </Field>
           <Field error={form.formState.errors.estaturaCm?.message} htmlFor="estaturaCm" label="Estatura (cm)">
             <Input id="estaturaCm" max="250" min="80" type="number" {...form.register('estaturaCm', { valueAsNumber: true })} />
@@ -84,7 +108,8 @@ export function ProfileDataForm({ profile, footer }: Readonly<{ profile: Profile
               {form.formState.errors.root.message}
             </p>
           ) : null}
-          <Button className="sm:col-span-2" loading={save.isPending} size="lg" type="submit" variant="primary">
+          {/* Lights up (accent fill) only with something to save, like the other sections. */}
+          <Button className="sm:col-span-2" loading={save.isPending} size="lg" type="submit" variant={form.formState.isDirty ? 'primary' : 'secondary'}>
             <Save className="size-4" />
             Guardar datos
           </Button>

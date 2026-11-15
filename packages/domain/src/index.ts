@@ -19,6 +19,7 @@ export * from './card-materials';
 export * from './rewards';
 export * from './session-labels';
 export * from './profile-completion';
+export * from './text-wrap';
 export * from './marketplace-labels';
 export * from './marketplace-categories';
 export * from './discovery-preferences';

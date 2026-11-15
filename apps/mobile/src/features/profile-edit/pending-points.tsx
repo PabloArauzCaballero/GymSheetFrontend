@@ -1,5 +1,5 @@
 import type { ProfileCompletion } from '@gymsheet/schemas';
-import { pendingProfileItems } from '@gymsheet/domain';
+import { noOrphan, pendingProfileItems } from '@gymsheet/domain';
 import { View } from 'react-native';
 import { Text } from '@/components/text';
 import { PointsChip } from '@/features/profile-hero/completion-nudge';
@@ -18,7 +18,7 @@ export function PendingPoints({ completion, codes }: { completion: ProfileComple
         <View key={item.code} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
           <PointsChip points={item.points} />
           <Text style={{ flex: 1 }} tone="secondary" variant="footnote">
-            {item.label}
+            {noOrphan(item.label)}
           </Text>
         </View>
       ))}

@@ -10,8 +10,15 @@ import { cn } from '@/shared/lib/cn';
 export function HeroSurface({
   children,
   watermark = false,
+  watermarkAt = 'bottom',
   className,
-}: Readonly<{ children: ReactNode; watermark?: boolean; className?: string }>) {
+}: Readonly<{
+  children: ReactNode;
+  watermark?: boolean;
+  /** `top` keeps the mark clear of a row of actions or labels along the bottom edge. */
+  watermarkAt?: 'top' | 'bottom';
+  className?: string;
+}>) {
   return (
     <div
       className={cn(
@@ -28,8 +35,8 @@ export function HeroSurface({
         }}
       />
       {watermark ? (
-        <span aria-hidden className="pointer-events-none absolute -bottom-6 -right-6 -z-10 opacity-[0.05]">
-          <ReppMark ink="var(--text)" size={168} tick="var(--text)" />
+        <span aria-hidden className={cn('pointer-events-none absolute -right-6 -z-10 opacity-[0.05]', watermarkAt === 'top' ? '-top-6' : '-bottom-6')}>
+          <ReppMark ink="var(--text)" size={watermarkAt === 'top' ? 140 : 168} tick="var(--text)" />
         </span>
       ) : null}
       {children}

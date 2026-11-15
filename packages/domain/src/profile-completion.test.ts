@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cardDisplayName, pendingProfileItems, pointsChip, profileNudgeTitle, profileProgress } from './profile-completion';
+import { cardDisplayName, fitnessEmptyHint, pendingProfileItems, pointsChip, profileNudgeTitle, profileProgress } from './profile-completion';
 
 const item = (code: string, done: boolean, awarded: boolean, points = 20) => ({ code, label: code, hint: '', points, done, awarded });
 
@@ -31,5 +31,17 @@ describe('profile completion copy', () => {
   it('shortens the name exactly like the discovery card', () => {
     expect(cardDisplayName('Ana María Pérez Soto')).toBe('Ana M.');
     expect(cardDisplayName('  Lucía  ')).toBe('Lucía');
+  });
+});
+
+describe('fitnessEmptyHint', () => {
+  it('points to the first session when there are none', () => {
+    expect(fitnessEmptyHint({ streak: 0, sessions: 0 })).toBe('Tu primera sesión enciende la racha.');
+  });
+  it('asks to relight a lapsed streak', () => {
+    expect(fitnessEmptyHint({ streak: 0, sessions: 12 })).toBe('Entrena hoy y vuelve a encender tu racha.');
+  });
+  it('says nothing while the streak is alive', () => {
+    expect(fitnessEmptyHint({ streak: 3, sessions: 12 })).toBeNull();
   });
 });

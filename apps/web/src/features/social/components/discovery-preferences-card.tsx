@@ -1,5 +1,6 @@
 'use client';
 
+import { discoveryPreferencesBlocker } from '@gymsheet/domain';
 import { Check, Dumbbell, Heart, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -59,6 +60,9 @@ function PreferencesForm({ embedded, initial, saving, onSave }: { embedded: bool
   const toggle = <T extends string>(values: T[], value: T, set: (next: T[]) => void) =>
     set(values.includes(value) ? values.filter((entry) => entry !== value) : [...values, value]);
 
+  // A disabled save says why (repp-diseno §8): the first thing still missing.
+  const blocker = discoveryPreferencesBlocker({ genders: selectedGenders, intents: selectedIntents, minAge, maxAge, radiusKm });
+
   return (
     <Card>
       {embedded ? null : (
@@ -96,7 +100,8 @@ function PreferencesForm({ embedded, initial, saving, onSave }: { embedded: bool
           <Checkbox checked={flexibleAge} label="Ampliar un poco la edad si hay pocas personas" onChange={(event) => setFlexibleAge(event.target.checked)} />
           <Checkbox checked={flexibleDistance} label="Ampliar un poco la distancia si hay pocas personas" onChange={(event) => setFlexibleDistance(event.target.checked)} />
         </div>
-        <Button className="w-full" variant="primary" disabled={saving || !selectedGenders.length || !selectedIntents.length || minAge < 18 || maxAge < minAge || radiusKm < 1 || radiusKm > 500} onClick={() => onSave({
+        {blocker ? <p className="t-footnote text-[var(--text-muted)]" id="discovery-preferences-blocker">{blocker}</p> : null}
+        <Button aria-describedby={blocker ? 'discovery-preferences-blocker' : undefined} className="w-full" variant="primary" disabled={saving || blocker !== null} onClick={() => onSave({
           genders: selectedGenders, intents: selectedIntents, minAge, maxAge, radiusKm, flexibleAge, flexibleDistance, expectedVersion: currentVersion,
         })}>{saving ? 'Guardando…' : embedded ? 'Buscar compañeros' : 'Guardar preferencias'}</Button>
       </CardContent>

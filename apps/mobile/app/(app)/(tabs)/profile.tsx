@@ -11,7 +11,7 @@ import { Button } from '@/components/ui';
 import { WeightIncrementPreference } from '@/components/weight-increment-preference';
 import { AboutSection } from '@/features/profile-hero/about-section';
 import { CompletionAvatar } from '@/features/profile-hero/completion-avatar';
-import { CompletionNudge } from '@/features/profile-hero/completion-nudge';
+import { CompletionError, CompletionNudge } from '@/features/profile-hero/completion-nudge';
 import { editRouteFor } from '@/features/profile-hero/edit-routes';
 import { fitnessNumbers } from '@/features/profile-hero/fitness-numbers';
 import { FitnessRow } from '@/features/profile-hero/fitness-row';
@@ -87,6 +87,9 @@ export default function ProfileScreen() {
   const rank = progress ? (progress.level?.name ?? 'Sin empezar') : null;
   // Three fixed slots, Editar always centred: Compartir waits (inert) for real numbers instead of popping in.
   const userId = principal?.id ?? null;
+  // A failed read with nothing cached is said out loud (ring and card), never hidden.
+  const completionFailed = completion.isError && !completion.data;
+  const retryCompletion = () => void completion.refetch();
   const shareStat = progress ? proudStat(fitnessNumbers(progress)) : null;
   const actions: ProfileAction[] = [
     { key: 'preview', label: 'Vista previa', icon: 'eye-outline', onPress: () => router.push('/profile-edit?tab=preview'), testID: 'profile-preview' },
@@ -118,8 +121,14 @@ export default function ProfileScreen() {
       />
 
       <TourTarget id="profile.identity">
-        <HeroSurface testID="profile-hero" watermark>
-          <CompletionAvatar initials={initialsOf(principal?.nombreCompleto, principal?.email)} percent={completion.data?.percent ?? null} photoUrl={own.cardEntry?.photoUrl ?? null} />
+        <HeroSurface testID="profile-hero" watermark watermarkAt="top">
+          <CompletionAvatar
+            initials={initialsOf(principal?.nombreCompleto, principal?.email)}
+            onRetry={completionFailed ? retryCompletion : undefined}
+            percent={completion.data?.percent ?? null}
+            photoUrl={own.cardEntry?.photoUrl ?? null}
+            retrying={completion.isFetching}
+          />
           <View style={{ alignItems: 'center', gap: spacing.sm }}>
             <Text accessibilityRole="header" numberOfLines={2} style={{ textAlign: 'center' }} variant="title">
               {age !== null ? `${name}, ${age}` : name}
@@ -135,7 +144,13 @@ export default function ProfileScreen() {
         </HeroSurface>
       </TourTarget>
 
-      {completion.isPending ? <Skeleton height={180} /> : completion.data ? <CompletionNudge completion={completion.data} onItemPress={(code) => router.push(editRouteFor(code))} /> : null}
+      {completion.isPending ? (
+        <Skeleton height={180} />
+      ) : completion.data ? (
+        <CompletionNudge completion={completion.data} onItemPress={(code) => router.push(editRouteFor(code))} />
+      ) : completionFailed ? (
+        <CompletionError onRetry={retryCompletion} retrying={completion.isFetching} />
+      ) : null}
 
       <AboutSection bio={own.bio} chips={own.chips} onEdit={() => router.push('/profile-edit?section=BIO')} />
 

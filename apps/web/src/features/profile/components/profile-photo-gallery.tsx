@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Trash2, Upload } from 'lucide-react';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import Image from 'next/image';
 import { profilePhotosService } from '@/features/profile/services/profile-photos-service';
 import { ApiError } from '@/shared/api/api-error';
@@ -17,7 +17,8 @@ const MAX_PHOTOS = 6;
  * Galería de fotos de perfil. No existía ni un avatar único antes de esto —
  * el perfil solo mostraba iniciales.
  */
-export function ProfilePhotoGallery() {
+/** `header`: first row of the card (the edit screen puts the pending «+N pts» there, like every section). */
+export function ProfilePhotoGallery({ header }: Readonly<{ header?: ReactNode }> = {}) {
   const queryClient = useQueryClient();
   const [picking, setPicking] = useState(false);
   const photos = useQuery({
@@ -55,6 +56,7 @@ export function ProfilePhotoGallery() {
         title="Fotos de perfil"
       />
       <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {header ? <div className="col-span-full">{header}</div> : null}
         {(photos.data ?? []).map((photo) => (
           <div
             className="group relative aspect-square overflow-hidden rounded-[8px] border border-[var(--border-subtle)]"

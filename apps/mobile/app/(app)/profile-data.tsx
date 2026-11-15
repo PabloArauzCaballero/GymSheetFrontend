@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams } from 'expo-router';
 import { ApiError } from '@gymsheet/api-client';
+import { formatDecimalInput } from '@gymsheet/domain';
 import { profileService } from '@/api/services';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { ScreenHeader, ScrollScreen } from '@/components/layout';
@@ -51,7 +52,7 @@ export default function ProfileDataScreen() {
       />
       <BodyDataWizard
         defaults={{
-          pesoKg: current ? String(current.pesoKg) : '',
+          pesoKg: current ? formatDecimalInput(current.pesoKg) : '',
           estaturaCm: current ? String(current.estaturaCm) : '',
           fechaNacimiento: splitBirthDate(current?.fechaNacimiento),
           objetivo: current?.objetivo ?? 'HIPERTROFIA',

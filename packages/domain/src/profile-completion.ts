@@ -49,6 +49,16 @@ export function proudStat({ streak, sessions, points }: { streak: number; sessio
 }
 
 /**
+ * The empty-state line under the senda when the numbers are zero: a next step,
+ * not a scolding. Null once there is a live streak.
+ */
+export function fitnessEmptyHint({ streak, sessions }: { streak: number; sessions: number }): string | null {
+  if (sessions === 0) return 'Tu primera sesión enciende la racha.';
+  if (streak === 0) return 'Entrena hoy y vuelve a encender tu racha.';
+  return null;
+}
+
+/**
  * Lo que devuelve `GET /me/progression/profile-completion`, solo con los campos
  * que leen estas funciones: el servidor decide qué vale cada dato y si ya está
  * pagado; aquí solo se ordena y se dice.

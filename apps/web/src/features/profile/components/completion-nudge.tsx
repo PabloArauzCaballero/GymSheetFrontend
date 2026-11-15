@@ -2,6 +2,7 @@ import { pendingProfileItems, pointsChip, profileNudgeTitle, profileProgress } f
 import {
   Calendar,
   ChevronRight,
+  CloudOff,
   Gauge,
   Heart,
   Image as ImageIcon,
@@ -9,10 +10,12 @@ import {
   MessageSquareText,
   PersonStanding,
   Camera,
+  RefreshCw,
   User,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ProfileCompletion } from '@/shared/api/schemas';
+import { Button } from '@/shared/components/ui/button';
 import { editHrefFor } from '../lib/edit-routes';
 
 /** Un glifo por dato: la lista se escanea por forma antes que por texto. */
@@ -52,10 +55,10 @@ export function CompletionNudge({ completion }: Readonly<{ completion: ProfileCo
   return (
     <section aria-labelledby="profile-nudge-title" className="panel grid gap-4 p-5" data-testid="profile-nudge">
       <div className="grid gap-2">
-        <h2 className="t-headline" id="profile-nudge-title">
+        <h2 className="t-headline text-balance" id="profile-nudge-title">
           {title}
         </h2>
-        <p className="t-footnote text-[var(--text-muted)]">
+        <p className="t-footnote text-pretty text-[var(--text-muted)]">
           {`${progress.label}. Cada dato suma una vez y no se pierde.`}
         </p>
         <span aria-hidden className="block h-1.5 overflow-hidden rounded-full bg-[var(--surface-highest)]">
@@ -67,11 +70,11 @@ export function CompletionNudge({ completion }: Readonly<{ completion: ProfileCo
           const Icon = PROFILE_ITEM_ICON[item.code] ?? User;
           return (
             <li key={item.code}>
-              <Link className="tap flex min-h-14 items-center gap-3 py-2 hover:opacity-90" href={editHrefFor(item.code)}>
+              <Link className="tap flex min-h-14 flex-wrap items-center gap-3 py-3 hover:opacity-90" href={editHrefFor(item.code)}>
                 <Icon aria-hidden className="size-5 shrink-0 text-[var(--text-muted)]" />
-                <span className="grid flex-1 gap-0.5">
-                  <span className="t-subhead font-semibold">{item.label}</span>
-                  <span className="t-footnote text-[var(--text-muted)]">{item.hint}</span>
+                <span className="grid min-w-[min(100%,7rem)] flex-1 gap-0.5">
+                  <span className="t-subhead text-balance font-semibold">{item.label}</span>
+                  <span className="t-footnote text-pretty text-[var(--text-muted)]">{item.hint}</span>
                 </span>
                 <PointsChip points={item.points} />
               </Link>
@@ -85,6 +88,28 @@ export function CompletionNudge({ completion }: Readonly<{ completion: ProfileCo
           <ChevronRight aria-hidden className="size-4" />
         </Link>
       ) : null}
+    </section>
+  );
+}
+
+/**
+ * The completion read failed: say so where the card would be, with a retry,
+ * instead of hiding the card (an absent nudge reads as «nothing left to earn»).
+ */
+export function CompletionError({ onRetry, retrying }: Readonly<{ onRetry: () => void; retrying: boolean }>) {
+  return (
+    <section className="panel grid gap-4 p-5" data-testid="profile-completion-error" role="alert">
+      <div className="flex items-start gap-3">
+        <CloudOff aria-hidden className="mt-0.5 size-5 shrink-0 text-[var(--text-muted)]" />
+        <div className="grid gap-0.5">
+          <h2 className="t-headline text-balance">No pudimos cargar lo que te falta del perfil</h2>
+          <p className="t-footnote text-pretty text-[var(--text-muted)]">Tus puntos están a salvo. Vuelve a intentarlo en un momento.</p>
+        </div>
+      </div>
+      <Button className="justify-self-start" loading={retrying} onClick={onRetry} size="sm" variant="secondary">
+        <RefreshCw aria-hidden className="size-4" />
+        Reintentar
+      </Button>
     </section>
   );
 }

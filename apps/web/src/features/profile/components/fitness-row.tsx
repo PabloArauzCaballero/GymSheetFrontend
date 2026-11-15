@@ -1,3 +1,4 @@
+import { noOrphan } from '@gymsheet/domain';
 import type { Progression } from '@/shared/api/schemas';
 import { Skeleton } from '@/shared/components/feedback/skeleton';
 import { plural } from './profile-hero';
@@ -21,10 +22,13 @@ export function FitnessRow({ progress, pending }: Readonly<{ progress: Progressi
     { key: 'sessions', value: numbers?.sessions ?? null, label: numbers ? plural(numbers.sessions, 'sesión', 'sesiones') : 'sesiones' },
   ];
   return (
-    <dl aria-busy={pending || undefined} className="grid w-full grid-cols-3 divide-x divide-[var(--border)]" data-testid="profile-fitness-row">
+    // Very large text (row under 14rem, which grows with the root font): one stat per line, figure then label.
+    <div className="@container w-full">
+    <dl aria-busy={pending || undefined} className="grid w-full grid-cols-3 divide-x divide-[var(--border)] @max-[14rem]:grid-cols-1 @max-[14rem]:gap-1 @max-[14rem]:divide-x-0" data-testid="profile-fitness-row">
       {stats.map((stat) => (
-        <div className="grid min-w-0 justify-items-center gap-0.5 px-1 text-center" key={stat.key}>
-          <dt className="t-footnote text-balance text-[var(--text-muted)]">{stat.label}</dt>
+        <div className="grid min-w-0 justify-items-center gap-0.5 px-1 text-center @max-[14rem]:flex @max-[14rem]:flex-wrap @max-[14rem]:items-baseline @max-[14rem]:justify-center @max-[14rem]:gap-x-2" key={stat.key}>
+          {/* text-balance alone still split «días de / racha»: the no-break space keeps the last word company. */}
+          <dt className="t-footnote text-balance text-[var(--text-muted)]">{noOrphan(stat.label)}</dt>
           <dd className="t-numeric order-first">
             {stat.value !== null ? (
               stat.value.toLocaleString('es-ES')
@@ -40,5 +44,6 @@ export function FitnessRow({ progress, pending }: Readonly<{ progress: Progressi
         </div>
       ))}
     </dl>
+    </div>
   );
 }

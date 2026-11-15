@@ -20,7 +20,7 @@ export type ProfileAction = {
 /**
  * Las acciones bajo la cara, en círculo y con su nombre debajo (el patrón de
  * Tinder). Columnas iguales: a 320 pt ninguna etiqueta se corta ni empuja a la
- * de al lado. La principal es la única en relleno de acento.
+ * de al lado; con texto grande pasa a dos líneas. La principal es la única en relleno de acento.
  */
 export function ProfileActions({ actions }: { actions: readonly ProfileAction[] }) {
   return (
@@ -57,7 +57,8 @@ export function ProfileActions({ actions }: { actions: readonly ProfileAction[] 
                 size={action.primary ? iconSizes.lg : iconSizes.md}
               />
             </View>
-            <Text numberOfLines={1} strong={action.primary} style={{ textAlign: 'center' }} tone={action.primary ? 'default' : 'secondary'} variant="footnote">
+            {/* Two lines, then shrink a little: large text never cuts a label to «Compar…». */}
+            <Text adjustsFontSizeToFit minimumFontScale={0.8} numberOfLines={2} strong={action.primary} style={{ textAlign: 'center' }} tone={action.primary ? 'default' : 'secondary'} variant="footnote">
               {action.label}
             </Text>
           </PressableScale>

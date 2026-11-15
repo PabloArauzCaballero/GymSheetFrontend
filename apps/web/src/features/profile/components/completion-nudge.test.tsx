@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { ProfileCompletion } from '@/shared/api/schemas';
-import { CompletionNudge } from './completion-nudge';
+import { CompletionAvatar } from './completion-avatar';
+import { CompletionError, CompletionNudge } from './completion-nudge';
 
 vi.mock('next/link', () => ({ default: ({ children, href }: { children: ReactNode; href: string }) => <a href={href}>{children}</a> }));
 
@@ -51,5 +52,28 @@ describe('CompletionNudge', () => {
   it('renders nothing once every point is earned', () => {
     const { container } = render(<CompletionNudge completion={completion([item('FOTO', 50, true, true)])} />);
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe('completion read failed', () => {
+  it('says so where the card would be and retries on demand', () => {
+    const onRetry = vi.fn();
+    render(<CompletionError onRetry={onRetry} retrying={false} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('No pudimos cargar lo que te falta del perfil');
+    fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it('turns the ring into a retry button instead of an empty track', () => {
+    const onRetry = vi.fn();
+    render(<CompletionAvatar initials="LP" onRetry={onRetry} percent={null} photoUrl={null} />);
+    fireEvent.click(screen.getByRole('button', { name: 'No se pudo cargar tu progreso del perfil. Reintentar' }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the plain ring while the percent is known', () => {
+    render(<CompletionAvatar initials="LP" onRetry={vi.fn()} percent={25} photoUrl={null} />);
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Tu foto de perfil. Perfil completo al 25 %' })).toBeInTheDocument();
   });
 });

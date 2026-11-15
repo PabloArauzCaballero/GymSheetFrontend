@@ -1,6 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
+import { discoveryPreferencesBlocker } from '@gymsheet/domain';
 import type { SocialStatusValue } from '@gymsheet/schemas';
 import { socialService } from '@/api/services';
 import { Card, Section } from '@/components/layout';
@@ -8,7 +10,7 @@ import { Button } from '@/components/ui';
 import { Checkbox } from '@/components/checkbox';
 import { FilterChip } from '@/components/filter-chip';
 import { notify } from '@/notifications';
-import { colors, fontSizes, radii, semibold, spacing } from '@/theme';
+import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
 
 const OPTIONS: readonly { value: SocialStatusValue; label: string }[] = [
   { value: 'OPEN_TO_MEET', label: 'Abierto/a a conocer gente' },
@@ -108,7 +110,17 @@ export function SocialDiscoverySettingsEditor() {
           })}
           variant={current?.profileEnabled ? 'danger' : 'primary'}
         />
+        {current && !current.profileEnabled ? (
+          // Disabled buttons say why, in a secondary tone (repp-diseno §8).
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <Ionicons color={colors.textSecondary} name="lock-closed-outline" size={iconSizes.sm} />
+            <Text style={{ flex: 1, color: colors.textSecondary, fontSize: fontSizes.sm, lineHeight: 20 }}>
+              Activa tu perfil social primero para elegir dónde apareces.
+            </Text>
+          </View>
+        ) : null}
         <Button
+          accessibilityHint={current && !current.profileEnabled ? 'Activa tu perfil social primero' : undefined}
           disabled={!current?.profileEnabled || update.isPending}
           label={current?.crossGymEnabled ? 'Desactivar descubrimiento entre gimnasios' : 'Permitir descubrimiento entre gimnasios'}
           loading={update.isPending}
@@ -118,9 +130,10 @@ export function SocialDiscoverySettingsEditor() {
             mapEnabled: current.mapEnabled,
             expectedVersion: current.version,
           })}
-          variant={current?.crossGymEnabled ? 'primary' : 'ghost'}
+          variant={current?.crossGymEnabled ? 'secondary' : 'ghost'}
         />
         <Button
+          accessibilityHint={current && !current.profileEnabled ? 'Activa tu perfil social primero' : undefined}
           disabled={!current?.profileEnabled || update.isPending}
           label={current?.mapEnabled ? 'Ocultarme del mapa' : 'Aparecer en el mapa'}
           loading={update.isPending}
@@ -130,7 +143,7 @@ export function SocialDiscoverySettingsEditor() {
             mapEnabled: !current.mapEnabled,
             expectedVersion: current.version,
           })}
-          variant={current?.mapEnabled ? 'primary' : 'ghost'}
+          variant={current?.mapEnabled ? 'secondary' : 'ghost'}
         />
       </Card>
     </Section>
@@ -177,6 +190,8 @@ export function DiscoveryPreferencesEditor({ embedded = false, onSaved }: { embe
     </Text>
   );
 
+  // A disabled save says why (repp-diseno §8): the first thing still missing.
+  const blocker = discoveryPreferencesBlocker({ genders, intents, minAge: Number(minAge), maxAge: Number(maxAge), radiusKm: Number(radiusKm) });
   const form = (
     <View style={{ gap: spacing.lg }}>
       {embedded ? null : (
@@ -233,7 +248,8 @@ export function DiscoveryPreferencesEditor({ embedded = false, onSaved }: { embe
         <Checkbox checked={flexibleDistance} label="Ampliar un poco la distancia si hay pocas personas" onChange={setFlexibleDistance} />
       </View>
 
-      <Button label={embedded ? 'Buscar compañeros' : 'Guardar preferencias'} loading={save.isPending} disabled={!genders.length || !intents.length || Number(minAge) < 18 || Number(maxAge) < Number(minAge) || Number(radiusKm) < 1 || Number(radiusKm) > 500} onPress={() => save.mutate({
+      {blocker ? <Text style={{ color: colors.textSecondary, fontSize: fontSizes.sm, lineHeight: 20 }}>{blocker}</Text> : null}
+      <Button accessibilityHint={blocker ?? undefined} label={embedded ? 'Buscar compañeros' : 'Guardar preferencias'} loading={save.isPending} disabled={blocker !== null} onPress={() => save.mutate({
         genders, intents, minAge: Number(minAge), maxAge: Number(maxAge), radiusKm: Number(radiusKm), flexibleAge, flexibleDistance, expectedVersion: version,
       })} />
     </View>

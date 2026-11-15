@@ -2,7 +2,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { profileProgress } from '@gymsheet/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { type ReactNode, useEffect, useState } from 'react';
-import { View } from 'react-native';
 import { GenderPreference } from '@/components/gender-preference';
 import { Card, ScreenHeader, ScrollScreen, Section } from '@/components/layout';
 import { NavRow } from '@/components/list';
@@ -54,12 +53,8 @@ export default function ProfileEditScreen() {
 
   const profile = own.profile.data;
   const sections: Record<SectionKey, ReactNode> = {
-    photos: (
-      <View key="photos" style={{ gap: spacing.sm }}>
-        <ProfilePhotoGallery />
-        <PendingPoints codes={['FOTO', 'FOTOS_3']} completion={completion} />
-      </View>
-    ),
+    // Every section says what it still pays in the same place: the first row of its card.
+    photos: <ProfilePhotoGallery header={<PendingPoints codes={['FOTO', 'FOTOS_3']} completion={completion} />} key="photos" />,
     about: <BioEditor bio={own.bio} footer={<PendingPoints codes={['BIO']} completion={completion} />} key={`about-${own.bio ?? ''}`} />,
     training: (
       <TrainingEditor
@@ -82,12 +77,7 @@ export default function ProfileEditScreen() {
         </Card>
       </Section>
     ),
-    senda: (
-      <View key="senda" style={{ gap: spacing.sm }}>
-        <GenderPreference />
-        <PendingPoints codes={['GENERO']} completion={completion} />
-      </View>
-    ),
+    senda: <GenderPreference header={<PendingPoints codes={['GENERO']} completion={completion} />} key="senda" />,
     social: <SocialStatusEditor key="social" />,
   };
   const first = SECTION_OF[params.section ?? ''];

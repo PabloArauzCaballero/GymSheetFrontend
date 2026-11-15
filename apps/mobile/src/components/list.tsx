@@ -47,7 +47,8 @@ export function NavRow({
           {title}
         </Text>
         {subtitle ? (
-          <Text numberOfLines={1} tone="muted" variant="subhead">
+          // Two lines too (like the web NavRow): one line cut «Todas tus sesiones, con sus se…».
+          <Text numberOfLines={2} tone="muted" variant="subhead">
             {subtitle}
           </Text>
         ) : null}

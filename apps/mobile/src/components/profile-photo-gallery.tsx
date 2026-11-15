@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { PressableScale } from '@/components/motion';
 import { profilePhotosService } from '@/api/services';
@@ -19,7 +20,8 @@ const THUMB_SIZE = 92;
  *
  * Mismo límite y mismo texto que en el portal web.
  */
-export function ProfilePhotoGallery() {
+/** `header`: first row inside the card (the edit screen puts the pending «+N pts» there, like every section). */
+export function ProfilePhotoGallery({ header }: { header?: ReactNode } = {}) {
   const queryClient = useQueryClient();
   const photos = useQuery({
     queryKey: ['profile', 'photos'],
@@ -77,6 +79,7 @@ export function ProfilePhotoGallery() {
         <ErrorState error={photos.error} onRetry={() => void photos.refetch()} />
       ) : (
         <Card>
+          {header}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
             {(photos.data ?? []).map((photo) => (
               <View key={photo.id} style={{ width: THUMB_SIZE, height: THUMB_SIZE }}>

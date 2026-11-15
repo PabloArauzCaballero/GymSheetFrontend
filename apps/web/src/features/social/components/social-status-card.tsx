@@ -29,6 +29,7 @@ export function SocialStatusCard() {
   const [visibleOverride, setVisibleOverride] = useState<boolean | null>(null);
   const value = valueOverride ?? status.data?.socialStatus ?? '';
   const visible = visibleOverride ?? status.data?.visible ?? false;
+  const dirty = value !== (status.data?.socialStatus ?? '') || visible !== (status.data?.visible ?? false);
 
   const save = useMutation({
     mutationFn: () =>
@@ -64,14 +65,16 @@ export function SocialStatusCard() {
           </Select>
         </Field>
         <Button
+          aria-pressed={visible}
           onClick={() => setVisibleOverride(!visible)}
           type="button"
-          variant={visible ? 'primary' : 'secondary'}
+          variant={visible ? 'secondary' : 'ghost'}
         >
           {visible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
           {visible ? 'Visible' : 'Oculto'}
         </Button>
-        <Button loading={save.isPending} onClick={() => save.mutate()} variant="primary">
+        {/* Accent fill only with a change to save: one lit save per screen. */}
+        <Button loading={save.isPending} onClick={() => save.mutate()} variant={dirty ? 'primary' : 'secondary'}>
           Guardar
         </Button>
       </CardContent>

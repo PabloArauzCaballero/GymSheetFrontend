@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
@@ -5,8 +6,8 @@ import Animated, { useAnimatedProps, useSharedValue, withTiming } from 'react-na
 import Svg, { Circle } from 'react-native-svg';
 import { Text } from '@/components/text';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
-import { DURATION, PREMIUM_EASING } from '@/components/motion';
-import { accentContrast, colors, radii, spacing } from '@/theme';
+import { DURATION, PREMIUM_EASING, PressableScale } from '@/components/motion';
+import { accentPolicy, colors, iconSizes, radii, spacing } from '@/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -22,16 +23,22 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
  * llena con el porcentaje que da el servidor y la píldora de abajo lo dice con
  * cifra. Sin dato todavía (`percent === null`) el aro queda en pista: mejor
  * callar que pintar un 0 % falso. El llenado anima una vez al llegar el dato;
- * con «Reducir movimiento» aparece ya lleno.
+ * con «Reducir movimiento» aparece ya lleno. Si la lectura falló (`onRetry`),
+ * la píldora dice «Reintentar» y toda la cara es el botón (132 pt de diana).
  */
 export function CompletionAvatar({
   photoUrl,
   initials,
   percent,
+  onRetry,
+  retrying = false,
 }: {
   photoUrl: string | null;
   initials: string;
   percent: number | null;
+  /** Set only when the completion read failed: the ring becomes a retry button. */
+  onRetry?: () => void;
+  retrying?: boolean;
 }) {
   const reduceMotion = useReduceMotion();
   const progress = useSharedValue(0);
@@ -47,12 +54,9 @@ export function CompletionAvatar({
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const shownUrl = photoUrl && photoUrl !== failedUrl ? photoUrl : null;
 
-  return (
-    <View
-      accessible
-      accessibilityLabel={percent === null ? 'Tu foto de perfil' : `Tu foto de perfil. Perfil completo al ${percent} %`}
-      style={{ width: SIZE, height: SIZE + spacing.smd, alignItems: 'center', alignSelf: 'center' }}
-    >
+  const failed = Boolean(onRetry) && percent === null;
+  const body = (
+    <>
       <Svg height={SIZE} style={{ position: 'absolute' }} width={SIZE}>
         <Circle cx={SIZE / 2} cy={SIZE / 2} fill="none" r={RADIUS} stroke={colors.surfaceHighest} strokeWidth={STROKE} />
         <AnimatedCircle
@@ -95,25 +99,53 @@ export function CompletionAvatar({
           </View>
         )}
       </View>
-      {percent !== null ? (
+      {percent !== null || failed ? (
         <View
           style={{
             position: 'absolute',
             bottom: 0,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.xxs,
             paddingHorizontal: spacing.smd,
             paddingVertical: spacing.xxs,
             borderRadius: radii.full,
-            // The ring is the volt datum; the pill only fills when the profile is complete.
-            backgroundColor: complete ? colors.volt : colors.surfaceHighest,
+            // Volt lives in the ring only: a complete profile reads in accent ink, not a second fill.
+            backgroundColor: colors.surfaceHighest,
             borderWidth: 2,
             borderColor: colors.surface,
           }}
         >
-          <Text style={complete ? { color: accentContrast() } : undefined} strong variant="footnote">
-            {complete ? 'Completo' : `${percent} %`}
+          {failed ? <Ionicons color={accentPolicy.ink} name="refresh" size={iconSizes.sm} /> : null}
+          <Text style={complete || failed ? { color: accentPolicy.ink } : undefined} strong variant="footnote">
+            {failed ? (retrying ? 'Reintentando…' : 'Reintentar') : complete ? 'Completo' : `${percent} %`}
           </Text>
         </View>
       ) : null}
+    </>
+  );
+  const box = { width: SIZE, height: SIZE + spacing.smd, alignItems: 'center', alignSelf: 'center' } as const;
+
+  if (failed && onRetry) {
+    return (
+      <PressableScale
+        accessibilityHint="Vuelve a pedir cuánto tienes completo"
+        accessibilityLabel={retrying ? 'No se pudo cargar tu progreso. Reintentando' : 'No se pudo cargar tu progreso del perfil. Reintentar'}
+        accessibilityRole="button"
+        accessibilityState={{ busy: retrying, disabled: retrying }}
+        disabled={retrying}
+        haptic="selection"
+        onPress={onRetry}
+        style={box}
+        testID="profile-completion-retry-ring"
+      >
+        {body}
+      </PressableScale>
+    );
+  }
+  return (
+    <View accessible accessibilityLabel={percent === null ? 'Tu foto de perfil' : `Tu foto de perfil. Perfil completo al ${percent} %`} style={box}>
+      {body}
     </View>
   );
 }

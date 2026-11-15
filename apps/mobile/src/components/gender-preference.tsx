@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { ReactNode } from 'react';
 import { Text, View } from 'react-native';
 import type { UserGender } from '@gymsheet/types';
 import { accountService } from '@/api/services';
@@ -26,7 +27,8 @@ const OPTIONS: readonly { value: UserGender; label: string }[] = [
   { value: 'UNSPECIFIED', label: 'Prefiero no decirlo' },
 ];
 
-export function GenderPreference() {
+/** `header`: first row inside the card (pending «+N pts» on the edit screen). */
+export function GenderPreference({ header }: { header?: ReactNode } = {}) {
   const queryClient = useQueryClient();
   const account = useQuery({ queryKey: ['user', 'me'], queryFn: () => accountService.getMe() });
 
@@ -51,6 +53,7 @@ export function GenderPreference() {
   return (
     <Section title="Rangos de tu senda">
       <Card>
+        {header}
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
           Elige con qué rangos e insignias te habla tu senda. Puedes cambiarlo cuando quieras.
         </Text>

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { fitnessEmptyHint } from '@gymsheet/domain';
 import type { Progression } from '@gymsheet/schemas';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
@@ -7,6 +8,7 @@ import { Card, Section } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { ProgressTrack } from '@/components/progression';
 import { Text } from '@/components/text';
+import { fitnessNumbers } from '@/features/profile-hero/fitness-numbers';
 import { colors, iconSizes, spacing } from '@/theme';
 
 /**
@@ -35,10 +37,11 @@ export function SendaCard({
     progress.nextLevel && progress.pointsToNextLevel !== null
       ? `Faltan ${progress.pointsToNextLevel.toLocaleString('es-ES')} puntos para ${progress.nextLevel.name}`
       : 'Senda completa';
+  const emptyHint = fitnessEmptyHint(fitnessNumbers(progress));
 
   return (
     <Section title="Tu senda">
-      <PressableScale accessibilityLabel={`Tu senda: ${rank}. ${next}. ${earned} insignias. Ver la senda completa.`} onPress={() => router.push('/trayectoria')}>
+      <PressableScale accessibilityLabel={`Tu senda: ${rank}. ${next}. ${earned} insignias. ${emptyHint ?? ''} Ver la senda completa.`} onPress={() => router.push('/trayectoria')}>
         <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
             <View style={{ flex: 1, gap: spacing.xxs }}>
@@ -46,6 +49,11 @@ export function SendaCard({
               <Text tone="secondary" variant="footnote">
                 {earned === 1 ? '1 insignia ganada' : `${earned} insignias ganadas`}
               </Text>
+              {emptyHint ? (
+                <Text tone="secondary" variant="footnote">
+                  {emptyHint}
+                </Text>
+              ) : null}
             </View>
             <Ionicons color={colors.textSecondary} name="chevron-forward" size={iconSizes.sm} />
           </View>

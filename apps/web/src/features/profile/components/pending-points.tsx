@@ -11,7 +11,7 @@ export function PendingPoints({ completion, codes }: Readonly<{ completion: Prof
       {pending.map((item) => (
         <li className="flex items-center gap-2" key={item.code}>
           <PointsChip points={item.points} />
-          <span className="t-footnote text-[var(--text-muted)]">{item.label}</span>
+          <span className="t-footnote text-pretty text-[var(--text-muted)]">{item.label}</span>
         </li>
       ))}
     </ul>

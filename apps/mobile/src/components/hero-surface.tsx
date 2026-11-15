@@ -16,11 +16,14 @@ import { cardGap, colors, heroGlow, heroWatermarkInk, radii, shadows, spacing } 
 export function HeroSurface({
   children,
   watermark = false,
+  watermarkAt = 'bottom',
   style,
   testID,
 }: {
   children: ReactNode;
   watermark?: boolean;
+  /** `top` keeps the mark clear of a row of actions or labels along the bottom edge. */
+  watermarkAt?: 'top' | 'bottom';
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }) {
@@ -49,8 +52,8 @@ export function HeroSurface({
         style={StyleSheet.absoluteFill}
       />
       {watermark ? (
-        <View pointerEvents="none" style={{ position: 'absolute', right: -spacing.lg, bottom: -spacing.lg }}>
-          <ReppMark ink={heroWatermarkInk} size={168} tick={heroWatermarkInk} />
+        <View pointerEvents="none" style={[{ position: 'absolute', right: -spacing.lg }, watermarkAt === 'top' ? { top: -spacing.lg } : { bottom: -spacing.lg }]}>
+          <ReppMark ink={heroWatermarkInk} size={watermarkAt === 'top' ? 140 : 168} tick={heroWatermarkInk} />
         </View>
       ) : null}
       {children}

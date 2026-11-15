@@ -25,7 +25,7 @@ import { formatDate } from '@/shared/lib/date';
 import { notify } from '@/shared/notifications';
 import { AboutCard } from './about-card';
 import { CompletionAvatar } from './completion-avatar';
-import { CompletionNudge } from './completion-nudge';
+import { CompletionError, CompletionNudge } from './completion-nudge';
 import { FitnessRow, fitnessNumbers } from './fitness-row';
 import { ProfileActions } from './profile-actions';
 import { RankChip } from './profile-hero';
@@ -93,6 +93,9 @@ export function ProfilePageClient() {
     disabledLabel: progression.isError ? 'Compartir: no se pudo cargar tu senda' : 'Compartir: cargando tu senda',
   };
   const age = profile.data?.edad ?? null;
+  // A failed read with nothing cached is said out loud (ring and card), never hidden.
+  const completionFailed = completion.isError && !completion.data;
+  const retryCompletion = () => void completion.refetch();
   const dataSubtitle = profile.isPending
     ? 'Cargando…'
     : profile.data
@@ -100,7 +103,7 @@ export function ProfilePageClient() {
       : 'Añade peso, estatura y objetivo';
 
   return (
-    <div className="mx-auto grid w-full max-w-[560px] gap-8 lg:max-w-[1040px]">
+    <div className="mx-auto grid w-full grid-cols-1 max-w-[560px] gap-8 lg:max-w-[1040px]">
       <PageHeader
         title="Perfil"
         titleAction={
@@ -111,10 +114,16 @@ export function ProfilePageClient() {
         tutorialId="page:profile"
       />
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
-        <div className="grid gap-8">
-          <HeroSurface className="justify-items-center gap-4 py-7" watermark>
-            <CompletionAvatar initials={initialsOf(me.nombreCompleto, me.email)} percent={completion.data?.percent ?? null} photoUrl={own.cardEntry?.photoUrl ?? null} />
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
+        <div className="grid min-w-0 grid-cols-1 gap-8">
+          <HeroSurface className="justify-items-center gap-4 py-7" watermark watermarkAt="top">
+            <CompletionAvatar
+              initials={initialsOf(me.nombreCompleto, me.email)}
+              onRetry={completionFailed ? retryCompletion : undefined}
+              percent={completion.data?.percent ?? null}
+              photoUrl={own.cardEntry?.photoUrl ?? null}
+              retrying={completion.isFetching}
+            />
             <div className="grid justify-items-center gap-2 text-center">
               <h2 className="display-title">{age !== null ? `${me.nombreCompleto}, ${age}` : me.nombreCompleto}</h2>
               <div className="flex flex-wrap justify-center gap-2">
@@ -133,7 +142,13 @@ export function ProfilePageClient() {
             />
           </HeroSurface>
 
-          {completion.isPending ? <Skeleton className="h-48" /> : completion.data ? <CompletionNudge completion={completion.data} /> : null}
+          {completion.isPending ? (
+            <Skeleton className="h-48" />
+          ) : completion.data ? (
+            <CompletionNudge completion={completion.data} />
+          ) : completionFailed ? (
+            <CompletionError onRetry={retryCompletion} retrying={completion.isFetching} />
+          ) : null}
           <AboutCard bio={own.bio} chips={own.chips} />
           <SendaCard failed={progression.isError} onRetry={() => void progression.refetch()} pending={progression.isPending} progress={progress} />
 
@@ -169,7 +184,7 @@ export function ProfilePageClient() {
           </Section>
         </div>
 
-        <div className="grid gap-5">
+        <div className="grid min-w-0 grid-cols-1 gap-5">
           <div className="panel grid gap-4 p-5">
             <WeightIncrementField value={me.pesoIncrementoKg} />
           </div>

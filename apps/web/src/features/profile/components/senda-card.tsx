@@ -1,11 +1,13 @@
 'use client';
 
+import { fitnessEmptyHint } from '@gymsheet/domain';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import type { Progression } from '@/shared/api/schemas';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { Skeleton } from '@/shared/components/feedback/skeleton';
 import { Section } from '@/shared/components/mobile/section';
+import { fitnessNumbers } from './fitness-row';
 
 /**
  * La senda en el perfil: el camino al siguiente rango y las insignias. Las
@@ -24,6 +26,7 @@ export function SendaCard({
     progress.nextLevel && progress.pointsToNextLevel !== null
       ? `Faltan ${progress.pointsToNextLevel.toLocaleString('es-ES')} puntos para ${progress.nextLevel.name}`
       : 'Senda completa';
+  const emptyHint = fitnessEmptyHint(fitnessNumbers(progress));
 
   return (
     <Section title="Tu senda">
@@ -32,6 +35,7 @@ export function SendaCard({
           <span className="grid flex-1 gap-0.5">
             <span className="t-headline">{next}</span>
             <span className="t-footnote text-[var(--text-muted)]">{earned === 1 ? '1 insignia ganada' : `${earned} insignias ganadas`}</span>
+            {emptyHint ? <span className="t-footnote text-pretty text-[var(--text-muted)]">{emptyHint}</span> : null}
           </span>
           <ChevronRight aria-hidden className="size-4 text-[var(--text-muted)]" />
         </span>
