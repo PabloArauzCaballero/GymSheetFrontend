@@ -85,7 +85,7 @@ const TABS: readonly { value: Tab; label: string; icon: keyof typeof Ionicons.gl
 /**
  * Una persona en una lista de Mensajes: avatar, nombre y sus acciones de icono.
  * El nombre cede (una línea, `flex: 1`) y las acciones no: antes un nombre
- * largo como «GymSheet Administrator» empujaba «Retirar» fuera de la tarjeta.
+ * largo como «REPP Administrator» empujaba «Retirar» fuera de la tarjeta.
  */
 function PersonRow({
   id,

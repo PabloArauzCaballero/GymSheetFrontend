@@ -47,6 +47,6 @@ export const workoutService = {
   updateSet: (id: string, input: Partial<WorkoutSetInput>) =>
     apiRequest(`/workouts/sets/${id}`, objectSchema, { method: 'PATCH', body: input }),
   removeSet: (id: string) => apiRequest(`/workouts/sets/${id}`, deleteSchema, { method: 'DELETE' }),
-  exportCsv: () => downloadFromApi('/export/workout-history/csv', 'gymsheet-historial.csv'),
-  exportJson: () => downloadFromApi('/export/workout-history', 'gymsheet-historial.json'),
+  exportCsv: () => downloadFromApi('/export/workout-history/csv', 'repp-historial.csv'),
+  exportJson: () => downloadFromApi('/export/workout-history', 'repp-historial.json'),
 };

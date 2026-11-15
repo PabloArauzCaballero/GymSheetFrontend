@@ -1,5 +1,5 @@
 /**
- * Service worker de GymSheet: sólo notificaciones push.
+ * Service worker de REPP: sólo notificaciones push.
  *
  * Deliberadamente NO tiene manejador `fetch`. Un service worker que intercepta
  * peticiones se convierte en una capa de caché que hay que invalidar, y aquí no
@@ -12,7 +12,7 @@
  * controlar todo el origen. Ver `use-web-push.ts` para el registro.
  */
 
-const FALLBACK_TITLE = 'GymSheet';
+const FALLBACK_TITLE = 'REPP';
 const LANDING_PATH = '/notifications';
 
 /**

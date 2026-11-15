@@ -6,11 +6,11 @@ appId: app.gymsheet.mobile
 ---
 - launchApp
 - extendedWaitUntil:
-    visible: 'Vuelve al trabajo.|Bienvenido a GymSheet|Hola, .*|Rutinas, tab.*'
+    visible: 'Vuelve al trabajo.|Bienvenido a REPP|Hola, .*|Rutinas, tab.*'
     timeout: 240000
 - runFlow:
     when:
-      visible: 'Bienvenido a GymSheet'
+      visible: 'Bienvenido a REPP'
     commands:
       - tapOn: 'Saltar tutorial'
 - runFlow: cerrar-tour.subflow.yaml
@@ -61,11 +61,11 @@ appId: app.gymsheet.mobile
           text: 'Ahora no'
           optional: true
       - extendedWaitUntil:
-          visible: 'Bienvenido a GymSheet|Hola, .*'
+          visible: 'Bienvenido a REPP|Hola, .*'
           timeout: 120000
       - runFlow:
           when:
-            visible: 'Bienvenido a GymSheet'
+            visible: 'Bienvenido a REPP'
           commands:
             - tapOn: 'Saltar tutorial'
       - runFlow: cerrar-tour.subflow.yaml

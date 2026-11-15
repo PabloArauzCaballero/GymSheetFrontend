@@ -576,11 +576,11 @@ const MOCKS_EXISTENTES = [
   { clave: "pending", email: "pending.mock@gymsheet.local", nombre: "Pending Renewal Mock", password: "MockLocal2026!", genero: "MALE", edad: 44, pesoKg: 86.0, estaturaCm: 172, objetivo: "REHABILITACION", fotos: 3 },
   // El administrador del gimnasio también sale en la baraja: el directorio y el
   // deck filtran por gimnasio y por estado, no por rol (`SocialRepository.directory`
-  // no mira `usuarios.rol`). Con «GymSheet Administrator» ordenando en quinto
-  // lugar por nombre, se cuela en las diez primeras cartas, y sin esto quedaría
-  // como la única tarjeta vacía de la captura. Se le toca lo mismo que a los
+  // no mira `usuarios.rol`). Si «REPP Administrator» se cuela por nombre en las
+  // diez primeras cartas, sin esto quedaría como la única tarjeta vacía de la
+  // captura. Se le toca lo mismo que a los
   // demás: perfil y fotos, nada de permisos ni de membresías.
-  { clave: "admin", email: "admin@gymsheet.local", nombre: "GymSheet Administrator", password: "AdminLocal2026!", genero: "MALE", edad: 39, pesoKg: 80.0, estaturaCm: 179, objetivo: "SALUD_GENERAL", fotos: 3, rol: "ADMIN" },
+  { clave: "admin", email: "admin@gymsheet.local", nombre: "REPP Administrator", password: "AdminLocal2026!", genero: "MALE", edad: 39, pesoKg: 80.0, estaturaCm: 179, objetivo: "SALUD_GENERAL", fotos: 3, rol: "ADMIN" },
   // `inactive.mock@gymsheet.local` queda fuera a propósito: está INACTIVO y el
   // directorio filtra por `u.estado = 'ACTIVO'`, así que nunca aparece en la
   // baraja y darle fotos sería trabajo que nadie va a ver.

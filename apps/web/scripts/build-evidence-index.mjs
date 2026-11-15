@@ -10,7 +10,7 @@ const main = load('report.json');
 const admin = load('report-admin.json');
 
 
-let md = `# Evidencia de sweep de clicks — GymSheet Web\n\n`;
+let md = `# Evidencia de sweep de clicks — REPP Web\n\n`;
 md += `Generado con Playwright + Chromium contra el stack real (web \`:3002\` → backend NestJS \`:3000\` → PostgreSQL) usando usuarios mock sembrados.\n\n`;
 
 const totalClicks = (main?.routes ?? []).reduce((a, r) => a + r.clicks.length, 0) + (admin?.routes ?? []).reduce((a, r) => a + r.clicks.length, 0);

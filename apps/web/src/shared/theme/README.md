@@ -11,7 +11,7 @@ contexto de marca.
    a una clave tipada. Añadir un color nuevo empieza aquí.
 2. `brand-contract.ts` — nombre, rótulo, monograma y los catálogos cerrados de
    glifo y tipografía.
-3. `default-palette.ts` — la identidad GymSheet (oscura y clara). Es la
+3. `default-palette.ts` — la identidad REPP (oscura y clara). Es la
    referencia y el respaldo de cualquier identidad parcial.
 4. `tenant-palette.ts` — lee el registro de inquilinos, lo valida y combina cada
    identidad parcial sobre la de referencia.

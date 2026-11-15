@@ -223,7 +223,7 @@ function InvitationCard({
             variant="ghost"
           />
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-            La agenda de GymSheet funciona sin permiso de calendario. Para usar
+            La agenda de REPP funciona sin permiso de calendario. Para usar
             otra app, importa este archivo manualmente; si cambia el encuentro,
             comparte el archivo actualizado.
           </Text>

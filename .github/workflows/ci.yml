@@ -49,6 +49,8 @@ jobs:
       # de src/theme, y contraste AA de los tokens en todas las marcas.
       - run: yarn workspace @gymsheet/mobile check:theme
       - run: yarn workspace @gymsheet/mobile test:theme
+      # Marca: el nombre anterior del producto no vuelve a la copia visible.
+      - run: yarn workspace @gymsheet/mobile check:brand
       # Lógica pura del móvil (entreno, buscador, programas, invitaciones…).
       - run: yarn workspace @gymsheet/mobile test
       - name: Expo Doctor

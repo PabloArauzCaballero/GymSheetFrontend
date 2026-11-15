@@ -65,7 +65,7 @@ async function nominatim(path: string, params: Record<string, string>): Promise<
     fetch(url, {
       headers: {
         Accept: 'application/json',
-        'User-Agent': `GymSheet-Admin/1.0 (+${serverEnv.APP_URL})`,
+        'User-Agent': `REPP-Admin/1.0 (+${serverEnv.APP_URL})`,
       },
       cache: 'no-store',
       signal: AbortSignal.timeout(TIMEOUT_MS),

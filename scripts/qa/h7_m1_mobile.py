@@ -101,7 +101,7 @@ def build_permission_flow(conversation_id: str, draft: str) -> str:
         f"- openLink: {json.dumps(f'gymsheet://chat/{conversation_id}', ensure_ascii=False)}",
         "- tapOn: Grabar mensaje de voz",
         "- assertVisible: Permite el micrófono en Ajustes",
-        "- assertVisible: Para grabar mensajes de voz, activa el micrófono para GymSheet en los ajustes del dispositivo. Puedes seguir escribiendo mensajes mientras tanto.",
+        "- assertVisible: Para grabar notas de voz, activa el micrófono para REPP en los ajustes del dispositivo.",
         "- takeScreenshot: microphone-denied-alert",
         "- tapOn: Ahora no",
         "- tapOn: Escribe un mensaje",
@@ -182,7 +182,7 @@ def run(argv: list[str]) -> int:
     installed = subprocess.run([adb, "-s", device_id, "shell", "pm", "path", PACKAGE],
                                capture_output=True, text=True, timeout=5, check=False)
     if installed.returncode != 0 or not installed.stdout.strip().startswith("package:"):
-        raise PairPreconditionError("GymSheet is not installed on the assigned Android device")
+        raise PairPreconditionError("REPP is not installed on the assigned Android device")
     maestro = os.environ.get("QA_MAESTRO_PATH") or shutil.which("maestro")
     if not maestro:
         candidate = pathlib.Path.home() / ".maestro/bin/maestro"

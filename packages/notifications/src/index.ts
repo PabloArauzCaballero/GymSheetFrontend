@@ -1,5 +1,5 @@
 /**
- * Shared engine behind every message GymSheet shows a user: toasts,
+ * Shared engine behind every message REPP shows a user: toasts,
  * confirmations and error copy. Framework-agnostic on purpose — the web app
  * renders it with sonner + Radix, the Expo app with a native toast host +
  * `Modal`, and both share the same rules, copy and telemetry.

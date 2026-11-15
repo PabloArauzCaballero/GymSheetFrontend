@@ -199,7 +199,7 @@ describe('trainingInvitationsService.exportCalendar', () => {
     expect(downloadFromApi).toHaveBeenNthCalledWith(
       1,
       `/me/training-invitations/${inviteId}/calendar.ics`,
-      `gymsheet-entrenamiento-${inviteId}.ics`,
+      `repp-entrenamiento-${inviteId}.ics`,
     );
     expect(vi.mocked(downloadFromApi).mock.calls[1]).toEqual(
       vi.mocked(downloadFromApi).mock.calls[0],

@@ -91,7 +91,7 @@ export function EquipmentAdmin({ canManage }: Readonly<{ canManage: boolean }>) 
             <Button
               disabled={!query.data?.length}
               onClick={() =>
-                downloadCsv(query.data ?? [], exportColumns, 'gymsheet-equipos.csv')
+                downloadCsv(query.data ?? [], exportColumns, 'repp-equipos.csv')
               }
               size="sm"
               variant="ghost"
@@ -101,7 +101,7 @@ export function EquipmentAdmin({ canManage }: Readonly<{ canManage: boolean }>) 
             </Button>
             <Button
               disabled={!query.data?.length}
-              onClick={() => downloadJson(query.data ?? [], 'gymsheet-equipos.json')}
+              onClick={() => downloadJson(query.data ?? [], 'repp-equipos.json')}
               size="sm"
               variant="ghost"
             >

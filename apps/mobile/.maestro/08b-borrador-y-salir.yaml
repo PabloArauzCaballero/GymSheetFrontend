@@ -37,7 +37,7 @@ env:
 - stopApp
 - launchApp
 - extendedWaitUntil:
-    visible: 'Hola, .*|Rutinas, tab.*|Bienvenido a GymSheet'
+    visible: 'Hola, .*|Rutinas, tab.*|Bienvenido a REPP'
     timeout: 240000
 - runFlow: cerrar-tour.subflow.yaml
 - tapOn: 'Rutinas, tab.*'

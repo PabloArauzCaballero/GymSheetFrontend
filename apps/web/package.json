@@ -12,7 +12,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
-    "source-check": "node scripts/source-check.mjs",
+    "source-check": "node scripts/source-check.mjs && node ../../scripts/check-brand-name.mjs src public",
     "start": "next start",
     "test": "vitest run",
     "test:e2e": "playwright test",

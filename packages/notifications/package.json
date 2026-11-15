@@ -10,7 +10,7 @@
   },
   "scripts": {
     "type-check": "tsc --noEmit",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint . --max-warnings 0 && node ../../scripts/check-brand-name.mjs src"
   },
   "dependencies": {
     "@gymsheet/api-client": "*"

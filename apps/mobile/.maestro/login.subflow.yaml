@@ -23,7 +23,7 @@ appId: app.gymsheet.mobile
       # El de acceso es ahora el mismo titular que sirve la web, desde
       # `@gymsheet/domain`: las dos plataformas reciben con las mismas palabras.
       - extendedWaitUntil:
-          visible: 'Vuelve al trabajo.|Bienvenido a GymSheet|Hola, Athlete'
+          visible: 'Vuelve al trabajo.|Bienvenido a REPP|Hola, Athlete'
           timeout: 240000
       - runFlow:
           when:
@@ -47,13 +47,13 @@ appId: app.gymsheet.mobile
                 text: 'Ahora no'
                 optional: true
             - extendedWaitUntil:
-                visible: 'Bienvenido a GymSheet|Hola, Athlete'
+                visible: 'Bienvenido a REPP|Hola, Athlete'
                 timeout: 120000
 # El tour sólo sale la primera vez. El control se llama «Saltar tutorial» en el
 # árbol de accesibilidad (`accessibilityLabel` en tour.tsx), no «Saltar».
 - runFlow:
     when:
-      visible: 'Bienvenido a GymSheet'
+      visible: 'Bienvenido a REPP'
     commands:
       - tapOn: 'Saltar tutorial'
 # Tras la bienvenida, Inicio estrena su propio tour.

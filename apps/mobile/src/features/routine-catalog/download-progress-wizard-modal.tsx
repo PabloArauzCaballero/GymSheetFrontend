@@ -312,7 +312,7 @@ export function DownloadProgressWizardModal({
                 {
                   key: 'pdf' as const,
                   title: 'PDF (.pdf)',
-                  desc: 'Documento visual con estética GymSheet oscura, tarjetas de métricas y listados.',
+                  desc: 'Documento visual con estética REPP oscura, tarjetas de métricas y listados.',
                   icon: 'document-outline' as const,
                 },
               ].map((item) => {
@@ -618,7 +618,7 @@ export function DownloadProgressWizardModal({
               4. Campos del sistema de rutinas
             </Text>
             <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
-              La exportación incluye todas las dimensiones del sistema de rutinas de GymSheet:
+              La exportación incluye todas las dimensiones del sistema de rutinas de REPP:
             </Text>
 
             <View style={{ gap: spacing.xs, marginTop: spacing.xs }}>

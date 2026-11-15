@@ -58,7 +58,7 @@ export async function shareTrainingInvitationCalendar(inviteId: string): Promise
   }
   // The same invite overwrites the same cache file. An external calendar may
   // use the server's stable UID to update an event, but import is user-driven.
-  const uri = `${FileSystem.cacheDirectory}gymsheet-encuentro-${id}.ics`;
+  const uri = `${FileSystem.cacheDirectory}repp-encuentro-${id}.ics`;
   await FileSystem.writeAsStringAsync(uri, ics, { encoding: FileSystem.EncodingType.UTF8 });
   try {
     await Sharing.shareAsync(uri, {

@@ -161,7 +161,7 @@ export const trainingInvitationsService = {
     const parsedId = z.string().uuid().parse(id);
     return downloadFromApi(
       `/me/training-invitations/${parsedId}/calendar.ics`,
-      `gymsheet-entrenamiento-${parsedId}.ics`,
+      `repp-entrenamiento-${parsedId}.ics`,
     );
   },
   sharedSession(id: string) {

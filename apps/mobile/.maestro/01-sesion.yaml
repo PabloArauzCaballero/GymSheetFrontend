@@ -34,7 +34,7 @@ name: 01 · Sesión — arranque y login
     # El rótulo de la marca va en versales bajo el emblema, igual que en la
     # cortinilla de arranque y en la web; antes esta pantalla mostraba el
     # nombre del gimnasio en caja mixta.
-    - assertVisible: 'GYMSHEET'
+    - assertVisible: 'REPP'
     - takeScreenshot: 01-login
     - tapOn:
         below: 'Correo electrónico'
@@ -57,7 +57,7 @@ name: 01 · Sesión — arranque y login
     # El tour se presenta en una UIWindow propia: hasta cerrarlo, Inicio no
     # está en la jerarquía consultable aunque se vea detrás.
     - extendedWaitUntil:
-        visible: 'Bienvenido a GymSheet'
+        visible: 'Bienvenido a REPP'
         timeout: 90000
     # `DevLoadingView` de React Native: la banda azul «Refreshing…» que tapa la
     # barra de estado mientras el bundle de Debug se recarga. Es andamiaje de

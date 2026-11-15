@@ -489,7 +489,7 @@ const SMALL = 1.028;
  *
  * Todos los chips laten a la vez, sin desfase: es lo mismo que hace la web, y
  * la simetria entre las dos plataformas es la que permite decir «los chips de
- * GymSheet laten asi» en vez de describir dos comportamientos distintos.
+ * REPP laten asi» en vez de describir dos comportamientos distintos.
  */
 export function Heartbeat({
   children,

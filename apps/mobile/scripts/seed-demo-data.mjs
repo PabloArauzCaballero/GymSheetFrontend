@@ -85,7 +85,7 @@ async function main() {
   if (!sede) {
     sede = await asAdmin('POST', '/admin/facilities/branches', {
       codigo: 'CENTRAL',
-      nombre: 'GymSheet Central',
+      nombre: 'REPP Central',
       descripcion: 'Sede principal.',
     });
   }

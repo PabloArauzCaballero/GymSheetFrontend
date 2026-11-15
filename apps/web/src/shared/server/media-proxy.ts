@@ -111,7 +111,7 @@ async function fetchFollowingSafeRedirects(
     // ruta de imagen sigue comportándose exactamente igual que antes.
     const headers: Record<string, string> = {
       Accept: 'image/*,video/*',
-      'User-Agent': 'GymSheet-Media-Proxy',
+      'User-Agent': 'REPP-Media-Proxy',
     };
     if (range) headers.Range = range;
     const response = await fetch(current, {

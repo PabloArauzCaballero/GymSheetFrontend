@@ -152,7 +152,7 @@ export async function exportRoutineProgress(
 
   const fileName =
     data.fileName ||
-    `gymsheet-progreso-rutinas.${filters.format === 'excel' ? 'xlsx' : filters.format}`;
+    `repp-progreso-rutinas.${filters.format === 'excel' ? 'xlsx' : filters.format}`;
   const temporaryUri = `${cacheDirectory}${fileName}`;
 
   await FileSystem.writeAsStringAsync(temporaryUri, data.base64, {
