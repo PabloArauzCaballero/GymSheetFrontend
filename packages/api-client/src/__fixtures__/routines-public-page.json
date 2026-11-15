@@ -1,0 +1,332 @@
+{
+  "ok": true,
+  "data": {
+    "items": [
+      {
+        "id": "9f393513-3543-4d1b-bf63-1f8d53af65bc",
+        "nombre": "Prevención para fútbol · 2 días",
+        "descripcion": "Nórdicos, Copenhague y trabajo a una pierna. Desde que la hago no he vuelto a tener molestias en el isquio.",
+        "creadoPorUsuarioId": "2b1b70d4-c716-43c0-ba16-5b4074226509",
+        "visibilidad": "PUBLIC",
+        "objetivo": "SALUD_GENERAL",
+        "estado": "ACTIVE",
+        "ejercicios": [
+          {
+            "id": "25b4ca6c-0240-47b5-bdd6-4b516fde1599",
+            "orden": 1,
+            "seriesObjetivo": 3,
+            "repsMin": 5,
+            "repsMax": 6,
+            "pesoObjetivoKg": null,
+            "rirObjetivo": 2,
+            "descansoSeg": 120,
+            "nota": null,
+            "grupo": null,
+            "grupoTipo": null,
+            "descansoEntreSeg": null,
+            "duracionSeg": null,
+            "ejercicio": {
+              "id": "ee0a31df-9be8-4ae5-b255-3796ae59a064",
+              "nombre": "inverse leg curl (bench support)",
+              "nombreEs": "Curl nórdico con apoyo en banco",
+              "grupoMuscular": "glutes",
+              "descripcion": "Túmbate boca abajo en un banco con las caderas en el borde y las piernas extendidas rectas detrás de ti. Sujétate del banco para mayor apoyo. Manteniendo la parte superior del cuerpo quieta, dobla las rodillas y curva las piernas hacia los glúteos. Haz una pausa breve en la parte superior, luego extiende lentamente las piernas de vuelta a la posición inicial. Repite el número de repeticiones deseado.",
+              "tipoEjercicio": "GLOBAL",
+              "createdByUsuarioId": null,
+              "estado": "ACTIVO",
+              "dataSource": "EXERCISES_DATASET",
+              "externalId": "0496",
+              "externalVersion": "f22e5285f9c4441f2282e3c18aaaa647ade8922512386929cead6bc2dc1469b0",
+              "sourceUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/data/exercises.json",
+              "sourceLicense": "MIT data; media governed by separate Gym Visual terms",
+              "sourceAttribution": "© Gym visual — https://gymvisual.com/",
+              "category": "upper legs",
+              "bodyPart": "upper legs",
+              "requiredEquipment": "body weight",
+              "targetMuscle": "hamstrings",
+              "synergistMuscleGroup": "glutes",
+              "secondaryMuscles": [
+                "glutes",
+                "calves"
+              ],
+              "instructions": {
+                "en": "Lie face down on a bench with your hips at the edge and your legs extended straight behind you. Hold onto the bench for support. Keeping your upper body still, bend your knees and curl your legs towards your glutes. Pause for a moment at the top, then slowly extend your legs back to the starting position. Repeat for the desired number of repetitions.",
+                "es": "Túmbate boca abajo en un banco con las caderas en el borde y las piernas extendidas rectas detrás de ti. Sujétate del banco para mayor apoyo. Manteniendo la parte superior del cuerpo quieta, dobla las rodillas y curva las piernas hacia los glúteos. Haz una pausa breve en la parte superior, luego extiende lentamente las piernas de vuelta a la posición inicial. Repite el número de repeticiones deseado.",
+                "fr": "Allonge-toi face vers le bas sur un banc, les hanches au bord et les jambes tendues droit derrière toi. Tiens-toi au banc pour te soutenir. En gardant le haut de ton corps immobile, plie tes genoux et fléchis tes jambes vers tes fessiers. Marque une pause en haut, puis étends lentement tes jambes pour revenir à la position de départ. Répète le nombre de répétitions souhaité.",
+                "hi": "अपने कूल्हों को किनारे पर रखकर एक बेंच पर मुंह करके लेट जाएं और आपके पैर आपके पीछे सीधे फैले हुए हों। समर्थन के लिए बेंच को पकड़ें। अपने ऊपरी शरीर को स्थिर रखते हुए, अपने घुटनों को मोड़ें और अपने पैरों को अपने ग्लूट्स की ओर मोड़ें। शीर्ष पर एक पल के लिए रुकें, फिर धीरे-धीरे अपने पैरों को वापस प्रारंभिक स्थिति में लाएँ। दोहराव की वांछित संख्या के लिए दोहराएँ।",
+                "it": "Sdraiati a faccia in giù su una panca con i fianchi sul bordo e le gambe distese dietro di te. Tieniti sulla panca per supporto. Tenendo ferma la parte superiore del corpo, piega le ginocchia e piega le gambe verso i glutei. Fai una pausa per un momento in alto, quindi estendi lentamente le gambe fino alla posizione di partenza. Ripetere per il numero di ripetizioni desiderato.",
+                "ko": "벤치 위에 엎드려 누우면서 고관절을 벤치의 모서리 너머로 놓고 다리를 뒤로 쭉 뻗습니다. 안정성을 위해 벤치를 잡습니다. 상체를 움직이지 않으면서 무릎을 구부려 다리를 둔근 쪽으로 구부립니다. 위쪽에서 잠시 멈춘 후 다리를 천천히 시작 자세로 펼칩니다. 원하는 반복 횟수만큼 반복합니다.",
+                "pl": "Połóż się przodem na ławce, biodra umieść na krawędzi, a nogi wyprostuj prosto za sobą. Chwyć się ławki dla wsparcia. Trzymając górną część ciała nieruchomo, zegnij kolana i przyciągnij nogi w stronę pośladków. Zatrzymaj się na chwilę na górze, a następnie powoli wyprostuj nogi z powrotem do pozycji wyjściowej. Powtórz zalecaną liczbę razy.",
+                "ru": "Лягте лицом вниз на скамью, прижав бедра к краю и вытянув ноги прямо позади себя. Держитесь за скамью для поддержки. Удерживая верхнюю часть тела неподвижно, согните колени и согните ноги к ягодицам. Задержитесь на мгновение в верхней точке, затем медленно вытяните ноги обратно в исходное положение. Повторите необходимое количество повторений.",
+                "tr": "Kalçalarınız kenarda olacak ve bacaklarınız düz bir şekilde arkanızda uzatılacak şekilde bir bankın üzerine yüz üstü uzanın. Destek için benche tutunun. Üst vücudunuzu sabit tutarak dizlerinizi bükün ve bacaklarınızı kalçalarınıza doğru kıvırın. Tepe noktasında bir an duraklayın, ardından bacaklarınızı yavaşça başlangıç ​​pozisyonuna geri uzatın. İstenilen sayıda tekrar için tekrarlayın.",
+                "zh": "脸朝下躺在长凳上，臀部位于边缘，双腿伸直在身后。 抓住长凳以获得支撑。 保持上半身不动，弯曲膝盖并将双腿向臀部弯曲。 在顶部停顿片刻，然后慢慢将双腿伸展回起始位置。 重复所需的重复次数。"
+              },
+              "instructionSteps": {
+                "en": [
+                  "Lie face down on a bench with your hips at the edge and your legs extended straight behind you.",
+                  "Hold onto the bench for support.",
+                  "Keeping your upper body still, bend your knees and curl your legs towards your glutes.",
+                  "Pause for a moment at the top, then slowly extend your legs back to the starting position.",
+                  "Repeat for the desired number of repetitions."
+                ],
+                "es": [
+                  "Túmbate boca abajo en un banco con las caderas en el borde y las piernas extendidas rectas detrás de ti.",
+                  "Sujétate del banco para mayor apoyo.",
+                  "Manteniendo la parte superior del cuerpo quieta, dobla las rodillas y curva las piernas hacia los glúteos.",
+                  "Haz una pausa breve en la parte superior, luego extiende lentamente las piernas de vuelta a la posición inicial.",
+                  "Repite el número de repeticiones deseado."
+                ],
+                "fr": [
+                  "Allonge-toi face vers le bas sur un banc, les hanches au bord et les jambes tendues droit derrière toi.",
+                  "Tiens-toi au banc pour te soutenir.",
+                  "En gardant le haut de ton corps immobile, plie tes genoux et fléchis tes jambes vers tes fessiers.",
+                  "Marque une pause en haut, puis étends lentement tes jambes pour revenir à la position de départ.",
+                  "Répète le nombre de répétitions souhaité."
+                ],
+                "hi": [
+                  "अपने कूल्हों को किनारे पर रखकर एक बेंच पर मुंह करके लेट जाएं और आपके पैर आपके पीछे सीधे फैले हुए हों।",
+                  "समर्थन के लिए बेंच को पकड़ें।",
+                  "अपने ऊपरी शरीर को स्थिर रखते हुए, अपने घुटनों को मोड़ें और अपने पैरों को अपने ग्लूट्स की ओर मोड़ें।",
+                  "शीर्ष पर एक पल के लिए रुकें, फिर धीरे-धीरे अपने पैरों को वापस प्रारंभिक स्थिति में लाएँ।",
+                  "दोहराव की वांछित संख्या के लिए दोहराएँ।"
+                ],
+                "it": [
+                  "Sdraiati a faccia in giù su una panca con i fianchi sul bordo e le gambe distese dietro di te.",
+                  "Tieniti sulla panca per supporto.",
+                  "Tenendo ferma la parte superiore del corpo, piega le ginocchia e piega le gambe verso i glutei.",
+                  "Fai una pausa per un momento in alto, quindi estendi lentamente le gambe fino alla posizione di partenza.",
+                  "Ripetere per il numero di ripetizioni desiderato."
+                ],
+                "ko": [
+                  "벤치 위에 엎드려 누우면서 고관절을 벤치의 모서리 너머로 놓고 다리를 뒤로 쭉 뻗습니다.",
+                  "안정성을 위해 벤치를 잡습니다.",
+                  "상체를 움직이지 않으면서 무릎을 구부려 다리를 둔근 쪽으로 구부립니다.",
+                  "위쪽에서 잠시 멈춘 후 다리를 천천히 시작 자세로 펼칩니다.",
+                  "원하는 반복 횟수만큼 반복합니다."
+                ],
+                "pl": [
+                  "Połóż się przodem na ławce, biodra umieść na krawędzi, a nogi wyprostuj prosto za sobą.",
+                  "Chwyć się ławki dla wsparcia.",
+                  "Trzymając górną część ciała nieruchomo, zegnij kolana i przyciągnij nogi w stronę pośladków.",
+                  "Zatrzymaj się na chwilę na górze, a następnie powoli wyprostuj nogi z powrotem do pozycji wyjściowej.",
+                  "Powtórz zalecaną liczbę razy."
+                ],
+                "ru": [
+                  "Лягте лицом вниз на скамью, прижав бедра к краю и вытянув ноги прямо позади себя.",
+                  "Держитесь за скамью для поддержки.",
+                  "Удерживая верхнюю часть тела неподвижно, согните колени и согните ноги к ягодицам.",
+                  "Задержитесь на мгновение в верхней точке, затем медленно вытяните ноги обратно в исходное положение.",
+                  "Повторите необходимое количество повторений."
+                ],
+                "tr": [
+                  "Kalçalarınız kenarda olacak ve bacaklarınız düz bir şekilde arkanızda uzatılacak şekilde bir bankın üzerine yüz üstü uzanın.",
+                  "Destek için benche tutunun.",
+                  "Üst vücudunuzu sabit tutarak dizlerinizi bükün ve bacaklarınızı kalçalarınıza doğru kıvırın.",
+                  "Tepe noktasında bir an duraklayın, ardından bacaklarınızı yavaşça başlangıç ​​pozisyonuna geri uzatın.",
+                  "İstenilen sayıda tekrar için tekrarlayın."
+                ],
+                "zh": [
+                  "脸朝下躺在长凳上，臀部位于边缘，双腿伸直在身后。",
+                  "抓住长凳以获得支撑。",
+                  "保持上半身不动，弯曲膝盖并将双腿向臀部弯曲。",
+                  "在顶部停顿片刻，然后慢慢将双腿伸展回起始位置。",
+                  "重复所需的重复次数。"
+                ]
+              },
+              "metadata": {
+                "mediaId": "ms7tjSG",
+                "contentSha256": "656634224b8977b99a6d765470ee123260d4979715eaa4e7c0b7c8bb0d79f93d",
+                "datasetCreatedAt": "2026-03-18T12:31:32.88459+00:00"
+              },
+              "equipment": [],
+              "media": [],
+              "meGustaTotal": 0,
+              "valoracion": {
+                "promedio": null,
+                "total": 0
+              },
+              "estadoModeracion": "VISIBLE"
+            }
+          }
+        ],
+        "dias": [
+          {
+            "id": "2a6e0ecb-39c0-47b3-9165-73568f4c3d06",
+            "diaSemana": 1,
+            "nombre": "Lunes",
+            "orden": 1,
+            "ejercicios": [
+              {
+                "id": "25b4ca6c-0240-47b5-bdd6-4b516fde1599",
+                "orden": 1,
+                "seriesObjetivo": 3,
+                "repsMin": 5,
+                "repsMax": 6,
+                "pesoObjetivoKg": null,
+                "rirObjetivo": 2,
+                "descansoSeg": 120,
+                "nota": null,
+                "grupo": null,
+                "grupoTipo": null,
+                "descansoEntreSeg": null,
+                "duracionSeg": null,
+                "ejercicio": {
+                  "id": "ee0a31df-9be8-4ae5-b255-3796ae59a064",
+                  "nombre": "inverse leg curl (bench support)",
+                  "nombreEs": "Curl nórdico con apoyo en banco",
+                  "grupoMuscular": "glutes",
+                  "descripcion": "Túmbate boca abajo en un banco con las caderas en el borde y las piernas extendidas rectas detrás de ti. Sujétate del banco para mayor apoyo. Manteniendo la parte superior del cuerpo quieta, dobla las rodillas y curva las piernas hacia los glúteos. Haz una pausa breve en la parte superior, luego extiende lentamente las piernas de vuelta a la posición inicial. Repite el número de repeticiones deseado.",
+                  "tipoEjercicio": "GLOBAL",
+                  "createdByUsuarioId": null,
+                  "estado": "ACTIVO",
+                  "dataSource": "EXERCISES_DATASET",
+                  "externalId": "0496",
+                  "externalVersion": "f22e5285f9c4441f2282e3c18aaaa647ade8922512386929cead6bc2dc1469b0",
+                  "sourceUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/data/exercises.json",
+                  "sourceLicense": "MIT data; media governed by separate Gym Visual terms",
+                  "sourceAttribution": "© Gym visual — https://gymvisual.com/",
+                  "category": "upper legs",
+                  "bodyPart": "upper legs",
+                  "requiredEquipment": "body weight",
+                  "targetMuscle": "hamstrings",
+                  "synergistMuscleGroup": "glutes",
+                  "secondaryMuscles": [
+                    "glutes",
+                    "calves"
+                  ],
+                  "instructions": {
+                    "en": "Lie face down on a bench with your hips at the edge and your legs extended straight behind you. Hold onto the bench for support. Keeping your upper body still, bend your knees and curl your legs towards your glutes. Pause for a moment at the top, then slowly extend your legs back to the starting position. Repeat for the desired number of repetitions.",
+                    "es": "Túmbate boca abajo en un banco con las caderas en el borde y las piernas extendidas rectas detrás de ti. Sujétate del banco para mayor apoyo. Manteniendo la parte superior del cuerpo quieta, dobla las rodillas y curva las piernas hacia los glúteos. Haz una pausa breve en la parte superior, luego extiende lentamente las piernas de vuelta a la posición inicial. Repite el número de repeticiones deseado.",
+                    "fr": "Allonge-toi face vers le bas sur un banc, les hanches au bord et les jambes tendues droit derrière toi. Tiens-toi au banc pour te soutenir. En gardant le haut de ton corps immobile, plie tes genoux et fléchis tes jambes vers tes fessiers. Marque une pause en haut, puis étends lentement tes jambes pour revenir à la position de départ. Répète le nombre de répétitions souhaité.",
+                    "hi": "अपने कूल्हों को किनारे पर रखकर एक बेंच पर मुंह करके लेट जाएं और आपके पैर आपके पीछे सीधे फैले हुए हों। समर्थन के लिए बेंच को पकड़ें। अपने ऊपरी शरीर को स्थिर रखते हुए, अपने घुटनों को मोड़ें और अपने पैरों को अपने ग्लूट्स की ओर मोड़ें। शीर्ष पर एक पल के लिए रुकें, फिर धीरे-धीरे अपने पैरों को वापस प्रारंभिक स्थिति में लाएँ। दोहराव की वांछित संख्या के लिए दोहराएँ।",
+                    "it": "Sdraiati a faccia in giù su una panca con i fianchi sul bordo e le gambe distese dietro di te. Tieniti sulla panca per supporto. Tenendo ferma la parte superiore del corpo, piega le ginocchia e piega le gambe verso i glutei. Fai una pausa per un momento in alto, quindi estendi lentamente le gambe fino alla posizione di partenza. Ripetere per il numero di ripetizioni desiderato.",
+                    "ko": "벤치 위에 엎드려 누우면서 고관절을 벤치의 모서리 너머로 놓고 다리를 뒤로 쭉 뻗습니다. 안정성을 위해 벤치를 잡습니다. 상체를 움직이지 않으면서 무릎을 구부려 다리를 둔근 쪽으로 구부립니다. 위쪽에서 잠시 멈춘 후 다리를 천천히 시작 자세로 펼칩니다. 원하는 반복 횟수만큼 반복합니다.",
+                    "pl": "Połóż się przodem na ławce, biodra umieść na krawędzi, a nogi wyprostuj prosto za sobą. Chwyć się ławki dla wsparcia. Trzymając górną część ciała nieruchomo, zegnij kolana i przyciągnij nogi w stronę pośladków. Zatrzymaj się na chwilę na górze, a następnie powoli wyprostuj nogi z powrotem do pozycji wyjściowej. Powtórz zalecaną liczbę razy.",
+                    "ru": "Лягте лицом вниз на скамью, прижав бедра к краю и вытянув ноги прямо позади себя. Держитесь за скамью для поддержки. Удерживая верхнюю часть тела неподвижно, согните колени и согните ноги к ягодицам. Задержитесь на мгновение в верхней точке, затем медленно вытяните ноги обратно в исходное положение. Повторите необходимое количество повторений.",
+                    "tr": "Kalçalarınız kenarda olacak ve bacaklarınız düz bir şekilde arkanızda uzatılacak şekilde bir bankın üzerine yüz üstü uzanın. Destek için benche tutunun. Üst vücudunuzu sabit tutarak dizlerinizi bükün ve bacaklarınızı kalçalarınıza doğru kıvırın. Tepe noktasında bir an duraklayın, ardından bacaklarınızı yavaşça başlangıç ​​pozisyonuna geri uzatın. İstenilen sayıda tekrar için tekrarlayın.",
+                    "zh": "脸朝下躺在长凳上，臀部位于边缘，双腿伸直在身后。 抓住长凳以获得支撑。 保持上半身不动，弯曲膝盖并将双腿向臀部弯曲。 在顶部停顿片刻，然后慢慢将双腿伸展回起始位置。 重复所需的重复次数。"
+                  },
+                  "instructionSteps": {
+                    "en": [
+                      "Lie face down on a bench with your hips at the edge and your legs extended straight behind you.",
+                      "Hold onto the bench for support.",
+                      "Keeping your upper body still, bend your knees and curl your legs towards your glutes.",
+                      "Pause for a moment at the top, then slowly extend your legs back to the starting position.",
+                      "Repeat for the desired number of repetitions."
+                    ],
+                    "es": [
+                      "Túmbate boca abajo en un banco con las caderas en el borde y las piernas extendidas rectas detrás de ti.",
+                      "Sujétate del banco para mayor apoyo.",
+                      "Manteniendo la parte superior del cuerpo quieta, dobla las rodillas y curva las piernas hacia los glúteos.",
+                      "Haz una pausa breve en la parte superior, luego extiende lentamente las piernas de vuelta a la posición inicial.",
+                      "Repite el número de repeticiones deseado."
+                    ],
+                    "fr": [
+                      "Allonge-toi face vers le bas sur un banc, les hanches au bord et les jambes tendues droit derrière toi.",
+                      "Tiens-toi au banc pour te soutenir.",
+                      "En gardant le haut de ton corps immobile, plie tes genoux et fléchis tes jambes vers tes fessiers.",
+                      "Marque une pause en haut, puis étends lentement tes jambes pour revenir à la position de départ.",
+                      "Répète le nombre de répétitions souhaité."
+                    ],
+                    "hi": [
+                      "अपने कूल्हों को किनारे पर रखकर एक बेंच पर मुंह करके लेट जाएं और आपके पैर आपके पीछे सीधे फैले हुए हों।",
+                      "समर्थन के लिए बेंच को पकड़ें।",
+                      "अपने ऊपरी शरीर को स्थिर रखते हुए, अपने घुटनों को मोड़ें और अपने पैरों को अपने ग्लूट्स की ओर मोड़ें।",
+                      "शीर्ष पर एक पल के लिए रुकें, फिर धीरे-धीरे अपने पैरों को वापस प्रारंभिक स्थिति में लाएँ।",
+                      "दोहराव की वांछित संख्या के लिए दोहराएँ।"
+                    ],
+                    "it": [
+                      "Sdraiati a faccia in giù su una panca con i fianchi sul bordo e le gambe distese dietro di te.",
+                      "Tieniti sulla panca per supporto.",
+                      "Tenendo ferma la parte superiore del corpo, piega le ginocchia e piega le gambe verso i glutei.",
+                      "Fai una pausa per un momento in alto, quindi estendi lentamente le gambe fino alla posizione di partenza.",
+                      "Ripetere per il numero di ripetizioni desiderato."
+                    ],
+                    "ko": [
+                      "벤치 위에 엎드려 누우면서 고관절을 벤치의 모서리 너머로 놓고 다리를 뒤로 쭉 뻗습니다.",
+                      "안정성을 위해 벤치를 잡습니다.",
+                      "상체를 움직이지 않으면서 무릎을 구부려 다리를 둔근 쪽으로 구부립니다.",
+                      "위쪽에서 잠시 멈춘 후 다리를 천천히 시작 자세로 펼칩니다.",
+                      "원하는 반복 횟수만큼 반복합니다."
+                    ],
+                    "pl": [
+                      "Połóż się przodem na ławce, biodra umieść na krawędzi, a nogi wyprostuj prosto za sobą.",
+                      "Chwyć się ławki dla wsparcia.",
+                      "Trzymając górną część ciała nieruchomo, zegnij kolana i przyciągnij nogi w stronę pośladków.",
+                      "Zatrzymaj się na chwilę na górze, a następnie powoli wyprostuj nogi z powrotem do pozycji wyjściowej.",
+                      "Powtórz zalecaną liczbę razy."
+                    ],
+                    "ru": [
+                      "Лягте лицом вниз на скамью, прижав бедра к краю и вытянув ноги прямо позади себя.",
+                      "Держитесь за скамью для поддержки.",
+                      "Удерживая верхнюю часть тела неподвижно, согните колени и согните ноги к ягодицам.",
+                      "Задержитесь на мгновение в верхней точке, затем медленно вытяните ноги обратно в исходное положение.",
+                      "Повторите необходимое количество повторений."
+                    ],
+                    "tr": [
+                      "Kalçalarınız kenarda olacak ve bacaklarınız düz bir şekilde arkanızda uzatılacak şekilde bir bankın üzerine yüz üstü uzanın.",
+                      "Destek için benche tutunun.",
+                      "Üst vücudunuzu sabit tutarak dizlerinizi bükün ve bacaklarınızı kalçalarınıza doğru kıvırın.",
+                      "Tepe noktasında bir an duraklayın, ardından bacaklarınızı yavaşça başlangıç ​​pozisyonuna geri uzatın.",
+                      "İstenilen sayıda tekrar için tekrarlayın."
+                    ],
+                    "zh": [
+                      "脸朝下躺在长凳上，臀部位于边缘，双腿伸直在身后。",
+                      "抓住长凳以获得支撑。",
+                      "保持上半身不动，弯曲膝盖并将双腿向臀部弯曲。",
+                      "在顶部停顿片刻，然后慢慢将双腿伸展回起始位置。",
+                      "重复所需的重复次数。"
+                    ]
+                  },
+                  "metadata": {
+                    "mediaId": "ms7tjSG",
+                    "contentSha256": "656634224b8977b99a6d765470ee123260d4979715eaa4e7c0b7c8bb0d79f93d",
+                    "datasetCreatedAt": "2026-03-18T12:31:32.88459+00:00"
+                  },
+                  "equipment": [],
+                  "media": [],
+                  "meGustaTotal": 0,
+                  "valoracion": {
+                    "promedio": null,
+                    "total": 0
+                  },
+                  "estadoModeracion": "VISIBLE"
+                }
+              }
+            ]
+          }
+        ],
+        "duracionSemanas": 8,
+        "progresion": {
+          "activa": true,
+          "descargaCada": 4,
+          "cargaDescarga": 0.9,
+          "volumenDescarga": 0.6
+        },
+        "esOficial": false,
+        "atribucion": null,
+        "basadaEnRutinaId": null,
+        "basadaEnVersion": null,
+        "numeroCopia": null,
+        "version": 1,
+        "hayVersionNueva": false,
+        "huellaCorta": "e814a8b5",
+        "valoracion": {
+          "promedio": 4.33,
+          "total": 3
+        },
+        "copias": 0,
+        "publicadaEn": "2026-11-15T21:30:11.418Z",
+        "estadoModeracion": "VISIBLE",
+        "esMia": false,
+        "puedoEditar": false,
+        "fechaCreacion": "2026-11-15T21:30:11.380Z",
+        "fechaActualizacion": "2026-11-15T21:30:11.418Z"
+      }
+    ],
+    "page": 1,
+    "pageSize": 20,
+    "total": 53,
+    "totalPages": 3
+  }
+}

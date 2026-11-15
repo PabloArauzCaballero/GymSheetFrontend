@@ -1,0 +1,102 @@
+{
+  "ok": true,
+  "data": {
+    "items": [
+      {
+        "id": "9f393513-3543-4d1b-bf63-1f8d53af65bc",
+        "nombre": "Prevención para fútbol · 2 días",
+        "descripcion": "Nórdicos, Copenhague y trabajo a una pierna. Desde que la hago no he vuelto a tener molestias en el isquio.",
+        "objetivo": "SALUD_GENERAL",
+        "duracionSemanas": 8,
+        "diasPorSemana": 2,
+        "ejerciciosTotal": 6,
+        "visibilidad": "PUBLIC",
+        "esOficial": false,
+        "esMia": false,
+        "autor": {
+          "id": "2b1b70d4-c716-43c0-ba16-5b4074226509",
+          "nombre": "Sofía Paredes",
+          "fotoUrl": "http://localhost:3000/media/users/2b1b70d4-c716-43c0-ba16-5b4074226509/perfiles/569dc4f1a9694287574b67ab6fa0267c6ca707655fdeb8ac3aa2eef9bf8b98d0.webp"
+        },
+        "portadaUrl": null,
+        "atribucion": null,
+        "basadaEnRutinaId": null,
+        "numeroCopia": null,
+        "valoracion": {
+          "promedio": 4.33,
+          "total": 3
+        },
+        "copias": 0,
+        "publicadaEn": "2026-11-15T21:30:11.418Z",
+        "version": 1,
+        "estadoModeracion": "VISIBLE",
+        "dias": [
+          {
+            "diaSemana": 1,
+            "nombre": "Lunes",
+            "ejerciciosTotal": 3
+          },
+          {
+            "diaSemana": 4,
+            "nombre": "Jueves",
+            "ejerciciosTotal": 3
+          }
+        ],
+        "invitacion": null
+      },
+      {
+        "id": "bc0a3721-e26f-4798-8266-572fc1e5679c",
+        "nombre": "Torso-pierna de Diego · 4 días",
+        "descripcion": "La que uso con mis alumnos intermedios: básicos pesados al principio y bombeo al final. Sube el peso cuando llegues al tope de repeticiones.",
+        "objetivo": "HIPERTROFIA",
+        "duracionSemanas": 8,
+        "diasPorSemana": 4,
+        "ejerciciosTotal": 17,
+        "visibilidad": "PUBLIC",
+        "esOficial": false,
+        "esMia": false,
+        "autor": {
+          "id": "0302b36a-e659-4378-8f92-cf8294959478",
+          "nombre": "Diego Morales",
+          "fotoUrl": "http://localhost:3000/media/users/0302b36a-e659-4378-8f92-cf8294959478/perfiles/51804ccc5fa9d3c0aaa02284e5b57ecf8d9b473a409dddb37801fe3637651a17.webp"
+        },
+        "portadaUrl": null,
+        "atribucion": null,
+        "basadaEnRutinaId": null,
+        "numeroCopia": null,
+        "valoracion": {
+          "promedio": 4.6,
+          "total": 5
+        },
+        "copias": 1,
+        "publicadaEn": "2026-11-15T21:30:10.845Z",
+        "version": 1,
+        "estadoModeracion": "VISIBLE",
+        "dias": [
+          {
+            "diaSemana": 1,
+            "nombre": "Torso fuerte",
+            "ejerciciosTotal": 5
+          },
+          {
+            "diaSemana": 2,
+            "nombre": "Pierna fuerte",
+            "ejerciciosTotal": 4
+          },
+          {
+            "diaSemana": 4,
+            "nombre": "Torso bombeo",
+            "ejerciciosTotal": 4
+          },
+          {
+            "diaSemana": 5,
+            "nombre": "Pierna bombeo",
+            "ejerciciosTotal": 4
+          }
+        ],
+        "invitacion": null
+      }
+    ],
+    "siguienteCursor": "eyJvIjoyMH0"
+  }
+}

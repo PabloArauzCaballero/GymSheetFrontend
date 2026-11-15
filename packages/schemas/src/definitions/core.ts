@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { consoleLogger } from '@gymsheet/observability';
 import { equipmentStatuses, equipmentTypes, trainingGoals, userRoles } from '@gymsheet/types';
 
 export const problemSchema = z.object({
@@ -148,6 +149,30 @@ export const exerciseMediaSchema = z
   })
   .passthrough();
 
+export type ExerciseMediaItem = z.infer<typeof exerciseMediaSchema>;
+
+/**
+ * Medios de un ejercicio, tolerantes por elemento: un medio que no encaja en
+ * `exerciseMediaSchema` (p. ej. un `provider` desconocido) se descarta y se
+ * avisa por el logger, en vez de tumbar con «Respuesta no válida» la rutina y
+ * la página entera que lo contienen. Cada medio que queda sigue validado
+ * estrictamente; si lo que llega no es una lista, sí es un error. El aviso
+ * lleva solo recuentos y la ruta/código del fallo, nunca URLs ni textos.
+ */
+export const exerciseMediaListSchema = z.array(z.unknown()).transform((items): ExerciseMediaItem[] => {
+  const kept: ExerciseMediaItem[] = [];
+  const issues: Array<{ index: number; path: string; code: string }> = [];
+  items.forEach((item, index) => {
+    const parsed = exerciseMediaSchema.safeParse(item);
+    if (parsed.success) kept.push(parsed.data);
+    else for (const issue of parsed.error.issues) issues.push({ index, path: issue.path.join('.'), code: issue.code });
+  });
+  if (kept.length < items.length) {
+    consoleLogger.warn('schema.exercise_media_dropped', { dropped: items.length - kept.length, kept: kept.length, issues });
+  }
+  return kept;
+});
+
 export const ratingSummarySchema = z.object({
   promedio: z.number().nullable(),
   total: z.number().int(),
@@ -188,7 +213,7 @@ export const exerciseSchema = z
     instructionSteps: z.record(z.string(), z.array(z.string())),
     metadata: z.record(z.string(), z.unknown()),
     equipment: z.array(equipmentSchema),
-    media: z.array(exerciseMediaSchema),
+    media: exerciseMediaListSchema,
     meGustaTotal: z.number().int().default(0),
     valoracion: ratingSummarySchema.default({ promedio: null, total: 0 }),
     estadoModeracion: z.string().default('VISIBLE'),
