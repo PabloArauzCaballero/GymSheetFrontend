@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Card, Section } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
-import { accentPolicy, colors, iconSizes, radii, spacing } from '@/theme';
+import { colors, iconSizes, radii, spacing } from '@/theme';
 
 export type AboutChip = { key: string; label: string; icon: keyof typeof Ionicons.glyphMap };
 
@@ -41,10 +41,11 @@ export function AboutSection({ bio, chips, onEdit }: { bio: string | null; chips
           {bio ? (
             <Text variant="body">{bio}</Text>
           ) : (
+            // Quiet empty state: the call to action lives once, in the completion card.
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-              <Ionicons color={accentPolicy.glyph} name="add-circle-outline" size={iconSizes.md} />
-              <Text style={{ color: accentPolicy.ink }} strong variant="subhead">
-                Escribe unas líneas sobre ti
+              <Ionicons color={colors.textSecondary} name="create-outline" size={iconSizes.md} />
+              <Text tone="secondary" variant="subhead">
+                Sin bio todavía
               </Text>
             </View>
           )}

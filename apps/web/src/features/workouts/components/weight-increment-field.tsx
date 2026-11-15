@@ -42,7 +42,7 @@ export function WeightIncrementField({ value }: Readonly<{ value: number | undef
             <button
               aria-pressed={active}
               className={cn(
-                'rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors',
+                'min-h-11 min-w-11 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors',
                 active
                   ? 'border-[var(--volt)] bg-[color-mix(in_srgb,var(--volt)_14%,transparent)] text-[var(--text)]'
                   : 'border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text-muted)]',

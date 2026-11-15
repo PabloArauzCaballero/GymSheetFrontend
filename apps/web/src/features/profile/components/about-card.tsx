@@ -1,4 +1,4 @@
-import { CirclePlus, Flag, Gauge, Heart } from 'lucide-react';
+import { Flag, Gauge, Heart, SquarePen } from 'lucide-react';
 import Link from 'next/link';
 import type { AboutChip } from '@/features/profile/hooks/use-own-profile';
 import { Section } from '@/shared/components/mobile/section';
@@ -21,9 +21,10 @@ export function AboutCard({ bio, chips }: Readonly<{ bio: string | null; chips: 
         {bio ? (
           <p className="t-body">{bio}</p>
         ) : (
-          <span className="t-subhead inline-flex items-center gap-2 font-semibold text-[var(--accent-ink)]">
-            <CirclePlus aria-hidden className="size-5" />
-            Escribe unas líneas sobre ti
+          // Quiet empty state: the call to action lives once, in the completion card.
+          <span className="t-subhead inline-flex items-center gap-2 text-[var(--text-muted)]">
+            <SquarePen aria-hidden className="size-5" />
+            Sin bio todavía
           </span>
         )}
         {chips.length > 0 ? (

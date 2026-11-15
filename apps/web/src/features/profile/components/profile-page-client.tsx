@@ -1,8 +1,8 @@
 'use client';
 
-import { roleLabel } from '@gymsheet/domain';
+import { proudStat, roleLabel } from '@gymsheet/domain';
 import { useQuery } from '@tanstack/react-query';
-import { Bell, Camera, CreditCard, Dumbbell, Eye, LifeBuoy, MessageCircle, PersonStanding, Scale, Settings, SquarePen, Star, Users } from 'lucide-react';
+import { Bell, CreditCard, Dumbbell, Eye, LifeBuoy, MessageCircle, PersonStanding, Scale, Settings, Share2, SquarePen, Star, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { membershipService } from '@/features/membership/services/membership-service';
@@ -26,9 +26,10 @@ import { notify } from '@/shared/notifications';
 import { AboutCard } from './about-card';
 import { CompletionAvatar } from './completion-avatar';
 import { CompletionNudge } from './completion-nudge';
+import { FitnessRow, fitnessNumbers } from './fitness-row';
 import { ProfileActions } from './profile-actions';
 import { RankChip } from './profile-hero';
-import { RowGlyph, RowGroup, initialsOf } from './profile-rows';
+import { RowGlyph, RowGroup, initialsOf, shareProfile } from './profile-rows';
 import { SendaCard } from './senda-card';
 
 const MEMBERSHIP_BADGE = {
@@ -40,7 +41,8 @@ const MEMBERSHIP_BADGE = {
 
 /**
  * Perfil, espejo de `apps/mobile/app/(app)/(tabs)/profile.tsx` (rediseño a lo
- * Tinder): la cara con el aro de completitud, tres acciones en círculo y el
+ * Tinder): la cara con el aro de completitud, puntos · racha · sesiones bajo
+ * el nombre, tres acciones en círculo (vista previa, editar, compartir) y el
  * empujón con los puntos reales que da cada dato que falta. Luego «Sobre ti»,
  * la senda y las listas. Se edita en `/profile/editar`.
  */
@@ -76,7 +78,20 @@ export function ProfilePageClient() {
   const member = membership.data?.membership;
   const ordered = [...(measurements.data ?? [])].sort((a, b) => b.measuredOn.localeCompare(a.measuredOn));
   const lastWeight = ordered[0];
-  const rank = progression.data ? (progression.data.level?.name ?? 'Sin empezar') : null;
+  const progress = progression.data;
+  const rank = progress ? (progress.level?.name ?? 'Sin empezar') : null;
+  // Three fixed slots, Editar always centred: Compartir waits (inert) for real numbers instead of popping in.
+  const shareStat = progress ? proudStat(fitnessNumbers(progress)) : null;
+  const share = {
+    key: 'share',
+    label: 'Compartir',
+    icon: Share2,
+    onClick: () => {
+      if (rank && shareStat) void shareProfile(me.id, rank, shareStat);
+    },
+    disabled: !(rank && shareStat),
+    disabledLabel: progression.isError ? 'Compartir: no se pudo cargar tu senda' : 'Compartir: cargando tu senda',
+  };
   const age = profile.data?.edad ?? null;
   const dataSubtitle = profile.isPending
     ? 'Cargando…'
@@ -103,22 +118,24 @@ export function ProfilePageClient() {
             <div className="grid justify-items-center gap-2 text-center">
               <h2 className="display-title">{age !== null ? `${me.nombreCompleto}, ${age}` : me.nombreCompleto}</h2>
               <div className="flex flex-wrap justify-center gap-2">
-                {rank ? <RankChip label={rank} /> : null}
+                {/* The rank slot always holds something of the chip's height, so the hero never jumps. */}
+                {rank ? <RankChip label={rank} /> : progression.isPending ? <Skeleton className="h-7 w-26 rounded-full" /> : <RankChip label="Sin cargar" />}
                 {me.rol !== 'CLIENTE' ? <Badge>{role}</Badge> : null}
               </div>
             </div>
+            <FitnessRow pending={progression.isPending} progress={progress} />
             <ProfileActions
               actions={[
-                { key: 'preview', label: 'Ver como te ven', icon: Eye, href: '/profile/editar?tab=preview' },
-                { key: 'edit', label: 'Editar perfil', icon: SquarePen, href: '/profile/editar', primary: true },
-                { key: 'photos', label: 'Añadir fotos', icon: Camera, href: '/profile/editar#fotos' },
+                { key: 'preview', label: 'Vista previa', icon: Eye, href: '/profile/editar?tab=preview' },
+                { key: 'edit', label: 'Editar', icon: SquarePen, href: '/profile/editar', primary: true },
+                share,
               ]}
             />
           </HeroSurface>
 
           {completion.isPending ? <Skeleton className="h-48" /> : completion.data ? <CompletionNudge completion={completion.data} /> : null}
           <AboutCard bio={own.bio} chips={own.chips} />
-          <SendaCard failed={progression.isError} onRetry={() => void progression.refetch()} pending={progression.isPending} progress={progression.data} userId={me.id} />
+          <SendaCard failed={progression.isError} onRetry={() => void progression.refetch()} pending={progression.isPending} progress={progress} />
 
           <Section title="Tu actividad">
             <RowGroup>

@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { profileProgress } from '@gymsheet/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { type ReactNode, useEffect, useState } from 'react';
 import { View } from 'react-native';
@@ -97,7 +98,7 @@ export default function ProfileEditScreen() {
     <ScrollScreen>
       <BackLink />
       <ScreenHeader
-        subtitle={completion ? `Perfil al ${completion.percent} % · ${completion.pointsEarned} de ${completion.pointsTotal} puntos ganados` : 'Lo que ven los demás y lo que ajusta tus entrenos.'}
+        subtitle={completion ? profileProgress(completion).label : 'Lo que ven los demás y lo que ajusta tus entrenos.'}
         title="Editar perfil"
       />
       <SegmentedPill

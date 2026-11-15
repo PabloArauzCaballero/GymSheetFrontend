@@ -34,8 +34,11 @@ export function SocialDiscoverySettingsCard() {
         description="Tu perfil empieza privado. La presencia en otros gimnasios y en el mapa tiene permisos separados."
         title="Descubrimiento social"
       />
-      <CardContent className="grid gap-3 sm:grid-cols-3">
+      {/* Side by side only when the card itself is wide: in the profile's narrow column the labels clipped. */}
+      <CardContent className="@container">
+        <div className="grid gap-3 @xl:grid-cols-3">
         <Button
+          className="whitespace-normal py-2 text-center"
           disabled={busy}
           onClick={() => update.mutate({
             profileEnabled: !current.profileEnabled,
@@ -46,6 +49,7 @@ export function SocialDiscoverySettingsCard() {
           variant={current.profileEnabled ? 'danger' : 'primary'}
         >{current.profileEnabled ? 'Pausar perfil social' : 'Activar perfil social'}</Button>
         <Button
+          className="whitespace-normal py-2 text-center"
           disabled={!current.profileEnabled || busy}
           onClick={() => update.mutate({
             profileEnabled: current.profileEnabled,
@@ -56,6 +60,7 @@ export function SocialDiscoverySettingsCard() {
           variant={current.crossGymEnabled ? 'primary' : 'secondary'}
         >{current.crossGymEnabled ? 'Desactivar entre gimnasios' : 'Permitir otros gimnasios'}</Button>
         <Button
+          className="whitespace-normal py-2 text-center"
           disabled={!current.profileEnabled || busy}
           onClick={() => update.mutate({
             profileEnabled: current.profileEnabled,
@@ -65,6 +70,7 @@ export function SocialDiscoverySettingsCard() {
           })}
           variant={current.mapEnabled ? 'primary' : 'secondary'}
         >{current.mapEnabled ? 'Ocultarme del mapa' : 'Aparecer en el mapa'}</Button>
+        </div>
       </CardContent>
     </Card>
   );

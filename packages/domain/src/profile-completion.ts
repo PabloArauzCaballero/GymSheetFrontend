@@ -73,6 +73,17 @@ export function profileNudgeTitle(pointsAvailable: number): string | null {
   return `Completa tu perfil y gana +${pointsAvailable.toLocaleString('es-ES')} puntos`;
 }
 
+/**
+ * The single profile progress number: items done out of items listed, exactly
+ * the server's `percent`. The ring, the bar and the edit header all read this,
+ * so they never disagree; points are what each item pays, not the progress.
+ */
+export function profileProgress(completion: { completed: number; total: number; percent: number }): { ratio: number; label: string } {
+  const ratio = Math.min(Math.max(completion.percent / 100, 0), 1);
+  const label = `Perfil al ${completion.percent} %: ${completion.completed} de ${completion.total} datos`;
+  return { ratio, label };
+}
+
 /** «+50». Lo que vale un dato, listo para una ficha. */
 export function pointsChip(points: number): string {
   return `+${points.toLocaleString('es-ES')}`;

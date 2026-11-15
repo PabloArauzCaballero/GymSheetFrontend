@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
@@ -43,6 +43,9 @@ export function CompletionAvatar({
 
   const ringProps = useAnimatedProps(() => ({ strokeDashoffset: CIRCUMFERENCE * (1 - progress.value) }));
   const complete = percent === 100;
+  // A photo that fails to load (expired link, offline) falls back to the initials, never a blank disc.
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const shownUrl = photoUrl && photoUrl !== failedUrl ? photoUrl : null;
 
   return (
     <View
@@ -66,13 +69,14 @@ export function CompletionAvatar({
         />
       </Svg>
       <View style={{ marginTop: STROKE + GAP }}>
-        {photoUrl ? (
+        {shownUrl ? (
           <Image
             accessibilityIgnoresInvertColors
             cachePolicy="memory-disk"
             contentFit="cover"
-            recyclingKey={photoUrl}
-            source={{ uri: photoUrl, width: AVATAR, height: AVATAR }}
+            onError={() => setFailedUrl(shownUrl)}
+            recyclingKey={shownUrl}
+            source={{ uri: shownUrl, width: AVATAR, height: AVATAR }}
             style={{ width: AVATAR, height: AVATAR, borderRadius: radii.full, backgroundColor: colors.surfaceHigh }}
             transition={160}
           />

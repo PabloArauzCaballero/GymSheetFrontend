@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cardDisplayName, pendingProfileItems, pointsChip, profileNudgeTitle } from './profile-completion';
+import { cardDisplayName, pendingProfileItems, pointsChip, profileNudgeTitle, profileProgress } from './profile-completion';
 
 const item = (code: string, done: boolean, awarded: boolean, points = 20) => ({ code, label: code, hint: '', points, done, awarded });
 
@@ -20,6 +20,12 @@ describe('profile completion copy', () => {
     expect(profileNudgeTitle(0)).toBeNull();
     expect(pointsChip(50)).toBe('+50');
     expect(pointsChip(15000)).toBe('+15.000');
+  });
+
+  it('gives one progress number (items, the server percent) for ring, bar and header', () => {
+    expect(profileProgress({ completed: 3, total: 8, percent: 37 })).toEqual({ ratio: 0.37, label: 'Perfil al 37 %: 3 de 8 datos' });
+    expect(profileProgress({ completed: 8, total: 8, percent: 100 }).ratio).toBe(1);
+    expect(profileProgress({ completed: 0, total: 8, percent: -5 }).ratio).toBe(0);
   });
 
   it('shortens the name exactly like the discovery card', () => {

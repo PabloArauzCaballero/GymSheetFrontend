@@ -27,6 +27,9 @@ export function CompletionAvatar({
     return () => cancelAnimationFrame(frame);
   }, [percent]);
   const complete = percent === 100;
+  // A photo that fails to load (expired link, offline) falls back to the initials, never a broken image.
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const shownUrl = photoUrl && photoUrl !== failedUrl ? photoUrl : null;
 
   return (
     <figure
@@ -52,9 +55,9 @@ export function CompletionAvatar({
         />
       </svg>
       <span className="absolute" style={{ top: STROKE + GAP, left: STROKE + GAP }}>
-        {photoUrl ? (
+        {shownUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- foto de usuario por el proxy de medios
-          <img alt="" className="rounded-full bg-[var(--surface-high)] object-cover" height={AVATAR} src={mediaProxyUrl(photoUrl)} style={{ width: AVATAR, height: AVATAR }} width={AVATAR} />
+          <img alt="" className="rounded-full bg-[var(--surface-high)] object-cover" height={AVATAR} onError={() => setFailedUrl(shownUrl)} src={mediaProxyUrl(shownUrl)} style={{ width: AVATAR, height: AVATAR }} width={AVATAR} />
         ) : (
           <span className="display-title grid place-items-center rounded-full bg-[var(--surface-highest)]" style={{ width: AVATAR, height: AVATAR }}>
             {initials}

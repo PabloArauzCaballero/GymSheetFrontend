@@ -43,7 +43,7 @@ export function NavRow({
       <span className="grid min-w-0 flex-1 gap-0.5">
         <span className="t-headline line-clamp-2">{title}</span>
         {subtitle ? (
-          <span className="t-subhead truncate text-[var(--text-muted)]">{subtitle}</span>
+          <span className="t-subhead line-clamp-2 text-[var(--text-muted)]">{subtitle}</span>
         ) : null}
       </span>
       {meta}

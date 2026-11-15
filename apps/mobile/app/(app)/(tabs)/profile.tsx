@@ -13,15 +13,18 @@ import { AboutSection } from '@/features/profile-hero/about-section';
 import { CompletionAvatar } from '@/features/profile-hero/completion-avatar';
 import { CompletionNudge } from '@/features/profile-hero/completion-nudge';
 import { editRouteFor } from '@/features/profile-hero/edit-routes';
-import { ProfileActions } from '@/features/profile-hero/profile-actions';
+import { fitnessNumbers } from '@/features/profile-hero/fitness-numbers';
+import { FitnessRow } from '@/features/profile-hero/fitness-row';
+import { ProfileActions, type ProfileAction } from '@/features/profile-hero/profile-actions';
 import { RankChip } from '@/features/profile-hero/profile-hero';
 import { AccountList, ActivityList } from '@/features/profile-hero/profile-lists';
+import { proudStat, shareMyProfile } from '@/features/profile-hero/profile-share';
 import { SendaCard } from '@/features/profile-hero/senda-card';
 import { useOwnProfile } from '@/features/profile-hero/use-own-profile';
 import { initialsOf, shortName } from '@/lib/format';
 import { confirm, notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
-import { spacing } from '@/theme';
+import { radii, spacing } from '@/theme';
 
 const ROLE_LABEL: Record<string, string> = {
   ADMIN: 'Administración',
@@ -33,8 +36,8 @@ const ROLE_LABEL: Record<string, string> = {
 
 /**
  * Perfil (rediseño 2026-11-15, a lo Tinder): la cara grande con el aro de
- * completitud, tres acciones en círculo —ver como te ven, editar, añadir
- * fotos— y, debajo, el empujón con los puntos reales que da cada dato que
+ * completitud, puntos · racha · sesiones bajo el nombre, tres acciones en
+ * círculo —vista previa, editar, compartir— y, debajo, el empujón con los puntos reales que da cada dato que
  * falta. Luego «Sobre ti», tu senda y las listas de siempre.
  */
 export default function ProfileScreen() {
@@ -80,7 +83,26 @@ export default function ProfileScreen() {
   const name = own.account.data?.nombreCompleto ?? principal?.nombreCompleto ?? shortName(undefined, principal?.email);
   const age = own.profile.data?.edad ?? null;
   const roleLabel = ROLE_LABEL[principal?.role ?? ''] ?? principal?.role ?? '—';
-  const rank = own.progression.data ? (own.progression.data.level?.name ?? 'Sin empezar') : null;
+  const progress = own.progression.data;
+  const rank = progress ? (progress.level?.name ?? 'Sin empezar') : null;
+  // Three fixed slots, Editar always centred: Compartir waits (inert) for real numbers instead of popping in.
+  const userId = principal?.id ?? null;
+  const shareStat = progress ? proudStat(fitnessNumbers(progress)) : null;
+  const actions: ProfileAction[] = [
+    { key: 'preview', label: 'Vista previa', icon: 'eye-outline', onPress: () => router.push('/profile-edit?tab=preview'), testID: 'profile-preview' },
+    { key: 'edit', label: 'Editar', icon: 'create-outline', onPress: () => router.push('/profile-edit'), primary: true, testID: 'profile-edit' },
+    {
+      key: 'share',
+      label: 'Compartir',
+      icon: 'share-outline',
+      onPress: () => {
+        if (userId && rank && shareStat) shareMyProfile({ userId, rank, stat: shareStat });
+      },
+      disabled: !(userId && rank && shareStat),
+      disabledLabel: own.progression.isError ? 'Compartir: no se pudo cargar tu senda' : 'Compartir: cargando tu senda',
+      testID: 'profile-share',
+    },
+  ];
 
   return (
     <ScrollScreen
@@ -103,17 +125,13 @@ export default function ProfileScreen() {
               {age !== null ? `${name}, ${age}` : name}
             </Text>
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              {rank ? <RankChip label={rank} /> : null}
+              {/* The rank slot always holds something of the chip's height, so the hero never jumps. */}
+              {rank ? <RankChip label={rank} /> : own.progression.isPending ? <Skeleton height={28} radius={radii.full} width={104} /> : <RankChip label="Sin cargar" />}
               {principal?.role && principal.role !== 'CLIENTE' ? <Badge label={roleLabel} /> : null}
             </View>
           </View>
-          <ProfileActions
-            actions={[
-              { key: 'preview', label: 'Ver como te ven', icon: 'eye-outline', onPress: () => router.push('/profile-edit?tab=preview'), testID: 'profile-preview' },
-              { key: 'edit', label: 'Editar perfil', icon: 'create-outline', onPress: () => router.push('/profile-edit'), primary: true, testID: 'profile-edit' },
-              { key: 'photos', label: 'Añadir fotos', icon: 'camera-outline', onPress: () => router.push('/profile-edit?section=FOTO'), testID: 'profile-add-photos' },
-            ]}
-          />
+          <FitnessRow pending={own.progression.isPending} progress={progress} />
+          <ProfileActions actions={actions} />
         </HeroSurface>
       </TourTarget>
 
@@ -125,8 +143,7 @@ export default function ProfileScreen() {
         error={own.progression.error}
         onRetry={() => void own.progression.refetch()}
         pending={own.progression.isPending}
-        progress={own.progression.data}
-        userId={principal?.id ?? null}
+        progress={progress}
       />
 
       <ActivityList />

@@ -1,4 +1,4 @@
-import { pendingProfileItems, pointsChip, profileNudgeTitle } from '@gymsheet/domain';
+import { pendingProfileItems, pointsChip, profileNudgeTitle, profileProgress } from '@gymsheet/domain';
 import {
   Calendar,
   ChevronRight,
@@ -47,7 +47,7 @@ export function CompletionNudge({ completion }: Readonly<{ completion: ProfileCo
   if (!title || pending.length === 0) return null;
   const shown = pending.slice(0, 3);
   const rest = pending.length - shown.length;
-  const ratio = completion.pointsEarned / Math.max(completion.pointsTotal, 1);
+  const progress = profileProgress(completion);
 
   return (
     <section aria-labelledby="profile-nudge-title" className="panel grid gap-4 p-5" data-testid="profile-nudge">
@@ -56,10 +56,10 @@ export function CompletionNudge({ completion }: Readonly<{ completion: ProfileCo
           {title}
         </h2>
         <p className="t-footnote text-[var(--text-muted)]">
-          {`Llevas ${completion.pointsEarned.toLocaleString('es-ES')} de ${completion.pointsTotal.toLocaleString('es-ES')}. Cada dato suma una vez y no se pierde.`}
+          {`${progress.label}. Cada dato suma una vez y no se pierde.`}
         </p>
         <span aria-hidden className="block h-1.5 overflow-hidden rounded-full bg-[var(--surface-highest)]">
-          <span className="block h-full rounded-full bg-[var(--volt)]" style={{ width: `${Math.round(ratio * 100)}%` }} />
+          <span className="block h-full rounded-full bg-[var(--volt)]" style={{ width: `${Math.round(progress.ratio * 100)}%` }} />
         </span>
       </div>
       <ul className="grid divide-y divide-[var(--border-subtle)]">

@@ -23,7 +23,7 @@ function completion(items: ProfileCompletion['items']): ProfileCompletion {
     items,
     completed: items.filter((entry) => entry.done).length,
     total: items.length,
-    percent: 0,
+    percent: Math.floor((items.filter((entry) => entry.done).length / Math.max(items.length, 1)) * 100),
     pointsEarned: earned,
     pointsAvailable: total - earned,
     pointsTotal: total,
@@ -35,7 +35,8 @@ describe('CompletionNudge', () => {
   it('promises exactly the points the server says are left, item by item, with a link to fix each', () => {
     render(<CompletionNudge completion={completion([item('FOTO', 50), item('BIO', 40), item('DATOS', 50, true, true)])} />);
     expect(screen.getByRole('heading', { name: 'Completa tu perfil y gana +90 puntos' })).toBeInTheDocument();
-    expect(screen.getByText('Llevas 50 de 140. Cada dato suma una vez y no se pierde.')).toBeInTheDocument();
+    // One progress number: items done, the same percent the ring shows (1 of 3 = 33 %).
+    expect(screen.getByText('Perfil al 33 %: 1 de 3 datos. Cada dato suma una vez y no se pierde.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Dato FOTO/ })).toHaveAttribute('href', '/profile/editar#fotos');
     expect(screen.getByRole('link', { name: /Dato BIO/ })).toHaveAttribute('href', '/profile/editar#sobre-ti');
     expect(screen.queryByText('Dato DATOS')).not.toBeInTheDocument();

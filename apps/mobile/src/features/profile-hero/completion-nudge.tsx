@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ProfileCompletion, ProfileCompletionItem } from '@gymsheet/schemas';
-import { pendingProfileItems, pointsChip, profileNudgeTitle } from '@gymsheet/domain';
+import { pendingProfileItems, pointsChip, profileNudgeTitle, profileProgress } from '@gymsheet/domain';
 import { View } from 'react-native';
 import { Card, Divider } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
@@ -78,6 +78,7 @@ export function CompletionNudge({
   if (!title || pending.length === 0) return null;
   const shown = pending.slice(0, 3);
   const rest = pending.length - shown.length;
+  const progress = profileProgress(completion);
 
   return (
     <Card>
@@ -86,9 +87,9 @@ export function CompletionNudge({
           {title}
         </Text>
         <Text tone="secondary" variant="footnote">
-          {`Llevas ${completion.pointsEarned.toLocaleString('es-ES')} de ${completion.pointsTotal.toLocaleString('es-ES')}. Cada dato suma una vez y no se pierde.`}
+          {`${progress.label}. Cada dato suma una vez y no se pierde.`}
         </Text>
-        <ProgressTrack color={colors.volt} height={6} ratio={completion.pointsEarned / Math.max(completion.pointsTotal, 1)} />
+        <ProgressTrack color={colors.volt} height={6} ratio={progress.ratio} />
       </View>
       <View>
         {shown.map((item, index) => (

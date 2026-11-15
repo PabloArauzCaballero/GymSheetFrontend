@@ -1,5 +1,6 @@
 'use client';
 
+import { profileProgress } from '@gymsheet/domain';
 import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -72,7 +73,7 @@ export function ProfileEditClient() {
         Perfil
       </Link>
       <PageHeader
-        description={completion ? `Perfil al ${completion.percent} % · ${completion.pointsEarned} de ${completion.pointsTotal} puntos ganados` : 'Lo que ven los demás y lo que ajusta tus entrenos.'}
+        description={completion ? profileProgress(completion).label : 'Lo que ven los demás y lo que ajusta tus entrenos.'}
         title="Editar perfil"
         tutorialId="page:profile"
       />
