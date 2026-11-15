@@ -2,7 +2,6 @@
 
 import {
   DEFAULT_MARKETPLACE_FILTERS,
-  MARKETPLACE_CATEGORIES,
   MARKETPLACE_SORTS,
   MARKETPLACE_TOP_RATING,
   filterEntities,
@@ -17,26 +16,15 @@ import {
   type MarketplaceSort,
 } from '@gymsheet/domain';
 import { ArrowDownUp, BadgeCheck, CircleX, CreditCard, Dumbbell, Search, ShieldCheck, ShoppingBag, Star, Tag, Ticket } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import type { DirectoryEntitySummary, EntityPlan } from '@/shared/api/schemas';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { DomainImage } from '@/shared/components/media/domain-image';
 import { cn } from '@/shared/lib/cn';
+import { MarketplaceCategoryRail } from './marketplace-category-rail';
 
 type Tab = 'OFFERS' | 'ENTITIES';
-
-const CATEGORY_IMAGE: Record<string, string> = {
-  all: 'todo',
-  gyms: 'gimnasios',
-  supplements: 'suplementos',
-  apparel: 'indumentaria',
-  equipment: 'equipamiento',
-  coaches: 'coaches',
-  centers: 'centros',
-  passes: 'pases',
-};
 
 function FilterChipButton({ active, children, onClick }: Readonly<{ active: boolean; children: React.ReactNode; onClick: () => void }>) {
   return (
@@ -155,34 +143,7 @@ export function MarketplaceClient({
         ) : null}
       </label>
 
-      <div aria-label="Categorías" className="nav-scroll -mx-1 flex gap-4 overflow-x-auto px-1 pb-1" role="group">
-        {MARKETPLACE_CATEGORIES.map((item) => {
-          const selected = filters.category === item.id;
-          return (
-            <button
-              aria-pressed={selected}
-              className="tap grid w-[5.5rem] shrink-0 justify-items-center gap-1.5"
-              key={item.id}
-              onClick={() => setFilters((current) => ({ ...current, category: item.id }))}
-              type="button"
-            >
-              <span
-                className={cn(
-                  'relative block size-[5.25rem] overflow-hidden rounded-[1.4rem] bg-[var(--surface-low)] transition-[box-shadow,transform] duration-[var(--dur-2)] motion-reduce:transition-none',
-                  selected
-                    ? '-translate-y-0.5 ring-2 ring-[var(--volt)] shadow-[0_8px_18px_color-mix(in_srgb,var(--volt)_35%,transparent)]'
-                    : 'ring-1 ring-[color-mix(in_srgb,var(--text)_10%,transparent)] shadow-[0_3px_8px_rgb(0_0_0/0.35)]',
-                )}
-              >
-                <Image alt="" className="object-cover" fill sizes="84px" unoptimized src={`/marketplace/categories/${CATEGORY_IMAGE[item.id]}.png`} />
-              </span>
-              <span className={cn('text-xs', selected ? 'font-bold text-[var(--text)]' : 'font-medium text-[var(--text-muted)]')}>
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <MarketplaceCategoryRail onChange={(category) => setFilters((current) => ({ ...current, category }))} value={filters.category} />
 
       <div aria-label="Filtros" className="nav-scroll -mx-1 flex items-center gap-2 overflow-x-auto px-1" role="group">
         <label
