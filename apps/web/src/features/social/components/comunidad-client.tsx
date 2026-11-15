@@ -2,23 +2,12 @@
 
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Ellipsis,
-  Heart,
-  LifeBuoy,
-  MapPin,
-  ShieldBan,
-  SlidersHorizontal,
-  Store,
-  Trophy,
-  Users,
-  X,
-  type LucideIcon,
-} from 'lucide-react';
+import { Ellipsis, SlidersHorizontal, X } from 'lucide-react';
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
 import { profileService } from '@/features/profile/services/profile-service';
 import { queryKeys } from '@/shared/api/query-keys';
+import { useBrand } from '@/shared/theme/brand-provider';
 import { Divider, ListCard, NavRow } from '@/shared/components/mobile/nav-row';
 import { cn } from '@/shared/lib/cn';
 import { DescubrirClient } from './descubrir-client';
@@ -67,17 +56,43 @@ function RoundButton({
   );
 }
 
+type CommunityIcon = 'personas' | 'preferencias' | 'top' | 'directorio' | 'mapa' | 'interacciones' | 'bloqueadas' | 'tour';
+
+/**
+ * 3D tile of the «⋯» sheet, the same artwork as mobile. The PNGs come from
+ * `apps/mobile/scripts/render-community-icons.mjs` at 1x/2x/3x, so the
+ * optimizer has nothing to add. Decorative: the row's title is the label.
+ */
+function CommunityTile({ name }: Readonly<{ name: CommunityIcon }>) {
+  const base = `/icons/community/${name}`;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- pre-rendered densities, nothing to optimize.
+    <img
+      alt=""
+      aria-hidden
+      className="-my-1 size-14 shrink-0"
+      decoding="async"
+      draggable={false}
+      height={56}
+      src={`${base}.png`}
+      srcSet={`${base}.png 1x, ${base}@2x.png 2x, ${base}@3x.png 3x`}
+      width={56}
+    />
+  );
+}
+
 /** Menú «⋯» de Comunidad (`community-overflow-sheet.tsx` del móvil), como hoja inferior. */
 function OverflowSheet({ onPreferences }: Readonly<{ onPreferences: () => void }>) {
   const [open, setOpen] = useState(false);
-  const rows: { href: string; icon: LucideIcon; title: string; subtitle: string }[] = [
-    { href: '/comunidad/personas', icon: Users, title: 'Personas del gimnasio', subtitle: 'El podio y el buscador de socios' },
-    { href: '/comunidad/personas#podio', icon: Trophy, title: 'Top 15 del Gym', subtitle: 'Los 15 atletas con más puntos, insignias y rachas' },
-    { href: '/directorio', icon: Store, title: 'Directorio REPP', subtitle: 'Gimnasios, tiendas de nutrición y coaches verificados' },
-    { href: '/comunidad/mapa', icon: MapPin, title: 'Mapa de socios', subtitle: 'Descubre quién está entrenando cerca de ti en el mapa' },
-    { href: '/interacciones', icon: Heart, title: 'Tus interacciones', subtitle: 'Likes recibidos, visitas a tu perfil y solicitudes' },
-    { href: '/comunidad/bloqueados', icon: ShieldBan, title: 'Personas bloqueadas', subtitle: 'Privacidad y control de usuarios bloqueados' },
-    { href: '/tutorials', icon: LifeBuoy, title: 'Tour de Comunidad', subtitle: 'Aprende cómo deslizar, hacer match y conectar' },
+  const brand = useBrand();
+  const rows: { href: string; icon: CommunityIcon; title: string; subtitle: string }[] = [
+    { href: '/comunidad/personas', icon: 'personas', title: 'Personas del gimnasio', subtitle: 'El podio y el buscador de socios' },
+    { href: '/comunidad/personas#podio', icon: 'top', title: 'Top 15 del Gym', subtitle: 'Los 15 atletas con más puntos, insignias y rachas' },
+    { href: '/directorio', icon: 'directorio', title: 'Directorio REPP', subtitle: 'Gimnasios, tiendas de nutrición y coaches verificados' },
+    { href: '/comunidad/mapa', icon: 'mapa', title: 'Mapa de socios', subtitle: 'Descubre quién está entrenando cerca de ti en el mapa' },
+    { href: '/interacciones', icon: 'interacciones', title: 'Tus interacciones', subtitle: 'Likes recibidos, visitas a tu perfil y solicitudes' },
+    { href: '/comunidad/bloqueados', icon: 'bloqueadas', title: 'Personas bloqueadas', subtitle: 'Privacidad y control de usuarios bloqueados' },
+    { href: '/tutorials', icon: 'tour', title: 'Tour de Comunidad', subtitle: 'Aprende cómo deslizar, hacer match y conectar' },
   ];
   return (
     <DialogPrimitive.Root onOpenChange={setOpen} open={open}>
@@ -92,7 +107,7 @@ function OverflowSheet({ onPreferences }: Readonly<{ onPreferences: () => void }
         <DialogPrimitive.Content className="sheet-panel fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85dvh] max-w-xl overflow-y-auto overscroll-contain rounded-t-[var(--radius-2xl)] bg-[var(--surface-high)] px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 shadow-[var(--shadow-dialog)] focus:outline-none">
           <span aria-hidden className="mx-auto mb-4 block h-1.5 w-10 rounded-full bg-[var(--border)]" />
           <div className="mb-3 flex items-center justify-between px-1">
-            <DialogPrimitive.Title className="title-text">Comunidad</DialogPrimitive.Title>
+            <DialogPrimitive.Title className="title-text">{`Comunidad ${brand.name}`}</DialogPrimitive.Title>
             <DialogPrimitive.Close
               aria-label="Cerrar"
               className="grid size-11 place-items-center rounded-full bg-[var(--surface-highest)]"
@@ -110,7 +125,7 @@ function OverflowSheet({ onPreferences }: Readonly<{ onPreferences: () => void }
               }}
               type="button"
             >
-              <SlidersHorizontal aria-hidden className="size-5 text-[var(--text-muted)]" />
+              <CommunityTile name="preferencias" />
               <span className="grid flex-1 gap-0.5">
                 <span className="t-headline">Preferencias de búsqueda</span>
                 <span className="t-subhead text-[var(--text-muted)]">Filtra por objetivos, sedes y género</span>
@@ -121,7 +136,7 @@ function OverflowSheet({ onPreferences }: Readonly<{ onPreferences: () => void }
                 <Divider />
                 <NavRow
                   href={row.href}
-                  leading={<row.icon aria-hidden className="size-5 shrink-0 text-[var(--text-muted)]" />}
+                  leading={<CommunityTile name={row.icon} />}
                   subtitle={row.subtitle}
                   title={row.title}
                 />

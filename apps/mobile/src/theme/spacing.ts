@@ -51,6 +51,12 @@ export const iconSizes = {
   lg: 24,
   xl: 32,
   '2xl': 40,
+  /**
+   * 3D icon tile of the Comunidad «⋯» sheet. Coupled to `ICON_SIZE` in
+   * `scripts/render-community-icons.mjs`: the PNGs are rendered at exactly
+   * this size (@1x/@2x/@3x). Change both together and re-run the script.
+   */
+  tile: 56,
 } as const;
 
 /** Tamaños de miniatura de ejercicio (C8.1). */
