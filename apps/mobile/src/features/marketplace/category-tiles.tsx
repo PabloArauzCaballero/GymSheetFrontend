@@ -183,11 +183,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 8,
     right: 8,
-    bottom: -8,
-    height: 12,
+    bottom: -4,
+    height: 4,
     borderRadius: 999,
-    backgroundColor: alpha(ink.black, 0.5),
-    filter: [{ blur: 6 }],
+    // boxShadow blur renders on iOS and Android alike (a `filter` blur is Android-only).
+    // The thin transparent box leaves only its soft shadow: an elliptical contact shadow.
+    boxShadow: `0 4px 10px 4px ${alpha(ink.black, 0.5)}`,
   },
   halo: {
     position: 'absolute',
