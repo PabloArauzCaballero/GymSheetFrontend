@@ -126,4 +126,28 @@ describe('POST /api/auth/register', () => {
     expect(response.status).toBe(400);
     expect(backendRequest).not.toHaveBeenCalled();
   });
+
+  it('forwards the ticket, honeypot and Turnstile token but never a device attestation', async () => {
+    backendRequest.mockResolvedValue(
+      Response.json({ status: 400, code: 'SIGNUP_REJECTED', detail: 'No pudimos crear tu cuenta.' }, { status: 400 }),
+    );
+
+    const response = await POST(
+      registerRequest({
+        ...signup,
+        ticket: 'ticket-1',
+        website: '',
+        turnstileToken: 'cf-token',
+        attestation: { platform: 'ios', token: 'forged', nonce: 'n' },
+      }),
+    );
+
+    const sent = JSON.parse(String(backendRequest.mock.calls[0]?.[1]?.body)) as Record<string, unknown>;
+    expect(sent).toMatchObject({ ticket: 'ticket-1', website: '', turnstileToken: 'cf-token' });
+    expect(sent).not.toHaveProperty('attestation');
+    // The rejection is relayed as is: generic message and its code, no session.
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: 'SIGNUP_REJECTED' });
+    expect(response.cookies.get('gymsheet_session')).toBeUndefined();
+  });
 });

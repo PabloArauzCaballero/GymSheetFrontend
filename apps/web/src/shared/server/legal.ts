@@ -7,12 +7,8 @@ import { pendingLegalDocumentsSchema, type LegalDocumentVersion } from '@/shared
 import { SESSION_COOKIE } from '@/shared/auth/constants';
 import { backendRequest, readBackendJson } from './backend';
 
-/**
- * Channel the backend stores with every legal acceptance as audit evidence
- * (`legal-client-context.ts`). The BFF is the web client, so it always says web.
- */
-export const CLIENT_PLATFORM_HEADER = 'X-Client-Platform';
-export const WEB_CLIENT_PLATFORM = 'web';
+// Kept here for the routes that already import them; `backendRequest` sends it on every call.
+export { CLIENT_PLATFORM_HEADER, WEB_CLIENT_PLATFORM } from './client-platform';
 
 const envelopeSchema = z.object({ ok: z.literal(true), data: pendingLegalDocumentsSchema });
 

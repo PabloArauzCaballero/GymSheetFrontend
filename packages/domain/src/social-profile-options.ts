@@ -50,6 +50,7 @@ export const petLabels: Record<PetOption, string> = {
 
 /** What each readiness gap asks the person to do, as a call to action. */
 export const readinessLabels: Record<DiscoveryReadinessCode, { title: string; action: string }> = {
+  EMAIL_VERIFICATION: { title: 'Verifica tu correo', action: 'Verificar correo' },
   PROFILE_ENABLED: { title: 'Activa tu perfil social', action: 'Activar perfil' },
   PREFERENCES: { title: 'Dinos a quién quieres conocer', action: 'Elegir preferencias' },
   PHOTOS: { title: 'Sube al menos 2 fotos', action: 'Subir fotos' },

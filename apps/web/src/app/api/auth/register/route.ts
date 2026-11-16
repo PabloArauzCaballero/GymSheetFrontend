@@ -1,27 +1,19 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
-import { registerPayloadSchema } from '@/shared/api/schemas';
+import { registerPayloadSchema, signupProtectionFieldsSchema } from '@/shared/api/schemas';
 import { isTrustedMutation } from '@/shared/server/csrf';
 import { backendRequest, readBackendJson } from '@/shared/server/backend';
 import { SESSION_COOKIE, sessionCookieOptions } from '@/shared/server/auth-cookie';
+import { tenantFromCookie } from '@/shared/server/bff-route';
 import { CLIENT_PLATFORM_HEADER, WEB_CLIENT_PLATFORM } from '@/shared/server/legal';
-import { TENANT_COOKIE } from '@/shared/theme/tenant-cookie';
 
 /**
- * Gimnasio al que se apunta la cuenta.
- *
- * Sale de la cookie de inquilino —que la puso la URL de acceso— y **no** del
- * cuerpo de la petición: quién entra por `dominio/topfitness` es un hecho del
- * servidor, y aceptarlo del navegador dejaría que cualquiera se diera de alta
- * en el gimnasio que quisiera escribiendo otro valor.
- *
- * Sin cookie no se envía nada y el backend aplica su `DEFAULT_TENANT_ID`, que
- * es lo correcto para una instalación de una sola marca.
+ * The signup plus its anti-automation evidence (form ticket, honeypot and the
+ * Turnstile token). Device attestation is a mobile-only proof: the web never sends it.
  */
-function tenantFromCookie(request: NextRequest): string | undefined {
-  const value = request.cookies.get(TENANT_COOKIE)?.value?.trim().toLowerCase();
-  return value && /^[a-z0-9][a-z0-9-]*$/.test(value) ? value : undefined;
-}
+const webRegisterPayloadSchema = registerPayloadSchema.extend(
+  signupProtectionFieldsSchema.omit({ attestation: true }).shape,
+);
 
 const authEnvelopeSchema = z.object({
   ok: z.literal(true),
@@ -32,6 +24,7 @@ const authEnvelopeSchema = z.object({
       email: z.string().email(),
       nombreCompleto: z.string(),
       rol: z.string(),
+      emailVerified: z.boolean().optional(),
     }),
   }),
 });
@@ -39,7 +32,7 @@ const authEnvelopeSchema = z.object({
 export async function POST(request: NextRequest) {
   if (!isTrustedMutation(request))
     return NextResponse.json({ detail: 'Origen no permitido.' }, { status: 403 });
-  const input = registerPayloadSchema.safeParse(await request.json().catch(() => null));
+  const input = webRegisterPayloadSchema.safeParse(await request.json().catch(() => null));
   // Same problem shape as the backend's 400, so the form can point at each field.
   if (!input.success)
     return NextResponse.json(

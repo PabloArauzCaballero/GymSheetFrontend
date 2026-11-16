@@ -10,6 +10,8 @@ import { socialService } from '@/features/social/services/social-service';
 import { publicFacilitiesClient } from '@/features/public-facilities/services/public-facilities-client';
 import type { SocialMapBounds } from '@/shared/api/schemas';
 import { mapMarkerColors } from '@/shared/theme/map-marker-colors';
+import { isEmailVerificationRequired } from '@/shared/api/email-verification';
+import { EmailVerificationRequired } from '@/shared/components/feedback/email-verification-required';
 
 type Layer = 'BOTH' | 'PEOPLE' | 'GYMS';
 const MAP_TILE_URL = process.env.NEXT_PUBLIC_MAP_TILE_URL ||
@@ -87,6 +89,11 @@ export function SocialMapClient({ viewerId }: Readonly<{ viewerId: string }>) {
         longitud >= searchedBounds.west && longitud <= searchedBounds.east;
     });
   }, [registeredGyms.data, searchedBounds]);
+
+  // The whole map API is closed until the email is verified: show that step, not three errors.
+  if ([areas, people, cities].some((query) => isEmailVerificationRequired(query.error))) {
+    return <main className="grid gap-5"><EmailVerificationRequired /></main>;
+  }
 
   return (
     <main className="grid gap-5">

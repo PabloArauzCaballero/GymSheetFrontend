@@ -28,7 +28,8 @@ import {
 import { legalQueryKeys, legalService } from '@/features/legal/legal-service';
 import { BirthDateField } from '@/features/signup/birth-date-field';
 import { SexField } from '@/features/signup/sex-field';
-import { signupServerErrors } from '@/features/signup/signup-logic';
+import { needsFreshTicket, signupServerErrors } from '@/features/signup/signup-logic';
+import { useRegisterTicket } from '@/features/signup/use-register-ticket';
 import { useAuthStore } from '@/state/auth-store';
 import { authLimits } from '@gymsheet/schemas';
 import { colors, fontSizes, iconSizes, spacing } from '@/theme';
@@ -37,6 +38,7 @@ export default function RegisterScreen() {
   const register = useAuthStore((state) => state.register);
   const queryClient = useQueryClient();
   const legal = useQuery({ queryKey: legalQueryKeys.current, queryFn: legalService.current, staleTime: 5 * 60_000 });
+  const ticket = useRegisterTicket();
   const [failure, setFailure] = useState<string | null>(null);
   const {
     control,
@@ -67,8 +69,9 @@ export default function RegisterScreen() {
       // móvil se desviaban en silencio.
       // No redirect here: the session flips to authenticated and the onboarding
       // guard in `(app)/_layout.tsx` sends the new CLIENTE to `/onboarding`.
-      await register(toRegisterPayload(values, termsVersion));
+      await register(toRegisterPayload(values, termsVersion), { ticket: await ticket.current() });
     } catch (error) {
+      if (needsFreshTicket(error)) ticket.renew();
       if (isTermsVersionOutdated(error)) {
         // The terms changed while the form was open: show the new ones, ask again.
         const fresh = outdatedCurrentDocuments(error.details);

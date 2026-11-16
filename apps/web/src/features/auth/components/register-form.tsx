@@ -2,12 +2,13 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import type { BaseSyntheticEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { AtSign, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
 import { authCopy, authDestination, authErrorMessage } from '@gymsheet/domain';
 import {
+  SIGNUP_REJECTED,
   registerDefaults,
   registerSchema,
   toRegisterPayload,
@@ -15,8 +16,9 @@ import {
 } from '@/shared/api/schemas';
 import { register as createAccount } from '@/features/auth/services/auth-client';
 import { currentLegalQueryKey, useCurrentLegal } from '@/features/auth/hooks/use-current-legal';
+import { useSignupProtection } from '@/features/auth/hooks/use-signup-protection';
 import { registerFieldErrors } from '@/features/auth/lib/register-errors';
-import { birthDateBounds, signupCopy } from '@/features/auth/lib/signup';
+import { signupCopy } from '@/features/auth/lib/signup';
 import {
   isTermsVersionOutdated,
   legalGateCopy,
@@ -25,17 +27,19 @@ import {
 } from '@/features/legal/lib/legal-documents';
 import { ApiError } from '@/shared/api/api-error';
 import { AuthAlert } from '@/features/auth/components/auth-alert';
+import { BirthDateField } from '@/features/auth/components/birth-date-field';
 import { SexField } from '@/features/auth/components/sex-field';
+import { SignupProtectionFields } from '@/features/auth/components/signup-protection-fields';
+import { TermsField } from '@/features/auth/components/terms-field';
 import { Button } from '@/shared/components/ui/button';
-import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Field } from '@/shared/components/ui/field';
-import { Input, InputWithIcon, PasswordInput } from '@/shared/components/ui/input';
+import { InputWithIcon, PasswordInput } from '@/shared/components/ui/input';
 
 export function RegisterForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const legal = useCurrentLegal();
-  const bounds = birthDateBounds();
+  const protection = useSignupProtection();
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: registerDefaults,
@@ -50,7 +54,7 @@ export function RegisterForm() {
     form.setError('root', { message: legalGateCopy.outdatedAtSignup });
   }
 
-  async function submit(values: RegisterInput) {
+  async function submit(values: RegisterInput, event?: BaseSyntheticEvent) {
     form.clearErrors('root');
     // The version the person is accepting; the server rejects a stale one (409).
     const termsVersion = termsVersionOf(legal.data ?? (await legal.refetch()).data);
@@ -61,13 +65,19 @@ export function RegisterForm() {
     try {
       // La traducción a lo que espera el servidor —quitar la confirmación—
       // la hace el paquete compartido, no esta pantalla.
-      await createAccount(toRegisterPayload(values, termsVersion));
+      const evidence = await protection.evidence(honeypotValue(event));
+      await createAccount({ ...toRegisterPayload(values, termsVersion), ...evidence });
       // Al onboarding directamente, igual que el móvil. Antes iba al panel y
       // un guardia la rebotaba, así que la cuenta recién creada veía medio
       // panel antes del cuestionario.
       router.replace(authDestination.web.afterRegister);
       router.refresh();
     } catch (error: unknown) {
+      // The ticket is single-use: any refused attempt asks for a new one.
+      void protection.renew();
+      // Never say why: the generic message is the whole answer.
+      if (error instanceof ApiError && error.code === SIGNUP_REJECTED)
+        return form.setError('root', { message: signupCopy.rejected });
       if (isTermsVersionOutdated(error)) return askToAcceptAgain(error);
       const fieldErrors = registerFieldErrors(error);
       fieldErrors.forEach(([field, message], index) =>
@@ -153,61 +163,23 @@ export function RegisterForm() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2 lg:gap-4">
-        <Field
+        <BirthDateField
           error={form.formState.errors.fechaNacimiento?.message}
-          hint={signupCopy.birthDate.hint}
-          htmlFor="fechaNacimiento"
-          label={signupCopy.birthDate.label}
-        >
-          {/* Native date input: the platform picker on iOS/Android, typed
-              digits with the keyboard on desktop, always `YYYY-MM-DD`. The
-              bounds change at midnight, hence no hydration warning. */}
-          <Input
-            autoComplete="bday"
-            className="appearance-none text-left [&::-webkit-date-and-time-value]:text-left"
-            id="fechaNacimiento"
-            max={bounds.max}
-            min={bounds.min}
-            suppressHydrationWarning
-            type="date"
-            {...form.register('fechaNacimiento')}
-          />
-        </Field>
+          registration={form.register('fechaNacimiento')}
+        />
 
         <SexField error={form.formState.errors.genero?.message} registration={form.register('genero')} />
       </div>
 
-      <div>
-        <Checkbox
-          label={
-            <span>
-              {authCopy.terms.prefix}{' '}
-              <Link
-                className="font-semibold text-[var(--text)] underline decoration-[var(--volt)] underline-offset-4"
-                href="/terminos"
-                target="_blank"
-              >
-                {authCopy.terms.termsLabel}
-              </Link>{' '}
-              {authCopy.terms.connector}{' '}
-              <Link
-                className="font-semibold text-[var(--text)] underline decoration-[var(--volt)] underline-offset-4"
-                href="/privacidad"
-                target="_blank"
-              >
-                {authCopy.terms.privacyLabel}
-              </Link>
-              .
-            </span>
-          }
-          {...form.register('acceptedTerms')}
-        />
-        {form.formState.errors.acceptedTerms?.message ? (
-          <p className="mt-1 text-xs text-[var(--danger-text)]" role="alert">
-            {form.formState.errors.acceptedTerms.message}
-          </p>
-        ) : null}
-      </div>
+      <TermsField
+        error={form.formState.errors.acceptedTerms?.message}
+        registration={form.register('acceptedTerms')}
+      />
+
+      <SignupProtectionFields
+        onTurnstileToken={protection.onTurnstileToken}
+        turnstileKey={protection.turnstileKey}
+      />
 
       {form.formState.errors.root?.message ? (
         <AuthAlert message={form.formState.errors.root.message} />
@@ -224,4 +196,12 @@ export function RegisterForm() {
       </Button>
     </form>
   );
+}
+
+/** The honeypot is uncontrolled and outside the form values: read it from the submitted form. */
+function honeypotValue(event?: BaseSyntheticEvent): string {
+  const target: unknown = event?.target;
+  if (!(target instanceof HTMLFormElement)) return '';
+  const value = new FormData(target).get('website');
+  return typeof value === 'string' ? value : '';
 }

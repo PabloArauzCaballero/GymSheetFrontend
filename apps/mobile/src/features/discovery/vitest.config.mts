@@ -19,7 +19,11 @@ export default defineConfig({
   },
   test: {
     ...webConfig.test,
-    include: ['src/features/discovery/__tests__/*.test.tsx', 'src/features/social-profile/__tests__/*.test.tsx'],
+    include: [
+      'src/features/discovery/__tests__/*.test.tsx',
+      'src/features/social-profile/__tests__/*.test.tsx',
+      'src/features/email-verification/__tests__/*.test.tsx',
+    ],
     setupFiles: [fileURLToPath(new URL('../../../../web/src/test/setup.ts', import.meta.url))],
   },
 });

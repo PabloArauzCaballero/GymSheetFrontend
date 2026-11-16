@@ -16,17 +16,18 @@ import { colors, fontSizes, spacing } from '@/theme';
 import {
   biometricKind,
   biometricLabel,
-  clearBiometricCredentials,
-  hasBiometricCredentials,
+  forgetParkedToken,
+  hasQuickLogin,
   markBiometricOffered,
-  readBiometricCredentials,
-  saveBiometricCredentials,
+  takeAutoPromptSkip,
+  turnOnQuickLogin,
   wasBiometricOffered,
   type BiometricKind,
 } from '@/storage/biometric-login';
 
 export default function LoginScreen() {
   const login = useAuthStore((state) => state.login);
+  const loginWithQuickLogin = useAuthStore((state) => state.loginWithQuickLogin);
   const router = useRouter();
   /**
    * El fallo del servidor se guarda aquí y se pinta junto al botón, no se manda
@@ -54,19 +55,21 @@ export default function LoginScreen() {
   const [bioKind, setBioKind] = useState<BiometricKind | null>(null);
   const [bioReady, setBioReady] = useState(false);
 
-  const offerBiometrics = useCallback(async (values: LoginInput, kind: BiometricKind) => {
+  // Turning it on stores nothing yet: the refresh token is parked behind the
+  // biometric prompt when the person logs out (see `storage/quick-login.ts`).
+  const offerBiometrics = useCallback(async (kind: BiometricKind) => {
     if (await wasBiometricOffered()) return;
     await markBiometricOffered();
     await new Promise<void>((resolve) => {
       Alert.alert(
         `¿Entrar con ${biometricLabel(kind)}?`,
-        'La próxima vez no tendrás que escribir tu contraseña.',
+        'Al volver después de cerrar sesión no tendrás que escribir tu contraseña.',
         [
           { text: 'Ahora no', style: 'cancel', onPress: () => resolve() },
           {
             text: 'Activar',
             onPress: () => {
-              saveBiometricCredentials(values).catch(() => undefined).finally(resolve);
+              void turnOnQuickLogin().finally(resolve);
             },
           },
         ],
@@ -77,25 +80,21 @@ export default function LoginScreen() {
 
   const loginWithBiometrics = useCallback(async () => {
     setFailure(null);
-    const credentials = await readBiometricCredentials();
-    if (!credentials) return;
     try {
-      await login(credentials);
-    } catch (error) {
-      if (error instanceof ApiError && error.kind === 'unauthorized') {
-        // La contraseña cambió: la guardada ya no sirve.
-        await clearBiometricCredentials();
-        setBioReady(false);
-        setFailure('Tu contraseña cambió. Escríbela de nuevo para volver a activar el acceso rápido.');
-        return;
+      const outcome = await loginWithQuickLogin();
+      if (outcome.kind === 'none' || outcome.kind === 'rejected') setBioReady(false);
+      if (outcome.kind === 'rejected') {
+        // Revoked from another device, expired, or already spent.
+        setFailure('Tu acceso rápido caducó. Entra con tu contraseña.');
       }
+    } catch (error) {
       setFailure(
         error instanceof ApiError
           ? authErrorMessage(error.kind, 'login', error.message)
           : authErrorMessage(undefined, 'login'),
       );
     }
-  }, [login]);
+  }, [loginWithQuickLogin]);
 
   useEffect(() => {
     let cancelled = false;
@@ -103,10 +102,12 @@ export default function LoginScreen() {
       const kind = await biometricKind();
       if (cancelled || !kind) return;
       setBioKind(kind);
-      if (await hasBiometricCredentials()) {
+      if (await hasQuickLogin()) {
         setBioReady(true);
         // Al abrir la pantalla se lanza solo, como en cualquier app bancaria.
-        if (!cancelled) await loginWithBiometrics();
+        // Not right after a logout that parked the token: the person just
+        // left (and on Android just confirmed with the fingerprint).
+        if (!cancelled && !takeAutoPromptSkip()) await loginWithBiometrics();
       }
     })().catch(() => undefined);
     return () => {
@@ -118,8 +119,9 @@ export default function LoginScreen() {
     setFailure(null);
     try {
       await login(values);
-      if (bioKind && !bioReady) void offerBiometrics(values, bioKind);
-      else if (bioKind && bioReady) void saveBiometricCredentials(values).catch(() => undefined);
+      // A token parked before is now orphaned: the next logout parks a fresh one.
+      void forgetParkedToken();
+      if (bioKind) void offerBiometrics(bioKind);
     } catch (error) {
       // El mapeo vive en `@gymsheet/domain`, así que la web dice exactamente lo
       // mismo ante el mismo fallo. Un 401 aquí es contraseña incorrecta, no

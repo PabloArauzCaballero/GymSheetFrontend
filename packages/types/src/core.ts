@@ -40,6 +40,8 @@ export type SessionPrincipal = {
   tenantId?: string | null;
   /** Permisos granulares de administración otorgados a esta cuenta (solo staff). */
   permissions?: string[];
+  /** Whether the account proved its mailbox. Absent from older backends. */
+  emailVerified?: boolean;
 };
 
 export type Profile = {

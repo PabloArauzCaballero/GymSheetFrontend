@@ -24,3 +24,4 @@ export * from './marketplace-categories';
 export * from './discovery-preferences';
 export * from './social-profile-options';
 export * from './legal';
+export * from './account-security';

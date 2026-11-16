@@ -35,7 +35,20 @@ export type SignupFields = {
   fechaNacimiento?: string;
 };
 
-/** The complete `POST /auth/register` body the backend accepts today. */
+/**
+ * A fresh single-use form ticket (`GET /auth/register/ticket`). The e2e backend
+ * disables ticket enforcement (and its 3 s minimum fill time), but every signup
+ * still carries one, exactly like the web form does.
+ */
+export async function registerTicket(): Promise<string> {
+  const response = await fetch(`${BACKEND}/auth/register/ticket`);
+  if (!response.ok) throw new Error(`GET /auth/register/ticket answered ${response.status}.`);
+  const json = (await response.json()) as { data?: { ticket?: string } };
+  if (!json.data?.ticket) throw new Error('GET /auth/register/ticket did not include a ticket.');
+  return json.data.ticket;
+}
+
+/** The complete `POST /auth/register` body the backend accepts today (ticket included). */
 export async function signupBody(fields: SignupFields) {
   return {
     email: fields.email,
@@ -45,10 +58,15 @@ export async function signupBody(fields: SignupFields) {
     genero: fields.genero ?? 'FEMALE',
     termsVersion: await currentTermsVersion(),
     acceptedTerms: true as const,
+    ticket: await registerTicket(),
   };
 }
 
-/** Fills every field of the web signup form (`/register` must already be open); does not submit. */
+/**
+ * Fills every field of the web signup form (`/register` must already be open);
+ * does not submit. The form fetches its own ticket on mount and waits for it on
+ * submit, and the honeypot stays empty because nothing here touches it.
+ */
 export async function fillSignupForm(
   page: Page,
   fields: Omit<SignupFields, 'genero'> & { confirmation?: string; sexo?: 'Mujer' | 'Hombre' },

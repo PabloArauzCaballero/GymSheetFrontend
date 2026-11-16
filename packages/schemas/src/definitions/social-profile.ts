@@ -97,7 +97,7 @@ export const socialAboutSchema = z.object({
 export type SocialAbout = z.infer<typeof socialAboutSchema>;
 
 /** Known readiness codes, in the order the backend checks them. */
-export const discoveryReadinessCodes = ['PROFILE_ENABLED', 'PREFERENCES', 'PHOTOS'] as const;
+export const discoveryReadinessCodes = ['EMAIL_VERIFICATION', 'PROFILE_ENABLED', 'PREFERENCES', 'PHOTOS'] as const;
 export type DiscoveryReadinessCode = (typeof discoveryReadinessCodes)[number];
 
 /** Unknown codes (added by a newer backend) are kept as strings and ignored by the UI. */

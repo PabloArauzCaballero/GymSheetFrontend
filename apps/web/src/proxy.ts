@@ -2,11 +2,17 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { SESSION_COOKIE } from '@/shared/auth/constants';
 import { tenantCatalog } from '@gymsheet/design-tokens';
 import { TENANT_COOKIE, TENANT_COOKIE_MAX_AGE } from '@/shared/theme/tenant-cookie';
+import { randomUuid } from '@/shared/lib/uuid';
+import {
+  INSTALLATION_COOKIE,
+  installationCookieOptions,
+  isInstallationId,
+} from '@/shared/server/installation-cookie';
 
 // Recuperar la contraseña es, por definición, algo que se hace sin sesión: sin
 // esta ruta aquí, quien la ha olvidado acaba redirigido al formulario que
 // justamente no puede completar.
-const publicRoutes = ['/login', '/register', '/recover-password'];
+const publicRoutes = ['/login', '/register', '/recover-password', '/completar-cuenta'];
 
 // Directorio de gimnasios (punto 14): a diferencia de lo anterior, esto no es
 // parte del flujo de autenticación — alguien con sesión también puede querer
@@ -31,6 +37,8 @@ export const knownRoutes = new Set([
   'login',
   'register',
   'recover-password',
+  // Google sign-in profile completion (before the account exists).
+  'completar-cuenta',
   'terminos',
   'privacidad',
   'gimnasios',
@@ -65,6 +73,8 @@ export const knownRoutes = new Set([
   'sistema',
   'trayectoria',
   'tutorials',
+  // Email PIN verification (inside the portal, needs a session).
+  'verificar-correo',
   'workouts',
 ]);
 
@@ -87,7 +97,7 @@ function tenantFromPath(pathname: string): string | null {
   return first && Object.hasOwn(tenantCatalog, first) ? first : null;
 }
 
-export function proxy(request: NextRequest) {
+function route(request: NextRequest) {
   const tenantPrefix = tenantFromPath(request.nextUrl.pathname);
   if (tenantPrefix) {
     // Se retira el prefijo y se recuerda la marca en cookie: la aplicación
@@ -123,7 +133,7 @@ export function proxy(request: NextRequest) {
   // administración añaden `requireRole`. El proxy es defensa en profundidad,
   // no la única puerta; y `proxy.test.ts` falla si la lista se queda vieja.
   if (!isKnownRoute(pathname)) {
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers: new Headers(request.headers) } });
   }
 
   if (!hasSessionCookie && !isPublicAuthRoute && !isLandingRoute && !isPublicContentRoute) {
@@ -134,7 +144,20 @@ export function proxy(request: NextRequest) {
   if (hasSessionCookie && (isPublicAuthRoute || isLandingRoute)) {
     return NextResponse.redirect(new URL('/comunidad', request.url));
   }
-  return NextResponse.next();
+  return NextResponse.next({ request: { headers: new Headers(request.headers) } });
+}
+
+/**
+ * Mints the installation cookie on the first page load. It is also written into
+ * the forwarded request, so the Server Components of this same render already
+ * send `X-Installation-Id` (they cannot set cookies themselves).
+ */
+export function proxy(request: NextRequest) {
+  const fresh = isInstallationId(request.cookies.get(INSTALLATION_COOKIE)?.value) ? null : randomUuid();
+  if (fresh) request.cookies.set(INSTALLATION_COOKIE, fresh);
+  const response = route(request);
+  if (fresh) response.cookies.set(INSTALLATION_COOKIE, fresh, installationCookieOptions());
+  return response;
 }
 
 export const config = {

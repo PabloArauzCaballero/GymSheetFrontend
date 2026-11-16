@@ -171,6 +171,7 @@ export function DescubrirClient({
     <div className="mx-auto grid w-full max-w-2xl gap-6">
       <DeckSurface
         deckError={deck.isError ? deck.error.message : null}
+        deckErrorCause={deck.error}
         needsPreferences={deck.isError && needsDiscoveryPreferences(deck.error)}
         empty={visibleQueue.length === 0}
         emptyAction={

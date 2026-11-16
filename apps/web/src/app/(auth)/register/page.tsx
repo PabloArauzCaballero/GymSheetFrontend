@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { authCopy } from '@gymsheet/domain';
 import { AuthFrame } from '@/features/auth/components/auth-frame';
+import { GoogleSignIn } from '@/features/auth/components/google-sign-in';
 import { RegisterForm } from '@/features/auth/components/register-form';
 
 export const metadata: Metadata = { title: 'Crear cuenta' };
@@ -25,7 +26,10 @@ export default function RegisterPage() {
       }
       title={authCopy.register.title}
     >
-      <RegisterForm />
+      <div className="grid gap-6">
+        <RegisterForm />
+        <GoogleSignIn />
+      </div>
     </AuthFrame>
   );
 }

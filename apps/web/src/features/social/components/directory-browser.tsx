@@ -92,7 +92,7 @@ export function DirectoryBrowser({
           <SkeletonList rows={4} variant="stacked" />
         )
       ) : directory.isError ? (
-        <ErrorPanel message={directory.error.message} onRetry={() => directory.refetch()} />
+        <ErrorPanel error={directory.error} message={directory.error.message} onRetry={() => directory.refetch()} />
       ) : directory.data?.length ? (
         viewMode === 'cards' ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

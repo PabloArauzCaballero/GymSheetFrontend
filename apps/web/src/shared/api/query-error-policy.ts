@@ -6,10 +6,12 @@ import { ApiError, isLegalAcceptanceRequired } from '@/shared/api/api-error';
  * sesión caducada). Avisar además con un toast de error alarma sin motivo.
  */
 // `DISCOVERY_PREFERENCES_REQUIRED`: Comunidad enseña ahí el formulario de preferencias.
+// `EMAIL_VERIFICATION_REQUIRED`: social screens show the «Verifica tu correo» step instead.
 const HANDLED_BY_THE_SCREEN = new Set([
   'SHARE_PENDING',
   'CONTENT_HIDDEN',
   'DISCOVERY_PREFERENCES_REQUIRED',
+  'EMAIL_VERIFICATION_REQUIRED',
 ]);
 
 export function shouldToastQueryError(error: unknown): boolean {

@@ -10,6 +10,7 @@ import { loginDefaults, loginSchema, type LoginInput } from '@/shared/api/schema
 import { login } from '@/features/auth/services/auth-client';
 import { ApiError } from '@/shared/api/api-error';
 import { AuthAlert } from '@/features/auth/components/auth-alert';
+import { GoogleSignIn } from '@/features/auth/components/google-sign-in';
 import { Button } from '@/shared/components/ui/button';
 import { Field } from '@/shared/components/ui/field';
 import { InputWithIcon, PasswordInput } from '@/shared/components/ui/input';
@@ -48,6 +49,7 @@ export function LoginForm() {
   }
 
   return (
+    <div className="grid gap-6">
     <form className="grid gap-5" method="post" onSubmit={form.handleSubmit(submit)} noValidate>
       <Field
         error={form.formState.errors.email?.message}
@@ -105,5 +107,7 @@ export function LoginForm() {
         </Link>
       </p>
     </form>
+    <GoogleSignIn returnTo={safeReturnTo(searchParams.get('returnTo'))} />
+    </div>
   );
 }

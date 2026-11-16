@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { registerSchema, toRegisterPayload, registerDefaults } from '@gymsheet/schemas';
 import { ApiError } from '@gymsheet/api-client';
-import { birthDateFromParts, signupServerErrors } from './signup-logic.ts';
+import { birthDateFromParts, needsFreshTicket, signupRejectedMessage, signupServerErrors } from './signup-logic.ts';
 
 function partsYearsAgo(years: number, extraDays = 0) {
   const date = new Date();
@@ -86,4 +86,22 @@ test('a failure no form field explains becomes the banner', () => {
   const taken = new ApiError({ message: 'x', status: 409, kind: 'conflict' });
   assert.equal(signupServerErrors(taken).banner, 'Ya existe una cuenta con ese correo.');
   assert.ok(signupServerErrors(new Error('boom')).banner);
+});
+
+test('a signup rejected by the protection shows only the generic banner', () => {
+  const rejected = new ApiError({
+    message: 'detalle interno',
+    status: 400,
+    kind: 'validation',
+    code: 'SIGNUP_REJECTED',
+    fieldErrors: { email: 'no debería verse' },
+  });
+  assert.deepEqual(signupServerErrors(rejected), { fields: [], banner: signupRejectedMessage });
+});
+
+test('a rejection or a taken email spends the ticket; a field error does not', () => {
+  assert.ok(needsFreshTicket(new ApiError({ message: 'x', status: 400, kind: 'validation', code: 'SIGNUP_REJECTED' })));
+  assert.ok(needsFreshTicket(new ApiError({ message: 'x', status: 409, kind: 'conflict' })));
+  assert.ok(!needsFreshTicket(new ApiError({ message: 'x', status: 400, kind: 'validation', fieldErrors: { email: 'x' } })));
+  assert.ok(!needsFreshTicket(new Error('boom')));
 });

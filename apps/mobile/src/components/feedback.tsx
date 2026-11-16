@@ -16,6 +16,8 @@ import { Button } from '@/components/ui';
 import { resolveError } from '@/notifications';
 import { Shimmer } from '@/components/shimmer';
 import { Text } from '@/components/text';
+import { isEmailVerificationRequired } from '@/features/email-verification/email-verification-logic';
+import { VerifyEmailState } from '@/features/email-verification/verify-email-state';
 import { cardPadding, colors, iconSizes, radii, shadows, spacing } from '@/theme';
 
 /**
@@ -304,6 +306,8 @@ export function EmptyState({
  * screen never invents its own wording for the same backend error.
  */
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  // Not a failure the person can retry: the mailbox has to be verified first.
+  if (isEmailVerificationRequired(error)) return <VerifyEmailState />;
   const resolved = resolveError(error);
   return (
     <CenteredState icon="cloud-offline-outline" message={resolved.message} title={resolved.title}>

@@ -5,6 +5,8 @@ const root = process.cwd();
 const sourceRoot = path.join(root, 'src');
 const allowedFetchFiles = new Set([
   'src/features/auth/services/auth-client.ts',
+  // Email verification and devices: their BFF routes turn 202/204 into JSON.
+  'src/features/account-security/services/account-client.ts',
   'src/shared/api/api-client.ts',
   'src/shared/server/backend.ts',
   'src/shared/server/media-proxy.ts',

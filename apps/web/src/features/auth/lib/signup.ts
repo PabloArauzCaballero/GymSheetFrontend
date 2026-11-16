@@ -1,10 +1,12 @@
-import { authCopy } from '@gymsheet/domain';
+import { authCopy, signupRejectedMessage } from '@gymsheet/domain';
 import { SIGNUP_MAX_AGE, SIGNUP_MIN_AGE } from '@/shared/api/schemas';
 
 /** Signup field copy, from the shared `authCopy` so web and mobile say the same. */
 export const signupCopy = {
   birthDate: authCopy.fields.birthDate,
   sex: { label: authCopy.fields.gender.label },
+  /** `SIGNUP_REJECTED`: deliberately generic, never the reason. */
+  rejected: signupRejectedMessage,
 } as const;
 
 function isoDay(date: Date): string {

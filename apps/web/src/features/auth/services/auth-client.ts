@@ -2,8 +2,12 @@ import { z } from 'zod';
 import {
   currentLegalDocumentsSchema,
   pendingLegalDocumentsSchema,
+  registerTicketSchema,
+  type IdentityCompletionPayload,
   type LegalDocumentVersion,
   type RegisterPayload,
+  type RegisterTicket,
+  type SignupProtectionFields,
 } from '@/shared/api/schemas';
 // Auth and legal calls use their own BFF routes (they set or need no session cookie)
 // but fail like every other call: one shared parser keeps codes, details and the
@@ -33,7 +37,7 @@ export async function login(input: { email: string; password: string }) {
 }
 
 /** The gym comes from the tenant cookie, server-side; never from this payload. */
-export async function register(input: RegisterPayload) {
+export async function register(input: RegisterPayload & Omit<SignupProtectionFields, 'attestation'>) {
   const response = await fetch('/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -105,4 +109,49 @@ export async function acceptLegal(
   });
   if (!response.ok) throw await apiErrorFromResponse(response);
   return pendingLegalEnvelope.parse(await response.json()).data.pending;
+}
+
+/** Single-use signup ticket (`GET /auth/register/ticket`); fetch it when the form opens. */
+export async function fetchRegisterTicket(): Promise<RegisterTicket> {
+  const response = await fetch('/api/auth/register/ticket', { cache: 'no-store' });
+  if (!response.ok) throw await apiErrorFromResponse(response);
+  return z.object({ ok: z.literal(true), data: registerTicketSchema }).parse(await response.json()).data;
+}
+
+/** A new nonce for one Google attempt; the BFF keeps its copy in an HttpOnly cookie. */
+export async function requestGoogleNonce(): Promise<string> {
+  const response = await fetch('/api/auth/google/nonce', { method: 'POST' });
+  if (!response.ok) throw await apiErrorFromResponse(response);
+  return z.object({ ok: z.literal(true), data: z.object({ nonce: z.string() }) }).parse(await response.json()).data.nonce;
+}
+
+const identityResultSchema = z.object({
+  ok: z.literal(true),
+  data: z.discriminatedUnion('status', [
+    z.object({ status: z.literal('AUTHENTICATED') }),
+    z.object({ status: z.literal('PROFILE_COMPLETION_REQUIRED'), email: z.string() }),
+  ]),
+});
+export type IdentitySignInOutcome = z.infer<typeof identityResultSchema>['data'];
+
+/** Signs in with a Google ID token; the signup token of a new person stays server-side. */
+export async function signInWithGoogle(input: { idToken: string; nonce: string }): Promise<IdentitySignInOutcome> {
+  const response = await fetch('/api/auth/google', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) throw await apiErrorFromResponse(response);
+  return identityResultSchema.parse(await response.json()).data;
+}
+
+/** Creates the account of the pending Google identity with the completed profile. */
+export async function completeGoogleSignup(input: Omit<IdentityCompletionPayload, 'signupToken'>) {
+  const response = await fetch('/api/auth/google/complete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) throw await apiErrorFromResponse(response);
+  return identityResultSchema.parse(await response.json()).data;
 }

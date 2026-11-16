@@ -50,6 +50,8 @@ export const sessionPrincipalSchema = z.object({
    * de referencia en vez de quedarse sin interfaz.
    */
   tenantId: z.string().nullable().optional(),
+  /** Whether the account proved its mailbox (franja 3). Absent from older backends. */
+  emailVerified: z.boolean().optional(),
 });
 
 export const profileSchema = z.object({

@@ -3,6 +3,9 @@ import { isIP } from 'node:net';
 import { headers as incomingHeaders } from 'next/headers';
 import { unstable_rethrow } from 'next/navigation';
 import { serverEnv } from '@/shared/config/env';
+import packageJson from '../../../package.json';
+import { CLIENT_PLATFORM_HEADER, WEB_CLIENT_PLATFORM } from './client-platform';
+import { resolveInstallationId } from './installation-id';
 
 export function backendUrl(path: string) {
   const normalized = path.startsWith('/') ? path : `/${path}`;
@@ -76,6 +79,20 @@ export function clientForwardingHeaders(
   return forwarded;
 }
 
+/**
+ * Device headers of the web client: installation id (HttpOnly cookie owned by
+ * the BFF), platform and app version. OS and model stay unset on purpose: the
+ * backend already gets the User-Agent and would only be guessing from it.
+ */
+export async function deviceHeaders(): Promise<Record<string, string>> {
+  const installationId = await resolveInstallationId();
+  return {
+    [CLIENT_PLATFORM_HEADER]: WEB_CLIENT_PLATFORM,
+    'X-App-Version': packageJson.version,
+    ...(installationId ? { 'X-Installation-Id': installationId } : {}),
+  };
+}
+
 /** Incoming request headers, or none when called outside a request scope. */
 async function currentRequestHeaders(): Promise<Headers | null> {
   try {
@@ -97,6 +114,9 @@ export async function backendRequest(path: string, input: BackendRequestOptions 
     for (const [name, value] of Object.entries(clientForwardingHeaders(incoming))) {
       if (!headers.has(name)) headers.set(name, value);
     }
+  }
+  for (const [name, value] of Object.entries(await deviceHeaders())) {
+    if (!headers.has(name)) headers.set(name, value);
   }
   const timeoutSignal = AbortSignal.timeout(timeoutMs ?? serverEnv.BACKEND_REQUEST_TIMEOUT_MS);
   const signal = externalSignal ? AbortSignal.any([externalSignal, timeoutSignal]) : timeoutSignal;

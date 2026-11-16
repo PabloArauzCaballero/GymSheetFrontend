@@ -4,12 +4,14 @@ import { cookies } from 'next/headers';
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import type { SessionPrincipal, UserRole } from '@/shared/api/contracts';
+import type { UserRole } from '@/shared/api/contracts';
+import type { PortalSession } from '@/shared/auth/portal-session';
 import { sessionPrincipalSchema, userSchema } from '@/shared/api/schemas';
 import { SESSION_COOKIE } from '@/shared/auth/constants';
 import { backendRequest, isBackendUnreachable, readBackendJson } from './backend';
 
 const envelopeSchema = z.object({ ok: z.literal(true), data: z.unknown() });
+const principalSchema = sessionPrincipalSchema;
 const permissionsMeSchema = z.object({ permissionKeys: z.array(z.string()) });
 
 async function readData<T>(response: Response, schema: z.ZodType<T>) {
@@ -49,7 +51,7 @@ export class BackendUnavailableError extends Error {
  * deseable: si el backend no contestó, no tiene sentido insistir tres veces
  * dentro del mismo render.
  */
-export const getSession = cache(async function getSession(): Promise<SessionPrincipal | null> {
+export const getSession = cache(async function getSession(): Promise<PortalSession | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
@@ -61,7 +63,7 @@ export const getSession = cache(async function getSession(): Promise<SessionPrin
   // sesión sea inválida. `readData` devuelve `null` tanto para un 401 como para
   // un timeout, y ahí es donde se perdía la distinción.
   if (isBackendUnreachable(principalResponse)) throw new BackendUnavailableError();
-  const principal = await readData(principalResponse, sessionPrincipalSchema);
+  const principal = await readData(principalResponse, principalSchema);
   const user = await readData(userResponse, userSchema);
   if (!principal) return null;
 

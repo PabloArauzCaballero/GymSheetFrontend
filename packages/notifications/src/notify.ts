@@ -1,4 +1,4 @@
-import { isLegalAcceptanceRequired } from '@gymsheet/api-client';
+import { isEmailVerificationRequired, isLegalAcceptanceRequired } from '@gymsheet/api-client';
 import { Deduplicator } from './dedupe';
 import { resolveError } from './messages';
 import { defaultPolicy, type NotificationPolicy } from './policy';
@@ -77,7 +77,8 @@ export class NotificationEngine {
    * already explains it, whichever query or mutation hit it first.
    */
   error(errorOrInput: unknown, options?: Omit<NotificationRequest, 'severity' | 'message'>) {
-    if (isLegalAcceptanceRequired(errorOrInput)) return undefined;
+    // Both blocks have their own screen state (legal gate, "Verifica tu correo").
+    if (isLegalAcceptanceRequired(errorOrInput) || isEmailVerificationRequired(errorOrInput)) return undefined;
     if (typeof errorOrInput === 'string') {
       return this.emit('error', { message: errorOrInput, ...options });
     }

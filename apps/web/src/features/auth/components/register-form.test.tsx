@@ -4,9 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/shared/api/api-error';
 import { RegisterForm } from './register-form';
 
-const { register, fetchCurrentLegal, replace } = vi.hoisted(() => ({
+const { register, fetchCurrentLegal, fetchRegisterTicket, replace } = vi.hoisted(() => ({
   register: vi.fn(),
   fetchCurrentLegal: vi.fn(),
+  fetchRegisterTicket: vi.fn(),
   replace: vi.fn(),
 }));
 
@@ -14,6 +15,7 @@ vi.mock('@/features/auth/services/auth-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/features/auth/services/auth-client')>()),
   register,
   fetchCurrentLegal,
+  fetchRegisterTicket,
 }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace, refresh: vi.fn(), push: vi.fn(), prefetch: vi.fn() }),
@@ -59,6 +61,10 @@ describe('RegisterForm', () => {
     replace.mockReset();
     fetchCurrentLegal.mockReset();
     fetchCurrentLegal.mockResolvedValue(current);
+    fetchRegisterTicket.mockReset();
+    fetchRegisterTicket
+      .mockResolvedValueOnce({ ticket: 'ticket-1', issuedAt: '2026-11-16T10:00:00.000Z' })
+      .mockResolvedValue({ ticket: 'ticket-2', issuedAt: '2026-11-16T10:01:00.000Z' });
   });
 
   it('asks for the sex and the birth date before sending anything', async () => {
@@ -80,9 +86,10 @@ describe('RegisterForm', () => {
     expect(register).not.toHaveBeenCalled();
   });
 
-  it('sends birth date, sex and the current terms version, then goes to onboarding', async () => {
+  it('sends birth date, sex, the current terms version and the form ticket, then goes to onboarding', async () => {
     register.mockResolvedValue({});
     renderForm();
+    await waitFor(() => expect(fetchRegisterTicket).toHaveBeenCalledTimes(1));
     fillValid({ birthDate: yearsAgo(18) });
     submit();
     await waitFor(() => expect(register).toHaveBeenCalledTimes(1));
@@ -94,6 +101,7 @@ describe('RegisterForm', () => {
       genero: 'FEMALE',
       termsVersion: '2026-08-25',
       acceptedTerms: true,
+      ticket: 'ticket-1',
     });
     await waitFor(() => expect(replace).toHaveBeenCalledWith('/onboarding'));
   });
@@ -138,5 +146,61 @@ describe('RegisterForm', () => {
     expect(screen.getByLabelText('Fecha de nacimiento')).toHaveAttribute('aria-invalid', 'true');
     expect(screen.getByText('Debes tener al menos 18 años.')).toBeInTheDocument();
     expect(screen.queryByText('Datos inválidos.')).toBeNull();
+  });
+
+  it('renders the honeypot outside the accessibility tree and the tab order', () => {
+    renderForm();
+    const honeypot = document.querySelector<HTMLInputElement>('input[name="website"]');
+    expect(honeypot).not.toBeNull();
+    expect(honeypot).toHaveAttribute('tabindex', '-1');
+    expect(honeypot).toHaveAttribute('autocomplete', 'off');
+    expect(honeypot?.closest('[aria-hidden="true"]')).not.toBeNull();
+    expect(screen.queryByRole('textbox', { name: 'Sitio web' })).toBeNull();
+  });
+
+  it('forwards a filled honeypot so the server can refuse the bot', async () => {
+    register.mockResolvedValue({});
+    renderForm();
+    await waitFor(() => expect(fetchRegisterTicket).toHaveBeenCalled());
+    fillValid();
+    fireEvent.change(document.querySelector('input[name="website"]')!, { target: { value: 'https://spam.example' } });
+    submit();
+    await waitFor(() => expect(register).toHaveBeenCalledTimes(1));
+    expect(register.mock.calls[0]?.[0]).toMatchObject({ website: 'https://spam.example' });
+  });
+
+  it('on SIGNUP_REJECTED shows only the generic message and sends a fresh ticket next time', async () => {
+    register.mockRejectedValueOnce(
+      new ApiError({
+        message: 'Motivo interno que no se muestra.',
+        status: 400,
+        kind: 'validation',
+        code: 'SIGNUP_REJECTED',
+      }),
+    );
+    register.mockResolvedValueOnce({});
+    renderForm();
+    await waitFor(() => expect(fetchRegisterTicket).toHaveBeenCalledTimes(1));
+    fillValid();
+    submit();
+
+    expect(await screen.findByText('No pudimos crear tu cuenta. Inténtalo de nuevo.')).toBeInTheDocument();
+    expect(screen.queryByText('Motivo interno que no se muestra.')).toBeNull();
+    await waitFor(() => expect(fetchRegisterTicket).toHaveBeenCalledTimes(2));
+
+    submit();
+    await waitFor(() => expect(register).toHaveBeenCalledTimes(2));
+    expect(register.mock.calls[0]?.[0]).toMatchObject({ ticket: 'ticket-1' });
+    expect(register.mock.calls[1]?.[0]).toMatchObject({ ticket: 'ticket-2' });
+  });
+
+  it('asks for a new ticket after a 409 too (tickets are single-use)', async () => {
+    register.mockRejectedValueOnce(new ApiError({ message: 'Existe.', status: 409, kind: 'conflict' }));
+    renderForm();
+    await waitFor(() => expect(fetchRegisterTicket).toHaveBeenCalledTimes(1));
+    fillValid();
+    submit();
+    expect(await screen.findByText('Ya existe una cuenta con ese correo.')).toBeInTheDocument();
+    await waitFor(() => expect(fetchRegisterTicket).toHaveBeenCalledTimes(2));
   });
 });

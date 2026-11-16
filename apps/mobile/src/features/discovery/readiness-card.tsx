@@ -8,17 +8,22 @@ import { socialService } from '@/api/services';
 import { Card } from '@/components/layout';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
+import { verifyEmailHref } from '@/features/email-verification/verify-email-state';
 import { refreshDiscoveryReadiness } from '@/features/social-profile/query-keys';
 import { notify } from '@/notifications';
 import { accentPolicy, colors, iconSizes, spacing } from '@/theme';
 
 const GAP_ICON: Record<DiscoveryReadinessCode, keyof typeof Ionicons.glyphMap> = {
+  EMAIL_VERIFICATION: 'mail-unread-outline',
   PROFILE_ENABLED: 'eye-outline',
   PREFERENCES: 'options-outline',
   PHOTOS: 'images-outline',
 };
 
-/** The action behind each gap. Turning the profile on is one tap; the rest open the "Conocer" step. */
+/**
+ * The action behind each gap. Turning the profile on is one tap; the email
+ * opens the PIN screen; the rest open the "Conocer" step.
+ */
 function useGapAction(needsSettings: boolean) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -49,6 +54,7 @@ function useGapAction(needsSettings: boolean) {
   });
   const run = (gap: DiscoveryReadinessCode) => {
     if (gap === 'PROFILE_ENABLED') enable.mutate();
+    else if (gap === 'EMAIL_VERIFICATION') router.push(verifyEmailHref);
     else router.push({ pathname: '/onboarding-conocer', params: { modo: 'perfil', paso: gap === 'PHOTOS' ? 'photos' : 'search' } });
   };
   return { run, enabling: enable.isPending };

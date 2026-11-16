@@ -47,6 +47,11 @@ export function isLegalAcceptanceRequired(error: unknown): error is ApiError {
   );
 }
 
+/** A social action blocked until the person verifies the email (403): the screen shows its own state. */
+export function isEmailVerificationRequired(error: unknown): error is ApiError {
+  return error instanceof ApiError && error.code === 'EMAIL_VERIFICATION_REQUIRED';
+}
+
 /** Server messages for the given form fields, in the order of `fields`; empty for any other error. */
 export function fieldErrorEntries<F extends string>(
   error: unknown,

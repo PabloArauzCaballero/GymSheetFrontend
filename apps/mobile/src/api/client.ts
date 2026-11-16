@@ -5,6 +5,8 @@ import { env, loopbackRewrite } from '@/config/env';
 import { clientPlatform, isLegalAcceptanceResponse } from '@/features/legal/legal-logic';
 import { notify } from '@/notifications';
 import { secureStoreAuthStorage, secureStoreTokenProvider } from '@/storage/secure-store';
+import { isEmailVerificationResponse } from '@/features/email-verification/email-verification-logic';
+import { deviceHeaders } from './device-identity';
 
 /**
  * Called when the backend rejects the stored token. The auth store registers
@@ -28,8 +30,24 @@ export function setLegalAcceptanceRequiredHandler(handler: () => void): void {
   onLegalAcceptanceRequired = handler;
 }
 
+/**
+ * Called when a social endpoint answers 403 EMAIL_VERIFICATION_REQUIRED, so the
+ * auth store can mark the email as unverified and show the banner. Registered
+ * by the store for the same reason as `setSessionLostHandler`: no cycle.
+ */
+let onEmailVerificationRequired: (() => void) | null = null;
+
+export function setEmailVerificationRequiredHandler(handler: () => void): void {
+  onEmailVerificationRequired = handler;
+}
+
 /** Sent on every request: the backend stores it with each legal acceptance as audit evidence. */
 const platformHeader = { 'X-Client-Platform': clientPlatform(Platform.OS) } as const;
+
+/** Platform plus the device headers (installation id, versions, model). */
+async function clientHeaders(): Promise<Record<string, string>> {
+  return { ...platformHeader, ...(await deviceHeaders()) };
+}
 
 /**
  * The mobile client talks to the NestJS backend directly with a bearer token
@@ -66,12 +84,33 @@ const refreshPayloadSchema = z.object({
 async function refreshSession(): Promise<boolean> {
   const refreshToken = await secureStoreAuthStorage.getRefreshToken();
   if (!refreshToken) return false;
+  const result = await exchangeRefreshToken(refreshToken);
+  if (result === 'rejected') return false;
 
+  const parsed = refreshPayloadSchema.safeParse(result);
+  if (!parsed.success) {
+    throw new ApiError({ message: 'Respuesta de renovación inválida.', status: 502, kind: 'contract' });
+  }
+
+  // Los dos, no sólo el de acceso: el servidor **rota** el refresh en cada uso
+  // y revoca el anterior, así que guardar sólo el nuevo access dejaría en el
+  // Llavero un refresh ya muerto y la siguiente renovación fallaría.
+  await secureStoreAuthStorage.saveTokens(parsed.data.accessToken, parsed.data.refreshToken);
+  return true;
+}
+
+/**
+ * `POST /auth/refresh` itself, shared by the silent renewal above and by the
+ * biometric quick login (`auth-store.loginWithRefreshToken`). Returns the
+ * unwrapped `data` (the full auth response: tokens and `user`), or `'rejected'`
+ * when the server refuses the token. Anything else throws an `ApiError`.
+ */
+export async function exchangeRefreshToken(refreshToken: string): Promise<unknown> {
   let response: Response;
   try {
     response = await fetch(`${env.apiUrl}/auth/refresh`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...platformHeader },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(await clientHeaders()) },
       body: JSON.stringify({ refreshToken }),
     });
   } catch {
@@ -86,7 +125,7 @@ async function refreshSession(): Promise<boolean> {
   // Sólo un rechazo explícito del refresh significa sesión perdida: 401
   // (revocado, caducado, reutilizado) o 400 (token con forma imposible). Un
   // 5xx o un 429 es el servidor que no puede contestar ahora.
-  if (response.status === 401 || response.status === 400) return false;
+  if (response.status === 401 || response.status === 400) return 'rejected';
   if (!response.ok) {
     throw new ApiError({
       message: 'No se pudo renovar la sesión ahora.',
@@ -96,19 +135,11 @@ async function refreshSession(): Promise<boolean> {
   }
 
   const body: unknown = await response.json().catch(() => null);
-  const envelope = z.object({ data: refreshPayloadSchema }).safeParse(body);
-  if (!envelope.success) {
+  const envelope = z.object({ data: z.unknown() }).safeParse(body);
+  if (!envelope.success || envelope.data.data === undefined) {
     throw new ApiError({ message: 'Respuesta de renovación inválida.', status: 502, kind: 'contract' });
   }
-
-  // Los dos, no sólo el de acceso: el servidor **rota** el refresh en cada uso
-  // y revoca el anterior, así que guardar sólo el nuevo access dejaría en el
-  // Llavero un refresh ya muerto y la siguiente renovación fallaría.
-  await secureStoreAuthStorage.saveTokens(
-    envelope.data.data.accessToken,
-    envelope.data.data.refreshToken,
-  );
-  return true;
+  return envelope.data.data;
 }
 
 /**
@@ -123,7 +154,7 @@ async function refreshSession(): Promise<boolean> {
 export async function revokeRefreshToken(refreshToken: string): Promise<void> {
   await fetch(`${env.apiUrl}/auth/logout`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(await clientHeaders()) },
     body: JSON.stringify({ refreshToken }),
   });
 }
@@ -153,16 +184,18 @@ const deviceFetch: typeof fetch = rewrite
   : fetch;
 
 /**
- * Every API call goes through here: it adds the platform header and spots the
- * legal block (428) once for all screens, so none of them has to handle it.
+ * Every API call goes through here: it adds the platform and device headers,
+ * reads a 204 as an empty success, and spots the legal block (428) and the
+ * unverified email (403) once for all screens, so none of them has to.
  */
 const apiFetch: typeof fetch = async (input, init) => {
   const headers = new Headers(init?.headers);
-  headers.set('X-Client-Platform', platformHeader['X-Client-Platform']);
+  for (const [name, value] of Object.entries(await clientHeaders())) headers.set(name, value);
   const response = await deviceFetch(input, { ...init, headers });
-  if (response.status === 428) {
+  if (response.status === 428 || response.status === 403) {
     const body: unknown = await response.clone().json().catch(() => null);
     if (isLegalAcceptanceResponse(response.status, body)) onLegalAcceptanceRequired?.();
+    if (isEmailVerificationResponse(response.status, body)) onEmailVerificationRequired?.();
   }
   return response;
 };

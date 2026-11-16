@@ -2,7 +2,7 @@
 
 import { knownReadinessGaps, readinessLabels } from '@gymsheet/domain';
 import { useQuery } from '@tanstack/react-query';
-import { Camera, CircleUserRound, SlidersHorizontal, type LucideIcon } from 'lucide-react';
+import { Camera, CircleUserRound, MailCheck, SlidersHorizontal, type LucideIcon } from 'lucide-react';
 import type { DiscoveryReadinessCode } from '@/shared/api/schemas';
 import { ButtonLink } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
@@ -10,6 +10,7 @@ import { socialProfileKeys, socialProfileService } from '../services/social-prof
 
 /** Where each gap is fixed: the same editors the rest of the app uses. */
 const GAP_TARGETS: Record<DiscoveryReadinessCode, { href: string; icon: LucideIcon }> = {
+  EMAIL_VERIFICATION: { href: '/verificar-correo', icon: MailCheck },
   PROFILE_ENABLED: { href: '/profile#perfil-social', icon: CircleUserRound },
   PREFERENCES: { href: '/onboarding/conocer', icon: SlidersHorizontal },
   PHOTOS: { href: '/profile#fotos', icon: Camera },

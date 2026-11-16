@@ -41,6 +41,15 @@ describe('DiscoveryReadinessCard', () => {
     expect(screen.queryByText(/SELFIE_CHECK/u)).toBeNull();
   });
 
+  it('sends an unverified email to the PIN screen first', async () => {
+    readiness.mockResolvedValue({ ready: false, missing: ['EMAIL_VERIFICATION', 'PHOTOS'] });
+    renderCard();
+
+    const link = await screen.findByRole('link', { name: 'Verificar correo' });
+    expect(link).toHaveAttribute('href', '/verificar-correo');
+    expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Verifica tu correo');
+  });
+
   it('renders nothing once you are ready or when only unknown gaps remain', async () => {
     readiness.mockResolvedValue({ ready: false, missing: ['SOMETHING_NEW'] });
     const { container, unmount } = renderCard();

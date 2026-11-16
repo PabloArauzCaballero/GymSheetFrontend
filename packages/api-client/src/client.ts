@@ -171,7 +171,7 @@ export function createApiClient(config: ApiClientConfig) {
         }
       }
       if (!response.ok) throw await apiErrorFromResponse(response);
-      const envelope = successEnvelopeSchema.safeParse(await response.json());
+      const envelope = successEnvelopeSchema.safeParse(await readSuccessBody(response));
       if (!envelope.success) {
         throw new ApiError({
           message: 'El servidor devolvió un contrato inválido.',
@@ -280,7 +280,7 @@ export function createApiClient(config: ApiClientConfig) {
         return { retry: true as const };
       }
       if (!response.ok) throw await apiErrorFromResponse(response);
-      const envelope = successEnvelopeSchema.safeParse(await response.json());
+      const envelope = successEnvelopeSchema.safeParse(await readSuccessBody(response));
       if (!envelope.success) {
         throw new ApiError({
           message: 'El servidor devolvió un contrato inválido.',
@@ -321,3 +321,13 @@ export function createApiClient(config: ApiClientConfig) {
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>;
+
+/**
+ * The success body. A `204 No Content` (revoking a device, signing out the
+ * others) is a success with no data: it reads as `{ ok: true, data: null }` so
+ * every endpoint shares one envelope contract.
+ */
+async function readSuccessBody(response: Response): Promise<unknown> {
+  if (response.status === 204) return { ok: true, data: null };
+  return response.json();
+}

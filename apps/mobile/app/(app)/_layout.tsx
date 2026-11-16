@@ -70,6 +70,8 @@ export default function AppLayout() {
         <Stack.Screen name="ejercicios" />
         <Stack.Screen name="ejercicio-nuevo" />
         <Stack.Screen name="settings" />
+        <Stack.Screen name="dispositivos" />
+        <Stack.Screen name="verificar-correo" />
         <Stack.Screen name="profile-edit" />
         <Stack.Screen name="registrar-peso" />
         <Stack.Screen name="membership" />
