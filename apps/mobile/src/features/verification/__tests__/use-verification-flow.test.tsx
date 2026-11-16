@@ -12,11 +12,13 @@ const mocks = vi.hoisted(() => ({
   notify: { success: vi.fn(), warning: vi.fn(), error: vi.fn(), info: vi.fn() },
   cameraPermission: vi.fn(),
   launchCamera: vi.fn(),
+  deleteFile: vi.fn(),
 }));
 
 vi.mock('@/api/client', () => ({ apiClient: { request: mocks.request, upload: mocks.upload } }));
 vi.mock('@/api/local-file-part', () => ({ appendLocalFile: vi.fn(async () => undefined) }));
 vi.mock('@/notifications', () => ({ confirm: mocks.confirm, notify: mocks.notify }));
+vi.mock('expo-file-system/legacy', () => ({ deleteAsync: mocks.deleteFile }));
 vi.mock('expo-image-picker', () => ({
   CameraType: { front: 'front', back: 'back' },
   requestCameraPermissionsAsync: mocks.cameraPermission,
@@ -47,6 +49,7 @@ beforeEach(() => {
   granted = false;
   mocks.confirm.mockResolvedValue({ confirmed: true });
   mocks.cameraPermission.mockResolvedValue({ granted: true });
+  mocks.deleteFile.mockResolvedValue(undefined);
   mocks.launchCamera.mockResolvedValue({ canceled: false, assets: [{ uri: 'file:///selfie.jpg', mimeType: 'image/jpeg', fileName: null }] });
   mocks.request.mockImplementation(async (path: string, _schema: unknown, options: { method: string }) => {
     if (path === '/me/verification') return { status: 'NONE', verifiedAt: null, challenge: null, lastDecision: null, canRetryAt: null };
@@ -133,4 +136,33 @@ test('a 409 expired challenge at upload offers a new gesture, and a 400 consent 
   await act(async () => { await result.current.upload(); });
   expect(mocks.confirm.mock.calls.length).toBe(asked + 1);
   expect(mocks.upload).toHaveBeenCalledTimes(3);
+});
+
+test('the selfie file never stays on the device: deleted on retake, after upload, on expiry and on leaving', async () => {
+  const shots = ['file:///a.jpg', 'file:///b.jpg', 'file:///c.jpg', 'file:///d.jpg'];
+  mocks.launchCamera.mockImplementation(async () => ({ canceled: false, assets: [{ uri: shots.shift(), mimeType: 'image/jpeg', fileName: null }] }));
+  mocks.upload
+    .mockRejectedValueOnce(apiError(409, 'VERIFICATION_CHALLENGE_EXPIRED'))
+    .mockResolvedValue({ id, status: 'PENDING_REVIEW', submittedAt: null });
+  const { result, unmount } = await renderReady();
+  await act(async () => { await result.current.start(); });
+
+  await act(async () => { await result.current.capture(); });
+  act(() => result.current.retake());
+  expect(mocks.deleteFile).toHaveBeenLastCalledWith('file:///a.jpg', { idempotent: true });
+
+  await act(async () => { await result.current.capture(); });
+  await act(async () => { await result.current.upload(); });
+  expect(result.current.step).toBe('expired');
+  expect(mocks.deleteFile).toHaveBeenLastCalledWith('file:///b.jpg', { idempotent: true });
+
+  await act(async () => { await result.current.start(); });
+  await act(async () => { await result.current.capture(); });
+  await act(async () => { await result.current.upload(); });
+  expect(mocks.deleteFile).toHaveBeenLastCalledWith('file:///c.jpg', { idempotent: true });
+
+  await act(async () => { await result.current.start(); });
+  await act(async () => { await result.current.capture(); });
+  unmount();
+  expect(mocks.deleteFile).toHaveBeenLastCalledWith('file:///d.jpg', { idempotent: true });
 });

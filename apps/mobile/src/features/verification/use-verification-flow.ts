@@ -2,9 +2,10 @@ import { secondsLeft, verificationCopy, verificationErrorKind, verificationError
 import type { MyVerification, VerificationChallenge } from '@gymsheet/schemas';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { notify } from '@/notifications';
 import { useConsentGate } from '@/features/consents/ask-consent';
+import { discardSelfieFile } from './selfie-file';
 import { activeChallenge, selfieFromAsset, verificationStep, type LocalSelfie } from './verification-logic';
 import { verificationQueryKey, verificationService } from './verification-service';
 
@@ -42,7 +43,16 @@ export function useVerificationFlow() {
   const [requested, setRequested] = useState<VerificationChallenge | null>(null);
   const [expiredId, setExpiredId] = useState<string | null>(null);
   const [unavailable, setUnavailable] = useState(false);
-  const [shot, setShot] = useState<LocalSelfie | null>(null);
+  const [shot, setShotState] = useState<LocalSelfie | null>(null);
+  // The file on disk follows the shot: replacing or clearing it deletes the old one.
+  const shotUri = useRef<string | null>(null);
+  const setShot = useCallback((next: LocalSelfie | null) => {
+    if (shotUri.current && shotUri.current !== next?.uri) void discardSelfieFile(shotUri.current);
+    shotUri.current = next?.uri ?? null;
+    setShotState(next);
+  }, []);
+  // Leaving the screen abandons the flow: nothing of the selfie stays on the device.
+  useEffect(() => () => void discardSelfieFile(shotUri.current), []);
   const [busy, setBusy] = useState<'start' | 'camera' | 'upload' | null>(null);
   const challenge = activeChallenge(requested, status.data);
   const seconds = useSecondsLeft(challenge?.expiresAt ?? null);
@@ -50,7 +60,11 @@ export function useVerificationFlow() {
   const fail = (error: unknown) => {
     const kind = verificationErrorKind(error);
     if (kind === 'unavailable') return setUnavailable(true);
-    if (kind === 'expired' && challenge) return setExpiredId(challenge.id);
+    if (kind === 'expired' && challenge) {
+      // An expired challenge cannot take this selfie any more: drop it.
+      setShot(null);
+      return setExpiredId(challenge.id);
+    }
     if (kind !== 'other' && kind !== 'consent') void queryClient.invalidateQueries({ queryKey: verificationQueryKey });
     const message = verificationErrorMessage(kind);
     if (message) notify.warning(message);
@@ -94,7 +108,7 @@ export function useVerificationFlow() {
       setBusy(null);
     }
     return undefined;
-  }, []);
+  }, [setShot]);
 
   const upload = async () => {
     if (!challenge || !shot) return;
