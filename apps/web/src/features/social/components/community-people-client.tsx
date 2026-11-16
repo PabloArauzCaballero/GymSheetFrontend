@@ -30,12 +30,9 @@ const EMPTY_PREFERENCES: DirectoryPreferences = { objetivo: '', sucursalId: '', 
  * Ahora la gente aparece de entrada: stories, el podio, un buscador y el
  * directorio. Lo que no es «quién hay» vive detrás de los iconos de la esquina
  * —preferencias, interacciones y mensajes—, que son las dos bandejas de entrada
- * de la parte social más el ajuste de a quién ves. La baraja es un destino
- * propio (`/descubrir`), no un modo de esta pantalla: se decide arrastrando y
- * ocupa el ancho entero.
+ * de la parte social más el ajuste de a quién ves.
  *
- * Los filtros son estado de la página y viajan a Descubrir como parámetros de
- * la URL: llegar a la baraja no debería reabrir un gimnasio recién acotado.
+ * The deck is not a mode of this screen: it lives in `/comunidad`.
  */
 export function CommunityPeopleClient() {
   const [preferences, setPreferences] = useState<DirectoryPreferences>(EMPTY_PREFERENCES);
@@ -52,15 +49,6 @@ export function CommunityPeopleClient() {
     () => Object.values(preferences).filter(Boolean).length,
     [preferences],
   );
-
-  const discoverHref = useMemo(() => {
-    const params = new URLSearchParams();
-    if (preferences.objetivo) params.set('objetivo', preferences.objetivo);
-    if (preferences.sucursalId) params.set('sucursalId', preferences.sucursalId);
-    if (preferences.genero) params.set('genero', preferences.genero);
-    const query = params.toString();
-    return query ? `/descubrir?${query}` : '/descubrir';
-  }, [preferences]);
 
   return (
     <div className="grid gap-8">
@@ -90,10 +78,8 @@ export function CommunityPeopleClient() {
             value={search}
           />
         </div>
-        {/* Tercera forma de mirar el mismo catálogo, pero no un modo de esta
-            pantalla: la baraja se decide arrastrando y ocupa el ancho entero,
-            así que es un destino. Se lleva los filtros puestos. */}
-        <ButtonLink href={discoverHref} variant="secondary">
+        {/* The deck lives in Comunidad, with its own filters. */}
+        <ButtonLink href="/comunidad" variant="secondary">
           <Flame aria-hidden className="size-4 text-[var(--accent-ink)]" />
           Descubrir
         </ButtonLink>

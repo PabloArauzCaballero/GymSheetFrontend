@@ -316,7 +316,7 @@ function SolicitudesTab() {
         <Button
           icon="compass-outline"
           label="Descubrir gente"
-          onPress={() => router.push('/descubrir')}
+          onPress={() => router.push('/comunidad')}
           size="sm"
           style={{ marginTop: spacing.xs }}
           variant="secondary"
@@ -462,7 +462,7 @@ function ConexionesTab() {
         <Button
           icon="compass-outline"
           label="Descubrir gente"
-          onPress={() => router.push('/descubrir')}
+          onPress={() => router.push('/comunidad')}
           size="sm"
           style={{ marginTop: spacing.xs }}
           variant="secondary"

@@ -17,7 +17,7 @@ function renderDiscover() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <DescubrirClient genero="FEMALE" objetivo="TRAINING" sucursalId="" />
+      <DescubrirClient objetivo="TRAINING" sucursalId="" />
     </QueryClientProvider>,
   );
 }
@@ -64,7 +64,7 @@ describe('DescubrirClient contract errors', () => {
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeTruthy();
   });
 
-  it('shows the real empty-deck state and a route back to change filters', async () => {
+  it('shows the real empty-deck state', async () => {
     backendFetch.mockReset().mockResolvedValue({
       ok: true,
       json: async () => ({ ok: true, data: [] }),
@@ -78,7 +78,40 @@ describe('DescubrirClient contract errors', () => {
         'Repi también se quedó sin perfiles. Vuelve mañana o cambia los filtros de objetivo y sede.',
       ),
     ).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Comunidad' })).toHaveAttribute('href', '/comunidad');
     expect(screen.queryByRole('button', { name: /Me interesa/u })).toBeNull();
+  });
+
+  it('offers no direct-message action: chats need an accepted connection first', async () => {
+    backendFetch.mockReset().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        ok: true,
+        data: [
+          {
+            userId: '00000000-0000-4000-8000-000000000001',
+            displayName: 'Ana',
+            objetivo: 'TRAINING',
+            branchId: null,
+            branchName: null,
+            connectionStatus: 'NONE',
+            connectionId: null,
+            socialStatus: null,
+            photoUrl: null,
+            photos: [],
+            age: 28,
+            gender: 'FEMALE',
+            experienceLevel: 'BEGINNER',
+            points: 0,
+            levelCode: null,
+          },
+        ],
+      }),
+    });
+
+    renderDiscover();
+
+    expect(await screen.findByRole('button', { name: 'Me interesa entrenar con Ana' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /mensaje directo/u })).toBeNull();
+    expect(backendFetch.mock.calls.some(([url]) => String(url).includes('/me/conversations'))).toBe(false);
   });
 });

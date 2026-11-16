@@ -55,7 +55,7 @@ test('H5.S1.M1 rejects an incompatible candidate and lets the user retry', async
   });
 
   await signIn(page, athlete);
-  await openPage(page, '/descubrir');
+  await openPage(page, '/comunidad');
 
   await expect(page.getByRole('main').getByRole('alert')).toContainText(
     'La respuesta no coincide con el contrato esperado.',
@@ -88,10 +88,9 @@ test('H5.S1.M2 renders the empty deck state and points to Community', async ({ p
       'Repi también se quedó sin perfiles. Vuelve mañana o cambia los filtros de objetivo y sede.',
     ),
   ).toBeVisible();
-  await expect(page.getByRole('main').getByRole('link', { name: 'Comunidad' })).toHaveAttribute(
-    'href',
-    '/comunidad',
-  );
+  // The deck lives in Comunidad: filters are changed from its own header.
+  await expect(page).toHaveURL(/\/comunidad$/u);
+  await expect(page.getByRole('main').getByRole('button', { name: 'Preferencias de búsqueda' })).toBeVisible();
   await expect(page.getByRole('button', { name: /Me interesa/u })).toHaveCount(0);
   await expect.poll(() => deckRequests).toBeGreaterThan(0);
 });
@@ -121,7 +120,7 @@ test('H5.S1.M4 requests a fresh cursor-free deck after returning from a successf
   });
 
   await signIn(page, athlete);
-  await openPage(page, '/descubrir');
+  await openPage(page, '/comunidad');
   await expect(page.getByRole('button', { name: 'Me interesa Ana de prueba' })).toBeVisible();
   const swipeResponse = page.waitForResponse((response) =>
     response.request().method() === 'POST' && response.url().includes('/me/discovery/swipes'),
@@ -132,8 +131,8 @@ test('H5.S1.M4 requests a fresh cursor-free deck after returning from a successf
   await expect.poll(() => deckRequests).toBeGreaterThan(1);
   const requestsBeforeReturn = deckRequests;
 
+  await openPage(page, '/comunidad/personas');
   await openPage(page, '/comunidad');
-  await openPage(page, '/descubrir');
   await expect(page.getByRole('heading', { name: 'Ya viste a todos por hoy' })).toBeVisible();
   await expect(page.getByText('Ana de prueba')).toHaveCount(0);
   await expect.poll(() => deckRequests).toBeGreaterThan(requestsBeforeReturn);
@@ -174,7 +173,7 @@ test('H5.S2.M1 tab, Space, and dragging send the same decision', async ({ page }
   });
 
   await signIn(page, athlete);
-  await openPage(page, '/descubrir');
+  await openPage(page, '/comunidad');
   const likeButton = page.getByRole('button', { name: 'Me interesa Ana de prueba' });
   let reachedLikeButtonByTab = false;
   for (let tabPress = 0; tabPress < 50; tabPress += 1) {

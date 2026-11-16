@@ -93,25 +93,33 @@ export type RecoverPasswordInput = z.infer<typeof recoverPasswordSchema>;
 
 /**
  * Lo que de verdad viaja a `POST /auth/register`, ya sin la confirmación ni la
- * cadena vacía del género.
+ * cadena vacía del género. The BFF validates the request body with this same
+ * schema, so client and server cannot drift.
  *
  * Se deriva aquí y no en cada cliente porque las dos plataformas cometían la
  * misma traducción por su cuenta —quitar `confirmation`, omitir `genero` si
  * está vacío, forzar `acceptedTerms` a `true`— y basta con que una cambie para
  * que el alta se comporte distinto según el dispositivo.
  */
-export type RegisterPayload = {
-  email: string;
-  password: string;
-  nombreCompleto: string;
-  genero?: 'MALE' | 'FEMALE' | 'UNSPECIFIED';
-  acceptedTerms: true;
-};
+export const registerPayloadSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(authLimits.emailMax),
+  password: z.string().min(authLimits.passwordMin).max(authLimits.passwordMax),
+  nombreCompleto: z.string().trim().min(authLimits.fullNameMin).max(authLimits.fullNameMax),
+  /**
+   * Opcional de verdad: la progresión tiene una rama neutra y nadie debería
+   * tener que declarar su género para poder crear una cuenta.
+   */
+  genero: z.enum(['MALE', 'FEMALE', 'UNSPECIFIED']).optional(),
+  acceptedTerms: z.literal(true),
+});
+export type RegisterPayload = z.output<typeof registerPayloadSchema>;
 
 export function toRegisterPayload(values: RegisterInput): RegisterPayload {
   return {
     nombreCompleto: values.nombreCompleto.trim(),
-    email: values.email.trim(),
+    // Same normalization as `registerPayloadSchema` (and the backend), so the
+    // payload is already in its canonical form when it leaves the client.
+    email: values.email.trim().toLowerCase(),
     password: values.password,
     // Literal `true` y no `values.acceptedTerms`: el esquema ya ha rechazado el
     // caso contrario, y el tipo del backend exige el literal.

@@ -4,7 +4,9 @@ import { Check, Dumbbell, Heart, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { notify } from '@/shared/notifications';
+import { directoryKeys } from '@/features/social/services/directory-keys';
 import { socialService } from '@/features/social/services/social-service';
+import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { Checkbox } from '@/shared/components/ui/checkbox';
@@ -30,16 +32,24 @@ export function DiscoveryPreferencesCard({
   onSaved?: () => void;
 }> = {}) {
   const client = useQueryClient();
-  const query = useQuery({ queryKey: ['social', 'discovery-preferences'], queryFn: socialService.getDiscoveryPreferences });
+  const query = useQuery({ queryKey: directoryKeys.discoveryPreferences, queryFn: socialService.getDiscoveryPreferences });
   const save = useMutation({
     mutationFn: socialService.updateDiscoveryPreferences,
     onSuccess: async () => {
-      await client.invalidateQueries({ queryKey: ['social', 'discovery-preferences'] });
+      await client.invalidateQueries({ queryKey: directoryKeys.discoveryPreferences });
       notify.success('Preferencias de Conocer guardadas.');
       onSaved?.();
     },
     onError: (error: Error) => notify.error(error),
   });
+  // A failed load must not look like "no preferences": offer a retry instead.
+  if (query.isError)
+    return (
+      <ErrorPanel
+        message="No pudimos cargar tus preferencias de descubrimiento."
+        onRetry={() => query.refetch()}
+      />
+    );
   if (query.isPending || !query.data) return null;
   return <PreferencesForm embedded={embedded} key={query.data?.version ?? 'unconfigured'} initial={query.data} saving={save.isPending} onSave={(input) => save.mutate(input)} />;
 }

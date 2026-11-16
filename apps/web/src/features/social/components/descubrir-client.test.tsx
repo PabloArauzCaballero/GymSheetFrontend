@@ -79,21 +79,31 @@ function deferred<T>() {
   return { promise, resolve, reject };
 }
 
-function renderDeck(genero = 'FEMALE') {
+const BRANCH_A = 'branch-a';
+const BRANCH_B = 'branch-b';
+
+function renderDeck(sucursalId = BRANCH_A) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   const ui = (filter: string) => <QueryClientProvider client={queryClient}>
-    <DescubrirClient genero={filter} objetivo="TRAINING" sucursalId="" />
+    <DescubrirClient objetivo="TRAINING" sucursalId={filter} />
   </QueryClientProvider>;
-  const rendered = render(ui(genero));
+  const rendered = render(ui(sucursalId));
   return { ...rendered, rerenderForFilter: (filter: string) => rendered.rerender(ui(filter)) };
 }
 
 describe('DescubrirClient swipe recovery', () => {
   beforeEach(() => {
-    deck.mockReset().mockImplementation(async (filters: { genero?: string }) => filters.genero === 'MALE' ? [carla] : [ana, bea]);
+    deck.mockReset().mockImplementation(async (filters: { sucursalId?: string }) => filters.sucursalId === BRANCH_B ? [carla] : [ana, bea]);
     swipe.mockReset().mockResolvedValue({ matched: false, connectionId: null });
     undoSwipe.mockReset().mockResolvedValue({ undone: 'PASS', targetId: ana.userId, connectionId: null, unmatched: false });
     notifyError.mockReset();
+  });
+
+  it('requests the deck with goal and branch only, never a session gender filter', async () => {
+    renderDeck();
+
+    expect(await screen.findByRole('button', { name: 'Me interesa Ana' })).toBeTruthy();
+    expect(deck).toHaveBeenCalledWith({ objetivo: 'TRAINING', sucursalId: BRANCH_A, limit: 10 });
   });
 
   it('reconciles a 409 swipe response from the authoritative deck without restoring the candidate', async () => {
@@ -120,7 +130,7 @@ describe('DescubrirClient swipe recovery', () => {
     const view = renderDeck();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Me interesa Ana' }));
-    view.rerenderForFilter('MALE');
+    view.rerenderForFilter(BRANCH_B);
     expect(await screen.findByRole('button', { name: 'Me interesa Carla' })).toBeTruthy();
 
     await act(async () => { failedSwipe.reject(new Error('network unavailable')); });
@@ -135,9 +145,9 @@ describe('DescubrirClient swipe recovery', () => {
     const view = renderDeck();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Me interesa Ana' }));
-    view.rerenderForFilter('MALE');
+    view.rerenderForFilter(BRANCH_B);
     expect(await screen.findByRole('button', { name: 'Me interesa Carla' })).toBeTruthy();
-    view.rerenderForFilter('FEMALE');
+    view.rerenderForFilter(BRANCH_A);
     expect(await screen.findByRole('button', { name: 'Me interesa Ana' })).toBeTruthy();
 
     await act(async () => { failedSwipe.reject(new Error('network unavailable')); });

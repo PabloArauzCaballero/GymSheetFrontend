@@ -1,10 +1,6 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { chatService } from '@/features/chat/services/chat-service';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { interactionKeys } from '@/features/interactions/services/interactions-service';
 import { discoveryService } from '@/features/social/services/discovery-service';
@@ -27,39 +23,24 @@ type FilteredEntry = { entry: GymDirectoryEntry; filterKey: string };
 const DECK_SIZE = 10;
 
 /**
- * La baraja de descubrimiento, a pantalla completa.
- *
- * El directorio de Comunidad sirve para recorrer el gimnasio; esto es lo
- * contrario — una sola carta, dos salidas, y la siguiente sólo aparece cuando
- * la anterior se ha resuelto. Por eso es un destino propio y no una pestaña:
- * ocupa el ancho entero, como en el móvil, en vez de quedarse en un rectángulo
- * pequeño flotando dentro de una página con cabecera y filtros.
+ * La baraja de descubrimiento, embebida en Comunidad como en el móvil.
  *
  * La cola visible se mantiene en local para que la tarjeta salga en el mismo
  * fotograma del gesto, pero la verdad está en el servidor: cada decisión es un
  * `POST` y, si falla, la tarjeta vuelve a su sitio en vez de desaparecer en
  * silencio.
+ *
+ * Who appears (gender, age, intent) comes from the saved discovery
+ * preferences; only goal and branch are session filters.
  */
 export function DescubrirClient({
-  genero,
   objetivo,
   sucursalId,
-  embedded = false,
 }: Readonly<{
-  genero: string;
   objetivo: string;
   sucursalId: string;
-  /** Dentro de Comunidad (como en el móvil): sin cabecera propia ni «volver». */
-  embedded?: boolean;
 }>) {
   const queryClient = useQueryClient();
-  const router = useRouter();
-  // El rayo de la botonera: chat directo con la persona de arriba, como en el móvil.
-  const message = useMutation({
-    mutationFn: (entry: GymDirectoryEntry) => chatService.startConversation(entry.userId),
-    onSuccess: (conversation) => router.push(`/chat/${conversation.conversationId}`),
-    onError: (error: Error) => notify.error(error),
-  });
   const [queue, setQueue] = useState<GymDirectoryEntry[]>([]);
   const [history, setHistory] = useState<GymDirectoryEntry[]>([]);
   const [match, setMatch] = useState<FilteredEntry | null>(null);
@@ -69,12 +50,11 @@ export function DescubrirClient({
     () => ({
       objetivo: objetivo || undefined,
       sucursalId: sucursalId || undefined,
-      genero: genero || undefined,
       limit: DECK_SIZE,
     }),
-    [genero, objetivo, sucursalId],
+    [objetivo, sucursalId],
   );
-  const filterKey = `${objetivo}|${sucursalId}|${genero}`;
+  const filterKey = `${objetivo}|${sucursalId}`;
   const activeFilterKeyRef = useRef(filterKey);
   useLayoutEffect(() => {
     activeFilterKeyRef.current = filterKey;
@@ -189,24 +169,6 @@ export function DescubrirClient({
 
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
-      {embedded ? null : (
-      <header className="grid gap-2">
-        <Link
-          className="inline-flex w-fit items-center gap-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
-          href="/comunidad"
-        >
-          <ArrowLeft aria-hidden className="size-4" />
-          Comunidad
-        </Link>
-        <h1 className="text-3xl font-semibold tracking-[-0.03em]">Descubrir</h1>
-        {/* Una línea, no dos: cada renglón de aquí arriba se lo quita a la
-            carta, que es lo único que la pantalla necesita enseñar. */}
-        <p className="text-sm text-[var(--text-muted)]">
-          Arrastra a la derecha si te interesa, a la izquierda si no.
-        </p>
-      </header>
-      )}
-
       <DeckSurface
         deckError={deck.isError ? deck.error.message : null}
         needsPreferences={deck.isError && needsDiscoveryPreferences(deck.error)}
@@ -236,8 +198,6 @@ export function DescubrirClient({
           entries={visibleQueue}
           onDecide={(entry, direction) => decide.mutate({ entry, direction, filterKey })}
           onInfo={(entry) => setDetail({ entry, filterKey })}
-          onMessage={(entry) => message.mutate(entry)}
-          messagePending={message.isPending}
           onUndo={() => undo.mutate({ filterKey })}
           undoPending={undo.isPending}
         />

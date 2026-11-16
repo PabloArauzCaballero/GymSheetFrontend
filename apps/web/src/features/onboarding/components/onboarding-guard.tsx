@@ -21,22 +21,26 @@ export function OnboardingGuard({
     enabled: role === 'CLIENTE',
     retry: 1,
   });
-  const requiresOnboarding = role === 'CLIENTE' && query.data?.status !== 'COMPLETED';
+  // Only a loaded state decides a redirect: a failed GET is not "onboarding
+  // pending", and sending the member to /onboarding would hide the real error.
+  const status = query.data?.status;
+  const resolved = role !== 'CLIENTE' || status !== undefined;
+  const requiresOnboarding = role === 'CLIENTE' && status !== undefined && status !== 'COMPLETED';
   useEffect(() => {
-    if (!query.isLoading && requiresOnboarding && pathname !== '/onboarding')
-      router.replace('/onboarding');
-    if (!query.isLoading && !requiresOnboarding && pathname === '/onboarding')
-      router.replace('/comunidad');
-  }, [pathname, query.isLoading, requiresOnboarding, router]);
+    if (!resolved) return;
+    if (requiresOnboarding && pathname !== '/onboarding') router.replace('/onboarding');
+    if (!requiresOnboarding && pathname === '/onboarding') router.replace('/comunidad');
+  }, [pathname, requiresOnboarding, resolved, router]);
   if (role !== 'CLIENTE') return children;
-  if (query.isLoading || (requiresOnboarding && pathname !== '/onboarding'))
-    return <LoadingPanel rows={5} />;
-  if (query.isError)
-    return (
+  if (status === undefined)
+    return query.isError ? (
       <ErrorPanel
         message="No pudimos verificar tu configuración. Reintenta para continuar de forma segura."
         onRetry={() => query.refetch()}
       />
+    ) : (
+      <LoadingPanel rows={5} />
     );
+  if (requiresOnboarding && pathname !== '/onboarding') return <LoadingPanel rows={5} />;
   return children;
 }

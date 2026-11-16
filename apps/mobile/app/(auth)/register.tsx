@@ -9,14 +9,13 @@ import {
 } from '@gymsheet/schemas';
 import {
   authCopy,
-  authDestination,
   authErrorMessage,
   genderOptions,
-  onboardingSteps,
+  onboardingFlowSteps,
 } from '@gymsheet/domain';
 import type { UserGender } from '@gymsheet/types';
 import { ApiError } from '@gymsheet/api-client';
-import { Link, useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 import { Button, Input, textLinkStyle } from '@/components/ui';
@@ -33,7 +32,6 @@ import { colors, fontSizes, iconSizes, spacing } from '@/theme';
 
 export default function RegisterScreen() {
   const register = useAuthStore((state) => state.register);
-  const router = useRouter();
   const [failure, setFailure] = useState<string | null>(null);
   const {
     control,
@@ -55,10 +53,9 @@ export default function RegisterScreen() {
       // La traducción a lo que espera el servidor —quitar la confirmación,
       // omitir el género vacío— la hace el paquete compartido, no esta
       // pantalla: era donde web y móvil se desviaban en silencio.
+      // No redirect here: the session flips to authenticated and the onboarding
+      // guard in `(app)/_layout.tsx` sends the new CLIENTE to `/onboarding`.
       await register(toRegisterPayload(values));
-      // La cuenta nace sin onboarding: llevarla directo a completarlo evita un
-      // panel vacío que no explica por qué lo está. Mismo destino que la web.
-      router.replace(authDestination.mobile.afterRegister);
     } catch (error) {
       setFailure(
         error instanceof ApiError
@@ -239,7 +236,7 @@ export default function RegisterScreen() {
 
       {/* Qué pasa después y qué pasa con tus datos, junto al botón que decide
           (skill `signup`: quitar incertidumbre). Las dos frases son ciertas
-          por construcción: el número sale de `onboardingSteps` y la segunda
+          por construcción: el número sale de `onboardingFlowSteps` y la segunda
           es la cláusula 2 de la política. */}
       <View style={{ gap: spacing.xs, alignSelf: 'stretch' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
@@ -251,7 +248,7 @@ export default function RegisterScreen() {
             size={iconSizes.sm}
           />
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, flex: 1 }}>
-            {`Luego, ${onboardingSteps.length} preguntas y eliges tu rutina.`}
+            {`Luego, ${onboardingFlowSteps.length} pasos y eliges tu rutina.`}
           </Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>

@@ -7,8 +7,9 @@ export default function AuthLayout() {
 
   // Never show auth screens to an already-authenticated user.
   if (status === 'authenticated') {
-    // El destino sale del paquete compartido: la web y el móvil usan rutas
-    // distintas para la misma pantalla, pero la intención se declara una vez.
+    // The destination comes from the shared package, after login and signup
+    // alike: the onboarding guard in `(app)/_layout.tsx` then sends a CLIENTE
+    // with unfinished onboarding to `/onboarding` (single source of truth).
     return <Redirect href={authDestination.mobile.afterLogin} />;
   }
 

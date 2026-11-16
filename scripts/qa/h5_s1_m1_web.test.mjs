@@ -43,12 +43,12 @@ test('web driver blocks before browser or file work when QA credentials are abse
 test('web navigation outage is blocked while an unexpected redirect remains a failure', async () => {
   await assert.rejects(openDiscoveryPage({
     goto: async () => { throw new Error('connection refused'); },
-    url: () => 'http://web.test/descubrir',
-  }, 'http://web.test/descubrir'), { name: 'PairPreconditionError' });
+    url: () => 'http://web.test/comunidad',
+  }, 'http://web.test/comunidad'), { name: 'PairPreconditionError' });
   await assert.rejects(openDiscoveryPage({
     goto: async () => undefined,
     url: () => 'http://web.test/login',
-  }, 'http://web.test/descubrir'), /did not open the authenticated discovery page/u);
+  }, 'http://web.test/comunidad'), /did not open the authenticated discovery page/u);
 });
 
 test('H5.S1.M1 recovery requires an alert, hidden corrupt candidate, retry request and valid card', () => {

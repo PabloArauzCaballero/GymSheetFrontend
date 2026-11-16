@@ -22,9 +22,9 @@ import { queryKeys } from '@/shared/api/query-keys';
 import { Divider, ListCard, NavRow } from '@/shared/components/mobile/nav-row';
 import { cn } from '@/shared/lib/cn';
 import { DescubrirClient } from './descubrir-client';
-import { SearchPreferencesDialog, type DirectoryPreferences } from './search-preferences-dialog';
+import { SearchPreferencesDialog, type DeckPreferences } from './search-preferences-dialog';
 
-const EMPTY_PREFERENCES: DirectoryPreferences = { objetivo: '', sucursalId: '', genero: '' };
+const EMPTY_PREFERENCES: DeckPreferences = { objetivo: '', sucursalId: '' };
 
 type Pill = 'foryou' | 'goal';
 
@@ -113,7 +113,7 @@ function OverflowSheet({ onPreferences }: Readonly<{ onPreferences: () => void }
               <SlidersHorizontal aria-hidden className="size-5 text-[var(--text-muted)]" />
               <span className="grid flex-1 gap-0.5">
                 <span className="t-headline">Preferencias de búsqueda</span>
-                <span className="t-subhead text-[var(--text-muted)]">Filtra por objetivos, sedes y género</span>
+                <span className="t-subhead text-[var(--text-muted)]">Filtra por objetivo y sede</span>
               </span>
             </button>
             {rows.map((row) => (
@@ -141,7 +141,7 @@ function OverflowSheet({ onPreferences }: Readonly<{ onPreferences: () => void }
  * de personas, el podio, el mapa y lo demás viven en el «⋯», como en el móvil.
  */
 export function ComunidadClient() {
-  const [preferences, setPreferences] = useState<DirectoryPreferences>(EMPTY_PREFERENCES);
+  const [preferences, setPreferences] = useState<DeckPreferences>(EMPTY_PREFERENCES);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [pill, setPill] = useState<Pill>('foryou');
 
@@ -199,8 +199,6 @@ export function ComunidadClient() {
       </div>
 
       <DescubrirClient
-        embedded
-        genero={preferences.genero}
         key={`${pill}-${goal}`}
         objetivo={goal}
         sucursalId={preferences.sucursalId}

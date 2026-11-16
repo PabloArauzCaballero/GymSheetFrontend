@@ -232,7 +232,7 @@ export default function ProfileScreen() {
           </Text>
           <ProgressTrack color={colors.textSecondary} height={4} ratio={completion.ratio} />
           {missingProfile ? (
-            <Button icon="create-outline" label="Completar mi perfil" onPress={() => router.push('/onboarding')} size="sm" style={{ alignSelf: 'flex-start' }} />
+            <Button icon="create-outline" label="Completar mi perfil" onPress={() => router.push('/profile-edit')} size="sm" style={{ alignSelf: 'flex-start' }} />
           ) : null}
         </View>
       ) : null}
@@ -265,7 +265,7 @@ export default function ProfileScreen() {
           {[
             <NavRow
               key="datos" leading={<RowGlyph icon="person-circle-outline" />}
-              onPress={() => router.push(missingProfile ? '/onboarding' : '/profile-edit')}
+              onPress={() => router.push('/profile-edit')}
               subtitle={dataSubtitle}
               testID="profile-data"
               title="Mis datos"

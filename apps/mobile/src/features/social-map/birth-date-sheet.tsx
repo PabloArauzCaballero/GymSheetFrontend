@@ -7,7 +7,7 @@ import { profileService } from '@/api/services';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { numericInputProps } from '@/components/keyboard';
 import { Button, Input } from '@/components/ui';
-import { BIRTH_DATE_PARTS, ageOn, birthDateError, toIsoBirthDate, type BirthDateParts } from '@/lib/birth-date';
+import { BIRTH_DATE_PARTS, birthDateError, toIsoBirthDate, type BirthDateParts } from '@/lib/birth-date';
 import { notify } from '@/notifications';
 import { colors, fontSizes, spacing } from '@/theme';
 
@@ -48,11 +48,8 @@ export function BirthDateSheet({ visible, profile, onClose, onSaved }: {
   const submit = () => {
     const empty = parts.dia === '' && parts.mes === '' && parts.anio === '';
     const message = empty ? 'Escribe tu fecha de nacimiento.' : birthDateError(parts.dia, parts.mes, parts.anio);
+    // `birthDateError` already enforces the app-wide 18+ floor (MIN_PROFILE_AGE).
     if (message) { setError(message); return; }
-    if (ageOn(Number(parts.anio), Number(parts.mes), Number(parts.dia)) < 18) {
-      setError('El mapa es solo para mayores de 18 años.');
-      return;
-    }
     setError(null);
     save.mutate(toIsoBirthDate(parts));
   };
@@ -60,7 +57,7 @@ export function BirthDateSheet({ visible, profile, onClose, onSaved }: {
   return (
     <BottomSheet
       onClose={onClose}
-      subtitle="En el mapa solo aparecen mayores de edad. Los demás verán tu edad, nunca la fecha."
+      subtitle="Los demás verán tu edad, nunca la fecha."
       title="¿Cuándo naciste?"
       visible={visible}
     >
