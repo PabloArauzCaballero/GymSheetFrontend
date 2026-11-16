@@ -9,6 +9,7 @@ import { Alert, Text, View } from 'react-native';
 import { Button, Input, textLinkStyle } from '@/components/ui';
 import { AuthAlert, AuthShell } from '@/components/auth-shell';
 import { accountEmailTextProps } from '@/lib/credential-input';
+import { loginFailureMessage } from '@/lib/suspension-notice';
 import { EmailSuggestion } from '@/features/first-impression/field-hint';
 import { emailTypoSuggestion } from '@/features/first-impression/signup-hints';
 import { useAuthStore } from '@/state/auth-store';
@@ -24,6 +25,12 @@ import {
   wasBiometricOffered,
   type BiometricKind,
 } from '@/storage/biometric-login';
+
+function credentialsMessage(error: unknown): string {
+  return error instanceof ApiError
+    ? authErrorMessage(error.kind, 'login', error.message)
+    : authErrorMessage(undefined, 'login');
+}
 
 export default function LoginScreen() {
   const login = useAuthStore((state) => state.login);
@@ -88,11 +95,7 @@ export default function LoginScreen() {
         setFailure('Tu acceso rápido caducó. Entra con tu contraseña.');
       }
     } catch (error) {
-      setFailure(
-        error instanceof ApiError
-          ? authErrorMessage(error.kind, 'login', error.message)
-          : authErrorMessage(undefined, 'login'),
-      );
+      setFailure(loginFailureMessage(error, () => credentialsMessage(error)));
     }
   }, [loginWithQuickLogin]);
 
@@ -125,12 +128,9 @@ export default function LoginScreen() {
     } catch (error) {
       // El mapeo vive en `@gymsheet/domain`, así que la web dice exactamente lo
       // mismo ante el mismo fallo. Un 401 aquí es contraseña incorrecta, no
-      // sesión caducada.
-      setFailure(
-        error instanceof ApiError
-          ? authErrorMessage(error.kind, 'login', error.message)
-          : authErrorMessage(undefined, 'login'),
-      );
+      // sesión caducada. A sanction (403 ACCOUNT_SUSPENDED / ACCOUNT_BANNED)
+      // is said by its code, with its reason and what the person can still ask.
+      setFailure(loginFailureMessage(error, () => credentialsMessage(error)));
     }
   });
 

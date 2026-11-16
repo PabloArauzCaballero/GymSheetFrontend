@@ -31,14 +31,19 @@ describe('requireSession with a suspended account', () => {
       json(401, {
         code: 'ACCOUNT_SUSPENDED',
         detail: 'Tu cuenta está suspendida mientras revisamos un reporte.',
-        details: { pendingReview: true },
+        details: {
+          pendingReview: true,
+          reason: { code: 'MENOR_DE_EDAD', label: 'Menor de edad', text: 'la cuenta parece ser de una persona menor de 18 años' },
+        },
       }),
     );
     const { requireSession } = await import('./session');
+    // Only the reason code travels; its words never reach the URL.
     await expect(requireSession()).rejects.toThrow(
-      'REDIRECT /api/auth/logout?returnTo=%2Flogin%3Fsuspended%3Dreview',
+      'REDIRECT /api/auth/logout?returnTo=%2Flogin%3Fsuspended%3Dreview%26reason%3DMENOR_DE_EDAD',
     );
     expect(mocks.redirect).toHaveBeenCalledTimes(1);
+    expect(String(mocks.redirect.mock.calls[0]?.[0])).not.toMatch(/Menor|menor/u);
   });
 
   it('keeps the plain logout for a token that is simply no longer valid', async () => {

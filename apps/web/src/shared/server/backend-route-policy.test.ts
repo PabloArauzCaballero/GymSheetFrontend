@@ -28,6 +28,7 @@ const allowedCases: Array<[string[], string]> = [
   [['me', 'blocks', id], `/me/blocks/${id}`],
   // Franja 4: consents and account rights.
   [['me', 'consents'], '/me/consents'],
+  [['admin', 'users', id, 'close'], `/admin/users/${id}/close`],
   [['me', 'consents', 'ORIENTATION'], '/me/consents/ORIENTATION'],
   [['me', 'account'], '/me/account'],
   [['me', 'account', 'closure-preview'], '/me/account/closure-preview'],
@@ -139,6 +140,9 @@ const blockedCases: Array<[string[]]> = [
   [['..', 'secrets']],
   [['gateway', 'events']],
   [['admin', 'media', id]],
+  // Only `close` on a UUID under `/admin/users`, nothing else of that prefix.
+  [['admin', 'users', id]],
+  [['admin', 'users', 'not-a-uuid', 'close']],
   // `targetKind` es el enum cerrado de moderación, no un comodín.
   [['admin', 'moderation', 'cases', 'BOGUS_KIND', id]],
   // La administración del catálogo de la senda no pasa por el BFF: la pantalla
