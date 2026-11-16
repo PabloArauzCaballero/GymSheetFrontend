@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { fillSignupForm } from './alta-datos';
+import { dismissTour } from './fixtures';
 
 /**
  * Email verification after a web signup. Needs the backend and PostgreSQL
@@ -29,6 +30,8 @@ test('a new account sees the banner, a wrong PIN error and the resend cooldown',
   // Persistent banner in the portal while the email is unverified.
   const banner = page.getByRole('complementary', { name: 'Verifica tu correo' });
   await expect(banner).toBeVisible({ timeout: 15_000 });
+  // A new account sees the welcome tour first; a person closes it before anything else.
+  await dismissTour(page);
   await banner.getByRole('link', { name: 'Verificar ahora' }).click();
   await expect(page).toHaveURL(/\/verificar-correo$/u);
   await expect(page.getByRole('heading', { name: 'Verifica tu correo' })).toBeVisible();
