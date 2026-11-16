@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { EntityPaymentConfig, EntityPlan } from '@gymsheet/schemas';
+import type { PublicPaymentConfig, EntityPlan } from '@gymsheet/schemas';
 
 /** Paso 1 del pago: el importe, el QR y los datos bancarios del comercio. */
 export function CheckoutBankDetails({
@@ -7,7 +7,7 @@ export function CheckoutBankDetails({
   paymentConfig,
 }: {
   plan: EntityPlan;
-  paymentConfig: EntityPaymentConfig | null;
+  paymentConfig: PublicPaymentConfig | null;
 }) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
@@ -73,13 +73,6 @@ export function CheckoutBankDetails({
                 </button>
               </div>
             </div>
-
-            {paymentConfig.taxId && (
-              <div className="flex justify-between items-center py-1 border-b border-[var(--border-subtle)]">
-                <span className="text-[var(--text-muted)]">NIT / CI / Tax ID:</span>
-                <span className="font-mono text-[var(--text)]">{paymentConfig.taxId}</span>
-              </div>
-            )}
 
             {paymentConfig.aliasOrPhone && (
               <div className="flex justify-between items-center py-1 border-b border-[var(--border-subtle)]">

@@ -7,7 +7,7 @@ import type {
   CreateReviewReplyInput,
   DirectoryEntitySummary,
   DirectoryFilterQuery,
-  EntityPaymentConfig,
+  PublicPaymentConfig,
   EntityPlan,
   EntityReviewsResponse,
   ListReviewsQuery,
@@ -19,7 +19,7 @@ import type {
 import {
   categoryTreeNodeSchema,
   directoryEntitySummarySchema,
-  entityPaymentConfigSchema,
+  publicPaymentConfigSchema,
   entityPlanSchema,
   entityReviewsResponseSchema,
   paymentOrderSchema,
@@ -130,9 +130,9 @@ export const directoryClient = {
   },
 
   getEntityPaymentConfig: (entityId: string) => {
-    return apiRequest<EntityPaymentConfig | null>(
+    return apiRequest<PublicPaymentConfig | null>(
       `/public/directory/entities/${encodeURIComponent(entityId)}/payment-config`,
-      entityPaymentConfigSchema.nullable()
+      publicPaymentConfigSchema.nullable()
     );
   },
 

@@ -6,6 +6,7 @@ import {
   persistCatalogCache,
   restoreCatalogCache,
 } from "@/lib/query-cache";
+import { accountKindOf } from "@gymsheet/domain";
 import { useAuthStore } from "@/state/auth-store";
 
 /**
@@ -22,6 +23,8 @@ import { useAuthStore } from "@/state/auth-store";
 export function CatalogWarmup() {
   const queryClient = useQueryClient();
   const status = useAuthStore((state) => state.status);
+  // The exercise catalog is a person surface: a business account gets 403 there (ADR-0020).
+  const isBusiness = useAuthStore((state) => (state.principal ? accountKindOf(state.principal) === "BUSINESS" : false));
 
   useEffect(() => {
     let stop = () => undefined as void;
@@ -40,13 +43,13 @@ export function CatalogWarmup() {
       void clearCatalogCache();
       return;
     }
-    if (status !== "authenticated") return;
+    if (status !== "authenticated" || isBusiness) return;
     void queryClient.prefetchQuery({
       queryKey: ["exercises", "taxonomy"],
       queryFn: () => exerciseService.taxonomy(),
       staleTime: 30 * 60 * 1000,
     });
-  }, [queryClient, status]);
+  }, [queryClient, status, isBusiness]);
 
   return null;
 }

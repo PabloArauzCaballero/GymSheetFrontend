@@ -14,10 +14,15 @@
  *
  * `MODERATOR` is the central REPP moderation team (backend ADR-0018): a
  * platform role like `SYSTEM_ADMIN`, never gym staff.
+ *
+ * `NEGOCIO` is a marketplace business account (backend ADR-0020): one login
+ * per gym, coach, center, store or service provider. It is not a person, so
+ * it never reaches the person portal (`accountKind` decides the shell).
  */
 export const userRoles = [
   'SYSTEM_ADMIN',
   'MODERATOR',
+  'NEGOCIO',
   'ADMIN',
   'CLIENTE',
   'ENTRENADOR_EXTERNO',

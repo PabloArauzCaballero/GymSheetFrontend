@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import type { EntityPaymentConfig, EntityPlan, PaymentOrder } from '@gymsheet/schemas';
+import type { PublicPaymentConfig, EntityPlan, PaymentOrder } from '@gymsheet/schemas';
 import { directoryClient } from '../services/directory-client';
 import { CheckoutBankDetails } from './checkout-bank-details';
 import { ReceiptForm } from './receipt-form';
 
 export interface OrderCheckoutModalProps {
   plan: EntityPlan;
-  paymentConfig: EntityPaymentConfig | null;
+  paymentConfig: PublicPaymentConfig | null;
   entityId: string;
   entityName: string;
   onClose: () => void;

@@ -22,7 +22,7 @@ import type {
   DirectoryEntitySummary,
   EntityReviewsResponse,
   EntityPlan,
-  EntityPaymentConfig,
+  PublicPaymentConfig,
   PaymentOrder,
 } from '@gymsheet/schemas';
 import { directoryService, directoryPaymentsService, communityService, membershipService } from '@/api/services';
@@ -80,7 +80,7 @@ export default function DirectorioScreen() {
   // Estados para Marketplace y Pagos por QR
   const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<EntityPlan | null>(null);
   const [currentOrder, setCurrentOrder] = useState<PaymentOrder | null>(null);
-  const [currentPaymentConfig, setCurrentPaymentConfig] = useState<EntityPaymentConfig | null>(null);
+  const [currentPaymentConfig, setCurrentPaymentConfig] = useState<PublicPaymentConfig | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [receiptUrl, setReceiptUrl] = useState('');
   const [receiptReference, setReceiptReference] = useState('');
@@ -160,7 +160,7 @@ export default function DirectorioScreen() {
   });
 
   // 6. Cargar configuración de pago y QR bancario de la entidad
-  const { data: entityPaymentConfig } = useQuery<EntityPaymentConfig | null>({
+  const { data: entityPaymentConfig } = useQuery<PublicPaymentConfig | null>({
     queryKey: ['directory-entity-payment-config', entityDetail?.id],
     queryFn: () => (entityDetail?.id ? directoryPaymentsService.getPaymentConfig(entityDetail.id) : null),
     enabled: Boolean(entityDetail?.id),
@@ -947,11 +947,6 @@ export default function DirectorioScreen() {
                     <Text style={styles.bankDetailValue}>
                       {currentPaymentConfig?.accountHolderName ?? entityDetail?.name}
                     </Text>
-                  </View>
-
-                  <View style={styles.bankDetailRow}>
-                    <Text style={styles.bankDetailLabel}>Doc. Identidad / NIT / CI:</Text>
-                    <Text style={styles.bankDetailValue}>{currentPaymentConfig?.taxId ?? 'N/D'}</Text>
                   </View>
 
                   <View style={styles.bankDetailRow}>

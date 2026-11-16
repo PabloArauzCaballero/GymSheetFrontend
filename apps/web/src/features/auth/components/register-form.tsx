@@ -24,6 +24,7 @@ import { currentLegalQueryKey, useCurrentLegal } from '@/features/auth/hooks/use
 import { useSignupProtection } from '@/features/auth/hooks/use-signup-protection';
 import { registerFieldErrors } from '@/features/auth/lib/register-errors';
 import { signupCopy } from '@/features/auth/lib/signup';
+import { honeypotValue } from '@/features/auth/lib/honeypot';
 import {
   isTermsVersionOutdated,
   legalGateCopy,
@@ -205,10 +206,3 @@ export function RegisterForm() {
   );
 }
 
-/** The honeypot is uncontrolled and outside the form values: read it from the submitted form. */
-function honeypotValue(event?: BaseSyntheticEvent): string {
-  const target: unknown = event?.target;
-  if (!(target instanceof HTMLFormElement)) return '';
-  const value = new FormData(target).get('website');
-  return typeof value === 'string' ? value : '';
-}

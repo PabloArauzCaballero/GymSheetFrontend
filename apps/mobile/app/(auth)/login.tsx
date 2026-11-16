@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginDefaults, loginSchema, type LoginInput } from '@gymsheet/schemas';
-import { authCopy, authErrorMessage } from '@gymsheet/domain';
+import { authCopy, authErrorMessage, businessDestination, businessEntryCopy } from '@gymsheet/domain';
 import { ApiError } from '@gymsheet/api-client';
 import { Link, useRouter } from 'expo-router';
 import { Alert, Text, View } from 'react-native';
@@ -148,6 +148,12 @@ export default function LoginScreen() {
             style={{ alignSelf: 'stretch' }}
             variant="secondary"
           />
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.xs }}>
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{businessEntryCopy.prompt}</Text>
+            <Link href={businessDestination.mobile.signup} style={textLinkStyle()}>
+              {businessEntryCopy.action}
+            </Link>
+          </View>
         </View>
       }
       title={authCopy.login.title}

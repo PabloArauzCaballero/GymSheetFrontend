@@ -35,12 +35,20 @@ export function isTermsVersionOutdated(error: unknown): error is { code: string;
 }
 
 /** Where each document is read in the app, and how it is named. */
-type LegalHref = '/(auth)/terminos' | '/(auth)/privacidad' | '/(auth)/normas';
+type LegalHref =
+  | '/(auth)/terminos'
+  | '/(auth)/privacidad'
+  | '/(auth)/normas'
+  | '/(auth)/negocio-terminos'
+  | '/(auth)/negocio-datos';
 
 export const legalDocumentRoutes: Readonly<Record<LegalDocument, { label: string; href: LegalHref; path: string }>> = {
   TERMS: { label: legalDocumentLabels.TERMS, href: '/(auth)/terminos', path: '/terminos' },
   PRIVACY: { label: legalDocumentLabels.PRIVACY, href: '/(auth)/privacidad', path: '/privacidad' },
   COMMUNITY: { label: legalDocumentLabels.COMMUNITY, href: '/(auth)/normas', path: '/normas' },
+  // Business accounts (ADR-0020): read from the business signup and the legal gate.
+  BUSINESS_TERMS: { label: legalDocumentLabels.BUSINESS_TERMS, href: '/(auth)/negocio-terminos', path: '/negocio-terminos' },
+  BUSINESS_DPA: { label: legalDocumentLabels.BUSINESS_DPA, href: '/(auth)/negocio-datos', path: '/negocio-datos' },
 };
 
 /** True while the person reads a document from the gate (the gate steps aside). */

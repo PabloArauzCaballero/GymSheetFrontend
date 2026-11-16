@@ -28,6 +28,13 @@ const allowedCases: Array<[string[], string]> = [
   [['me', 'blocks', id], `/me/blocks/${id}`],
   // Franja 4: consents and account rights.
   [['me', 'consents'], '/me/consents'],
+  // Franja 8a: business accounts and public handles.
+  [['business', 'me'], '/business/me'],
+  [['business', 'me', 'profile'], '/business/me/profile'],
+  [['business', 'me', 'handle'], '/business/me/handle'],
+  [['business', 'me', 'media', 'COVER'], '/business/me/media/COVER'],
+  [['public', 'handles', 'top.fitness_bo'], '/public/handles/top.fitness_bo'],
+  [['public', 'handles', '@Top.Fit', 'availability'], '/public/handles/%40Top.Fit/availability'],
   [['admin', 'users', id, 'close'], `/admin/users/${id}/close`],
   [['me', 'consents', 'ORIENTATION'], '/me/consents/ORIENTATION'],
   [['me', 'account'], '/me/account'],
@@ -158,6 +165,10 @@ const blockedCases: Array<[string[]]> = [
   [['..', 'secrets']],
   [['gateway', 'events']],
   [['admin', 'media', id]],
+  // Business routes outside the 8a contract, and a handle with a slash.
+  [['business', 'signup']],
+  [['business', 'me', 'media', 'GALLERY']],
+  [['public', 'handles', 'a/b']],
   // Only `close` on a UUID under `/admin/users`, nothing else of that prefix.
   [['admin', 'users', id]],
   [['admin', 'users', 'not-a-uuid', 'close']],

@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import {
+  businessSessionUserSchema,
+  businessSummarySchema,
+  type BusinessSignupPayload,
+  type PublishedLegalDocument,
   currentLegalDocumentsSchema,
   pendingLegalDocumentsSchema,
   registerTicketSchema,
@@ -179,4 +183,30 @@ export async function completeGoogleSignup(input: Omit<IdentityCompletionPayload
   });
   if (!response.ok) throw await apiErrorFromResponse(response);
   return identityResultSchema.parse(await response.json()).data;
+}
+
+// Business accounts (ADR-0020, franja 8a).
+const signupEnvelope = z.object({
+  ok: z.literal(true),
+  data: z.object({ user: businessSessionUserSchema, business: businessSummarySchema }),
+});
+
+/** `POST /business/signup` through its own BFF route: it sets the HttpOnly session cookie. */
+export async function signupBusiness(payload: Omit<BusinessSignupPayload, 'attestation'>) {
+  const response = await fetch('/api/business/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw await apiErrorFromResponse(response);
+  return signupEnvelope.parse(await response.json()).data;
+}
+
+const businessLegalEnvelope = z.object({ ok: z.literal(true), data: currentLegalDocumentsSchema });
+
+/** The business legal set (BUSINESS_TERMS, BUSINESS_DPA, PRIVACY) the checkbox accepts as a whole. */
+export async function fetchBusinessLegal(): Promise<PublishedLegalDocument[]> {
+  const response = await fetch('/api/legal/current?accountKind=BUSINESS');
+  if (!response.ok) throw await apiErrorFromResponse(response);
+  return businessLegalEnvelope.parse(await response.json()).data.documents;
 }

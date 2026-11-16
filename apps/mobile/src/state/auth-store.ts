@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { sessionPrincipalSchema } from '@gymsheet/schemas';
 import { setActiveTenant } from '@/theme';
 import { initialSessionState, type SessionState } from '@gymsheet/auth';
-import type { LoginInput, RegisterPayload, SignupProtectionFields } from '@gymsheet/schemas';
+import type { BusinessSignupPayload, LoginInput, RegisterPayload, SignupProtectionFields } from '@gymsheet/schemas';
 import {
   apiClient,
   exchangeRefreshToken,
@@ -78,6 +78,7 @@ const authPayloadSchema = z
       rol: z.string(),
       tenantId: z.string().nullable().optional(),
       emailVerified: z.boolean().optional(),
+      accountKind: z.enum(['PERSON', 'BUSINESS']).optional(),
     }),
   })
   .transform((payload) => ({
@@ -90,6 +91,7 @@ const authPayloadSchema = z
       role: payload.user.rol,
       tenantId: payload.user.tenantId ?? null,
       emailVerified: payload.user.emailVerified,
+      accountKind: payload.user.accountKind,
     }),
   }));
 
@@ -112,6 +114,8 @@ interface AuthState extends Pick<SessionState, 'status' | 'principal'> {
   /** Face ID / fingerprint entry with the refresh token parked at logout. */
   loginWithQuickLogin: () => Promise<QuickLoginOutcome<void>>;
   register: (input: RegisterPayload, protection?: SignupProtectionFields) => Promise<void>;
+  /** `POST /business/signup` (ADR-0020): the session opens on the business shell. */
+  registerBusiness: (input: BusinessSignupPayload) => Promise<void>;
   /** Re-reads `GET /auth/me`, e.g. after confirming the email PIN. */
   refreshAccount: () => Promise<void>;
   setEmailVerified: (verified: boolean) => void;
@@ -207,6 +211,11 @@ export const useAuthStore = create<AuthState>((set, get) => {
         },
       });
       await openSession(payload);
+    },
+
+    async registerBusiness(input) {
+      // Same session contract as a person signup; `business` is read later from `GET /business/me`.
+      await openSession(await apiClient.request('/business/signup', authPayloadSchema, { method: 'POST', body: input }));
     },
 
     async refreshAccount() {

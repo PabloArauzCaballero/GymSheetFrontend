@@ -14,6 +14,8 @@ const permissionKey = '[a-z-]+%3A[a-z-]+';
 // alternativa explícita en vez de un comodín, igual que el token de activación
 // más abajo — así una URL no puede colar un valor que el backend rechazaría
 // de todos modos, pero sin llegar a intentarlo.
+// A public `@handle` (the backend normalizes it); `%40` is an encoded leading `@`.
+const handle = '(?:[A-Za-z0-9._-]|%40){1,96}';
 const moderationTargetKind =
   'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER|REEL|ROUTINE|EXERCISE|COMMENT|MUSIC_PLAYLIST';
 
@@ -276,6 +278,10 @@ const allowedPathPatterns = [
   new RegExp(`^/routines/${resourceId}/(copy|publish|unpublish|schedule|shares|structure|sync-from-source|calendar)$`, 'u'),
   new RegExp(`^/routines/${resourceId}/(shares|weeks)/${resourceId}$`, 'u'),
   new RegExp(`^/workouts/${resourceId}/apply-to-routine$`, 'u'),
+  // Business accounts (ADR-0020): own account, profile, handle, logo/cover; public handles.
+  /^\/business\/me(\/(profile|handle|media))?$/u,
+  /^\/business\/me\/media\/(LOGO|COVER)$/u,
+  new RegExp(`^/public/handles/${handle}(/availability)?$`, 'u'),
 ];
 
 export function resolveAllowedBackendPath(parts: string[]) {

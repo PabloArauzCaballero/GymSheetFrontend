@@ -21,7 +21,17 @@ import { accountService } from '../services/account-client';
 export function EmailVerificationForm({
   email,
   verified: alreadyVerified = false,
-}: Readonly<{ email: string; verified?: boolean }>) {
+  onVerified,
+}: Readonly<{
+  email: string;
+  verified?: boolean;
+  /**
+   * Inside a flow that owns the title and the next step (the business signup):
+   * no card or heading of its own, and success hands over instead of showing
+   * «Ir a Comunidad».
+   */
+  onVerified?: () => void;
+}>) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const cooldown = useCountdown();
@@ -36,6 +46,7 @@ export function EmailVerificationForm({
       // The layout re-reads `/auth/me` (banner) and the social queries that answered 403 retry.
       router.refresh();
       await queryClient.invalidateQueries();
+      onVerified?.();
     },
     onError: (failure: Error) => {
       setError(pinErrorMessage(failure));
@@ -71,7 +82,7 @@ export function EmailVerificationForm({
     confirm.mutate(parsed.data.pin);
   }
 
-  if (alreadyVerified || confirm.isSuccess) {
+  if ((alreadyVerified || confirm.isSuccess) && !onVerified) {
     return (
       <section
         className="panel grid justify-items-center gap-3 px-6 py-10 text-center"
@@ -89,17 +100,21 @@ export function EmailVerificationForm({
   }
 
   return (
-    <form className="panel grid gap-6 px-6 py-8 sm:px-8" noValidate onSubmit={submit}>
-      <header className="grid justify-items-center gap-2 text-center">
-        <span className="grid size-14 place-items-center rounded-full bg-[var(--surface-highest)]">
-          <MailCheck aria-hidden className="size-7 text-[var(--accent-ink)]" />
-        </span>
-        <h1 className="text-2xl font-semibold tracking-[-0.02em]">{emailVerificationCopy.title}</h1>
-        <p className="t-subhead max-w-sm text-[var(--text-muted)]">
-          {emailVerificationCopy.description}
-        </p>
+    <form className={onVerified ? 'grid gap-6' : 'panel grid gap-6 px-6 py-8 sm:px-8'} noValidate onSubmit={submit}>
+      {onVerified ? (
         <p className="t-subhead break-all font-medium">{email}</p>
-      </header>
+      ) : (
+        <header className="grid justify-items-center gap-2 text-center">
+          <span className="grid size-14 place-items-center rounded-full bg-[var(--surface-highest)]">
+            <MailCheck aria-hidden className="size-7 text-[var(--accent-ink)]" />
+          </span>
+          <h1 className="text-2xl font-semibold tracking-[-0.02em]">{emailVerificationCopy.title}</h1>
+          <p className="t-subhead max-w-sm text-[var(--text-muted)]">
+            {emailVerificationCopy.description}
+          </p>
+          <p className="t-subhead break-all font-medium">{email}</p>
+        </header>
+      )}
 
       <Field error={error ?? undefined} htmlFor="email-pin" label={emailVerificationCopy.pinLabel}>
         <Input

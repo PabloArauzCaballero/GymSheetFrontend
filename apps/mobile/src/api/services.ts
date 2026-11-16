@@ -56,7 +56,7 @@ import {
   entityReviewsResponseSchema,
   reviewItemSchema,
   entityPlanSchema,
-  entityPaymentConfigSchema,
+  publicPaymentConfigSchema,
   paymentOrderSchema,
   restSettingsResultSchema,
   skippedSetSchema,
@@ -1140,7 +1140,7 @@ export const directoryPaymentsService = {
   getPaymentConfig: (entityId: string) =>
     apiClient.request(
       `/public/directory/entities/${entityId}/payment-config`,
-      entityPaymentConfigSchema.nullable()
+      publicPaymentConfigSchema.nullable()
     ),
 
   createOrder: (input: { planId: string; athleteNotes?: string }) =>
@@ -1148,7 +1148,7 @@ export const directoryPaymentsService = {
       '/directory/payments/orders',
       z.object({
         order: paymentOrderSchema,
-        paymentConfig: entityPaymentConfigSchema.nullable(),
+        paymentConfig: publicPaymentConfigSchema.nullable(),
       }),
       {
         method: 'POST',

@@ -4,6 +4,7 @@ import { TourOverlay } from '@/components/tour';
 import { NudgeSync } from '@/features/nudge/nudge-sync';
 import { OnboardingGuard } from '@/features/onboarding-guard/onboarding-guard';
 import { detailStackOptions } from '@/lib/screen-options';
+import { personShellRedirect } from '@/features/business/business-routing';
 import { useAuthStore } from '@/state/auth-store';
 import { useTourStore } from '@/state/tour-store';
 
@@ -31,6 +32,7 @@ import { useTourStore } from '@/state/tour-store';
 export default function AppLayout() {
   const status = useAuthStore((state) => state.status);
   const farewell = useAuthStore((state) => state.farewell);
+  const principal = useAuthStore((state) => state.principal);
   // Se hidrata una vez, aqui: montarlo en una pantalla haria que el tour
   // reapareciera cada vez que esa pantalla se remonta.
   const hydrateTour = useTourStore((state) => state.hydrate);
@@ -43,6 +45,9 @@ export default function AppLayout() {
   if (status === 'unauthenticated') {
     return <Redirect href={farewell ? '/(auth)/hasta-pronto' : '/(auth)/login'} />;
   }
+  // A business account never mounts the person tabs (ADR-0020).
+  const businessHome = personShellRedirect(principal);
+  if (businessHome) return <Redirect href={businessHome} />;
 
   return (
     <>

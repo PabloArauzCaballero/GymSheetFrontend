@@ -86,6 +86,8 @@ export default function RootLayout() {
           >
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(app)" />
+            {/* Business accounts (ADR-0020): their own shell, never the person tabs. */}
+            <Stack.Screen name="(business)" />
           </Stack>
           {/* Above every screen and every role: the API blocks all calls with 428 until accepted. */}
           <LegalGate />

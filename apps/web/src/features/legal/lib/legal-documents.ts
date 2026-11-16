@@ -9,6 +9,8 @@ export const legalDocumentLinks: Readonly<Record<LegalDocument, { label: string;
   TERMS: { label: legalDocumentLabels.TERMS, href: '/terminos' },
   PRIVACY: { label: legalDocumentLabels.PRIVACY, href: '/privacidad' },
   COMMUNITY: { label: legalDocumentLabels.COMMUNITY, href: '/normas' },
+  BUSINESS_TERMS: { label: legalDocumentLabels.BUSINESS_TERMS, href: '/negocio/terminos' },
+  BUSINESS_DPA: { label: legalDocumentLabels.BUSINESS_DPA, href: '/negocio/datos' },
 };
 
 /** Any request blocked until the person accepts the current documents (428): the shared predicate. */

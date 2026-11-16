@@ -58,7 +58,11 @@ test('the gate steps aside only on the three document screens', () => {
 });
 
 test('signup and the legal gate cover the community rules too', () => {
-  assert.deepEqual(Object.keys(legalDocumentRoutes), ['TERMS', 'PRIVACY', 'COMMUNITY']);
+  // The catalog also carries the business set (ADR-0020); every document has its screen.
+  assert.deepEqual(Object.keys(legalDocumentRoutes), ['TERMS', 'PRIVACY', 'COMMUNITY', 'BUSINESS_TERMS', 'BUSINESS_DPA']);
+  assert.equal(legalDocumentRoutes.BUSINESS_TERMS.href, '/(auth)/negocio-terminos');
+  assert.equal(legalDocumentRoutes.BUSINESS_DPA.href, '/(auth)/negocio-datos');
+  assert.equal(isReadingLegalDocument('/negocio-datos'), true);
   assert.equal(legalDocumentRoutes.COMMUNITY.href, '/(auth)/normas');
   assert.equal(legalDocumentRoutes.COMMUNITY.label, 'Normas de la comunidad');
   // The signup checkbox names the three documents it accepts.

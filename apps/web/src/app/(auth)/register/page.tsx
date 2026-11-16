@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { authCopy } from '@gymsheet/domain';
 import { AuthFrame } from '@/features/auth/components/auth-frame';
+import { BusinessEntryLink } from '@/features/business/components/business-entry-link';
 import { GoogleSignIn } from '@/features/auth/components/google-sign-in';
 import { RegisterForm } from '@/features/auth/components/register-form';
 
@@ -14,6 +15,7 @@ export default function RegisterPage() {
       description={authCopy.register.description}
       eyebrow={authCopy.register.eyebrow}
       footer={
+        <>
         <p className="text-[var(--text-muted)]">
           {authCopy.register.switchPrompt}{' '}
           <Link
@@ -23,6 +25,8 @@ export default function RegisterPage() {
             {authCopy.register.switchAction}
           </Link>
         </p>
+        <BusinessEntryLink />
+        </>
       }
       title={authCopy.register.title}
     >

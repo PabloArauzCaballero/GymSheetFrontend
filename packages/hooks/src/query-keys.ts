@@ -38,6 +38,14 @@ export const queryKeys = {
   accountExportLatest: ['account', 'export', 'latest'] as const,
   /** Person verification by selfie (franja 6). */
   verification: ['verification', 'me'] as const,
+  /** Business accounts (ADR-0020, franja 8a). */
+  business: {
+    me: ['business', 'me'] as const,
+    legalCurrent: ['legal', 'current', 'BUSINESS'] as const,
+    categories: (entityType: string) => ['business', 'categories', entityType] as const,
+    handleAvailability: (handle: string) => ['business', 'handle-availability', handle] as const,
+    publicHandle: (handle: string) => ['public', 'handle', handle] as const,
+  },
   admin: {
     branches: (page: number) => ['admin', 'branches', page] as const,
     /** Todas las sedes (para el mapa); comparte prefijo para invalidarse con la lista. */

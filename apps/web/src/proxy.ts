@@ -25,7 +25,25 @@ const publicRoutes = ['/login', '/register', '/recover-password', '/completar-cu
 // siendo públicos — esta lista también exime del muro de acceso.
 // `/normas` (community rules) is a legal document like the other two, and
 // `/adios` is where a closed account lands, already without a session.
-const publicContentRoutes = ['/gimnasios', '/terminos', '/privacidad', '/normas', '/adios', '/directorio'];
+//
+// Business signup (ADR-0020) starts without a session, and its two legal
+// documents must be readable from it; `/n/` is the public `@handle` profile.
+// The business portal itself (`/negocio`) stays behind the wall.
+const publicContentRoutes = [
+  '/gimnasios',
+  '/terminos',
+  '/privacidad',
+  '/normas',
+  '/adios',
+  '/directorio',
+  '/negocio/registro',
+  '/negocio/terminos',
+  '/negocio/datos',
+  '/n/',
+];
+
+/** `/@topfit` → the handle, when the segment can be one (the backend normalizes and decides). */
+const HANDLE_SEGMENT = /^\/(?:@|%40)([A-Za-z0-9._%-]{1,96})\/?$/u;
 
 // Primeros segmentos que la aplicación resuelve de verdad. Sirve para dar 404
 // antes que el muro de acceso (M-4): sin esto, un enlace roto compartido en
@@ -60,6 +78,11 @@ export const knownRoutes = new Set([
   'interacciones',
   'marketplace',
   'membership',
+  // Public `@handle` profile: `/@topfit` is rewritten here (App Router cannot
+  // have an `@` folder: `@` names a parallel route).
+  'n',
+  // Business portal and signup (ADR-0020, franja 8a).
+  'negocio',
   // REPP moderation console (`MODERATOR`, `SYSTEM_ADMIN`; ADR-0018).
   'moderacion',
   'notifications',
@@ -106,6 +129,9 @@ function tenantFromPath(pathname: string): string | null {
 }
 
 function route(request: NextRequest) {
+  const handle = HANDLE_SEGMENT.exec(request.nextUrl.pathname)?.[1];
+  if (handle) return NextResponse.rewrite(new URL(`/n/${handle}${request.nextUrl.search}`, request.url));
+
   const tenantPrefix = tenantFromPath(request.nextUrl.pathname);
   if (tenantPrefix) {
     // Se retira el prefijo y se recuerda la marca en cookie: la aplicación

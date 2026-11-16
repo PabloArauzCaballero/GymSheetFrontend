@@ -17,6 +17,25 @@ export const entityPaymentConfigSchema = z.object({
 export type EntityPaymentConfig = z.infer<typeof entityPaymentConfigSchema>;
 export type EntityPaymentConfigInput = z.input<typeof entityPaymentConfigSchema>;
 
+/**
+ * What a buyer sees to pay (`GET /public/directory/entities/:id/payment-config`
+ * and `paymentConfig` of a new order): no tax id, ids or dates since franja 8a
+ * (D5), and `null` when the seller has no active method. `taxId` stays
+ * optional so an older backend that still sends it keeps parsing.
+ */
+export const publicPaymentConfigSchema = z.object({
+  bankName: z.string(),
+  accountHolderName: z.string(),
+  accountNumber: z.string(),
+  aliasOrPhone: z.string().nullable().optional(),
+  qrImageUrl: z.string(),
+  qrPayload: z.string().nullable().optional(),
+  instructions: z.string().nullable().optional(),
+  taxId: z.string().optional(),
+  isActive: z.boolean(),
+});
+export type PublicPaymentConfig = z.infer<typeof publicPaymentConfigSchema>;
+
 export const entityPlanTypeEnum = z.enum(['MEMBERSHIP_PLAN', 'PASS', 'SERVICE', 'PRODUCT']);
 export type EntityPlanType = z.infer<typeof entityPlanTypeEnum>;
 

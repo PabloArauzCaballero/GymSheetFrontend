@@ -1,8 +1,11 @@
+import { businessDestination } from '@gymsheet/domain';
+import { redirect } from 'next/navigation';
 import { Suspense, type ReactNode } from 'react';
 import { DeniedNotice } from '@/shared/components/feedback/denied-notice';
 import { PortalShell } from '@/shared/components/layout/portal-shell';
 import { impersonatedGym } from '@/shared/server/impersonation';
 import { requireSession } from '@/shared/server/session';
+import { isBusinessSession } from '@/shared/server/business-session';
 import { getPendingLegalDocuments } from '@/shared/server/legal';
 import { LegalGate } from '@/features/legal/components/legal-gate';
 import { OnboardingGuard } from '@/features/onboarding/components/onboarding-guard';
@@ -10,6 +13,8 @@ import { OnboardingGuard } from '@/features/onboarding/components/onboarding-gua
 export default async function PortalLayout({ children }: Readonly<{ children: ReactNode }>) {
   // In parallel: the legal check must not add a round trip to every portal load.
   const [session, pendingLegal] = await Promise.all([requireSession(), getPendingLegalDocuments()]);
+  // A business account never sees a person page or the person navigation (ADR-0020).
+  if (isBusinessSession(session)) redirect(businessDestination.web.home);
   // Only a platform admin can be operating a gym; the cookie is ignored for anyone else.
   const gym = session.role === 'SYSTEM_ADMIN' ? await impersonatedGym() : null;
   return (

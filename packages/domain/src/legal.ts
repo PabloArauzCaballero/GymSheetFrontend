@@ -15,6 +15,8 @@ export const legalDocumentLabels: Readonly<Record<LegalDocument, string>> = {
   TERMS: 'Términos y condiciones',
   PRIVACY: 'Política de privacidad',
   COMMUNITY: 'Normas de la comunidad',
+  BUSINESS_TERMS: 'Términos para negocios',
+  BUSINESS_DPA: 'Acuerdo de tratamiento de datos',
 };
 
 export const legalGateCopy = {

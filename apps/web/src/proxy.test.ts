@@ -82,3 +82,30 @@ describe('installation cookie', () => {
     expect(response.cookies.get('gymsheet_installation')).toBeUndefined();
   });
 });
+
+describe('business routes (ADR-0020)', () => {
+  it('rewrites /@handle to the public profile without a session', () => {
+    const response = proxy(new NextRequest('http://localhost:3002/@top.fitness'));
+    expect(response.headers.get('x-middleware-rewrite')).toBe('http://localhost:3002/n/top.fitness');
+  });
+
+  it('also rewrites an encoded @', () => {
+    const response = proxy(new NextRequest('http://localhost:3002/%40topfit'));
+    expect(response.headers.get('x-middleware-rewrite')).toBe('http://localhost:3002/n/topfit');
+  });
+
+  it('opens the business signup without a session', () => {
+    const response = proxy(new NextRequest('http://localhost:3002/negocio/registro'));
+    expect(response.headers.get('location')).toBeNull();
+  });
+
+  it('keeps the business portal behind the login wall', () => {
+    const response = proxy(new NextRequest('http://localhost:3002/negocio'));
+    expect(response.headers.get('location')).toBe('http://localhost:3002/login?returnTo=%2Fnegocio');
+  });
+
+  it('does not treat /notifications as the public /n/ profile', () => {
+    const response = proxy(new NextRequest('http://localhost:3002/notifications'));
+    expect(response.status).toBe(307);
+  });
+});

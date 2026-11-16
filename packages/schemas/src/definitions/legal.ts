@@ -2,11 +2,12 @@ import { z } from 'zod';
 import { consentVersionSchema } from './privacy';
 
 /**
- * Legal documents a person accepts. Mirrors the backend's `src/modules/legal`
- * catalog. COMMUNITY is the community rules: the terms incorporate them, so
- * signup and the legal gate accept all three.
+ * Legal documents of the backend's `src/modules/legal` catalog. A person
+ * accepts TERMS, PRIVACY and COMMUNITY (the terms incorporate the community
+ * rules); a business account accepts BUSINESS_TERMS, BUSINESS_DPA and PRIVACY
+ * (`GET /legal/current?accountKind=BUSINESS`, ADR-0020).
  */
-export const legalDocuments = ['TERMS', 'PRIVACY', 'COMMUNITY'] as const;
+export const legalDocuments = ['TERMS', 'PRIVACY', 'COMMUNITY', 'BUSINESS_TERMS', 'BUSINESS_DPA'] as const;
 export type LegalDocument = (typeof legalDocuments)[number];
 
 export const legalDocumentVersionSchema = z.object({

@@ -52,6 +52,10 @@ export const sessionPrincipalSchema = z.object({
   tenantId: z.string().nullable().optional(),
   /** Whether the account proved its mailbox (franja 3). Absent from older backends. */
   emailVerified: z.boolean().optional(),
+  /** Person or business (ADR-0020). Absent from older backends: `accountKindOf` derives it from the role. */
+  accountKind: z.enum(['PERSON', 'BUSINESS']).optional(),
+  /** The listing of a business account (`GET /auth/me`); null for a person. */
+  businessEntityId: z.string().uuid().nullable().optional(),
 });
 
 export const profileSchema = z.object({
