@@ -14,6 +14,16 @@ type PreviewInput = {
   lastMessageType?: string | null;
   lastMessageFromMe?: boolean;
   lastMessageAt: string | null;
+  systemKind?: string | null;
+};
+
+/**
+ * Read-only system chats explain what they are until their first message:
+ * «sin mensajes» next to a pinned chat you can't write in reads like a bug.
+ */
+const EMPTY_SYSTEM_PREVIEW: Record<string, string> = {
+  CORPORATE: 'Novedades y avisos de GymSheet.',
+  TENANT_ADMIN: 'Avisos de la administración de tu gimnasio.',
 };
 
 const ICON_BY_TYPE: Record<string, string> = {
@@ -36,7 +46,8 @@ export const UNKNOWN_MESSAGE_PREVIEW = 'Mensaje';
  */
 export function conversationPreview(input: PreviewInput): ConversationPreview {
   if (!input.lastMessageAt) {
-    return { icon: null, prefix: null, text: EMPTY_CONVERSATION_PREVIEW, subdued: true };
+    const system = input.systemKind ? EMPTY_SYSTEM_PREVIEW[input.systemKind] : undefined;
+    return { icon: null, prefix: null, text: system ?? EMPTY_CONVERSATION_PREVIEW, subdued: true };
   }
   const type = input.lastMessageType ?? null;
   const text = input.lastMessage?.trim() || UNKNOWN_MESSAGE_PREVIEW;

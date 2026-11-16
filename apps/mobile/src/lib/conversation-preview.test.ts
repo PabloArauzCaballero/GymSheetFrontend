@@ -42,3 +42,15 @@ test('system and deleted rows are subdued and never prefixed', () => {
 test('an unknown server type falls back to plain text', () => {
   assert.equal(conversationPreview({ lastMessage: 'x', lastMessageType: 'poll', lastMessageAt: at }).icon, null);
 });
+
+test('an empty system chat says what it is instead of «sin mensajes»', () => {
+  assert.equal(
+    conversationPreview({ lastMessage: null, lastMessageAt: null, systemKind: 'TENANT_ADMIN' }).text,
+    'Avisos de la administración de tu gimnasio.',
+  );
+  assert.equal(conversationPreview({ lastMessage: null, lastMessageAt: null, systemKind: 'CORPORATE' }).text, 'Novedades y avisos de GymSheet.');
+});
+
+test('an unknown system kind keeps the generic empty copy', () => {
+  assert.equal(conversationPreview({ lastMessage: null, lastMessageAt: null, systemKind: 'OTHER' }).text, EMPTY_CONVERSATION_PREVIEW);
+});
