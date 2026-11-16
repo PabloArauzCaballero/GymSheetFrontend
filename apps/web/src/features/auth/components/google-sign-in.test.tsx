@@ -1,6 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '@/shared/api/api-error';
 import { GoogleSignIn } from './google-sign-in';
+
+const auth = vi.hoisted(() => ({ requestGoogleNonce: vi.fn(), signInWithGoogle: vi.fn() }));
+vi.mock('@/features/auth/services/auth-client', () => auth);
 
 const env = vi.hoisted(() => ({ publicEnv: {} as Record<string, string | undefined> }));
 vi.mock('@/shared/config/public-env', () => env);
@@ -17,6 +21,7 @@ vi.mock('next/script', () => ({
 describe('GoogleSignIn', () => {
   beforeEach(() => {
     env.publicEnv = {};
+    delete window.google;
   });
 
   it('renders nothing (and loads no script) without NEXT_PUBLIC_GOOGLE_CLIENT_ID', () => {
@@ -33,5 +38,36 @@ describe('GoogleSignIn', () => {
       'https://accounts.google.com/gsi/client',
     );
     expect(screen.getByRole('group', { name: 'Continuar con Google' })).toBeInTheDocument();
+  });
+
+  it('says an expulsion by its code when Google proved the owner (403 ACCOUNT_BANNED)', async () => {
+    env.publicEnv = { NEXT_PUBLIC_GOOGLE_CLIENT_ID: 'client.apps.googleusercontent.com' };
+    let callback: ((answer: { credential: string }) => void) | undefined;
+    window.google = {
+      accounts: {
+        id: {
+          initialize: (options) => {
+            callback = options.callback as typeof callback;
+          },
+          renderButton: vi.fn(),
+        },
+      },
+    };
+    auth.requestGoogleNonce.mockResolvedValue('nonce-1');
+    auth.signInWithGoogle.mockRejectedValue(
+      new ApiError({
+        message: 'Cerramos tu cuenta por incumplir las normas de la comunidad.',
+        status: 403,
+        kind: 'forbidden',
+        code: 'ACCOUNT_BANNED',
+        details: { reason: { code: 'SPAM', label: 'Spam', text: 'publicidad o mensajes repetidos que nadie pidió' } },
+      }),
+    );
+    render(<GoogleSignIn />);
+    await waitFor(() => expect(callback).toBeDefined());
+    await act(async () => callback?.({ credential: 'id-token' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Tu cuenta fue expulsada por incumplir varias veces las normas de la comunidad. Motivo: Spam (publicidad o mensajes repetidos que nadie pidió). Para tus datos, escribe a {{REPP_CONTACTO_PRIVACIDAD}}.',
+    );
   });
 });

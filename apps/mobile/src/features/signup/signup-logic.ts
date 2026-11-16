@@ -1,5 +1,5 @@
 import { ApiError, fieldErrorEntries } from '@gymsheet/api-client';
-import { authCopy, authErrorMessage, signupRejectedMessage } from '@gymsheet/domain';
+import { accountSanctionMessage, authCopy, authErrorMessage, signupRejectedMessage } from '@gymsheet/domain';
 import { SIGNUP_REJECTED, registerServerFields, type RegisterServerField } from '@gymsheet/schemas';
 import { toIsoBirthDate, type BirthDateParts } from '../../lib/birth-date';
 
@@ -41,6 +41,9 @@ export function signupServerErrors(error: unknown): {
   if (error instanceof ApiError && error.code === SIGNUP_REJECTED) {
     return { fields: [], banner: signupRejectedMessage };
   }
+  // A suspension inherited by the address (403 ACCOUNT_SUSPENDED) is said by its code.
+  const sanction = accountSanctionMessage(error);
+  if (sanction) return { fields: [], banner: sanction };
   const fields = fieldErrorEntries(error, registerServerFields);
   if (fields.length > 0) return { fields, banner: null };
   const banner =

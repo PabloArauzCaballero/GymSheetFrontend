@@ -241,6 +241,8 @@ const allowedPathPatterns = [
   // The latest request (resumes a pending or ready copy after a reload).
   /^\/me\/export\/latest$/u,
   new RegExp(`^/me/export/${uuid}(/download)?$`, 'u'),
+  // An ADMIN closes a staff account of their gym (POST; scope decided by the backend).
+  new RegExp(`^/admin/users/${uuid}/close$`, 'u'),
   // Social: bloqueos, descubrimiento, mapa y confirmaciones de lectura.
   /^\/me\/blocks$/u,
   new RegExp(`^/me/blocks/${resourceId}$`, 'u'),

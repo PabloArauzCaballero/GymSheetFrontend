@@ -14,13 +14,14 @@ export async function GET() {
     }
     // The code travels so the client shows the suspension, never «sesión expirada».
     if (error instanceof AccountSuspendedError) {
-      const { pendingReview, until } = error.suspension;
+      const { pendingReview, until, reason } = error.suspension;
+      const withReason = reason ? { reason } : {};
       return NextResponse.json(
         {
           ok: false,
           code: ACCOUNT_SUSPENDED,
           detail: error.message,
-          details: pendingReview ? { pendingReview } : { pendingReview, until },
+          details: pendingReview ? { pendingReview, ...withReason } : { pendingReview, until, ...withReason },
         },
         { status: 401 },
       );

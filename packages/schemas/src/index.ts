@@ -10,6 +10,8 @@ export * from './definitions/legal';
 export * from './definitions/account-security';
 export * from './definitions/privacy';
 export * from './definitions/account-rights';
+export * from './definitions/account-sanction';
+export * from './definitions/notifications';
 export * from './definitions/social-map';
 export * from './definitions/stories';
 export * from './definitions/reels';

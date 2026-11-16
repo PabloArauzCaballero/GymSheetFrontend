@@ -105,3 +105,17 @@ test('a rejection or a taken email spends the ticket; a field error does not', (
   assert.ok(!needsFreshTicket(new ApiError({ message: 'x', status: 400, kind: 'validation', fieldErrors: { email: 'x' } })));
   assert.ok(!needsFreshTicket(new Error('boom')));
 });
+
+test('a signup refused by an inherited suspension says it by its code, with its reason and rights', () => {
+  const suspended = new ApiError({
+    message: 'Tu cuenta está suspendida mientras revisamos un reporte.',
+    status: 403,
+    kind: 'forbidden',
+    code: 'ACCOUNT_SUSPENDED',
+    details: { pendingReview: true, reason: { code: 'SPAM', label: 'Spam', text: 'publicidad o mensajes repetidos que nadie pidió' } },
+  });
+  const { fields, banner } = signupServerErrors(suspended);
+  assert.deepEqual(fields, []);
+  assert.match(banner ?? '', /^Tu cuenta está suspendida mientras revisamos una denuncia\. Motivo: Spam \(publicidad/u);
+  assert.match(banner ?? '', /escribe a \{\{REPP_CONTACTO_PRIVACIDAD\}\}\.$/u);
+});
