@@ -28,7 +28,8 @@ export function WeekView({
   return (
     <div className="grid gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-1">
+        {/* No fixed min width: a rem-based one was 256 px at 200 % text, wider than a 320 px phone. */}
+        <div className="flex min-w-0 items-center gap-1">
           <Button
             aria-label="Semana anterior"
             disabled={week.numero <= 1}
@@ -38,7 +39,7 @@ export function WeekView({
           >
             <ChevronLeft aria-hidden className="size-4" />
           </Button>
-          <p aria-live="polite" className="min-w-32 text-center text-sm font-semibold">
+          <p aria-live="polite" className="min-w-0 text-center text-sm font-semibold tabular-nums text-balance">
             Semana {week.numero} de {totalWeeks}
           </p>
           <Button

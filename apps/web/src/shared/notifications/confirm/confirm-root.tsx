@@ -5,6 +5,7 @@ import { AlertTriangle, HelpCircle, Info } from 'lucide-react';
 import { useRef, useSyncExternalStore } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/cn';
+import { useFocusReturn } from '@/shared/lib/focus-return';
 import { confirmStore, type ActiveConfirmation } from '@gymsheet/notifications';
 
 const SEVERITY_ICON = {
@@ -37,10 +38,7 @@ export function ConfirmRoot() {
     confirmStore.getSnapshot,
     confirmStore.getServerSnapshot,
   );
-  const cancelRef = useRef<HTMLButtonElement>(null);
-
   const open = active !== null;
-  const Icon = active ? SEVERITY_ICON[active.severity] : HelpCircle;
 
   return (
     <DialogPrimitive.Root
@@ -52,72 +50,83 @@ export function ConfirmRoot() {
       }}
     >
       {active ? (
-        <DialogPrimitive.Portal>
+        <DialogPrimitive.Portal key={active.id}>
           <DialogPrimitive.Overlay className="dialog-overlay fixed inset-0 z-[100] bg-[var(--overlay)] backdrop-blur-[2px]" />
           {/* Centrado por capa flex, igual que el resto de diálogos: el panel no
               se desplaza sobre sí mismo, así que nada se mueve bajo el dedo. */}
           <div className="fixed inset-0 z-[101] grid place-items-center overflow-y-auto p-4">
-            <DialogPrimitive.Content
-              onEscapeKeyDown={(event) => {
-                if (!active.dismissible) event.preventDefault();
-              }}
-              onPointerDownOutside={(event) => {
-                if (!active.dismissible) event.preventDefault();
-              }}
-              onOpenAutoFocus={(event) => {
-                // Safe default on destructive prompts: focus Cancel, not Delete.
-                if (active.severity === 'danger' && cancelRef.current) {
-                  event.preventDefault();
-                  cancelRef.current.focus();
-                }
-              }}
-              className="dialog-panel relative max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-[8px] border border-[var(--border)] bg-[var(--surface-lowest)] p-6 shadow-[var(--shadow-dialog)]"
-            >
-              <div className="flex gap-4">
-                <span
-                  aria-hidden
-                  className={cn(
-                    'grid size-11 shrink-0 place-items-center rounded-full border',
-                    SEVERITY_ACCENT[active.severity],
-                  )}
-                >
-                  <Icon className="size-5" />
-                </span>
-                <div className="min-w-0">
-                  <DialogPrimitive.Title className="text-lg font-semibold tracking-[-0.02em]">
-                    {active.title}
-                  </DialogPrimitive.Title>
-                  <DialogPrimitive.Description className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
-                    {active.message}
-                  </DialogPrimitive.Description>
-                  {active.description ? (
-                    <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
-                      {active.description}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-              <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <Button
-                  ref={cancelRef}
-                  onClick={() => confirmStore.resolveActive('cancel')}
-                  type="button"
-                  variant="ghost"
-                >
-                  {active.cancelLabel}
-                </Button>
-                <Button
-                  onClick={() => confirmStore.resolveActive('confirm')}
-                  type="button"
-                  variant={CONFIRM_VARIANT[active.severity]}
-                >
-                  {active.confirmLabel}
-                </Button>
-              </div>
-            </DialogPrimitive.Content>
+            <ConfirmPanel active={active} />
           </div>
         </DialogPrimitive.Portal>
       ) : null}
     </DialogPrimitive.Root>
+  );
+}
+
+/** One confirmation; mounted per prompt so it remembers which control opened it. */
+function ConfirmPanel({ active }: Readonly<{ active: ActiveConfirmation }>) {
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const returnFocus = useFocusReturn();
+  const Icon = SEVERITY_ICON[active.severity] ?? HelpCircle;
+  return (
+      <DialogPrimitive.Content
+        onCloseAutoFocus={returnFocus}
+        onEscapeKeyDown={(event) => {
+          if (!active.dismissible) event.preventDefault();
+        }}
+        onPointerDownOutside={(event) => {
+          if (!active.dismissible) event.preventDefault();
+        }}
+        onOpenAutoFocus={(event) => {
+          // Safe default on destructive prompts: focus Cancel, not Delete.
+          if (active.severity === 'danger' && cancelRef.current) {
+            event.preventDefault();
+            cancelRef.current.focus();
+          }
+        }}
+        className="dialog-panel relative max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-[8px] border border-[var(--border)] bg-[var(--surface-lowest)] p-6 shadow-[var(--shadow-dialog)]"
+      >
+        <div className="flex gap-4">
+          <span
+            aria-hidden
+            className={cn(
+              'grid size-11 shrink-0 place-items-center rounded-full border',
+              SEVERITY_ACCENT[active.severity],
+            )}
+          >
+            <Icon className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <DialogPrimitive.Title className="text-lg font-semibold tracking-[-0.02em]">
+              {active.title}
+            </DialogPrimitive.Title>
+            <DialogPrimitive.Description className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+              {active.message}
+            </DialogPrimitive.Description>
+            {active.description ? (
+              <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+                {active.description}
+              </p>
+            ) : null}
+          </div>
+        </div>
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button
+            ref={cancelRef}
+            onClick={() => confirmStore.resolveActive('cancel')}
+            type="button"
+            variant="ghost"
+          >
+            {active.cancelLabel}
+          </Button>
+          <Button
+            onClick={() => confirmStore.resolveActive('confirm')}
+            type="button"
+            variant={CONFIRM_VARIANT[active.severity]}
+          >
+            {active.confirmLabel}
+          </Button>
+        </div>
+      </DialogPrimitive.Content>
   );
 }

@@ -66,13 +66,15 @@ export const onMedia = {
 } as const;
 
 /**
- * Botonera de la baraja de Comunidad (`accentHues` + `darkSurfaces` del
- * móvil): cada acción con su color, sobre un fondo oscuro de su mismo tono.
+ * Deck action row, the same language as the app's `DeckAction`: one quiet surface,
+ * a 1 px outline and a glyph in the same tone. Only the two decisions carry a hue
+ * (pass in danger, like in accent ink); undo, super like and message stay neutral,
+ * so the accent is not spent on five buttons at once.
  */
 export const deckActions = {
-  undo: { ink: '#F59E0B', bg: 'rgb(24 32 47 / 0.85)', edge: 'rgb(245 158 11 / 0.55)' },
-  pass: { ink: '#EF4444', bg: 'rgb(32 18 24 / 0.9)', edge: '#EF4444' },
-  star: { ink: '#06B6D4', bg: 'rgb(15 30 48 / 0.85)', edge: '#06B6D4' },
-  like: { ink: 'var(--accent-ink)', bg: 'rgb(25 38 18 / 0.9)', edge: 'var(--volt)' },
-  boost: { ink: '#A855F7', bg: 'rgb(30 20 48 / 0.85)', edge: '#A855F7' },
+  undo: { ink: 'var(--text-muted)', bg: 'var(--surface-low)', edge: 'var(--text-muted)' },
+  pass: { ink: 'var(--danger)', bg: 'var(--surface-low)', edge: 'var(--danger)' },
+  star: { ink: 'var(--text-muted)', bg: 'var(--surface-low)', edge: 'var(--text-muted)' },
+  like: { ink: 'var(--accent-ink)', bg: 'var(--surface-low)', edge: 'var(--accent-ink)' },
+  boost: { ink: 'var(--text-muted)', bg: 'var(--surface-low)', edge: 'var(--text-muted)' },
 } as const;

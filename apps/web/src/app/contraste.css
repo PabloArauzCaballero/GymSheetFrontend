@@ -11,3 +11,9 @@
 [data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-description] {
   color: var(--text-muted);
 }
+
+/* Toasts sit above the page chrome (header and tab bar, z-40) but below every modal layer (z-50 and
+ * the confirmation at z-100): Sonner's default z-index put a toast on top of a dialog's backdrop. */
+[data-sonner-toaster] {
+  z-index: 45 !important;
+}

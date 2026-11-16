@@ -11,6 +11,9 @@
  * de verdad exige `tabpanel`, `aria-controls` y navegación con flechas, y
  * prometer eso sin cumplirlo deja al lector de pantalla buscando un panel que
  * no existe.
+ *
+ * With very large text the labels wrap inside their pill instead of pushing the
+ * pair past the screen (the group used to scroll sideways, hiding «Di like»).
  */
 export function Segmented<Value extends string>({
   onChange,
@@ -24,7 +27,7 @@ export function Segmented<Value extends string>({
   return (
     <div
       aria-label="Cambiar de lista"
-      className="inline-flex w-fit max-w-full gap-1 overflow-x-auto rounded-full border border-[var(--border-subtle)] bg-[var(--surface-low)] p-1"
+      className="inline-flex w-fit max-w-full gap-1 rounded-[1.5rem] border border-[var(--border-subtle)] bg-[var(--surface-low)] p-1"
       role="group"
     >
       {options.map((option) => {
@@ -32,7 +35,7 @@ export function Segmented<Value extends string>({
         return (
           <button
             aria-pressed={active}
-            className={`min-h-11 shrink-0 rounded-full px-4 text-sm transition-colors duration-[var(--dur-2)] ${
+            className={`min-h-11 min-w-0 rounded-[calc(1.5rem-4px)] px-4 py-1 text-sm leading-tight text-balance transition-colors duration-[var(--dur-2)] ${
               active
                 ? 'bg-[var(--volt)] font-semibold text-[var(--accent-contrast)]'
                 : 'font-medium text-[var(--text-muted)] hover:text-[var(--text)]'
@@ -47,7 +50,7 @@ export function Segmented<Value extends string>({
                 className={
                   active
                     ? 'ml-1.5 tabular-nums'
-                    : 'ml-1.5 tabular-nums text-[var(--text-disabled)]'
+                    : 'ml-1.5 tabular-nums'
                 }
               >
                 {option.count}

@@ -65,17 +65,17 @@ export function AboutCard({ routine }: Readonly<{ routine: Routine }>) {
       </h2>
       <dl className="mt-4 grid gap-3 text-sm">
         {rows.map(([term, value]) => (
-          <div className="flex items-baseline justify-between gap-4" key={term}>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5" key={term}>
             <dt className="text-[var(--text-muted)]">{term}</dt>
-            <dd className="text-right font-semibold">{value}</dd>
+            <dd className="ml-auto min-w-0 text-right font-semibold">{value}</dd>
           </div>
         ))}
-        <div className="flex items-baseline justify-between gap-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
           <dt className="inline-flex items-center gap-1.5 text-[var(--text-muted)]">
             <Star aria-hidden className="size-4" />
             Valoración
           </dt>
-          <dd className="text-right font-semibold">
+          <dd className="ml-auto min-w-0 text-right font-semibold">
             {ratingLabel(routine.valoracion.promedio, routine.valoracion.total)}
           </dd>
         </div>

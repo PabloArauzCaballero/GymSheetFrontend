@@ -221,7 +221,8 @@ export function DiscoveryPreferencesEditor({ embedded = false, onSaved }: { embe
 
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
         {([[minAge, setMinAge, 'Edad mín.'], [maxAge, setMaxAge, 'Edad máx.'], [radiusKm, setRadiusKm, 'Radio (km)']] as const).map(([value, setter, label]) => (
-          <View key={label} style={{ flex: 1, gap: spacing.xs }}>
+          // space-between: when one label wraps at 320 or with large text, the three inputs still share a baseline.
+          <View key={label} style={{ flex: 1, gap: spacing.xs, justifyContent: 'space-between' }}>
             {fieldLabel(label)}
             <TextInput
               accessibilityLabel={label}
@@ -233,7 +234,7 @@ export function DiscoveryPreferencesEditor({ embedded = false, onSaved }: { embe
                 fontWeight: semibold,
                 textAlign: 'center',
                 backgroundColor: colors.surfaceLow,
-                borderColor: colors.border,
+                borderColor: colors.borderControl,
                 borderWidth: 1,
                 borderRadius: radii.lg,
                 borderCurve: 'continuous',

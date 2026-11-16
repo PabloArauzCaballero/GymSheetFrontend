@@ -8,8 +8,9 @@ import { chatService } from '@/features/chat/services/chat-service';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { interactionKeys } from '@/features/interactions/services/interactions-service';
 import { discoveryService } from '@/features/social/services/discovery-service';
+import { socialService } from '@/features/social/services/social-service';
 import { directoryKeys } from '@/features/social/services/directory-keys';
-import { needsDiscoveryPreferences } from '@gymsheet/domain';
+import { discoveryDeckGate, needsDiscoveryPreferences } from '@gymsheet/domain';
 import { ApiError } from '@/shared/api/api-error';
 import type { GymDirectoryEntry, SwipeDirection, UndoSwipeResult } from '@/shared/api/schemas';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -82,9 +83,14 @@ export function DescubrirClient({
   const [queueFilterKey, setQueueFilterKey] = useState(filterKey);
   const [historyFilterKey, setHistoryFilterKey] = useState(filterKey);
 
+  // The deck is only asked for once the preferences read says they exist: without them the server
+  // answers 400 (DISCOVERY_PREFERENCES_REQUIRED), and the setup form is shown from this read instead.
+  const preferences = useQuery({ queryKey: ['social', 'discovery-preferences'], queryFn: socialService.getDiscoveryPreferences });
+  const gate = discoveryDeckGate(preferences);
   const deck = useQuery({
     queryKey: directoryKeys.deck(filterKey),
     queryFn: () => discoveryService.deck(filters),
+    enabled: gate === 'deck',
     // Una baraja usada no se guarda: al volver a entrar se reparte de nuevo.
     // Con la caché por defecto reaparecerían cartas ya decididas, que el
     // servidor no considera candidatas y rechazaría con un conflicto.
@@ -199,17 +205,16 @@ export function DescubrirClient({
           Comunidad
         </Link>
         <h1 className="text-3xl font-semibold tracking-[-0.03em]">Descubrir</h1>
-        {/* Una línea, no dos: cada renglón de aquí arriba se lo quita a la
-            carta, que es lo único que la pantalla necesita enseñar. */}
-        <p className="text-sm text-[var(--text-muted)]">
-          Arrastra a la derecha si te interesa, a la izquierda si no.
+        {/* Same copy as the app; `text-pretty` keeps a wrap from leaving one lone word. */}
+        <p className="text-pretty text-sm text-[var(--text-muted)]">
+          Desliza: derecha si te interesa, izquierda si no.
         </p>
       </header>
       )}
 
       <DeckSurface
         deckError={deck.isError ? deck.error.message : null}
-        needsPreferences={deck.isError && needsDiscoveryPreferences(deck.error)}
+        needsPreferences={gate === 'setup' || (deck.isError && needsDiscoveryPreferences(deck.error))}
         empty={visibleQueue.length === 0}
         emptyAction={
           <div className="flex flex-wrap justify-center gap-2">
@@ -227,7 +232,7 @@ export function DescubrirClient({
             </Button>
           </div>
         }
-        loading={deck.isLoading}
+        loading={gate === 'pending' || deck.isLoading}
         onRefetch={() => deck.refetch()}
       >
         <DirectorySwipeDeck

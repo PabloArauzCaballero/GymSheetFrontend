@@ -46,12 +46,14 @@ export function RatingStars({
   return (
     <div className="grid gap-2" data-testid="rating">
       <div className="flex flex-wrap items-center gap-3">
-        <div aria-label="Tu valoración" className="flex" role="radiogroup">
+        {/* Five equal columns capped at 5 × 44 px: with very large text the stars share the row
+            instead of growing with the rem-sized targets past a 320 px screen. */}
+        <div aria-label="Tu valoración" className="grid w-full max-w-[13.75rem] grid-cols-5" role="radiogroup">
           {[1, 2, 3, 4, 5].map((stars) => (
             <button
               aria-checked={mine === stars}
               aria-label={`${stars} ${stars === 1 ? 'estrella' : 'estrellas'}`}
-              className="grid size-11 place-items-center rounded-[var(--radius-sm)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--volt)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="grid h-11 min-w-0 place-items-center rounded-[var(--radius-sm)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--volt)] disabled:cursor-not-allowed disabled:opacity-50"
               disabled={isOwner || save.isPending}
               key={stars}
               onClick={() => save.mutate(mine === stars ? null : stars)}
@@ -60,7 +62,7 @@ export function RatingStars({
             >
               <Star
                 aria-hidden
-                className={cn('size-6', mine !== null && stars <= mine ? 'text-[var(--accent-ink)]' : 'text-[var(--text-muted)]')}
+                className={cn('size-6 max-w-full', mine !== null && stars <= mine ? 'text-[var(--accent-ink)]' : 'text-[var(--text-muted)]')}
                 fill={mine !== null && stars <= mine ? 'currentColor' : 'none'}
               />
             </button>

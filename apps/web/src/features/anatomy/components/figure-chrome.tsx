@@ -7,7 +7,7 @@ import { ANATOMY_CANVAS, ANATOMY_CANVAS_CLEAR } from '@/shared/theme/anatomy-can
 
 /** Pastilla de vidrio sobre la figura: se lee sobre cualquier parte de la lámina. */
 const glass =
-  'pointer-events-auto inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-3 text-xs font-semibold text-white/75 backdrop-blur-md transition-[background-color,color,transform] duration-[var(--dur-1)] ease-[var(--ease-out)] hover:bg-black/65 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95';
+  'pointer-events-auto inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-3 text-xs font-semibold text-white/75 backdrop-blur-md transition-[background-color,color,transform] duration-[var(--dur-1)] ease-[var(--ease-out)] hover:bg-black/65 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-95';
 
 function ToolButton({
   label,
@@ -20,7 +20,7 @@ function ToolButton({
     <button
       aria-label={label}
       aria-pressed={active}
-      className={cn(glass, round && 'size-9 px-0', active && 'bg-white/20 text-white')}
+      className={cn(glass, round && 'size-11 px-0', active && 'bg-white/20 text-white')}
       onClick={onClick}
       title={label}
       type="button"
@@ -54,7 +54,7 @@ export function FigureChrome({
   return (
     <>
       <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-2">
-        <div className="flex gap-2">
+        <div className="flex min-w-0 flex-wrap gap-2">
           <ToolButton active={showZones} label="Mostrar zonas" onClick={onToggleZones}>
             <ScanLine aria-hidden className="size-4" />
             Zonas
@@ -64,7 +64,7 @@ export function FigureChrome({
             Lista
           </Link>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex shrink-0 flex-col gap-2">
           <ToolButton label="Acercar" onClick={onZoomIn} round>
             <Plus aria-hidden className="size-4" />
           </ToolButton>

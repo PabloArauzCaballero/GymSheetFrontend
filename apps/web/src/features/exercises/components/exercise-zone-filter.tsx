@@ -15,7 +15,7 @@ function Chip({
     <button
       aria-pressed={active}
       className={cn(
-        'inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm transition-[background-color,border-color,color,transform] duration-[var(--dur-1)] ease-[var(--ease-out)] motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-ink)] active:scale-[0.97] motion-reduce:active:scale-100',
+        'inline-flex min-h-11 max-w-full flex-wrap items-center gap-x-2 rounded-full border px-3.5 text-sm transition-[background-color,border-color,color,transform] duration-[var(--dur-1)] ease-[var(--ease-out)] motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-ink)] active:scale-[0.97] motion-reduce:active:scale-100',
         active
           ? 'border-[var(--text)] bg-[var(--text)] font-semibold text-[var(--background)]'
           : 'border-[var(--border)] bg-[var(--surface-low)] text-[var(--text-muted)] hover:border-[var(--text-disabled)] hover:text-[var(--text)]',
@@ -25,7 +25,7 @@ function Chip({
     >
       {label}
       {count !== undefined ? (
-        <span className={cn('data-value text-xs', active ? 'opacity-70' : 'text-[var(--text-disabled)]')}>
+        <span className={cn('data-value text-xs', active ? 'opacity-70' : 'text-[var(--text-muted)]')}>
           {count}
         </span>
       ) : null}

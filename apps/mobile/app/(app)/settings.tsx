@@ -5,7 +5,7 @@ import { ActivityIndicator, Linking, Switch, Text, View } from 'react-native';
 import { chatService } from '@/api/services';
 import { Card, Divider, Row, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { BackLink } from '@/components/nav';
-import { Button } from '@/components/ui';
+import { LogoutRow } from '@/features/profile-hero/logout-row';
 import { ReadReceiptChatsSheet, SheetRow } from '@/features/chat/chat-sheets';
 import { useNudgePrefs } from '@/features/nudge/nudge-prefs';
 import { confirm, notify } from '@/notifications';
@@ -208,13 +208,10 @@ export default function SettingsScreen() {
         </Card>
       </Section>
 
-      <Button
-        icon="log-out-outline"
-        label="Cerrar sesión"
-        loading={signingOut}
-        onPress={() => void onLogout()}
-        variant="danger"
-      />
+      {/* Same destructive row as at the end of «Tu cuenta» on the profile: findable, not the loudest thing. */}
+      <Card list>
+        <LogoutRow onPress={() => void onLogout()} pending={signingOut} />
+      </Card>
 
       <ReadReceiptChatsSheet
         chats={(conversations.data ?? [])

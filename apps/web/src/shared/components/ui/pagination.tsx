@@ -8,7 +8,7 @@ export function Pagination({
 }: Readonly<{ page: number; totalPages: number; onPageChange: (page: number) => void }>) {
   if (totalPages <= 1) return null;
   return (
-    <div className="flex items-center justify-between border-t border-[var(--border-subtle)] px-4 py-3">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-subtle)] px-4 py-3">
       <span className="text-xs text-[var(--text-muted)]">
         Página {page} de {totalPages}
       </span>

@@ -122,6 +122,18 @@ export function ProfilePageClient() {
       </div>
     </Section>
   );
+  const activity = (
+    <Section title="Tu actividad">
+      <RowGroup>
+        {[
+          <NavRow href="/workouts" key="entrenos" leading={<RowGlyph icon={Dumbbell} />} subtitle="Todas tus sesiones, con sus series" title="Mis entrenos" />,
+          <NavRow href="/exercises" key="ejercicios" leading={<RowGlyph icon={Star} />} subtitle="Tus favoritos ☆ y el catálogo completo" title="Mis ejercicios y favoritos" />,
+          <NavRow href="/chat" key="chat" leading={<RowGlyph icon={MessageCircle} />} subtitle="Habla con tus conexiones" title="Chat" />,
+          <NavRow href="/entrenar-juntos" key="juntos" leading={<RowGlyph icon={Users} />} subtitle="Invitaciones recibidas y encuentros" title="Entrenar juntos" />,
+        ]}
+      </RowGroup>
+    </Section>
+  );
   const hasPhoto = Boolean(own.cardEntry?.photoUrl);
 
   return (
@@ -175,16 +187,7 @@ export function ProfilePageClient() {
           <AboutCard bio={own.bio} chips={own.chips} />
           <div className="lg:hidden">{senda}</div>
 
-          <Section title="Tu actividad">
-            <RowGroup>
-              {[
-                <NavRow href="/workouts" key="entrenos" leading={<RowGlyph icon={Dumbbell} />} subtitle="Todas tus sesiones, con sus series" title="Mis entrenos" />,
-                <NavRow href="/exercises" key="ejercicios" leading={<RowGlyph icon={Star} />} subtitle="Tus favoritos ☆ y el catálogo completo" title="Mis ejercicios y favoritos" />,
-                <NavRow href="/chat" key="chat" leading={<RowGlyph icon={MessageCircle} />} subtitle="Habla con tus conexiones" title="Chat" />,
-                <NavRow href="/entrenar-juntos" key="juntos" leading={<RowGlyph icon={Users} />} subtitle="Invitaciones recibidas y encuentros" title="Entrenar juntos" />,
-              ]}
-            </RowGroup>
-          </Section>
+          <div className="min-w-0 lg:hidden">{activity}</div>
 
           <div className="grid min-w-0 grid-cols-1 gap-8 lg:hidden">{conocer}</div>
 
@@ -204,15 +207,18 @@ export function ProfilePageClient() {
                 <NavRow href="/notifications" key="avisos" leading={<RowGlyph icon={Bell} />} subtitle="Qué avisos quieres recibir" title="Notificaciones" />,
                 <NavRow href="/tutorials" key="tour" leading={<RowGlyph icon={LifeBuoy} />} subtitle="Vuelve a ver la bienvenida y las guías de cada pantalla" title="Ver tutorial" />,
                 <NavRow href="/settings" key="ajustes" leading={<RowGlyph icon={Settings} />} subtitle="Cuenta, versión y cierre de sesión" title="Ajustes" />,
+                <LogoutButton key="logout" row />,
               ]}
             </RowGroup>
           </Section>
           <div className="min-w-0 lg:hidden">{weight}</div>
         </div>
 
-        {/* Desktop: «Tu senda» sits beside the hero, above the fold; the weight chips are a setting, so they go last. */}
+        {/* Desktop: «Tu senda» sits beside the hero, above the fold; «Tu actividad» joins it so both
+            columns end at about the same height; the weight chips are a setting, so they go last. */}
         <div className="hidden min-w-0 grid-cols-1 gap-8 lg:grid">
           {senda}
+          {activity}
           {conocer}
           {weight}
         </div>
@@ -220,7 +226,6 @@ export function ProfilePageClient() {
 
       <div className="mx-auto grid w-full max-w-[560px] gap-2">
         <p className="t-footnote truncate text-center text-[var(--text-muted)]">{`${role} · ${me.email}`}</p>
-        <LogoutButton block withLabel />
       </div>
     </div>
   );

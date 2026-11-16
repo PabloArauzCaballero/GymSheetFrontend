@@ -48,13 +48,15 @@ export function RepiCard({ here }: Readonly<{ here?: 'routines' }>) {
   const body = (
     <>
       <Repi className="size-16 shrink-0 sm:size-[4.5rem]" mood={entry.mood} size={72} />
-      <span className="grid min-w-0 flex-1 gap-0.5">
+      {/* A 9rem basis: with very large text the words drop under Repi instead of being squeezed
+          into a sliver beside it (and overflowing the card at 320 px). */}
+      <span className="grid min-w-0 flex-1 basis-[9rem] gap-0.5">
         <span className="t-headline">{entry.title}</span>
         <span className="t-subhead text-[var(--text-muted)]">{entry.body}</span>
       </span>
     </>
   );
-  const shell = 'panel flex items-center gap-3 px-4 py-3';
+  const shell = 'panel flex flex-wrap items-center gap-3 px-4 py-3';
   if (here === 'routines') {
     return (
       <section aria-label="Repi" className={shell} data-testid="repi-gym">

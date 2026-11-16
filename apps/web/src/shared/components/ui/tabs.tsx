@@ -24,7 +24,7 @@ export function TabsList({ className, ...props }: ComponentProps<typeof TabsPrim
     <TabsPrimitive.List
       className={cn(// Píldora segmentada del móvil (`SegmentedPill`): carril `surfaceLow`,
         // opción activa en `surfaceHighest`, sin subrayado de acento.
-        'nav-scroll inline-flex max-w-full gap-1 overflow-x-auto rounded-full bg-[var(--surface-low)] p-1 shadow-[var(--shadow-sm)]', className)}
+        'nav-scroll inline-flex max-w-full flex-wrap gap-1 overflow-x-auto rounded-[1.5rem] bg-[var(--surface-low)] p-1 shadow-[var(--shadow-sm)]', className)}
       {...props}
     />
   );
@@ -34,7 +34,8 @@ export function TabsTrigger({ className, ...props }: ComponentProps<typeof TabsP
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        'group/tab relative min-h-10 shrink-0 rounded-full px-4 text-[15px] font-semibold text-[var(--text-muted)] transition-[background-color,color] duration-[var(--dur-2)] ease-[var(--ease-out)] hover:text-[var(--text)] data-[state=active]:bg-[var(--surface-highest)] data-[state=active]:text-[var(--text)] data-[state=active]:shadow-[0_2px_8px_rgb(0_0_0/0.25)]',
+        // Labels wrap between words, and the row itself wraps, on a 320 px phone or at 200 % text: no tab hides behind a sideways scroll.
+        'group/tab relative min-h-11 rounded-[calc(1.5rem-4px)] px-4 py-1 text-[0.9375rem] font-semibold leading-tight text-balance text-[var(--text-muted)] transition-[background-color,color] duration-[var(--dur-2)] ease-[var(--ease-out)] hover:text-[var(--text)] data-[state=active]:bg-[var(--surface-highest)] data-[state=active]:text-[var(--text)] data-[state=active]:shadow-[0_2px_8px_rgb(0_0_0/0.25)]',
         className,
       )}
       {...props}

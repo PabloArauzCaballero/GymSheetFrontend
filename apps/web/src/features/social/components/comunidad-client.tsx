@@ -183,7 +183,7 @@ export function ComunidadClient() {
 
         <div
           aria-label="Qué baraja ver"
-          className="flex items-center gap-0.5 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-low)] p-[3px]"
+          className="flex min-w-0 items-center gap-0.5 rounded-[1.5rem] border border-[var(--border-subtle)] bg-[var(--surface-low)] p-[3px]"
           role="radiogroup"
         >
           {(
@@ -195,7 +195,7 @@ export function ComunidadClient() {
             <button
               aria-checked={pill === value}
               className={cn(
-                'min-h-9 whitespace-nowrap rounded-full px-3 text-xs transition-colors sm:px-4 duration-[var(--dur-2)]',
+                'min-h-11 min-w-0 rounded-[calc(1.5rem-3px)] px-3 py-1 text-xs leading-tight text-balance transition-colors sm:px-4 duration-[var(--dur-2)]',
                 pill === value
                   ? 'bg-[var(--surface-high)] font-bold text-[var(--text)]'
                   : 'font-medium text-[var(--text-muted)] hover:text-[var(--text)]',

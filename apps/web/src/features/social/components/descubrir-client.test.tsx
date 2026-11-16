@@ -8,7 +8,8 @@ import { DescubrirClient } from './descubrir-client';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }) }));
 
-const { deck, swipe, undoSwipe, notifyError } = vi.hoisted(() => ({
+const { deck, swipe, undoSwipe, notifyError, getDiscoveryPreferences } = vi.hoisted(() => ({
+  getDiscoveryPreferences: vi.fn(),
   deck: vi.fn(),
   swipe: vi.fn(),
   undoSwipe: vi.fn(),
@@ -17,6 +18,12 @@ const { deck, swipe, undoSwipe, notifyError } = vi.hoisted(() => ({
 
 vi.mock('@/features/social/services/discovery-service', () => ({
   discoveryService: { deck, swipe, undoSwipe },
+}));
+vi.mock('@/features/social/services/social-service', () => ({
+  socialService: { getDiscoveryPreferences },
+}));
+vi.mock('./discovery-preferences-card', () => ({
+  DiscoveryPreferencesCard: () => <p>Formulario de preferencias</p>,
 }));
 vi.mock('@/shared/notifications', () => ({ notify: { error: notifyError, success: vi.fn() } }));
 vi.mock('next/link', () => ({ default: ({ children, href }: { children: ReactNode; href: string }) => <a href={href}>{children}</a> }));
@@ -88,8 +95,40 @@ function renderDeck(genero = 'FEMALE') {
   return { ...rendered, rerenderForFilter: (filter: string) => rendered.rerender(ui(filter)) };
 }
 
+const CONFIGURED = {
+  configured: true, genders: ['FEMALE'], intents: ['TRAINING'], minAge: 18, maxAge: 65,
+  radiusKm: 25, flexibleAge: false, flexibleDistance: false, version: 1,
+} as const;
+
+describe('DescubrirClient without discovery preferences', () => {
+  beforeEach(() => {
+    deck.mockReset().mockResolvedValue([ana]);
+    notifyError.mockReset();
+  });
+
+  it('shows the setup form from the preferences read and never asks for the deck', async () => {
+    getDiscoveryPreferences.mockReset().mockResolvedValue({ configured: false, version: 0 });
+    renderDeck();
+    expect(await screen.findByText('Formulario de preferencias')).toBeInTheDocument();
+    expect(deck).not.toHaveBeenCalled();
+    expect(notifyError).not.toHaveBeenCalled();
+  });
+
+  it('waits for the preferences read before asking for the deck', async () => {
+    const read = deferred<typeof CONFIGURED>();
+    getDiscoveryPreferences.mockReset().mockReturnValue(read.promise);
+    renderDeck();
+    await act(async () => { await Promise.resolve(); });
+    expect(deck).not.toHaveBeenCalled();
+    await act(async () => { read.resolve(CONFIGURED); });
+    expect(await screen.findByTestId(`candidate-${ana.userId}`)).toBeInTheDocument();
+    expect(deck).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('DescubrirClient swipe recovery', () => {
   beforeEach(() => {
+    getDiscoveryPreferences.mockReset().mockResolvedValue(CONFIGURED);
     deck.mockReset().mockImplementation(async (filters: { genero?: string }) => filters.genero === 'MALE' ? [carla] : [ana, bea]);
     swipe.mockReset().mockResolvedValue({ matched: false, connectionId: null });
     undoSwipe.mockReset().mockResolvedValue({ undone: 'PASS', targetId: ana.userId, connectionId: null, unmatched: false });

@@ -9,6 +9,15 @@
  * espera que funcione la pareja.
  * -------------------------------------------------------------------------- */
 @layer components {
+  /* A bare `grid` gets one implicit `auto` column, which grows to the widest unbreakable child
+   * (a tab scroller, a search input, a long word at 200 % text) and drags the whole page past the
+   * screen. `minmax(0, 1fr)` keeps the column at the container's width; children that scroll keep
+   * scrolling inside it. Any `grid-cols-*` utility (later layer) or inline template still wins, and
+   * column-flow grids are left alone. */
+  .grid:not([class*='grid-flow-col']):not([class*='auto-cols']) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .tech-grid {
     background-image:
       linear-gradient(var(--grid-line) 1px, transparent 1px),
@@ -86,6 +95,10 @@
     letter-spacing: -0.02em;
     line-height: 1.12;
     text-wrap: balance;
+    /* One long word («Interacciones») at 200 % text on a 320 px phone is wider than the column:
+     * hyphenate it (or, failing that, break it) instead of widening the whole page. */
+    hyphens: auto;
+    overflow-wrap: anywhere;
   }
 
   /* `title` del móvil: Bricolage a 22, para títulos de tarjeta y hoja. */

@@ -7,7 +7,6 @@ import { Badge, ScrollScreen, ScreenHeader } from '@/components/layout';
 import { HeroSurface } from '@/components/hero-surface';
 import { Text } from '@/components/text';
 import { TourTarget, useScreenTour } from '@/components/tour';
-import { Button } from '@/components/ui';
 import { WeightIncrementPreference } from '@/components/weight-increment-preference';
 import { AboutSection } from '@/features/profile-hero/about-section';
 import { CompletionAvatar } from '@/features/profile-hero/completion-avatar';
@@ -168,17 +167,20 @@ export default function ProfileScreen() {
 
       <ActivityList />
       <ConocerList />
-      <AccountList missingProfile={own.missingProfile} profile={own.profile.data} profilePending={own.profile.isPending} />
+      <AccountList
+        missingProfile={own.missingProfile}
+        onLogout={() => void onLogout()}
+        profile={own.profile.data}
+        profilePending={own.profile.isPending}
+        signingOut={signingOut}
+      />
       <WeightIncrementPreference />
 
-      <View style={{ gap: spacing.sm }}>
-        {principal?.email ? (
-          <Text numberOfLines={1} selectable style={{ textAlign: 'center' }} tone="muted" variant="footnote">
-            {`${roleLabel} · ${principal.email}`}
-          </Text>
-        ) : null}
-        <Button icon="log-out-outline" label="Cerrar sesión" loading={signingOut} onPress={() => void onLogout()} size="lg" variant="danger" />
-      </View>
+      {principal?.email ? (
+        <Text numberOfLines={1} selectable style={{ textAlign: 'center' }} tone="muted" variant="footnote">
+          {`${roleLabel} · ${principal.email}`}
+        </Text>
+      ) : null}
     </ScrollScreen>
   );
 }

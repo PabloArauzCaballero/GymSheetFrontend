@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { Modal, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,7 +21,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { GymDirectoryEntry, SwipeDirection } from '@gymsheet/schemas';
 import { ApiError } from '@gymsheet/api-client';
-import { chatService, discoveryService, profilePhotosService } from '@/api/services';
+import { chatService, discoveryService, profilePhotosService, socialService } from '@/api/services';
+import { DiscoveryPreferencesEditor } from '@/components/social-status-editor';
+import { discoveryDeckGate, needsDiscoveryPreferences } from '@gymsheet/domain';
 import { refreshSocialRelationship } from '@/api/social-cache';
 import { getH5S2M1FixtureSnapshot } from '@/api/client';
 import { AmbientBackground } from '@/components/ambient';
@@ -33,7 +35,7 @@ import {
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { TourHelpButton, useResponsive } from '@/components/layout';
 import { TourTarget, useScreenTour } from '@/components/tour';
-import { PressableScale } from '@/components/motion';
+import { DeckAction } from '@/components/deck-action';
 import { BackLink } from '@/components/nav';
 import { ProfileDetailSheet } from '@/components/profile-detail-sheet';
 import { Button } from '@/components/ui';
@@ -151,50 +153,6 @@ function DecisionStamp({
         {label}
       </Text>
     </Animated.View>
-  );
-}
-
-/** Botón circular de la fila de acciones: el equivalente pulsable del gesto. */
-function DeckAction({
-  accent,
-  disabled = false,
-  icon,
-  label,
-  loading = false,
-  onPress,
-  size,
-}: {
-  accent: string;
-  disabled?: boolean;
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  loading?: boolean;
-  onPress: () => void;
-  size: number;
-}) {
-  return (
-    <PressableScale
-      accessibilityLabel={label}
-      disabled={disabled || loading}
-      onPress={onPress}
-      style={{
-        width: size,
-        height: size,
-        borderRadius: radii.full,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: disabled ? colors.borderSubtle : accent,
-        backgroundColor: colors.surfaceLow,
-        opacity: disabled ? 0.5 : 1,
-      }}
-    >
-      {loading ? (
-        <ActivityIndicator color={accent} size="small" />
-      ) : (
-        <Ionicons color={disabled ? colors.textDisabled : accent} name={icon} size={size * 0.42} />
-      )}
-    </PressableScale>
   );
 }
 
@@ -400,7 +358,11 @@ export default function DescubrirScreen() {
     [params.objetivo, params.sucursalId, params.genero],
   );
 
+  // Same gate as Comunidad: no deck request until the preferences read says they exist.
+  const preferences = useQuery({ queryKey: ['social', 'discovery-preferences'], queryFn: socialService.getDiscoveryPreferences });
+  const gate = discoveryDeckGate(preferences);
   const deck = useQuery({
+    enabled: gate === 'deck',
     queryKey: [
       'social',
       'discovery',
@@ -858,10 +820,9 @@ export default function DescubrirScreen() {
               </Text>
               <TourHelpButton tourKey="descubrir" />
             </View>
-            {/* Una línea, no dos: cada renglón de aquí arriba se lo quita a la
-                carta, que es lo único que la pantalla necesita enseñar. */}
-            <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-              Arrastra a la derecha si te interesa, a la izquierda si no.
+            {/* Short enough for one line at 390; at 320 or with large text it wraps instead of cutting. */}
+            <Text numberOfLines={2} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+              Desliza: derecha si te interesa, izquierda si no.
             </Text>
             {h5S2M1Fixture.enabled ? (
               <Text
@@ -898,8 +859,12 @@ export default function DescubrirScreen() {
               marginRight: deckGutter + insets.right,
             }}
           >
-            {deck.isPending ? (
+            {gate === 'pending' || (gate === 'deck' && deck.isPending) ? (
               <Skeleton height={stage.height || 420} />
+            ) : gate === 'setup' || (deck.isError && needsDiscoveryPreferences(deck.error)) ? (
+              <ScrollView contentContainerStyle={{ gap: spacing.md, paddingVertical: spacing.lg }}>
+                <DiscoveryPreferencesEditor embedded onSaved={redeal} />
+              </ScrollView>
             ) : deck.isError ? (
               <ErrorState error={deck.error} onRetry={redeal} />
             ) : topCard ? (

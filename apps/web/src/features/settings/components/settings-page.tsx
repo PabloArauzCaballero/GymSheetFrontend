@@ -108,8 +108,10 @@ export function SettingsPage({
         </div>
       </Section>
 
-      {/* Como en el móvil: cerrar sesión al final, a lo ancho y en rojo. */}
-      <LogoutButton block withLabel />
+      {/* Same destructive row as at the end of «Tu cuenta» on the profile, on both platforms. */}
+      <ListCard>
+        <LogoutButton row />
+      </ListCard>
     </div>
   );
 }

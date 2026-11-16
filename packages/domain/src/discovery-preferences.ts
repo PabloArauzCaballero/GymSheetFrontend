@@ -17,6 +17,24 @@ export function needsDiscoveryPreferences(error: unknown): boolean {
 }
 
 /**
+ * May the deck be requested yet?
+ *
+ * Both apps already read `/me/discovery/preferences`, which says plainly whether
+ * they exist (`configured`). Asking for the deck before that answer only earns a
+ * 400 (the code above) that shipped builds still rely on, so new clients wait:
+ * `pending` while the read is in flight, `setup` to show the form, `deck` to
+ * deal. If that read itself fails, fall back to asking for the deck: the 400
+ * branch above still shows the form, and an outage never hides the deck.
+ */
+export function discoveryDeckGate(read: {
+  data?: { configured: boolean } | undefined;
+  isError: boolean;
+}): 'pending' | 'setup' | 'deck' {
+  if (read.data) return read.data.configured ? 'deck' : 'setup';
+  return read.isError ? 'deck' : 'pending';
+}
+
+/**
  * Why the preferences button is disabled, in words, or null when it can act.
  * Neutral wording: the same card saves («Guardar preferencias») or deals the
  * deck («Buscar compañeros» in Comunidad). Same rules on web and mobile.

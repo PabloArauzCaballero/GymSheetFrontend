@@ -19,8 +19,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { ReppLogo } from '@/components/brand/repp-mark';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
+import { Gesture } from 'react-native-gesture-handler';
+import {
   Easing,
   cancelAnimation,
   runOnJS,
@@ -29,11 +29,10 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming,
-  type SharedValue,
 } from 'react-native-reanimated';
 import type { GymDirectoryEntry, SwipeDirection, PublicBranchSummary } from '@gymsheet/schemas';
 import { ApiError } from '@gymsheet/api-client';
-import { needsDiscoveryPreferences } from '@gymsheet/domain';
+import { discoveryDeckGate, needsDiscoveryPreferences } from '@gymsheet/domain';
 import { trainingGoals } from '@gymsheet/types';
 import {
   chatService,
@@ -41,6 +40,7 @@ import {
   facilitiesService,
   profilePhotosService,
   profileService,
+  socialService,
 } from '@/api/services';
 import { refreshSocialRelationship } from '@/api/social-cache';
 import { CommunityOverflowSheet } from '@/components/community-overflow-sheet';
@@ -53,11 +53,12 @@ import { Button } from '@/components/ui';
 import { ErrorState } from '@/components/feedback';
 import { DiscoveryPreferencesEditor } from '@/components/social-status-editor';
 import { initialsOf } from '@/lib/format';
-import { levelTitle } from '@/components/directory-card';
+import { DeckActionBar, ACTION_BAR_BOTTOM } from '@/features/comunidad/deck-action-bar';
+import { DeckStage } from '@/features/comunidad/deck-stage';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { TRAINING_GOAL_LABEL } from '@/lib/social-labels';
-import { accentHues, alpha, colors, darkSurfaces, fontSizes, iconSizes, ink, minTouchTarget, onMedia, overlay, radii, spacing } from '@/theme';
+import { alpha, colors, fontSizes, iconSizes, ink, minTouchTarget, onMedia, overlay, radii, spacing } from '@/theme';
 
 const DECK_SIZE = 15;
 const DECISION_RATIO = 0.28;
@@ -67,16 +68,6 @@ const EXIT_MS = 220;
 const CARD_SPRING = { damping: 24, stiffness: 260, mass: 0.6, overshootClamping: true } as const;
 const BACK_ZONE_RATIO = 1 / 3;
 const TAP_MAX_MS = 260;
-const STAMP_TOP = spacing.xl;
-
-const SCRIM_BOTTOM = [
-  'transparent',
-  alpha(darkSurfaces.night, 0.25),
-  alpha(darkSurfaces.night, 0.72),
-  alpha(darkSurfaces.night, 0.96),
-] as const;
-const SCRIM_BOTTOM_STOPS = [0, 0.35, 0.7, 1] as const;
-const SCRIM_TOP = [alpha(ink.black, 0.45), 'transparent'] as const;
 const MATCH_SCRIM = [overlay.scrimSoft, overlay.scrimStrong] as const;
 
 type Decision = { entry: GymDirectoryEntry; direction: SwipeDirection; filterKey: string };
@@ -90,61 +81,6 @@ const GOAL_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   RENDIMIENTO_DEPORTIVO: 'trophy-outline',
   REHABILITACION: 'medkit-outline',
 };
-
-function DecisionStamp({
-  color,
-  label,
-  side,
-  threshold,
-  translateX,
-}: {
-  color: string;
-  label: string;
-  side: 'left' | 'right' | 'top';
-  threshold: number;
-  translateX: SharedValue<number>;
-}) {
-  const sign = side === 'left' ? 1 : -1;
-  const animated = useAnimatedStyle(() => ({
-    opacity:
-      side === 'top'
-        ? Math.min(Math.max((Math.abs(translateX.value) * 1.5) / threshold, 0), 1)
-        : Math.min(Math.max((sign * translateX.value) / threshold, 0), 1),
-  }));
-
-  return (
-    <Animated.View
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      pointerEvents="none"
-      style={[
-        {
-          position: 'absolute',
-          top: STAMP_TOP + 10,
-          left: side === 'left' ? spacing.lg : side === 'top' ? '25%' : undefined,
-          right: side === 'right' ? spacing.lg : side === 'top' ? '25%' : undefined,
-          paddingHorizontal: spacing.md,
-          paddingVertical: spacing.xs,
-          borderRadius: radii.md,
-          borderWidth: 3,
-          borderColor: color,
-          alignItems: 'center',
-          backgroundColor: alpha(ink.black, 0.3),
-          transform: [
-            {
-              rotate: side === 'left' ? '-12deg' : side === 'right' ? '12deg' : '0deg',
-            },
-          ],
-        },
-        animated,
-      ]}
-    >
-      <Text style={{ color, fontSize: fontSizes.xl, fontWeight: '800', letterSpacing: 1.5 }}>
-        {label}
-      </Text>
-    </Animated.View>
-  );
-}
 
 function FilterChip({
   label,
@@ -607,7 +543,12 @@ export default function ComunidadScreen() {
     activeDeckKeyRef.current = deckKey;
   }, [deckKey]);
 
+  // The deck is only asked for once the preferences read says they exist: without them the server
+  // answers 400 (DISCOVERY_PREFERENCES_REQUIRED); the setup form is shown from this read instead.
+  const preferences = useQuery({ queryKey: ['social', 'discovery-preferences'], queryFn: socialService.getDiscoveryPreferences });
+  const gate = discoveryDeckGate(preferences);
   const deck = useQuery({
+    enabled: gate === 'deck',
     queryKey: ['social', 'discovery', 'deck', objetivosKey, sucursalId ?? '', genero ?? ''],
     queryFn: () => discoveryService.deck(filters),
     gcTime: 0,
@@ -863,19 +804,6 @@ export default function ComunidadScreen() {
     };
   });
 
-  const currentPhotoUrl = useMemo(() => {
-    if (!topCard) return null;
-    if (topCard.photos.length > 0) {
-      return topCard.photos[photoIndex]?.url ?? topCard.photoUrl;
-    }
-    return topCard.photoUrl;
-  }, [photoIndex, topCard]);
-
-  const nextCardPhotoUrl = useMemo(() => {
-    if (!nextCard) return null;
-    return nextCard.photos[0]?.url ?? nextCard.photoUrl;
-  }, [nextCard]);
-
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Cabecera: marca REPP + acciones, y debajo el selector del mazo */}
@@ -895,8 +823,8 @@ export default function ComunidadScreen() {
               accessibilityLabel="Preferencias de búsqueda"
               onPress={() => setPrefsVisible(true)}
               style={{
-                width: 42,
-                height: 42,
+                width: minTouchTarget,
+                height: minTouchTarget,
                 borderRadius: radii.full,
                 backgroundColor: colors.surfaceHigh,
                 alignItems: 'center',
@@ -938,8 +866,8 @@ export default function ComunidadScreen() {
             accessibilityLabel="Opciones de Comunidad"
             onPress={() => setOverflowVisible(true)}
             style={{
-              width: 42,
-              height: 42,
+              width: minTouchTarget,
+              height: minTouchTarget,
               borderRadius: radii.full,
               backgroundColor: colors.surfaceHigh,
               alignItems: 'center',
@@ -970,9 +898,12 @@ export default function ComunidadScreen() {
                 setCategoryPill('foryou');
                 setObjetivos([]);
               }}
+              accessibilityRole="button"
+              accessibilityState={{ selected: categoryPill === 'foryou' }}
               style={{
+                minHeight: minTouchTarget,
+                justifyContent: 'center',
                 paddingHorizontal: spacing.md,
-                paddingVertical: 6,
                 borderRadius: radii.full,
                 backgroundColor: categoryPill === 'foryou' ? colors.surfaceHigh : 'transparent',
               }}
@@ -994,9 +925,12 @@ export default function ComunidadScreen() {
                 const userGoal = myProfile.data?.objetivo ?? 'HIPERTROFIA';
                 setObjetivos([userGoal]);
               }}
+              accessibilityRole="button"
+              accessibilityState={{ selected: categoryPill === 'goal' }}
               style={{
+                minHeight: minTouchTarget,
+                justifyContent: 'center',
                 paddingHorizontal: spacing.md,
-                paddingVertical: 6,
                 borderRadius: radii.full,
                 backgroundColor: categoryPill === 'goal' ? colors.surfaceHigh : 'transparent',
               }}
@@ -1028,14 +962,14 @@ export default function ComunidadScreen() {
           justifyContent: 'center',
         }}
       >
-        {deck.isPending ? (
+        {gate === 'pending' || (gate === 'deck' && deck.isPending) ? (
           <View style={{ flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
             <ActivityIndicator color={colors.volt} size="large" />
             <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, marginTop: spacing.md }}>
               Cargando compañeros de entreno…
             </Text>
           </View>
-        ) : deck.isError && needsDiscoveryPreferences(deck.error) ? (
+        ) : gate === 'setup' || (deck.isError && needsDiscoveryPreferences(deck.error)) ? (
           // Sin preferencias no se recomienda a nadie (nunca se adivina a quién
           // quiere conocer alguien): se piden aquí mismo, no un error sin salida.
           <ScrollView
@@ -1058,301 +992,18 @@ export default function ComunidadScreen() {
             <ErrorState error={deck.error} onRetry={redeal} />
           </View>
         ) : topCard ? (
-          <View style={{ width: '100%', height: '100%', position: 'relative' }}>
-            {/* Background Card (next card) */}
-            {nextCard ? (
-              <Animated.View
-                pointerEvents="none"
-                style={[
-                  StyleSheet.absoluteFill,
-                  {
-                    borderRadius: 24,
-                    overflow: 'hidden',
-                    backgroundColor: colors.surfaceLow,
-                    borderWidth: 1,
-                    borderColor: colors.borderSubtle,
-                  },
-                  nextCardStyle,
-                ]}
-              >
-                {nextCardPhotoUrl ? (
-                  <Image
-                    cachePolicy="memory-disk"
-                    contentFit="cover"
-                    priority="low"
-                    recyclingKey={nextCardPhotoUrl}
-                    source={{ uri: nextCardPhotoUrl }}
-                    style={StyleSheet.absoluteFill}
-                  />
-                ) : (
-                  <View
-                    style={[
-                      StyleSheet.absoluteFill,
-                      {
-                        backgroundColor: colors.surfaceHigh,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      },
-                    ]}
-                  >
-                    <Text style={{ color: colors.textMuted, fontSize: fontSizes['2xl'], fontWeight: '700' }}>
-                      {initialsOf(nextCard.displayName, undefined)}
-                    </Text>
-                  </View>
-                )}
-                <LinearGradient colors={SCRIM_BOTTOM} locations={SCRIM_BOTTOM_STOPS} style={StyleSheet.absoluteFill} />
-              </Animated.View>
-            ) : null}
-
-            {/* Active Swipable Card */}
-            <GestureDetector gesture={deckGesture}>
-              <Animated.View
-                style={[
-                  StyleSheet.absoluteFill,
-                  {
-                    borderRadius: 26,
-                    overflow: 'hidden',
-                    backgroundColor: colors.surfaceLow,
-                    borderWidth: 1,
-                    borderColor: alpha(ink.white, 0.12),
-                    shadowColor: ink.black,
-                    shadowOffset: { width: 0, height: 10 },
-                    shadowOpacity: 0.45,
-                    shadowRadius: 20,
-                    elevation: 10,
-                  },
-                  cardStyle,
-                ]}
-              >
-                {/* Photo or Initials Avatar */}
-                {currentPhotoUrl ? (
-                  <Image
-                    cachePolicy="memory-disk"
-                    contentFit="cover"
-                    priority="high"
-                    recyclingKey={currentPhotoUrl}
-                    source={{ uri: currentPhotoUrl }}
-                    style={StyleSheet.absoluteFill}
-                    transition={140}
-                  />
-                ) : (
-                  <View
-                    style={[
-                      StyleSheet.absoluteFill,
-                      {
-                        backgroundColor: colors.surfaceHigh,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      },
-                    ]}
-                  >
-                    <View
-                      style={{
-                        width: 104,
-                        height: 104,
-                        borderRadius: radii.full,
-                        backgroundColor: colors.surfaceHighest,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Text style={{ color: colors.textSecondary, fontSize: fontSizes['2xl'], fontWeight: '700' }}>
-                        {initialsOf(topCard.displayName, undefined)}
-                      </Text>
-                    </View>
-                  </View>
-                )}
-
-                {/* Top Multi-Photo Story Bars */}
-                {photoCount > 1 ? (
-                  <>
-                    <LinearGradient colors={SCRIM_TOP} pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 60 }} />
-                    <View
-                      pointerEvents="none"
-                      style={{
-                        position: 'absolute',
-                        top: 14,
-                        left: 14,
-                        right: 14,
-                        flexDirection: 'row',
-                        gap: 5,
-                      }}
-                    >
-                      {Array.from({ length: photoCount }).map((_, idx) => (
-                        <View
-                          key={idx}
-                          style={{
-                            flex: 1,
-                            height: 3,
-                            borderRadius: radii.full,
-                            backgroundColor:
-                              idx === photoIndex ? ink.white : alpha(ink.white, 0.35),
-                            shadowColor: idx === photoIndex ? ink.white : 'transparent',
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: idx === photoIndex ? 0.6 : 0,
-                            shadowRadius: 3,
-                          }}
-                        />
-                      ))}
-                    </View>
-                  </>
-                ) : null}
-
-                {/* Decision Stamps */}
-                <DecisionStamp
-                  color={colors.volt}
-                  label="ME INTERESA"
-                  side="left"
-                  threshold={threshold}
-                  translateX={translateX}
-                />
-                <DecisionStamp
-                  color={colors.danger}
-                  label="PASO"
-                  side="right"
-                  threshold={threshold}
-                  translateX={translateX}
-                />
-
-                {/* Bottom Gradient Overlay & Member Info (Identical to Tinder Image 2) */}
-                <LinearGradient
-                  colors={SCRIM_BOTTOM}
-                  locations={SCRIM_BOTTOM_STOPS}
-                  pointerEvents="box-none"
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    paddingHorizontal: spacing.lg,
-                    paddingBottom: spacing.lg,
-                    paddingTop: spacing['2xl'],
-                  }}
-                >
-                  <View style={{ gap: spacing.xs }}>
-                    {/* Name, Age, Verified badge and Chevron Up info */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                        <Text
-                          numberOfLines={1}
-                          style={{
-                            color: ink.white,
-                            fontSize: fontSizes.xl,
-                            fontWeight: '800',
-                            letterSpacing: -0.6,
-                          }}
-                        >
-                          {topCard.displayName}
-                        </Text>
-
-                        {typeof topCard.age === 'number' ? (
-                          <Text
-                            style={{
-                              color: alpha(ink.white, 0.85),
-                              fontSize: fontSizes.heading,
-                              fontWeight: '400',
-                            }}
-                          >
-                            {topCard.age}
-                          </Text>
-                        ) : null}
-
-                        {/* No verified tick: the card carries no verification data, so it would vouch for everyone. */}
-                      </View>
-
-                      {/* Info Chevron Up Button */}
-                      <PressableScale
-                        accessibilityLabel={`Ver perfil completo de ${topCard.displayName}`}
-                        onPress={() => {
-                          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          setDetailEntry(topCard);
-                        }}
-                        style={{
-                          width: 38,
-                          height: 38,
-                          borderRadius: radii.full,
-                          backgroundColor: alpha(ink.white, 0.18),
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          borderWidth: 1,
-                          borderColor: alpha(ink.white, 0.3),
-                        }}
-                      >
-                        <Ionicons color={ink.white} name="chevron-up" size={18} />
-                      </PressableScale>
-                    </View>
-
-                    {/* Chips / Metadata Row */}
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                      {topCard.branchName ? (
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 4,
-                            paddingHorizontal: 10,
-                            paddingVertical: 4,
-                            borderRadius: radii.full,
-                            backgroundColor: alpha(colors.background, 0.7),
-                            borderWidth: 1,
-                            borderColor: alpha(ink.white, 0.14),
-                          }}
-                        >
-                          <Ionicons color={alpha(ink.white, 0.85)} name="location-outline" size={13} />
-                          <Text style={{ color: ink.white, fontSize: fontSizes.xs, fontWeight: '600' }}>
-                            {topCard.branchName}
-                          </Text>
-                        </View>
-                      ) : null}
-
-                      {topCard.objetivo ? (
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 4,
-                            paddingHorizontal: 10,
-                            paddingVertical: 4,
-                            borderRadius: radii.full,
-                            backgroundColor: alpha(colors.background, 0.7),
-                            borderWidth: 1,
-                            borderColor: alpha(ink.white, 0.14),
-                          }}
-                        >
-                          <Ionicons color={colors.volt} name="barbell-outline" size={13} />
-                          <Text style={{ color: ink.white, fontSize: fontSizes.xs, fontWeight: '600' }}>
-                            {TRAINING_GOAL_LABEL[topCard.objetivo] ?? topCard.objetivo}
-                          </Text>
-                        </View>
-                      ) : null}
-
-                      {topCard.levelCode ? (
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 4,
-                            paddingHorizontal: 10,
-                            paddingVertical: 4,
-                            borderRadius: radii.full,
-                            backgroundColor: alpha(accentHues.volt, 0.18),
-                            borderWidth: 1,
-                            borderColor: alpha(accentHues.volt, 0.4),
-                          }}
-                        >
-                          <Ionicons color={colors.volt} name="trophy-outline" size={13} />
-                          <Text style={{ color: colors.volt, fontSize: fontSizes.xs, fontWeight: '700', fontVariant: ['tabular-nums'] }}>
-                            {levelTitle(topCard.levelCode)}
-                            {typeof topCard.points === 'number' ? ` · ${topCard.points} pts` : ''}
-                          </Text>
-                        </View>
-                      ) : null}
-                    </View>
-                  </View>
-                </LinearGradient>
-              </Animated.View>
-            </GestureDetector>
-          </View>
+          <DeckStage
+            cardStyle={cardStyle}
+            gesture={deckGesture}
+            nextCard={nextCard}
+            nextCardStyle={nextCardStyle}
+            onOpenDetail={() => setDetailEntry(topCard)}
+            onStepPhoto={stepPhoto}
+            photoIndex={photoIndex}
+            threshold={threshold}
+            topCard={topCard}
+            translateX={translateX}
+          />
         ) : (
           /* Empty State: Out of cards */
           <View
@@ -1395,6 +1046,17 @@ export default function ComunidadScreen() {
             </View>
 
             <View style={{ width: '100%', maxWidth: 280, gap: spacing.sm }}>
+              {/* The last decision stays undoable once the deck runs out (as on the web empty state). */}
+              {decided.some((item) => item.filterKey === deckKey) ? (
+                <Button
+                  icon="arrow-undo-outline"
+                  label="Deshacer la última"
+                  loading={undo.isPending}
+                  onPress={() => undo.mutate({ filterKey: deckKey })}
+                  testID="comunidad-empty-undo"
+                  variant="ghost"
+                />
+              ) : null}
               <Button icon="reload-outline" label="Explorar de nuevo" onPress={redeal} variant="primary" />
               <Button icon="options-outline" label="Cambiar filtros" onPress={() => setPrefsVisible(true)} variant="ghost" />
             </View>
@@ -1405,165 +1067,20 @@ export default function ComunidadScreen() {
       {/* Barra de acciones: solo con una tarjeta delante. Sin preferencias, cargando o con el mazo
           vacío no hay a quién deshacer, rechazar ni dar like: botones ahí son promesas rotas. */}
       {topCard ? (
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-evenly',
-          paddingHorizontal: spacing.lg,
-          paddingTop: spacing.xs,
-          paddingBottom: 84,
-          zIndex: 10,
-        }}
-      >
-        {/* 1. Rewind / Undo Button (Yellow / Amber) */}
-        <PressableScale
-          accessibilityLabel="Deshacer último swipe"
-          disabled={decided.length === 0 || undo.isPending}
-          onPress={() => {
-            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            undo.mutate({ filterKey: deckKey });
-          }}
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: radii.full,
-            backgroundColor: alpha(darkSurfaces.card, 0.85),
-            borderWidth: 1.5,
-            borderColor: alpha(accentHues.amber, 0.55),
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: decided.length === 0 || undo.isPending ? 0.35 : 1,
-            shadowColor: accentHues.amber,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.2,
-            shadowRadius: 8,
-          }}
-        >
-          {undo.isPending ? (
-            <ActivityIndicator color={accentHues.amber} size="small" />
-          ) : (
-            <Ionicons color={accentHues.amber} name="reload-outline" size={22} />
-          )}
-        </PressableScale>
-
-        {/* 2. Pass / X Button (Red) */}
-        <PressableScale
-          accessibilityLabel="No me interesa"
-          disabled={!topCard || swipe.isPending}
-          onPress={() => {
-            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            flyOut('PASS');
-          }}
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: radii.full,
-            backgroundColor: alpha(darkSurfaces.rewind, 0.9),
-            borderWidth: 2,
-            borderColor: accentHues.red,
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: !topCard ? 0.4 : 1,
-            shadowColor: accentHues.red,
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.3,
-            shadowRadius: 12,
-          }}
-        >
-          <Ionicons color={accentHues.red} name="close" size={34} />
-        </PressableScale>
-
-        {/* 3. Super Like / Star Button (Cyan / Blue) */}
-        <PressableScale
-          accessibilityLabel="Super Like"
-          disabled={!topCard || swipe.isPending}
-          onPress={() => {
-            void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            flyOut('LIKE');
-          }}
-          style={{
-            width: 50,
-            height: 50,
-            borderRadius: radii.full,
-            backgroundColor: alpha(darkSurfaces.superLike, 0.85),
-            borderWidth: 1.5,
-            borderColor: accentHues.cyan,
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: !topCard ? 0.4 : 1,
-            shadowColor: accentHues.cyan,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.25,
-            shadowRadius: 8,
-          }}
-        >
-          <Ionicons color={accentHues.cyan} name="star" size={24} />
-        </PressableScale>
-
-        {/* 4. Like / Heart Button (Volt / Green) */}
-        <PressableScale
-          accessibilityLabel="Me interesa entrenar"
-          disabled={!topCard || swipe.isPending}
-          onPress={() => {
-            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            flyOut('LIKE');
-          }}
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: radii.full,
-            backgroundColor: alpha(darkSurfaces.like, 0.9),
-            borderWidth: 2,
-            borderColor: colors.volt,
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: !topCard ? 0.4 : 1,
-            shadowColor: colors.volt,
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.35,
-            shadowRadius: 14,
-          }}
-        >
-          <Ionicons color={colors.volt} name="heart" size={34} />
-        </PressableScale>
-
-        {/* 5. Direct Chat / Flash Button (Purple) */}
-        <PressableScale
-          accessibilityLabel="Enviar mensaje directo"
-          disabled={!topCard || message.isPending}
-          onPress={() => {
-            if (topCard) {
-              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              message.mutate(topCard.userId);
-            }
-          }}
-          style={{
-            width: 50,
-            height: 50,
-            borderRadius: radii.full,
-            backgroundColor: alpha(darkSurfaces.boost, 0.85),
-            borderWidth: 1.5,
-            borderColor: accentHues.purple,
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: !topCard ? 0.4 : 1,
-            shadowColor: accentHues.purple,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.25,
-            shadowRadius: 8,
-          }}
-        >
-          {message.isPending ? (
-            <ActivityIndicator color={accentHues.purple} size="small" />
-          ) : (
-            <Ionicons color={accentHues.purple} name="flash" size={22} />
-          )}
-        </PressableScale>
-      </View>
+        <DeckActionBar
+          canUndo={decided.length > 0}
+          messaging={message.isPending}
+          onLike={() => flyOut('LIKE')}
+          onMessage={() => message.mutate(topCard.userId)}
+          onPass={() => flyOut('PASS')}
+          onSuperLike={() => flyOut('LIKE')}
+          onUndo={() => undo.mutate({ filterKey: deckKey })}
+          swiping={swipe.isPending}
+          undoing={undo.isPending}
+        />
       ) : (
         // Reserva el alto de la barra flotante para que nada quede debajo del vidrio.
-        <View style={{ height: 84 }} />
+        <View style={{ height: ACTION_BAR_BOTTOM }} />
       )}
 
       {/* 3-Dots Menu Sheet (Consolidated Community Menu) */}

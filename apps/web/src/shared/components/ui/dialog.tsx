@@ -4,6 +4,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cn } from '@/shared/lib/cn';
+import { useFocusReturn } from '@/shared/lib/focus-return';
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
@@ -15,6 +16,7 @@ export function DialogContent({
   description,
   className,
 }: Readonly<{ children: ReactNode; title: string; description?: string; className?: string }>) {
+  const returnFocus = useFocusReturn();
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="dialog-overlay fixed inset-0 z-50 bg-[var(--overlay)] backdrop-blur-[2px]" />
@@ -30,6 +32,7 @@ export function DialogContent({
       */}
       <div className="pointer-events-none fixed inset-0 z-50 grid place-items-center p-4">
         <DialogPrimitive.Content
+          onCloseAutoFocus={returnFocus}
           className={cn(
             'dialog-panel pointer-events-auto relative max-h-[90dvh] w-full max-w-xl overflow-y-auto rounded-[var(--radius-2xl)] border border-transparent bg-[var(--surface-high)] p-6 shadow-[var(--shadow-dialog)]',
             className,

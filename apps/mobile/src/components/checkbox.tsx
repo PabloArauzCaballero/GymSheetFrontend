@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
 import { DURATION, PREMIUM_EASING, PRESS_SPRING, PressableScale } from '@/components/motion';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
-import { accentContrast, colors, fontSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
+import { accentContrast, colors, fontSizes, minTouchTarget, radii, spacing } from '@/theme';
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 
@@ -41,7 +41,8 @@ export function Checkbox({
   // gimnasio: a partir de ahí el acento se queda clavado en el de referencia en
   // toda la aplicación. Un `colors.volt` dentro de un worklet cuesta el tema.
   const marcado = colors.volt;
-  const borde = colors.border;
+  // Unchecked outline is the only cue the box exists: `borderControl` keeps it ≥ 3:1 (WCAG 1.4.11).
+  const borde = colors.borderControl;
   const tinta = accentContrast();
 
   const box = useAnimatedStyle(() => ({
@@ -97,7 +98,7 @@ export function Checkbox({
           <Ionicons color={tinta} name="checkmark" size={15} />
         </Animated.View>
       </AnimatedView>
-      <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, fontWeight: semibold }}>
+      <Text style={{ flexShrink: 1, color: colors.textSecondary, fontSize: fontSizes.sm, lineHeight: 20 }}>
         {label}
       </Text>
     </PressableScale>

@@ -34,7 +34,7 @@ export function PageHeader({
           desplazaba en horizontal. */}
       <div className="grid min-w-0 max-w-3xl gap-1">
         {eyebrow ? (
-          <p className="text-[15px] font-semibold leading-5 text-[var(--accent-ink)]">{eyebrow}</p>
+          <p className="text-[0.9375rem] font-semibold leading-[1.35] text-[var(--accent-ink)]">{eyebrow}</p>
         ) : null}
         {titleAction ? (
           // The action wraps under the title only when the title's longest word and the action no
@@ -46,8 +46,9 @@ export function PageHeader({
         ) : (
           <h1 className="display-title">{title}</h1>
         )}
+        {/* rem, not px: the description grows with the browser text size like the title does. */}
         {description ? (
-          <p className="mt-1 max-w-2xl text-[15px] leading-5 text-[var(--text-muted)] sm:text-[17px] sm:leading-6">
+          <p className="mt-1 max-w-2xl text-[0.9375rem] leading-[1.35] text-[var(--text-muted)] sm:text-[1.0625rem] sm:leading-[1.4]">
             {description}
           </p>
         ) : null}

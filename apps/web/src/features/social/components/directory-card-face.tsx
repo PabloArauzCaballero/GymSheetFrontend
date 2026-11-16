@@ -79,9 +79,7 @@ export function DirectoryCardFace({
     entry.branchName,
     entry.experienceLevel ? (experienceLevelLabels[entry.experienceLevel] ?? entry.experienceLevel) : null,
     typeof entry.points === 'number' ? `${entry.points.toLocaleString('es-ES')}\u00A0pts` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  ].filter((part): part is string => Boolean(part));
 
   return (
     <div className={cn('relative overflow-hidden bg-[var(--surface-high)]', fill ? 'size-full' : 'aspect-[4/5] w-full')}>
@@ -157,7 +155,18 @@ export function DirectoryCardFace({
           ) : null}
         </p>
         {/* One plain line, as on the app: objetivo · sede · nivel · puntos. Chips over a photo were noise. */}
-        {meta ? <p className="line-clamp-2 text-sm leading-[19px] text-white/85">{meta}</p> : null}
+        {/* The «·» sits in the gap before each part, positioned outside it: the part that starts a
+            line has its dot past the clipped left edge, so no line starts or ends with «·». */}
+        {meta.length > 0 ? (
+          <p className="flex flex-wrap gap-x-3.5 overflow-hidden text-sm leading-[19px] text-white/85">
+            {meta.map((part) => (
+              <span className="relative min-w-0" key={part}>
+                <span aria-hidden className="absolute right-full w-3.5 text-center">·</span>
+                {part}
+              </span>
+            ))}
+          </p>
+        ) : null}
       </div>
 
       {onInfo && interactive ? (

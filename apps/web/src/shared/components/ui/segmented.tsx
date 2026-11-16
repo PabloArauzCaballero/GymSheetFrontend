@@ -12,17 +12,23 @@ export interface SegmentOption<T extends string> {
  * desliza a la elegida (se lee como un interruptor, no como pestañas sueltas).
  * Es un `radiogroup`: las flechas cambian de opción, como en un grupo de
  * radios nativo. Sin acento de marca: el color queda para el músculo.
+ *
+ * With `tabsFor` it switches whole views (Editar / Vista previa), so it is
+ * announced as a `tablist` whose tabs control the panel with that id.
  */
 export function Segmented<T extends string>({
   options,
   value,
   onChange,
   label,
+  tabsFor,
 }: Readonly<{
   options: readonly SegmentOption<T>[];
   value: T;
   onChange: (next: T) => void;
   label: string;
+  /** Id of the panel these options switch: renders tab semantics instead of radio. */
+  tabsFor?: string;
 }>) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const index = Math.max(0, options.findIndex((option) => option.value === value));
@@ -79,7 +85,7 @@ export function Segmented<T extends string>({
       className="relative inline-grid max-w-full rounded-[1.5rem] border border-[var(--border-subtle)] bg-[var(--surface-high)] p-[3px]"
       onKeyDown={onKeyDown}
       ref={groupRef}
-      role="radiogroup"
+      role={tabsFor ? 'tablist' : 'radiogroup'}
       style={{ gridTemplateColumns: stacked ? 'minmax(0, 1fr)' : `repeat(${options.length}, minmax(0, 1fr))` }}
     >
       {/* Invisible copies of the labels, unwrapped: their width decides side by side or stacked. */}
@@ -106,7 +112,10 @@ export function Segmented<T extends string>({
         const active = position === index;
         return (
           <button
-            aria-checked={active}
+            aria-checked={tabsFor ? undefined : active}
+            aria-controls={tabsFor}
+            aria-selected={tabsFor ? active : undefined}
+            id={tabsFor ? `${tabsFor}-tab-${option.value}` : undefined}
             className={
               `relative z-[1] min-h-11 ${stacked ? 'min-w-0' : 'min-w-[5.5rem]'} rounded-[calc(1.5rem-3px)] px-4 py-1 text-sm leading-tight [overflow-wrap:anywhere] transition-colors duration-[var(--dur-1)] motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-ink)] ` +
               (active ? `font-semibold text-[var(--text)] ${pill ? '' : 'bg-[var(--surface-highest)]'}` : 'font-medium text-[var(--text-muted)] hover:text-[var(--text)]')
@@ -116,7 +125,7 @@ export function Segmented<T extends string>({
             ref={(element) => {
               refs.current[position] = element;
             }}
-            role="radio"
+            role={tabsFor ? 'tab' : 'radio'}
             tabIndex={active ? 0 : -1}
             type="button"
           >

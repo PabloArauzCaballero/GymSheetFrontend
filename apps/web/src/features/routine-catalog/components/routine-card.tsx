@@ -20,7 +20,7 @@ function planLine(card: Pick<RoutineCardData, 'diasPorSemana' | 'duracionSemanas
 function SocialProof({ valoracion, copias }: Readonly<Pick<RoutineCardData, 'valoracion' | 'copias'>>) {
   const rating = ratingValue(valoracion);
   return (
-    <span className="t-footnote inline-flex shrink-0 items-center gap-1 tabular-nums">
+    <span className="t-footnote inline-flex min-w-0 flex-wrap items-center justify-end gap-x-1 tabular-nums">
       {rating ? (
         <>
           <Star aria-hidden className="size-3 fill-current" style={{ color: ratingStar }} />

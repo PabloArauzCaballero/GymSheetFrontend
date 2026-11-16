@@ -64,6 +64,8 @@ test('cerrar sesion devuelve al acceso y protege el panel', async ({ page }) => 
   }
   await expect(logout).toBeVisible({ timeout: 15_000 });
   await logout.click();
+  // Logging out asks first, as on the app.
+  await page.getByRole('dialog').getByRole('button', { name: 'Cerrar sesión' }).click();
   await page.waitForURL(/\/login|\/$/u, { timeout: 20_000 });
   await page.goto('/dashboard');
   await expect(page).toHaveURL(/\/login/u, { timeout: 15_000 });

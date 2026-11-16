@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { discoveryPreferencesBlocker, needsDiscoveryPreferences } from './discovery-preferences';
+import { discoveryDeckGate, discoveryPreferencesBlocker, needsDiscoveryPreferences } from './discovery-preferences';
 
 describe('needsDiscoveryPreferences', () => {
   it('reconoce el código estable', () => {
@@ -36,5 +36,20 @@ describe('discoveryPreferencesBlocker', () => {
     expect(discoveryPreferencesBlocker({ ...ok, maxAge: 20, minAge: 30 })).toMatch(/edades/);
     expect(discoveryPreferencesBlocker({ ...ok, radiusKm: Number.NaN })).toBe('El radio va de 1 a 500 km.');
     expect(discoveryPreferencesBlocker({ ...ok, radiusKm: 501 })).toBe('El radio va de 1 a 500 km.');
+  });
+});
+
+describe('discoveryDeckGate', () => {
+  it('waits for the preferences read before asking for the deck', () => {
+    expect(discoveryDeckGate({ data: undefined, isError: false })).toBe('pending');
+  });
+  it('shows the setup form, without a deck request, when preferences are missing', () => {
+    expect(discoveryDeckGate({ data: { configured: false }, isError: false })).toBe('setup');
+  });
+  it('deals once preferences exist', () => {
+    expect(discoveryDeckGate({ data: { configured: true }, isError: false })).toBe('deck');
+  });
+  it('falls back to the deck (and its 400 branch) when the preferences read fails', () => {
+    expect(discoveryDeckGate({ data: undefined, isError: true })).toBe('deck');
   });
 });

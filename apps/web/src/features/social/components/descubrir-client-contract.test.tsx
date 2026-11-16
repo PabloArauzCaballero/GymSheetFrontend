@@ -24,7 +24,12 @@ function renderDiscover() {
 
 describe('DescubrirClient contract errors', () => {
   beforeEach(() => {
-    backendFetch.mockReset().mockResolvedValue({
+    const preferences = {
+      ok: true,
+      json: async () => ({ ok: true, data: { configured: true, genders: ['FEMALE'], intents: ['TRAINING'], minAge: 18, maxAge: 65, radiusKm: 25, flexibleAge: false, flexibleDistance: false, version: 1 } }),
+    };
+    backendFetch.mockReset().mockImplementation(async (input: unknown) => String(input).includes('/discovery/preferences') ? preferences : deckResponse);
+    const deckResponse = {
       ok: true,
       json: async () => ({
         ok: true,
@@ -48,7 +53,7 @@ describe('DescubrirClient contract errors', () => {
           },
         ],
       }),
-    });
+    };
   });
 
   it('rejects an incompatible deck DTO and offers a retry without rendering its candidate', async () => {
@@ -60,15 +65,21 @@ describe('DescubrirClient contract errors', () => {
     expect(screen.queryByText('Persona corrupta')).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
-    await waitFor(() => expect(backendFetch).toHaveBeenCalledTimes(2));
+    // Two deck requests (first load + retry); the preferences read is not counted.
+    await waitFor(() => expect(backendFetch.mock.calls.filter(([input]) => !String(input).includes('/discovery/preferences'))).toHaveLength(2));
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeTruthy();
   });
 
   it('shows the real empty-deck state and a route back to change filters', async () => {
-    backendFetch.mockReset().mockResolvedValue({
+    const preferences = {
+      ok: true,
+      json: async () => ({ ok: true, data: { configured: true, genders: ['FEMALE'], intents: ['TRAINING'], minAge: 18, maxAge: 65, radiusKm: 25, flexibleAge: false, flexibleDistance: false, version: 1 } }),
+    };
+    backendFetch.mockReset().mockImplementation(async (input: unknown) => String(input).includes('/discovery/preferences') ? preferences : deckResponse);
+    const deckResponse = {
       ok: true,
       json: async () => ({ ok: true, data: [] }),
-    });
+    };
 
     renderDiscover();
 

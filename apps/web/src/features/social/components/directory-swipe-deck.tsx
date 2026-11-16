@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence } from 'framer-motion';
-import { Heart, RotateCcw, Star, X, Zap } from 'lucide-react';
+import { Heart, MessageCircle, Star, Undo2, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { GymDirectoryEntry, SwipeDirection } from '@/shared/api/schemas';
 import { deckActions } from '@/shared/theme/metric-colors';
@@ -69,7 +69,7 @@ export function DirectorySwipeDeck({
       {/* La botonera del móvil: deshacer · paso · super like · me interesa · mensaje. */}
       <div className="flex items-center gap-3">
         <DeckAction disabled={!canUndo || undoPending} label="Deshacer la última decisión" onClick={onUndo} size="sm" tone="undo">
-          <RotateCcw aria-hidden className="size-5" />
+          <Undo2 aria-hidden className="size-5" />
         </DeckAction>
         <DeckAction
           disabled={!top || decidePending}
@@ -104,7 +104,7 @@ export function DirectorySwipeDeck({
             size="sm"
             tone="boost"
           >
-            <Zap aria-hidden className="size-5 fill-current" />
+            <MessageCircle aria-hidden className="size-5" />
           </DeckAction>
         ) : null}
       </div>
@@ -134,7 +134,7 @@ function DeckAction({
   return (
     <button
       aria-label={label}
-      className={`tap grid ${size === 'sm' ? 'size-12 border-[1.5px]' : 'size-16 border-2'} place-items-center rounded-full shadow-[0_6px_16px_rgb(0_0_0/0.35)] transition-transform duration-[var(--dur-1)] active:scale-[0.94] disabled:pointer-events-none disabled:opacity-40 motion-reduce:active:scale-100`}
+      className={`tap grid ${size === 'sm' ? 'size-12' : 'size-16'} place-items-center rounded-full border transition-transform duration-[var(--dur-1)] active:scale-[0.94] disabled:pointer-events-none disabled:opacity-40 motion-reduce:active:scale-100`}
       disabled={disabled}
       onClick={onClick}
       style={{ background: look.bg, borderColor: look.edge, color: look.ink }}

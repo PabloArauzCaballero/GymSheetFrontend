@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, View } from 'react-native';
 import type { GymDirectoryEntry } from '@gymsheet/schemas';
+import { MetaLine } from '@/components/meta-line';
 import { initialsOf } from '@/lib/format';
 import {
   EXPERIENCE_LEVEL_LABEL,
@@ -141,8 +142,7 @@ export function DirectoryCardFace({
     // Same plain line as the web card: objetivo · sede · nivel · puntos.
     typeof entry.points === 'number' ? `${entry.points.toLocaleString('es-ES')}\u00A0pts` : null,
   ]
-    .filter((part): part is string => Boolean(part))
-    .join(' · ');
+    .filter((part): part is string => Boolean(part));
 
   const nameSize = fill ? fontSizes['2xl'] : fontSizes.lg;
 
@@ -306,19 +306,7 @@ export function DirectoryCardFace({
             ) : null}
           </View>
 
-          {meta ? (
-            <Text
-              numberOfLines={2}
-              style={{
-                color: onMedia.textSoft,
-                fontSize: fontSizes.sm,
-                lineHeight: 19,
-                marginTop: 2,
-              }}
-            >
-              {meta}
-            </Text>
-          ) : null}
+          <MetaLine parts={meta} />
 
           {entry.socialStatus ? (
             <Text

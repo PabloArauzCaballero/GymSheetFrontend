@@ -79,6 +79,7 @@ export function ProfileEditClient() {
       />
       <Segmented
         label="Modo"
+        tabsFor="profile-edit-panel"
         onChange={(next) => router.replace(next === 'preview' ? '/profile/editar?tab=preview' : '/profile/editar', { scroll: false })}
         options={[
           { value: 'edit', label: 'Editar' },
@@ -87,6 +88,7 @@ export function ProfileEditClient() {
         value={tab}
       />
 
+      <div aria-labelledby={`profile-edit-panel-tab-${tab}`} className="grid grid-cols-1 gap-8" id="profile-edit-panel" role="tabpanel">
       {tab === 'preview' ? (
         own.cardEntry && !own.branches.isLoading ? <ProfilePreview entry={own.cardEntry} /> : null
       ) : (
@@ -128,6 +130,7 @@ export function ProfileEditClient() {
           </section>
         </>
       )}
+      </div>
     </div>
   );
 }

@@ -12,6 +12,8 @@ import { GOAL_LABEL, MEMBERSHIP_LABEL, MEMBERSHIP_TONE, formatDate } from '@/lib
 import { routes } from '@/lib/routes';
 import { useTourStore } from '@/state/tour-store';
 import { colors, iconSizes, spacing } from '@/theme';
+import { LogoutRow } from './logout-row';
+import { weightTrend } from './weight-trend';
 
 /** Glifo de fila, callado: el protagonista de la pantalla es la cara, no la lista. */
 function RowGlyph({ icon }: { icon: keyof typeof Ionicons.glyphMap }) {
@@ -92,7 +94,7 @@ function dataSubtitle(profile: Profile | undefined, pending: boolean, missing: b
   return `${profile.pesoKg.toLocaleString('es-ES')} kg · ${profile.estaturaCm} cm · ${GOAL_LABEL[profile.objetivo]}`;
 }
 
-export function AccountList({ profile, profilePending, missingProfile }: { profile: Profile | undefined; profilePending: boolean; missingProfile: boolean }) {
+export function AccountList({ profile, profilePending, missingProfile, onLogout, signingOut }: { profile: Profile | undefined; profilePending: boolean; missingProfile: boolean; onLogout: () => void; signingOut: boolean }) {
   const router = useRouter();
   const resetTour = useTourStore((state) => state.reset);
   const measurements = useQuery({ queryKey: ['profile', 'body-measurements'], queryFn: () => profileService.measurements() });
@@ -102,7 +104,7 @@ export function AccountList({ profile, profilePending, missingProfile }: { profi
   const firstWeight = measurements.data?.[measurements.data.length - 1];
   const trend =
     lastWeight && firstWeight && lastWeight.id !== firstWeight.id
-      ? `${lastWeight.weight - firstWeight.weight > 0 ? '+' : '−'}${Math.abs(lastWeight.weight - firstWeight.weight).toLocaleString('es-ES', { maximumFractionDigits: 1 })} ${lastWeight.unit.toLowerCase()} desde ${formatDate(firstWeight.measuredOn)}`
+      ? weightTrend(lastWeight.weight - firstWeight.weight, lastWeight.unit, formatDate(firstWeight.measuredOn))
       : null;
 
   return (
@@ -134,6 +136,7 @@ export function AccountList({ profile, profilePending, missingProfile }: { profi
           <NavRow key="notif" leading={<RowGlyph icon="notifications-outline" />} onPress={() => router.push('/notifications')} subtitle="Qué avisos quieres recibir" title="Notificaciones" />,
           <NavRow key="tour" leading={<RowGlyph icon="help-buoy-outline" />} onPress={() => void resetTour()} subtitle="Vuelve a ver la bienvenida y los avisos de cada pantalla" title="Ver tutorial" />,
           <NavRow key="ajustes" leading={<RowGlyph icon="settings-outline" />} onPress={() => router.push('/settings')} subtitle="Cuenta, versión y cierre de sesión" title="Ajustes" />,
+          <LogoutRow key="logout" onPress={onLogout} pending={signingOut} />,
         ]}
       </RowGroup>
     </Section>
