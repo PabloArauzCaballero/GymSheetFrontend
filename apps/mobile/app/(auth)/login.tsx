@@ -69,7 +69,7 @@ export default function LoginScreen() {
           {
             text: 'Activar',
             onPress: () => {
-              void turnOnQuickLogin().finally(resolve);
+              void turnOnQuickLogin(useAuthStore.getState().principal?.id ?? '').finally(resolve);
             },
           },
         ],

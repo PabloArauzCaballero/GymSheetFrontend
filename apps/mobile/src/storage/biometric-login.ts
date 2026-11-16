@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import {
   clearParkedToken,
   consumeParkedToken,
+  bindQuickLoginToAccount,
   enableQuickLogin,
   hasParkedToken,
   migrateLegacyCredentials,
@@ -66,8 +67,13 @@ export async function migrateBiometricLogin(): Promise<void> {
   await migrateLegacyCredentials(store).catch(() => undefined);
 }
 
-export async function turnOnQuickLogin(): Promise<void> {
-  await enableQuickLogin(store).catch(() => undefined);
+export async function turnOnQuickLogin(userId: string): Promise<void> {
+  await enableQuickLogin(store, userId).catch(() => undefined);
+}
+
+/** After any sign-in: quick login of another account on this phone is turned off. */
+export async function bindQuickLoginTo(userId: string): Promise<void> {
+  await bindQuickLoginToAccount(store, userId).catch(() => undefined);
 }
 
 /** A token is parked and the login screen can offer (or launch) the biometric entry. */
@@ -82,8 +88,8 @@ export async function hasQuickLogin(): Promise<boolean> {
  */
 let skipNextAutoPrompt = false;
 
-export async function parkForQuickLogin(refreshToken: string): Promise<boolean> {
-  const parked = await parkRefreshToken(store, refreshToken).catch(() => false);
+export async function parkForQuickLogin(refreshToken: string, userId: string): Promise<boolean> {
+  const parked = await parkRefreshToken(store, refreshToken, userId).catch(() => false);
   if (parked) skipNextAutoPrompt = true;
   return parked;
 }

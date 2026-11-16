@@ -58,12 +58,32 @@ export async function migrateLegacyCredentials(store: QuickLoginStore): Promise<
   await store.set(quickLoginKeys.migrated, '1');
 }
 
-export async function enableQuickLogin(store: QuickLoginStore): Promise<void> {
-  await store.set(quickLoginKeys.enabled, '1');
+/**
+ * Quick login belongs to the account that turned it on: the flag stores that
+ * account's id. A shared phone must never park (and later hand over) another
+ * person's session behind the owner's fingerprint.
+ */
+export async function enableQuickLogin(store: QuickLoginStore, userId: string): Promise<void> {
+  if (!userId) return;
+  await store.set(quickLoginKeys.enabled, userId);
 }
 
-export async function isQuickLoginEnabled(store: QuickLoginStore): Promise<boolean> {
-  return (await store.get(quickLoginKeys.enabled)) === '1';
+/** Enabled for exactly this account. The pre-binding value `'1'` counts as off. */
+export async function isQuickLoginEnabled(store: QuickLoginStore, userId: string): Promise<boolean> {
+  if (!userId) return false;
+  return (await store.get(quickLoginKeys.enabled)) === userId;
+}
+
+/**
+ * After any sign-in: if quick login belongs to another account, it is turned
+ * off (and its parked token dropped) and the new person is asked afresh.
+ */
+export async function bindQuickLoginToAccount(store: QuickLoginStore, userId: string): Promise<void> {
+  const owner = await store.get(quickLoginKeys.enabled);
+  if (owner && owner !== userId) {
+    await disableQuickLogin(store);
+    await store.remove(quickLoginKeys.offered);
+  }
 }
 
 export async function hasParkedToken(store: QuickLoginStore): Promise<boolean> {
@@ -84,8 +104,12 @@ export async function disableQuickLogin(store: QuickLoginStore): Promise<void> {
  * Parks the refresh token at logout. `true` means it is stored and the caller
  * must NOT revoke it; `false` (off, cancelled, no biometrics) means revoke as usual.
  */
-export async function parkRefreshToken(store: QuickLoginStore, refreshToken: string): Promise<boolean> {
-  if (!refreshToken || !(await isQuickLoginEnabled(store))) return false;
+export async function parkRefreshToken(
+  store: QuickLoginStore,
+  refreshToken: string,
+  userId: string,
+): Promise<boolean> {
+  if (!refreshToken || !(await isQuickLoginEnabled(store, userId))) return false;
   try {
     await store.set(quickLoginKeys.token, refreshToken, { prompt: quickLoginPrompts.arm });
     await store.set(quickLoginKeys.armed, '1');

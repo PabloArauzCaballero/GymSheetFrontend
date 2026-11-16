@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   consumeParkedToken,
   disableQuickLogin,
+  bindQuickLoginToAccount,
   enableQuickLogin,
   hasParkedToken,
   migrateLegacyCredentials,
@@ -56,36 +57,36 @@ test('la migración corre una sola vez y nunca lee el hueco protegido', async ()
 test('ningún valor guardado contiene la contraseña', async () => {
   const { store, entries } = memoryStore({ [quickLoginKeys.legacyCredentials]: LEGACY });
   await migrateLegacyCredentials(store);
-  await enableQuickLogin(store);
-  await parkRefreshToken(store, 'refresh-abc');
+  await enableQuickLogin(store, 'user-a');
+  await parkRefreshToken(store, 'refresh-abc', 'user-a');
   for (const entry of entries.values()) assert.ok(!entry.value.includes('Secreta2026!'));
 });
 
 test('sin activar, cerrar sesión no aparca nada y el llamador revoca', async () => {
   const { store, entries } = memoryStore();
-  assert.equal(await parkRefreshToken(store, 'refresh-abc'), false);
+  assert.equal(await parkRefreshToken(store, 'refresh-abc', 'user-a'), false);
   assert.equal(entries.has(quickLoginKeys.token), false);
 });
 
 test('activado, aparca el refresh detrás de la biometría', async () => {
   const { store, entries } = memoryStore();
-  await enableQuickLogin(store);
-  assert.equal(await parkRefreshToken(store, 'refresh-abc'), true);
+  await enableQuickLogin(store, 'user-a');
+  assert.equal(await parkRefreshToken(store, 'refresh-abc', 'user-a'), true);
   assert.deepEqual(entries.get(quickLoginKeys.token), { value: 'refresh-abc', protected: true });
   assert.equal(await hasParkedToken(store), true);
 });
 
 test('si la persona cancela la huella al aparcar, se revoca como siempre', async () => {
   const { store, entries } = memoryStore({}, { protectedWrite: true });
-  await enableQuickLogin(store);
-  assert.equal(await parkRefreshToken(store, 'refresh-abc'), false);
+  await enableQuickLogin(store, 'user-a');
+  assert.equal(await parkRefreshToken(store, 'refresh-abc', 'user-a'), false);
   assert.equal(entries.has(quickLoginKeys.armed), false);
 });
 
 test('entrar canjea el token aparcado y vacía el hueco', async () => {
   const { store, entries, log } = memoryStore();
-  await enableQuickLogin(store);
-  await parkRefreshToken(store, 'refresh-abc');
+  await enableQuickLogin(store, 'user-a');
+  await parkRefreshToken(store, 'refresh-abc', 'user-a');
   const seen: string[] = [];
   const outcome = await consumeParkedToken(store, async (token) => {
     seen.push(token);
@@ -97,21 +98,21 @@ test('entrar canjea el token aparcado y vacía el hueco', async () => {
   assert.equal(entries.has(quickLoginKeys.token), false);
   assert.equal(await hasParkedToken(store), false);
   // The preference survives: the next logout parks again.
-  assert.equal(entries.get(quickLoginKeys.enabled)?.value, '1');
+  assert.equal(entries.get(quickLoginKeys.enabled)?.value, 'user-a');
 });
 
 test('un token rechazado se borra y pide contraseña', async () => {
   const { store } = memoryStore();
-  await enableQuickLogin(store);
-  await parkRefreshToken(store, 'refresh-abc');
+  await enableQuickLogin(store, 'user-a');
+  await parkRefreshToken(store, 'refresh-abc', 'user-a');
   assert.deepEqual(await consumeParkedToken(store, async () => 'rejected' as const), { kind: 'rejected' });
   assert.equal(await hasParkedToken(store), false);
 });
 
 test('sin red el token se conserva para reintentar', async () => {
   const { store } = memoryStore();
-  await enableQuickLogin(store);
-  await parkRefreshToken(store, 'refresh-abc');
+  await enableQuickLogin(store, 'user-a');
+  await parkRefreshToken(store, 'refresh-abc', 'user-a');
   await assert.rejects(consumeParkedToken(store, async () => {
     throw new Error('offline');
   }));
@@ -139,8 +140,31 @@ test('sin token aparcado no se pide biometría', async () => {
 
 test('desactivar borra la preferencia y el token aparcado', async () => {
   const { store, entries } = memoryStore();
-  await enableQuickLogin(store);
-  await parkRefreshToken(store, 'refresh-abc');
+  await enableQuickLogin(store, 'user-a');
+  await parkRefreshToken(store, 'refresh-abc', 'user-a');
   await disableQuickLogin(store);
   assert.equal(entries.size, 0);
+});
+
+test('a shared phone never parks another account\'s session behind the owner\'s fingerprint', async () => {
+  const { store } = memoryStore();
+  await enableQuickLogin(store, 'user-a');
+  // B signs in on A's phone: quick login (A's) is turned off and B is asked afresh.
+  await bindQuickLoginToAccount(store, 'user-b');
+  assert.equal(await parkRefreshToken(store, 'refresh-of-b', 'user-b'), false);
+  assert.equal(await parkRefreshToken(store, 'refresh-of-b', 'user-a'), false);
+  assert.equal(await hasParkedToken(store), false);
+});
+
+test('only the account that turned quick login on gets its token parked', async () => {
+  const { store } = memoryStore();
+  await enableQuickLogin(store, 'user-a');
+  assert.equal(await parkRefreshToken(store, 'refresh-of-b', 'user-b'), false);
+  assert.equal(await parkRefreshToken(store, 'refresh-of-a', 'user-a'), true);
+});
+
+test('the pre-binding flag no longer enables quick login', async () => {
+  const { store } = memoryStore();
+  await store.set(quickLoginKeys.enabled, '1');
+  assert.equal(await parkRefreshToken(store, 'refresh-abc', 'user-a'), false);
 });

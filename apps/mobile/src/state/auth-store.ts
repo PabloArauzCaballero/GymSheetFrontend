@@ -18,7 +18,7 @@ import { restoreSession } from '@/lib/session-restore';
 import { env } from '@/config/env';
 import { unregisterPushNotifications } from '@/notifications/push';
 import { useLegalGateStore } from '@/features/legal/legal-store';
-import { migrateBiometricLogin, parkForQuickLogin, signInWithParkedToken } from '@/storage/biometric-login';
+import { bindQuickLoginTo, migrateBiometricLogin, parkForQuickLogin, signInWithParkedToken } from '@/storage/biometric-login';
 import type { QuickLoginOutcome } from '@/storage/quick-login';
 
 /**
@@ -113,6 +113,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     await rememberPrincipal(payload.user);
     setActiveTenant(payload.user.tenantId);
     set({ status: 'authenticated', principal: payload.user, emailVerified: payload.user.emailVerified ?? null });
+    await bindQuickLoginTo(payload.user.id);
   }
 
   return {
@@ -210,7 +211,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
         getRefreshToken: () => secureStoreAuthStorage.getRefreshToken(),
         revokeRefreshToken,
         clearTokens: () => secureStoreAuthStorage.clearTokens(),
-        parkForQuickLogin,
+        // Parked only for the account that turned quick login on.
+        parkForQuickLogin: (refreshToken) => parkForQuickLogin(refreshToken, get().principal?.id ?? ''),
       });
       // The legal block belongs to the account that just left.
       useLegalGateStore.getState().clear();
