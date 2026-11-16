@@ -1,6 +1,6 @@
 'use client';
 
-import { gestureGlyph, verificationReviewCopy } from '@gymsheet/domain';
+import { gestureGlyph, verificationGymLabel, verificationReviewCopy } from '@gymsheet/domain';
 import { useQuery } from '@tanstack/react-query';
 import { ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
@@ -15,7 +15,7 @@ import { verificationService } from '../services/verification-service';
 import { VerificationReviewPanel } from './verification-review-panel';
 
 /**
- * `/admin/verificaciones`: selfies waiting for a person to compare them.
+ * `/moderacion/verificaciones`: selfies of every gym waiting for the REPP team.
  * Refreshed every 4 minutes, inside the 5-minute life of the signed selfie
  * links, so an open item never shows a dead link for long. The backend
  * authorizes every call; this screen only hides what it cannot use.
@@ -64,8 +64,8 @@ export function VerificationQueue() {
                       </span>
                       <span className="grid min-w-0 gap-0.5">
                         <span className="t-headline truncate">{item.member.name}</span>
-                        <span className="t-footnote text-[var(--text-muted)]">
-                          {item.submittedAt ? formatDateTime(item.submittedAt) : 'Sin fecha'}
+                        <span className="t-footnote truncate text-[var(--text-muted)]">
+                          {verificationGymLabel(item)} · {item.submittedAt ? formatDateTime(item.submittedAt) : 'Sin fecha'}
                         </span>
                       </span>
                     </button>

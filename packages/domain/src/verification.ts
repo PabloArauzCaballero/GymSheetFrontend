@@ -1,5 +1,7 @@
 import {
   CONSENT_REQUIRED,
+  MODERATION_PEER_CASE,
+  MODERATION_SELF_CASE,
   VERIFICATION_ALREADY_VERIFIED,
   VERIFICATION_CHALLENGE_EXPIRED,
   VERIFICATION_IN_REVIEW,
@@ -41,12 +43,15 @@ export const verificationCopy = {
   ctaAction: 'Verificarme',
   ctaDismiss: 'Ahora no',
   pageTitle: 'Verifica tu perfil',
-  pageIntro: 'Hazte una selfie con el gesto que te pedimos. Una persona del gimnasio la compara con tus fotos.',
+  pageIntro: 'Hazte una selfie con el gesto que te pedimos. El equipo de REPP la compara con tus fotos.',
   start: 'Pedir mi gesto',
   gestureTitle: 'Tu gesto',
   countdown: (clock: string) => `Te quedan ${clock}`,
   expiredTitle: 'El gesto caducó',
   expiredBody: 'Pide otro gesto para volver a intentarlo.',
+  /** EXPIRED status: the gesture ran out, or the selfie waited 30 days unreviewed and was erased. */
+  attemptExpiredTitle: 'Tu intento venció',
+  attemptExpiredBody: 'Tu revisión venció o el gesto caducó. Puedes intentarlo de nuevo con un gesto nuevo.',
   newChallenge: 'Pedir otro gesto',
   openCamera: 'Abrir cámara',
   takeSelfie: 'Tomar selfie',
@@ -54,7 +59,7 @@ export const verificationCopy = {
   retake: 'Repetir',
   send: 'Enviar selfie',
   previewAlt: 'Tu selfie antes de enviarla',
-  privacyNote: 'Solo la ve el equipo que revisa. La borramos 30 días después de decidir.',
+  privacyNote: 'Solo la ve el equipo de REPP. La borramos 30 días después de decidir.',
   pendingTitle: 'Tu selfie está en revisión',
   pendingBody: 'Te avisaremos cuando la revisemos.',
   approvedTitle: 'Perfil verificado',
@@ -100,8 +105,8 @@ export function verificationView(state: Pick<MyVerification, 'status' | 'lastDec
     case 'EXPIRED':
       return {
         tone: 'neutral',
-        title: verificationCopy.expiredTitle,
-        body: capped ? verificationCopy.rateLimited : verificationCopy.expiredBody,
+        title: verificationCopy.attemptExpiredTitle,
+        body: capped ? verificationCopy.rateLimited : verificationCopy.attemptExpiredBody,
         canStart: !capped,
       };
     case 'REVOKED':
@@ -144,6 +149,8 @@ export type VerificationErrorKind =
   | 'photosRequired'
   | 'photosChanged'
   | 'stale'
+  | 'selfCase'
+  | 'peerCase'
   | 'other';
 
 const ERROR_KINDS: Readonly<Record<string, VerificationErrorKind>> = {
@@ -156,6 +163,8 @@ const ERROR_KINDS: Readonly<Record<string, VerificationErrorKind>> = {
   [VERIFICATION_PHOTOS_REQUIRED]: 'photosRequired',
   [VERIFICATION_PHOTOS_CHANGED]: 'photosChanged',
   [VERIFICATION_STATE_CONFLICT]: 'stale',
+  [MODERATION_SELF_CASE]: 'selfCase',
+  [MODERATION_PEER_CASE]: 'peerCase',
 };
 
 /** Which verification failure this is. Duck-typed so this package stays HTTP-free. */
@@ -195,7 +204,7 @@ export const verificationRejectionLabels: Readonly<Record<VerificationRejectionR
 
 export const verificationReviewCopy = {
   title: 'Verificaciones',
-  description: 'Compara cada selfie con las fotos del perfil y el gesto pedido. Lo más antiguo primero.',
+  description: 'Selfies de todos los gimnasios. Compara cada una con las fotos del perfil y el gesto pedido. Lo más antiguo primero.',
   emptyTitle: 'No hay selfies por revisar',
   emptyBody: 'Aquí aparecerán las selfies que envíen las personas.',
   pickOne: 'Elige una selfie de la lista para compararla.',
@@ -211,7 +220,32 @@ export const verificationReviewCopy = {
   photosChanged: 'Las fotos cambiaron, vuelve a cargar.',
   reload: 'Volver a cargar',
   alreadyDecided: 'Otra persona ya decidió esta verificación.',
+  reviewExpired: 'Esta verificación venció y ya no se puede decidir.',
+  selfCase: 'No puedes revisar tu propia verificación.',
+  peerCase: 'La verificación de una cuenta de la plataforma la revisa la administración del sistema.',
+  noGym: 'Sin gimnasio',
 } as const;
+
+/** The gym a queue item belongs to, in words: the queue mixes every gym. */
+export function verificationGymLabel(item: Pick<VerificationQueueItem, 'tenantName'>): string {
+  return item.tenantName ?? verificationReviewCopy.noGym;
+}
+
+/** Staff-side refusals that close the item: why it left the list. Null for any other failure. */
+export function verificationReviewRefusal(kind: VerificationErrorKind): string | null {
+  switch (kind) {
+    case 'stale':
+      return verificationReviewCopy.alreadyDecided;
+    case 'expired':
+      return verificationReviewCopy.reviewExpired;
+    case 'selfCase':
+      return verificationReviewCopy.selfCase;
+    case 'peerCase':
+      return verificationReviewCopy.peerCase;
+    default:
+      return null;
+  }
+}
 
 /** An approval is bound to exactly the photos the moderator saw. */
 export function approveInput(item: Pick<VerificationQueueItem, 'profilePhotos'>): DecideVerificationInput {

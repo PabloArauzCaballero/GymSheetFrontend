@@ -12,7 +12,7 @@ import {
   editarEstructura,
   empujeCuatroDias,
   etiquetaUnica,
-  promoverASistema,
+  promover,
   publicarRutina,
 } from './rutinas-datos';
 import { abrirComo, abrirSegundo, comboLabel, combos, expect } from './rutinas-pagina';
@@ -157,7 +157,7 @@ for (const combo of combos) {
     test('RF-11: Recomendadas por REPP aparece con sello y desaparece al desmarcar', async ({ page, context, baseURL }) => {
       const tag = etiquetaUnica();
       const [ana, sis] = await Promise.all([crearCuenta('ana', 'Ana Autora'), crearCuenta('sis', 'Equipo REPP')]);
-      const s = apiDe(await promoverASistema(sis));
+      const s = apiDe(await promover(sis, 'SYSTEM_ADMIN'));
       const oficial = await crearRutina(s, empujeCuatroDias(`Full body REPP ${tag}`, { objetivo: 'SALUD_GENERAL' }));
       await publicarRutina(s, oficial.id);
       expect((await s('POST', `/admin/routines/${oficial.id}/official`)).status).toBeLessThan(300);

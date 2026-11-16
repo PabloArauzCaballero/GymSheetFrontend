@@ -17,7 +17,7 @@ vi.mock('@/api/client', () => ({ apiClient: { request: mocks.request } }));
 vi.mock('@/notifications', () => ({ confirm: mocks.confirm, notify: mocks.notify }));
 
 const consent = (kind: string, granted: boolean) => ({
-  kind, granted, version: granted ? '2026-12-01' : null, currentVersion: '2026-12-01',
+  kind, granted, version: granted ? '2026-12-02' : null, currentVersion: '2026-12-02',
   upToDate: granted, grantedAt: null, revokedAt: null,
 });
 const list = (granted: Record<string, boolean> = {}) => ({
@@ -52,7 +52,7 @@ test('a 400 CONSENT_REQUIRED asks inline, grants the current version and retries
   expect(mocks.confirm).toHaveBeenCalledWith(expect.objectContaining({ title: consentsSectionCopy.promptTitle('ORIENTATION') }));
   expect(mocks.request).toHaveBeenCalledWith('/me/consents/ORIENTATION', expect.anything(), {
     method: 'PUT',
-    body: { granted: true, version: '2026-12-01' },
+    body: { granted: true, version: '2026-12-02' },
   });
   expect(save).toHaveBeenCalledTimes(2);
 });

@@ -38,6 +38,7 @@ const ROLE_LABEL: Record<string, string> = {
   ENTRENADOR_EXTERNO: 'Entrenador externo',
   COACH: 'Entrenador',
   FRONT_DESK: 'Recepción',
+  MODERATOR: 'Moderación REPP',
 };
 
 /**

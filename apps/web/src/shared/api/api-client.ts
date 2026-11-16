@@ -55,7 +55,10 @@ export async function apiRequest<T>(
       signal: requestController.signal,
     });
     if (!response.ok) throw await apiErrorFromResponse(response);
-    const envelope = successEnvelopeSchema.safeParse(await response.json());
+    // `204 No Content` has no envelope: its data is `null` (e.g. revoking a moderator).
+    const envelope = successEnvelopeSchema.safeParse(
+      response.status === 204 ? { ok: true, data: null } : await response.json(),
+    );
     if (!envelope.success) {
       throw new ApiError({
         message: 'El servidor devolvió un contrato inválido.',
@@ -113,7 +116,10 @@ export async function apiUpload<T>(
       signal: requestController.signal,
     });
     if (!response.ok) throw await apiErrorFromResponse(response);
-    const envelope = successEnvelopeSchema.safeParse(await response.json());
+    // `204 No Content` has no envelope: its data is `null` (e.g. revoking a moderator).
+    const envelope = successEnvelopeSchema.safeParse(
+      response.status === 204 ? { ok: true, data: null } : await response.json(),
+    );
     if (!envelope.success) {
       throw new ApiError({
         message: 'El servidor devolvió un contrato inválido.',

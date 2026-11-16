@@ -113,7 +113,7 @@ export function RoutineActions({
             </p>
           ) : null}
           <ReportDialog
-            consequence="Alguien del equipo revisará la rutina. Nadie sabrá que fuiste tú."
+            consequence="El equipo de moderación de REPP revisará la rutina. Nadie sabrá que fuiste tú."
             defaultReason="INFORMACION_ENGANOSA"
             subjectName="esta rutina"
             successMessage="Gracias. Lo revisaremos."

@@ -30,6 +30,32 @@ export function isSystemAdmin(role: UserRole | null | undefined): boolean {
   return role === 'SYSTEM_ADMIN';
 }
 
+/**
+ * Platform roles that moderate social content of every gym (backend ADR-0018):
+ * the central REPP team (`MODERATOR`) and the platform administrator. Gym staff
+ * never moderates, whatever grants it holds.
+ */
+export const PLATFORM_MODERATION_ROLES: readonly UserRole[] = ['MODERATOR', 'SYSTEM_ADMIN'];
+
+/** Member of the central REPP moderation team (not the platform administrator). */
+export function isModerator(role: UserRole | null | undefined): boolean {
+  return role === 'MODERATOR';
+}
+
+/** Can open the moderation console, the routines review and the signups review. */
+export function isPlatformModerator(role: UserRole | null | undefined): boolean {
+  return role != null && PLATFORM_MODERATION_ROLES.includes(role);
+}
+
+/**
+ * Roles the backend answers `GET /admin/permissions/me` for (`ADMIN`,
+ * `FRONT_DESK`, and `SYSTEM_ADMIN` that satisfies `ADMIN`). A coach or a
+ * moderator would get 403: their access never depends on grants.
+ */
+export function hasAdminPermissionGrants(role: UserRole | null | undefined): boolean {
+  return role === 'ADMIN' || role === 'FRONT_DESK' || role === 'SYSTEM_ADMIN';
+}
+
 export function canManageAdminPanel(role: UserRole | null | undefined): boolean {
   return isAdmin(role);
 }

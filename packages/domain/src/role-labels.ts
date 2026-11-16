@@ -6,6 +6,7 @@ const ROLE_LABELS: Readonly<Record<string, string>> = {
   CLIENTE: 'Socio',
   ADMIN: 'Administrador del gimnasio',
   SYSTEM_ADMIN: 'Administrador del sistema',
+  MODERATOR: 'Moderación REPP',
   COACH: 'Entrenador',
   ENTRENADOR_EXTERNO: 'Entrenador externo',
   FRONT_DESK: 'Recepción',

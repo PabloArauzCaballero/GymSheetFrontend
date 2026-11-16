@@ -20,6 +20,9 @@ const tabLabels: Record<string, string> = {
   '/admin': 'Módulos',
   '/admin/usuarios': 'Usuarios',
   '/sistema': 'Sistema',
+  '/moderacion': 'Moderación',
+  '/moderacion/rutinas': 'Rutinas',
+  '/moderacion/verificaciones': 'Selfies',
 };
 
 function withTabLabel(item: NavigationItem): NavigationItem {

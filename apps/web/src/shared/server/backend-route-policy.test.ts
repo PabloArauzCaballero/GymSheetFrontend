@@ -122,6 +122,14 @@ const allowedCases: Array<[string[], string]> = [
     `/admin/moderation/cases/CHAT_MESSAGE/${id}/resolve`,
   ],
   [['admin', 'moderation', 'users', id, 'history'], `/admin/moderation/users/${id}/history`],
+  // ADR-0018: the central queue carries every reportable kind.
+  [['admin', 'moderation', 'cases', 'ROUTINE', id], `/admin/moderation/cases/ROUTINE/${id}`],
+  [
+    ['admin', 'moderation', 'cases', 'COMMENT', id, 'resolve'],
+    `/admin/moderation/cases/COMMENT/${id}/resolve`,
+  ],
+  [['admin', 'platform', 'moderators'], '/admin/platform/moderators'],
+  [['admin', 'platform', 'moderators', id], `/admin/platform/moderators/${id}`],
   [['me', 'reports'], '/me/reports'],
   [['me', 'training-invitations'], '/me/training-invitations'],
   [['me', 'training-invitations', id, 'respond'], `/me/training-invitations/${id}/respond`],
@@ -152,6 +160,9 @@ const blockedCases: Array<[string[]]> = [
   [['admin', 'users', 'not-a-uuid', 'close']],
   // `targetKind` es el enum cerrado de moderación, no un comodín.
   [['admin', 'moderation', 'cases', 'BOGUS_KIND', id]],
+  // Moderators are addressed by UUID only, and nothing else lives under `/admin/platform`.
+  [['admin', 'platform', 'moderators', 'not-a-uuid']],
+  [['admin', 'platform', 'tenants']],
   // La administración del catálogo de la senda no pasa por el BFF: la pantalla
   // que la consumirá todavía no existe, y abrir la ruta antes de tener quien la
   // use sería dejar accesible desde el navegador una API que nadie vigila.

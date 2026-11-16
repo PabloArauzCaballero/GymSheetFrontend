@@ -1,7 +1,8 @@
 'use client';
 
+import { moderationResolutionLabel } from '@gymsheet/domain';
 import { useQuery } from '@tanstack/react-query';
-import { EyeOff, ShieldCheck } from 'lucide-react';
+import { CircleCheck, EyeOff, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { PageHeader } from '@/shared/components/layout/page-header';
@@ -15,6 +16,7 @@ import {
   TARGET_LABEL,
   type ModerationCase,
   type ModerationTargetKind,
+  type ModerationVerdict,
 } from '@/features/moderation/services/moderation-service';
 import { CasePanel } from './moderation-case-panel';
 import { queueKey, SeverityBadge } from './moderation-labels';
@@ -49,6 +51,9 @@ function CaseRow({
         ) : null}
       </div>
       <p className="mt-2 text-sm text-[var(--text)]">{item.reported_user_name}</p>
+      {item.tenant_name ? (
+        <p className="mt-1 text-xs text-[var(--text-muted)]">{item.tenant_name}</p>
+      ) : null}
       <p className="mt-1 text-xs text-[var(--text-muted)]">
         {item.reasons.map((reason) => REASON_LABEL[reason]).join(' · ')}
       </p>
@@ -66,7 +71,12 @@ export function ModerationQueue() {
   const [selected, setSelected] = useState<{
     targetKind: ModerationTargetKind;
     targetId: string;
+    tenantName: string | null;
   } | null>(null);
+  // The verdict stays on screen after the case leaves the queue.
+  const [lastVerdict, setLastVerdict] = useState<
+    (ModerationVerdict & { tenantName: string | null }) | null
+  >(null);
 
   const queue = useQuery({
     queryKey: queueKey,
@@ -81,9 +91,22 @@ export function ModerationQueue() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        description="Contenido reportado por la comunidad, lo más urgente primero. Cada tarjeta reúne todas las quejas sobre lo mismo."
+        description="Denuncias de todos los gimnasios, lo más urgente primero. Cada tarjeta reúne todas las quejas sobre lo mismo."
         title="Moderación"
       />
+
+      {lastVerdict ? (
+        <p
+          className="flex flex-wrap items-center gap-2 text-sm text-[var(--text-muted)]"
+          data-testid="ultimo-veredicto"
+          role="status"
+        >
+          <CircleCheck aria-hidden className="size-4" />
+          Último caso resuelto:
+          <Badge tone="neutral">{moderationResolutionLabel(lastVerdict.resolution)}</Badge>
+          {lastVerdict.tenantName ? <span>· {lastVerdict.tenantName}</span> : null}
+        </p>
+      ) : null}
 
       {queue.isPending ? (
         <div className="h-96 animate-pulse rounded-[8px] bg-[var(--surface-low)]" />
@@ -105,6 +128,7 @@ export function ModerationQueue() {
                     setSelected({
                       targetKind: item.target_kind,
                       targetId: item.target_id,
+                      tenantName: item.tenant_name,
                     })
                   }
                   selected={
@@ -121,9 +145,13 @@ export function ModerationQueue() {
               {selected ? (
                 <CasePanel
                   key={`${selected.targetKind}:${selected.targetId}`}
-                  onResolved={() => setSelected(null)}
+                  onResolved={(verdict) => {
+                    setLastVerdict({ ...verdict, tenantName: selected.tenantName });
+                    setSelected(null);
+                  }}
                   targetId={selected.targetId}
                   targetKind={selected.targetKind}
+                  tenantName={selected.tenantName}
                 />
               ) : (
                 <EmptyState

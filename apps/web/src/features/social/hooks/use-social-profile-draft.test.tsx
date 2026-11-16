@@ -77,8 +77,8 @@ describe('useSocialProfileDraft with an orientation', () => {
   const orientationConsent = (granted: boolean) => ({
     kind: 'ORIENTATION',
     granted,
-    version: granted ? '2026-12-01' : null,
-    currentVersion: '2026-12-01',
+    version: granted ? '2026-12-02' : null,
+    currentVersion: '2026-12-02',
     upToDate: granted,
     grantedAt: null,
     revokedAt: null,
@@ -108,7 +108,7 @@ describe('useSocialProfileDraft with an orientation', () => {
       saved = await result.current.saveDraft();
     });
     expect(saved).toBe(true);
-    expect(mocks.setConsent).toHaveBeenCalledWith('ORIENTATION', { granted: true, version: '2026-12-01' });
+    expect(mocks.setConsent).toHaveBeenCalledWith('ORIENTATION', { granted: true, version: '2026-12-02' });
     expect(mocks.setConsent.mock.invocationCallOrder[0]!).toBeLessThan(mocks.update.mock.invocationCallOrder[0]!);
     expect(mocks.confirm).not.toHaveBeenCalled();
   });

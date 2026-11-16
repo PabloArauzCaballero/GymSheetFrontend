@@ -16,6 +16,9 @@ import {
   verificationCopy,
   verificationErrorKind,
   verificationErrorMessage,
+  verificationGymLabel,
+  verificationReviewCopy,
+  verificationReviewRefusal,
   verificationView,
 } from './verification';
 
@@ -64,19 +67,36 @@ describe('verification contracts (backend-shaped samples)', () => {
     expect(verificationSubmissionSchema.safeParse({ id, status: 'NONE', submittedAt: null }).success).toBe(false);
   });
 
-  it('parses the staff queue as a plain array with the signed selfie link', () => {
-    const [item] = verificationQueueSchema.parse([
+  it('parses the REPP queue as a plain array with the gym and the signed selfie link', () => {
+    const [item, orphan] = verificationQueueSchema.parse([
       {
         id,
         status: 'PENDING_REVIEW',
         member: { id: userId, name: 'Ana' },
+        tenantId: 'gym-b',
+        tenantName: 'Gimnasio B',
         gesture: challenge.gesture,
         submittedAt: '2026-11-16T10:05:00.000Z',
         selfie: { url: `/api/v1/admin/verifications/${id}/selfie?expires=1&signature=abcdefghijklmnopqrstuv`, expiresAt: '2026-11-16T10:10:00.000Z' },
         profilePhotos: [{ id: photoId, url: 'https://cdn.example.test/a.jpg' }],
       },
+      {
+        id: photoId,
+        status: 'PENDING_REVIEW',
+        member: { id: userId, name: 'Beto' },
+        tenantId: 'gym-c',
+        tenantName: null,
+        gesture: challenge.gesture,
+        submittedAt: null,
+        selfie: null,
+        profilePhotos: [],
+      },
     ]);
     expect(item?.profilePhotos).toHaveLength(1);
+    expect(item && verificationGymLabel(item)).toBe('Gimnasio B');
+    expect(orphan && verificationGymLabel(orphan)).toBe(verificationReviewCopy.noGym);
+    // A queue item without its gym is an old contract: refuse it rather than guess.
+    expect(verificationQueueSchema.safeParse([{ ...orphan, tenantId: undefined }]).success).toBe(false);
   });
 
   it('builds decisions the backend accepts: approval bound to the compared photos, rejection with a reason', () => {
@@ -124,6 +144,15 @@ describe('verification rules', () => {
     });
   });
 
+  it('words EXPIRED for a review that ran out (30 days, REVIEW_EXPIRED) as well as a lapsed gesture', () => {
+    expect(verificationView({ status: 'EXPIRED', canRetryAt: null, lastDecision: null })).toEqual({
+      tone: 'neutral',
+      title: 'Tu intento venció',
+      body: 'Tu revisión venció o el gesto caducó. Puedes intentarlo de nuevo con un gesto nuevo.',
+      canStart: true,
+    });
+  });
+
   it('maps the backend error codes to calm states', () => {
     expect(verificationErrorKind({ code: 'CONSENT_REQUIRED', status: 400 })).toBe('consent');
     expect(verificationErrorKind({ code: 'VERIFICATION_UNAVAILABLE', status: 503 })).toBe('unavailable');
@@ -134,5 +163,15 @@ describe('verification rules', () => {
     expect(verificationErrorKind(new Error('boom'))).toBe('other');
     expect(verificationErrorMessage('unavailable')).toBe(verificationCopy.unavailableBody);
     expect(verificationErrorMessage('other')).toBeNull();
+  });
+
+  it('maps the REPP case rule and closed attempts to the reason the item left the queue', () => {
+    expect(verificationErrorKind({ code: 'MODERATION_SELF_CASE', status: 403 })).toBe('selfCase');
+    expect(verificationErrorKind({ code: 'MODERATION_PEER_CASE', status: 403 })).toBe('peerCase');
+    expect(verificationReviewRefusal('selfCase')).toBe(verificationReviewCopy.selfCase);
+    expect(verificationReviewRefusal('peerCase')).toBe(verificationReviewCopy.peerCase);
+    expect(verificationReviewRefusal('expired')).toBe(verificationReviewCopy.reviewExpired);
+    expect(verificationReviewRefusal('stale')).toBe(verificationReviewCopy.alreadyDecided);
+    expect(verificationReviewRefusal('other')).toBeNull();
   });
 });

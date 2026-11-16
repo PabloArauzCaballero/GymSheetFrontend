@@ -1,18 +1,20 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BACKEND } from './alta-datos';
-import { admin, dismissTour, openPage, signIn } from './fixtures';
-import { apiDe, crearCuenta, sql, type Cuenta } from './rutinas-datos';
+import { admin, dismissTour, openPage, signIn, waitForPageSettled } from './fixtures';
+import { apiDe, crearCuenta, promover, sql, type Cuenta } from './rutinas-datos';
 
 /**
  * Person verification by selfie (franja 6) against the real backend:
  * the member grants the VERIFICATION_SELFIE consent, gets a gesture with its
  * countdown, uploads a selfie through the file input and lands on «en
- * revisión»; a moderator approves it side by side with the profile photos and
- * the member's state turns verified, on the server and after a reload.
+ * revisión»; gym staff cannot open the review (a selfie is biometric data, the
+ * gym never sees it: 403); a REPP moderator (`MODERATOR`, ADR-0018) sees the
+ * member's gym, approves side by side with the profile photos and the member's
+ * state turns verified, on the server and after a reload.
  *
  * Needs the backend (`E2E_BACKEND_URL`), PostgreSQL (`sql()` prepares what the
  * API does not let a test create: a verified email, the member in the seeded
- * admin's gym and the moderation grants) and writable (non-immutable) media
+ * admin's gym and the `MODERATOR` role) and writable (non-immutable) media
  * storage — on immutable storage the backend answers 503 by design.
  */
 test.describe.configure({ mode: 'serial' });
@@ -25,6 +27,7 @@ const PNG = Buffer.from(
 );
 
 let member: Cuenta;
+let moderator: Cuenta;
 
 async function uploadProfilePhoto(account: Cuenta, name: string) {
   const form = new FormData();
@@ -51,15 +54,8 @@ test.beforeAll(async () => {
        tenant_id = (SELECT tenant_id FROM public.usuarios WHERE email = '${email}')
      WHERE id = '${member.id}'`,
   );
-  // The seeded admin moderates only with the grants the backend checks.
-  for (const key of ['moderation:read', 'moderation:act']) {
-    await sql(
-      `INSERT INTO admin.user_permissions (id, user_id, permission_key, granted_at, created_at, updated_at)
-       SELECT gen_random_uuid(), u.id, '${key}', now(), now(), now() FROM public.usuarios u
-       WHERE u.email = '${email}' AND NOT EXISTS (
-         SELECT 1 FROM admin.user_permissions p WHERE p.user_id = u.id AND p.permission_key = '${key}')`,
-    );
-  }
+  // The selfie review belongs to the central REPP team, not to the gym.
+  moderator = await promover(await crearCuenta('verif-mod', 'Moderación QA'), 'MODERATOR');
   // A moderator needs at least two visible photos to compare the selfie with.
   await uploadProfilePhoto(member, 'perfil-1.png');
   await uploadProfilePhoto(member, 'perfil-2.png');
@@ -97,13 +93,36 @@ test('member: consent → gesture with countdown → selfie by file → in revie
   await expect(page.getByText('Tu selfie está en revisión')).toBeVisible({ timeout: 20_000 });
 });
 
-test('staff: approve next to the profile photos → the member is verified', async ({ page, browser }) => {
+test('gym staff: no selfie review, neither the old address nor the API', async ({ page }) => {
   await signIn(page, admin);
+  // The old gym address redirects to the REPP console, whose role guard turns staff away.
   await openPage(page, '/admin/verificaciones');
+  await waitForPageSettled(page);
+  await expect(page).not.toHaveURL(/verificaciones/u);
+  await expect(page.getByRole('heading', { level: 1, name: 'Verificaciones' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Verificaciones' })).toHaveCount(0);
+  // The backend is the authority: 403 to a gym role whatever grants it holds.
+  const queue = await page.request.get('/api/backend/admin/verifications?status=PENDING_REVIEW&limit=50');
+  expect(queue.status()).toBe(403);
+});
+
+test('REPP moderator: approve next to the profile photos → the member is verified', async ({ page, browser }) => {
+  const queued = await apiDe(moderator)<Array<{ member: { id: string }; tenantName: string | null }>>(
+    'GET',
+    '/admin/verifications?status=PENDING_REVIEW&limit=50',
+  );
+  const gym = queued.data.find((item) => item.member.id === member.id)?.tenantName;
+  expect(gym, 'the queue names the member gym').toBeTruthy();
+
+  await signIn(page, moderator);
+  await openPage(page, '/moderacion/verificaciones');
   await expect(page.getByRole('heading', { level: 1, name: 'Verificaciones' })).toBeVisible({ timeout: 20_000 });
 
-  await page.getByRole('button').filter({ hasText: member.nombre }).first().click();
+  const row = page.getByRole('button').filter({ hasText: member.nombre }).first();
+  await expect(row).toContainText(gym ?? '');
+  await row.click();
   await expect(page.getByRole('heading', { level: 2, name: member.nombre })).toBeFocused();
+  await expect(page.getByTestId('verification-gym')).toHaveText(gym ?? '');
   await expect(page.getByAltText(`Selfie de ${member.nombre}`)).toBeVisible();
   await expect(page.getByTestId('compared-photos').getByRole('img')).toHaveCount(2);
   const decided = waitForBackend(page, 'POST', '/decide');

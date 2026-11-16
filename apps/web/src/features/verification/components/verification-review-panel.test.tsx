@@ -21,6 +21,8 @@ const item = (photos = [photo(2), photo(3)]): VerificationQueueItem => ({
   id,
   status: 'PENDING_REVIEW',
   member: { id: '0190e2cb-a6d4-7ec3-8f91-a6c735631509', name: 'Ana Pérez' },
+  tenantId: '0190e2cb-a6d4-7ec3-8f91-a6c73563150a',
+  tenantName: 'Gimnasio Centro',
   gesture: { code: 'TOUCH_EAR', instruction: 'Tócate una oreja con la mano' },
   submittedAt: '2026-11-16T10:00:00.000Z',
   selfie: { url: `/api/v1/admin/verifications/${id}/selfie?expires=1763290000000&signature=abcdefghijklmnopqrstuvwxyz`, expiresAt: 'x' },
@@ -50,6 +52,8 @@ describe('VerificationReviewPanel', () => {
       `/api/backend/admin/verifications/${id}/selfie?expires=1763290000000&signature=abcdefghijklmnopqrstuvwxyz`,
     );
     expect(screen.getAllByAltText(/Foto \d del perfil de Ana Pérez/u)).toHaveLength(2);
+    // The REPP queue mixes every gym: each review names the member's.
+    expect(screen.getByTestId('verification-gym')).toHaveTextContent('Gimnasio Centro');
   });
 
   it('approves bound to exactly the photos on screen', async () => {
@@ -96,5 +100,18 @@ describe('VerificationReviewPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Aprobar' }));
     await waitFor(() => expect(handlers.onDone).toHaveBeenCalled());
     expect(mocks.notify.info).toHaveBeenCalledWith('Otra persona ya decidió esta verificación.');
+  });
+
+  it.each([
+    [403, 'forbidden', 'MODERATION_SELF_CASE', 'No puedes revisar tu propia verificación.'],
+    [403, 'forbidden', 'MODERATION_PEER_CASE', 'La verificación de una cuenta de la plataforma la revisa la administración del sistema.'],
+    [409, 'conflict', 'VERIFICATION_CHALLENGE_EXPIRED', 'Esta verificación venció y ya no se puede decidir.'],
+  ] as const)('on %i %s %s explains why and closes the item', async (status, kind, code, message) => {
+    mocks.decide.mockRejectedValue(new ApiError({ message: 'x', status, kind, code }));
+    const { handlers } = renderPanel(item());
+    fireEvent.click(screen.getByRole('button', { name: 'Aprobar' }));
+    await waitFor(() => expect(handlers.onDone).toHaveBeenCalled());
+    expect(mocks.notify.info).toHaveBeenCalledWith(message);
+    expect(mocks.notify.error).not.toHaveBeenCalled();
   });
 });

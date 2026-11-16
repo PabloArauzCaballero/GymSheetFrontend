@@ -26,8 +26,8 @@ const required = new ApiError({
 const orientation = (granted: boolean) => ({
   kind: 'ORIENTATION',
   granted,
-  version: granted ? '2026-12-01' : null,
-  currentVersion: '2026-12-01',
+  version: granted ? '2026-12-02' : null,
+  currentVersion: '2026-12-02',
   upToDate: granted,
   grantedAt: null,
   revokedAt: null,
@@ -64,7 +64,7 @@ describe('useConsentGate.withConsent', () => {
       title: 'Falta tu consentimiento: Orientación',
       message: 'Guardamos tu orientación para tu perfil de Conocer. Solo se ve si activas «Mostrar en mi perfil». Nunca la usamos para ordenar ni filtrar perfiles.',
     });
-    expect(mocks.setConsent).toHaveBeenCalledWith('ORIENTATION', { granted: true, version: '2026-12-01' });
+    expect(mocks.setConsent).toHaveBeenCalledWith('ORIENTATION', { granted: true, version: '2026-12-02' });
   });
 
   it('rethrows the original failure when the person declines, without granting', async () => {

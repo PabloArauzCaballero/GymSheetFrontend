@@ -5,7 +5,7 @@ const muscleCode = '[A-Z0-9_]+';
 const uuid = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
 // Qué se comenta o valora (`contentKinds` en `@gymsheet/types`, enum cerrado).
 const contentKind = 'ROUTINE|EXERCISE|DIRECTORY_ENTITY|DIRECTORY_PRODUCT';
-// Clave de permiso granular, p. ej. `admin-access:manage` o `moderation:read`
+// Clave de permiso granular, p. ej. `admin-access:manage` o `support:read`
 // (dominio:acción, `admin-permission.catalog.ts`). Va URL-encodeada en el
 // segmento (`encodeURIComponent` convierte `:` en `%3A`), así que el patrón
 // matchea la forma codificada, no el literal con dos puntos.
@@ -14,7 +14,8 @@ const permissionKey = '[a-z-]+%3A[a-z-]+';
 // alternativa explícita en vez de un comodín, igual que el token de activación
 // más abajo — así una URL no puede colar un valor que el backend rechazaría
 // de todos modos, pero sin llegar a intentarlo.
-const moderationTargetKind = 'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER';
+const moderationTargetKind =
+  'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER|REEL|ROUTINE|EXERCISE|COMMENT|MUSIC_PLAYLIST';
 
 const allowedPathPatterns = [
   /^\/access\/me$/u,
@@ -61,6 +62,9 @@ const allowedPathPatterns = [
     'u',
   ),
   new RegExp(`^/admin/moderation/users/${resourceId}/history$`, 'u'),
+  // The REPP moderation team (ADR-0018), managed by SYSTEM_ADMIN: list, assign, revoke.
+  /^\/admin\/platform\/moderators$/u,
+  new RegExp(`^/admin/platform/moderators/${uuid}$`, 'u'),
   // Permisos granulares del personal (H01): catálogo, los de un usuario,
   // otorgar y revocar. `/me` es la vista propia (qué puedo hacer yo).
   /^\/admin\/permissions\/me$/u,

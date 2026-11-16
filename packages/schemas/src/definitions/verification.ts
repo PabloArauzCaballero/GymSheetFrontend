@@ -78,11 +78,14 @@ export const verificationSubmissionSchema = z.object({
 });
 export type VerificationSubmission = z.infer<typeof verificationSubmissionSchema>;
 
-/** One item of `GET /admin/verifications` (a plain array, oldest first). */
+/** One item of `GET /admin/verifications` (a plain array, oldest first; MODERATOR and SYSTEM_ADMIN only). */
 export const verificationQueueItemSchema = z.object({
   id: z.string().uuid(),
   status: z.enum(verificationAttemptStatuses),
   member: z.object({ id: z.string().uuid(), name: z.string() }),
+  /** Gym of the member: the REPP queue mixes every gym (ADR-0018). */
+  tenantId: z.string().min(1),
+  tenantName: z.string().nullable(),
   gesture: verificationGestureSchema,
   submittedAt: z.string().nullable(),
   /** Short-lived link signed for this moderator; null when no selfie is stored. */
@@ -117,3 +120,7 @@ export const VERIFICATION_IN_REVIEW = 'VERIFICATION_IN_REVIEW';
 export const VERIFICATION_ALREADY_VERIFIED = 'VERIFICATION_ALREADY_VERIFIED';
 /** 409: the attempt no longer accepts that change (someone else decided it). */
 export const VERIFICATION_STATE_CONFLICT = 'VERIFICATION_STATE_CONFLICT';
+/** 403: nobody reviews their own selfie (ADR-0018 §8). */
+export const MODERATION_SELF_CASE = 'MODERATION_SELF_CASE';
+/** 403: a MODERATOR never reviews a MODERATOR or SYSTEM_ADMIN attempt. */
+export const MODERATION_PEER_CASE = 'MODERATION_PEER_CASE';

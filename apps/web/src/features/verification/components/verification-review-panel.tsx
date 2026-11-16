@@ -5,7 +5,9 @@ import {
   gestureGlyph,
   rejectInput,
   verificationErrorKind,
+  verificationGymLabel,
   verificationRejectionLabels,
+  verificationReviewRefusal,
   verificationReviewCopy as copy,
 } from '@gymsheet/domain';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -62,12 +64,14 @@ export function VerificationReviewPanel({
     onError: async (error: Error) => {
       const kind = verificationErrorKind(error);
       if (kind === 'photosChanged') return setPhotosChanged(true);
-      if (kind === 'stale' || (error as { status?: number }).status === 404) {
-        notify.info(copy.alreadyDecided);
-        await queryClient.invalidateQueries({ queryKey: queryKeys.admin.verifications });
-        return onDone();
-      }
-      notify.error(error);
+      // Decided by someone else, expired, or a case this account may not take
+      // (own selfie, a platform account): the item leaves the list either way.
+      const refusal =
+        verificationReviewRefusal(kind) ?? ((error as { status?: number }).status === 404 ? copy.alreadyDecided : null);
+      if (!refusal) return notify.error(error);
+      notify.info(refusal);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.verifications });
+      onDone();
     },
   });
 
@@ -77,6 +81,9 @@ export function VerificationReviewPanel({
         <h2 className="title-text outline-none" ref={heading} tabIndex={-1}>
           {item.member.name}
         </h2>
+        <p className="t-footnote text-[var(--text-muted)]" data-testid="verification-gym">
+          {verificationGymLabel(item)}
+        </p>
         <p className="t-subhead flex items-center gap-2 text-[var(--text-muted)]">
           <span aria-hidden className="text-xl leading-none">{gestureGlyph(item.gesture)}</span>
           <span>

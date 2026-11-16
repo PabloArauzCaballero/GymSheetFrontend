@@ -29,7 +29,7 @@ export function ExerciseCommunityDialog({ line, isOwner }: Readonly<{ line: Exer
           <RatingStars id={line.ejercicioId} isOwner={isOwner} kind="EXERCISE" />
           {isOwner ? null : (
             <ReportDialog
-              consequence="Alguien del equipo revisará el ejercicio. Nadie sabrá que fuiste tú."
+              consequence="El equipo de moderación de REPP revisará el ejercicio. Nadie sabrá que fuiste tú."
               defaultReason="EJERCICIO_PELIGROSO"
               subjectName={line.nombre}
               successMessage="Gracias. Lo revisaremos."
