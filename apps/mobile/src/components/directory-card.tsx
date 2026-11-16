@@ -51,6 +51,9 @@ export function levelTitle(code: string): string {
 export const INFO_BUTTON_SIZE = minTouchTarget;
 export const INFO_BUTTON_INSET = spacing.md;
 
+/** Dynamic Type cap for the name (×1.35, like other constrained surfaces); the details go to ×1.6 (`MetaLine`). */
+const NAME_SCALE_LIMIT = 1.35;
+
 /** Alto de cada barra del carrusel. Tres puntos: se ve, no pesa. */
 const SEGMENT_HEIGHT = 3;
 
@@ -277,34 +280,15 @@ export function DirectoryCardFace({
         }}
       >
         <View style={{ paddingRight: onInfoPress ? INFO_BUTTON_SIZE : 0 }}>
-          {/* Nombre y edad en una línea, con el peso separando a uno de otra:
-              es la firma tipográfica de la baraja, y por eso no se parte en dos
-              renglones aunque el nombre sea largo. */}
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6 }}>
-            <Text
-              numberOfLines={1}
-              style={{
-                flexShrink: 1,
-                color: onMedia.text,
-                fontSize: nameSize,
-                fontWeight: '700',
-                letterSpacing: nameSize * -0.02,
-              }}
-            >
-              {entry.displayName}
-            </Text>
+          {/* Name and age in one text, the weight setting them apart: the age stays with the last word when
+              a long name (or large text) wraps to a second line, instead of truncating to «Luc…». Grows with
+              Dynamic Type up to ×1.35, as other constrained surfaces do: past that the card is all text band. */}
+          <Text maxFontSizeMultiplier={NAME_SCALE_LIMIT} numberOfLines={2} style={{ color: onMedia.text, fontSize: nameSize, lineHeight: Math.round(nameSize * 1.1), fontWeight: '700', letterSpacing: nameSize * -0.02 }}>
+            {entry.displayName}
             {typeof entry.age === 'number' ? (
-              <Text
-                style={{
-                  color: alpha(onMedia.text, 0.92),
-                  fontSize: nameSize * 0.82,
-                  fontWeight: '400',
-                }}
-              >
-                {entry.age}
-              </Text>
+              <Text style={{ color: alpha(onMedia.text, 0.92), fontWeight: '400' }}>{`  ${entry.age}`}</Text>
             ) : null}
-          </View>
+          </Text>
 
           <MetaLine parts={meta} />
 

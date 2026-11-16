@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { BIO_MAX_LENGTH } from '@gymsheet/domain';
+import { BIO_MAX_LENGTH, BIO_PLACEHOLDER } from '@gymsheet/domain';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { accountService } from '@/api/services';
@@ -52,7 +52,7 @@ export function BioEditor({ bio, footer }: { bio: string | null; footer?: ReactN
           maxLength={BIO_MAX_LENGTH}
           multiline
           onChangeText={setDraft}
-          placeholder="Pierna los lunes, café después. Busco compañero para press banca."
+          placeholder={BIO_PLACEHOLDER}
           style={{ minHeight: 96, paddingVertical: spacing.smd, textAlignVertical: 'top' }}
           testID="bio-input"
           value={draft}

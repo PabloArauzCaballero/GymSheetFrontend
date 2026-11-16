@@ -36,7 +36,7 @@ function completion(items: ProfileCompletion['items']): ProfileCompletion {
 
 describe('CompletionNudge', () => {
   it('promises exactly the points the server says are left, item by item, with a link to fix each', () => {
-    render(<CompletionNudge completion={completion([item('FOTO', 50), item('BIO', 40), item('DATOS', 50, true, true)])} />);
+    render(<CompletionNudge completion={completion([item('FOTO', 50), item('BIO', 40), item('DATOS', 50, true, true)])} seenBefore={undefined} />);
     expect(screen.getByRole('heading', { name: /^Completa tu perfil y gana \+90\spuntos$/ })).toBeInTheDocument();
     // One progress number: items done, the same percent the ring shows (1 of 3 = 33 %).
     expect(screen.getByText('Perfil al 33 %: 1 de 3 datos. Cada dato suma una vez y no se pierde.')).toBeInTheDocument();
@@ -46,17 +46,29 @@ describe('CompletionNudge', () => {
   });
 
   it('shows at most three items and links to the rest', () => {
-    render(<CompletionNudge completion={completion(['FOTO', 'BIO', 'NIVEL', 'GENERO'].map((code) => item(code, 20)))} />);
+    render(<CompletionNudge completion={completion(['FOTO', 'BIO', 'NIVEL', 'GENERO'].map((code) => item(code, 20)))} seenBefore={undefined} />);
     expect(screen.getAllByRole('listitem')).toHaveLength(3);
     expect(screen.getByRole('link', { name: /Ver 1 dato más/ })).toHaveAttribute('href', '/profile/editar');
   });
 
   it('turns into the reward at 100 %: what completing it earned and a link to how others see you', () => {
-    render(<CompletionNudge completion={completion([item('FOTO', 50, true, true), item('BIO', 40, true, true)])} />);
+    render(<CompletionNudge completion={completion([item('FOTO', 50, true, true), item('BIO', 40, true, true)])} seenBefore={false} />);
     expect(screen.queryByRole('heading', { name: /Completa tu perfil/ })).not.toBeInTheDocument();
     const reward = screen.getByRole('link', { name: /Perfil completo/ });
     expect(reward).toHaveAttribute('href', '/profile/editar?tab=preview');
     expect(reward).toHaveTextContent('Ganaste 90 puntos completándolo.');
+  });
+
+  it('once seen, collapses to one quiet line that still leads to the preview', () => {
+    render(<CompletionNudge completion={completion([item('FOTO', 50, true, true), item('BIO', 40, true, true)])} seenBefore />);
+    const quiet = screen.getByRole('link', { name: /Perfil completo.*Ver cómo te\sven/ });
+    expect(quiet).toHaveAttribute('href', '/profile/editar?tab=preview');
+    expect(quiet).not.toHaveTextContent('Ganaste');
+  });
+
+  it('shows nothing at 100 % until the browser memory is read (no flash of the wrong variant)', () => {
+    const { container } = render(<CompletionNudge completion={completion([item('FOTO', 50, true, true)])} seenBefore={undefined} />);
+    expect(container).toBeEmptyDOMElement();
   });
 });
 

@@ -20,6 +20,7 @@ import { RankChip } from '@/features/profile-hero/profile-hero';
 import { AccountList, ActivityList, ConocerList } from '@/features/profile-hero/profile-lists';
 import { proudStat, shareMyProfile } from '@/features/profile-hero/profile-share';
 import { SendaCard } from '@/features/profile-hero/senda-card';
+import { useCompleteSeen } from '@/features/profile-hero/use-complete-seen';
 import { useOwnProfile } from '@/features/profile-hero/use-own-profile';
 import { initialsOf, shortName } from '@/lib/format';
 import { confirm, notify } from '@/notifications';
@@ -57,6 +58,8 @@ export default function ProfileScreen() {
 
   // Lo recién ganado se celebra una vez, donde viven los puntos (el servidor solo lo marca en la lectura que lo otorga).
   const award = usePointsAward(completion.data, principal?.id);
+  // The 100 % card is said once per device: full the first time, a quiet line after.
+  const completeSeen = useCompleteSeen(principal?.id, completion.data?.percent);
 
   const onLogout = async () => {
     const result = await confirm({
@@ -150,7 +153,7 @@ export default function ProfileScreen() {
         {completion.isPending ? (
           <CompletionSkeleton />
         ) : completion.data ? (
-          <CompletionNudge completion={completion.data} onItemPress={(code) => router.push(editRouteFor(code))} onSeePreview={() => router.push('/profile-edit?tab=preview')} />
+          <CompletionNudge completion={completion.data} onItemPress={(code) => router.push(editRouteFor(code))} onSeePreview={() => router.push('/profile-edit?tab=preview')} seenBefore={completeSeen} />
         ) : completionFailed ? (
           <CompletionError onRetry={retryCompletion} retrying={completion.isFetching} />
         ) : null}

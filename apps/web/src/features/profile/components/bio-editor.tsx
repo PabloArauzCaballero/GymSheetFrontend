@@ -1,6 +1,6 @@
 'use client';
 
-import { BIO_MAX_LENGTH } from '@gymsheet/domain';
+import { BIO_MAX_LENGTH, BIO_PLACEHOLDER } from '@gymsheet/domain';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { useDraftReport } from '@/features/profile/lib/unsaved-guard';
@@ -53,7 +53,7 @@ export function BioEditor({ bio, footer }: Readonly<{ bio: string | null; footer
           id="bio"
           maxLength={BIO_MAX_LENGTH}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder="Pierna los lunes, café después. Busco compañero para press banca."
+          placeholder={BIO_PLACEHOLDER}
           rows={3}
           value={draft}
         />

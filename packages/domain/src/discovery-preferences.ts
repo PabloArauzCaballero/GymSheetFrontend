@@ -58,3 +58,47 @@ export function discoveryPreferencesBlocker({
   if (!(radiusKm >= 1 && radiusKm <= 500)) return 'El radio va de 1 a 500 km.';
   return null;
 }
+
+type PreferencesDraft = {
+  genders: readonly string[];
+  intents: readonly string[];
+  minAge: number;
+  maxAge: number;
+  radiusKm: number;
+  flexibleAge: boolean;
+  flexibleDistance: boolean;
+};
+
+/** What both forms show before anything was ever saved. */
+export const DISCOVERY_PREFERENCES_DEFAULTS: PreferencesDraft = {
+  genders: [],
+  intents: [],
+  minAge: 18,
+  maxAge: 65,
+  radiusKm: 25,
+  flexibleAge: false,
+  flexibleDistance: false,
+};
+
+/**
+ * Has the preferences form changed from what it opened with — the last save,
+ * or the defaults if nothing was ever saved? Drives the same save row as the
+ * edit sections (status line + a save that is off until there is something to
+ * save). Choice order does not matter (Mujeres then Hombres is the same set).
+ */
+export function discoveryPreferencesDirty(
+  saved: ({ configured: true } & PreferencesDraft) | { configured: false } | null | undefined,
+  draft: PreferencesDraft,
+): boolean {
+  const base = saved?.configured ? saved : DISCOVERY_PREFERENCES_DEFAULTS;
+  const sameSet = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((value) => b.includes(value));
+  return !(
+    sameSet(base.genders, draft.genders) &&
+    sameSet(base.intents, draft.intents) &&
+    base.minAge === draft.minAge &&
+    base.maxAge === draft.maxAge &&
+    base.radiusKm === draft.radiusKm &&
+    base.flexibleAge === draft.flexibleAge &&
+    base.flexibleDistance === draft.flexibleDistance
+  );
+}

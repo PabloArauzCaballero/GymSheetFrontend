@@ -22,6 +22,9 @@ const allowedFetchFiles = new Set([
 const allowedStorageFiles = new Set([
   'src/features/routine-wizard/draft-store.ts',
   'src/features/routine-wizard/draft-store.test.ts',
+  // Not session data either: one boolean per member id («already saw the 100 % card»), the web twin of
+  // the app's SecureStore flag. No token, no profile data; losing it only shows the full card again.
+  'src/features/profile/lib/use-complete-seen.ts',
 ]);
 const sourceExtensions = new Set(['.ts', '.tsx', '.css']);
 

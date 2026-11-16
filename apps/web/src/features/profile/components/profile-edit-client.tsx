@@ -135,7 +135,7 @@ export function ProfileEditClient() {
             </Section>
           </section>
           <SocialStatusCard />
-          <section className="grid scroll-mt-24 gap-5" id="progress">
+          <section className="grid scroll-mt-24 gap-8" id="progress">
             <BodyWeightCard />
             <ProfileMeasurements />
           </section>

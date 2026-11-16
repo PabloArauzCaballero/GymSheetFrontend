@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ProfileCompletion, ProfileCompletionItem } from '@gymsheet/schemas';
-import { noOrphan, pendingProfileItems, pointsChip, profileCompleteCopy, profileNudgeTitle, profileProgress } from '@gymsheet/domain';
+import { noOrphan, pendingProfileItems, pointsChip, profileNudgeTitle, profileProgress } from '@gymsheet/domain';
 import { View } from 'react-native';
 import { Skeleton } from '@/components/feedback';
 import { Card, Divider } from '@/components/layout';
@@ -8,6 +8,7 @@ import { PressableScale } from '@/components/motion';
 import { ProgressTrack } from '@/components/progression';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
+import { CompletionDone } from './completion-done';
 import { accentPolicy, colors, iconSizes, minTouchTarget, radii, spacing, textVariants } from '@/theme';
 
 /** Un glifo por dato: la lista se escanea por forma antes que por texto. */
@@ -72,15 +73,18 @@ export function CompletionNudge({
   completion,
   onItemPress,
   onSeePreview,
+  seenBefore,
 }: {
   completion: ProfileCompletion;
   onItemPress: (code: string) => void;
   /** At 100 % the card turns into the reward: how others see you. */
   onSeePreview: () => void;
+  /** Whether the 100 % card was already seen on this device (`useCompleteSeen`). */
+  seenBefore: boolean | undefined;
 }) {
   const title = profileNudgeTitle(completion.pointsAvailable);
   const pending = pendingProfileItems(completion.items);
-  if (!title || pending.length === 0) return <CompletionDone completion={completion} onPress={onSeePreview} />;
+  if (!title || pending.length === 0) return <CompletionDone completion={completion} onPress={onSeePreview} seenBefore={seenBefore} />;
   const shown = pending.slice(0, 3);
   const rest = pending.length - shown.length;
   const progress = profileProgress(completion);
@@ -138,30 +142,6 @@ export function CompletionError({ onRetry, retrying }: { onRetry: () => void; re
         </View>
       </View>
       <Button icon="refresh-outline" label="Reintentar" loading={retrying} onPress={onRetry} size="sm" style={{ alignSelf: 'flex-start' }} testID="profile-completion-retry" variant="secondary" />
-    </Card>
-  );
-}
-
-/**
- * 100 %: the nudge becomes a quiet reward — a full check in accent ink, what
- * completing it earned and the way to see the result. One row, so a complete
- * profile does not keep a big card asking for nothing.
- */
-function CompletionDone({ completion, onPress }: { completion: ProfileCompletion; onPress: () => void }) {
-  const copy = profileCompleteCopy(completion);
-  if (!copy) return null;
-  return (
-    <Card>
-      <PressableScale accessibilityHint="Ver tu vista previa" accessibilityLabel={`${copy.title}. ${copy.body}`} onPress={onPress} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd, minHeight: minTouchTarget }} testID="profile-complete">
-        <View style={{ width: minTouchTarget, height: minTouchTarget, borderRadius: radii.full, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceHighest }}>
-          <Ionicons color={accentPolicy.ink} name="checkmark-circle" size={iconSizes.lg} />
-        </View>
-        <View style={{ flex: 1, gap: spacing.xxs }}>
-          <Text accessibilityRole="header" variant="headline">{copy.title}</Text>
-          <Text tone="secondary" variant="footnote">{noOrphan(copy.body)}</Text>
-        </View>
-        <Ionicons color={colors.textMuted} name="chevron-forward" size={iconSizes.sm} />
-      </PressableScale>
     </Card>
   );
 }

@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
-import { discoveryPreferencesBlocker } from '@gymsheet/domain';
+import { DISCOVERY_PREFERENCES_DEFAULTS as DEFAULTS, discoveryPreferencesBlocker, discoveryPreferencesDirty } from '@gymsheet/domain';
 import type { SocialStatusValue } from '@gymsheet/schemas';
 import { socialService } from '@/api/services';
 import { Card, Section } from '@/components/layout';
@@ -95,7 +95,7 @@ export function SocialDiscoverySettingsEditor() {
   const busy = settings.isLoading || update.isPending;
 
   return (
-    <Section icon="compass-outline" title="Descubrimiento social">
+    <Section title="Descubrimiento social">
       <Card>
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
           Tu perfil empieza privado. La presencia en otros gimnasios y en el mapa tiene permisos separados.
@@ -154,6 +154,8 @@ export function SocialDiscoverySettingsEditor() {
   );
 }
 
+const PREFERENCES_SAVE_KEY = ['social', 'discovery-preferences', 'save'] as const;
+
 /** Preferencias explícitas, separadas del permiso para aparecer en descubrimiento. */
 /**
  * `embedded`: dentro de Comunidad, sin la cabecera (la pantalla ya pregunta
@@ -164,9 +166,9 @@ export function DiscoveryPreferencesEditor({ embedded = false, onSaved }: { embe
   const preferences = useQuery({ queryKey: ['social', 'discovery-preferences'], queryFn: socialService.getDiscoveryPreferences });
   const [genders, setGenders] = useState<('MALE' | 'FEMALE')[]>([]);
   const [intents, setIntents] = useState<('TRAINING' | 'FRIENDSHIP' | 'DATING')[]>([]);
-  const [minAge, setMinAge] = useState('18');
-  const [maxAge, setMaxAge] = useState('65');
-  const [radiusKm, setRadiusKm] = useState('25');
+  const [minAge, setMinAge] = useState(String(DEFAULTS.minAge));
+  const [maxAge, setMaxAge] = useState(String(DEFAULTS.maxAge));
+  const [radiusKm, setRadiusKm] = useState(String(DEFAULTS.radiusKm));
   const [flexibleAge, setFlexibleAge] = useState(false);
   const [flexibleDistance, setFlexibleDistance] = useState(false);
   useEffect(() => {
@@ -177,10 +179,12 @@ export function DiscoveryPreferencesEditor({ embedded = false, onSaved }: { embe
     setFlexibleAge(value.flexibleAge); setFlexibleDistance(value.flexibleDistance);
   }, [preferences.data]);
   const save = useMutation({
+    mutationKey: PREFERENCES_SAVE_KEY,
     mutationFn: socialService.updateDiscoveryPreferences,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['social', 'discovery-preferences'] });
-      notify.success('Preferencias de Conocer guardadas.');
+      // Comunidad deals the deck at once (a toast says it worked); settings say it in their save row.
+      if (embedded) notify.success('Preferencias de Conocer guardadas.');
       onSaved?.();
     },
     onError: (error: Error) => notify.error(error.message),
@@ -195,7 +199,11 @@ export function DiscoveryPreferencesEditor({ embedded = false, onSaved }: { embe
   );
 
   // A disabled save says why (repp-diseno §8): the first thing still missing.
-  const blocker = discoveryPreferencesBlocker({ genders, intents, minAge: Number(minAge), maxAge: Number(maxAge), radiusKm: Number(radiusKm) });
+  const draft = { genders, intents, minAge: Number(minAge), maxAge: Number(maxAge), radiusKm: Number(radiusKm), flexibleAge, flexibleDistance };
+  const blocker = discoveryPreferencesBlocker(draft);
+  const dirty = discoveryPreferencesDirty(preferences.data, draft);
+  const status = useSectionSave(PREFERENCES_SAVE_KEY, dirty);
+  const submit = () => save.mutate({ ...draft, expectedVersion: version });
   const form = (
     <View style={{ gap: spacing.lg }}>
       {embedded ? null : (
@@ -254,15 +262,21 @@ export function DiscoveryPreferencesEditor({ embedded = false, onSaved }: { embe
       </View>
 
       {blocker ? <Text style={{ color: colors.textSecondary, fontSize: fontSizes.sm, lineHeight: 20 }}>{blocker}</Text> : null}
-      <Button accessibilityHint={blocker ?? undefined} label={embedded ? 'Buscar compañeros' : 'Guardar preferencias'} loading={save.isPending} disabled={blocker !== null} onPress={() => save.mutate({
-        genders, intents, minAge: Number(minAge), maxAge: Number(maxAge), radiusKm: Number(radiusKm), flexibleAge, flexibleDistance, expectedVersion: version,
-      })} />
+      {embedded ? (
+        <Button accessibilityHint={blocker ?? undefined} disabled={blocker !== null} label="Buscar compañeros" loading={save.isPending} onPress={submit} />
+      ) : (
+        // Same save row as every edit section: its status on the left, a small save on the right.
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <SaveStatusLine saved="Preferencias guardadas." status={status} testID="preferences-status" />
+          <Button accessibilityHint={blocker ?? undefined} disabled={blocker !== null || !dirty} label="Guardar preferencias" loading={save.isPending} onPress={submit} size="sm" testID="preferences-save" />
+        </View>
+      )}
     </View>
   );
 
   if (embedded) return <Card>{form}</Card>;
   return (
-    <Section icon="options-outline" title="Preferencias de Conocer">
+    <Section title="Preferencias de Conocer">
       <Card>{form}</Card>
     </Section>
   );

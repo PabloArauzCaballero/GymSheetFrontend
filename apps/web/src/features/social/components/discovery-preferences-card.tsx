@@ -1,11 +1,12 @@
 'use client';
 
-import { discoveryPreferencesBlocker } from '@gymsheet/domain';
+import { DISCOVERY_PREFERENCES_DEFAULTS as DEFAULTS, discoveryPreferencesBlocker, discoveryPreferencesDirty } from '@gymsheet/domain';
 import { Check, Dumbbell, Heart, Users } from 'lucide-react';
 import { useId, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { notify } from '@/shared/notifications';
 import { socialService } from '@/features/social/services/social-service';
+import { SaveStatusLine, useSectionSave } from '@/shared/components/feedback/save-status';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Checkbox } from '@/shared/components/ui/checkbox';
@@ -23,6 +24,8 @@ const INTENTS = {
 const FIELD_LABEL = 'text-xs font-semibold uppercase tracking-[0.04em] text-[var(--text-muted)]';
 /** A `legend` is not a grid item, so a fieldset's `gap` never reaches it: the space goes on the legend. */
 const LEGEND = `${FIELD_LABEL} mb-3`;
+/** The save's key: its status line reads the last save from the mutation cache, like every edit section. */
+const PREFERENCES_SAVE_KEY = ['social', 'discovery-preferences', 'save'] as const;
 
 export function DiscoveryPreferencesCard({
   embedded = false,
@@ -35,10 +38,12 @@ export function DiscoveryPreferencesCard({
   const client = useQueryClient();
   const query = useQuery({ queryKey: ['social', 'discovery-preferences'], queryFn: socialService.getDiscoveryPreferences });
   const save = useMutation({
+    mutationKey: PREFERENCES_SAVE_KEY,
     mutationFn: socialService.updateDiscoveryPreferences,
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: ['social', 'discovery-preferences'] });
-      notify.success('Preferencias de Conocer guardadas.');
+      // Comunidad deals the deck at once (a toast says it worked); the profile says it in its save row.
+      if (embedded) notify.success('Preferencias de Conocer guardadas.');
       onSaved?.();
     },
     onError: (error: Error) => notify.error(error),
@@ -53,18 +58,22 @@ function PreferencesForm({ embedded, initial, saving, onSave }: { embedded: bool
   const saved = initial?.configured ? initial : null;
   const [selectedGenders, setSelectedGenders] = useState<('MALE' | 'FEMALE')[]>(saved?.genders ?? []);
   const [selectedIntents, setSelectedIntents] = useState<('TRAINING' | 'FRIENDSHIP' | 'DATING')[]>(saved?.intents ?? []);
-  const [minAge, setMinAge] = useState(saved?.minAge ?? 18);
-  const [maxAge, setMaxAge] = useState(saved?.maxAge ?? 65);
-  const [radiusKm, setRadiusKm] = useState(saved?.radiusKm ?? 25);
-  const [flexibleAge, setFlexibleAge] = useState(saved?.flexibleAge ?? false);
-  const [flexibleDistance, setFlexibleDistance] = useState(saved?.flexibleDistance ?? false);
+  const [minAge, setMinAge] = useState(saved?.minAge ?? DEFAULTS.minAge);
+  const [maxAge, setMaxAge] = useState(saved?.maxAge ?? DEFAULTS.maxAge);
+  const [radiusKm, setRadiusKm] = useState(saved?.radiusKm ?? DEFAULTS.radiusKm);
+  const [flexibleAge, setFlexibleAge] = useState(saved?.flexibleAge ?? DEFAULTS.flexibleAge);
+  const [flexibleDistance, setFlexibleDistance] = useState(saved?.flexibleDistance ?? DEFAULTS.flexibleDistance);
   const currentVersion = saved?.version ?? 0;
   const toggle = <T extends string>(values: T[], value: T, set: (next: T[]) => void) =>
     set(values.includes(value) ? values.filter((entry) => entry !== value) : [...values, value]);
 
   // A disabled save says why (repp-diseno §8): the first thing still missing.
   const blockerId = useId();
-  const blocker = discoveryPreferencesBlocker({ genders: selectedGenders, intents: selectedIntents, minAge, maxAge, radiusKm });
+  const draft = { genders: selectedGenders, intents: selectedIntents, minAge, maxAge, radiusKm, flexibleAge, flexibleDistance };
+  const blocker = discoveryPreferencesBlocker(draft);
+  const dirty = discoveryPreferencesDirty(initial, draft);
+  const status = useSectionSave(PREFERENCES_SAVE_KEY, dirty);
+  const submit = () => onSave({ ...draft, expectedVersion: currentVersion });
 
   return (
     <Card>
@@ -104,9 +113,19 @@ function PreferencesForm({ embedded, initial, saving, onSave }: { embedded: bool
           <Checkbox checked={flexibleDistance} label="Ampliar un poco la distancia si hay pocas personas" onChange={(event) => setFlexibleDistance(event.target.checked)} />
         </div>
         {blocker ? <p className="t-footnote text-[var(--text-muted)]" id={blockerId}>{blocker}</p> : null}
-        <Button aria-describedby={blocker ? blockerId : undefined} className="w-full whitespace-normal text-center" variant={embedded ? 'primary' : 'secondary'} disabled={saving || blocker !== null} onClick={() => onSave({
-          genders: selectedGenders, intents: selectedIntents, minAge, maxAge, radiusKm, flexibleAge, flexibleDistance, expectedVersion: currentVersion,
-        })}>{saving ? 'Guardando…' : embedded ? 'Buscar compañeros' : 'Guardar preferencias'}</Button>
+        {embedded ? (
+          <Button aria-describedby={blocker ? blockerId : undefined} className="w-full whitespace-normal text-center" disabled={saving || blocker !== null} onClick={submit} variant="primary">
+            {saving ? 'Guardando…' : 'Buscar compañeros'}
+          </Button>
+        ) : (
+          // Same save row as every edit section: its status on the left, a small save on the right.
+          <div className="flex flex-wrap items-center gap-3">
+            <SaveStatusLine saved="Preferencias guardadas." status={status} testId="preferences-status" />
+            <Button aria-describedby={blocker ? blockerId : undefined} disabled={blocker !== null || !dirty} loading={saving} onClick={submit} size="sm" variant="primary">
+              Guardar preferencias
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -81,40 +81,41 @@ export function MediaSourceDialog({
   };
 
   const fileField = (
-    <>
-      <input
-        accept={accept}
-        // Fuera del recorrido de teclado: se llega por el botón de al lado, que
-        // sí se anuncia. Un campo de archivo invisible en medio sólo confunde.
-        aria-hidden
-        className="sr-only"
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          // Se limpia siempre: si no, elegir el mismo archivo dos veces
-          // seguidas no dispara `change` y la subida parece ignorada.
-          event.target.value = '';
-          if (file) pick(file);
-        }}
-        ref={fileInputRef}
-        tabIndex={-1}
-        type="file"
-      />
-      <Button
-        className="justify-self-start"
-        disabled={busy}
-        onClick={() => fileInputRef.current?.click()}
-        type="button"
-        variant={camera === 'available' ? 'secondary' : 'primary'}
-      >
-        <Upload aria-hidden className="size-4" />
-        {fileLabel}
-      </Button>
-    </>
+    <Button
+      className="justify-self-start"
+      disabled={busy}
+      onClick={() => fileInputRef.current?.click()}
+      type="button"
+      variant={camera === 'available' ? 'secondary' : 'primary'}
+    >
+      <Upload aria-hidden className="size-4" />
+      {fileLabel}
+    </Button>
   );
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="max-w-2xl" description={description} title={title}>
+        {/* One input for the dialog's whole life, outside the branch the camera probe swaps: the probe can
+            answer while the file chooser is open, and a file picked from an input React has just replaced
+            fires `change` on a detached node — the upload was silently lost (prove-photo-race.mjs). */}
+        <input
+          accept={accept}
+          // Fuera del recorrido de teclado: se llega por el botón de al lado, que
+          // sí se anuncia. Un campo de archivo invisible en medio sólo confunde.
+          aria-hidden
+          className="sr-only"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            // Se limpia siempre: si no, elegir el mismo archivo dos veces
+            // seguidas no dispara `change` y la subida parece ignorada.
+            event.target.value = '';
+            if (file) pick(file);
+          }}
+          ref={fileInputRef}
+          tabIndex={-1}
+          type="file"
+        />
         {children}
         {camera === 'available' ? (
           <Tabs defaultValue="file">

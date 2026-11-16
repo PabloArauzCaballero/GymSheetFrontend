@@ -19,6 +19,7 @@ export * from './card-materials';
 export * from './rewards';
 export * from './session-labels';
 export * from './profile-completion';
+export * from './profile-complete-seen';
 export * from './save-status';
 export * from './dirty-registry';
 export * from './chat-waiting';

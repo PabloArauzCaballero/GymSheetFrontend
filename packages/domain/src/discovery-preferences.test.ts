@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { discoveryDeckGate, discoveryPreferencesBlocker, needsDiscoveryPreferences } from './discovery-preferences';
+import { DISCOVERY_PREFERENCES_DEFAULTS, discoveryDeckGate, discoveryPreferencesBlocker, discoveryPreferencesDirty, needsDiscoveryPreferences } from './discovery-preferences';
 
 describe('needsDiscoveryPreferences', () => {
   it('reconoce el código estable', () => {
@@ -51,5 +51,26 @@ describe('discoveryDeckGate', () => {
   });
   it('falls back to the deck (and its 400 branch) when the preferences read fails', () => {
     expect(discoveryDeckGate({ data: undefined, isError: true })).toBe('deck');
+  });
+});
+
+describe('discoveryPreferencesDirty', () => {
+  const saved = { configured: true as const, genders: ['MALE', 'FEMALE'], intents: ['TRAINING'], minAge: 20, maxAge: 40, radiusKm: 25, flexibleAge: false, flexibleDistance: true };
+  const draft = { genders: ['FEMALE', 'MALE'], intents: ['TRAINING'], minAge: 20, maxAge: 40, radiusKm: 25, flexibleAge: false, flexibleDistance: true };
+
+  it('the saved values in another order are not a change', () => {
+    expect(discoveryPreferencesDirty(saved, draft)).toBe(false);
+  });
+
+  it('any field that differs is a change', () => {
+    expect(discoveryPreferencesDirty(saved, { ...draft, radiusKm: 30 })).toBe(true);
+    expect(discoveryPreferencesDirty(saved, { ...draft, intents: ['TRAINING', 'DATING'] })).toBe(true);
+    expect(discoveryPreferencesDirty(saved, { ...draft, flexibleAge: true })).toBe(true);
+  });
+
+  it('never configured: compared with the defaults the form opens with', () => {
+    expect(discoveryPreferencesDirty({ configured: false }, DISCOVERY_PREFERENCES_DEFAULTS)).toBe(false);
+    expect(discoveryPreferencesDirty(null, DISCOVERY_PREFERENCES_DEFAULTS)).toBe(false);
+    expect(discoveryPreferencesDirty({ configured: false }, draft)).toBe(true);
   });
 });

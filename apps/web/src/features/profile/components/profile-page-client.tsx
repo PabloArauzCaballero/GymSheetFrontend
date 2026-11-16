@@ -10,6 +10,7 @@ import { membershipService } from '@/features/membership/services/membership-ser
 import { onboardingService } from '@/features/onboarding/services/onboarding-service';
 import { goalLabels } from '@/features/profile/components/profile-form-schema';
 import { useOwnProfile } from '@/features/profile/hooks/use-own-profile';
+import { useCompleteSeen } from '@/features/profile/lib/use-complete-seen';
 import { DiscoveryPreferencesCard } from '@/features/social/components/discovery-preferences-card';
 import { SocialDiscoverySettingsCard } from '@/features/social/components/social-discovery-settings-card';
 import { WeightIncrementField } from '@/features/workouts/components/weight-increment-field';
@@ -60,6 +61,8 @@ export function ProfilePageClient() {
 
   // Lo recién ganado se celebra una vez, donde viven los puntos (el servidor solo lo marca en la lectura que lo otorga).
   const { award, announcement } = usePointsAward(completion.data, user.data?.id);
+  // The 100 % card is said once per browser: full the first time, a quiet line after.
+  const completeSeen = useCompleteSeen(user.data?.id, completion.data?.percent);
 
   if (user.isPending) {
     return (
@@ -145,7 +148,7 @@ export function ProfilePageClient() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
         <div className="grid min-w-0 grid-cols-1 gap-8">
-          <HeroSurface className="enter-up justify-items-center gap-4 py-7" watermark watermarkAt="top">
+          <HeroSurface className="enter-up justify-items-center gap-4" watermark watermarkAt="top">
             <CompletionAvatar
               hint={hasPhoto ? 'Ver cómo te ven en Conocer' : 'Añadir una foto'}
               href={hasPhoto ? '/profile/editar?tab=preview' : '/profile/editar#fotos'}
@@ -179,7 +182,7 @@ export function ProfilePageClient() {
             {completion.isPending ? (
               <CompletionSkeleton />
             ) : completion.data ? (
-              <CompletionNudge completion={completion.data} />
+              <CompletionNudge completion={completion.data} seenBefore={completeSeen} />
             ) : completionFailed ? (
               <CompletionError onRetry={retryCompletion} retrying={completion.isFetching} />
             ) : null}

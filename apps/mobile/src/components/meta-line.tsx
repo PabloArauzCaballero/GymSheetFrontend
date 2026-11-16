@@ -1,6 +1,9 @@
 import { Text, View } from 'react-native';
 import { fontSizes, onMedia } from '@/theme';
 
+/** Dynamic Type cap for the details over a photo (×1.6): legible, and the photo still shows. */
+const DETAIL_SCALE_LIMIT = 1.6;
+
 /** Gap between parts; the «·» is drawn inside it. */
 const DOT_WIDTH = 14;
 
@@ -22,8 +25,8 @@ export function MetaLine({ parts }: { parts: string[] }) {
     >
       {parts.map((part) => (
         <View key={part} style={{ flexShrink: 1 }}>
-          <Text style={[text, { position: 'absolute', right: '100%', width: DOT_WIDTH, textAlign: 'center' }]}>·</Text>
-          <Text style={[text, { flexShrink: 1 }]}>{part}</Text>
+          <Text maxFontSizeMultiplier={DETAIL_SCALE_LIMIT} style={[text, { position: 'absolute', right: '100%', width: DOT_WIDTH, textAlign: 'center' }]}>·</Text>
+          <Text maxFontSizeMultiplier={DETAIL_SCALE_LIMIT} style={[text, { flexShrink: 1 }]}>{part}</Text>
         </View>
       ))}
     </View>

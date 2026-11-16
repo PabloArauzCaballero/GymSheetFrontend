@@ -82,7 +82,9 @@ export function DirectoryCardFace({
   ].filter((part): part is string => Boolean(part));
 
   return (
-    <div className={cn('relative overflow-hidden bg-[var(--surface-high)]', fill ? 'size-full' : 'aspect-[4/5] w-full')}>
+    // Its own size container: the large-text layout (info button under the details) follows the card's width
+    // wherever it is shown — deck, list or the profile preview — not whichever ancestor happens to be one.
+    <div className={cn('@container relative overflow-hidden bg-[var(--surface-high)]', fill ? 'size-full' : 'aspect-[4/5] w-full')}>
       {current ? (
         <DomainImage alt={`Foto de ${entry.displayName}`} src={current.url} />
       ) : (
@@ -147,10 +149,13 @@ export function DirectoryCardFace({
 
       {/* Tres paradas y no dos: con dos, el tramo medio sube demasiado rápido y
           el degradado vuelve a leerse como una banda cortada a media foto. */}
-      {/* With very large text (a deck under 14rem wide, see the deck's `@container`) the info button
+      {/* Insets and controls stop growing past ×1.2 (px caps): at 200 % text the room goes to the words.
+          With very large text (a card under 14rem wide, its own `@container`) the info button
           leaves the details' side and drops under them, so the details keep the card's full width. */}
-      <div className={cn('pointer-events-none absolute inset-x-0 bottom-0 z-10 grid gap-0.5 bg-[linear-gradient(to_top,rgb(var(--scrim-channels)/0.88)_0%,rgb(var(--scrim-channels)/0.45)_55%,transparent_100%)] p-5 pt-16 text-white @max-[14rem]:pt-8', onInfo && interactive && 'pr-16 @max-[14rem]:pr-5')}>
-        <p className={cn('font-semibold tracking-[-0.02em] [overflow-wrap:anywhere]', fill ? 'text-3xl @max-[10rem]:text-2xl' : 'text-xl')}>
+      <div className={cn('pointer-events-none absolute inset-x-0 bottom-0 z-10 grid gap-0.5 bg-[linear-gradient(to_top,rgb(var(--scrim-channels)/0.88)_0%,rgb(var(--scrim-channels)/0.45)_55%,transparent_100%)] px-[min(1.25rem,24px)] pb-[min(1.25rem,24px)] pt-16 text-white @max-[14rem]:pt-8', onInfo && interactive && 'pr-16 @max-[14rem]:pr-[min(1.25rem,24px)]')}>
+        {/* Same steps as the app (2xl 34 / lg 22, bold). Text grows with the reader's size up to ×1.35 for the
+            name and ×1.6 for the details (the app's maxFontSizeMultiplier): past that a photo card is all band. */}
+        <p className={cn('font-bold leading-[1.1] tracking-[-0.02em] [overflow-wrap:anywhere]', fill ? 'text-[min(2.125rem,46px)]' : 'text-[min(1.375rem,30px)]')}>
           {entry.displayName}
           {entry.age !== null ? (
             <span className="ml-2 font-normal opacity-90">{entry.age}</span>
@@ -160,7 +165,7 @@ export function DirectoryCardFace({
         {/* The «·» sits in the gap before each part, positioned outside it: the part that starts a
             line has its dot past the clipped left edge, so no line starts or ends with «·». */}
         {meta.length > 0 ? (
-          <p className="flex flex-wrap gap-x-3.5 overflow-hidden text-sm leading-[1.35] text-white/85">
+          <p className="mt-1 flex flex-wrap gap-x-3.5 overflow-hidden text-[min(0.9375rem,24px)] leading-[1.3] text-white/85">
             {meta.map((part) => (
               <span className="relative min-w-0" key={part}>
                 <span aria-hidden className="absolute right-full w-3.5 text-center">·</span>
@@ -172,14 +177,14 @@ export function DirectoryCardFace({
         {onInfo && interactive ? (
           <button
             aria-label={`Ver la ficha de ${entry.displayName}`}
-            className="tap pointer-events-auto absolute bottom-4 right-4 z-10 grid size-11 place-items-center @max-[14rem]:static @max-[14rem]:mt-3 @max-[14rem]:justify-self-end rounded-full border border-white/30 bg-[rgb(var(--scrim-channels)/0.45)] text-white"
+            className="tap pointer-events-auto absolute bottom-4 right-4 z-10 grid size-[min(2.75rem,56px)] place-items-center @max-[14rem]:static @max-[14rem]:mt-3 @max-[14rem]:justify-self-end rounded-full border border-white/30 bg-[rgb(var(--scrim-channels)/0.45)] text-white"
             onClick={(event) => {
               event.stopPropagation();
               onInfo();
             }}
             type="button"
           >
-            <Info aria-hidden className="size-5" />
+            <Info aria-hidden className="size-[min(1.25rem,24px)]" />
           </button>
         ) : null}
       </div>
@@ -204,7 +209,7 @@ function GalleryStep({
     <button
       aria-label={label}
       className={cn(
-        'absolute top-[40%] z-10 grid size-11 -translate-y-1/2 place-items-center @max-[14rem]:top-14 @max-[14rem]:translate-y-0 rounded-full border border-white/30 bg-[rgb(var(--scrim-channels)/0.45)] text-white transition-opacity duration-[var(--dur-2)] disabled:pointer-events-none disabled:opacity-0',
+        'absolute top-[40%] z-10 grid size-[min(2.75rem,56px)] -translate-y-1/2 place-items-center @max-[14rem]:top-14 @max-[14rem]:translate-y-0 rounded-full border border-white/30 bg-[rgb(var(--scrim-channels)/0.45)] text-white transition-opacity duration-[var(--dur-2)] disabled:pointer-events-none disabled:opacity-0',
         direction === 'prev' ? 'left-3' : 'right-3',
       )}
       disabled={disabled}
@@ -214,7 +219,7 @@ function GalleryStep({
       }}
       type="button"
     >
-      <Icon aria-hidden className="size-5" />
+      <Icon aria-hidden className="size-[min(1.25rem,24px)]" />
     </button>
   );
 }
