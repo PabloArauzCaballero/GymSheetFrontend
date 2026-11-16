@@ -21,6 +21,7 @@ import { profileService } from '@/features/profile/services/profile-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { Divider, ListCard, NavRow } from '@/shared/components/mobile/nav-row';
 import { cn } from '@/shared/lib/cn';
+import { VerificationCta } from '@/features/verification/components/verification-cta';
 import { DescubrirClient } from './descubrir-client';
 import { DiscoveryReadinessCard } from './discovery-readiness-card';
 import { SearchPreferencesDialog, type DeckPreferences } from './search-preferences-dialog';
@@ -201,6 +202,7 @@ export function ComunidadClient() {
 
       {/* The deck shows its own preferences form when they are missing. */}
       <DiscoveryReadinessCard omit={['PREFERENCES']} />
+      <VerificationCta />
 
       <DescubrirClient
         key={`${pill}-${goal}`}

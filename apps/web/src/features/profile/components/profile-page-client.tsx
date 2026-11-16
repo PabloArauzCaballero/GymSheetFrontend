@@ -29,6 +29,7 @@ import { ConocerProfileSection } from '@/features/social/components/conocer/cono
 import { DiscoveryPreferencesCard } from '@/features/social/components/discovery-preferences-card';
 import { SocialDiscoverySettingsCard } from '@/features/social/components/social-discovery-settings-card';
 import { SocialStatusCard } from '@/features/social/components/social-status-card';
+import { VerificationCta } from '@/features/verification/components/verification-cta';
 import { WeightIncrementField } from '@/features/workouts/components/weight-increment-field';
 import { ApiError } from '@/shared/api/api-error';
 import { goalLabels } from '@/features/profile/components/profile-form-schema';
@@ -216,6 +217,7 @@ export function ProfilePageClient() {
             </div>
           ) : null}
 
+          <VerificationCta enabled={offersConocer(me?.rol)} />
           <Section title="Tu actividad">
             <RowGroup>
               {[

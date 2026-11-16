@@ -77,6 +77,8 @@ export const knownRoutes = new Set([
   'sistema',
   'trayectoria',
   'tutorials',
+  // Person verification by selfie (franja 6).
+  'verificacion',
   // Email PIN verification (inside the portal, needs a session).
   'verificar-correo',
   'workouts',

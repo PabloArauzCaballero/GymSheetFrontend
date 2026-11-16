@@ -241,6 +241,12 @@ const allowedPathPatterns = [
   // The latest request (resumes a pending or ready copy after a reload).
   /^\/me\/export\/latest$/u,
   new RegExp(`^/me/export/${uuid}(/download)?$`, 'u'),
+  // Person verification (franja 6): own status, challenge and selfie upload;
+  // the staff queue, its signed selfie link and the decision.
+  /^\/me\/verification(\/challenge)?$/u,
+  new RegExp(`^/me/verification/${uuid}/selfie$`, 'u'),
+  /^\/admin\/verifications$/u,
+  new RegExp(`^/admin/verifications/${uuid}/(selfie|decide)$`, 'u'),
   // Social: bloqueos, descubrimiento, mapa y confirmaciones de lectura.
   /^\/me\/blocks$/u,
   new RegExp(`^/me/blocks/${resourceId}$`, 'u'),

@@ -26,6 +26,7 @@ export * from './social-profile-options';
 export * from './legal';
 export * from './account-security';
 export * from './privacy';
+export * from './verification';
 export * from './account-rights';
 export * from './community-rules';
 export * from './discovery-reasons';

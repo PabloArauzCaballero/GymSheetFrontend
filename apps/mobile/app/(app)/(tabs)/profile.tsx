@@ -21,6 +21,8 @@ import { Button } from '@/components/ui';
 import { WeightIncrementPreference } from '@/components/weight-increment-preference';
 import { completionMessage, profileCompletion } from '@/features/profile-hero/profile-completion';
 import { HeroStats, ProfileHero, plural } from '@/features/profile-hero/profile-hero';
+import { VerificationCta } from '@/features/verification/verification-cta';
+import { VerificationStatusRow } from '@/features/verification/verification-status-row';
 import { proudStat, shareMyProfile } from '@/features/profile-hero/profile-share';
 import { confirm, notify } from '@/notifications';
 import { membershipService, profilePhotosService, profileService, progressionService } from '@/api/services';
@@ -238,6 +240,8 @@ export default function ProfileScreen() {
         </View>
       ) : null}
 
+      <VerificationCta />
+
       <Section title="Tu actividad">
         <RowGroup>
           {[
@@ -259,6 +263,7 @@ export default function ProfileScreen() {
                     testID="profile-conocer"
                     title="Tu perfil de Conocer"
                   />,
+                  <VerificationStatusRow key="verificacion" leading={<RowGlyph icon="shield-checkmark-outline" />} />,
                 ]
               : []),
             <NavRow key="chat" leading={<RowGlyph icon="chatbubbles-outline" />} onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />,

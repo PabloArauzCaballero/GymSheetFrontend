@@ -34,7 +34,8 @@ async function forward(request: NextRequest, parts: string[]) {
       path === '/admin/media' ||
       path === '/me/stories' ||
       path.startsWith('/me/stories/') ||
-      path.endsWith('/messages/media')
+      path.endsWith('/messages/media') ||
+      (path.startsWith('/me/verification/') && path.endsWith('/selfie'))
         ? 60_000
         : undefined,
     headers,

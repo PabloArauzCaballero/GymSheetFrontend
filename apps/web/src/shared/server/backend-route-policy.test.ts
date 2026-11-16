@@ -132,6 +132,13 @@ const allowedCases: Array<[string[], string]> = [
     ['me', 'training-invitations', id, 'calendar.ics'],
     `/me/training-invitations/${id}/calendar.ics`,
   ],
+  // Franja 6: person verification (member and staff).
+  [['me', 'verification'], '/me/verification'],
+  [['me', 'verification', 'challenge'], '/me/verification/challenge'],
+  [['me', 'verification', id, 'selfie'], `/me/verification/${id}/selfie`],
+  [['admin', 'verifications'], '/admin/verifications'],
+  [['admin', 'verifications', id, 'selfie'], `/admin/verifications/${id}/selfie`],
+  [['admin', 'verifications', id, 'decide'], `/admin/verifications/${id}/decide`],
 ];
 const blockedCases: Array<[string[]]> = [
   [['admin', 'access', 'mock', 'events']],
@@ -173,6 +180,11 @@ const blockedCases: Array<[string[]]> = [
   [['me', 'export', 'newest']],
   [['me', 'export', 'latest', 'download']],
   [['me', 'account', 'delete-everything']],
+  // Verification ids are strict UUIDs and the suffixes are exact.
+  [['me', 'verification', 'not-a-uuid', 'selfie']],
+  [['me', 'verification', id]],
+  [['admin', 'verifications', id]],
+  [['admin', 'verifications', id, 'approve-all']],
 ];
 
 describe('backend route policy', () => {

@@ -37,6 +37,8 @@ export const queryKeys = {
   accountClosurePreview: ['account', 'closure-preview'] as const,
   accountExport: (exportId: string) => ['account', 'export', exportId] as const,
   accountExportLatest: ['account', 'export', 'latest'] as const,
+  /** Person verification by selfie (franja 6). */
+  verification: ['verification', 'me'] as const,
   admin: {
     branches: (page: number) => ['admin', 'branches', page] as const,
     /** Todas las sedes (para el mapa); comparte prefijo para invalidarse con la lista. */
@@ -50,5 +52,6 @@ export const queryKeys = {
     memberships: (page: number) => ['admin', 'memberships', page] as const,
     accessDevices: ['admin', 'access-devices'] as const,
     accessHistory: (page: number) => ['admin', 'access-history', page] as const,
+    verifications: ['admin', 'verifications'] as const,
   },
 };

@@ -1,6 +1,7 @@
 import {
   Activity,
   Award,
+  BadgeCheck,
   BarChart3,
   Bell,
   Building2,
@@ -147,6 +148,14 @@ export const adminNavigation: NavigationItem[] = [
     icon: ShieldAlert,
     roles: ['ADMIN', 'FRONT_DESK'],
     description: 'Contenido reportado por la comunidad, lo urgente primero.',
+    requiredPermission: 'moderation:read',
+  },
+  {
+    href: '/admin/verificaciones',
+    label: 'Verificaciones',
+    icon: BadgeCheck,
+    roles: ['ADMIN', 'FRONT_DESK'],
+    description: 'Selfies por comparar con las fotos del perfil.',
     requiredPermission: 'moderation:read',
   },
   {
