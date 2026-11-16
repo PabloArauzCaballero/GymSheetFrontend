@@ -1,7 +1,10 @@
 import { cookies } from 'next/headers';
 import { NextResponse, type NextRequest } from 'next/server';
 import { SESSION_COOKIE } from '@/shared/auth/constants';
-import { fetchExternalMedia } from '@/shared/server/media-proxy';
+import { publicEnv } from '@/shared/config/public-env';
+import { serverEnv } from '@/shared/config/env';
+import { backendMediaTarget } from '@/shared/server/backend-media';
+import { fetchExternalMedia, fetchTrustedMedia } from '@/shared/server/media-proxy';
 import { verifyMediaSignature } from '@/shared/server/media-signing';
 
 // Proxy de medios del BFF: sirve imágenes y vídeos externos desde el mismo
@@ -31,7 +34,14 @@ export async function GET(request: NextRequest) {
   // El `Range` del navegador se reenvía: es lo que deja a un `<video>` empezar
   // a reproducir sin descargar el clip entero y buscar dentro de él. La
   // respuesta puede venir como 206 y con `Content-Range`, y se devuelve igual.
-  const result = await fetchExternalMedia(raw, request.headers.get('range'));
+  const range = request.headers.get('range');
+  // The backend's own local media mount is reached through its configured
+  // origin; anything else goes through the SSRF-guarded external fetch.
+  const own = backendMediaTarget(raw, {
+    internalOrigin: serverEnv.BACKEND_API_URL,
+    publicOrigins: [serverEnv.BACKEND_PUBLIC_ORIGIN, publicEnv.NEXT_PUBLIC_BACKEND_ORIGIN],
+  });
+  const result = own ? await fetchTrustedMedia(own, range) : await fetchExternalMedia(raw, range);
   if (!result.ok) return new NextResponse(null, { status: result.status });
 
   return new NextResponse(result.body, {
