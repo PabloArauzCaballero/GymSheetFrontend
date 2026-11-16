@@ -4,14 +4,39 @@
  * memory. Kept dependency-free and framework-agnostic.
  */
 
-function triggerDownload(content: string, filename: string, mimeType: string): void {
-  const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });
+/**
+ * Hands a Blob to the browser as a file download. The anchor is attached
+ * before clicking (Firefox ignores detached anchors) and the object URL is
+ * revoked on the next task: revoking synchronously can cancel the download.
+ */
+export function saveBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
   anchor.download = filename;
+  anchor.rel = 'noopener';
+  anchor.style.display = 'none';
+  document.body.append(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+/** Decodes a base64 payload into a binary Blob (PDF/XLSX must never pass through UTF-8). */
+export function base64ToBlob(base64: string, mimeType: string): Blob {
+  let binary: string;
+  try {
+    binary = atob(base64);
+  } catch {
+    throw new Error('El archivo recibido está dañado. Vuelve a intentarlo.');
+  }
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  return new Blob([bytes], { type: mimeType });
+}
+
+function triggerDownload(content: string, filename: string, mimeType: string): void {
+  saveBlob(new Blob([content], { type: `${mimeType};charset=utf-8` }), filename);
 }
 
 export function downloadJson(data: unknown, filename: string): void {

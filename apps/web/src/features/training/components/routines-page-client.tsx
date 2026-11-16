@@ -32,6 +32,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { RoutineImportDialog } from './routine-import-dialog';
+import { DownloadProgressDialog } from '@/features/routine-progress-export/components/download-progress-dialog';
 import { WeekPlan } from './week-plan';
 import { useRouter } from 'next/navigation';
 
@@ -108,8 +109,10 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
       <PageHeader
         tutorialId="page:routines"
         actions={
-          <div className="flex flex-wrap gap-2" data-tutorial-id="routines:actions">
+          // Four actions: capped so they wrap instead of pushing over the title.
+          <div className="flex flex-wrap gap-2 sm:max-w-[36rem] sm:justify-end" data-tutorial-id="routines:actions">
             <RoutineImportDialog />
+            <DownloadProgressDialog />
             {publicEnv.routinesV2 ? (
               <ButtonLink href="/routines/new" variant="primary">
                 <Plus className="size-4" />

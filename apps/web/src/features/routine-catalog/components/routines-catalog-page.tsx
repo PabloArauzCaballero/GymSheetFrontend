@@ -10,6 +10,7 @@ import { ButtonLink } from '@/shared/components/ui/button';
 import { ChoiceChip } from '@/shared/components/ui/choice-chip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { RoutineImportDialog } from '@/features/training/components/routine-import-dialog';
+import { DownloadProgressDialog } from '@/features/routine-progress-export/components/download-progress-dialog';
 import { WeekPlan } from '@/features/training/components/week-plan';
 import { trainingService } from '@/features/training/services/training-service';
 import { ProgramCards } from '@/features/programs/components/program-cards';
@@ -48,12 +49,14 @@ export function RoutinesCatalogPage() {
     <div className="mx-auto grid w-full max-w-[560px] gap-8 sm:max-w-none">
       <PageHeader
         actions={
-          <div className="flex flex-wrap gap-2" data-tutorial-id="routines:actions">
+          // Four actions: capped so they wrap instead of pushing over the title.
+          <div className="flex flex-wrap gap-2 sm:max-w-[36rem] sm:justify-end" data-tutorial-id="routines:actions">
             <ButtonLink href="/cardio/new" variant="secondary">
               <HeartPulse aria-hidden className="size-4" />
               Plan de cardio
             </ButtonLink>
             <RoutineImportDialog />
+            <DownloadProgressDialog />
             <ButtonLink href="/routines/new" variant="primary">
               <Plus aria-hidden className="size-4" />
               Nueva rutina

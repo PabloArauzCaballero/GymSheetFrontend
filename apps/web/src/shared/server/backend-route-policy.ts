@@ -74,7 +74,10 @@ const allowedPathPatterns = [
   // Máquina que corresponde a un músculo, para el alta de ejercicio propio.
   /^\/exercises\/equipment-suggestion$/u,
   new RegExp(`^/exercises/${resourceId}(/media)?$`, 'u'),
-  /^\/export\/workout-history(\/csv)?$/u,
+  /^\/export\/workout-history(\/csv|\/pdf)?$/u,
+  // Progreso de rutinas: opciones del asistente y la descarga. La política sólo
+  // mira la ruta, no el método: es el backend quien acota GET/POST.
+  /^\/export\/routine-progress(\/filter-options)?$/u,
   /^\/memberships\/me$/u,
   /^\/membership\/plans$/u,
   new RegExp(`^/membership/plans/${resourceId}$`, 'u'),

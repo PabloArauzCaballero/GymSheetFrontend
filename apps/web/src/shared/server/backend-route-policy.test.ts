@@ -15,6 +15,10 @@ const allowedCases: Array<[string[], string]> = [
   [['admin', 'membership', 'staff'], '/admin/membership/staff'],
   [['me', 'progression'], '/me/progression'],
   [['programs', 'active'], '/programs/active'],
+  // Descargas de avance (paridad con el móvil).
+  [['export', 'workout-history', 'pdf'], '/export/workout-history/pdf'],
+  [['export', 'routine-progress'], '/export/routine-progress'],
+  [['export', 'routine-progress', 'filter-options'], '/export/routine-progress/filter-options'],
   // Auditoría 2026-11-09: rutas que la web llamaba y el BFF rechazaba.
   [['admin', 'routines'], '/admin/routines'],
   [['admin', 'support', 'users', id, 'training'], `/admin/support/users/${id}/training`],
@@ -155,6 +159,9 @@ const blockedCases: Array<[string[]]> = [
   // `push` no es un prefijo abierto: sólo la configuración pública pasa.
   [['notifications', 'push']],
   [['notifications', 'device-tokens', id]],
+  // Las auditorías de descarga no se exponen al navegador.
+  [['export', 'routine-progress', 'audits']],
+  [['export', 'workout-history', 'xlsx']],
 ];
 
 describe('backend route policy', () => {

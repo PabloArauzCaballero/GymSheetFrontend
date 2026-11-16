@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ApiError, classifyStatus } from './api-error';
 import { randomUuid } from '@/shared/lib/uuid';
 import { problemSchema } from './schemas';
+import { saveBlob } from '@/shared/lib/data-transfer';
 
 const successEnvelopeSchema = z.object({ ok: z.literal(true), data: z.unknown() });
 
@@ -174,6 +175,7 @@ export async function apiUpload<T>(
   }
 }
 
+/** Streams a binary/text export through the BFF and saves it under `filename`. */
 export async function downloadFromApi(path: string, filename: string) {
   const requestController = createRequestController(undefined, 60_000);
   try {
@@ -182,13 +184,7 @@ export async function downloadFromApi(path: string, filename: string) {
       signal: requestController.signal,
     });
     if (!response.ok) throw await readError(response);
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = filename;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    saveBlob(await response.blob(), filename);
   } catch (error: unknown) {
     if (error instanceof ApiError) throw error;
     if (error instanceof DOMException && error.name === 'AbortError') {

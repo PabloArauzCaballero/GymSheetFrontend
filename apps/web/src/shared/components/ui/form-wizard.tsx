@@ -155,7 +155,9 @@ export function FormWizard({
 
   return (
     <form
-      className={cn('grid gap-6', className)}
+      // `min-w-0` on the form and its children: grid items default to
+      // `min-width: auto`, so a wide step could push past a narrow dialog.
+      className={cn('grid min-w-0 gap-6 [&>*]:min-w-0', className)}
       noValidate
       // El aviso de un paso deja de ser cierto en cuanto el usuario corrige:
       // escribir o actuar dentro del paso (p. ej. marcar el mapa) lo retira.
@@ -171,7 +173,7 @@ export function FormWizard({
           Paso {current + 1} de {steps.length}
           {active ? ` · ${active.title}` : ''}
         </p>
-        <ol className="grid gap-2" style={{ gridTemplateColumns: `repeat(${steps.length}, 1fr)` }}>
+        <ol className="grid gap-2" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
           {steps.map((step, index) => {
             const state = index < current ? 'done' : index === current ? 'current' : 'upcoming';
             const reachable = index <= visited + 1;
@@ -251,7 +253,7 @@ export function FormWizard({
         </p>
       ) : null}
 
-      <div className="flex items-center justify-between gap-2 border-t border-[var(--border-subtle)] pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-subtle)] pt-4">
         {current === 0 ? (
           <Button disabled={pending} onClick={onCancel} type="button" variant="ghost">
             Cancelar

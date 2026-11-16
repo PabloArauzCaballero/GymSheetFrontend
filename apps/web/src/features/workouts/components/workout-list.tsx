@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { CirclePlay, CirclePlus, FileJson, Sheet } from 'lucide-react';
+import { CirclePlay, CirclePlus, FileJson, FileText, Sheet } from 'lucide-react';
 import { useState } from 'react';
 import { notify } from '@/shared/notifications';
 import { workoutService } from '@/features/workouts/services/workout-service';
@@ -14,20 +14,32 @@ import { Button, ButtonLink } from '@/shared/components/ui/button';
 import { Pagination } from '@/shared/components/ui/pagination';
 import { SessionRow } from './session-row';
 
+type ExportType = 'pdf' | 'csv' | 'json';
+const EXPORTERS: Record<ExportType, () => Promise<string>> = {
+  pdf: workoutService.exportPdf,
+  csv: workoutService.exportCsv,
+  json: workoutService.exportJson,
+};
+
 export function WorkoutList() {
   const [page, setPage] = useState(1);
-  const [exporting, setExporting] = useState<'csv' | 'json' | null>(null);
+  const [exporting, setExporting] = useState<ExportType | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
   const query = useQuery({
     queryKey: queryKeys.workouts(page),
     queryFn: () => workoutService.list(page, 20),
   });
-  async function exportHistory(type: 'csv' | 'json') {
+  async function exportHistory(type: ExportType) {
+    if (exporting) return;
     setExporting(type);
+    setExportError(null);
     try {
-      await (type === 'csv' ? workoutService.exportCsv() : workoutService.exportJson());
-      notify.success('Exportación preparada.');
+      const saved = await EXPORTERS[type]();
+      notify.success(`Descargado como ${saved}`);
     } catch (error: unknown) {
-      notify.error(error instanceof Error ? error.message : 'No se pudo exportar.');
+      const message = error instanceof Error ? error.message : 'No se pudo exportar.';
+      setExportError(message);
+      notify.error(message);
     } finally {
       setExporting(null);
     }
@@ -50,15 +62,36 @@ export function WorkoutList() {
         tutorialId="page:workouts"
       />
 
-      <div className="grid grid-cols-2 gap-2" data-tutorial-id="workouts:export">
-        <Button loading={exporting === 'json'} onClick={() => exportHistory('json')} size="sm" variant="ghost">
+      {/* Como el móvil: el PDF es para enseñar al entrenador; CSV y JSON, para analizar. */}
+      <div
+        aria-busy={exporting !== null}
+        className="grid grid-cols-2 gap-2 sm:grid-cols-3"
+        data-tutorial-id="workouts:export"
+      >
+        <Button
+          className="col-span-2 sm:col-span-1"
+          disabled={exporting !== null}
+          loading={exporting === 'pdf'}
+          onClick={() => exportHistory('pdf')}
+          size="sm"
+          variant="ghost"
+        >
+          <FileText aria-hidden className="size-4" />
+          {exporting === 'pdf' ? 'Generando…' : 'Avance en PDF'}
+        </Button>
+        <Button disabled={exporting !== null} loading={exporting === 'json'} onClick={() => exportHistory('json')} size="sm" variant="ghost">
           <FileJson aria-hidden className="size-4" />
           {exporting === 'json' ? 'Generando…' : 'Datos en JSON'}
         </Button>
-        <Button loading={exporting === 'csv'} onClick={() => exportHistory('csv')} size="sm" variant="ghost">
+        <Button disabled={exporting !== null} loading={exporting === 'csv'} onClick={() => exportHistory('csv')} size="sm" variant="ghost">
           <Sheet aria-hidden className="size-4" />
           {exporting === 'csv' ? 'Generando…' : 'Datos en CSV'}
         </Button>
+        {exportError ? (
+          <p className="col-span-2 text-sm text-[var(--danger-text)] sm:col-span-3" role="alert">
+            {exportError}
+          </p>
+        ) : null}
       </div>
 
       <span className="grid" data-tutorial-id="workouts:new">

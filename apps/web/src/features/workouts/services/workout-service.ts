@@ -14,6 +14,8 @@ import type { StreakLocation } from '@gymsheet/domain';
 
 const deleteSchema = z.object({ deleted: z.literal(true) });
 const objectSchema = z.record(z.string(), z.unknown());
+/** Downloads an export and resolves with the filename it was saved as. */
+const saveExport = (path: string, filename: string) => downloadFromApi(path, filename).then(() => filename);
 
 export const workoutService = {
   list: (page = 1, pageSize = 20) =>
@@ -47,6 +49,8 @@ export const workoutService = {
   updateSet: (id: string, input: Partial<WorkoutSetInput>) =>
     apiRequest(`/workouts/sets/${id}`, objectSchema, { method: 'PATCH', body: input }),
   removeSet: (id: string) => apiRequest(`/workouts/sets/${id}`, deleteSchema, { method: 'DELETE' }),
-  exportCsv: () => downloadFromApi('/export/workout-history/csv', 'repp-historial.csv'),
-  exportJson: () => downloadFromApi('/export/workout-history', 'repp-historial.json'),
+  /** PDF del avance: el backend lo sirve en binario como `repp-avance.pdf`. */
+  exportPdf: () => saveExport('/export/workout-history/pdf', 'repp-avance.pdf'),
+  exportCsv: () => saveExport('/export/workout-history/csv', 'repp-avance.csv'),
+  exportJson: () => saveExport('/export/workout-history', 'repp-historial.json'),
 };
