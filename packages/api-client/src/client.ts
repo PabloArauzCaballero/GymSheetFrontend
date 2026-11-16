@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ApiError } from './api-error';
 import { apiErrorFromResponse } from './error-response';
+import { ACCOUNT_SUSPENDED } from '@gymsheet/schemas';
 import { noopTokenProvider, type TokenProvider } from './token-provider';
 
 const successEnvelopeSchema = z.object({ ok: z.literal(true), data: z.unknown() });
@@ -31,6 +32,14 @@ export type ApiClientConfig = {
    * `refreshOnce`); la implementación no tiene que preocuparse de eso.
    */
   refreshSession?: () => Promise<boolean>;
+  /**
+   * Called when a 401 carries `code: ACCOUNT_SUSPENDED`. A suspended account
+   * is not an expired token: it is never refreshed (a new token would be
+   * refused the same way, so refreshing would loop) and `onUnauthorized` is
+   * not called. The request rejects with that `ApiError` (code and details
+   * intact) so the app can sign out and show the suspension by its code.
+   */
+  onAccountSuspended?: (error: ApiError) => void | Promise<void>;
 };
 
 export type RequestOptions = Omit<RequestInit, 'body'> & {
@@ -108,6 +117,14 @@ export function createApiClient(config: ApiClientConfig) {
    * correcta y el servidor la vuelve a rechazar, el problema no es el token y
    * reintentar otra vez sería una espiral.
    */
+  /** A suspended account's 401: reported and rethrown, never refreshed. */
+  async function rejectIfSuspended(response: Response): Promise<void> {
+    const error = await apiErrorFromResponse(response.clone());
+    if (error.code !== ACCOUNT_SUSPENDED) return;
+    await config.onAccountSuspended?.(error);
+    throw error;
+  }
+
   async function handleUnauthorized(retrying: boolean): Promise<boolean> {
     if (!retrying && (await refreshOnce())) return true;
     await config.onUnauthorized?.();
@@ -163,6 +180,7 @@ export function createApiClient(config: ApiClientConfig) {
         signal: controller.signal,
       });
       if (response.status === 401) {
+        await rejectIfSuspended(response);
         // El reintento se lanza **fuera** de este `try`: aquí dentro sigue vivo
         // el `AbortController` con su temporizador, y reusarlo le daría a la
         // segunda petición lo que quedara del plazo de la primera.
@@ -276,6 +294,7 @@ export function createApiClient(config: ApiClientConfig) {
         body: form,
         signal: controller.signal,
       });
+      if (response.status === 401) await rejectIfSuspended(response);
       if (response.status === 401 && (await handleUnauthorized(retrying))) {
         return { retry: true as const };
       }

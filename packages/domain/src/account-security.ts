@@ -1,4 +1,5 @@
 import { IDENTITY_EMAIL_UNVERIFIED, SIGNUP_TOKEN_INVALID, type UserDevice } from '@gymsheet/schemas';
+import { accountSuspensionCopy, accountSuspensionOf } from './account-rights';
 
 /** Copy and pure rules of email verification, devices and third-party sign-in, shared by web and mobile. */
 
@@ -64,6 +65,8 @@ export const signupRejectedMessage = 'No pudimos crear tu cuenta. Inténtalo de 
 /** What a failed Google or Apple attempt tells the person. Never the backend internals. */
 export function identityErrorMessage(provider: 'Google' | 'Apple', error: unknown): string {
   const { code, status } = (error ?? {}) as { code?: unknown; status?: unknown };
+  const suspension = accountSuspensionOf(error);
+  if (suspension) return accountSuspensionCopy.message(suspension);
   if (code === IDENTITY_EMAIL_UNVERIFIED) return `Tu cuenta de ${provider} no tiene el correo verificado.`;
   if (code === SIGNUP_TOKEN_INVALID) return `Pasó demasiado tiempo. Vuelve a continuar con ${provider}.`;
   if (status === 404) return `El acceso con ${provider} no está disponible.`;

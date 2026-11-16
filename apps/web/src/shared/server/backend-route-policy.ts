@@ -230,6 +230,17 @@ const allowedPathPatterns = [
   new RegExp(`^/exercises/${resourceId}/(like|muscles)$`, 'u'),
   new RegExp(`^/me/exercises/${resourceId}/preference$`, 'u'),
   new RegExp(`^/muscles/${muscleCode}(/exercises)?$`, 'u'),
+  // Privacy and account rights (franja 4): consents per closed kind, rename,
+  // closure preview/PIN/close, email change and the full data export.
+  /^\/me\/consents$/u,
+  /^\/me\/consents\/(HEALTH|ORIENTATION|VERIFICATION_SELFIE|PRECISE_LOCATION)$/u,
+  /^\/me\/account$/u,
+  /^\/me\/account\/(closure-preview|closure-pin)$/u,
+  /^\/me\/email\/change(\/confirm)?$/u,
+  /^\/me\/export$/u,
+  // The latest request (resumes a pending or ready copy after a reload).
+  /^\/me\/export\/latest$/u,
+  new RegExp(`^/me/export/${uuid}(/download)?$`, 'u'),
   // Social: bloqueos, descubrimiento, mapa y confirmaciones de lectura.
   /^\/me\/blocks$/u,
   new RegExp(`^/me/blocks/${resourceId}$`, 'u'),

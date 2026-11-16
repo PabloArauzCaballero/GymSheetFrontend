@@ -12,7 +12,6 @@ import {
 } from '@gymsheet/domain';
 import { onboardingService } from '@/api/services';
 import { BackLink } from '@/components/nav';
-import { Checkbox } from '@/components/checkbox';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { numericInputProps } from '@/components/keyboard';
 import { Card, ScrollScreen } from '@/components/layout';
@@ -29,6 +28,8 @@ import {
 import { shortName } from '@/lib/format';
 import { notify } from '@/notifications';
 import { onboardingQueryKey } from '@/features/onboarding-guard/onboarding-gate';
+import { OnboardingConsents, preferencesConsentsReady } from '@/features/consents/onboarding-consents';
+import { consentVersionOf } from '@/features/consents/consent-service';
 import { useAuthStore } from '@/state/auth-store';
 import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
@@ -186,6 +187,7 @@ export default function OnboardingScreen() {
           trainingPreferences: preferences,
           physicalConsiderations: considerations || null,
           consentHealth,
+          consentHealthVersion: consentHealth ? await consentVersionOf(queryClient, 'HEALTH') : undefined,
           consentData,
         });
       return onboardingService.saveEquipment(trainingLocation === 'GYM' ? [] : equipment);
@@ -233,7 +235,7 @@ export default function OnboardingScreen() {
   const weightValid = Number.isFinite(Number(weight.replace(',', '.'))) && Number(weight) > 0;
   const heightValid = Number.isFinite(Number(height.replace(',', '.'))) && Number(height) > 0;
   const stepValid = step !== 1 || (weightValid && heightValid);
-  const consentGiven = step !== 2 || (consentHealth && consentData);
+  const consentGiven = step !== 2 || preferencesConsentsReady(considerations, consentHealth, consentData);
 
   // Un protagonista por paso: la pregunta. El último no pregunta, celebra, y
   // apunta a lo que viene después —elegir la rutina del primer entreno—.
@@ -407,15 +409,12 @@ export default function OnboardingScreen() {
               onChangeText={setConsiderations}
               value={considerations}
             />
-            <Checkbox
-              checked={consentHealth}
-              label="Confirmo que la información física es correcta y puedo actualizarla después."
-              onChange={setConsentHealth}
-            />
-            <Checkbox
-              checked={consentData}
-              label="Acepto el uso de estos datos para personalizar mi entrenamiento."
-              onChange={setConsentData}
+            <OnboardingConsents
+              consentData={consentData}
+              consentHealth={consentHealth}
+              considerations={considerations}
+              onConsentData={setConsentData}
+              onConsentHealth={setConsentHealth}
             />
           </View>
         ) : null}

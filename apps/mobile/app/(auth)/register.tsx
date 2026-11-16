@@ -233,7 +233,7 @@ export default function RegisterScreen() {
             {errors.acceptedTerms.message}
           </Text>
         ) : null}
-        {/* «Términos» y «Privacidad» a secas: la casilla de encima ya los nombra
+        {/* «Términos», «Privacidad» y «Normas» a secas: la casilla de encima ya los nombra
             enteros, y en un iPhone SE «Leer términos» partía en dos líneas. El
             lector de pantalla oye la versión larga. */}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.lg, rowGap: spacing.xs }}>
@@ -247,6 +247,10 @@ export default function RegisterScreen() {
             style={[textLinkStyle(), { flexShrink: 0 }]}
           >
             Privacidad
+          </Link>
+          {/* The community rules are the third document the checkbox accepts. */}
+          <Link accessibilityLabel={authCopy.terms.readRules} href="/(auth)/normas" numberOfLines={1} style={[textLinkStyle(), { flexShrink: 0 }]}>
+            Normas
           </Link>
         </View>
       </View>

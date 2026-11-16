@@ -81,7 +81,7 @@ export function ConocerFlowScreen({ mode, initialStep }: { mode: ConocerMode; in
           ) : current.key === 'habits' ? (
             <HabitsStep draft={draft} onChange={update} />
           ) : current.key === 'orientation' ? (
-            <OrientationStep draft={draft} onChange={update} />
+            <OrientationStep draft={draft} error={flow.saveError} onChange={update} />
           ) : current.key === 'bio' ? (
             <BioStep draft={draft} error={flow.saveError} onChange={update} />
           ) : (

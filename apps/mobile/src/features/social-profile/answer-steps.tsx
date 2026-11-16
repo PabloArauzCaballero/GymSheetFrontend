@@ -26,7 +26,7 @@ export function HabitsStep({ draft, onChange }: StepProps) {
  * preference, hence a `Switch` and not a checkbox; without an orientation there
  * is nothing to show, so it stays disabled.
  */
-export function OrientationStep({ draft, onChange }: StepProps) {
+export function OrientationStep({ draft, onChange, error }: StepProps & { error?: string }) {
   const reduceMotion = useReduceMotion();
   const disabled = draft.orientation === null;
   return (
@@ -37,6 +37,12 @@ export function OrientationStep({ draft, onChange }: StepProps) {
         title="Orientación"
         value={draft.orientation}
       />
+      {/* A sensitive datum: saving it asks for its own consent first (ADR-0014). */}
+      {error ? (
+        <Text accessibilityLiveRegion="polite" accessibilityRole="alert" tone="danger" variant="footnote">{error}</Text>
+      ) : disabled ? null : (
+        <Text tone="muted" variant="footnote">Para guardarla te pediremos tu consentimiento. Puedes retirarlo cuando quieras.</Text>
+      )}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: minTouchTarget }}>
         <View style={{ flex: 1, gap: spacing.xxs }}>
           <Text strong variant="subhead">Mostrar en mi perfil</Text>

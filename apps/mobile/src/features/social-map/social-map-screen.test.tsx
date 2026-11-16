@@ -6,8 +6,8 @@ import SocialMapScreen from '../../../app/(app)/social-map';
 
 type Props = { children?: ReactNode; onPress?: () => void; accessibilityLabel?: string };
 
-const { mapAreas, mapGyms, mapNearby, publicBranches, getProfile, updateProfile, updateDiscoverySettings, region, Box, Press } = vi.hoisted(() => ({
-  mapAreas: vi.fn(), mapGyms: vi.fn(), mapNearby: vi.fn(), publicBranches: vi.fn(),
+const { mapAreas, mapGyms, mapNearby, publicBranches, getProfile, updateProfile, updateDiscoverySettings, ensureConsent, region, Box, Press } = vi.hoisted(() => ({
+  mapAreas: vi.fn(), mapGyms: vi.fn(), mapNearby: vi.fn(), publicBranches: vi.fn(), ensureConsent: vi.fn(),
   getProfile: vi.fn(), updateProfile: vi.fn(), updateDiscoverySettings: vi.fn(),
   region: { latitude: -16.5, longitude: -68.13, latitudeDelta: 0.09, longitudeDelta: 0.09 },
   Box: ({ children }: Props) => <div>{children}</div>,
@@ -22,6 +22,12 @@ vi.mock('@/api/services', () => ({
   },
   profileService: { get: getProfile, update: updateProfile },
   facilitiesService: { publicBranches },
+}));
+vi.mock('@/features/consents/ask-consent', () => ({
+  useConsentGate: () => ({
+    ensure: ensureConsent,
+    withConsent: async (action: () => Promise<unknown>) => ({ done: true, value: await action() }),
+  }),
 }));
 vi.mock('expo-location', () => ({
   getForegroundPermissionsAsync: vi.fn().mockResolvedValue({ granted: false }),
@@ -100,6 +106,7 @@ beforeEach(() => {
   mapAreas.mockResolvedValue({ cells: [] });
   publicBranches.mockResolvedValue([]);
   mapNearby.mockResolvedValue({ preferencesApplied: true, people: [person] });
+  ensureConsent.mockResolvedValue(true);
 });
 
 describe('SocialMapScreen', () => {
@@ -162,5 +169,26 @@ describe('SocialMapScreen', () => {
     fireEvent.click(screen.getByText('Guardar y aparecer en el mapa'));
     expect(await screen.findByText('Debes tener 18 años o más.')).toBeTruthy();
     expect(updateProfile).not.toHaveBeenCalled();
+  });
+
+  it('si no compartes, no ves: explica cómo activarlo en vez de un error', async () => {
+    const { ApiError } = await import('@gymsheet/api-client');
+    mapNearby.mockRejectedValue(new ApiError({ message: 'x', status: 403, kind: 'forbidden', code: 'SOCIAL_MAP_DISABLED' }));
+    renderMap();
+    fireEvent.click(await screen.findByLabelText('Gimnasio Sopocachi'));
+    expect(await screen.findByText('Comparte para ver')).toBeTruthy();
+    expect(screen.queryByText('Error')).toBeNull();
+    fireEvent.click(screen.getByText('Activar en mi perfil'));
+    expect(await screen.findByText('Editor de preferencias')).toBeTruthy();
+  });
+
+  it('pide el consentimiento de ubicación antes de aparecer y no envía nada si lo niegas', async () => {
+    getProfile.mockResolvedValue({ ...savedProfile, edad: 30 });
+    ensureConsent.mockResolvedValue(false);
+    renderMap();
+    fireEvent.click(await screen.findByLabelText('Preferencias'));
+    fireEvent.click(await screen.findByText('Aparecer en el mapa'));
+    await waitFor(() => expect(ensureConsent).toHaveBeenCalledWith('PRECISE_LOCATION'));
+    expect(updateDiscoverySettings).not.toHaveBeenCalled();
   });
 });

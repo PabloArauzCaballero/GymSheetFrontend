@@ -3,7 +3,7 @@ import { defineConfig } from '../../../../web/node_modules/vitest/dist/config.js
 import webConfig from '../../../../web/vitest.config';
 
 /**
- * Mobile hook tests (discovery deck, Conocer flow; jsdom + renderHook), reusing the web config for a
+ * Mobile hook tests (discovery deck, Conocer flow, email verification, privacy and consents; jsdom + renderHook), reusing the web config for a
  * single React copy and the `@gymsheet/*` aliases. Run from `apps/mobile`:
  *   node ../web/node_modules/vitest/vitest.mjs run --config src/features/discovery/vitest.config.mts
  */
@@ -23,6 +23,8 @@ export default defineConfig({
       'src/features/discovery/__tests__/*.test.tsx',
       'src/features/social-profile/__tests__/*.test.tsx',
       'src/features/email-verification/__tests__/*.test.tsx',
+      'src/features/privacy/__tests__/*.test.tsx',
+      'src/features/consents/__tests__/*.test.tsx',
     ],
     setupFiles: [fileURLToPath(new URL('../../../../web/src/test/setup.ts', import.meta.url))],
   },

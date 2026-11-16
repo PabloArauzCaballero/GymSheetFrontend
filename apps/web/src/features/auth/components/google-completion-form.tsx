@@ -34,7 +34,7 @@ const completionSchema = z.object({
   genero: registerSchema.shape.genero,
   acceptedTerms: z
     .boolean()
-    .refine(Boolean, 'Debes aceptar los términos y la política de privacidad.'),
+    .refine(Boolean, authCopy.terms.required),
 });
 type CompletionInput = z.infer<typeof completionSchema>;
 const serverFields = ['nombreCompleto', 'fechaNacimiento', 'genero'] as const;

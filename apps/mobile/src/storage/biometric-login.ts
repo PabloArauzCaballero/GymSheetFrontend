@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import {
   clearParkedToken,
   consumeParkedToken,
+  disableQuickLogin,
   bindQuickLoginToAccount,
   enableQuickLogin,
   hasParkedToken,
@@ -105,6 +106,11 @@ export function signInWithParkedToken<T>(
   exchange: (refreshToken: string) => Promise<T | 'rejected'>,
 ): Promise<QuickLoginOutcome<T>> {
   return consumeParkedToken(store, exchange);
+}
+
+/** Closed account: quick login off and any parked token gone. Throws on a Keychain error. */
+export async function turnOffQuickLogin(): Promise<void> {
+  await disableQuickLogin(store);
 }
 
 export async function forgetParkedToken(): Promise<void> {

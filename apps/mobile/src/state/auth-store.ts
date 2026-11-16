@@ -12,13 +12,20 @@ import {
   setSessionLostHandler,
 } from '@/api/client';
 import { endSession } from '@/lib/end-session';
+import { wipeClosedAccount } from '@/lib/closed-account';
 import { ApiError } from '@gymsheet/api-client';
 import { principalCache, secureStoreAuthStorage } from '@/storage/secure-store';
 import { restoreSession } from '@/lib/session-restore';
 import { env } from '@/config/env';
 import { unregisterPushNotifications } from '@/notifications/push';
 import { useLegalGateStore } from '@/features/legal/legal-store';
-import { bindQuickLoginTo, migrateBiometricLogin, parkForQuickLogin, signInWithParkedToken } from '@/storage/biometric-login';
+import {
+  bindQuickLoginTo,
+  migrateBiometricLogin,
+  parkForQuickLogin,
+  signInWithParkedToken,
+  turnOffQuickLogin,
+} from '@/storage/biometric-login';
 import type { QuickLoginOutcome } from '@/storage/quick-login';
 
 /**
@@ -104,6 +111,11 @@ interface AuthState extends Pick<SessionState, 'status' | 'principal'> {
   refreshAccount: () => Promise<void>;
   setEmailVerified: (verified: boolean) => void;
   logout: () => Promise<void>;
+  /** Set by `endClosedAccount`: the private area hands over to the goodbye screen, not to login. */
+  farewell: boolean;
+  /** After `DELETE /me/account`: forgets the account on this phone (no server call). */
+  endClosedAccount: (clearCaches: readonly (() => Promise<void> | void)[]) => Promise<void>;
+  dismissFarewell: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => {
@@ -120,6 +132,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     status: initialSessionState.status,
     principal: initialSessionState.principal,
     emailVerified: null,
+    farewell: false,
 
     async hydrate() {
       // F3.17: deletes any password the old quick login stored. Independent of
@@ -218,6 +231,23 @@ export const useAuthStore = create<AuthState>((set, get) => {
       useLegalGateStore.getState().clear();
       setActiveTenant(null);
       set({ status: 'unauthenticated', principal: null, emailVerified: null });
+    },
+
+    async endClosedAccount(clearCaches) {
+      await wipeClosedAccount({
+        clearTokens: () => secureStoreAuthStorage.clearTokens(),
+        disableQuickLogin: turnOffQuickLogin,
+        signOut: () => {
+          useLegalGateStore.getState().clear();
+          setActiveTenant(null);
+          set({ status: 'unauthenticated', principal: null, emailVerified: null, farewell: true });
+        },
+        clearCaches,
+      });
+    },
+
+    dismissFarewell() {
+      set({ farewell: false });
     },
   };
 });

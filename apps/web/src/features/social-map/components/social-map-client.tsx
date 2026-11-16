@@ -12,6 +12,8 @@ import type { SocialMapBounds } from '@/shared/api/schemas';
 import { mapMarkerColors } from '@/shared/theme/map-marker-colors';
 import { isEmailVerificationRequired } from '@/shared/api/email-verification';
 import { EmailVerificationRequired } from '@/shared/components/feedback/email-verification-required';
+import { isSocialMapDisabled } from '@gymsheet/domain';
+import { SocialMapDisabled } from './social-map-disabled';
 
 type Layer = 'BOTH' | 'PEOPLE' | 'GYMS';
 const MAP_TILE_URL = process.env.NEXT_PUBLIC_MAP_TILE_URL ||
@@ -95,6 +97,9 @@ export function SocialMapClient({ viewerId }: Readonly<{ viewerId: string }>) {
     return <main className="grid gap-5"><EmailVerificationRequired /></main>;
   }
 
+  // The viewer does not share, so the server shows them nobody; gyms stay visible.
+  const mapClosed = [areas, people].some((query) => isSocialMapDisabled(query.error));
+
   return (
     <main className="grid gap-5">
       <header className="grid gap-2">
@@ -172,7 +177,9 @@ export function SocialMapClient({ viewerId }: Readonly<{ viewerId: string }>) {
         </div>
 
         <aside aria-live="polite" className="max-h-[min(68vh,46rem)] overflow-y-auto rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-low)] p-5">
-          {cellId ? (
+          {mapClosed ? (
+            <SocialMapDisabled />
+          ) : cellId ? (
             <>
               <button className="mb-4 text-sm text-[var(--accent-ink)]" onClick={() => setCellId(null)} type="button">← Todas las zonas</button>
               <h2 className="mb-4 text-lg font-semibold">Personas en esta zona</h2>

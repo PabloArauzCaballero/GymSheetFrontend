@@ -22,6 +22,7 @@ vi.mock('next/navigation', () => ({
 const pending = [
   { document: 'TERMS', version: '2026-11-16' },
   { document: 'PRIVACY', version: '2026-11-16' },
+  { document: 'COMMUNITY', version: '2026-11-16' },
 ] as const;
 
 const blocked = new ApiError({
@@ -64,6 +65,8 @@ describe('LegalGate', () => {
     expect(await screen.findByRole('heading', { name: 'Actualizamos los términos' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Términos y condiciones/u })).toHaveAttribute('href', '/terminos');
     expect(screen.getByRole('link', { name: /Política de privacidad/u })).toHaveAttribute('href', '/privacidad');
+    // Community rules are a versioned legal document too: listed and accepted with the others.
+    expect(screen.getByRole('link', { name: /Normas de la comunidad/u })).toHaveAttribute('href', '/normas');
     expect(screen.getByRole('link', { name: 'Cerrar sesión' })).toHaveAttribute(
       'href',
       '/api/auth/logout?returnTo=/login',

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { DevicesSection } from '@/features/account-security/components/devices-section';
+import { PrivacySection } from '@/features/privacy/components/privacy-section';
 import { SettingsPage } from '@/features/settings/components/settings-page';
 import { requireSession } from '@/shared/server/session';
 import packageJson from '../../../../package.json';
@@ -17,6 +18,7 @@ export default async function SettingsRoute() {
       version={packageJson.version}
     >
       <DevicesSection />
+      <PrivacySection name={session.nombreCompleto} />
     </SettingsPage>
   );
 }

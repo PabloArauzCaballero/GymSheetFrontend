@@ -26,6 +26,16 @@ const allowedCases: Array<[string[], string]> = [
   [['public', 'directory', 'entities', id, 'plans'], `/public/directory/entities/${id}/plans`],
   [['muscles', 'BICEPS_BRACHII', 'exercises'], '/muscles/BICEPS_BRACHII/exercises'],
   [['me', 'blocks', id], `/me/blocks/${id}`],
+  // Franja 4: consents and account rights.
+  [['me', 'consents'], '/me/consents'],
+  [['me', 'consents', 'ORIENTATION'], '/me/consents/ORIENTATION'],
+  [['me', 'account'], '/me/account'],
+  [['me', 'account', 'closure-preview'], '/me/account/closure-preview'],
+  [['me', 'account', 'closure-pin'], '/me/account/closure-pin'],
+  [['me', 'email', 'change', 'confirm'], '/me/email/change/confirm'],
+  [['me', 'export'], '/me/export'],
+  [['me', 'export', 'latest'], '/me/export/latest'],
+  [['me', 'export', id, 'download'], `/me/export/${id}/download`],
   [['me', 'social-map', 'cells', id, 'people'], `/me/social-map/cells/${id}/people`],
   [['me', 'chat', 'read-receipts'], '/me/chat/read-receipts'],
   [['me', 'reels', id, 'comments', id], `/me/reels/${id}/comments/${id}`],
@@ -158,6 +168,11 @@ const blockedCases: Array<[string[]]> = [
   // `push` no es un prefijo abierto: sólo la configuración pública pasa.
   [['notifications', 'push']],
   [['notifications', 'device-tokens', id]],
+  // Consent kinds are a closed set; the export id is a strict UUID.
+  [['me', 'consents', 'MARKETING']],
+  [['me', 'export', 'newest']],
+  [['me', 'export', 'latest', 'download']],
+  [['me', 'account', 'delete-everything']],
 ];
 
 describe('backend route policy', () => {

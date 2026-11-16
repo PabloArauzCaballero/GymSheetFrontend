@@ -6,6 +6,7 @@ import { clientPlatform, isLegalAcceptanceResponse } from '@/features/legal/lega
 import { notify } from '@/notifications';
 import { secureStoreAuthStorage, secureStoreTokenProvider } from '@/storage/secure-store';
 import { isEmailVerificationResponse } from '@/features/email-verification/email-verification-logic';
+import { endSuspendedSession, suspensionMessage } from '@/lib/suspension-notice';
 import { deviceHeaders } from './device-identity';
 
 /**
@@ -192,6 +193,21 @@ const apiFetch: typeof fetch = async (input, init) => {
   const headers = new Headers(init?.headers);
   for (const [name, value] of Object.entries(await clientHeaders())) headers.set(name, value);
   const response = await deviceFetch(input, { ...init, headers });
+  if (response.status === 401) {
+    const body: unknown = await response.clone().json().catch(() => null);
+    const suspension = suspensionMessage(response.status, body);
+    // Ended here, before the shared client tries to renew: with the tokens gone
+    // it finds no refresh, does not retry, and `onUnauthorized` stays quiet.
+    if (suspension) {
+      await endSuspendedSession({
+        getRefreshToken: () => secureStoreAuthStorage.getRefreshToken(),
+        revokeRefreshToken,
+        clearTokens: () => secureStoreTokenProvider.clear(),
+        sessionLost: () => onSessionLost?.(),
+        notify: (message) => notify.warning({ title: 'Cuenta suspendida', message, deduplicationKey: 'session-expired' }),
+      }, suspension);
+    }
+  }
   if (response.status === 428 || response.status === 403) {
     const body: unknown = await response.clone().json().catch(() => null);
     if (isLegalAcceptanceResponse(response.status, body)) onLegalAcceptanceRequired?.();

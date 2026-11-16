@@ -83,15 +83,21 @@ export const authCopy = {
     termsLabel: 'términos y condiciones',
     connector: 'y la',
     privacyLabel: 'política de privacidad',
+    /** «Acepto los términos y condiciones, la política de privacidad y las normas de la comunidad». */
+    listSeparator: ', la',
+    rulesConnector: 'y las',
+    rulesLabel: 'normas de la comunidad',
     /**
      * La misma frase sin enlaces dentro. La web la compone en piezas porque
      * puede incrustar dos enlaces en mitad del texto; el móvil no —una casilla
      * de React Native lleva una etiqueta de texto plano— y ahí los documentos
      * se abren desde dos enlaces aparte, bajo la casilla.
      */
-    plain: 'Acepto los términos y condiciones y la política de privacidad',
+    plain: 'Acepto los términos y condiciones, la política de privacidad y las normas de la comunidad',
     readTerms: 'Leer términos',
     readPrivacy: 'Leer privacidad',
+    readRules: 'Leer normas',
+    required: 'Acepta los términos, la privacidad y las normas para seguir.',
   },
 } as const;
 

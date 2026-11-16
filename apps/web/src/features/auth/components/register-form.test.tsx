@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/shared/api/api-error';
 import { RegisterForm } from './register-form';
@@ -24,6 +24,7 @@ vi.mock('next/navigation', () => ({
 const current = [
   { document: 'TERMS', version: '2026-08-25' },
   { document: 'PRIVACY', version: '2026-08-25' },
+  { document: 'COMMUNITY', version: '2026-08-25' },
 ] as const;
 
 function yearsAgo(years: number, extraDays = 0) {
@@ -128,6 +129,46 @@ describe('RegisterForm', () => {
     submit();
     await waitFor(() => expect(register).toHaveBeenCalledTimes(2));
     expect(register.mock.calls[1]?.[0]).toMatchObject({ termsVersion: '2026-11-16' });
+  });
+
+  it('accepts the terms, the privacy policy and the community rules in one checkbox', () => {
+    renderForm();
+    const box = screen.getByRole('checkbox');
+    // The accessible-name algorithm pads inline links with spaces; the visible sentence has none.
+    expect(box).toHaveAccessibleName(
+      /^Acepto los términos y condiciones ?, la política de privacidad y las normas de la comunidad ?\.$/u,
+    );
+    expect(screen.getByRole('link', { name: 'términos y condiciones' })).toHaveAttribute('href', '/terminos');
+    expect(screen.getByRole('link', { name: 'política de privacidad' })).toHaveAttribute('href', '/privacidad');
+    expect(screen.getByRole('link', { name: 'normas de la comunidad' })).toHaveAttribute('href', '/normas');
+  });
+
+  it('asks again when the community rules changed at signup (409 listing COMMUNITY)', async () => {
+    register.mockRejectedValueOnce(
+      new ApiError({
+        message: 'Cambiaron las normas.',
+        status: 409,
+        kind: 'conflict',
+        code: 'TERMS_VERSION_OUTDATED',
+        details: {
+          documents: [
+            { document: 'TERMS', version: '2026-08-25', contentSha256: null },
+            { document: 'PRIVACY', version: '2026-08-25', contentSha256: null },
+            { document: 'COMMUNITY', version: '2026-12-01', contentSha256: null },
+          ],
+        },
+      }),
+    );
+    renderForm();
+    // Let the current versions load, so a later refetch can only come from an unreadable 409.
+    await waitFor(() => expect(fetchCurrentLegal).toHaveBeenCalledTimes(1));
+    await act(async () => undefined);
+    fillValid();
+    submit();
+    expect(await screen.findByText('Actualizamos los términos. Revísalos y acéptalos de nuevo.')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox')).not.toBeChecked();
+    // The fresh list came in the 409 itself: no extra round trip for the versions.
+    expect(fetchCurrentLegal).toHaveBeenCalledTimes(1);
   });
 
   it('shows the server field errors next to their fields', async () => {

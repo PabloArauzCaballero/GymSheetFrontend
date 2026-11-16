@@ -23,7 +23,9 @@ const publicRoutes = ['/login', '/register', '/recover-password', '/completar-cu
 // «con sesión → /dashboard», pensada para login y registro: el resultado era que
 // quien tenía cuenta no podía releer los términos que había aceptado. Siguen
 // siendo públicos — esta lista también exime del muro de acceso.
-const publicContentRoutes = ['/gimnasios', '/terminos', '/privacidad', '/directorio'];
+// `/normas` (community rules) is a legal document like the other two, and
+// `/adios` is where a closed account lands, already without a session.
+const publicContentRoutes = ['/gimnasios', '/terminos', '/privacidad', '/normas', '/adios', '/directorio'];
 
 // Primeros segmentos que la aplicación resuelve de verdad. Sirve para dar 404
 // antes que el muro de acceso (M-4): sin esto, un enlace roto compartido en
@@ -41,6 +43,8 @@ export const knownRoutes = new Set([
   'completar-cuenta',
   'terminos',
   'privacidad',
+  'normas',
+  'adios',
   'gimnasios',
   'directorio',
   'access',

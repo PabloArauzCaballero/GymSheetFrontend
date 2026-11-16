@@ -8,6 +8,9 @@ import type { UserRole } from '@/shared/api/contracts';
 import type { PortalSession } from '@/shared/auth/portal-session';
 import { sessionPrincipalSchema, userSchema } from '@/shared/api/schemas';
 import { SESSION_COOKIE } from '@/shared/auth/constants';
+import { accountSuspensionOf, type AccountSuspension } from '@gymsheet/domain';
+import { apiErrorFromProblem } from '@/shared/api/api-error';
+import { suspendedExitPath } from '@/shared/auth/suspension';
 import { backendRequest, isBackendUnreachable, readBackendJson } from './backend';
 
 const envelopeSchema = z.object({ ok: z.literal(true), data: z.unknown() });
@@ -33,6 +36,17 @@ export class BackendUnavailableError extends Error {
   constructor() {
     super('No pudimos contactar al servidor.');
     this.name = 'BackendUnavailableError';
+  }
+}
+
+/**
+ * The backend refused the token because the account is suspended (401
+ * `ACCOUNT_SUSPENDED`). Not «no session»: the person must be told why.
+ */
+export class AccountSuspendedError extends Error {
+  constructor(readonly suspension: AccountSuspension) {
+    super('Cuenta suspendida.');
+    this.name = 'AccountSuspendedError';
   }
 }
 
@@ -63,6 +77,12 @@ export const getSession = cache(async function getSession(): Promise<PortalSessi
   // sesión sea inválida. `readData` devuelve `null` tanto para un 401 como para
   // un timeout, y ahí es donde se perdía la distinción.
   if (isBackendUnreachable(principalResponse)) throw new BackendUnavailableError();
+  if (principalResponse.status === 401) {
+    const suspension = accountSuspensionOf(
+      apiErrorFromProblem(401, await readBackendJson(principalResponse.clone())),
+    );
+    if (suspension) throw new AccountSuspendedError(suspension);
+  }
   const principal = await readData(principalResponse, principalSchema);
   const user = await readData(userResponse, userSchema);
   if (!principal) return null;
@@ -100,7 +120,14 @@ export const getSession = cache(async function getSession(): Promise<PortalSessi
  * usuario sigue dentro.
  */
 export async function requireSession() {
-  const session = await getSession();
+  let session: PortalSession | null;
+  try {
+    session = await getSession();
+  } catch (error: unknown) {
+    // Clears the cookie and lands on login with the suspension, not «sesión expirada».
+    if (error instanceof AccountSuspendedError) redirect(suspendedExitPath(error.suspension));
+    throw error;
+  }
   if (!session) redirect('/api/auth/logout?returnTo=/login');
   return session;
 }

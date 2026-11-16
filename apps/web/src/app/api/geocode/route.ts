@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { reversePlace, searchPlaces } from '@/shared/server/geocoding';
-import { getSession } from '@/shared/server/session';
+import { AccountSuspendedError, getSession } from '@/shared/server/session';
 import { isValidLatLng } from '@/shared/lib/geo';
 
 export const runtime = 'nodejs';
@@ -13,7 +13,10 @@ export const dynamic = 'force-dynamic';
  * es quien da de alta y mueve sedes, puede usarlo.
  */
 export async function GET(request: NextRequest) {
-  const session = await getSession();
+  const session = await getSession().catch((error: unknown) => {
+    if (error instanceof AccountSuspendedError) return null;
+    throw error;
+  });
   if (!session) return NextResponse.json({ places: [] }, { status: 401 });
   if (session.role !== 'ADMIN') return NextResponse.json({ places: [] }, { status: 403 });
 

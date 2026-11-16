@@ -35,9 +35,12 @@ export function isTermsVersionOutdated(error: unknown): error is { code: string;
 }
 
 /** Where each document is read in the app, and how it is named. */
-export const legalDocumentRoutes: Readonly<Record<LegalDocument, { label: string; href: '/(auth)/terminos' | '/(auth)/privacidad'; path: string }>> = {
+type LegalHref = '/(auth)/terminos' | '/(auth)/privacidad' | '/(auth)/normas';
+
+export const legalDocumentRoutes: Readonly<Record<LegalDocument, { label: string; href: LegalHref; path: string }>> = {
   TERMS: { label: legalDocumentLabels.TERMS, href: '/(auth)/terminos', path: '/terminos' },
   PRIVACY: { label: legalDocumentLabels.PRIVACY, href: '/(auth)/privacidad', path: '/privacidad' },
+  COMMUNITY: { label: legalDocumentLabels.COMMUNITY, href: '/(auth)/normas', path: '/normas' },
 };
 
 /** True while the person reads a document from the gate (the gate steps aside). */

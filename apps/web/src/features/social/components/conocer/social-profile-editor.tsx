@@ -7,7 +7,7 @@ import { Skeleton } from '@/shared/components/feedback/skeleton';
 import { BioField } from './bio-field';
 import { HabitsPicker } from './habits-picker';
 import { InterestsPicker } from './interests-picker';
-import { OrientationPicker } from './orientation-picker';
+import { OrientationPicker, type OrientationConsentControl } from './orientation-picker';
 
 export type SocialProfileSection = 'interests' | 'habits' | 'orientation' | 'bio';
 
@@ -19,10 +19,12 @@ export function SocialProfileEditor({
   section,
   draft,
   onChange,
+  orientationConsent,
 }: Readonly<{
   section: SocialProfileSection;
   draft: SocialProfileDraft;
   onChange: (next: SocialProfileDraft) => void;
+  orientationConsent?: OrientationConsentControl;
 }>) {
   if (section === 'interests') {
     return <InterestsEditor onChange={(interests) => onChange({ ...draft, interests })} selected={draft.interests} />;
@@ -31,7 +33,13 @@ export function SocialProfileEditor({
     return <HabitsPicker onChange={(habits) => onChange({ ...draft, ...habits })} value={draft} />;
   }
   if (section === 'orientation') {
-    return <OrientationPicker onChange={(value) => onChange({ ...draft, ...value })} value={draft} />;
+    return (
+      <OrientationPicker
+        consent={orientationConsent}
+        onChange={(value) => onChange({ ...draft, ...value })}
+        value={draft}
+      />
+    );
   }
   return <BioField onChange={(bio) => onChange({ ...draft, bio })} value={draft.bio} />;
 }

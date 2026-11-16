@@ -1,10 +1,11 @@
-import type { LegalDocument, LegalDocumentVersion } from '@gymsheet/schemas';
+import { legalDocuments, type LegalDocument, type LegalDocumentVersion } from '@gymsheet/schemas';
 
 /** Legal-acceptance rules and copy shared by web and mobile. */
 
 export const legalDocumentLabels: Readonly<Record<LegalDocument, string>> = {
   TERMS: 'Términos y condiciones',
   PRIVACY: 'Política de privacidad',
+  COMMUNITY: 'Normas de la comunidad',
 };
 
 export const legalGateCopy = {
@@ -20,12 +21,17 @@ export const legalGateCopy = {
   versionUnavailable: 'No pudimos cargar los términos. Inténtalo de nuevo.',
 } as const;
 
-/** The version the signup form sends as `termsVersion`: the current TERMS one. */
+/**
+ * The version the signup form sends as `termsVersion`: the current TERMS one.
+ * The backend checks it and records the acceptance of EVERY current document
+ * (terms, privacy and community rules) in the signup transaction, so the
+ * checkbox must cover all three and the payload stays the same.
+ */
 export function termsVersionOf(documents: readonly LegalDocumentVersion[] | undefined): string | undefined {
   return documents?.find((entry) => entry.document === 'TERMS')?.version;
 }
 
-const knownDocuments: readonly string[] = ['TERMS', 'PRIVACY'] satisfies LegalDocument[];
+const knownDocuments: readonly string[] = legalDocuments;
 
 /** Current versions carried by a 409 TERMS_VERSION_OUTDATED in `details.documents`. */
 export function outdatedCurrentDocuments(details: unknown): LegalDocumentVersion[] | undefined {
@@ -36,6 +42,11 @@ export function outdatedCurrentDocuments(details: unknown): LegalDocumentVersion
       typeof entry?.version === 'string' && knownDocuments.includes(entry?.document),
   );
   return valid.length === documents.length ? valid : undefined;
+}
+
+/** Every current document, in catalog order: what signup shows and accepts. */
+export function signupLegalDocuments(documents: readonly LegalDocumentVersion[] | undefined): LegalDocumentVersion[] {
+  return legalDocuments.flatMap((document) => documents?.filter((entry) => entry.document === document) ?? []);
 }
 
 const isoDate = /^(\d{4})-(\d{2})-(\d{2})$/u;

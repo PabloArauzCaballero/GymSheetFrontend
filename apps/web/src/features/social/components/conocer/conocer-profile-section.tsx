@@ -22,7 +22,7 @@ const SECTIONS: { key: SocialProfileSection; title: string }[] = [
  * guided step for whoever skipped it.
  */
 export function ConocerProfileSection() {
-  const { query, draft, setDraft, saveDraft, saving } = useSocialProfileDraft();
+  const { query, draft, setDraft, saveDraft, saving, orientationConsent } = useSocialProfileDraft();
   if (query.isError) {
     return <ErrorPanel message="No pudimos cargar tu perfil de Conocer." onRetry={() => void query.refetch()} />;
   }
@@ -44,7 +44,12 @@ export function ConocerProfileSection() {
         {SECTIONS.map((section) => (
           <section aria-label={section.title} className="grid gap-3" key={section.key}>
             <h3 className="data-label text-[var(--text-muted)]">{section.title}</h3>
-            <SocialProfileEditor draft={draft} onChange={setDraft} section={section.key} />
+            <SocialProfileEditor
+              draft={draft}
+              onChange={setDraft}
+              orientationConsent={orientationConsent}
+              section={section.key}
+            />
           </section>
         ))}
         <Button

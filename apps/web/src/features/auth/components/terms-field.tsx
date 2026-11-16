@@ -8,7 +8,10 @@ import { Checkbox } from '@/shared/components/ui/checkbox';
 const linkClass =
   'font-semibold text-[var(--text)] underline decoration-[var(--volt)] underline-offset-4';
 
-/** Terms and privacy acceptance, with both documents one tap away. */
+/**
+ * One checkbox for the three legal documents (terms, privacy, community
+ * rules), each one tap away. Signup records the acceptance of all three.
+ */
 export function TermsField({
   registration,
   error,
@@ -21,10 +24,14 @@ export function TermsField({
             {authCopy.terms.prefix}{' '}
             <Link className={linkClass} href="/terminos" target="_blank">
               {authCopy.terms.termsLabel}
-            </Link>{' '}
-            {authCopy.terms.connector}{' '}
+            </Link>
+            {authCopy.terms.listSeparator}{' '}
             <Link className={linkClass} href="/privacidad" target="_blank">
               {authCopy.terms.privacyLabel}
+            </Link>{' '}
+            {authCopy.terms.rulesConnector}{' '}
+            <Link className={linkClass} href="/normas" target="_blank">
+              {authCopy.terms.rulesLabel}
             </Link>
             .
           </span>

@@ -6,12 +6,22 @@ import { authDestination } from '@gymsheet/domain';
 import { socialProfileSaveFailure } from '@gymsheet/hooks';
 import { profilePhotosService } from '@/api/services';
 import { socialProfileService } from '@/api/social-profile-service';
+import { useConsentGate } from '@/features/consents/ask-consent';
 import { onboardingQueryKey } from '@/features/onboarding-guard/onboarding-gate';
 import { notify, resolveError } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { CONOCER_STEPS, stepAt } from './conocer-steps';
 import { refreshDiscoveryReadiness, socialProfileKeys } from './query-keys';
 import { draftFromProfile, emptyDraft, missingPhotos, sameDraft, toUpdateInput, type SocialDraft } from './selection';
+
+const ORIENTATION_DECLINED = 'Sin tu consentimiento no guardamos tu orientación. Déjala sin elegir para seguir.';
+
+/** The person said no to the consent the save needed: stay on the step, no error toast. */
+class ConsentDeclinedError extends Error {
+  constructor() {
+    super('Sin tu consentimiento no podemos guardar este dato. Quítalo para seguir.');
+  }
+}
 
 /** `onboarding`: offered after the questionnaire, closes the step. `perfil`: opened from Perfil, only edits. */
 export type ConocerMode = 'onboarding' | 'perfil';
@@ -29,6 +39,7 @@ export function useConocerFlow(mode: ConocerMode, initialStep: number) {
   const [draft, setDraft] = useState<SocialDraft>(emptyDraft);
   const [saveError, setSaveError] = useState<string | undefined>();
   const hydrated = useRef(false);
+  const consent = useConsentGate();
 
   const profile = useQuery({ queryKey: socialProfileKeys.profile, queryFn: socialProfileService.get });
   const photos = useQuery({ queryKey: ['profile', 'photos'], queryFn: () => profilePhotosService.list() });
@@ -43,7 +54,11 @@ export function useConocerFlow(mode: ConocerMode, initialStep: number) {
     mutationFn: async (next: SocialDraft) => {
       const current = profile.data;
       if (current && sameDraft(next, draftFromProfile(current))) return current;
-      return socialProfileService.update(toUpdateInput(next, current?.version ?? 0));
+      // The orientation is a sensitive datum: the server answers 400
+      // CONSENT_REQUIRED without its consent, so ask for it and save again.
+      const saved = await consent.withConsent(() => socialProfileService.update(toUpdateInput(next, current?.version ?? 0)));
+      if (!saved.done) throw new ConsentDeclinedError();
+      return saved.value;
     },
     onSuccess: async (saved) => {
       setSaveError(undefined);
@@ -61,7 +76,7 @@ export function useConocerFlow(mode: ConocerMode, initialStep: number) {
         return;
       }
       setSaveError(resolveError(error).message);
-      notify.error(error);
+      if (!(error instanceof ConsentDeclinedError)) notify.error(error);
     },
   });
 
@@ -77,6 +92,11 @@ export function useConocerFlow(mode: ConocerMode, initialStep: number) {
   const leave = () => (mode === 'onboarding' ? close.mutate('SKIP') : router.back());
 
   const next = async () => {
+    // Asked on the step that collects it, before the save, not after a failure.
+    if (stepAt(step).key === 'orientation' && draft.orientation !== null && !(await consent.ensure('ORIENTATION'))) {
+      setSaveError(ORIENTATION_DECLINED);
+      return;
+    }
     try {
       await save.mutateAsync(draft);
     } catch {

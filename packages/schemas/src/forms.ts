@@ -111,7 +111,7 @@ export const registerSchema = z
   })
   .refine((value) => value.acceptedTerms, {
     path: ['acceptedTerms'],
-    message: 'Debes aceptar los términos y la política de privacidad.',
+    message: 'Acepta los términos, la privacidad y las normas para seguir.',
   });
 export type RegisterInput = z.infer<typeof registerSchema>;
 

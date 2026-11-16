@@ -177,6 +177,7 @@ export const onboardingService = {
     trainingPreferences: string[];
     physicalConsiderations?: string | null;
     consentHealth: boolean;
+    consentHealthVersion?: string;
     consentData: boolean;
   }) =>
     apiClient.request('/me/onboarding/preferences', onboardingSchema, {

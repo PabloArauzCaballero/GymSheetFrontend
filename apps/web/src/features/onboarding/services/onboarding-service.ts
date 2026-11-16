@@ -29,6 +29,8 @@ export const onboardingService = {
     trainingPreferences: string[];
     physicalConsiderations?: string | null;
     consentHealth: boolean;
+    /** Version of the health consent text shown; the backend defaults to the current one. */
+    consentHealthVersion?: string;
     consentData: boolean;
   }) =>
     apiRequest<OnboardingState>('/me/onboarding/preferences', onboardingSchema, {

@@ -30,6 +30,13 @@ export const queryKeys = {
   gymDirectory: (filters: string) => ['gym-directory', filters] as const,
   conversations: ['conversations', 'me'] as const,
   messages: (conversationId: string) => ['messages', conversationId] as const,
+  /** Public current legal versions (`GET /legal/current`). */
+  legalCurrent: ['legal', 'current'] as const,
+  /** Privacy and account rights (franja 4). */
+  consents: ['privacy', 'consents'] as const,
+  accountClosurePreview: ['account', 'closure-preview'] as const,
+  accountExport: (exportId: string) => ['account', 'export', exportId] as const,
+  accountExportLatest: ['account', 'export', 'latest'] as const,
   admin: {
     branches: (page: number) => ['admin', 'branches', page] as const,
     /** Todas las sedes (para el mapa); comparte prefijo para invalidarse con la lista. */

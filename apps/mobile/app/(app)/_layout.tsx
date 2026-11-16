@@ -30,6 +30,7 @@ import { useTourStore } from '@/state/tour-store';
  */
 export default function AppLayout() {
   const status = useAuthStore((state) => state.status);
+  const farewell = useAuthStore((state) => state.farewell);
   // Se hidrata una vez, aqui: montarlo en una pantalla haria que el tour
   // reapareciera cada vez que esa pantalla se remonta.
   const hydrateTour = useTourStore((state) => state.hydrate);
@@ -38,8 +39,9 @@ export default function AppLayout() {
   }, [hydrateTour]);
 
   // Protect the entire private group from unauthenticated access.
+  // A closed account says goodbye first; any other exit goes to login.
   if (status === 'unauthenticated') {
-    return <Redirect href="/(auth)/login" />;
+    return <Redirect href={farewell ? '/(auth)/hasta-pronto' : '/(auth)/login'} />;
   }
 
   return (
@@ -71,6 +73,11 @@ export default function AppLayout() {
         <Stack.Screen name="ejercicio-nuevo" />
         <Stack.Screen name="settings" />
         <Stack.Screen name="dispositivos" />
+        {/* Privacidad y datos (franja 4): consents, export and account rights. */}
+        <Stack.Screen name="datos-privacidad" />
+        <Stack.Screen name="cambiar-correo" />
+        <Stack.Screen name="cambiar-nombre" />
+        <Stack.Screen name="cerrar-cuenta" />
         <Stack.Screen name="verificar-correo" />
         <Stack.Screen name="profile-edit" />
         <Stack.Screen name="registrar-peso" />

@@ -26,7 +26,7 @@ export function ConocerFlow() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [index, setIndex] = useState(0);
-  const { query, draft, setDraft, saveDraft, saving } = useSocialProfileDraft();
+  const { query, draft, setDraft, saveDraft, saving, orientationConsent } = useSocialProfileDraft();
   const photos = useQuery({ queryKey: queryKeys.profilePhotos, queryFn: profilePhotosService.list });
   const close = useMutation({
     mutationFn: onboardingService.setSocialStep,
@@ -77,7 +77,12 @@ export function ConocerFlow() {
       ) : (
         <Card>
           <CardContent>
-            <SocialProfileEditor draft={draft} onChange={setDraft} section={step.key} />
+            <SocialProfileEditor
+              draft={draft}
+              onChange={setDraft}
+              orientationConsent={orientationConsent}
+              section={step.key}
+            />
           </CardContent>
         </Card>
       )}

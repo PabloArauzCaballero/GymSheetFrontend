@@ -1,11 +1,13 @@
 /// <reference types="node" />
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { authCopy, signupLegalDocuments } from '@gymsheet/domain';
 import {
   clientPlatform,
   isLegalAcceptanceResponse,
   isReadingLegalDocument,
   isTermsVersionOutdated,
+  legalDocumentRoutes,
   legalVersionLabel,
   outdatedCurrentDocuments,
   termsVersionOf,
@@ -48,10 +50,27 @@ test('a stale termsVersion 409 is recognised and carries the current documents',
   assert.equal(outdatedCurrentDocuments(undefined), undefined);
 });
 
-test('the gate steps aside only on the two document screens', () => {
+test('the gate steps aside only on the three document screens', () => {
   assert.equal(isReadingLegalDocument('/terminos'), true);
   assert.equal(isReadingLegalDocument('/privacidad'), true);
+  assert.equal(isReadingLegalDocument('/normas'), true);
   assert.equal(isReadingLegalDocument('/comunidad'), false);
+});
+
+test('signup and the legal gate cover the community rules too', () => {
+  assert.deepEqual(Object.keys(legalDocumentRoutes), ['TERMS', 'PRIVACY', 'COMMUNITY']);
+  assert.equal(legalDocumentRoutes.COMMUNITY.href, '/(auth)/normas');
+  assert.equal(legalDocumentRoutes.COMMUNITY.label, 'Normas de la comunidad');
+  // The signup checkbox names the three documents it accepts.
+  assert.match(authCopy.terms.plain, /términos.*privacidad.*normas de la comunidad/u);
+  const current = [
+    { document: 'COMMUNITY' as const, version: '2026-08-25' },
+    { document: 'TERMS' as const, version: '2026-08-25' },
+    { document: 'PRIVACY' as const, version: '2026-08-25' },
+  ];
+  assert.deepEqual(signupLegalDocuments(current).map((entry) => entry.document), ['TERMS', 'PRIVACY', 'COMMUNITY']);
+  // A 409 at signup may carry the community rules among the current versions.
+  assert.deepEqual(outdatedCurrentDocuments({ documents: current }), current);
 });
 
 test('date versions read as a date', () => {

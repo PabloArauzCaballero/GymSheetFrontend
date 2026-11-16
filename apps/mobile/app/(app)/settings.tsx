@@ -109,6 +109,13 @@ export default function SettingsScreen() {
             />
           ) : null}
           <SheetRow
+            hint="Consentimientos, copia de tus datos, correo y cierre de la cuenta."
+            icon="shield-checkmark-outline"
+            label="Privacidad y datos"
+            onPress={() => router.push('/datos-privacidad')}
+            testID="settings-privacy"
+          />
+          <SheetRow
             hint={deviceCopy.description}
             icon="phone-portrait-outline"
             label={deviceCopy.title}

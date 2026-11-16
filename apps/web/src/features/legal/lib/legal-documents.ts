@@ -8,6 +8,7 @@ export { legalGateCopy, legalVersionLabel, outdatedCurrentDocuments, termsVersio
 export const legalDocumentLinks: Readonly<Record<LegalDocument, { label: string; href: string }>> = {
   TERMS: { label: legalDocumentLabels.TERMS, href: '/terminos' },
   PRIVACY: { label: legalDocumentLabels.PRIVACY, href: '/privacidad' },
+  COMMUNITY: { label: legalDocumentLabels.COMMUNITY, href: '/normas' },
 };
 
 /** Any request blocked until the person accepts the current documents (428): the shared predicate. */
