@@ -89,7 +89,7 @@ test('a new member answers Conocer, skips photos and keeps the answers after a r
   await page.getByRole('button', { name: 'Bisexual' }).click();
   await expect(page.getByRole('switch', { name: 'Mostrar en mi perfil' })).not.toBeChecked();
   // A sensitive datum: the separate ORIENTATION consent is asked inline before saving.
-  await page.getByRole('checkbox', { name: /Acepto que guarden mi orientación/u }).check();
+  await page.getByRole('checkbox', { name: /Acepto que REPP guarde mi orientación/u }).check();
   await page.getByRole('button', { name: /Continuar/u }).click();
 
   // e) Bio.
