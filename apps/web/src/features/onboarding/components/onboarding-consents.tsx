@@ -1,4 +1,4 @@
-import { consentCopy } from '@gymsheet/domain';
+import { consentCopy, onboardingHealthConsentHint } from '@gymsheet/domain';
 import { Checkbox } from '@/shared/components/ui/checkbox';
 
 /**
@@ -29,9 +29,7 @@ export function OnboardingConsents({
           onChange={(event) => onHealthChange(event.target.checked)}
         />
         <p className="pl-[30px] text-xs leading-5 text-[var(--text-muted)]" id="onboarding-health-purpose">
-          {healthNeeded
-            ? 'Necesario para guardar tus consideraciones físicas. Lo retiras en Ajustes y las borramos.'
-            : 'Opcional. Solo hace falta si escribes consideraciones físicas.'}
+          {healthNeeded ? onboardingHealthConsentHint.needed : onboardingHealthConsentHint.optional}
         </p>
       </div>
       <Checkbox

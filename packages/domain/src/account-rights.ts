@@ -40,12 +40,12 @@ export const emailChangeCopy = {
 
 export const accountExportCopy = {
   title: 'Descargar mis datos',
-  description: 'Prepara una copia de todo lo que guardamos de ti, en un archivo JSON.',
+  description: 'Prepara una copia de tus datos en un archivo JSON. No trae tus archivos: fotos, videos ni audios.',
   request: 'Preparar copia',
-  pending: 'Preparando tu copia. Puede tardar unos minutos.',
+  pending: 'Preparando tu copia. Te avisamos en la app y por correo cuando esté lista.',
   ready: 'Tu copia está lista.',
   download: 'Descargar copia',
-  failed: 'No pudimos preparar tu copia. Inténtalo más tarde.',
+  failed: 'No pudimos preparar tu copia. Te avisamos por correo. Inténtalo más tarde.',
   expires: (date: string) => `Disponible hasta el ${date}.`,
   rateLimited: (wait: string) => `Ya pediste una copia hoy. Pide otra en ${wait}.`,
 } as const;
@@ -81,7 +81,7 @@ export const accountClosureCopy = {
 
 export const goodbyeCopy = {
   title: 'Tu cuenta está cerrada',
-  description: 'Borramos tus datos personales. Gracias por entrenar con nosotros.',
+  description: 'Borramos o dejamos sin tu nombre tus datos, como te mostramos antes de cerrar. Gracias por entrenar con nosotros.',
   action: 'Ir al inicio',
 } as const;
 

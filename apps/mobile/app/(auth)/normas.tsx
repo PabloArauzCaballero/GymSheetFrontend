@@ -15,8 +15,6 @@ const RULE_ICONS: readonly LegalIcon[] = [
   'eye-off-outline',
   'ban-outline',
   'barbell-outline',
-  'mail-unread-outline',
-  'copy-outline',
 ];
 
 const CLAUSES: readonly LegalClause[] = [
@@ -29,8 +27,9 @@ const CLAUSES: readonly LegalClause[] = [
   {
     title: communityRulesCopy.enforcementTitle,
     icon: 'flag-outline',
-    body: communityRulesCopy.enforcement.join(' '),
+    body: communityRulesCopy.enforcement.join('\n\n'),
   },
+  { title: 'Resumen', icon: 'document-text-outline', body: communityRulesCopy.summaryNote },
 ];
 
 /** Lo esencial: los tres primeros títulos, que ya dicen lo que más pesa. */

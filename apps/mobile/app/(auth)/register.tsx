@@ -14,7 +14,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 import { Button, Input, textLinkStyle } from '@/components/ui';
 import { AuthAlert, AuthShell } from '@/components/auth-shell';
-import { Checkbox } from '@/components/checkbox';
 import { registerBenefits, registerFormTitle } from '@/features/first-impression/copy';
 import { EmailSuggestion, FieldHint } from '@/features/first-impression/field-hint';
 import { emailTypoSuggestion, passwordChecks } from '@/features/first-impression/signup-hints';
@@ -28,6 +27,7 @@ import {
 import { legalQueryKeys, legalService } from '@/features/legal/legal-service';
 import { BirthDateField } from '@/features/signup/birth-date-field';
 import { SexField } from '@/features/signup/sex-field';
+import { TermsField } from '@/features/signup/terms-field';
 import { needsFreshTicket, signupServerErrors } from '@/features/signup/signup-logic';
 import { useRegisterTicket } from '@/features/signup/use-register-ticket';
 import { useAuthStore } from '@/state/auth-store';
@@ -212,48 +212,13 @@ export default function RegisterScreen() {
         )}
       />
 
-      <View style={{ gap: spacing.xs }}>
-        <Controller
-          control={control}
-          name="acceptedTerms"
-          render={({ field: { onChange, value } }) => (
-            <Checkbox
-              checked={value}
-              label={authCopy.terms.plain}
-              onChange={onChange}
-            />
-          )}
-        />
-        {errors.acceptedTerms?.message ? (
-          <Text
-            accessibilityLiveRegion="polite"
-            accessibilityRole="alert"
-            style={{ color: colors.danger, fontSize: fontSizes.xs }}
-          >
-            {errors.acceptedTerms.message}
-          </Text>
-        ) : null}
-        {/* «Términos», «Privacidad» y «Normas» a secas: la casilla de encima ya los nombra
-            enteros, y en un iPhone SE «Leer términos» partía en dos líneas. El
-            lector de pantalla oye la versión larga. */}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.lg, rowGap: spacing.xs }}>
-          <Link accessibilityLabel={authCopy.terms.readTerms} href="/(auth)/terminos" numberOfLines={1} style={[textLinkStyle(), { flexShrink: 0 }]}>
-            Términos
-          </Link>
-          <Link
-            accessibilityLabel={authCopy.terms.readPrivacy}
-            href="/(auth)/privacidad"
-            numberOfLines={1}
-            style={[textLinkStyle(), { flexShrink: 0 }]}
-          >
-            Privacidad
-          </Link>
-          {/* The community rules are the third document the checkbox accepts. */}
-          <Link accessibilityLabel={authCopy.terms.readRules} href="/(auth)/normas" numberOfLines={1} style={[textLinkStyle(), { flexShrink: 0 }]}>
-            Normas
-          </Link>
-        </View>
-      </View>
+      <Controller
+        control={control}
+        name="acceptedTerms"
+        render={({ field: { onChange, value } }) => (
+          <TermsField checked={value} error={errors.acceptedTerms?.message} onChange={onChange} />
+        )}
+      />
 
       {failure ? <AuthAlert message={failure} /> : null}
 

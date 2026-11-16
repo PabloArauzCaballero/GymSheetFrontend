@@ -23,29 +23,44 @@ export type ConsentCopy = {
 export const consentCopy: Readonly<Record<ConsentKind, ConsentCopy>> = {
   HEALTH: {
     title: 'Datos de salud',
-    purpose: 'Guardamos tus consideraciones físicas para adaptar tus rutinas.',
+    purpose:
+      'Guardamos lo que escribes sobre tus lesiones o condiciones físicas. Solo lo ves tú, en la copia de tus datos. Hoy no cambia tus rutinas.',
     revokeEffect: 'Borramos tus consideraciones físicas.',
-    grantLabel: 'Acepto que guarden mis consideraciones físicas (dato de salud) para adaptar mis rutinas.',
+    grantLabel:
+      'Acepto que REPP guarde lo que escribo sobre mi salud y mis condiciones físicas. Es opcional y lo puedo retirar en Ajustes.',
   },
   ORIENTATION: {
     title: 'Orientación',
-    purpose: 'Guardamos tu orientación para tu perfil de Conocer. Solo se ve si eliges mostrarla.',
+    purpose:
+      'Guardamos tu orientación para tu perfil de Conocer. Solo se ve si activas «Mostrar en mi perfil». Nunca la usamos para ordenar ni filtrar perfiles.',
     revokeEffect: 'Borramos tu orientación y dejamos de mostrarla.',
-    grantLabel: 'Acepto que guarden mi orientación (dato sensible) para mi perfil de Conocer.',
+    grantLabel:
+      'Acepto que REPP guarde mi orientación (dato sensible) para mi perfil de Conocer. Solo se ve si activo «Mostrar en mi perfil».',
   },
   VERIFICATION_SELFIE: {
     title: 'Selfie de verificación',
-    purpose: 'Usaremos una selfie para comprobar que tu perfil es real.',
-    revokeEffect: 'No usaremos ninguna selfie para verificar tu perfil.',
-    grantLabel: 'Acepto que usen una selfie para verificar mi perfil.',
+    purpose:
+      'Una persona de moderación compara tu selfie con tus fotos para darte la marca «Verificado». Borramos la selfie 30 días después de decidir.',
+    revokeEffect:
+      'Borramos tus selfies y cancelamos la verificación en curso. Si ya estás verificado, la marca se queda.',
+    grantLabel:
+      'Acepto que REPP guarde mi selfie de verificación para que una persona de moderación la compare con mis fotos. Se borra 30 días después de la decisión.',
   },
   PRECISE_LOCATION: {
-    title: 'Ubicación en el mapa',
-    purpose: 'Usamos tu ubicación para mostrarte en el mapa, en una zona de unos 2 km.',
-    revokeEffect: 'Borramos tu ubicación y te quitamos del mapa.',
-    grantLabel: 'Acepto que usen mi ubicación para mostrarme en el mapa, en una zona aproximada.',
+    title: 'Ubicación precisa',
+    purpose:
+      'Guardamos tu última ubicación para mostrarte en el mapa social, en una zona de unos 2 km, y para calcular distancias en Conocer. Nadie ve tu punto exacto.',
+    revokeEffect: 'Borramos tu ubicación y te quitamos del mapa. Conocer calcula distancias desde tu sede.',
+    grantLabel:
+      'Acepto que REPP guarde mi última ubicación para mostrarme en el mapa social en una zona aproximada y para calcular distancias en Conocer.',
   },
 };
+
+/** Helper lines under the health checkbox of onboarding: without and with considerations typed. */
+export const onboardingHealthConsentHint = {
+  optional: 'Opcional. Solo hace falta si escribes consideraciones físicas.',
+  needed: 'Necesario para guardar tus consideraciones físicas. Lo retiras en Ajustes y las borramos.',
+} as const;
 
 export const consentsSectionCopy = {
   title: 'Consentimientos',
@@ -67,6 +82,21 @@ export const consentsSectionCopy = {
 
 /** Every kind, in the backend's order, so lists look the same on every platform. */
 export const consentKindOrder: readonly ConsentKind[] = consentKinds;
+
+/**
+ * The kinds the settings list shows, in `consentKindOrder`. VERIFICATION_SELFIE
+ * stays out until the selfie screen exists (franja 6): add it back here.
+ */
+export const settingsConsentKinds: readonly ConsentKind[] = consentKindOrder.filter(
+  (kind) => kind !== 'VERIFICATION_SELFIE',
+);
+
+/** The consents of the settings list: only `settingsConsentKinds`, in that order. */
+export function settingsConsents<T extends Pick<Consent, 'kind'>>(consents: readonly T[]): T[] {
+  return consents
+    .filter((consent) => settingsConsentKinds.includes(consent.kind))
+    .sort((a, b) => settingsConsentKinds.indexOf(a.kind) - settingsConsentKinds.indexOf(b.kind));
+}
 
 const isConsentKind = (value: unknown): value is ConsentKind =>
   typeof value === 'string' && (consentKinds as readonly string[]).includes(value);

@@ -62,7 +62,7 @@ test('signup and the legal gate cover the community rules too', () => {
   assert.equal(legalDocumentRoutes.COMMUNITY.href, '/(auth)/normas');
   assert.equal(legalDocumentRoutes.COMMUNITY.label, 'Normas de la comunidad');
   // The signup checkbox names the three documents it accepts.
-  assert.match(authCopy.terms.plain, /términos.*privacidad.*normas de la comunidad/u);
+  assert.match(authCopy.terms.plain, /términos.*privacidad \(con su anexo de retención de datos\).*normas de la comunidad/u);
   const current = [
     { document: 'COMMUNITY' as const, version: '2026-08-25' },
     { document: 'TERMS' as const, version: '2026-08-25' },

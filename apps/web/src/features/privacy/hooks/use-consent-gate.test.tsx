@@ -62,7 +62,7 @@ describe('useConsentGate.withConsent', () => {
     expect(save).toHaveBeenCalledTimes(2);
     expect(mocks.confirm.mock.calls[0]?.[0]).toMatchObject({
       title: 'Falta tu consentimiento: Orientación',
-      message: 'Guardamos tu orientación para tu perfil de Conocer. Solo se ve si eliges mostrarla.',
+      message: 'Guardamos tu orientación para tu perfil de Conocer. Solo se ve si activas «Mostrar en mi perfil». Nunca la usamos para ordenar ni filtrar perfiles.',
     });
     expect(mocks.setConsent).toHaveBeenCalledWith('ORIENTATION', { granted: true, version: '2026-12-01' });
   });
