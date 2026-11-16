@@ -1,4 +1,4 @@
-import { pendingProfileItems, pointsChip, profileNudgeTitle, profileProgress } from '@gymsheet/domain';
+import { noOrphan, pendingProfileItems, pointsChip, profileNudgeTitle, profileProgress } from '@gymsheet/domain';
 import {
   Calendar,
   ChevronRight,
@@ -55,8 +55,9 @@ export function CompletionNudge({ completion }: Readonly<{ completion: ProfileCo
   return (
     <section aria-labelledby="profile-nudge-title" className="panel grid gap-4 p-5" data-testid="profile-nudge">
       <div className="grid gap-2">
-        <h2 className="t-headline text-balance" id="profile-nudge-title">
-          {title}
+        {/* Same break as the app: noOrphan, not text-balance (native has no balance, so the two wrapped differently). */}
+        <h2 className="t-headline text-pretty" id="profile-nudge-title">
+          {noOrphan(title)}
         </h2>
         <p className="t-footnote text-pretty text-[var(--text-muted)]">
           {`${progress.label}. Cada dato suma una vez y no se pierde.`}
@@ -102,7 +103,7 @@ export function CompletionError({ onRetry, retrying }: Readonly<{ onRetry: () =>
       <div className="flex items-start gap-3">
         <CloudOff aria-hidden className="mt-0.5 size-5 shrink-0 text-[var(--text-muted)]" />
         <div className="grid gap-0.5">
-          <h2 className="t-headline text-balance">No pudimos cargar lo que te falta del perfil</h2>
+          <h2 className="t-headline text-pretty">{noOrphan('No pudimos cargar tu progreso')}</h2>
           <p className="t-footnote text-pretty text-[var(--text-muted)]">Tus puntos están a salvo. Vuelve a intentarlo en un momento.</p>
         </div>
       </div>

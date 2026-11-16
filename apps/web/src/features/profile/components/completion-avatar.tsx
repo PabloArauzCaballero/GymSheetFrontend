@@ -1,6 +1,6 @@
 'use client';
 
-import { RefreshCw } from 'lucide-react';
+import { CloudOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { mediaProxyUrl } from '@/shared/components/media/domain-image';
 
@@ -16,21 +16,20 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
  * del móvil). El aro arranca vacío y se llena una vez al llegar el dato; con
  * `prefers-reduced-motion` aparece ya lleno (`motion-reduce:transition-none`).
  * Sin dato (`percent === null`) el aro queda en pista: no se pinta un 0 % falso.
- * Si la lectura falló (`onRetry`), la cara entera es un botón «Reintentar».
+ * Si la lectura falló (`failed`), la píldora dice «Sin cargar»: el único
+ * «Reintentar» de esa falla es el de la tarjeta de abajo, no dos botones iguales.
  */
 export function CompletionAvatar({
   photoUrl,
   initials,
   percent,
-  onRetry,
-  retrying = false,
+  failed = false,
 }: Readonly<{
   photoUrl: string | null;
   initials: string;
   percent: number | null;
-  /** Set only when the completion read failed: the ring becomes a retry button. */
-  onRetry?: () => void;
-  retrying?: boolean;
+  /** The completion read failed: the pill says so; the retry lives in the error card only. */
+  failed?: boolean;
 }>) {
   const [shown, setShown] = useState(0);
   useEffect(() => {
@@ -41,7 +40,7 @@ export function CompletionAvatar({
   // A photo that fails to load (expired link, offline) falls back to the initials, never a broken image.
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const shownUrl = photoUrl && photoUrl !== failedUrl ? photoUrl : null;
-  const failed = Boolean(onRetry) && percent === null;
+  const unloaded = failed && percent === null;
 
   const body = (
     <>
@@ -71,37 +70,21 @@ export function CompletionAvatar({
           </span>
         )}
       </span>
-      {percent !== null || failed ? (
-        // Volt lives in the ring only: «Completo» and «Reintentar» read in accent ink, not a second fill.
+      {percent !== null || unloaded ? (
+        // Volt lives in the ring only: «Completo» reads in accent ink, not a second fill.
         <span
           className={`t-footnote absolute bottom-0 inline-flex items-center gap-1 rounded-full border-2 border-[var(--surface)] bg-[var(--surface-highest)] px-3 py-0.5 font-semibold ${
-            complete || failed ? 'text-[var(--accent-ink)]' : ''
+            complete ? 'text-[var(--accent-ink)]' : ''
           }`}
         >
-          {failed ? <RefreshCw aria-hidden className={`size-3.5 ${retrying ? 'animate-spin motion-reduce:animate-none' : ''}`} /> : null}
-          {failed ? (retrying ? 'Reintentando…' : 'Reintentar') : complete ? 'Completo' : `${percent} %`}
+          {unloaded ? <CloudOff aria-hidden className="size-3.5" /> : null}
+          {unloaded ? 'Sin cargar' : complete ? 'Completo' : `${percent} %`}
         </span>
       ) : null}
     </>
   );
   const box = { width: SIZE, height: SIZE + 12 };
 
-  if (failed && onRetry) {
-    return (
-      <button
-        aria-busy={retrying || undefined}
-        aria-label={retrying ? 'No se pudo cargar tu progreso. Reintentando' : 'No se pudo cargar tu progreso del perfil. Reintentar'}
-        className="tap relative mx-auto grid cursor-pointer place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--volt)] disabled:cursor-progress"
-        data-testid="profile-completion-retry-ring"
-        disabled={retrying}
-        onClick={onRetry}
-        style={box}
-        type="button"
-      >
-        {body}
-      </button>
-    );
-  }
   return (
     <figure aria-label={percent === null ? 'Tu foto de perfil' : `Tu foto de perfil. Perfil completo al ${percent} %`} className="relative mx-auto grid place-items-center" role="img" style={box}>
       {body}

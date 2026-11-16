@@ -7,7 +7,7 @@ import { DomainImage } from './domain-image';
  * Tres iniciales dejan de leerse como una persona y empiezan a leerse como una
  * sigla, y en un círculo de 40 px no caben sin encogerse.
  */
-function initialsOf(name: string): string {
+export function initialsOf(name: string): string {
   const words = name.trim().split(/\s+/u).filter(Boolean);
   if (words.length === 0) return '?';
   const first = words[0]?.[0] ?? '';

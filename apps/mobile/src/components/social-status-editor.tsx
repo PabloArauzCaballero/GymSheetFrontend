@@ -108,7 +108,9 @@ export function SocialDiscoverySettingsEditor() {
             mapEnabled: current.profileEnabled ? false : current.mapEnabled,
             expectedVersion: current.version,
           })}
-          variant={current?.profileEnabled ? 'danger' : 'primary'}
+          // Outlined + icon, not an accent fill: the edit screen keeps its accent for saving.
+          icon={current?.profileEnabled ? undefined : 'person-add-outline'}
+          variant={current?.profileEnabled ? 'danger' : 'ghost'}
         />
         {current && !current.profileEnabled ? (
           // Disabled buttons say why, in a secondary tone (repp-diseno §8).

@@ -24,26 +24,27 @@ export function FitnessRow({ progress, pending }: Readonly<{ progress: Progressi
   return (
     // Very large text (row under 14rem, which grows with the root font): one stat per line, figure then label.
     <div className="@container w-full">
-    <dl aria-busy={pending || undefined} className="grid w-full grid-cols-3 divide-x divide-[var(--border)] @max-[14rem]:grid-cols-1 @max-[14rem]:gap-1 @max-[14rem]:divide-x-0" data-testid="profile-fitness-row">
+    <ul aria-busy={pending || undefined} className="grid w-full grid-cols-3 divide-x divide-[var(--border)] @max-[14rem]:grid-cols-1 @max-[14rem]:gap-1 @max-[14rem]:divide-x-0" data-testid="profile-fitness-row">
       {stats.map((stat) => (
-        <div className="grid min-w-0 justify-items-center gap-0.5 px-1 text-center @max-[14rem]:flex @max-[14rem]:flex-wrap @max-[14rem]:items-baseline @max-[14rem]:justify-center @max-[14rem]:gap-x-2" key={stat.key}>
-          {/* text-balance alone still split «días de / racha»: the no-break space keeps the last word company. */}
-          <dt className="t-footnote text-balance text-[var(--text-muted)]">{noOrphan(stat.label)}</dt>
-          <dd className="t-numeric order-first">
+        <li className="grid min-w-0 justify-items-center gap-0.5 px-1 text-center @max-[14rem]:flex @max-[14rem]:flex-wrap @max-[14rem]:items-baseline @max-[14rem]:justify-center @max-[14rem]:gap-x-2" key={stat.key}>
+          {/* Screen readers hear the mobile wording, figure first («70 puntos»); the visual parts are hidden from them. */}
+          <span className="sr-only">
+            {stat.value !== null ? `${stat.value.toLocaleString('es-ES')} ${stat.label}` : `${stat.label}: ${pending ? 'cargando' : 'no disponible'}`}
+          </span>
+          <span aria-hidden className="t-numeric">
             {stat.value !== null ? (
               stat.value.toLocaleString('es-ES')
             ) : pending ? (
               <Skeleton className="h-[1lh] w-10" />
             ) : (
-              <span className="text-[var(--text-muted)]">
-                <span aria-hidden>—</span>
-                <span className="sr-only">No disponible</span>
-              </span>
+              <span className="text-[var(--text-muted)]">—</span>
             )}
-          </dd>
-        </div>
+          </span>
+          {/* text-balance alone still split «días de / racha»: the no-break space keeps the last word company. */}
+          <span aria-hidden className="t-footnote text-balance text-[var(--text-muted)]">{noOrphan(stat.label)}</span>
+        </li>
       ))}
-    </dl>
+    </ul>
     </div>
   );
 }

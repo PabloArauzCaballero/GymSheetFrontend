@@ -6,7 +6,7 @@ import Animated, { useAnimatedProps, useSharedValue, withTiming } from 'react-na
 import Svg, { Circle } from 'react-native-svg';
 import { Text } from '@/components/text';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
-import { DURATION, PREMIUM_EASING, PressableScale } from '@/components/motion';
+import { DURATION, PREMIUM_EASING } from '@/components/motion';
 import { accentPolicy, colors, iconSizes, radii, spacing } from '@/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -23,22 +23,21 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
  * llena con el porcentaje que da el servidor y la píldora de abajo lo dice con
  * cifra. Sin dato todavía (`percent === null`) el aro queda en pista: mejor
  * callar que pintar un 0 % falso. El llenado anima una vez al llegar el dato;
- * con «Reducir movimiento» aparece ya lleno. Si la lectura falló (`onRetry`),
- * la píldora dice «Reintentar» y toda la cara es el botón (132 pt de diana).
+ * con «Reducir movimiento» aparece ya lleno. Si la lectura falló (`failed`),
+ * la píldora dice «Sin cargar»: el único «Reintentar» de esa falla es el de la
+ * tarjeta de abajo, no dos botones iguales.
  */
 export function CompletionAvatar({
   photoUrl,
   initials,
   percent,
-  onRetry,
-  retrying = false,
+  failed = false,
 }: {
   photoUrl: string | null;
   initials: string;
   percent: number | null;
-  /** Set only when the completion read failed: the ring becomes a retry button. */
-  onRetry?: () => void;
-  retrying?: boolean;
+  /** The completion read failed: the pill says so; the retry lives in the error card only. */
+  failed?: boolean;
 }) {
   const reduceMotion = useReduceMotion();
   const progress = useSharedValue(0);
@@ -54,7 +53,7 @@ export function CompletionAvatar({
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const shownUrl = photoUrl && photoUrl !== failedUrl ? photoUrl : null;
 
-  const failed = Boolean(onRetry) && percent === null;
+  const unloaded = failed && percent === null;
   const body = (
     <>
       <Svg height={SIZE} style={{ position: 'absolute' }} width={SIZE}>
@@ -99,7 +98,7 @@ export function CompletionAvatar({
           </View>
         )}
       </View>
-      {percent !== null || failed ? (
+      {percent !== null || unloaded ? (
         <View
           style={{
             position: 'absolute',
@@ -116,9 +115,9 @@ export function CompletionAvatar({
             borderColor: colors.surface,
           }}
         >
-          {failed ? <Ionicons color={accentPolicy.ink} name="refresh" size={iconSizes.sm} /> : null}
-          <Text style={complete || failed ? { color: accentPolicy.ink } : undefined} strong variant="footnote">
-            {failed ? (retrying ? 'Reintentando…' : 'Reintentar') : complete ? 'Completo' : `${percent} %`}
+          {unloaded ? <Ionicons color={colors.textSecondary} name="cloud-offline-outline" size={iconSizes.sm} /> : null}
+          <Text style={complete ? { color: accentPolicy.ink } : undefined} strong variant="footnote">
+            {unloaded ? 'Sin cargar' : complete ? 'Completo' : `${percent} %`}
           </Text>
         </View>
       ) : null}
@@ -126,23 +125,6 @@ export function CompletionAvatar({
   );
   const box = { width: SIZE, height: SIZE + spacing.smd, alignItems: 'center', alignSelf: 'center' } as const;
 
-  if (failed && onRetry) {
-    return (
-      <PressableScale
-        accessibilityHint="Vuelve a pedir cuánto tienes completo"
-        accessibilityLabel={retrying ? 'No se pudo cargar tu progreso. Reintentando' : 'No se pudo cargar tu progreso del perfil. Reintentar'}
-        accessibilityRole="button"
-        accessibilityState={{ busy: retrying, disabled: retrying }}
-        disabled={retrying}
-        haptic="selection"
-        onPress={onRetry}
-        style={box}
-        testID="profile-completion-retry-ring"
-      >
-        {body}
-      </PressableScale>
-    );
-  }
   return (
     <View accessible accessibilityLabel={percent === null ? 'Tu foto de perfil' : `Tu foto de perfil. Perfil completo al ${percent} %`} style={box}>
       {body}

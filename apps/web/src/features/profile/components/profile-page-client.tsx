@@ -102,6 +102,9 @@ export function ProfilePageClient() {
       ? `${profile.data.pesoKg.toLocaleString('es-ES')} kg · ${profile.data.estaturaCm} cm · ${goalLabels[profile.data.objetivo]}`
       : 'Añade peso, estatura y objetivo';
 
+  // One card, two slots: under the nudge on phones, beside the hero on desktop (only one is displayed).
+  const senda = <SendaCard failed={progression.isError} onRetry={() => void progression.refetch()} pending={progression.isPending} progress={progress} />;
+
   return (
     <div className="mx-auto grid w-full grid-cols-1 max-w-[560px] gap-8 lg:max-w-[1040px]">
       <PageHeader
@@ -119,10 +122,9 @@ export function ProfilePageClient() {
           <HeroSurface className="justify-items-center gap-4 py-7" watermark watermarkAt="top">
             <CompletionAvatar
               initials={initialsOf(me.nombreCompleto, me.email)}
-              onRetry={completionFailed ? retryCompletion : undefined}
+              failed={completionFailed}
               percent={completion.data?.percent ?? null}
               photoUrl={own.cardEntry?.photoUrl ?? null}
-              retrying={completion.isFetching}
             />
             <div className="grid justify-items-center gap-2 text-center">
               <h2 className="display-title">{age !== null ? `${me.nombreCompleto}, ${age}` : me.nombreCompleto}</h2>
@@ -150,7 +152,7 @@ export function ProfilePageClient() {
             <CompletionError onRetry={retryCompletion} retrying={completion.isFetching} />
           ) : null}
           <AboutCard bio={own.bio} chips={own.chips} />
-          <SendaCard failed={progression.isError} onRetry={() => void progression.refetch()} pending={progression.isPending} progress={progress} />
+          <div className="lg:hidden">{senda}</div>
 
           <Section title="Tu actividad">
             <RowGroup>
@@ -184,12 +186,16 @@ export function ProfilePageClient() {
           </Section>
         </div>
 
+        {/* Desktop: «Tu senda» sits beside the hero, above the fold; the weight chips are a setting, so they go last. */}
         <div className="grid min-w-0 grid-cols-1 gap-5">
-          <div className="panel grid gap-4 p-5">
-            <WeightIncrementField value={me.pesoIncrementoKg} />
-          </div>
+          <div className="hidden lg:block">{senda}</div>
           <SocialDiscoverySettingsCard />
           <DiscoveryPreferencesCard />
+          <Section title="Incremento de peso">
+            <div className="panel p-5">
+              <WeightIncrementField value={me.pesoIncrementoKg} />
+            </div>
+          </Section>
         </div>
       </div>
 

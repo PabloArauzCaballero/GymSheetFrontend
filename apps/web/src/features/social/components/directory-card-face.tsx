@@ -1,9 +1,10 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, Dumbbell, Info, MapPin, Trophy, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Dumbbell, Info, MapPin, Trophy } from 'lucide-react';
 import { useState } from 'react';
 import type { GymDirectoryEntry } from '@/shared/api/schemas';
 import { DomainImage } from '@/shared/components/media/domain-image';
+import { initialsOf } from '@/shared/components/media/person-avatar';
 import { cn } from '@/shared/lib/cn';
 import { experienceLevelLabels, trainingGoalLabels } from './directory-labels';
 
@@ -83,8 +84,11 @@ export function DirectoryCardFace({
       {current ? (
         <DomainImage alt={`Foto de ${entry.displayName}`} src={current.url} />
       ) : (
-        <span className="grid size-full place-items-center bg-[var(--surface-low)] text-[var(--text-disabled)]">
-          <User aria-hidden className="size-16" />
+        // Same no-photo face as the app: the person's initials in a disc, not a generic glyph.
+        <span className="grid size-full place-items-center bg-[var(--surface-high)]">
+          <span aria-hidden className="grid size-24 place-items-center rounded-full bg-[var(--surface-highest)] text-2xl font-semibold text-[var(--text-muted)]">
+            {initialsOf(entry.displayName)}
+          </span>
         </span>
       )}
 

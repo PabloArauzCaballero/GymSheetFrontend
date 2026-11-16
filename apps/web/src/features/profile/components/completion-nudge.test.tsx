@@ -35,7 +35,7 @@ function completion(items: ProfileCompletion['items']): ProfileCompletion {
 describe('CompletionNudge', () => {
   it('promises exactly the points the server says are left, item by item, with a link to fix each', () => {
     render(<CompletionNudge completion={completion([item('FOTO', 50), item('BIO', 40), item('DATOS', 50, true, true)])} />);
-    expect(screen.getByRole('heading', { name: 'Completa tu perfil y gana +90 puntos' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^Completa tu perfil y gana \+90\spuntos$/ })).toBeInTheDocument();
     // One progress number: items done, the same percent the ring shows (1 of 3 = 33 %).
     expect(screen.getByText('Perfil al 33 %: 1 de 3 datos. Cada dato suma una vez y no se pierde.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Dato FOTO/ })).toHaveAttribute('href', '/profile/editar#fotos');
@@ -59,20 +59,20 @@ describe('completion read failed', () => {
   it('says so where the card would be and retries on demand', () => {
     const onRetry = vi.fn();
     render(<CompletionError onRetry={onRetry} retrying={false} />);
-    expect(screen.getByRole('alert')).toHaveTextContent('No pudimos cargar lo que te falta del perfil');
+    expect(screen.getByRole('alert')).toHaveTextContent('No pudimos cargar tu progreso');
     fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
-  it('turns the ring into a retry button instead of an empty track', () => {
-    const onRetry = vi.fn();
-    render(<CompletionAvatar initials="LP" onRetry={onRetry} percent={null} photoUrl={null} />);
-    fireEvent.click(screen.getByRole('button', { name: 'No se pudo cargar tu progreso del perfil. Reintentar' }));
-    expect(onRetry).toHaveBeenCalledTimes(1);
+  it('marks the ring as not loaded without a second retry button', () => {
+    render(<CompletionAvatar failed initials="LP" percent={null} photoUrl={null} />);
+    // One «Reintentar» per failure: it lives in the error card, the ring only says what happened.
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Tu foto de perfil' })).toHaveTextContent('Sin cargar');
   });
 
   it('keeps the plain ring while the percent is known', () => {
-    render(<CompletionAvatar initials="LP" onRetry={vi.fn()} percent={25} photoUrl={null} />);
+    render(<CompletionAvatar failed initials="LP" percent={25} photoUrl={null} />);
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Tu foto de perfil. Perfil completo al 25 %' })).toBeInTheDocument();
   });

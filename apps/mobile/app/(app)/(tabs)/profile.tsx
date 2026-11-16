@@ -124,10 +124,9 @@ export default function ProfileScreen() {
         <HeroSurface testID="profile-hero" watermark watermarkAt="top">
           <CompletionAvatar
             initials={initialsOf(principal?.nombreCompleto, principal?.email)}
-            onRetry={completionFailed ? retryCompletion : undefined}
+            failed={completionFailed}
             percent={completion.data?.percent ?? null}
             photoUrl={own.cardEntry?.photoUrl ?? null}
-            retrying={completion.isFetching}
           />
           <View style={{ alignItems: 'center', gap: spacing.sm }}>
             <Text accessibilityRole="header" numberOfLines={2} style={{ textAlign: 'center' }} variant="title">

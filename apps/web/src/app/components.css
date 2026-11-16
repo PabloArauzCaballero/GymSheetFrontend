@@ -47,6 +47,10 @@
     backdrop-filter: saturate(1.6) blur(var(--blur-3));
     -webkit-backdrop-filter: saturate(1.6) blur(var(--blur-3));
   }
+  /* Bottom tab bar: solid, so page text never reads through its labels (even 94 % let it show). */
+  .tab-bar-surface {
+    background: var(--surface-sidebar);
+  }
   @supports not (backdrop-filter: blur(1px)) {
     .glass-bar {
       background: var(--surface-sidebar);

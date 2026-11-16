@@ -126,7 +126,7 @@ export function CompletionError({ onRetry, retrying }: { onRetry: () => void; re
       <View accessibilityRole="alert" style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.smd }}>
         <Ionicons color={colors.textSecondary} name="cloud-offline-outline" size={iconSizes.md} />
         <View style={{ flex: 1, gap: spacing.xxs }}>
-          <Text variant="headline">{noOrphan('No pudimos cargar lo que te falta del perfil')}</Text>
+          <Text variant="headline">{noOrphan('No pudimos cargar tu progreso')}</Text>
           <Text tone="secondary" variant="footnote">
             {noOrphan('Tus puntos están a salvo. Vuelve a intentarlo en un momento.')}
           </Text>

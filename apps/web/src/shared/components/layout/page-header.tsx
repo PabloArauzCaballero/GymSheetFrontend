@@ -37,8 +37,10 @@ export function PageHeader({
           <p className="text-[15px] font-semibold leading-5 text-[var(--accent-ink)]">{eyebrow}</p>
         ) : null}
         {titleAction ? (
-          <div className="flex items-start gap-2">
-            <h1 className="display-title min-w-0 flex-1">{title}</h1>
+          // The action wraps under the title only when the title's longest word and the action no
+          // longer fit side by side (very large text on a phone); otherwise the row is unchanged.
+          <div className="flex flex-wrap items-start gap-2">
+            <h1 className="display-title min-w-0 flex-1 basis-[min-content]">{title}</h1>
             {titleAction}
           </div>
         ) : (

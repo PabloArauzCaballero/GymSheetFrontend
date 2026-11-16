@@ -51,15 +51,19 @@ export function PortalShell({
       </aside>
       <div className="min-w-0 pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <header className="glass-bar sticky top-0 z-40 border-b border-[var(--border-subtle)] pt-[env(safe-area-inset-top)]">
-          <div className="flex h-14 items-center justify-between gap-3 px-4 sm:px-6 lg:h-16 lg:px-10">
-            <div className="lg:hidden">
+          {/* Under pressure (very large text on a phone) the bar keeps navigation and help; the brand,
+              theme and logout step aside — both still live in Ajustes, and logout also on Perfil. */}
+          <div className="@container flex h-14 items-center justify-between gap-3 px-4 sm:px-6 lg:h-16 lg:px-10">
+            <div className="lg:hidden @max-[16rem]:hidden">
               <Brand />
             </div>
             <div className="ml-auto flex items-center gap-2">
               <MoreMenu session={session} />
               <TutorialLauncher />
-              <ThemeToggle />
-              <LogoutButton />
+              <div className="flex items-center gap-2 @max-[16rem]:hidden">
+                <ThemeToggle />
+                <LogoutButton />
+              </div>
             </div>
           </div>
         </header>

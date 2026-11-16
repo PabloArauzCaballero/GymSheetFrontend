@@ -14,7 +14,7 @@ export function AboutCard({ bio, chips }: Readonly<{ bio: string | null; chips: 
     <Section title="Sobre ti">
       <Link
         aria-label={bio ? `Tu bio: ${bio}. Editar` : 'Escribe tu bio'}
-        className="panel grid gap-4 p-5 transition-colors duration-[var(--dur-2)] hover:bg-[var(--surface)]"
+        className="panel grid grid-cols-[minmax(0,1fr)] gap-4 p-5 transition-colors duration-[var(--dur-2)] hover:bg-[var(--surface)]"
         data-testid="profile-about"
         href="/profile/editar#sobre-ti"
       >
@@ -32,8 +32,8 @@ export function AboutCard({ bio, chips }: Readonly<{ bio: string | null; chips: 
             {chips.map((chip) => {
               const Icon = CHIP_ICON[chip.kind];
               return (
-                <li className="t-subhead inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface-high)] px-3 py-1.5" key={chip.key}>
-                  <Icon aria-hidden className="size-4 text-[var(--text-muted)]" />
+                <li className="t-subhead inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full [overflow-wrap:anywhere] border border-[var(--border)] bg-[var(--surface-high)] px-3 py-1.5" key={chip.key}>
+                  <Icon aria-hidden className="size-4 shrink-0 text-[var(--text-muted)]" />
                   {chip.label}
                 </li>
               );

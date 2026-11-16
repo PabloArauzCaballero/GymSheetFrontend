@@ -17,14 +17,18 @@ describe('profile hero identity', () => {
     expect(screen.getByText('12.500')).toBeInTheDocument();
     expect(screen.getByText('día de racha')).toBeInTheDocument();
     expect(screen.getByText('sesiones')).toBeInTheDocument();
+    // Screen readers get the mobile wording, figure first.
+    expect(screen.getByText('12.500 puntos')).toHaveClass('sr-only');
+    expect(screen.getByText('3 sesiones')).toHaveClass('sr-only');
   });
 
   it('keeps its three slots while loading and after an error, so the hero never jumps', () => {
     const { rerender } = render(<FitnessRow pending progress={undefined} />);
     expect(screen.getByTestId('profile-fitness-row')).toHaveAttribute('aria-busy', 'true');
-    expect(screen.getAllByRole('term')).toHaveLength(3);
+    expect(screen.getAllByRole('listitem')).toHaveLength(3);
+    expect(screen.getByText('puntos: cargando')).toBeInTheDocument();
     rerender(<FitnessRow pending={false} progress={undefined} />);
-    expect(screen.getAllByText('No disponible')).toHaveLength(3);
+    expect(screen.getAllByText(/: no disponible$/)).toHaveLength(3);
   });
 
   it('renders link and button actions in equal columns', () => {

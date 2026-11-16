@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Lock } from 'lucide-react';
+import { Lock, UserRoundPlus } from 'lucide-react';
 import { notify } from '@/shared/notifications';
 import { socialService } from '@/features/social/services/social-service';
 import { Button } from '@/shared/components/ui/button';
@@ -42,7 +42,8 @@ export function SocialDiscoverySettingsCard() {
       <CardContent className="@container">
         <div className="grid gap-3 @xl:grid-cols-3">
         <Button
-          className="whitespace-normal py-2 text-center"
+          // Off: a 3:1 control outline (≈4.8:1 dark, ≈3.6:1 light); the shared --border is only ~1.3:1.
+          className={`whitespace-normal py-2 text-center ${current.profileEnabled ? '' : 'border-[color-mix(in_srgb,var(--text-muted)_75%,var(--surface))]'}`}
           disabled={busy}
           onClick={() => update.mutate({
             profileEnabled: !current.profileEnabled,
@@ -50,9 +51,12 @@ export function SocialDiscoverySettingsCard() {
             mapEnabled: current.profileEnabled ? false : current.mapEnabled,
             expectedVersion: current.version,
           })}
-          // Secondary: the profile screen's one accent fill is «Editar».
-          variant={current.profileEnabled ? 'danger' : 'secondary'}
-        >{current.profileEnabled ? 'Pausar perfil social' : 'Activar perfil social'}</Button>
+          // Outlined + icon, not an accent fill: the profile screen's one accent fill is «Editar».
+          variant={current.profileEnabled ? 'danger' : 'ghost'}
+        >
+          {current.profileEnabled ? null : <UserRoundPlus aria-hidden className="size-5 shrink-0" />}
+          {current.profileEnabled ? 'Pausar perfil social' : 'Activar perfil social'}
+        </Button>
         <Button
           aria-describedby={locked ? 'social-discovery-locked' : undefined}
           className={dependent}

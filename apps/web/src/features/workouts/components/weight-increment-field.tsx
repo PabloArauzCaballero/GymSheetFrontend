@@ -2,7 +2,8 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { profileService } from '@/features/profile/services/profile-service';
-import { cn } from '@/shared/lib/cn';
+import { Check } from 'lucide-react';
+import { ChoiceChip } from '@/shared/components/ui/choice-chip';
 import { notify } from '@/shared/notifications';
 
 const OPTIONS = [1.25, 2.5, 5] as const;
@@ -14,7 +15,9 @@ const OPTIONS = [1.25, 2.5, 5] as const;
  * registro de series, no un dato sobre la cuenta. Se guarda al tocar, como el
  * resto de preferencias de esta página.
  *
- * Mismo control y mismo texto que en la aplicación móvil.
+ * Mismo control y mismo texto que en la aplicación móvil: el título
+ * («Incremento de peso») lo pone la sección que lo monta, y el chip elegido va
+ * en blanco con su marca, como `FilterChip`, nunca en acento.
  */
 export function WeightIncrementField({ value }: Readonly<{ value: number | undefined }>) {
   const queryClient = useQueryClient();
@@ -30,30 +33,18 @@ export function WeightIncrementField({ value }: Readonly<{ value: number | undef
   });
 
   return (
-    <div className="grid gap-2">
-      <p className="text-sm font-medium text-[var(--text)]">Chips de peso</p>
-      <p className="text-xs text-[var(--text-muted)]">
+    <div className="grid gap-3">
+      <p className="t-footnote text-pretty text-[var(--text-muted)]">
         Cuánto suma cada chip («+{current.toLocaleString('es-ES')} kg») al registrar una serie.
       </p>
       <div className="flex flex-wrap gap-2">
         {OPTIONS.map((option) => {
           const active = option === current;
           return (
-            <button
-              aria-pressed={active}
-              className={cn(
-                'min-h-11 min-w-11 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors',
-                active
-                  ? 'border-[var(--volt)] bg-[color-mix(in_srgb,var(--volt)_14%,transparent)] text-[var(--text)]'
-                  : 'border-[var(--border-subtle)] bg-[var(--surface-low)] text-[var(--text-muted)]',
-              )}
-              disabled={save.isPending}
-              key={option}
-              onClick={() => save.mutate(option)}
-              type="button"
-            >
+            <ChoiceChip className="gap-1.5" disabled={save.isPending} key={option} onClick={() => save.mutate(option)} selected={active}>
+              {active ? <Check aria-hidden className="size-4" /> : null}
               {option.toLocaleString('es-ES')} kg
-            </button>
+            </ChoiceChip>
           );
         })}
       </div>

@@ -12,8 +12,8 @@ import { activeHrefFor, NavAlert, NavigationList, useInteractionAlerts } from '.
 import { tabBarFor } from './tab-bar-config';
 
 /**
- * Barra de pestañas inferior, la del móvil: vidrio oscuro, cuatro destinos con
- * icono y rótulo, y la píldora jade suave detrás del activo. Lo que no cabe
+ * Barra de pestañas inferior, la del móvil: superficie casi opaca (el texto de
+ * la página no se transparenta), cinco destinos con icono y rótulo, y la píldora jade suave detrás del activo. Lo que no cabe
  * vive en «Más», como Ajustes vive detrás de Perfil en la app.
  */
 export function TabBar({ session }: Readonly<{ session: SessionPrincipal }>) {
@@ -37,12 +37,15 @@ export function TabBar({ session }: Readonly<{ session: SessionPrincipal }>) {
   const activeHref = parent && tabs.some((tab) => tab.href === parent) ? parent : ownHref;
 
   const tabClasses =
-    'tap relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 text-xs font-semibold leading-none';
+    // Never a fixed width: five tabs always share the bar (min-w-0). With labels, each tab grows from its
+    // label's width (flex-auto) so «Marketplace» keeps room down to 360 px; icon-only, they split it evenly.
+    'tap relative flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-xs font-semibold leading-none @min-[22.5rem]:flex-auto';
 
   return (
     <nav
       aria-label="Pestañas"
-      className="glass-bar fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border-subtle)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:hidden"
+      data-tab-bar
+      className="tab-bar-surface @container fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border-subtle)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:hidden"
     >
       <div className="mx-auto flex max-w-xl items-stretch px-2 pt-1.5">
         {tabs.map((tab) => {
@@ -56,7 +59,7 @@ export function TabBar({ session }: Readonly<{ session: SessionPrincipal }>) {
               href={tab.href}
               key={tab.href}
             >
-              <span className="relative grid h-8 w-14 place-items-center">
+              <span className="relative grid h-8 w-full max-w-14 place-items-center">
                 <span
                   aria-hidden
                   className={cn(
@@ -73,7 +76,8 @@ export function TabBar({ session }: Readonly<{ session: SessionPrincipal }>) {
                   <NavAlert count={interactionAlerts} floating />
                 ) : null}
               </span>
-              {tab.label}
+              {/* Five labels need ~22.5rem: narrower (or with large text) the bar goes icon-only, the name stays for screen readers. */}
+              <span className="whitespace-nowrap @max-[22.5rem]:sr-only">{tab.label}</span>
             </Link>
           );
         })}
