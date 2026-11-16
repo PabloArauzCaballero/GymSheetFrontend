@@ -38,6 +38,12 @@ export const SWIPE_REPLY_THRESHOLD = 64;
 const BIG = 18;
 const SMALL = 6;
 const TAIL_W = 8;
+/**
+ * Side margin of a message row. The tail hangs `TAIL_W` outside the bubble, so
+ * with the old 4 pt it was clipped by the screen edge; this leaves the tail
+ * tip 4 pt inside and the bubble body 12 pt in, like WhatsApp.
+ */
+export const BUBBLE_ROW_INSET = TAIL_W + spacing.xs;
 const TAIL_H = 13;
 
 /** `pending`: la burbuja optimista, todavía sin confirmar por el servidor (reloj, como WhatsApp). */
@@ -234,7 +240,7 @@ export function MessageBubble({
         alignSelf: 'stretch',
         // Lista invertida: el margen inferior es el hueco que se ve arriba.
         marginBottom: groupedWithOlder ? 2 : spacing.sm,
-        paddingHorizontal: spacing.xs,
+        paddingHorizontal: BUBBLE_ROW_INSET,
         paddingBottom: reactions.length ? 18 : 0,
         backgroundColor: highlighted ? chatColors.focusFlash : 'transparent',
       }}
