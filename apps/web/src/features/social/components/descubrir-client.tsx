@@ -7,7 +7,7 @@ import { discoveryService } from '@/features/social/services/discovery-service';
 import { directoryKeys } from '@/features/social/services/directory-keys';
 import { needsDiscoveryPreferences } from '@gymsheet/domain';
 import { ApiError } from '@/shared/api/api-error';
-import type { GymDirectoryEntry, SwipeDirection, UndoSwipeResult } from '@/shared/api/schemas';
+import type { DiscoveryCard, SwipeDirection, UndoSwipeResult } from '@/shared/api/schemas';
 import { queryKeys } from '@/shared/api/query-keys';
 import { Button } from '@/shared/components/ui/button';
 import { notify } from '@/shared/notifications';
@@ -16,8 +16,8 @@ import { DirectorySwipeDeck } from './directory-swipe-deck';
 import { MatchCelebration } from './match-celebration';
 import { MemberDetailSheet } from './member-detail-sheet';
 
-type Decision = { entry: GymDirectoryEntry; direction: SwipeDirection; filterKey: string };
-type FilteredEntry = { entry: GymDirectoryEntry; filterKey: string };
+type Decision = { entry: DiscoveryCard; direction: SwipeDirection; filterKey: string };
+type FilteredEntry = { entry: DiscoveryCard; filterKey: string };
 
 /** Cartas por reparto. El backend admite hasta 30; diez llenan una sesión corta. */
 const DECK_SIZE = 10;
@@ -41,8 +41,8 @@ export function DescubrirClient({
   sucursalId: string;
 }>) {
   const queryClient = useQueryClient();
-  const [queue, setQueue] = useState<GymDirectoryEntry[]>([]);
-  const [history, setHistory] = useState<GymDirectoryEntry[]>([]);
+  const [queue, setQueue] = useState<DiscoveryCard[]>([]);
+  const [history, setHistory] = useState<DiscoveryCard[]>([]);
   const [match, setMatch] = useState<FilteredEntry | null>(null);
   const [detail, setDetail] = useState<FilteredEntry | null>(null);
 
@@ -76,7 +76,7 @@ export function DescubrirClient({
   // render (patrón admitido por React, el mismo que usa `DomainImage`). Un
   // `useEffect` pintaría un fotograma con la cola anterior justo después de
   // cambiar de filtro, que es cuando más se nota.
-  const [syncedDeck, setSyncedDeck] = useState<GymDirectoryEntry[] | null>(null);
+  const [syncedDeck, setSyncedDeck] = useState<DiscoveryCard[] | null>(null);
   if (deck.data && deck.data !== syncedDeck) {
     setSyncedDeck(deck.data);
     setQueue(deck.data);

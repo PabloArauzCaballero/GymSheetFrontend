@@ -12,7 +12,8 @@ import type { SocialMapBounds } from '@/shared/api/schemas';
 import { mapMarkerColors } from '@/shared/theme/map-marker-colors';
 import { isEmailVerificationRequired } from '@/shared/api/email-verification';
 import { EmailVerificationRequired } from '@/shared/components/feedback/email-verification-required';
-import { isSocialMapDisabled } from '@gymsheet/domain';
+import { isMatchOutcome, isSocialMapDisabled } from '@gymsheet/domain';
+import { queryKeys } from '@/shared/api/query-keys';
 import { SocialMapDisabled } from './social-map-disabled';
 
 type Layer = 'BOTH' | 'PEOPLE' | 'GYMS';
@@ -79,7 +80,11 @@ export function SocialMapClient({ viewerId }: Readonly<{ viewerId: string }>) {
   });
   const connect = useMutation({
     mutationFn: (userId: string) => socialService.sendConnection(userId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['social-map', viewerId, 'people', cellId] }),
+    // A LIKE back is the match: the backend opens the chat in the same step.
+    onSuccess: (connection) => Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['social-map', viewerId, 'people', cellId] }),
+      isMatchOutcome(connection) ? queryClient.invalidateQueries({ queryKey: queryKeys.conversations }) : null,
+    ]),
   });
 
   const visibleGyms = useMemo(() => {

@@ -146,7 +146,7 @@ test('H3.S2.M3 deshacer un paso devuelve la carta y conserva los bloqueos', asyn
   // el endpoint undo sólo revierte la decisión sobre Ana y nunca debe tocar el bloqueo.
   let unblockCalls = 0;
   await page.route('**/api/backend/me/discovery/deck**', async (route) => {
-    await fulfill(route, passed && !undone ? [] : [entry()]);
+    await fulfill(route, passed && !undone ? [] : [{ ...entry(), reasons: [], distanceKm: null }]);
   });
   await page.route('**/api/backend/me/discovery/swipes', async (route) => {
     passed = route.request().postDataJSON().direction === 'PASS';

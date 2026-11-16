@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { chatMessageSchema, readReceiptSettingsSchema, setDisappearingMessagesResponseSchema, setMessageReactionResponseSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema, musicPlaylistSchema, musicPlaylistPageSchema } from '@gymsheet/schemas';
+import { chatMessageSchema, readReceiptSettingsSchema, setDisappearingMessagesResponseSchema, setMessageReactionResponseSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema, discoveryDeckSchema, musicPlaylistSchema, musicPlaylistPageSchema } from '@gymsheet/schemas';
 import type { RoutineVisibility } from '@gymsheet/types';
 import type { DiscoveryIntent, MusicVisibility, SocialMapBounds, SocialMapCoordinates } from '@gymsheet/schemas';
 import {
@@ -738,7 +738,7 @@ export const discoveryService = {
   deck: (filters: DirectoryFilters = {}) =>
     apiClient.request(
       `/me/discovery/deck?${socialQueryString(filters)}`,
-      z.array(gymDirectoryEntrySchema),
+      discoveryDeckSchema,
       { method: 'GET' },
     ),
   /** «Me gusta» mutuo = match automático: la respuesta llega con `matched: true`. */

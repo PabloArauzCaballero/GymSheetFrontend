@@ -14,6 +14,8 @@ import {
 import { SocialAboutSection, hasAboutContent } from './about/social-about-section';
 import { socialStatusLabels } from './social-status-labels';
 import { galleryOf } from './directory-card-face';
+import { DiscoveryContextBlock } from './discovery-card-context';
+import { isDiscoveryCard } from '@gymsheet/domain';
 
 type DetailRow = { icon: ReactNode; label: string; value: string };
 type DetailSection = { key: string; title: string; rows: DetailRow[] };
@@ -22,8 +24,8 @@ type DetailSection = { key: string; title: string; rows: DetailRow[] };
  * Las secciones que la persona ha rellenado. Nada más.
  *
  * Una sección vacía con un guion dentro no informa de nada y deja la ficha
- * llena de huecos esperando datos que este backend no tiene: aquí no hay
- * ubicación ni distancia, así que tampoco hay sitios reservados para ellos.
+ * llena de huecos esperando datos que no llegan. The rounded distance exists
+ * only on deck cards and is shown by `DiscoveryContextBlock`, not here.
  * Bio, interests and habits live in `SocialAboutSection`, which renders only
  * what was answered.
  */
@@ -139,6 +141,8 @@ export function MemberDetailSheet({
         }
       >
         <div className="grid gap-6">
+          {/* Opened from the deck: why this person shows up, never whether they are online. */}
+          {isDiscoveryCard(entry) ? <DiscoveryContextBlock ranking={entry} /> : null}
           {photos.map((photo, position) => {
             const section = sections[position];
             return (

@@ -40,6 +40,9 @@ function validCandidate() {
     experienceLevel: 'BEGINNER',
     points: 0,
     levelCode: null,
+    // Deck cards always carry their ranking context (backend franja 5).
+    reasons: ['SAME_GOAL', 'VERIFIED'],
+    distanceKm: 2,
   };
 }
 

@@ -28,3 +28,5 @@ export * from './account-security';
 export * from './privacy';
 export * from './account-rights';
 export * from './community-rules';
+export * from './discovery-reasons';
+export * from './connection-outcome';

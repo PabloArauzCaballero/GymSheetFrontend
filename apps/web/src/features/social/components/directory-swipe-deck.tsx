@@ -3,7 +3,7 @@
 import { AnimatePresence } from 'framer-motion';
 import { Heart, RotateCcw, Star, X } from 'lucide-react';
 import type { ReactNode } from 'react';
-import type { GymDirectoryEntry, SwipeDirection } from '@/shared/api/schemas';
+import type { DiscoveryCard, SwipeDirection } from '@/shared/api/schemas';
 import { deckActions } from '@/shared/theme/metric-colors';
 import { SwipeCard } from './swipe-card';
 
@@ -34,9 +34,9 @@ export function DirectorySwipeDeck({
   decidePending,
   undoPending,
 }: Readonly<{
-  entries: GymDirectoryEntry[];
-  onDecide: (entry: GymDirectoryEntry, direction: SwipeDirection) => void;
-  onInfo: (entry: GymDirectoryEntry) => void;
+  entries: DiscoveryCard[];
+  onDecide: (entry: DiscoveryCard, direction: SwipeDirection) => void;
+  onInfo: (entry: DiscoveryCard) => void;
   onUndo: () => void;
   canUndo: boolean;
   decidePending: boolean;
