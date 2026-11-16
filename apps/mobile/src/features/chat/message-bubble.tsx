@@ -185,6 +185,12 @@ export function MessageBubble({
   const edited = Boolean(message.editedAt) && !tombstone;
   const temporary = Boolean(message.expiresAt) && !tombstone;
   const showReceipt = mine && !tombstone && receipt;
+  // A voice note leaves free room right of its duration: the time sits there,
+  // as in WhatsApp, instead of adding a whole line (the bubble was ~74 pt tall).
+  // Only the player itself (`ChatAudioMessage`): view-once and unavailable
+  // variants fill their line.
+  const overlayMeta = Boolean(body)
+    || (message.type === 'audio' && !tombstone && !message.viewOnce && Boolean(message.mediaUrl));
 
   const tick = () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   const pan = Gesture.Pan()
@@ -296,7 +302,7 @@ export function MessageBubble({
                 <Text style={{ color: 'transparent', fontSize: fontSizes.micro }}>{spacer}</Text>
               </Text>
             ) : null}
-            <View style={body ? { position: 'absolute', right: spacing.sm + 2, bottom: 5 } : { alignSelf: 'flex-end', marginTop: 2 }}>
+            <View style={overlayMeta ? { position: 'absolute', right: spacing.sm + 2, bottom: 5 } : { alignSelf: 'flex-end', marginTop: 2 }}>
               {meta}
             </View>
             {tail ? <Tail color={fill} mine={mine} /> : null}

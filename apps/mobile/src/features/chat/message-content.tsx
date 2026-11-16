@@ -137,8 +137,10 @@ const ChatAudioMessage = memo(function ChatAudioMessage({ messageId, uri, token,
   const ink = mine ? colors.text : accentPolicy.ink;
   const { muted } = bubbleInk(mine);
 
-  if (!token && !local) return <Text style={{ color: muted, fontSize: fontSizes.sm }}>Audio no disponible.</Text>;
-  if (status.error && !failed) return <Text style={{ color: muted, fontSize: fontSizes.sm }}>Este audio ya no está disponible.</Text>;
+  // The bubble overlays the time bottom-right of a voice note; these notices
+  // span the whole line, so they reserve that line for it.
+  if (!token && !local) return <Text style={{ color: muted, fontSize: fontSizes.sm, paddingBottom: spacing.md }}>Audio no disponible.</Text>;
+  if (status.error && !failed) return <Text style={{ color: muted, fontSize: fontSizes.sm, paddingBottom: spacing.md }}>Este audio ya no está disponible.</Text>;
 
   const togglePlayback = async () => {
     if (failed) {
@@ -166,7 +168,8 @@ const ChatAudioMessage = memo(function ChatAudioMessage({ messageId, uri, token,
         haptic="none"
         onPress={() => void togglePlayback()}
         scaleTo={0.9}
-        style={{ width: minTouchTarget, height: minTouchTarget, alignItems: 'center', justifyContent: 'center' }}
+        // Pulled toward the bubble edge so the icon doesn't float; the 44 pt target stays.
+        style={{ width: minTouchTarget, height: minTouchTarget, marginLeft: -spacing.sm, alignItems: 'center', justifyContent: 'center' }}
       >
         {loading
           ? <ActivityIndicator color={ink} size="small" />
