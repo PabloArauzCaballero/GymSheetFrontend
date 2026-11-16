@@ -15,6 +15,7 @@ import { storyThumbnailUrl } from '@/components/story-thumbnail';
 import { env } from '@/config/env';
 import { useMediaAccessToken } from '@/features/chat/use-media-access-token';
 import { ErrorState, Skeleton } from '@/components/feedback';
+import { useScreenFrame } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
 import { useStoryPrefs } from '@/state/story-prefs-store';
@@ -22,7 +23,7 @@ import { useAuthStore } from '@/state/auth-store';
 import { initialsOf } from '@/lib/format';
 import { requestId } from '@/lib/request-id';
 import { canSubmitStoryAudience, toggleStoryAudienceRecipient } from '@/lib/story-audience-selection';
-import { accentPolicy, colors, fontSizes, gutter, iconSizes, minTouchTarget, overlay, radii, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, spacing } from '@/theme';
 
 const AVATAR_SIZE = 60;
 /** Diámetro del botón «+» sobre el avatar propio. */
@@ -104,9 +105,11 @@ function StoryRing({
   onThumbnailError?: () => void;
 }) {
   // A broken thumbnail (expired token, purged story) falls back to the avatar
-  // instead of leaving an empty circle.
-  const [failedUri, setFailedUri] = useState<string | null>(null);
-  const showThumbnail = thumbnail !== null && thumbnail.uri !== failedUri;
+  // instead of leaving an empty circle. Keyed by URI *and* token: after the
+  // token refresh the same URI must get another try.
+  const [failedKey, setFailedKey] = useState<string | null>(null);
+  const thumbnailKey = thumbnail ? `${thumbnail.uri}|${thumbnail.token}` : null;
+  const showThumbnail = thumbnail !== null && thumbnailKey !== failedKey;
   return (
     <View style={{ width: RING_OUTER, height: RING_OUTER, alignItems: 'center', justifyContent: 'center' }}>
       {/* Capa 1 — el aro. Con todo visto es un gris apagado y no «nada»: que
@@ -142,7 +145,7 @@ function StoryRing({
             cachePolicy="memory-disk"
             contentFit="cover"
             onError={() => {
-              setFailedUri(thumbnail.uri);
+              setFailedKey(thumbnailKey);
               onThumbnailError?.();
             }}
             recyclingKey={thumbnail.uri}
@@ -458,6 +461,8 @@ export function StoriesBar() {
   });
   const myPhotoUrl = myPhotos.data?.[0]?.url ?? null;
   const { token: mediaToken, onMediaError } = useMediaAccessToken();
+  // Same gutter `ScrollScreen` pads with (wider on tablets and in landscape).
+  const frame = useScreenFrame();
   const thumbnailOf = (stories: StoryFeedEntry['stories']): StoryThumbnail => {
     const uri = mediaToken ? storyThumbnailUrl(stories, env.apiUrl) : null;
     return uri && mediaToken ? { uri, token: mediaToken } : null;
@@ -624,10 +629,15 @@ export function StoriesBar() {
         // of being clipped at the gutter mid-avatar; the padding keeps the first
         // ring aligned with the rest of the content.
         <ScrollView
-          contentContainerStyle={{ gap: spacing.md, paddingVertical: spacing.xs, paddingHorizontal: gutter }}
+          contentContainerStyle={{
+            gap: spacing.md,
+            paddingVertical: spacing.xs,
+            paddingLeft: frame.gutter + frame.insets.left,
+            paddingRight: frame.gutter + frame.insets.right,
+          }}
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={{ marginHorizontal: -gutter }}
+          style={{ marginLeft: -(frame.gutter + frame.insets.left), marginRight: -(frame.gutter + frame.insets.right) }}
         >
           {/* Los dos pulsables son hermanos, no uno dentro de otro: en Android
               el padre se queda con el toque destinado al hijo, y el «+» dejaba

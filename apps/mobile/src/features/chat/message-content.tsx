@@ -185,8 +185,9 @@ const ChatAudioMessage = memo(function ChatAudioMessage({ messageId, uri, token,
             accessibilityLabel={chatAudioPlayerAccessibilityLabel(status.isLoaded, status.currentTime, status.duration)}
             style={{ color: muted, fontSize: fontSizes.xs, fontVariant: ['tabular-nums'] }}
           >
+            {/* Short on purpose: the bubble's time overlays the right of this line. */}
             {failed
-              ? 'Toca para reintentar'
+              ? 'Reintentar'
               : status.isLoaded ? `${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, '0')}` : 'Nota de voz'}
           </Text>
         </View>
