@@ -85,3 +85,17 @@ test('si aparcar falla o se cancela, revoca como siempre', async () => {
     assert.deepEqual(calls, ['push', 'read', 'revoke:64', 'clear']);
   }
 });
+
+test('borra el archivo de datos descargado aunque falle, después de los tokens', async () => {
+  const { calls, steps } = recorder({
+    revokeRefreshToken: async () => {
+      throw new Error('offline');
+    },
+    clearCachedFiles: async () => {
+      calls.push('files');
+      throw new Error('disk');
+    },
+  });
+  await endSession(steps);
+  assert.deepEqual(calls, ['push', 'read', 'clear', 'files']);
+});

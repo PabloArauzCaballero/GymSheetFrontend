@@ -30,6 +30,7 @@ async function forward(request: NextRequest, parts: string[]) {
     // defecto los corta a mitad de camino.
     timeoutMs:
       path.startsWith('/export/') ||
+      path.startsWith('/me/export/') ||
       path === '/admin/media' ||
       path === '/me/stories' ||
       path.startsWith('/me/stories/') ||

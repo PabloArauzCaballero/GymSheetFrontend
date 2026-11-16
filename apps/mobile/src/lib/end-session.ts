@@ -20,6 +20,8 @@ export type EndSessionSteps = {
   clearTokens: () => Promise<void>;
   /** `true` when the token was parked for quick login and must stay alive. */
   parkForQuickLogin?: (refreshToken: string) => Promise<boolean>;
+  /** Files this account left on the device (the downloaded data export). Best effort. */
+  clearCachedFiles?: () => Promise<void>;
 };
 
 export async function endSession(steps: EndSessionSteps): Promise<void> {
@@ -40,4 +42,6 @@ export async function endSession(steps: EndSessionSteps): Promise<void> {
     // Revocación remota de buena fe; lo local se borra igual.
   }
   await steps.clearTokens();
+  // The next person to sign in on this device must not find this account's data.
+  await steps.clearCachedFiles?.().catch(() => undefined);
 }

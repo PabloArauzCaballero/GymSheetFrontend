@@ -3,9 +3,8 @@ import * as Sharing from 'expo-sharing';
 import { apiClient } from '@/api/client';
 import { env } from '@/config/env';
 import { secureStoreTokenProvider } from '@/storage/secure-store';
+import { cachedExportPath, deleteCachedExport } from '@/storage/cached-export';
 import { accountExportStatusSchema } from '@gymsheet/schemas';
-
-const FILE_NAME = 'repp-mis-datos.json';
 
 async function download(downloadPath: string, target: string) {
   const token = await secureStoreTokenProvider.getAccessToken();
@@ -18,14 +17,14 @@ async function download(downloadPath: string, target: string) {
 /**
  * Downloads the account copy (authenticated, so never a plain link) into the
  * cache and hands it to the platform share sheet: Files, Drive, mail. The
- * cached copy is overwritten by the next download and deleted when the account
- * is closed (`deleteCachedExport`); deleting it right after the sheet resolves
+ * cached copy is overwritten by the next download and deleted at logout and
+ * account closure (`deleteCachedExport`); deleting it right after the sheet resolves
  * could pull the file from under the receiving app on Android.
  * `false` when this device cannot share files.
  */
 export async function shareAccountExport(exportId: string, downloadPath: string): Promise<boolean> {
-  if (!FileSystem.cacheDirectory || !(await Sharing.isAvailableAsync())) return false;
-  const target = `${FileSystem.cacheDirectory}${FILE_NAME}`;
+  const target = cachedExportPath();
+  if (!target || !(await Sharing.isAvailableAsync())) return false;
   let result = await download(downloadPath, target);
   if (result.status === 401) {
     // Through the shared client once: it renews the session (or ends it).
@@ -40,8 +39,4 @@ export async function shareAccountExport(exportId: string, downloadPath: string)
   return true;
 }
 
-/** Best effort: the copy left in the cache by the last download. */
-export async function deleteCachedExport(): Promise<void> {
-  if (!FileSystem.cacheDirectory) return;
-  await FileSystem.deleteAsync(`${FileSystem.cacheDirectory}${FILE_NAME}`, { idempotent: true }).catch(() => undefined);
-}
+export { deleteCachedExport };

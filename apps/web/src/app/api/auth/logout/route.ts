@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { isTrustedMutation } from '@/shared/server/csrf';
 import { expiredSessionCookieOptions, SESSION_COOKIE } from '@/shared/server/auth-cookie';
+import { safeReturnUrl } from '@/shared/server/safe-return-url';
 
 function clearSession(response: NextResponse) {
   response.cookies.set(SESSION_COOKIE, '', expiredSessionCookieOptions());
@@ -8,12 +9,8 @@ function clearSession(response: NextResponse) {
 }
 
 export function GET(request: NextRequest) {
-  const requestedReturn = request.nextUrl.searchParams.get('returnTo');
-  const returnTo =
-    requestedReturn?.startsWith('/') && !requestedReturn.startsWith('//')
-      ? requestedReturn
-      : '/login';
-  return clearSession(NextResponse.redirect(new URL(returnTo, request.url)));
+  const returnTo = safeReturnUrl(request.nextUrl.searchParams.get('returnTo'), request.url);
+  return clearSession(NextResponse.redirect(returnTo));
 }
 
 export function POST(request: NextRequest) {

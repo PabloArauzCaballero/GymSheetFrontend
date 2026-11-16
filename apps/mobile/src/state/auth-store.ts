@@ -28,6 +28,11 @@ import {
 } from '@/storage/biometric-login';
 import type { QuickLoginOutcome } from '@/storage/quick-login';
 
+/** Loaded on demand so the store keeps no static native-module import (tests run it in node). */
+function clearCachedFiles(): Promise<void> {
+  return import('@/storage/cached-export').then((files) => files.deleteCachedExport()).catch(() => undefined);
+}
+
 /**
  * The shared principal, `emailVerified` included (optional, so a backend
  * without the field reads as «unknown», not «unverified»).
@@ -226,6 +231,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
         clearTokens: () => secureStoreAuthStorage.clearTokens(),
         // Parked only for the account that turned quick login on.
         parkForQuickLogin: (refreshToken) => parkForQuickLogin(refreshToken, get().principal?.id ?? ''),
+        clearCachedFiles,
       });
       // The legal block belongs to the account that just left.
       useLegalGateStore.getState().clear();
@@ -259,6 +265,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
  */
 setSessionLostHandler(() => {
   if (useAuthStore.getState().status === 'unauthenticated') return;
+  void clearCachedFiles();
   useLegalGateStore.getState().clear();
   setActiveTenant(null);
   useAuthStore.setState({ status: 'unauthenticated', principal: null, emailVerified: null });
