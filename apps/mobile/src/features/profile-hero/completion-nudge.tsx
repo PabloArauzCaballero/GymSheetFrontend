@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ProfileCompletion, ProfileCompletionItem } from '@gymsheet/schemas';
 import { noOrphan, pendingProfileItems, pointsChip, profileNudgeTitle, profileProgress } from '@gymsheet/domain';
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { Skeleton } from '@/components/feedback';
 import { Card, Divider } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
@@ -42,24 +42,28 @@ export function PointsChip({ points }: { points: number }) {
 }
 
 function NudgeRow({ item, onPress }: { item: ProfileCompletionItem; onPress: () => void }) {
+  // Past Dynamic Type ×1.3 the chip beside the text left it ~75 pt at 320 («prim/era f/oto»): it moves under the text.
+  const stacked = useWindowDimensions().fontScale > 1.3;
+  const chip = <PointsChip points={item.points} />;
   return (
     <PressableScale
       accessibilityHint={item.hint}
       accessibilityLabel={`${item.label}. Suma ${item.points} puntos.`}
       onPress={onPress}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd, minHeight: minTouchTarget + spacing.sm, paddingVertical: spacing.smd }}
+      style={{ flexDirection: 'row', alignItems: stacked ? 'flex-start' : 'center', gap: spacing.smd, minHeight: minTouchTarget + spacing.sm, paddingVertical: spacing.smd }}
       testID={`profile-nudge-${item.code}`}
     >
       <Ionicons color={colors.textSecondary} name={PROFILE_ITEM_ICON[item.code] ?? 'ellipse-outline'} size={iconSizes.md} />
-      <View style={{ flex: 1, gap: spacing.xxs }}>
+      <View style={{ flex: 1, gap: spacing.xxs, alignItems: 'flex-start' }}>
         <Text strong variant="subhead">
           {noOrphan(item.label)}
         </Text>
         <Text tone="secondary" variant="footnote">
           {noOrphan(item.hint)}
         </Text>
+        {stacked ? chip : null}
       </View>
-      <PointsChip points={item.points} />
+      {stacked ? null : chip}
     </PressableScale>
   );
 }

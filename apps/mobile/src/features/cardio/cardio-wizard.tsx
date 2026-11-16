@@ -87,7 +87,8 @@ export function CardioWizardScreen() {
   return (
     <ScrollScreen>
       <BackLink />
-      <ScreenHeader detail subtitle={`Paso ${phase + 1} de ${STEPS.length}`} title="Plan de cardio" />
+      {/* StepProgress already says «Paso N de 6»: a header subtitle repeated it. */}
+      <ScreenHeader detail title="Plan de cardio" />
       <StepProgress current={phase} steps={STEPS} />
       <Animated.View entering={enter} exiting={exit} key={phase}>
         <Phase errors={errors} form={form} set={set} showErrors={showErrors} />

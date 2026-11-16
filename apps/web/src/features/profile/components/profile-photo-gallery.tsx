@@ -81,7 +81,7 @@ export function ProfilePhotoGallery({ header }: Readonly<{ header?: ReactNode }>
           // and a disabled button cannot take it (focus would fall to <body>).
           <button
             aria-disabled={upload.isPending || undefined}
-            className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-[8px] border border-dashed border-[var(--border-subtle)] text-[var(--text-muted)] transition-colors hover:border-[var(--volt)] hover:text-[var(--text)] aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+            className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-[8px] border border-dashed border-[var(--border)] text-[var(--text-muted)] transition-colors hover:border-[var(--volt)] hover:text-[var(--text)] aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
             onClick={() => upload.isPending || setPicking(true)}
             type="button"
           >

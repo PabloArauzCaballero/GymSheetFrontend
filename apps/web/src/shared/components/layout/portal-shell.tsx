@@ -63,8 +63,10 @@ export function PortalShell({
             </div>
           </div>
         </header>
+        {/* Phone gutter: 1.5rem, capped at 7.5vw (= 24 px at 320). Same at 100 %; with 200 % text the rem gutter
+            would double to 48 px and leave a 320 screen a ~140 px column («Vis/ta pre/via»). */}
         <main
-          className="page-enter mx-auto w-full max-w-[1200px] px-6 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-6 sm:px-8 sm:pt-8 lg:px-12 lg:pb-[calc(3rem+env(safe-area-inset-bottom))] lg:pt-10"
+          className="page-enter mx-auto w-full max-w-[1200px] px-[min(1.5rem,7.5vw)] pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-6 sm:px-8 sm:pt-8 lg:px-12 lg:pb-[calc(3rem+env(safe-area-inset-bottom))] lg:pt-10"
           key={pathname}
         >
           {children}

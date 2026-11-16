@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { colors, comfortableTouchTarget, iconSizes, radii, spacing } from '@/theme';
@@ -26,6 +26,10 @@ export function NavRow({
   onPress: () => void;
   testID?: string;
 }) {
+  // Past Dynamic Type ×1.3 the art beside the text left titles too narrow («Notificacione/s» at 393): it goes on
+  // its own line above them, as iOS accessibility layouts do. Nothing is dropped (the Chat art carries a count).
+  const { fontScale } = useWindowDimensions();
+  const stacked = Boolean(leading) && fontScale > 1.3;
   return (
     <PressableScale
       accessibilityLabel={subtitle ? `${title}. ${subtitle}` : title}
@@ -39,8 +43,9 @@ export function NavRow({
       }}
       testID={testID}
     >
-      {leading}
+      {stacked ? null : leading}
       <View style={{ flex: 1, gap: spacing.xxs }}>
+        {stacked ? <View style={{ alignSelf: 'flex-start', marginBottom: spacing.xxs }}>{leading}</View> : null}
         {/* Never truncated: titles carry prefixes («Plan del coach — Hipertrofia PPL») and what a «…» cuts is
             what tells rows apart; a 2-line cap still cut subtitles at 320 and at Dynamic Type XL. Rows grow. */}
         <Text variant="headline">

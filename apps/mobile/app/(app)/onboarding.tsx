@@ -237,7 +237,7 @@ export default function OnboardingScreen() {
       <View key={step} style={{ gap: spacing.sm }}>
         <EnterUp index={0}>
           <AppText tone="muted" variant="footnote">
-            {`Paso ${step + 1} de 4 · Se guarda en tu cuenta`}
+            Se guarda en tu cuenta
           </AppText>
         </EnterUp>
         <EnterUp index={1} style={{ gap: spacing.sm }}>

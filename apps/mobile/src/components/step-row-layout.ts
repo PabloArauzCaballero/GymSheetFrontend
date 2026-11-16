@@ -21,3 +21,14 @@ export function stepRowLayout({
   const column = (rowWidth - gap * (count - 1)) / count;
   return Math.max(...labelWidths) > column ? 'compact' : 'columns';
 }
+
+/**
+ * What StepProgress says about where you are: shown in the compact line and announced for the columns row.
+ * It is the only place a flow states «Paso N de M», so a screen header must not repeat it.
+ */
+export function stepAnnouncement(current: number, labels: readonly string[]): string {
+  const total = labels.length;
+  const index = Math.min(Math.max(current, 0), Math.max(total - 1, 0));
+  const label = labels[index];
+  return label ? `Paso ${index + 1} de ${total}: ${label}` : `Paso ${index + 1} de ${total}`;
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Text, useWindowDimensions, View } from 'react-native';
-import { stepRowLayout } from '@/components/step-row-layout';
+import { stepAnnouncement, stepRowLayout } from '@/components/step-row-layout';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useAnimatedStyle,
@@ -66,6 +66,7 @@ export function StepProgress({
   const [rowWidth, setRowWidth] = useState(0);
   const [labelWidths, setLabelWidths] = useState<number[]>([]);
   const layout = stepRowLayout({ count: steps.length, fontScale, gap: STEP_GAP, labelWidths, rowWidth });
+  const announcement = stepAnnouncement(current, steps.map((step) => step.label));
 
   return (
     <View style={{ gap: spacing.sm }}>
@@ -111,11 +112,17 @@ export function StepProgress({
         <View accessibilityRole="text" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
           <Ionicons color={colors.volt} name={steps[current]?.icon ?? 'ellipse'} size={iconSizes.md} />
           <Text style={[labelStyle, { flex: 1, color: colors.text, fontWeight: '700', textAlign: 'left' }]}>
-            {`Paso ${current + 1} de ${steps.length}: ${steps[current]?.label ?? ''}`}
+            {announcement}
           </Text>
         </View>
       ) : (
-        <View onLayout={(event) => setRowWidth(event.nativeEvent.layout.width)} style={{ flexDirection: 'row', gap: STEP_GAP }}>
+        <View
+          // One announcement for the row: the step count lives here, so screens do not repeat «Paso N de M».
+          accessibilityLabel={announcement}
+          accessible
+          onLayout={(event) => setRowWidth(event.nativeEvent.layout.width)}
+          style={{ flexDirection: 'row', gap: STEP_GAP }}
+        >
           {steps.map((step, index) => {
             const done = index <= current;
             return (

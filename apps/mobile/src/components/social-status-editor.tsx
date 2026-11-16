@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { DISCOVERY_PREFERENCES_DEFAULTS as DEFAULTS, discoveryPreferencesBlocker, discoveryPreferencesDirty } from '@gymsheet/domain';
 import type { SocialStatusValue } from '@gymsheet/schemas';
 import { socialService } from '@/api/services';
@@ -192,6 +192,7 @@ export function DiscoveryPreferencesEditor({ embedded = false, onSaved }: { embe
   const version = preferences.data?.version ?? 0;
   const toggle = <T extends string>(items: T[], item: T, update: (next: T[]) => void) =>
     update(items.includes(item) ? items.filter((value) => value !== item) : [...items, item]);
+  const { fontScale } = useWindowDimensions();
   const fieldLabel = (text: string) => (
     <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, fontWeight: semibold, letterSpacing: 0.4, textTransform: 'uppercase' }}>
       {text}
@@ -229,7 +230,8 @@ export function DiscoveryPreferencesEditor({ embedded = false, onSaved }: { embe
         </View>
       </View>
 
-      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+      {/* Three columns split «RADI/O (KM)» past Dynamic Type ×1.3: one field a row there. */}
+      <View style={{ flexDirection: fontScale > 1.3 ? 'column' : 'row', gap: spacing.sm }}>
         {([[minAge, setMinAge, 'Edad mín.'], [maxAge, setMaxAge, 'Edad máx.'], [radiusKm, setRadiusKm, 'Radio (km)']] as const).map(([value, setter, label]) => (
           // space-between: when one label wraps at 320 or with large text, the three inputs still share a baseline.
           <View key={label} style={{ flex: 1, gap: spacing.xs, justifyContent: 'space-between' }}>

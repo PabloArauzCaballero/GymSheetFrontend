@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native';
+import { Text, useWindowDimensions, View } from 'react-native';
 import type { Ionicons } from '@expo/vector-icons';
 import type { CardioModality } from '@gymsheet/types';
 import { cardioModalityLabels } from '@gymsheet/hooks';
@@ -36,6 +36,8 @@ export function ModalityCard({
 }) {
   const look = LOOK[modality];
   const reduceMotion = useReduceMotion();
+  // Past Dynamic Type ×1.3 two cards a row split «Correr» into «Corre/r»: one card a row instead.
+  const { fontScale } = useWindowDimensions();
   const ink = selected ? accentContrast() : colors.text;
   return (
     <PressableScale
@@ -45,7 +47,7 @@ export function ModalityCard({
       onPress={onSelect}
       scaleTo={0.95}
       style={{
-        width: '48%',
+        width: fontScale > 1.3 ? '100%' : '48%',
         gap: spacing.sm,
         padding: spacing.md,
         minHeight: 128,

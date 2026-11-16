@@ -39,8 +39,10 @@ export function PageHeader({
         {titleAction ? (
           // The action wraps under the title only when the title's longest word and the action no
           // longer fit side by side (very large text on a phone); otherwise the row is unchanged.
+          // Whole words for that test: `anywhere` and hyphenation shrink min-content to a syllable, so the
+          // action never wrapped and «Perfil» became «Per-fil» beside it. `break-word` still stops overflow.
           <div className="flex flex-wrap items-start gap-2">
-            <h1 className="display-title min-w-0 flex-1 basis-[min-content]">{title}</h1>
+            <h1 className="display-title min-w-0 flex-1 basis-[min-content] hyphens-manual [overflow-wrap:break-word]">{title}</h1>
             {titleAction}
           </div>
         ) : (
