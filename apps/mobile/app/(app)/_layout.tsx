@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Redirect, Stack } from 'expo-router';
 import { TourOverlay } from '@/components/tour';
 import { NudgeSync } from '@/features/nudge/nudge-sync';
+import { OnboardingGuard } from '@/features/onboarding-guard/onboarding-guard';
 import { detailStackOptions } from '@/lib/screen-options';
 import { useAuthStore } from '@/state/auth-store';
 import { useTourStore } from '@/state/tour-store';
@@ -23,8 +24,9 @@ import { useTourStore } from '@/state/tour-store';
  * tarjeta destacada en Inicio, que además la pone en el recorrido diario en vez
  * de esconderla detrás de un sexto icono.
  *
- * The session guard and the tour live here rather than one level down so both
- * cover the pushed screens too.
+ * The session guard, the onboarding guard and the tour live here rather than one
+ * level down so they cover the pushed screens too. The onboarding guard is the
+ * only thing that routes a CLIENTE into (or out of) `/onboarding`.
  */
 export default function AppLayout() {
   const status = useAuthStore((state) => state.status);
@@ -73,15 +75,13 @@ export default function AppLayout() {
         <Stack.Screen name="notifications-inbox" />
         <Stack.Screen name="reels" />
         <Stack.Screen name="training-invitations" />
-        {/* La baraja de descubrimiento: se abre desde Comunidad y se cierra
-            volviendo, así que es una hermana del resto de pantallas de detalle
-            y no una sexta pestaña. */}
-        <Stack.Screen name="descubrir" />
         <Stack.Screen name="chat" />
       </Stack>
       <TourOverlay />
       {/* Repi: widgets, tarjeta de Inicio y notificaciones. Solo con sesión. */}
       {status === 'authenticated' ? <NudgeSync /> : null}
+      {/* Last, so its overlay covers the stack and the tour while it decides. */}
+      <OnboardingGuard />
     </>
   );
 }

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import type { SocialStatusValue } from '@gymsheet/schemas';
+import { queryKeys } from '@gymsheet/hooks';
 import { socialService } from '@/api/services';
 import { Card, Section } from '@/components/layout';
 import { Button } from '@/components/ui';
@@ -144,7 +145,7 @@ export function SocialDiscoverySettingsEditor() {
  */
 export function DiscoveryPreferencesEditor({ embedded = false, onSaved }: { embedded?: boolean; onSaved?: () => void } = {}) {
   const queryClient = useQueryClient();
-  const preferences = useQuery({ queryKey: ['social', 'discovery-preferences'], queryFn: socialService.getDiscoveryPreferences });
+  const preferences = useQuery({ queryKey: queryKeys.discoveryPreferences, queryFn: socialService.getDiscoveryPreferences });
   const [genders, setGenders] = useState<('MALE' | 'FEMALE')[]>([]);
   const [intents, setIntents] = useState<('TRAINING' | 'FRIENDSHIP' | 'DATING')[]>([]);
   const [minAge, setMinAge] = useState('18');
@@ -162,7 +163,7 @@ export function DiscoveryPreferencesEditor({ embedded = false, onSaved }: { embe
   const save = useMutation({
     mutationFn: socialService.updateDiscoveryPreferences,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['social', 'discovery-preferences'] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.discoveryPreferences });
       notify.success('Preferencias de Conocer guardadas.');
       onSaved?.();
     },

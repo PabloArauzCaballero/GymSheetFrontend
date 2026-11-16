@@ -26,7 +26,6 @@ export type TourKey =
   | 'profile'
   | 'trayectoria'
   | 'comunidad'
-  | 'descubrir'
   | 'interacciones'
   | 'chat'
   | 'membership'
@@ -127,7 +126,6 @@ const ALL_KEYS: readonly TourKey[] = [
   'profile',
   'trayectoria',
   'comunidad',
-  'descubrir',
   'interacciones',
   'chat',
   'membership',

@@ -15,6 +15,12 @@ import type { DirectoryFilters } from './social-service';
 import { directoryQueryString } from './social-service';
 
 /**
+ * Deck filters. Gender is deliberately absent: the saved discovery
+ * preferences (`genders`) are the single source of who appears in the deck.
+ */
+export type DeckFilters = Pick<DirectoryFilters, 'objetivo' | 'sucursalId' | 'limit'>;
+
+/**
  * Descubrimiento: la baraja y los swipes.
  *
  * Va aparte de `socialService` por la misma razón que en el móvil: es otro
@@ -26,7 +32,7 @@ import { directoryQueryString } from './social-service';
  */
 export const discoveryService = {
   /** Candidatos sin decidir. El backend acota `limit`; por defecto trae 10. */
-  deck: (filters: DirectoryFilters = {}) =>
+  deck: (filters: DeckFilters = {}) =>
     apiRequest<GymDirectoryEntry[]>(
       `/me/discovery/deck?${directoryQueryString(filters)}`,
       z.array(gymDirectoryEntrySchema),

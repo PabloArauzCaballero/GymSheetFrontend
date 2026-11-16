@@ -231,8 +231,6 @@ const SCREEN_TOURS: Record<Exclude<TourKey, 'welcome'>, readonly TourStep[]> = {
       body: 'Conoce socios uno a uno, una carta por persona. Se aplican los filtros que tengas puestos.',
       target: 'comunidad.discover',
     },
-  ],
-  descubrir: [
     {
       icon: 'albums-outline',
       title: 'Una carta por socio',
@@ -242,7 +240,6 @@ const SCREEN_TOURS: Record<Exclude<TourKey, 'welcome'>, readonly TourStep[]> = {
       icon: 'heart-outline',
       title: 'O usa los botones',
       body: 'La cruz pasa y el corazón marca interés. La flecha deshace tu última decisión.',
-      target: 'descubrir.actions',
     },
   ],
   interacciones: [

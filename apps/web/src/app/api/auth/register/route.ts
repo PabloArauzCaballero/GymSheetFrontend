@@ -1,21 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
+import { registerPayloadSchema } from '@/shared/api/schemas';
 import { isTrustedMutation } from '@/shared/server/csrf';
 import { backendRequest, readBackendJson } from '@/shared/server/backend';
 import { SESSION_COOKIE, sessionCookieOptions } from '@/shared/server/auth-cookie';
 import { TENANT_COOKIE } from '@/shared/theme/tenant-cookie';
-
-const registerSchema = z.object({
-  email: z.string().email().max(180),
-  password: z.string().min(8).max(128),
-  nombreCompleto: z.string().trim().min(3).max(180),
-  /**
-   * Opcional de verdad: la progresión tiene una rama neutra y nadie debería
-   * tener que declarar su género para poder crear una cuenta.
-   */
-  genero: z.enum(['MALE', 'FEMALE', 'UNSPECIFIED']).optional(),
-  acceptedTerms: z.literal(true),
-});
 
 /**
  * Gimnasio al que se apunta la cuenta.
@@ -49,7 +38,7 @@ const authEnvelopeSchema = z.object({
 export async function POST(request: NextRequest) {
   if (!isTrustedMutation(request))
     return NextResponse.json({ detail: 'Origen no permitido.' }, { status: 403 });
-  const input = registerSchema.safeParse(await request.json().catch(() => null));
+  const input = registerPayloadSchema.safeParse(await request.json().catch(() => null));
   if (!input.success)
     return NextResponse.json({ detail: 'Datos de registro inválidos.' }, { status: 400 });
   const backendResponse = await backendRequest('/auth/register', {

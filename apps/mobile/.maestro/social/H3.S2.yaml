@@ -67,7 +67,7 @@ name: H3.S2 · Solicitudes y deshacer descarte
 # M3: hacer un descarte controlado del candidato QA y deshacer inmediatamente.
 # El objetivo del botón incluye el nombre para que ningún otro perfil reciba
 # una decisión accidental. El mismo objetivo debe volver a quedar arriba.
-- openLink: gymsheet://descubrir
+- openLink: gymsheet://comunidad
 # iOS puede pedir confirmación al abrir un enlace propio desde Maestro.
 - tapOn:
     text: Abrir

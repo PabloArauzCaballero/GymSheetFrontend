@@ -23,6 +23,7 @@ export const queryKeys = {
   tutorialProgress: ['tutorials', 'progress', 'me'] as const,
   connections: ['connections', 'me'] as const,
   socialStatus: ['social-status', 'me'] as const,
+  discoveryPreferences: ['social', 'discovery-preferences'] as const,
   gymDirectory: (filters: string) => ['gym-directory', filters] as const,
   conversations: ['conversations', 'me'] as const,
   messages: (conversationId: string) => ['messages', conversationId] as const,

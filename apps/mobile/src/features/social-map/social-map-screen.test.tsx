@@ -160,7 +160,7 @@ describe('SocialMapScreen', () => {
     fireEvent.change(screen.getByLabelText('Mes'), { target: { value: '1' } });
     fireEvent.change(screen.getByLabelText('Año'), { target: { value: year } });
     fireEvent.click(screen.getByText('Guardar y aparecer en el mapa'));
-    expect(await screen.findByText('El mapa es solo para mayores de 18 años.')).toBeTruthy();
+    expect(await screen.findByText('Debes tener 18 años o más.')).toBeTruthy();
     expect(updateProfile).not.toHaveBeenCalled();
   });
 });

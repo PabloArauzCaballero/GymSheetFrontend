@@ -7,7 +7,6 @@ import {
   CalendarCheck,
   ClipboardList,
   Dumbbell,
-  Flame,
   Film,
   Gauge,
   GraduationCap,
@@ -64,10 +63,6 @@ export const primaryNavigation: NavigationItem[] = [
   // Pestaña del móvil (#74): ofertas y tiendas sin salir del portal.
   { href: '/marketplace', label: 'Marketplace', icon: Store },
   { href: '/reels', label: 'Reels', icon: Film },
-  // La baraja es un destino y no una pestaña de Comunidad: se decide
-  // arrastrando y ocupa el ancho entero. Va pegada a Comunidad porque se llega
-  // desde allí con los filtros puestos, y aquí sin ellos.
-  { href: '/descubrir', label: 'Descubrir', icon: Flame },
   // Pegada a Comunidad: es lo que pasó ahí mientras no mirabas (likes, vistas
   // de perfil, next). Lleva el único indicador numérico de la navegación, así
   // que enterrarla al final la volvería una notificación que nadie atiende.

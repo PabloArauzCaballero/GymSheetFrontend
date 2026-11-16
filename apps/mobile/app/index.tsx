@@ -1,4 +1,5 @@
 import { Redirect } from 'expo-router';
+import { authDestination } from '@gymsheet/domain';
 import { View } from 'react-native';
 import { useAuthStore } from '@/state/auth-store';
 import { colors } from '@/theme';
@@ -23,5 +24,7 @@ export default function Index() {
     return <View style={{ flex: 1, backgroundColor: colors.background }} />;
   }
 
-  return <Redirect href={status === 'authenticated' ? '/comunidad' : '/(auth)/login'} />;
+  // Authenticated sessions land on Comunidad; the onboarding guard in
+  // `(app)/_layout.tsx` takes a CLIENTE with unfinished onboarding from there.
+  return <Redirect href={status === 'authenticated' ? authDestination.mobile.afterLogin : '/(auth)/login'} />;
 }

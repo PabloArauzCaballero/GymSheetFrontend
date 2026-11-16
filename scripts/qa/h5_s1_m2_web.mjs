@@ -69,7 +69,7 @@ export async function runH5S1M2(args, env = process.env) {
     if (!['http:', 'https:'].includes(base.protocol) || base.username || base.password) {
       throw new Error('invalid web base');
     }
-    webUrl = new URL('/descubrir', base);
+    webUrl = new URL('/comunidad', base);
   } catch {
     throw new Error('H5.S1.M2 web base URL is invalid');
   }

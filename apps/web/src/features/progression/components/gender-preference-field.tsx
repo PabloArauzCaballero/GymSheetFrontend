@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { genderOptions } from '@gymsheet/domain';
 import { profileService } from '@/features/profile/services/profile-service';
 import type { UserGender } from '@/shared/api/contracts';
 import { Field } from '@/shared/components/ui/field';
@@ -45,12 +46,15 @@ export function GenderPreferenceField({ value }: Readonly<{ value: UserGender | 
       <Select
         disabled={save.isPending}
         id="genero"
-        onChange={(event) => save.mutate(event.target.value as UserGender)}
-        value={value ?? 'UNSPECIFIED'}
+        // The shared list uses '' for "prefer not to say"; the backend stores it as UNSPECIFIED.
+        onChange={(event) => save.mutate((event.target.value || 'UNSPECIFIED') as UserGender)}
+        value={value === 'UNSPECIFIED' || value === null ? '' : value}
       >
-        <option value="UNSPECIFIED">Prefiero no decirlo</option>
-        <option value="MALE">Hombre</option>
-        <option value="FEMALE">Mujer</option>
+        {genderOptions.map((option) => (
+          <option key={option.value || 'none'} value={option.value}>
+            {option.label}
+          </option>
+        ))}
       </Select>
     </Field>
   );

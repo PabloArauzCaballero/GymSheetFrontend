@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { RegisterPayload } from '@/shared/api/schemas';
 import { ApiError } from '@/shared/api/api-error';
 
 const authResponseSchema = z.object({
@@ -40,14 +41,8 @@ export async function login(input: { email: string; password: string }) {
   return authResponseSchema.parse(await response.json()).data.user;
 }
 
-export async function register(input: {
-  email: string;
-  password: string;
-  nombreCompleto: string;
-  /** Ausente = no se preguntó. El gimnasio lo pone la cookie de inquilino, en el servidor. */
-  genero?: 'MALE' | 'FEMALE' | 'UNSPECIFIED';
-  acceptedTerms: boolean;
-}) {
+/** The gym comes from the tenant cookie, server-side; never from this payload. */
+export async function register(input: RegisterPayload) {
   const response = await fetch('/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

@@ -237,7 +237,7 @@ export default function SocialMapScreen() {
               {location.profile ? (
                 <Button icon="calendar-outline" label="Añadir fecha de nacimiento" onPress={() => { setPreferencesOpen(false); setBirthDateOpen(true); }} size="sm" variant="secondary" />
               ) : (
-                <Button icon="person-outline" label="Completar mi perfil" onPress={() => { setPreferencesOpen(false); router.push('/onboarding'); }} size="sm" variant="secondary" />
+                <Button icon="person-outline" label="Completar mi perfil" onPress={() => { setPreferencesOpen(false); router.push('/profile-edit'); }} size="sm" variant="secondary" />
               )}
             </View>
           ) : null}
