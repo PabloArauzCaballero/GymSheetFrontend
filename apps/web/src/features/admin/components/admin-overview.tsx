@@ -35,7 +35,7 @@ export function AdminOverview({
   return (
     <div className="mx-auto grid w-full max-w-[560px] gap-8 lg:max-w-[1040px]">
       <PageHeader
-        description="Lo que tu cuenta puede ver y hacer en el gimnasio."
+        description="Los módulos del gimnasio que estás operando."
         title="Administración"
         tutorialId="page:admin"
       />

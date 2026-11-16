@@ -1,10 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { isTrustedMutation } from '@/shared/server/csrf';
 import { expiredSessionCookieOptions, SESSION_COOKIE } from '@/shared/server/auth-cookie';
+import { expiredImpersonationCookieOptions, IMPERSONATION_COOKIE } from '@/shared/server/impersonation';
 import { safeReturnUrl } from '@/shared/server/safe-return-url';
 
 function clearSession(response: NextResponse) {
   response.cookies.set(SESSION_COOKIE, '', expiredSessionCookieOptions());
+  // Signing out also stops operating a gym: the scoped token must not outlive the session.
+  response.cookies.set(IMPERSONATION_COOKIE, '', expiredImpersonationCookieOptions());
   return response;
 }
 

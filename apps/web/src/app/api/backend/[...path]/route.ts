@@ -5,14 +5,23 @@ import { expiredSessionCookieOptions } from '@/shared/server/auth-cookie';
 import { backendRequest } from '@/shared/server/backend';
 import { resolveAllowedBackendPath } from '@/shared/server/backend-route-policy';
 import { isTrustedMutation } from '@/shared/server/csrf';
+import {
+  decodeImpersonation,
+  expiredImpersonationCookieOptions,
+  IMPERSONATION_COOKIE,
+} from '@/shared/server/impersonation';
 
 async function forward(request: NextRequest, parts: string[]) {
   if (!isTrustedMutation(request))
     return NextResponse.json({ detail: 'Origen no permitido.' }, { status: 403 });
   const path = resolveAllowedBackendPath(parts);
   if (!path) return NextResponse.json({ detail: 'Ruta no permitida.' }, { status: 404 });
-  const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  if (!token) return NextResponse.json({ detail: 'Autenticación requerida.' }, { status: 401 });
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE)?.value;
+  if (!sessionToken) return NextResponse.json({ detail: 'Autenticación requerida.' }, { status: 401 });
+  // While a platform admin operates a gym, every proxied call carries the scoped token.
+  const impersonation = decodeImpersonation(cookieStore.get(IMPERSONATION_COOKIE)?.value, sessionToken);
+  const token = impersonation?.accessToken ?? sessionToken;
   const headers = new Headers();
   const contentType = request.headers.get('content-type');
   if (contentType) headers.set('Content-Type', contentType);
@@ -52,7 +61,10 @@ async function forward(request: NextRequest, parts: string[]) {
     headers: responseHeaders,
   });
   if (backendResponse.status === 401) {
-    response.cookies.set(SESSION_COOKIE, '', expiredSessionCookieOptions());
+    // A refused scoped token ends the impersonation, not the session: the next
+    // request goes out with the account's own token and tells whether it still holds.
+    if (impersonation) response.cookies.set(IMPERSONATION_COOKIE, '', expiredImpersonationCookieOptions());
+    else response.cookies.set(SESSION_COOKIE, '', expiredSessionCookieOptions());
   }
   return response;
 }

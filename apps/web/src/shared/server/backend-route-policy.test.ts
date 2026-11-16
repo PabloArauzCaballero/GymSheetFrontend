@@ -148,6 +148,9 @@ const allowedCases: Array<[string[], string]> = [
   [['admin', 'verifications'], '/admin/verifications'],
   [['admin', 'verifications', id, 'selfie'], `/admin/verifications/${id}/selfie`],
   [['admin', 'verifications', id, 'decide'], `/admin/verifications/${id}/decide`],
+  // Franja 7a: the gym catalog of the impersonation picker, and the member's own assignments.
+  [['admin', 'tenants'], '/admin/tenants'],
+  [['routines', 'assignments', 'me'], '/routines/assignments/me'],
 ];
 const blockedCases: Array<[string[]]> = [
   [['admin', 'access', 'mock', 'events']],
@@ -200,6 +203,10 @@ const blockedCases: Array<[string[]]> = [
   [['me', 'verification', id]],
   [['admin', 'verifications', id]],
   [['admin', 'verifications', id, 'approve-all']],
+  // Franja 7a: coach routine assignment no longer exists.
+  [['routines', id, 'assign']],
+  [['routines', 'assignments', 'coach']],
+  [['admin', 'tenants', 'default']],
 ];
 
 describe('backend route policy', () => {

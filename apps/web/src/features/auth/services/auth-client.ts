@@ -52,6 +52,31 @@ export async function logout() {
   if (!response.ok) throw await apiErrorFromResponse(response);
 }
 
+const impersonationStartedSchema = z.object({
+  ok: z.literal(true),
+  data: z.object({ tenantId: z.string(), nombre: z.string() }),
+});
+
+/**
+ * Starts operating a gym (platform admin). The scoped token goes straight into
+ * an HttpOnly cookie set by the BFF; only the gym id and name come back.
+ */
+export async function startImpersonation(tenantId: string) {
+  const response = await fetch('/api/auth/impersonation', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tenantId }),
+  });
+  if (!response.ok) throw await apiErrorFromResponse(response);
+  return impersonationStartedSchema.parse(await response.json()).data;
+}
+
+/** Back to the account's own token: the BFF drops the impersonation cookie. */
+export async function stopImpersonation() {
+  const response = await fetch('/api/auth/impersonation', { method: 'DELETE' });
+  if (!response.ok) throw await apiErrorFromResponse(response);
+}
+
 /**
  * Pide un PIN de recuperación al correo indicado.
  *

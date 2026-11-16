@@ -65,6 +65,8 @@ const allowedPathPatterns = [
   // The REPP moderation team (ADR-0018), managed by SYSTEM_ADMIN: list, assign, revoke.
   /^\/admin\/platform\/moderators$/u,
   new RegExp(`^/admin/platform/moderators/${uuid}$`, 'u'),
+  // Gym catalog for «Elegir gimnasio» (SYSTEM_ADMIN only; franja 7a impersonation).
+  /^\/admin\/tenants$/u,
   // Permisos granulares del personal (H01): catálogo, los de un usuario,
   // otorgar y revocar. `/me` es la vista propia (qué puedo hacer yo).
   /^\/admin\/permissions\/me$/u,
@@ -180,7 +182,8 @@ const allowedPathPatterns = [
   /^\/muscle-groups$/u,
   /^\/routines$/u,
   /^\/routines\/import$/u,
-  /^\/routines\/assignments\/(me|coach)$/u,
+  // Only the member's own assignments: coach assignment was removed in franja 7a.
+  /^\/routines\/assignments\/me$/u,
   // Programas de fuerza (`@gymsheet/api-client` → `createProgramServices`):
   // «Hoy» de Inicio, la activación y las tarjetas de programa los usan, y sin
   // estas entradas el BFF los rechazaba con «Ruta no permitida».
@@ -189,7 +192,7 @@ const allowedPathPatterns = [
   new RegExp(`^/programs/${resourceId}/(stop|progress|next-loads|close)$`, 'u'),
   new RegExp(`^/routines/exercises/${resourceId}$`, 'u'),
   new RegExp(`^/routines/${resourceId}$`, 'u'),
-  new RegExp(`^/routines/${resourceId}/(exercises|assign|start)$`, 'u'),
+  new RegExp(`^/routines/${resourceId}/(exercises|start)$`, 'u'),
   /^\/user-exercises$/u,
   new RegExp(`^/user-exercises/${resourceId}$`, 'u'),
   /^\/users\/me$/u,
@@ -211,7 +214,7 @@ const allowedPathPatterns = [
   // ── Rutas que la web ya llamaba y el BFF rechazaba (auditoría 2026-11-09). ──
   // Cada una existe en el backend (`GymSheetBackend`, rama `dev`, controlador
   // indicado) y lo autoriza ahí: este allowlist es defensa en profundidad.
-  // Administración (roles ADMIN/FRONT_DESK/SYSTEM_ADMIN en el backend).
+  // Administración (SYSTEM_ADMIN en el backend desde la franja 7a).
   /^\/admin\/routines$/u,
   new RegExp(`^/admin/routines/${resourceId}/(insights|official)$`, 'u'),
   new RegExp(`^/admin/support/programs/${resourceId}/recompute-week$`, 'u'),
@@ -251,7 +254,7 @@ const allowedPathPatterns = [
   new RegExp(`^/me/verification/${uuid}/selfie$`, 'u'),
   /^\/admin\/verifications$/u,
   new RegExp(`^/admin/verifications/${uuid}/(selfie|decide)$`, 'u'),
-  // An ADMIN closes a staff account of their gym (POST; scope decided by the backend).
+  // The platform admin closes a legacy staff account (POST; scope decided by the backend).
   new RegExp(`^/admin/users/${uuid}/close$`, 'u'),
   // Social: bloqueos, descubrimiento, mapa y confirmaciones de lectura.
   /^\/me\/blocks$/u,

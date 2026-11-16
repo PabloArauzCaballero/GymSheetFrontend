@@ -12,7 +12,6 @@ export const queryKeys = {
   routines: (scope: string) => ['routines', scope] as const,
   routine: (id: string) => ['routine', id] as const,
   routineAssignments: ['routines', 'assignments', 'me'] as const,
-  coachAssignments: ['routines', 'assignments', 'coach'] as const,
   membership: ['membership', 'me'] as const,
   membershipAccesses: ['membership', 'accesses'] as const,
   membershipOptions: ['membership', 'options'] as const,

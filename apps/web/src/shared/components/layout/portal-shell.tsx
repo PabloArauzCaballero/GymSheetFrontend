@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import type { PortalSession } from '@/shared/auth/portal-session';
 import { EmailVerificationBannerSlot } from '@/features/account-security/components/email-verification-banner-slot';
+import { ImpersonationBanner } from '@/features/impersonation/components/impersonation-banner';
 import { AmbientBackground } from '@/shared/components/background/ambient-background';
 import {
   TutorialLauncher,
@@ -20,8 +21,14 @@ import { ThemeToggle } from './theme-toggle';
 
 export function PortalShell({
   session,
+  gymName = null,
   children,
-}: Readonly<{ session: PortalSession; children: ReactNode }>) {
+}: Readonly<{
+  session: PortalSession;
+  /** The gym the platform admin is operating, or `null` (see `shared/server/impersonation.ts`). */
+  gymName?: string | null;
+  children: ReactNode;
+}>) {
   const pathname = usePathname();
   return (
     <TutorialProvider role={session.role} userId={session.id}>
@@ -63,6 +70,7 @@ export function PortalShell({
               <LogoutButton />
             </div>
           </div>
+          {gymName ? <ImpersonationBanner gymName={gymName} /> : null}
           <EmailVerificationBannerSlot emailVerified={session.emailVerified} />
         </header>
         <main

@@ -10,7 +10,7 @@ import { MaintenancePanel } from './maintenance-panel';
 import { RoomPanel } from './room-panel';
 
 export function FacilitiesAdmin({ role }: Readonly<{ role: UserRole }>) {
-  const canManage = role === 'ADMIN';
+  const canManage = role === 'SYSTEM_ADMIN';
   return (
     <div className="grid gap-8">
       <PageHeader

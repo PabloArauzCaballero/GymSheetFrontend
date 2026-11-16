@@ -3,32 +3,27 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Archive, BookmarkPlus, Play, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { isStaff } from '@gymsheet/domain';
 import { canActivateProgram } from '@gymsheet/hooks';
 import type { Routine } from '@gymsheet/types';
-import type { UserRole } from '@/shared/api/contracts';
 import { Button, ButtonLink } from '@/shared/components/ui/button';
 import { confirm, notify } from '@/shared/notifications';
 import { ReportDialog } from '@/features/moderation/components/report-dialog';
 import { routineV2Keys } from '@/features/routines-v2/keys';
 import { sharingService } from '@/features/routines-v2/services';
 import { ShareDialog } from '@/features/routine-sharing/components/share-dialog';
-import { AssignRoutineDialog } from '@/features/training/components/assign-routine-dialog';
 import { trainingService } from '@/features/training/services/training-service';
 import { useSavedCopy } from '../use-saved-copy';
 import { PublishControls } from './publish-controls';
 
 /**
  * Las acciones de la rutina según quién mira: la autora publica, comparte y
- * archiva; cualquiera que la vea la copia, la denuncia o empieza una sesión; el
- * entrenador la asigna a un cliente.
+ * archiva; cualquiera que la vea la copia, la denuncia o empieza una sesión.
  */
 export function RoutineActions({
   routine,
-  role,
   onStart,
   starting,
-}: Readonly<{ routine: Routine; role: UserRole; onStart: () => void; starting: boolean }>) {
+}: Readonly<{ routine: Routine; onStart: () => void; starting: boolean }>) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const copy = useMutation({
@@ -122,7 +117,6 @@ export function RoutineActions({
           />
         </>
       )}
-      {isStaff(role) ? <AssignRoutineDialog routineId={routine.id} /> : null}
     </div>
   );
 }

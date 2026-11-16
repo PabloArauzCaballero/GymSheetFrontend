@@ -9,8 +9,8 @@ export const dynamic = 'force-dynamic';
 /**
  * `GET /api/geocode?q=texto` busca direcciones; `?lat=&lng=` hace la búsqueda
  * inversa. No es un proxy abierto hacia Nominatim: la sesión se valida contra
- * el backend (no basta con que exista la cookie) y solo el administrador, que
- * es quien da de alta y mueve sedes, puede usarlo.
+ * el backend (no basta con que exista la cookie) y solo el administrador de
+ * plataforma, que es quien da de alta y mueve sedes, puede usarlo.
  */
 export async function GET(request: NextRequest) {
   const session = await getSession().catch((error: unknown) => {
@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
     throw error;
   });
   if (!session) return NextResponse.json({ places: [] }, { status: 401 });
-  if (session.role !== 'ADMIN') return NextResponse.json({ places: [] }, { status: 403 });
+  // Franja 7a: branches are managed by the platform admin, not by the gym.
+  if (session.role !== 'SYSTEM_ADMIN') return NextResponse.json({ places: [] }, { status: 403 });
 
   const params = request.nextUrl.searchParams;
   const query = params.get('q')?.trim() ?? '';

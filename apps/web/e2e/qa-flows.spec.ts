@@ -3,7 +3,7 @@
  * afirma lo que la pantalla debe mostrar; los fallos son hallazgos, no ruido.
  */
 import { expect, test } from '@playwright/test';
-import { admin, athlete, openPage, signIn } from './fixtures';
+import { athlete, openPage, signIn, signInOperatingGym } from './fixtures';
 import { fillSignupForm } from './alta-datos';
 
 
@@ -99,7 +99,7 @@ test('el buscador de ejercicios responde y muestra resultados o vacio explicito'
 });
 
 test('el panel de administracion carga sus modulos', async ({ page }) => {
-  await signIn(page, admin);
+  await signInOperatingGym(page);
   await openPage(page, '/admin');
   await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 20_000 });
   await expect(page.locator('main')).not.toContainText(/Application error|Something went wrong/iu);

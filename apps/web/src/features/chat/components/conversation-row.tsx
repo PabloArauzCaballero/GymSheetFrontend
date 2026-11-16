@@ -1,20 +1,14 @@
 'use client';
 
-import { Building2, ShieldCheck } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 import Link from 'next/link';
 import type { ConversationSummary } from '@/shared/api/schemas';
 import { PersonAvatar } from '@/shared/components/media/person-avatar';
 import { chatTimestampLabel } from '@/features/chat/lib/chat-time';
 
-const SYSTEM_ICON = {
-  CORPORATE: Building2,
-  TENANT_ADMIN: ShieldCheck,
-} as const;
+const SYSTEM_ICON = { CORPORATE: Building2 } as const;
 
-const SYSTEM_LABEL = {
-  CORPORATE: 'Corporativo',
-  TENANT_ADMIN: 'Admin del gimnasio',
-} as const;
+const SYSTEM_LABEL = { CORPORATE: 'Corporativo' } as const;
 
 /**
  * Una fila de la lista de chats.

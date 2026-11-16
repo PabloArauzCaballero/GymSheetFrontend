@@ -1,8 +1,6 @@
 import {
   Activity,
-  BarChart3,
   Bell,
-  Building2,
   CalendarCheck,
   ClipboardList,
   Dumbbell,
@@ -13,21 +11,17 @@ import {
   IdCard,
   KeyRound,
   MessageCircle,
-  ScanFace,
-  ScrollText,
   Settings,
   UserRound,
-  ShieldCheck,
   Signpost,
   Sparkles,
   Store,
-  Users,
   Users2,
 } from 'lucide-react';
 import type { UserRole } from '@/shared/api/contracts';
-import { moderationNavigation, systemNavigation } from './platform-navigation';
+import { adminNavigation, moderationNavigation, systemNavigation } from './platform-navigation';
 
-export { moderationNavigation, systemNavigation };
+export { adminNavigation, moderationNavigation, systemNavigation };
 
 export type NavigationItem = {
   href: string;
@@ -77,101 +71,9 @@ export const primaryNavigation: NavigationItem[] = [
   { href: '/tutorials', label: 'Centro de ayuda', icon: GraduationCap },
 ];
 
-export const adminNavigation: NavigationItem[] = [
-  {
-    // Primero, y no una pestaña dentro de «Operaciones»: es la pantalla que se
-    // abre cada mañana para decidir a quién llamar, y es donde aterriza quien
-    // atiende el gimnasio al entrar al portal. Esconderla un nivel más abajo
-    // era la diferencia entre que se use y que no.
-    href: '/admin/operacion',
-    label: 'Panel del gimnasio',
-    icon: BarChart3,
-    roles: ['ADMIN', 'FRONT_DESK'],
-    description: 'Uso del equipamiento, flujo de personas y quién no ha renovado.',
-  },
-  // Sin `description`: es la propia rejilla, y listarse a sí misma dentro sería
-  // un enlace que devuelve a donde ya estás.
-  { href: '/admin', label: 'Operaciones', icon: ShieldCheck, roles: ['ADMIN', 'FRONT_DESK'] },
-  {
-    href: '/admin/usuarios',
-    label: 'Usuarios',
-    icon: Users,
-    roles: ['ADMIN', 'FRONT_DESK'],
-    description: 'Todas las cuentas, con su membresía y su última actividad.',
-  },
-  {
-    href: '/admin/equipment',
-    label: 'Equipamiento',
-    icon: Dumbbell,
-    roles: ['ADMIN', 'FRONT_DESK'],
-    description: 'Inventario visible y operaciones autorizadas por rol.',
-  },
-  {
-    href: '/admin/exercises',
-    label: 'Catálogo global',
-    icon: Activity,
-    roles: ['ADMIN'],
-    description: 'Ejercicios globales e importación controlada de dataset.',
-  },
-  {
-    href: '/admin/facilities',
-    label: 'Instalaciones',
-    icon: Building2,
-    roles: ['ADMIN', 'FRONT_DESK'],
-    description: 'Sedes, salas, puntos de acceso y mantenimiento.',
-  },
-  {
-    href: '/admin/membership',
-    label: 'Clientes',
-    icon: Users,
-    roles: ['ADMIN', 'FRONT_DESK'],
-    description: 'Planes, clientes, vigencias y personal.',
-  },
-  {
-    href: '/admin/people',
-    label: 'Registrar persona',
-    icon: ScanFace,
-    roles: ['ADMIN', 'FRONT_DESK'],
-    description: 'Alta de personas con credencial facial capturada desde la cámara.',
-  },
-  {
-    href: '/admin/access',
-    label: 'Control de acceso',
-    icon: KeyRound,
-    roles: ['ADMIN', 'FRONT_DESK'],
-    description: 'Dispositivos, decisiones y credenciales.',
-  },
-  {
-    href: '/admin/permissions',
-    label: 'Permisos',
-    icon: ShieldCheck,
-    roles: ['ADMIN', 'FRONT_DESK'],
-    description: 'Otorgar y revocar permisos granulares al personal.',
-    requiredPermission: 'admin-access:manage',
-  },
-  {
-    href: '/admin/auditoria',
-    label: 'Auditoría',
-    icon: ScrollText,
-    roles: ['ADMIN', 'FRONT_DESK'],
-    description: 'Quién hizo qué, cuándo y sobre qué cuenta.',
-    requiredPermission: 'admin-access:manage',
-  },
-];
-
 /**
- * Lo personal que conserva el personal de un gimnasio.
- *
- * Un `ADMIN` o un `FRONT_DESK` sigue teniendo cuenta propia —su credencial de
- * entrada, sus avisos, sus conversaciones—, pero eso no es su trabajo: es lo
- * que necesita de vez en cuando. Por eso viaja en un grupo aparte y detrás del
- * gimnasio, en vez de mezclado entre los módulos de operación.
- *
- * Lo que NO está aquí es deliberado: entrenamientos, rutinas, ejercicios, senda,
- * comunidad, descubrir e interacciones son la aplicación del socio. Enseñárselas
- * al personal empuja quince pantallas ajenas por delante de las suyas, que es
- * justo lo que hacía que «Panel del gimnasio» —donde viven uso de máquinas y
- * flujo de personas— pareciera no existir.
+ * Lo personal que conserva el equipo de moderación de REPP: su cuenta, sus
+ * avisos y sus conversaciones, detrás de la cola y no mezclado con ella.
  */
 export const accountNavigation: NavigationItem[] = [
   { href: '/membership', label: 'Mi membresía', icon: IdCard },
@@ -205,19 +107,13 @@ export type NavigationGroup = { label?: string; items: NavigationItem[] };
 /**
  * Qué navegación le corresponde a cada audiencia.
  *
- * Tres respuestas distintas porque son tres trabajos distintos, y el orden
- * dentro de cada una ya es la respuesta a «¿qué vine a hacer?»:
- *
- * - `SYSTEM_ADMIN`: la plataforma. No pertenece a ningún gimnasio (la razón
- *   larga está en `isStaff`, en `@gymsheet/domain`).
+ * - `SYSTEM_ADMIN`: la plataforma, y debajo los módulos del gimnasio que opera
+ *   (franja 7a: REPP opera los gimnasios; ver `platform-navigation.ts`).
  * - `MODERATOR`: the REPP moderation queue first, its own account after
- *   (ADR-0018). Like gym staff, it does not come to train here.
- * - `ADMIN` / `FRONT_DESK`: el gimnasio primero, su cuenta después. Quien abre
- *   el portal a las siete de la mañana viene a ver quién entró y qué máquina se
- *   está saturando, no a registrar su propia serie.
- * - Todo lo demás (`CLIENTE`, `COACH`): la aplicación del socio, intacta. El
- *   `COACH` se queda aquí a propósito: rutinas y ejercicios son su trabajo,
- *   no un adorno.
+ *   (ADR-0018). It does not come to train here.
+ * - Todo lo demás (`CLIENTE` y los roles heredados del gimnasio: `ADMIN`,
+ *   `FRONT_DESK`, `COACH`, `ENTRENADOR_EXTERNO`): la aplicación de la persona.
+ *   Since franja 7a gym roles carry no administration at all.
  */
 export function navigationFor(
   role: UserRole,
@@ -226,19 +122,17 @@ export function navigationFor(
   const visible = (items: NavigationItem[]) =>
     items.filter((item) => canSee(item, role, permissions));
 
-  if (role === 'SYSTEM_ADMIN') return [{ items: visible(systemNavigation) }];
+  if (role === 'SYSTEM_ADMIN') {
+    return [
+      { label: 'Plataforma', items: visible(systemNavigation) },
+      { label: 'Gimnasio', items: visible(adminNavigation) },
+    ];
+  }
   if (role === 'MODERATOR') {
     return [
       { label: 'Moderación REPP', items: visible(moderationNavigation) },
       { label: 'Tu cuenta', items: visible(accountNavigation) },
     ];
   }
-  if (role === 'ADMIN' || role === 'FRONT_DESK') {
-    return [
-      { label: 'Gimnasio', items: visible(adminNavigation) },
-      { label: 'Tu cuenta', items: visible(accountNavigation) },
-    ];
-  }
   return [{ items: visible(primaryNavigation) }];
 }
-

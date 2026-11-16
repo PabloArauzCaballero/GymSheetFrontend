@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { isTrustedMutation } from '@/shared/server/csrf';
 import { backendRequest, readBackendJson } from '@/shared/server/backend';
 import { SESSION_COOKIE, sessionCookieOptions } from '@/shared/server/auth-cookie';
+import { expiredImpersonationCookieOptions, IMPERSONATION_COOKIE } from '@/shared/server/impersonation';
 
 const loginSchema = z.object({
   email: z.string().email().max(180),
@@ -41,5 +42,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ detail: 'Contrato de autenticación inválido.' }, { status: 502 });
   const response = NextResponse.json({ ok: true, data: { user: parsed.data.data.user } });
   response.cookies.set(SESSION_COOKIE, parsed.data.data.accessToken, sessionCookieOptions());
+  // A new session starts on its own token, never on a gym the previous one was operating.
+  response.cookies.set(IMPERSONATION_COOKIE, '', expiredImpersonationCookieOptions());
   return response;
 }

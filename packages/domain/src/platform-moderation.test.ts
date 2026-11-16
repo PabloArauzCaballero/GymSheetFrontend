@@ -3,7 +3,7 @@ import {
   hasAdminPermissionGrants,
   isModerator,
   isPlatformModerator,
-  isStaff,
+  isSystemAdmin,
 } from './permissions';
 import {
   MODERATOR_NOT_ASSIGNABLE,
@@ -22,18 +22,17 @@ describe('platform moderation roles', () => {
     expect(isPlatformModerator(null)).toBe(false);
   });
 
-  it('a moderator is neither gym staff nor a platform admin', () => {
+  it('a moderator is not the platform admin', () => {
     expect(isModerator('MODERATOR')).toBe(true);
     expect(isModerator('SYSTEM_ADMIN')).toBe(false);
-    expect(isStaff('MODERATOR')).toBe(false);
+    expect(isSystemAdmin('MODERATOR')).toBe(false);
   });
 
-  it('asks for permission grants only where the backend answers them', () => {
-    expect(hasAdminPermissionGrants('ADMIN')).toBe(true);
-    expect(hasAdminPermissionGrants('FRONT_DESK')).toBe(true);
+  it('asks for permission grants only where the backend answers them (franja 7a: platform admin only)', () => {
     expect(hasAdminPermissionGrants('SYSTEM_ADMIN')).toBe(true);
-    expect(hasAdminPermissionGrants('MODERATOR')).toBe(false);
-    expect(hasAdminPermissionGrants('COACH')).toBe(false);
+    for (const role of ['ADMIN', 'FRONT_DESK', 'COACH', 'ENTRENADOR_EXTERNO', 'MODERATOR', 'CLIENTE'] as const) {
+      expect(hasAdminPermissionGrants(role)).toBe(false);
+    }
   });
 });
 

@@ -1,4 +1,21 @@
-import { Award, BadgeCheck, ClipboardList, ScrollText, Server, ShieldAlert, UserCog } from 'lucide-react';
+import {
+  Activity,
+  Award,
+  BadgeCheck,
+  BarChart3,
+  Building2,
+  ClipboardList,
+  Dumbbell,
+  KeyRound,
+  ScanFace,
+  ScrollText,
+  Server,
+  ShieldAlert,
+  ShieldCheck,
+  UserCog,
+  Users,
+} from 'lucide-react';
+import type { UserRole } from '@/shared/api/contracts';
 import type { NavigationItem } from './nav-config';
 
 /**
@@ -33,9 +50,8 @@ export const moderationNavigation: NavigationItem[] = [
 ];
 
 /**
- * Consola de plataforma. Vive aparte de `adminNavigation` porque no es «más
- * administración»: son gimnasios distintos, y mezclar las dos listas pondría
- * módulos de un gimnasio concreto delante de quien no está mirando ninguno.
+ * Consola de plataforma: lo que no depende de ningún gimnasio. Los módulos de
+ * un gimnasio concreto van aparte, en `adminNavigation`.
  */
 export const systemNavigation: NavigationItem[] = [
   { href: '/sistema', label: 'Sistema', icon: Server, roles: ['SYSTEM_ADMIN'] },
@@ -60,5 +76,92 @@ export const systemNavigation: NavigationItem[] = [
     icon: Award,
     roles: ['SYSTEM_ADMIN'],
     description: 'Catálogo oficial: crear, marcar y desmarcar rutinas recomendadas por REPP.',
+  },
+];
+
+/** Who operates a gym since franja 7a: REPP's platform admin, impersonating it. */
+const GYM_OPERATOR: readonly UserRole[] = ['SYSTEM_ADMIN'];
+
+/**
+ * Administration of ONE gym, moved from the gym staff to the platform admin
+ * (franja 7a). The pages keep their `/admin/*` addresses; they act on the gym
+ * chosen in `/sistema` («Elegir gimnasio»).
+ */
+export const adminNavigation: NavigationItem[] = [
+  {
+    // First: the screen that says who to call today in the gym being operated.
+    href: '/admin/operacion',
+    label: 'Panel del gimnasio',
+    icon: BarChart3,
+    roles: GYM_OPERATOR,
+    description: 'Uso del equipamiento, flujo de personas y quién no ha renovado.',
+  },
+  // Sin `description`: es la propia rejilla, y listarse a sí misma dentro sería
+  // un enlace que devuelve a donde ya estás.
+  { href: '/admin', label: 'Operaciones', icon: ShieldCheck, roles: GYM_OPERATOR },
+  {
+    href: '/admin/usuarios',
+    label: 'Usuarios',
+    icon: Users,
+    roles: GYM_OPERATOR,
+    description: 'Todas las cuentas, con su membresía y su última actividad.',
+  },
+  {
+    href: '/admin/equipment',
+    label: 'Equipamiento',
+    icon: Dumbbell,
+    roles: GYM_OPERATOR,
+    description: 'Inventario visible y operaciones autorizadas por rol.',
+  },
+  {
+    href: '/admin/exercises',
+    label: 'Catálogo global',
+    icon: Activity,
+    roles: GYM_OPERATOR,
+    description: 'Ejercicios globales e importación controlada de dataset.',
+  },
+  {
+    href: '/admin/facilities',
+    label: 'Instalaciones',
+    icon: Building2,
+    roles: GYM_OPERATOR,
+    description: 'Sedes, salas, puntos de acceso y mantenimiento.',
+  },
+  {
+    href: '/admin/membership',
+    label: 'Clientes',
+    icon: Users,
+    roles: GYM_OPERATOR,
+    description: 'Planes, clientes, vigencias y personal.',
+  },
+  {
+    href: '/admin/people',
+    label: 'Registrar persona',
+    icon: ScanFace,
+    roles: GYM_OPERATOR,
+    description: 'Alta de personas con credencial facial capturada desde la cámara.',
+  },
+  {
+    href: '/admin/access',
+    label: 'Control de acceso',
+    icon: KeyRound,
+    roles: GYM_OPERATOR,
+    description: 'Dispositivos, decisiones y credenciales.',
+  },
+  {
+    href: '/admin/permissions',
+    label: 'Permisos',
+    icon: ShieldCheck,
+    roles: GYM_OPERATOR,
+    description: 'Otorgar y revocar permisos granulares de administración.',
+    requiredPermission: 'admin-access:manage',
+  },
+  {
+    href: '/admin/auditoria',
+    label: 'Auditoría',
+    icon: ScrollText,
+    roles: GYM_OPERATOR,
+    description: 'Quién hizo qué, cuándo y sobre qué cuenta.',
+    requiredPermission: 'admin-access:manage',
   },
 ];

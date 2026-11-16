@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BACKEND } from './alta-datos';
-import { admin, dismissTour, openPage, signIn, waitForPageSettled } from './fixtures';
+import { dismissTour, e2eTenantId, openPage, signIn, waitForPageSettled } from './fixtures';
 import { apiDe, crearCuenta, promover, sql, type Cuenta } from './rutinas-datos';
 
 /**
@@ -14,7 +14,7 @@ import { apiDe, crearCuenta, promover, sql, type Cuenta } from './rutinas-datos'
  *
  * Needs the backend (`E2E_BACKEND_URL`), PostgreSQL (`sql()` prepares what the
  * API does not let a test create: a verified email, the member in the seeded
- * admin's gym and the `MODERATOR` role) and writable (non-immutable) media
+ * gym, a legacy gym `ADMIN` and the `MODERATOR` role) and writable (non-immutable) media
  * storage — on immutable storage the backend answers 503 by design.
  */
 test.describe.configure({ mode: 'serial' });
@@ -28,6 +28,7 @@ const PNG = Buffer.from(
 
 let member: Cuenta;
 let moderator: Cuenta;
+let gymAdmin: Cuenta;
 
 async function uploadProfilePhoto(account: Cuenta, name: string) {
   const form = new FormData();
@@ -48,12 +49,13 @@ function waitForBackend(page: Page, method: string, pathEnd: string) {
 
 test.beforeAll(async () => {
   member = await crearCuenta('verif', 'Verificación QA');
-  const email = admin.email.replaceAll("'", "''");
   await sql(
-    `UPDATE public.usuarios SET email_verified_at = now(),
-       tenant_id = (SELECT tenant_id FROM public.usuarios WHERE email = '${email}')
+    `UPDATE public.usuarios SET email_verified_at = now(), tenant_id = '${e2eTenantId}'
      WHERE id = '${member.id}'`,
   );
+  // Franja 7a: the seeded admin is the platform admin; gym staff is a legacy role set by hand.
+  gymAdmin = await crearCuenta('verif-gym', 'Admin Gimnasio QA');
+  await sql(`UPDATE public.usuarios SET rol = 'ADMIN', tenant_id = '${e2eTenantId}' WHERE id = '${gymAdmin.id}'`);
   // The selfie review belongs to the central REPP team, not to the gym.
   moderator = await promover(await crearCuenta('verif-mod', 'Moderación QA'), 'MODERATOR');
   // A moderator needs at least two visible photos to compare the selfie with.
@@ -94,7 +96,7 @@ test('member: consent → gesture with countdown → selfie by file → in revie
 });
 
 test('gym staff: no selfie review, neither the old address nor the API', async ({ page }) => {
-  await signIn(page, admin);
+  await signIn(page, gymAdmin);
   // The old gym address redirects to the REPP console, whose role guard turns staff away.
   await openPage(page, '/admin/verificaciones');
   await waitForPageSettled(page);

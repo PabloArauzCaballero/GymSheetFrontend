@@ -449,13 +449,22 @@ export async function sesionDeCardio<T = unknown>(
 }
 
 /**
- * Inicia sesión como el administrador de gimnasio sembrado (`admin@gymsheet.local`). Sirve para
- * las herramientas de soporte (`recompute-week`); la moderación es del equipo de REPP.
+ * Inicia sesión como el administrador de plataforma sembrado (`SEED_ADMIN_*`, `admin@gymsheet.local`)
+ * y opera el gimnasio indicado (`POST /auth/impersonate-tenant`), como hace «Elegir gimnasio» en
+ * `/sistema`. Sirve para las herramientas de soporte (`recompute-week`): desde la franja 7a el
+ * personal del gimnasio ya no administra nada.
  */
-export async function adminDeGimnasio(): Promise<Api> {
+export async function adminDePlataforma(gimnasio = process.env.E2E_TENANT_ID ?? 'default'): Promise<Api> {
   const login = await llamar<{ accessToken: string }>('POST', '/auth/login', {
     email: process.env.E2E_ADMIN_EMAIL ?? 'admin@gymsheet.local',
     password: process.env.E2E_ADMIN_PASSWORD ?? 'AdminLocal2026!',
   });
-  return apiDe({ token: login.data.accessToken });
+  const operando = await llamar<{ accessToken: string }>(
+    'POST',
+    '/auth/impersonate-tenant',
+    { tenantId: gimnasio },
+    login.data.accessToken,
+  );
+  if (operando.status >= 300) throw new Error(`No se pudo operar el gimnasio ${gimnasio} (${operando.status}).`);
+  return apiDe({ token: operando.data.accessToken });
 }

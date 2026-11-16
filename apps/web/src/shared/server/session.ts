@@ -87,9 +87,9 @@ export const getSession = cache(async function getSession(): Promise<PortalSessi
   const user = await readData(userResponse, userSchema);
   if (!principal) return null;
 
-  // Only the roles `/admin/permissions/me` answers for (ADMIN, FRONT_DESK and
-  // SYSTEM_ADMIN, whose list is the whole catalog) ask for it: a coach or a
-  // moderator would get 403, and a moderator needs no grant (ADR-0018). This
+  // Only the platform admin asks for `/admin/permissions/me` (its list is the
+  // whole catalog): since franja 7a every other role, legacy gym staff
+  // included, gets 403 there, and a moderator needs no grant (ADR-0018). This
   // also saves a round-trip on every page load for member accounts.
   const permissions =
     hasAdminPermissionGrants(principal.role)

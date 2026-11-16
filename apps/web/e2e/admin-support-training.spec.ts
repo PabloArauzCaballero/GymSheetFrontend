@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { openPage, signIn, waitForPageSettled } from './fixtures';
+import { openPage, operateGym, signIn, waitForPageSettled } from './fixtures';
 import { backendComo, cargarSemilla, comboDe, evidencia, test } from './evidencia-admin';
 
 /**
@@ -7,8 +7,9 @@ import { backendComo, cargarSemilla, comboDe, evidencia, test } from './evidenci
  * (`07_BACKOFFICE.md` §C).
  *
  * Soporte abre la ficha de un socio desde la lista de usuarios, recalcula una
- * semana vencida (con confirmación y resultado), comprueba que repetirlo no
- * paga dos veces, y quien sólo puede leer ve el botón desactivado. Los datos
+ * semana vencida (con confirmación y resultado) y comprueba que repetirlo no
+ * paga dos veces. Desde la franja 7a soporte es el administrador de plataforma
+ * operando el gimnasio del socio; el `ADMIN` del gimnasio ya no entra. Los datos
  * salen de `scripts/seed-evidencia-rutinas.mjs`: el socio A entrenó la semana 1
  * sin que se contara (recalcular la cumple) y el socio B no entrenó (sigue sin
  * cumplirse).
@@ -32,7 +33,8 @@ const confirmar = (page: Page) => page.getByRole('button', { name: 'Recalcular',
 
 test('RF-B3 · soporte ve el entrenamiento de un socio y recalcula una semana', async ({ page }, testInfo) => {
   const datos = semilla.combos[comboDe(testInfo.project.name)];
-  await signIn(page, { email: datos.gym, password: semilla.password });
+  await signIn(page, { email: semilla.sys, password: semilla.password });
+  await operateGym(page, datos.tenantId);
 
   await test.step('01 · la ficha reúne programas, semanas, invitaciones y sesiones', async () => {
     await abrirFicha(page, datos.memberA);
@@ -85,29 +87,23 @@ test('RF-B3 · soporte ve el entrenamiento de un socio y recalcula una semana', 
   });
 });
 
-test('RF-B3 · quien sólo puede leer ve el botón desactivado', async ({ page }, testInfo) => {
-  const datos = semilla.combos[comboDe(testInfo.project.name)];
-  await signIn(page, { email: datos.reader, password: semilla.password });
-  await openPage(page, `/admin/usuarios/${datos.memberA.id}/entrenamiento?nombre=${encodeURIComponent(datos.memberA.nombre)}`);
-  await waitForPageSettled(page);
-  await expect(page.getByRole('heading', { level: 1, name: `Entrenamiento de ${datos.memberA.nombre}` })).toBeVisible();
-  const boton = page.getByRole('button', { name: 'Recalcular la semana 1' });
-  await expect(boton).toBeDisabled();
-  await expect(boton).toHaveAttribute('title', /support:respond/u);
-  await evidencia(page, 'RF-B3', '03', 'boton-desactivado-sin-permiso');
-});
-
-test('RF-B3 · sin support:read no se abre la ficha', async ({ page, consolaPermitida }, testInfo) => {
-  const datos = semilla.combos[comboDe(testInfo.project.name)];
-  // `redirect('/admin?denied=1')` deja a esta cuenta, que no tiene permisos de soporte, en
-  // `/admin`; si el aviso «No tienes permiso…» llega a pintarse, se anuncia con `console.error` a propósito.
-  consolaPermitida.push(/\[notifications\] \{severity: error/u);
-  // El administrador del OTRO gimnasio no tiene permisos de soporte.
-  await signIn(page, { email: semilla.other, password: semilla.password });
-  await page.goto(`/admin/usuarios/${datos.memberA.id}/entrenamiento`);
-  await page.waitForURL((url) => url.pathname === '/admin' && url.searchParams.get('denied') === '1');
-  await waitForPageSettled(page);
-  await expect(page.getByRole('heading', { level: 1, name: 'Administración' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: /Entrenamiento de/u })).toHaveCount(0);
-  await evidencia(page, 'RF-B3', '04', 'sin-permiso-de-lectura');
-});
+/**
+ * Franja 7a: support permissions granted to a gym ADMIN no longer open anything.
+ * The seeded gym accounts (`gym`, `reader`, `other`) are legacy ADMINs; the
+ * role guard sends them back to the person portal with the denied notice.
+ */
+for (const cuenta of ['gym', 'reader', 'other'] as const) {
+  test(`RF-B3 · un ADMIN del gimnasio (${cuenta}) ya no abre la ficha`, async ({ page, consolaPermitida }, testInfo) => {
+    const datos = semilla.combos[comboDe(testInfo.project.name)];
+    // The «No tienes permiso…» notice is announced with `console.error` on purpose.
+    consolaPermitida.push(/\[notifications\] \{severity: error/u);
+    const email = cuenta === 'other' ? semilla.other : datos[cuenta];
+    await signIn(page, { email, password: semilla.password });
+    await page.goto(`/admin/usuarios/${datos.memberA.id}/entrenamiento`);
+    await page.waitForURL((url) => !url.pathname.startsWith('/admin'));
+    expect(new URL(page.url()).searchParams.get('denied')).toBe('1');
+    await waitForPageSettled(page);
+    await expect(page.getByRole('heading', { name: /Entrenamiento de/u })).toHaveCount(0);
+    await evidencia(page, 'RF-B3', '04', `admin-de-gimnasio-sin-acceso-${cuenta}`);
+  });
+}

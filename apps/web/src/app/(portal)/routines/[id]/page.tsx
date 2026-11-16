@@ -10,13 +10,13 @@ export const metadata: Metadata = { title: 'Rutina' };
 export default async function RoutineDetailPage({
   params,
 }: Readonly<{ params: Promise<{ id: string }> }>) {
-  const session = await requireSession();
+  await requireSession();
   const { id } = await params;
   return publicEnv.routinesV2 ? (
     <Suspense>
-      <RoutineDetailV2 id={id} role={session.role} />
+      <RoutineDetailV2 id={id} />
     </Suspense>
   ) : (
-    <RoutineDetailClient id={id} role={session.role} />
+    <RoutineDetailClient id={id} />
   );
 }

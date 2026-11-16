@@ -177,8 +177,12 @@ export const undoSwipeResultSchema = z.object({
 });
 export type UndoSwipeResult = z.infer<typeof undoSwipeResultSchema>;
 
-/** `null` para un chat normal entre socios; fija el chat arriba de la lista. */
-export const systemConversationKinds = ['CORPORATE', 'TENANT_ADMIN'] as const;
+/**
+ * `null` para un chat normal entre socios; fija el chat arriba de la lista.
+ * Only REPP's own chat remains: the gym admin chat (`TENANT_ADMIN`) was removed
+ * in franja 7a, and the backend no longer creates or lists it.
+ */
+export const systemConversationKinds = ['CORPORATE'] as const;
 export type SystemConversationKind = (typeof systemConversationKinds)[number];
 
 export const conversationSummarySchema = z.object({

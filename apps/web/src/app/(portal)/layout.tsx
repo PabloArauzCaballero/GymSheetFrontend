@@ -1,6 +1,7 @@
 import { Suspense, type ReactNode } from 'react';
 import { DeniedNotice } from '@/shared/components/feedback/denied-notice';
 import { PortalShell } from '@/shared/components/layout/portal-shell';
+import { impersonatedGym } from '@/shared/server/impersonation';
 import { requireSession } from '@/shared/server/session';
 import { getPendingLegalDocuments } from '@/shared/server/legal';
 import { LegalGate } from '@/features/legal/components/legal-gate';
@@ -9,6 +10,8 @@ import { OnboardingGuard } from '@/features/onboarding/components/onboarding-gua
 export default async function PortalLayout({ children }: Readonly<{ children: ReactNode }>) {
   // In parallel: the legal check must not add a round trip to every portal load.
   const [session, pendingLegal] = await Promise.all([requireSession(), getPendingLegalDocuments()]);
+  // Only a platform admin can be operating a gym; the cookie is ignored for anyone else.
+  const gym = session.role === 'SYSTEM_ADMIN' ? await impersonatedGym() : null;
   return (
     // Outside the onboarding guard: with documents pending, its own request would answer 428.
     <LegalGate initialPending={pendingLegal}>
@@ -18,7 +21,9 @@ export default async function PortalLayout({ children }: Readonly<{ children: Re
         <Suspense fallback={null}>
           <DeniedNotice />
         </Suspense>
-        <PortalShell session={session}>{children}</PortalShell>
+        <PortalShell gymName={gym?.nombre ?? null} session={session}>
+          {children}
+        </PortalShell>
       </OnboardingGuard>
     </LegalGate>
   );

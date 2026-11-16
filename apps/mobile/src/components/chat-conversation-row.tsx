@@ -12,7 +12,6 @@ const AVATAR_SIZE = 52;
 /** `null` para un chat normal — sin distintivo. */
 const SYSTEM_KIND_ICON: Record<NonNullable<ConversationSummary['systemKind']>, keyof typeof Ionicons.glyphMap> = {
   CORPORATE: 'business',
-  TENANT_ADMIN: 'shield-checkmark',
 };
 
 /**

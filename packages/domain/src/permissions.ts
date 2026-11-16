@@ -5,25 +5,9 @@ import type { UserRole } from '@gymsheet/types';
  * authorization source of truth; these helpers only drive UI gating so both
  * clients hide the same surfaces for the same roles.
  */
-const STAFF_ROLES: readonly UserRole[] = ['ADMIN', 'COACH', 'FRONT_DESK'];
-const ADMIN_ROLES: readonly UserRole[] = ['ADMIN'];
-
-/**
- * Personal de UN gimnasio.
- *
- * `SYSTEM_ADMIN` queda deliberadamente fuera: no pertenece a ningún gimnasio y
- * las superficies que esto abre —clientes, equipamiento, instalaciones— asumen
- * un gimnasio concreto detrás. Su sitio es la consola de sistema, no la del
- * gimnasio, y colarlo aquí haría que el portal le pintara una navegación de
- * datos que su sesión no tiene acotados.
- */
-export function isStaff(role: UserRole | null | undefined): boolean {
-  return role != null && STAFF_ROLES.includes(role);
-}
-
-export function isAdmin(role: UserRole | null | undefined): boolean {
-  return role != null && ADMIN_ROLES.includes(role);
-}
+// Since franja 7a the gym has no staff surfaces: REPP operates every gym
+// (`SYSTEM_ADMIN`) and moderates them (`MODERATOR`). The legacy gym roles stay in
+// the enum until 7d but carry no administration, so there is no `isStaff` any more.
 
 /** Administrador de plataforma: opera por encima de los gimnasios. */
 export function isSystemAdmin(role: UserRole | null | undefined): boolean {
@@ -48,16 +32,12 @@ export function isPlatformModerator(role: UserRole | null | undefined): boolean 
 }
 
 /**
- * Roles the backend answers `GET /admin/permissions/me` for (`ADMIN`,
- * `FRONT_DESK`, and `SYSTEM_ADMIN` that satisfies `ADMIN`). A coach or a
- * moderator would get 403: their access never depends on grants.
+ * Roles the backend answers `GET /admin/permissions/me` for: only the platform
+ * admin since franja 7a (every `admin/*` route is `@Roles(SYSTEM_ADMIN)`). A
+ * legacy gym role (ADMIN, FRONT_DESK, COACH) or a moderator would get 403.
  */
 export function hasAdminPermissionGrants(role: UserRole | null | undefined): boolean {
-  return role === 'ADMIN' || role === 'FRONT_DESK' || role === 'SYSTEM_ADMIN';
-}
-
-export function canManageAdminPanel(role: UserRole | null | undefined): boolean {
-  return isAdmin(role);
+  return role === 'SYSTEM_ADMIN';
 }
 
 export function canAccessMemberFeatures(role: UserRole | null | undefined): boolean {

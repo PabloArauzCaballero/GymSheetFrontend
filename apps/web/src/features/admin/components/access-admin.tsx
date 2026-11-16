@@ -21,7 +21,7 @@ export function AccessAdmin({ role }: Readonly<{ role: UserRole }>) {
           <TabsTrigger value="credentials">Credenciales</TabsTrigger>
         </TabsList>
         <TabsContent value="devices">
-          <AccessDevicePanel canManage={role === 'ADMIN'} />
+          <AccessDevicePanel canManage={role === 'SYSTEM_ADMIN'} />
         </TabsContent>
         <TabsContent value="history">
           <AccessHistoryPanel />
