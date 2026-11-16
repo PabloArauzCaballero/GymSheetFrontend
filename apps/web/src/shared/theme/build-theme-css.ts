@@ -1,3 +1,4 @@
+import { chatColors, type ChatColors } from '@gymsheet/design-tokens';
 import { FONT_VARIABLE, fontVariableByKey } from './brand-contract';
 import {
   cssVariableByScalar,
@@ -88,8 +89,22 @@ function declarationsFor(palette: ModePalette): string[] {
   return declarations;
 }
 
+/** Chat's accent is not tenant-owned (`@gymsheet/design-tokens/chat`): same values for every brand. */
+function chatDeclarations(chat: ChatColors): string[] {
+  return [
+    `--chat-ink: ${chat.ink}`,
+    `--chat-fill-from: ${chat.fillFrom}`,
+    `--chat-fill-to: ${chat.fillTo}`,
+    `--chat-on-fill: ${chat.onFill}`,
+    `--chat-dot: ${chat.dot}`,
+    `--chat-on-dot: ${chat.onDot}`,
+    `--chat-dot-channels: ${toChannels('chatDot', chat.dot)}`,
+  ];
+}
+
 function block(selector: string, palette: ModePalette): string {
-  return `${selector}{${declarationsFor(palette).join(';')}}`;
+  const chat = palette.colorScheme === 'light' ? chatColors.light : chatColors.dark;
+  return `${selector}{${[...declarationsFor(palette), ...chatDeclarations(chat)].join(';')}}`;
 }
 
 /**

@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { profileService } from '@/features/profile/services/profile-service';
 import type { UserGender } from '@/shared/api/contracts';
+import { SaveStatusLine, useSectionSave } from '@/shared/components/feedback/save-status';
 import { Field } from '@/shared/components/ui/field';
 import { Select } from '@/shared/components/ui/select';
 import { notify } from '@/shared/notifications';
@@ -19,10 +20,13 @@ import { notify } from '@/shared/notifications';
  * reversible, y un formulario de un campo con su propio «Guardar» es fricción
  * sin contrapartida.
  */
+const GENDER_SAVE_KEY = ['profile', 'gender'] as const;
+
 export function GenderPreferenceField({ value }: Readonly<{ value: UserGender | null }>) {
   const queryClient = useQueryClient();
 
   const save = useMutation({
+    mutationKey: GENDER_SAVE_KEY,
     mutationFn: profileService.updateGender,
     onSuccess: async () => {
       await Promise.all([
@@ -31,12 +35,14 @@ export function GenderPreferenceField({ value }: Readonly<{ value: UserGender | 
         // recargar la página, que es justo el cambio que se acaba de pedir.
         queryClient.invalidateQueries({ queryKey: ['progression'] }),
       ]);
-      notify.success('Preferencia guardada.');
     },
     onError: (error: Error) => notify.error(error.message),
   });
 
+  // A one-tap choice saves on change and confirms in the same status line as the sections with a button.
+  const status = useSectionSave(GENDER_SAVE_KEY, false);
   return (
+    <>
     <Field
       hint="Elige con qué rangos e insignias te habla tu senda. Puedes cambiarlo cuando quieras."
       htmlFor="genero"
@@ -60,5 +66,7 @@ export function GenderPreferenceField({ value }: Readonly<{ value: UserGender | 
         <option value="FEMALE">Mujer</option>
       </Select>
     </Field>
+    <SaveStatusLine saved="Preferencia guardada." status={status} testId="gender-status" />
+    </>
   );
 }

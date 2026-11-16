@@ -3,15 +3,8 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { mascotXml, type MascotMood } from '@gymsheet/design-tokens/repi';
-import Animated, {
-  Easing,
-  cancelAnimation,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { Easing, cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import { noOrphan } from '@gymsheet/domain';
 import { Button } from '@/components/ui';
 import { resolveError } from '@/notifications';
 import { Shimmer } from '@/components/shimmer';
@@ -197,7 +190,7 @@ function CenteredState({
         />
       )}
       <Text style={{ textAlign: 'center' }} variant="headline">
-        {title}
+        {noOrphan(title)}
       </Text>
       <Text selectable style={{ textAlign: 'center' }} tone="muted" variant="subhead">
         {message}
@@ -255,7 +248,7 @@ function CompactState({
           <Ionicons color={colors.textMuted} name={icon} size={iconSizes.lg} />
         </View>}
         <View style={{ flex: 1, gap: 2 }}>
-          <Text variant="headline">{title}</Text>
+          <Text variant="headline">{noOrphan(title)}</Text>
           <Text selectable tone="muted" variant="subhead">
             {message}
           </Text>

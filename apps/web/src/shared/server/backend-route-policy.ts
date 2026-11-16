@@ -114,6 +114,8 @@ const allowedPathPatterns = [
   // acotado al tenant y filtrar por una sede ajena no puede devolver a nadie.
   /^\/me\/facilities\/branches$/u,
   /^\/me\/conversations$/u,
+  // Matches waiting for my reply: the glowing dot on Chat (same source as the app's Repi widget).
+  /^\/me\/conversations\/pending-replies$/u,
   new RegExp(`^/me/conversations/${resourceId}/messages$`, 'u'),
   // Chat completo, a la altura del móvil: media (multipart), la revelación de
   // un mensaje de vista única, el apodo privado de la conversación y el avance

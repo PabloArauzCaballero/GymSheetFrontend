@@ -1,10 +1,11 @@
 'use client';
 
-import { proudStat, roleLabel } from '@gymsheet/domain';
+import { proudStat, roleLabel, shortDate, weightRowSubtitle } from '@gymsheet/domain';
 import { useQuery } from '@tanstack/react-query';
-import { Bell, CreditCard, Dumbbell, Eye, LifeBuoy, MessageCircle, PersonStanding, Scale, Settings, Share2, SquarePen, Star, Users } from 'lucide-react';
+import { Bell, CreditCard, Dumbbell, Eye, LifeBuoy, PersonStanding, Scale, Settings, Share2, SquarePen, Star, Users } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
+import type { CSSProperties } from 'react';
+import { useChatWaiting } from '@/features/chat/hooks/use-chat-waiting';
 import { membershipService } from '@/features/membership/services/membership-service';
 import { onboardingService } from '@/features/onboarding/services/onboarding-service';
 import { goalLabels } from '@/features/profile/components/profile-form-schema';
@@ -22,15 +23,18 @@ import { NavRow } from '@/shared/components/mobile/nav-row';
 import { Section } from '@/shared/components/mobile/section';
 import { Badge } from '@/shared/components/ui/badge';
 import { formatDate } from '@/shared/lib/date';
-import { notify } from '@/shared/notifications';
 import { AboutCard } from './about-card';
 import { CompletionAvatar } from './completion-avatar';
-import { CompletionError, CompletionNudge } from './completion-nudge';
+import { CompletionError, CompletionNudge, CompletionSkeleton } from './completion-nudge';
+import { AwardAnnouncer, usePointsAward } from './points-award';
 import { FitnessRow, fitnessNumbers } from './fitness-row';
 import { ProfileActions } from './profile-actions';
 import { RankChip } from './profile-hero';
-import { RowGlyph, RowGroup, initialsOf, shareProfile } from './profile-rows';
+import { ChatTile, RowGlyph, RowGroup, initialsOf, shareProfile } from './profile-rows';
 import { SendaCard } from './senda-card';
+
+/** Stagger step for `.enter-up` (`--i`). */
+const stagger = (index: number) => ({ '--i': index }) as CSSProperties;
 
 const MEMBERSHIP_BADGE = {
   ACTIVE: { label: 'Activa', tone: 'success' },
@@ -52,17 +56,10 @@ export function ProfilePageClient() {
   const { user, profile, progression, completion } = own;
   const measurements = useQuery({ queryKey: queryKeys.bodyMeasurements, queryFn: onboardingService.measurements });
   const membership = useQuery({ queryKey: queryKeys.membership, queryFn: membershipService.getMine, retry: false });
+  const chatWaiting = useChatWaiting();
 
-  // Lo recién ganado se celebra una vez: el servidor solo lo marca en la lectura que lo otorga.
-  const celebrated = useRef('');
-  useEffect(() => {
-    const data = completion.data;
-    const key = data?.awardedNow.join(',') ?? '';
-    if (!data || !key || key === celebrated.current) return;
-    celebrated.current = key;
-    const points = data.items.filter((item) => data.awardedNow.includes(item.code)).reduce((sum, item) => sum + item.points, 0);
-    notify.success(`+${points} puntos por completar tu perfil.`);
-  }, [completion.data]);
+  // Lo recién ganado se celebra una vez, donde viven los puntos (el servidor solo lo marca en la lectura que lo otorga).
+  const { award, announcement } = usePointsAward(completion.data, user.data?.id);
 
   if (user.isPending) {
     return (
@@ -77,8 +74,6 @@ export function ProfilePageClient() {
   const me = user.data;
   const role = roleLabel(me.rol);
   const member = membership.data?.membership;
-  const ordered = [...(measurements.data ?? [])].sort((a, b) => b.measuredOn.localeCompare(a.measuredOn));
-  const lastWeight = ordered[0];
   const progress = progression.data;
   const rank = progress ? (progress.level?.name ?? 'Sin empezar') : null;
   // Three fixed slots, Editar always centred: Compartir waits (inert) for real numbers instead of popping in.
@@ -128,7 +123,7 @@ export function ProfilePageClient() {
         {[
           <NavRow href="/workouts" key="entrenos" leading={<RowGlyph icon={Dumbbell} />} subtitle="Todas tus sesiones, con sus series" title="Mis entrenos" />,
           <NavRow href="/exercises" key="ejercicios" leading={<RowGlyph icon={Star} />} subtitle="Tus favoritos ☆ y el catálogo completo" title="Mis ejercicios y favoritos" />,
-          <NavRow href="/chat" key="chat" leading={<RowGlyph icon={MessageCircle} />} subtitle="Habla con tus conexiones" title="Chat" />,
+          <NavRow href="/chat" key="chat" leading={<ChatTile count={chatWaiting.count} pulseKey={chatWaiting.pulseKey} />} subtitle={chatWaiting.label ?? 'Habla con tus conexiones'} title="Chat" />,
           <NavRow href="/entrenar-juntos" key="juntos" leading={<RowGlyph icon={Users} />} subtitle="Invitaciones recibidas y encuentros" title="Entrenar juntos" />,
         ]}
       </RowGroup>
@@ -150,7 +145,7 @@ export function ProfilePageClient() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
         <div className="grid min-w-0 grid-cols-1 gap-8">
-          <HeroSurface className="justify-items-center gap-4 py-7" watermark watermarkAt="top">
+          <HeroSurface className="enter-up justify-items-center gap-4 py-7" watermark watermarkAt="top">
             <CompletionAvatar
               hint={hasPhoto ? 'Ver cómo te ven en Conocer' : 'Añadir una foto'}
               href={hasPhoto ? '/profile/editar?tab=preview' : '/profile/editar#fotos'}
@@ -167,7 +162,9 @@ export function ProfilePageClient() {
                 {me.rol !== 'CLIENTE' ? <Badge>{role}</Badge> : null}
               </div>
             </div>
-            <FitnessRow pending={progression.isPending} progress={progress} />
+            {/* The count-up waits for the re-read progression, so it never starts from a stale total. */}
+            <FitnessRow award={award && progression.dataUpdatedAt >= award.at ? award : null} pending={progression.isPending} progress={progress} />
+            <AwardAnnouncer line={announcement} />
             <ProfileActions
               actions={[
                 { key: 'preview', label: 'Vista previa', icon: Eye, href: '/profile/editar?tab=preview' },
@@ -177,25 +174,31 @@ export function ProfilePageClient() {
             />
           </HeroSurface>
 
-          {completion.isPending ? (
-            <Skeleton className="h-48" />
-          ) : completion.data ? (
-            <CompletionNudge completion={completion.data} />
-          ) : completionFailed ? (
-            <CompletionError onRetry={retryCompletion} retrying={completion.isFetching} />
-          ) : null}
-          <AboutCard bio={own.bio} chips={own.chips} />
-          <div className="lg:hidden">{senda}</div>
+          {/* Sections enter once, in reading order (≤6 × 40 ms, `profile-motion.css`); reduced motion cuts it. */}
+          <div className="enter-up grid" style={stagger(1)}>
+            {completion.isPending ? (
+              <CompletionSkeleton />
+            ) : completion.data ? (
+              <CompletionNudge completion={completion.data} />
+            ) : completionFailed ? (
+              <CompletionError onRetry={retryCompletion} retrying={completion.isFetching} />
+            ) : null}
+          </div>
+          <div className="enter-up grid" style={stagger(2)}>
+            <AboutCard bio={own.bio} chips={own.chips} />
+          </div>
+          <div className="enter-up lg:hidden" style={stagger(3)}>{senda}</div>
 
-          <div className="min-w-0 lg:hidden">{activity}</div>
+          <div className="enter-up min-w-0 lg:hidden" style={stagger(4)}>{activity}</div>
 
-          <div className="grid min-w-0 grid-cols-1 gap-8 lg:hidden">{conocer}</div>
+          <div className="enter-up grid min-w-0 grid-cols-1 gap-8 lg:hidden" style={stagger(5)}>{conocer}</div>
 
+          <div className="enter-up grid min-w-0" style={stagger(6)}>
           <Section title="Tu cuenta">
             <RowGroup>
               {[
                 <NavRow href="/profile/editar#datos" key="datos" leading={<RowGlyph icon={PersonStanding} />} subtitle={dataSubtitle} title="Peso, estatura y objetivo" />,
-                <NavRow href="/profile/editar#progress" key="peso" leading={<RowGlyph icon={Scale} />} subtitle={measurements.isError ? 'No se pudo cargar tu evolución' : lastWeight ? `Último: ${lastWeight.weight.toLocaleString('es-ES')} ${lastWeight.unit.toLowerCase()}` : 'Anota tu primer pesaje'} title="Registrar peso" />,
+                <NavRow href="/profile/editar#progress" key="peso" leading={<RowGlyph icon={Scale} />} subtitle={weightRowSubtitle(measurements.data, measurements.isError, shortDate)} title="Registrar peso" />,
                 <NavRow
                   href="/membership"
                   key="membresia"
@@ -211,6 +214,7 @@ export function ProfilePageClient() {
               ]}
             </RowGroup>
           </Section>
+          </div>
           <div className="min-w-0 lg:hidden">{weight}</div>
         </div>
 

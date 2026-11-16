@@ -5,7 +5,6 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Tabs } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
 import {
   BottomTabBar,
   BottomTabBarHeightCallbackContext,
@@ -25,9 +24,10 @@ import {
   useInteractionCounts,
 } from '@/components/interactions-counts';
 import { TourTarget } from '@/components/tour';
-import { socialService } from '@/api/services';
+import { ChatTabDot, useReceivedRequests } from '@/features/chat/chat-tab-dot';
+import { useChatWaiting } from '@/features/chat/use-chat-waiting';
 import { ACTIVE_BAR_SPACE, ActiveWorkoutBar, useActiveWorkout } from '@/features/workout/active-workout-bar';
-import { accentContrast, alpha, colors, fontSizes, iconSizes, overlay, radii, semibold, shadows, spacing } from '@/theme';
+import { accentContrast, alpha, chat, colors, fontSizes, iconSizes, overlay, radii, semibold, shadows, spacing } from '@/theme';
 
 /** Outline when resting, filled when active — the platform convention. */
 const ICONS = {
@@ -162,7 +162,9 @@ function tabIcon(screen: keyof typeof ICONS) {
           ]}
         />
         <ReAnimated.View style={style}>
-          <Ionicons color={color} name={ICONS[screen][focused ? 1 : 0]} size={iconSizes.lg} />
+          {/* Mensajes wears Chat's own vibrant ink, with its glowing dot at the tip when something waits. */}
+          <Ionicons color={screen === 'mensajes' ? chat.ink : color} name={ICONS[screen][focused ? 1 : 0]} size={iconSizes.lg} />
+          {screen === 'mensajes' ? <ChatTabDot /> : null}
         </ReAnimated.View>
       </TourTarget>
     );
@@ -262,19 +264,9 @@ export default function TabsLayout() {
   const counts = useInteractionCounts();
   const alerts = interactionsAlertTotal(counts.data);
   const floating = useFloatingTabBar();
-  /**
-   * Quien quiere conectar contigo, en el icono de Mensajes. Misma clave que la
-   * vista de Solicitudes: el número sale de la caché que esa pantalla ya
-   * mantiene, y una solicitud respondida lo baja en los dos sitios a la vez.
-   * Sin él, con la barra solo de iconos, una solicitud nueva no se veía hasta
-   * entrar a buscarla.
-   */
-  const pending = useQuery({
-    queryKey: ['social', 'connections', 'PENDING'],
-    queryFn: () => socialService.listConnections('PENDING'),
-    staleTime: 60_000,
-  });
-  const requests = (pending.data ?? []).filter((connection) => connection.direction === 'RECEIVED').length;
+  // Requests to answer and chats waiting for my reply: one dot on Mensajes (`ChatTabDot`), said in its label.
+  const requests = useReceivedRequests();
+  const waiting = useChatWaiting();
   const badgeStyle = {
     backgroundColor: colors.volt,
     color: accentContrast(),
@@ -407,11 +399,9 @@ export default function TabsLayout() {
         options={{
           title: 'Mensajes',
           tabBarAccessibilityLabel:
-            requests > 0
-              ? `Mensajes, ${requests} ${requests === 1 ? 'solicitud' : 'solicitudes'} por responder, tab`
+            requests > 0 || waiting.label
+              ? `Mensajes, ${[waiting.label, requests > 0 ? `${requests} ${requests === 1 ? 'solicitud' : 'solicitudes'} por responder` : null].filter(Boolean).join(', ')}, tab`
               : undefined,
-          tabBarBadge: requests > 0 ? tabBadge(requests) : undefined,
-          tabBarBadgeStyle: badgeStyle,
           tabBarIcon: tabIcon('mensajes'),
         }}
       />

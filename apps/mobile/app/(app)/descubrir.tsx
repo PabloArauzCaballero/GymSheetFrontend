@@ -821,8 +821,8 @@ export default function DescubrirScreen() {
               <TourHelpButton tourKey="descubrir" />
             </View>
             {/* Short enough for one line at 390; at 320 or with large text it wraps instead of cutting. */}
-            <Text numberOfLines={2} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-              Desliza: derecha si te interesa, izquierda si no.
+            <Text numberOfLines={3} style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
+              Desliza: derecha si te interesa, izquierda si no. Tu decisión se guarda.
             </Text>
             {h5S2M1Fixture.enabled ? (
               <Text

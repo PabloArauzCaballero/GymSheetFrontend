@@ -1,6 +1,7 @@
 import { noOrphan } from '@gymsheet/domain';
 import type { Progression } from '@/shared/api/schemas';
 import { Skeleton } from '@/shared/components/feedback/skeleton';
+import { AwardedPoints, type PointsAward } from './points-award';
 import { plural } from './profile-hero';
 
 /** Points, streak and sessions from the real progression: what the hero shows and what sharing brags about. */
@@ -14,7 +15,7 @@ export function fitnessNumbers(progress: Pick<Progression, 'points' | 'streak' |
  * ocupa lo mismo: cargando, la cifra es una silueta; si falló, una raya (el
  * reintento está en la tarjeta de la senda). Nada salta al llegar el dato.
  */
-export function FitnessRow({ progress, pending }: Readonly<{ progress: Progression | undefined; pending: boolean }>) {
+export function FitnessRow({ progress, pending, award = null }: Readonly<{ progress: Progression | undefined; pending: boolean; award?: PointsAward | null }>) {
   const numbers = progress ? fitnessNumbers(progress) : null;
   const stats = [
     { key: 'points', value: numbers?.points ?? null, label: 'puntos' },
@@ -32,7 +33,9 @@ export function FitnessRow({ progress, pending }: Readonly<{ progress: Progressi
             {stat.value !== null ? `${stat.value.toLocaleString('es-ES')} ${stat.label}` : `${stat.label}: ${pending ? 'cargando' : 'no disponible'}`}
           </span>
           <span aria-hidden className="t-numeric">
-            {stat.value !== null ? (
+            {stat.key === 'points' && award && stat.value !== null ? (
+              <AwardedPoints award={award} key={award.key} value={stat.value} />
+            ) : stat.value !== null ? (
               stat.value.toLocaleString('es-ES')
             ) : pending ? (
               <Skeleton className="h-[1lh] w-10" />

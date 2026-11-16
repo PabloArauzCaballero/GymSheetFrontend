@@ -10,6 +10,7 @@ import { queryKeys } from '@/shared/api/query-keys';
 import { useBrand } from '@/shared/theme/brand-provider';
 import { Divider, ListCard, NavRow } from '@/shared/components/mobile/nav-row';
 import { cn } from '@/shared/lib/cn';
+import { COMUNIDAD_COLUMN } from './deck-geometry';
 import { DescubrirClient } from './descubrir-client';
 import { SearchPreferencesDialog, type DirectoryPreferences } from './search-preferences-dialog';
 
@@ -169,54 +170,61 @@ export function ComunidadClient() {
   const goal = pill === 'goal' ? (profile.data?.objetivo ?? 'HIPERTROFIA') : preferences.objetivo;
 
   return (
-    <div className="mx-auto grid w-full max-w-xl gap-5">
-      <h1 className="sr-only">Comunidad</h1>
-      <div className="flex items-center justify-between gap-2">
-        <RoundButton
-          active={filtersActive}
-          dot={filtersActive}
-          label="Preferencias de búsqueda"
-          onClick={() => setPreferencesOpen(true)}
-        >
-          <SlidersHorizontal aria-hidden className="size-5" />
-        </RoundButton>
-
-        <div
-          aria-label="Qué baraja ver"
-          className="flex min-w-0 items-center gap-0.5 rounded-[1.5rem] border border-[var(--border-subtle)] bg-[var(--surface-low)] p-[3px]"
-          role="radiogroup"
-        >
-          {(
-            [
-              ['foryou', 'Para ti'],
-              ['goal', 'Mismo objetivo'],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              aria-checked={pill === value}
-              className={cn(
-                'min-h-11 min-w-0 rounded-[calc(1.5rem-3px)] px-3 py-1 text-xs leading-tight text-balance transition-colors sm:px-4 duration-[var(--dur-2)]',
-                pill === value
-                  ? 'bg-[var(--surface-high)] font-bold text-[var(--text)]'
-                  : 'font-medium text-[var(--text-muted)] hover:text-[var(--text)]',
-              )}
-              key={value}
-              onClick={() => setPill(value)}
-              role="radio"
-              type="button"
-            >
-              {label}
-            </button>
-          ))}
+    // One column the card's width (max-w-md), at least as tall as the space between the app header
+    // and the tab bar, so the deck can be a real flex column (see COMUNIDAD_COLUMN).
+    <div className={`mx-auto flex w-full max-w-md flex-col gap-4 ${COMUNIDAD_COLUMN}`}>
+      {/* Same header as the app: title on the card's left edge, filters and «⋯» on its right edge;
+          the deck switch spans the card's width underneath. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        {/* Never squeezed (shrink-0): with very large text it steps down a size and the buttons wrap under it. */}
+        <h1 className="shrink-0 text-2xl font-semibold tracking-[-0.02em] @max-[14rem]:text-xl">Comunidad</h1>
+        <div className="ml-auto flex items-center gap-2">
+          <RoundButton
+            active={filtersActive}
+            dot={filtersActive}
+            label="Preferencias de búsqueda"
+            onClick={() => setPreferencesOpen(true)}
+          >
+            <SlidersHorizontal aria-hidden className="size-5" />
+          </RoundButton>
+          <OverflowSheet onPreferences={() => setPreferencesOpen(true)} />
         </div>
+      </div>
 
-        <OverflowSheet onPreferences={() => setPreferencesOpen(true)} />
+      <div
+        aria-label="Qué baraja ver"
+        className="flex w-full items-stretch gap-1 rounded-[1.5rem] border border-[var(--border-subtle)] bg-[var(--surface-low)] p-1"
+        role="radiogroup"
+      >
+        {(
+          [
+            ['foryou', 'Para ti'],
+            ['goal', 'Mismo objetivo'],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            aria-checked={pill === value}
+            className={cn(
+              'min-h-11 min-w-0 flex-1 rounded-[calc(1.5rem-4px)] px-3 py-1 text-sm leading-tight text-balance transition-colors duration-[var(--dur-2)]',
+              pill === value
+                ? 'bg-[var(--surface-high)] font-semibold text-[var(--text)]'
+                : 'font-medium text-[var(--text-muted)] hover:text-[var(--text)]',
+            )}
+            key={value}
+            onClick={() => setPill(value)}
+            role="radio"
+            type="button"
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       <DescubrirClient
         embedded
         genero={preferences.genero}
         key={`${pill}-${goal}`}
+        onChangeFilters={() => setPreferencesOpen(true)}
         objetivo={goal}
         sucursalId={preferences.sucursalId}
       />

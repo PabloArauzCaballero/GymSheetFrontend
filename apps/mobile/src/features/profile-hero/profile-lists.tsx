@@ -3,8 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
+import { weightRowSubtitle } from '@gymsheet/domain';
 import type { Profile } from '@gymsheet/types';
 import { membershipService, profileService, socialService } from '@/api/services';
+import { ChatTile, ROW_GLYPH_WIDTH } from '@/components/chat-tile';
 import { ErrorState } from '@/components/feedback';
 import { Badge, Card, Divider, Section } from '@/components/layout';
 import { NavRow } from '@/components/list';
@@ -12,13 +14,13 @@ import { GOAL_LABEL, MEMBERSHIP_LABEL, MEMBERSHIP_TONE, formatDate } from '@/lib
 import { routes } from '@/lib/routes';
 import { useTourStore } from '@/state/tour-store';
 import { colors, iconSizes, spacing } from '@/theme';
+import { useChatWaiting } from '@/features/chat/use-chat-waiting';
 import { LogoutRow } from './logout-row';
-import { weightTrend } from './weight-trend';
 
 /** Glifo de fila, callado: el protagonista de la pantalla es la cara, no la lista. */
 function RowGlyph({ icon }: { icon: keyof typeof Ionicons.glyphMap }) {
   return (
-    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: iconSizes.lg, alignItems: 'center' }}>
+    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: ROW_GLYPH_WIDTH, alignItems: 'center' }}>
       <Ionicons color={colors.textSecondary} name={icon} size={iconSizes.md} />
     </View>
   );
@@ -41,13 +43,14 @@ function RowGroup({ children }: { children: ReactNode[] }) {
 
 export function ActivityList() {
   const router = useRouter();
+  const waiting = useChatWaiting();
   return (
     <Section title="Tu actividad">
       <RowGroup>
         {[
           <NavRow key="entrenos" leading={<RowGlyph icon="barbell-outline" />} onPress={() => router.push('/workouts')} subtitle="Todas tus sesiones, con sus series" title="Mis entrenos" />,
           <NavRow key="ejercicios" leading={<RowGlyph icon="star-outline" />} onPress={() => router.push(routes.exerciseFavorites())} subtitle="Tus favoritos ☆ y el catálogo completo" testID="profile-exercises" title="Mis ejercicios y favoritos" />,
-          <NavRow key="chat" leading={<RowGlyph icon="chatbubbles-outline" />} onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />,
+          <NavRow key="chat" leading={<ChatTile count={waiting.count} pulseKey={waiting.pulseKey} />} onPress={() => router.push('/chat')} subtitle={waiting.label ?? 'Habla con tus conexiones'} testID="profile-chat" title="Chat" />,
           <NavRow key="training-invitations" leading={<RowGlyph icon="people-outline" />} onPress={() => router.push('/training-invitations')} subtitle="Invitaciones recibidas y encuentros" title="Entrenar juntos" />,
         ]}
       </RowGroup>
@@ -100,13 +103,6 @@ export function AccountList({ profile, profilePending, missingProfile, onLogout,
   const measurements = useQuery({ queryKey: ['profile', 'body-measurements'], queryFn: () => profileService.measurements() });
   const membership = useQuery({ queryKey: ['membership', 'me'], queryFn: () => membershipService.getMine() });
   const member = membership.data?.membership;
-  const lastWeight = measurements.data?.[0];
-  const firstWeight = measurements.data?.[measurements.data.length - 1];
-  const trend =
-    lastWeight && firstWeight && lastWeight.id !== firstWeight.id
-      ? weightTrend(lastWeight.weight - firstWeight.weight, lastWeight.unit, formatDate(firstWeight.measuredOn))
-      : null;
-
   return (
     <Section title="Tu cuenta">
       <RowGroup>
@@ -116,7 +112,7 @@ export function AccountList({ profile, profilePending, missingProfile, onLogout,
             key="peso"
             leading={<RowGlyph icon="scale-outline" />}
             onPress={() => router.push('/registrar-peso')}
-            subtitle={measurements.isError ? 'No se pudo cargar tu evolución' : lastWeight ? `Último: ${lastWeight.weight.toLocaleString('es-ES')} ${lastWeight.unit.toLowerCase()}${trend ? ` · ${trend}` : ''}` : 'Anota tu primer pesaje'}
+            subtitle={weightRowSubtitle(measurements.data, measurements.isError, formatDate)}
             title="Registrar peso"
           />,
           membership.isError ? (

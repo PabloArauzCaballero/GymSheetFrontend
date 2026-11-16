@@ -48,7 +48,7 @@ export function LogoutButton({
         onClick={logout}
         type="button"
       >
-        <span aria-hidden className="grid w-6 shrink-0 place-items-center">
+        <span aria-hidden className="grid w-9 shrink-0 place-items-center">
           {loading ? <LoaderCircle className="size-5 animate-spin" /> : <LogOut className="size-5" />}
         </span>
         <span className="t-headline">Cerrar sesión</span>

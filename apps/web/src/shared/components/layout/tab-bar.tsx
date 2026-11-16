@@ -5,6 +5,8 @@ import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { ChatDot } from '@/features/chat/components/chat-dot';
+import { useChatWaiting } from '@/features/chat/hooks/use-chat-waiting';
 import type { SessionPrincipal } from '@/shared/api/contracts';
 import { cn } from '@/shared/lib/cn';
 import { navigationFor } from './nav-config';
@@ -19,6 +21,7 @@ import { tabBarFor } from './tab-bar-config';
 export function TabBar({ session }: Readonly<{ session: SessionPrincipal }>) {
   const pathname = usePathname();
   const interactionAlerts = useInteractionAlerts();
+  const chatWaiting = useChatWaiting();
   const tabs = tabBarFor(session.role, session.permissions);
   const all = navigationFor(session.role, session.permissions).flatMap((group) => group.items);
   const ownHref = activeHrefFor(pathname, all.map((item) => item.href));
@@ -54,6 +57,8 @@ export function TabBar({ session }: Readonly<{ session: SessionPrincipal }>) {
           return (
             <Link
               aria-current={active ? 'page' : undefined}
+              // One clean name for Chat («Mensajes, 2 chats esperan tu respuesta»); the dot's figure is decoration.
+              aria-label={tab.href === '/chat' && chatWaiting.label ? `${tab.label}, ${chatWaiting.label}` : undefined}
               className={cn(tabClasses, active ? 'text-[var(--accent-ink)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]')}
               data-tutorial-id={`tab:${tab.href}`}
               href={tab.href}
@@ -67,17 +72,23 @@ export function TabBar({ session }: Readonly<{ session: SessionPrincipal }>) {
                     active ? 'scale-100 opacity-100' : 'scale-x-[0.55] scale-y-[0.8] opacity-0',
                   )}
                 />
+                {/* Chat wears its own vibrant ink, with the glowing dot at the tip when chats wait for a reply. */}
                 <Icon
                   aria-hidden
-                  className="relative size-6"
+                  className={cn('relative size-6', tab.href === '/chat' && 'text-[var(--chat-ink)]')}
                   strokeWidth={active ? 2.25 : 1.75}
                 />
                 {tab.href === '/comunidad' ? (
                   <NavAlert count={interactionAlerts} floating />
                 ) : null}
+                {tab.href === '/chat' && chatWaiting.count > 0 ? (
+                  <ChatDot className="absolute top-0 right-1" count={chatWaiting.count} halo="var(--surface-high)" pulseKey={chatWaiting.pulseKey} />
+                ) : null}
               </span>
               {/* Five labels need ~22.5rem: narrower (or with large text) the bar goes icon-only, the name stays for screen readers. */}
-              <span className="whitespace-nowrap @max-[22.5rem]:sr-only">{tab.label}</span>
+              <span className="whitespace-nowrap @max-[22.5rem]:sr-only">
+                {tab.label}
+              </span>
             </Link>
           );
         })}

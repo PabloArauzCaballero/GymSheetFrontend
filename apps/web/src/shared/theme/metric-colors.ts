@@ -68,8 +68,8 @@ export const onMedia = {
 /**
  * Deck action row, the same language as the app's `DeckAction`: one quiet surface,
  * a 1 px outline and a glyph in the same tone. Only the two decisions carry a hue
- * (pass in danger, like in accent ink); undo, super like and message stay neutral,
- * so the accent is not spent on five buttons at once.
+ * (pass in danger, like in accent ink); undo and super like stay neutral, and the
+ * message button wears Chat's own vibrant fill (`chat`), not the brand accent.
  */
 export const deckActions = {
   undo: { ink: 'var(--text-muted)', bg: 'var(--surface-low)', edge: 'var(--text-muted)' },
@@ -77,4 +77,5 @@ export const deckActions = {
   star: { ink: 'var(--text-muted)', bg: 'var(--surface-low)', edge: 'var(--text-muted)' },
   like: { ink: 'var(--accent-ink)', bg: 'var(--surface-low)', edge: 'var(--accent-ink)' },
   boost: { ink: 'var(--text-muted)', bg: 'var(--surface-low)', edge: 'var(--text-muted)' },
+  chat: { ink: 'var(--chat-on-fill)', bg: 'linear-gradient(135deg, var(--chat-fill-from), var(--chat-fill-to))', edge: 'transparent' },
 } as const;

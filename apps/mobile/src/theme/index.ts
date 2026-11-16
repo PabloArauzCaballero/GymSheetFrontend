@@ -6,7 +6,7 @@
  * `fontSizes`, `accentPolicy`, `tones`, `applyBrandColors`, marcas…): las
  * pantallas importan de `@/theme` y no saben de qué archivo sale cada token.
  */
-import { theme } from '@gymsheet/design-tokens';
+import { chatColors as chatPalette, theme } from '@gymsheet/design-tokens';
 
 export * from './colors';
 export * from './spacing';
@@ -23,3 +23,5 @@ export type { Theme } from '@gymsheet/design-tokens';
 export * from './extras';
 export * from './cards';
 export * from './arenas';
+/** Chat's own vibrant accent (dark app): fixed for every tenant. Ratios in `@gymsheet/design-tokens/chat`. */
+export const chat = chatPalette.dark;

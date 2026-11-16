@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { notify } from '@/shared/notifications';
+import { useDraftReport } from '@/features/profile/lib/unsaved-guard';
 import { socialService } from '@/features/social/services/social-service';
 import type { SocialStatusValue } from '@/shared/api/schemas';
 import { socialStatusValues } from '@/shared/api/schemas';
@@ -14,7 +15,10 @@ import { Button } from '@/shared/components/ui/button';
 import { Field } from '@/shared/components/ui/field';
 import { Select } from '@/shared/components/ui/select';
 import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
+import { SaveStatusLine, useSectionSave } from '@/shared/components/feedback/save-status';
 import { socialStatusLabels } from './social-status-labels';
+
+const SOCIAL_SAVE_KEY = ['profile', 'social-status'] as const;
 
 /** Tu estado social: solo lo ve quien tenga una conexión aceptada contigo Y lo marques visible. */
 export function SocialStatusCard() {
@@ -33,21 +37,26 @@ export function SocialStatusCard() {
   const dirty = value !== (status.data?.socialStatus ?? '') || visible !== (status.data?.visible ?? false);
 
   const save = useMutation({
+    mutationKey: SOCIAL_SAVE_KEY,
     mutationFn: () =>
       socialService.updateSocialStatus({ socialStatus: value === '' ? null : value, visible }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.socialStatus });
-      notify.success('Estado social actualizado.');
+      // The overrides go: the saved value is the server's again, so the section reads clean.
+      setValueOverride(null);
+      setVisibleOverride(null);
     },
     onError: (error: Error) => notify.error(error),
   });
 
+  const saveStatus = useSectionSave(SOCIAL_SAVE_KEY, dirty);
+  useDraftReport('social-status', dirty);
   if (status.isLoading) return <LoadingPanel rows={2} />;
 
   return (
     <Section title="Tu estado social">
     <Card>
-      <CardContent className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end">
+      <CardContent className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
         <p className="t-subhead text-[var(--text-muted)] sm:col-span-full">Solo lo ven tus conexiones aceptadas, y solo si lo dejas visible.</p>
         <Field htmlFor="social-status" label="Estado">
           <Select
@@ -72,10 +81,13 @@ export function SocialStatusCard() {
           {visible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
           {visible ? 'Visible' : 'Oculto'}
         </Button>
-        {/* Accent fill only with a change to save: one lit save per screen. */}
-        <Button loading={save.isPending} onClick={() => save.mutate()} variant={dirty ? 'primary' : 'secondary'}>
-          Guardar
-        </Button>
+        {/* The edit page's one save row: status left, the section's own save right. */}
+        <div className="flex flex-wrap items-center gap-3 sm:col-span-full">
+          <SaveStatusLine saved="Estado social guardado." status={saveStatus} testId="social-status-save" />
+          <Button disabled={!dirty} loading={save.isPending} onClick={() => save.mutate()} size="sm" variant="primary">
+            Guardar estado
+          </Button>
+        </div>
       </CardContent>
     </Card>
     </Section>

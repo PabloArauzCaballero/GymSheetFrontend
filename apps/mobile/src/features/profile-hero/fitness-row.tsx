@@ -2,9 +2,11 @@ import { noOrphan } from '@gymsheet/domain';
 import type { Progression } from '@gymsheet/schemas';
 import { View } from 'react-native';
 import { Skeleton } from '@/components/feedback';
+import { CountUpText } from '@/components/motion';
 import { Text } from '@/components/text';
 import { fitnessNumbers } from '@/features/profile-hero/fitness-numbers';
 import { plural } from '@/features/profile-hero/profile-hero';
+import { AwardChip, type PointsAward } from './points-award';
 import { colors, radii, spacing, textVariants } from '@/theme';
 
 type Stat = { key: string; value: number | null; label: string };
@@ -32,7 +34,7 @@ function fitnessStats(progress: Progression | undefined): Stat[] {
  * ocupa lo mismo: cargando, la cifra es una silueta; si falló, una raya (el
  * reintento está en la tarjeta de la senda). Nada salta al llegar el dato.
  */
-export function FitnessRow({ progress, pending }: { progress: Progression | undefined; pending: boolean }) {
+export function FitnessRow({ progress, pending, award = null }: { progress: Progression | undefined; pending: boolean; award?: PointsAward | null }) {
   return (
     <View style={{ flexDirection: 'row', alignSelf: 'stretch' }} testID="profile-fitness-row">
       {fitnessStats(progress).map((stat, index) => (
@@ -44,6 +46,12 @@ export function FitnessRow({ progress, pending }: { progress: Progression | unde
         >
           {stat.value === null && pending ? (
             <Skeleton height={textVariants.numeric.lineHeight} radius={radii.sm} width={40} />
+          ) : stat.key === 'points' && award && stat.value !== null ? (
+            // The award moment: the figure counts up from before the award, the «+N» chip rises beside it.
+            <View>
+              <CountUpText from={Math.max(stat.value - award.points, 0)} key={award.key} style={[textVariants.numeric, { color: colors.text }]} value={stat.value} />
+              <AwardChip points={award.points} />
+            </View>
           ) : (
             <Text numberOfLines={1} tone={stat.value === null ? 'secondary' : 'default'} variant="numeric">
               {stat.value === null ? '—' : stat.value.toLocaleString('es-ES')}

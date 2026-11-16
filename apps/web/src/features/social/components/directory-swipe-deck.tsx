@@ -4,7 +4,9 @@ import { AnimatePresence } from 'framer-motion';
 import { Heart, MessageCircle, Star, Undo2, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { GymDirectoryEntry, SwipeDirection } from '@/shared/api/schemas';
+import { ChatDot } from '@/features/chat/components/chat-dot';
 import { deckActions } from '@/shared/theme/metric-colors';
+import { DECK_CARD, DECK_CARD_FILL } from './deck-geometry';
 import { SwipeCard } from './swipe-card';
 
 /**
@@ -34,7 +36,13 @@ export function DirectorySwipeDeck({
   undoPending,
   onMessage,
   messagePending = false,
+  showHint = true,
+  fill = false,
 }: Readonly<{
+  /** Inside Comunidad's column: the card fills the free height instead of keeping its natural size. */
+  fill?: boolean;
+  /** The how-to line under the buttons. Off when the page header already says it. */
+  showHint?: boolean;
   /** Rayo: abre un chat directo con la persona de arriba. */
   onMessage?: (entry: GymDirectoryEntry) => void;
   messagePending?: boolean;
@@ -50,8 +58,10 @@ export function DirectorySwipeDeck({
   const top = visible[0];
 
   return (
-    <div className="grid justify-items-center gap-6">
-      <div className="relative h-[28rem] w-full max-w-md sm:h-[34rem]">
+    // A flex column: the card is the only item that gives way, so the actions always fit under it.
+    // `@container` lets the buttons size against the deck's width (cqw), not just the text size.
+    <div className="@container flex min-h-0 w-full flex-1 flex-col items-center justify-[safe_center] gap-4 sm:gap-5" data-deck>
+      <div className={fill ? DECK_CARD_FILL : DECK_CARD}>
         <AnimatePresence>
           {/* Se pintan en orden inverso para que la primera quede arriba en el
               apilado sin recurrir a `z-index` por tarjeta. */}
@@ -67,7 +77,9 @@ export function DirectorySwipeDeck({
         </AnimatePresence>
       </div>
       {/* La botonera del móvil: deshacer · paso · super like · me interesa · mensaje. */}
-      <div className="flex items-center gap-3">
+      {/* 48/64 rem buttons that scale with text but never outgrow the deck: each is capped at a share of
+          its width (5 buttons + 4 gaps ≤ 97 cqw), and the small ones never drop under 44 px. */}
+      <div className="flex w-full max-w-md shrink-0 items-center justify-center gap-[min(0.75rem,2.5cqw)]">
         <DeckAction disabled={!canUndo || undoPending} label="Deshacer la última decisión" onClick={onUndo} size="sm" tone="undo">
           <Undo2 aria-hidden className="size-5" />
         </DeckAction>
@@ -102,15 +114,19 @@ export function DirectorySwipeDeck({
             label={top ? `Enviar mensaje directo a ${top.displayName}` : 'Enviar mensaje directo'}
             onClick={() => top && onMessage(top)}
             size="sm"
-            tone="boost"
+            tone="chat"
           >
-            <MessageCircle aria-hidden className="size-5" />
+            <MessageCircle aria-hidden className="size-5 fill-current" />
+            {/* The glowing tip is decoration (Chat ink, no figure): the alert pink stays for «someone is waiting». */}
+            {top && !messagePending ? <ChatDot className="absolute top-0.5 right-0.5" halo="var(--background)" tone="spark" /> : null}
           </DeckAction>
         ) : null}
       </div>
-      <p className="text-center text-xs text-[var(--text-muted)]">
-        Arrastra la tarjeta o usa los botones. Tu decisión se guarda.
-      </p>
+      {showHint ? (
+        <p className="shrink-0 text-center text-xs text-[var(--text-muted)] max-[359px]:hidden @max-[14rem]:hidden [@media(max-height:700px)]:hidden">
+          Arrastra la tarjeta o usa los botones. Tu decisión se guarda.
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -131,13 +147,15 @@ function DeckAction({
   tone: keyof typeof deckActions;
 }>) {
   const look = deckActions[tone];
+  // Disabled is announced (aria-disabled keeps it focusable, so a screen reader still finds it) and drawn
+  // dashed in --text-disabled (≥3:1 on --surface-low), never faded below legibility.
   return (
     <button
+      aria-disabled={disabled || undefined}
       aria-label={label}
-      className={`tap grid ${size === 'sm' ? 'size-12' : 'size-16'} place-items-center rounded-full border transition-transform duration-[var(--dur-1)] active:scale-[0.94] disabled:pointer-events-none disabled:opacity-40 motion-reduce:active:scale-100`}
-      disabled={disabled}
-      onClick={onClick}
-      style={{ background: look.bg, borderColor: look.edge, color: look.ink }}
+      className={`tap relative grid shrink-0 ${size === 'sm' ? 'size-[max(44px,min(3rem,16.5cqw))] [&>svg:first-child]:size-[42%]' : 'size-[min(4rem,20cqw)] [&>svg:first-child]:size-[48%]'} place-items-center rounded-full border ${tone === 'chat' ? 'shadow-[0_6px_18px_-6px_var(--chat-fill-from)]' : ''} transition-transform duration-[var(--dur-1)] motion-reduce:active:scale-100 ${disabled ? 'cursor-not-allowed border-dashed' : 'active:scale-[0.94]'}`}
+      onClick={disabled ? undefined : onClick}
+      style={disabled ? { background: 'var(--surface-low)', borderColor: 'var(--text-disabled)', color: 'var(--text-disabled)' } : { background: look.bg, borderColor: look.edge, color: look.ink }}
       type="button"
     >
       {children}

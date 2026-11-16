@@ -46,7 +46,10 @@ export function DescubrirClient({
   objetivo,
   sucursalId,
   embedded = false,
+  onChangeFilters,
 }: Readonly<{
+  /** Opens the search preferences (Comunidad owns that dialog); offered when the deck runs out. */
+  onChangeFilters?: () => void;
   genero: string;
   objetivo: string;
   sucursalId: string;
@@ -194,7 +197,8 @@ export function DescubrirClient({
   });
 
   return (
-    <div className="mx-auto grid w-full max-w-2xl gap-6">
+    // Embedded, it is the flexible part of Comunidad's column (the deck fills what the header leaves).
+    <div className={embedded ? 'flex min-h-0 w-full flex-1 flex-col' : 'mx-auto grid w-full max-w-2xl gap-6'}>
       {embedded ? null : (
       <header className="grid gap-2">
         <Link
@@ -207,7 +211,7 @@ export function DescubrirClient({
         <h1 className="text-3xl font-semibold tracking-[-0.03em]">Descubrir</h1>
         {/* Same copy as the app; `text-pretty` keeps a wrap from leaving one lone word. */}
         <p className="text-pretty text-sm text-[var(--text-muted)]">
-          Desliza: derecha si te interesa, izquierda si no.
+          Desliza: derecha si te interesa, izquierda si no. Tu decisión se guarda.
         </p>
       </header>
       )}
@@ -217,7 +221,16 @@ export function DescubrirClient({
         needsPreferences={gate === 'setup' || (deck.isError && needsDiscoveryPreferences(deck.error))}
         empty={visibleQueue.length === 0}
         emptyAction={
-          <div className="flex flex-wrap justify-center gap-2">
+          // The app's three actions, same words and order, one column of equal-width buttons.
+          <div className="mx-auto grid w-full max-w-xs gap-3">
+            <Button loading={deck.isFetching} onClick={() => deck.refetch()} variant="primary">
+              Explorar de nuevo
+            </Button>
+            {onChangeFilters ? (
+              <Button onClick={onChangeFilters} variant="secondary">
+                Cambiar filtros
+              </Button>
+            ) : null}
             {visibleHistory.length > 0 ? (
               <Button
                 loading={undo.isPending}
@@ -227,9 +240,6 @@ export function DescubrirClient({
                 Deshacer la última
               </Button>
             ) : null}
-            <Button loading={deck.isFetching} onClick={() => deck.refetch()} variant="primary">
-              Buscar más socios
-            </Button>
           </div>
         }
         loading={gate === 'pending' || deck.isLoading}
@@ -244,6 +254,8 @@ export function DescubrirClient({
           onMessage={(entry) => message.mutate(entry)}
           messagePending={message.isPending}
           onUndo={() => undo.mutate({ filterKey })}
+          fill={embedded}
+          showHint={embedded}
           undoPending={undo.isPending}
         />
       </DeckSurface>

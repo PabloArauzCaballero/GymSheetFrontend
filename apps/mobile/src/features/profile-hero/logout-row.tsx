@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { ROW_GLYPH_WIDTH } from '@/components/chat-tile';
 import { ActivityIndicator, View } from 'react-native';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
@@ -21,7 +22,7 @@ export function LogoutRow({ onPress, pending }: { onPress: () => void; pending: 
       style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.smd, minHeight: comfortableTouchTarget, paddingVertical: spacing.sm }}
       testID="logout-row"
     >
-      <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: iconSizes.lg, alignItems: 'center' }}>
+      <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: ROW_GLYPH_WIDTH, alignItems: 'center' }}>
         {pending ? <ActivityIndicator color={colors.danger} size="small" /> : <Ionicons color={colors.danger} name="log-out-outline" size={iconSizes.md} />}
       </View>
       <Text style={{ flex: 1 }} tone="danger" variant="headline">

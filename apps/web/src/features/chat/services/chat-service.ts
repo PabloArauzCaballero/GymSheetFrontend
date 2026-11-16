@@ -9,6 +9,7 @@ import type {
 import {
   conversationSummarySchema,
   chatMessageSchema,
+  pendingRepliesSchema,
   messageSchema,
   readReceiptSettingsSchema,
   socketTicketSchema,
@@ -37,6 +38,8 @@ const readSchema = z.object({ read: z.literal(true) });
 export const chatService = {
   listConversations: () =>
     apiRequest<ConversationSummary[]>('/me/conversations', z.array(conversationSummarySchema)),
+  /** Matches waiting for my reply (`GET /me/conversations/pending-replies`): the Chat dot. */
+  pendingReplies: () => apiRequest('/me/conversations/pending-replies', pendingRepliesSchema),
   startConversation: (otherUserId: string) =>
     apiRequest<StartConversationResponse>('/me/conversations', startConversationResponseSchema, {
       method: 'POST',

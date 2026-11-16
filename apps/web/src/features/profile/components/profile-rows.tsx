@@ -1,15 +1,32 @@
 'use client';
 
-import type { LucideIcon } from 'lucide-react';
+import { MessagesSquare, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { ChatDot } from '@/features/chat/components/chat-dot';
 import { Divider, ListCard } from '@/shared/components/mobile/nav-row';
 import { notify } from '@/shared/notifications';
 
 /** Glifo de fila, callado: un trazo gris; el protagonista es el héroe. */
 export function RowGlyph({ icon: Icon }: Readonly<{ icon: LucideIcon }>) {
   return (
-    <span aria-hidden className="grid w-6 shrink-0 place-items-center text-[var(--text-muted)]">
+    <span aria-hidden className="grid w-9 shrink-0 place-items-center text-[var(--text-muted)]">
       <Icon className="size-5" />
+    </span>
+  );
+}
+
+/**
+ * Chat's row tile (`apps/mobile/src/components/chat-tile.tsx`): the vibrant fill with
+ * a white glyph and, when chats wait for a reply, the glowing dot with the figure.
+ */
+export function ChatTile({ count, pulseKey }: Readonly<{ count: number; pulseKey: number }>) {
+  return (
+    // Same 36 px column as the other rows' glyphs, so titles align; the dot sits on the tile's corner, clear of the text.
+    <span aria-hidden className="grid w-9 shrink-0 place-items-center">
+      <span className="chat-fill relative grid size-7 place-items-center rounded-[var(--radius-sm)]">
+        <MessagesSquare className="size-4" />
+        {count > 0 ? <ChatDot className="absolute -top-2 -right-2" count={count} halo="var(--surface)" pulseKey={pulseKey} /> : null}
+      </span>
     </span>
   );
 }

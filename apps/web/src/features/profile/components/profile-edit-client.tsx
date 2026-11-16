@@ -18,7 +18,9 @@ import { PageHeader } from '@/shared/components/layout/page-header';
 import { Section } from '@/shared/components/mobile/section';
 import { Segmented } from '@/shared/components/ui/segmented';
 import { BioEditor } from './bio-editor';
+import { confirmDiscardDrafts, useLeaveGuard } from '../lib/unsaved-guard';
 import { PendingPoints } from './pending-points';
+import { AwardAnnouncer, useAwardDetector } from './points-award';
 import { ProfileDataForm } from './profile-data-form';
 import { ProfilePreview } from './profile-preview';
 import { TrainingEditor } from './training-editor';
@@ -38,6 +40,10 @@ export function ProfileEditClient() {
   const own = useOwnProfile();
   const queryClient = useQueryClient();
   const completion = own.completion.data;
+  // An award earned by a save here is announced at once; the hero shows it on return to the profile.
+  const awardLine = useAwardDetector(completion, own.user.data?.id);
+  // Unsaved sections are never dropped silently: leaving or switching to the preview asks first.
+  useLeaveGuard();
 
   // The gallery only refreshes its own list: re-read completion when photos change.
   const photosVersion = own.photos.dataUpdatedAt;
@@ -77,10 +83,15 @@ export function ProfileEditClient() {
         title="Editar perfil"
         tutorialId="page:profile"
       />
+      <AwardAnnouncer line={awardLine} />
       <Segmented
         label="Modo"
         tabsFor="profile-edit-panel"
-        onChange={(next) => router.replace(next === 'preview' ? '/profile/editar?tab=preview' : '/profile/editar', { scroll: false })}
+        onChange={(next) => {
+          void confirmDiscardDrafts().then((go) => {
+            if (go) router.replace(next === 'preview' ? '/profile/editar?tab=preview' : '/profile/editar', { scroll: false });
+          });
+        }}
         options={[
           { value: 'edit', label: 'Editar' },
           { value: 'preview', label: 'Vista previa' },

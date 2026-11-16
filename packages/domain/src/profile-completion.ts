@@ -105,6 +105,44 @@ export function completionRingLabel({ hasPhoto, percent, failed = false }: { has
   return failed ? `${subject}. Progreso sin cargar` : subject;
 }
 
+/**
+ * Points the server awarded in this very read (`awardedNow`), and the line
+ * that says it. Zero when nothing was awarded: no celebration for old news.
+ */
+export function awardedNowPoints<T extends Pick<ProfileCompletionItemLike, 'code' | 'points'>>(completion: { items: readonly T[]; awardedNow: readonly string[] }): number {
+  return completion.items.filter((item) => completion.awardedNow.includes(item.code)).reduce((sum, item) => sum + item.points, 0);
+}
+
+/**
+ * Points to celebrate on a completion read. Any progression read on the server
+ * can be the one that awards (`awardedNow` lands on whichever request got
+ * there first), so the client also compares `pointsEarned` with the last read
+ * it saw for this member: a rise is an award, whichever request granted it.
+ * Without a previous read there is nothing to compare: no celebration.
+ */
+export function pointsAwardDelta(previousEarned: number | null, completion: { pointsEarned: number; items: readonly Pick<ProfileCompletionItemLike, 'code' | 'points'>[]; awardedNow: readonly string[] }): number {
+  // Already counted (another screen read the same data first): never celebrate twice.
+  if (previousEarned !== null) return Math.max(completion.pointsEarned - previousEarned, 0);
+  return awardedNowPoints(completion);
+}
+
+export function awardAnnouncement(points: number): string {
+  return `+${points.toLocaleString('es-ES')} puntos por completar tu perfil.`;
+}
+
+/**
+ * The «complete» state: the profile is at 100 %. It says what completing it
+ * earned (the server's `pointsEarned`) and points to the reward: how others see
+ * you. Members who had everything before points existed earned 0: no number.
+ */
+export function profileCompleteCopy(completion: { percent: number; pointsEarned: number }): { title: string; body: string } | null {
+  if (completion.percent < 100) return null;
+  const body = completion.pointsEarned > 0
+    ? `Ganaste ${completion.pointsEarned.toLocaleString('es-ES')} puntos completándolo. Así te ven en Conocer.`
+    : 'Así te ven en Conocer.';
+  return { title: 'Perfil completo', body };
+}
+
 /** «+50». Lo que vale un dato, listo para una ficha. */
 export function pointsChip(points: number): string {
   return `+${points.toLocaleString('es-ES')}`;

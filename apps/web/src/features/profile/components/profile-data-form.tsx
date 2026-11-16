@@ -8,17 +8,18 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { goalLabels, profileFormSchema, type ProfileFormValues } from '@/features/profile/components/profile-form-schema';
 import * as birthDate from '@/features/profile/lib/birth-date';
+import { useDraftReport } from '@/features/profile/lib/unsaved-guard';
 import { profileService } from '@/features/profile/services/profile-service';
 import type { Profile } from '@/shared/api/contracts';
 import { trainingGoals } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
+import { SaveStatusLine, useSectionSave } from '@/shared/components/feedback/save-status';
 import { Button } from '@/shared/components/ui/button';
 import { Section } from '@/shared/components/mobile/section';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Field } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
-import { notify } from '@/shared/notifications';
 
 /**
  * A weight typed the Spanish way («63,5», a dot works too). Shows the text as
@@ -67,6 +68,8 @@ function BirthDateInput({ field }: Readonly<{ field: { value: string; onChange: 
   );
 }
 
+const DATA_SAVE_KEY = ['profile', 'data'] as const;
+
 /**
  * Peso, estatura, nacimiento y objetivo (antes era toda la página de edición).
  * `profile === null` es «todavía sin medidas»: se crea con `POST`.
@@ -87,6 +90,7 @@ export function ProfileDataForm({ profile, footer }: Readonly<{ profile: Profile
       });
   }, [form, profile]);
   const save = useMutation({
+    mutationKey: DATA_SAVE_KEY,
     mutationFn: ({ fechaNacimiento, ...values }: ProfileFormValues) => {
       const input = { ...values, ...birthDate.birthDatePayload(fechaNacimiento, Boolean(profile?.fechaNacimiento)) };
       return profile ? profileService.updateProfile(input) : profileService.createProfile(input);
@@ -99,11 +103,12 @@ export function ProfileDataForm({ profile, footer }: Readonly<{ profile: Profile
         // Completing these fields can award profile points.
         queryClient.invalidateQueries({ queryKey: ['progression'] }),
       ]);
-      notify.success('Perfil actualizado.');
     },
     onError: (error: Error) => form.setError('root', { message: error.message }),
   });
 
+  const status = useSectionSave(DATA_SAVE_KEY, form.formState.isDirty);
+  useDraftReport('data', form.formState.isDirty);
   return (
     <form onSubmit={form.handleSubmit((values) => save.mutate(values))}>
       {/* «Tus datos», as on the app; the heading sits outside the card like every other section. */}
@@ -137,11 +142,14 @@ export function ProfileDataForm({ profile, footer }: Readonly<{ profile: Profile
               {form.formState.errors.root.message}
             </p>
           ) : null}
-          {/* Lights up (accent fill) only with something to save, like the other sections. */}
-          <Button className="sm:col-span-2" loading={save.isPending} size="lg" type="submit" variant={form.formState.isDirty ? 'primary' : 'secondary'}>
-            <Save className="size-4" />
-            Guardar datos
-          </Button>
+          {/* One save per section, the same row as every other section: status left, button right. */}
+          <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
+            <SaveStatusLine saved="Datos guardados." status={status} testId="data-status" />
+            <Button disabled={profile !== null && !form.formState.isDirty} loading={save.isPending} size="sm" type="submit" variant="primary">
+              <Save aria-hidden className="size-4" />
+              Guardar datos
+            </Button>
+          </div>
         </CardContent>
       </Card>
       </Section>

@@ -1,0 +1,72 @@
+/* ----------------------------------------------------------------------------
+ * Chat's glowing dot (`ChatDot`) and its vibrant fill. Colours come from the
+ * `--chat-*` variables (`@gymsheet/design-tokens/chat`, emitted by
+ * `build-theme-css.ts`). The dot pulses only when its key changes (something
+ * new arrived): two rings, then still. The global `prefers-reduced-motion`
+ * kill-switch in `animations.css` leaves it static.
+ * -------------------------------------------------------------------------- */
+
+/* In `components`, so Tailwind utilities (`absolute`, `ml-auto`…) on the dot still win. */
+@layer components {
+.chat-dot {
+  --chat-halo: var(--surface);
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  min-width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 9999px;
+  background: var(--chat-dot);
+  color: var(--chat-on-dot);
+  box-shadow:
+    0 0 0 2px var(--chat-halo),
+    0 0 10px 2px rgb(var(--chat-dot-channels) / 0.6);
+  pointer-events: none;
+  isolation: isolate;
+}
+.chat-dot[data-figure] {
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.chat-dot[data-tone='spark'] {
+  min-width: 0.625rem;
+  height: 0.625rem;
+  background: var(--chat-ink);
+  box-shadow:
+    0 0 0 2px var(--chat-halo),
+    0 0 10px 3px color-mix(in srgb, var(--chat-ink) 70%, transparent);
+}
+.chat-dot[data-pulse]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--chat-dot);
+  /* Behind the dot: the ring grows out from under it and never veils the figure. */
+  z-index: -1;
+  opacity: 0;
+  animation: chat-dot-pulse 0.84s var(--ease-out) 0.14s 2 both;
+}
+/* The vibrant fill of Chat's own controls (deck message button, profile row tile). */
+.chat-fill {
+  background: linear-gradient(135deg, var(--chat-fill-from), var(--chat-fill-to));
+  color: var(--chat-on-fill);
+}
+}
+
+@keyframes chat-dot-pulse {
+  from {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+

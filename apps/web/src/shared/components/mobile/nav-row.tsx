@@ -36,7 +36,7 @@ export function NavRow({
 }>) {
   return (
     <Link
-      className="tap group flex min-h-12 items-center gap-3 py-2 transition-opacity duration-[var(--dur-2)] hover:opacity-90"
+      className="tap group flex min-h-12 items-center gap-3 py-2 transition-[opacity,transform] duration-[var(--dur-1)] ease-[var(--ease-out)] hover:opacity-90 active:scale-[0.98] motion-reduce:active:scale-100"
       href={href}
     >
       {leading}

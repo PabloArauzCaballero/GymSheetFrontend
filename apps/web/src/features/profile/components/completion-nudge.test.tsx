@@ -51,9 +51,12 @@ describe('CompletionNudge', () => {
     expect(screen.getByRole('link', { name: /Ver 1 dato más/ })).toHaveAttribute('href', '/profile/editar');
   });
 
-  it('renders nothing once every point is earned', () => {
-    const { container } = render(<CompletionNudge completion={completion([item('FOTO', 50, true, true)])} />);
-    expect(container).toBeEmptyDOMElement();
+  it('turns into the reward at 100 %: what completing it earned and a link to how others see you', () => {
+    render(<CompletionNudge completion={completion([item('FOTO', 50, true, true), item('BIO', 40, true, true)])} />);
+    expect(screen.queryByRole('heading', { name: /Completa tu perfil/ })).not.toBeInTheDocument();
+    const reward = screen.getByRole('link', { name: /Perfil completo/ });
+    expect(reward).toHaveAttribute('href', '/profile/editar?tab=preview');
+    expect(reward).toHaveTextContent('Ganaste 90 puntos completándolo.');
   });
 });
 

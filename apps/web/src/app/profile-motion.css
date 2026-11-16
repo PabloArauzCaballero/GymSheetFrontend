@@ -1,0 +1,51 @@
+/* ----------------------------------------------------------------------------
+ * Profile motion that answers something: the «+N» award chip rising beside the
+ * points, and the sections entering once in reading order. All of it is cut by
+ * the global `prefers-reduced-motion` kill-switch (`animations.css`).
+ * -------------------------------------------------------------------------- */
+
+.award-chip {
+  animation:
+    award-rise var(--dur-4) var(--ease-out) both,
+    award-leave var(--dur-2) ease-in 2.4s forwards;
+}
+@keyframes award-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes award-leave {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Sections: rise 16 px and fade, 40 ms apart, at most six steps (mobile `EnterUp`). */
+.enter-up {
+  animation: enter-up var(--dur-3) var(--ease-out) both;
+  animation-delay: calc(min(var(--i, 0), 6) * 40ms);
+}
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Reduced motion: the kill-switch shortens the animation, so the stagger delay must go too,
+   or sections would sit invisible for up to 240 ms before appearing. */
+@media (prefers-reduced-motion: reduce) {
+  .enter-up,
+  .award-chip {
+    animation-delay: 0s;
+  }
+}

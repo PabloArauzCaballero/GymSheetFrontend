@@ -147,8 +147,10 @@ export function DirectoryCardFace({
 
       {/* Tres paradas y no dos: con dos, el tramo medio sube demasiado rápido y
           el degradado vuelve a leerse como una banda cortada a media foto. */}
-      <div className={cn('pointer-events-none absolute inset-x-0 bottom-0 z-10 grid gap-0.5 bg-[linear-gradient(to_top,rgb(var(--scrim-channels)/0.88)_0%,rgb(var(--scrim-channels)/0.45)_55%,transparent_100%)] p-5 pt-16 text-white', onInfo && interactive && 'pr-16')}>
-        <p className={cn('font-semibold tracking-[-0.02em]', fill ? 'text-3xl' : 'text-xl')}>
+      {/* With very large text (a deck under 14rem wide, see the deck's `@container`) the info button
+          leaves the details' side and drops under them, so the details keep the card's full width. */}
+      <div className={cn('pointer-events-none absolute inset-x-0 bottom-0 z-10 grid gap-0.5 bg-[linear-gradient(to_top,rgb(var(--scrim-channels)/0.88)_0%,rgb(var(--scrim-channels)/0.45)_55%,transparent_100%)] p-5 pt-16 text-white @max-[14rem]:pt-8', onInfo && interactive && 'pr-16 @max-[14rem]:pr-5')}>
+        <p className={cn('font-semibold tracking-[-0.02em] [overflow-wrap:anywhere]', fill ? 'text-3xl @max-[10rem]:text-2xl' : 'text-xl')}>
           {entry.displayName}
           {entry.age !== null ? (
             <span className="ml-2 font-normal opacity-90">{entry.age}</span>
@@ -158,7 +160,7 @@ export function DirectoryCardFace({
         {/* The «·» sits in the gap before each part, positioned outside it: the part that starts a
             line has its dot past the clipped left edge, so no line starts or ends with «·». */}
         {meta.length > 0 ? (
-          <p className="flex flex-wrap gap-x-3.5 overflow-hidden text-sm leading-[19px] text-white/85">
+          <p className="flex flex-wrap gap-x-3.5 overflow-hidden text-sm leading-[1.35] text-white/85">
             {meta.map((part) => (
               <span className="relative min-w-0" key={part}>
                 <span aria-hidden className="absolute right-full w-3.5 text-center">·</span>
@@ -167,21 +169,20 @@ export function DirectoryCardFace({
             ))}
           </p>
         ) : null}
+        {onInfo && interactive ? (
+          <button
+            aria-label={`Ver la ficha de ${entry.displayName}`}
+            className="tap pointer-events-auto absolute bottom-4 right-4 z-10 grid size-11 place-items-center @max-[14rem]:static @max-[14rem]:mt-3 @max-[14rem]:justify-self-end rounded-full border border-white/30 bg-[rgb(var(--scrim-channels)/0.45)] text-white"
+            onClick={(event) => {
+              event.stopPropagation();
+              onInfo();
+            }}
+            type="button"
+          >
+            <Info aria-hidden className="size-5" />
+          </button>
+        ) : null}
       </div>
-
-      {onInfo && interactive ? (
-        <button
-          aria-label={`Ver la ficha de ${entry.displayName}`}
-          className="tap absolute bottom-4 right-4 z-10 grid size-11 place-items-center rounded-full border border-white/30 bg-[rgb(var(--scrim-channels)/0.45)] text-white"
-          onClick={(event) => {
-            event.stopPropagation();
-            onInfo();
-          }}
-          type="button"
-        >
-          <Info aria-hidden className="size-5" />
-        </button>
-      ) : null}
     </div>
   );
 }
@@ -197,11 +198,13 @@ function GalleryStep({
   onStep,
 }: Readonly<{ direction: 'prev' | 'next'; disabled: boolean; label: string; onStep: () => void }>) {
   const Icon = direction === 'prev' ? ChevronLeft : ChevronRight;
+  // At 40 %, not 50 %: on a short card the middle is already the name band and the info button.
+  // With very large text the band covers most of the card, so the arrows sit right under the progress bars.
   return (
     <button
       aria-label={label}
       className={cn(
-        'absolute top-1/2 z-10 grid size-11 -translate-y-1/2 place-items-center rounded-full border border-white/30 bg-[rgb(var(--scrim-channels)/0.45)] text-white transition-opacity duration-[var(--dur-2)] disabled:pointer-events-none disabled:opacity-0',
+        'absolute top-[40%] z-10 grid size-11 -translate-y-1/2 place-items-center @max-[14rem]:top-14 @max-[14rem]:translate-y-0 rounded-full border border-white/30 bg-[rgb(var(--scrim-channels)/0.45)] text-white transition-opacity duration-[var(--dur-2)] disabled:pointer-events-none disabled:opacity-0',
         direction === 'prev' ? 'left-3' : 'right-3',
       )}
       disabled={disabled}

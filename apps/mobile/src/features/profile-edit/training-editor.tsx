@@ -6,12 +6,15 @@ import { onboardingService } from '@/api/services';
 import { FilterChip } from '@/components/filter-chip';
 import { Card, Section } from '@/components/layout';
 import { Text } from '@/components/text';
+import { SaveStatusLine, useSectionSave } from '@/components/save-status';
 import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
 import { spacing } from '@/theme';
+import { useDraftReport } from './unsaved-guard';
 
 type Level = keyof typeof experienceLevelLabels;
 const LEVELS: readonly Level[] = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
+const TRAINING_SAVE_KEY = ['profile', 'training'] as const;
 
 /**
  * Nivel e intereses: las fichas que te juntan con gente de tu ritmo. Va por
@@ -34,8 +37,11 @@ export function TrainingEditor({
 
   const dirty = draftLevel !== level || draftInterests.join('|') !== interestsKey;
   const options = [...new Set([...preferenceOptions, ...interests])];
+  const status = useSectionSave(TRAINING_SAVE_KEY, dirty);
+  useDraftReport('training', dirty);
 
   const save = useMutation({
+    mutationKey: TRAINING_SAVE_KEY,
     mutationFn: () =>
       onboardingService.updateTrainingProfile({
         ...(draftLevel ? { experienceLevel: draftLevel } : {}),
@@ -46,7 +52,6 @@ export function TrainingEditor({
         queryClient.invalidateQueries({ queryKey: ['onboarding', 'me'] }),
         queryClient.invalidateQueries({ queryKey: ['progression'] }),
       ]);
-      notify.success('Entreno guardado.');
     },
     onError: (error: unknown) => notify.error(error),
   });
@@ -74,15 +79,17 @@ export function TrainingEditor({
             <FilterChip key={interest} label={interest} onPress={() => toggle(interest)} selected={draftInterests.includes(interest)} testID={`interest-${interest}`} />
           ))}
         </View>
-        <Button
-          disabled={!dirty || (!draftLevel && draftInterests.length === 0)}
-          label="Guardar entreno"
-          loading={save.isPending}
-          onPress={() => save.mutate()}
-          size="sm"
-          style={{ alignSelf: 'flex-end' }}
-          testID="training-save"
-        />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <SaveStatusLine saved="Entreno guardado." status={status} testID="training-status" />
+          <Button
+            disabled={!dirty || (!draftLevel && draftInterests.length === 0)}
+            label="Guardar entreno"
+            loading={save.isPending}
+            onPress={() => save.mutate()}
+            size="sm"
+            testID="training-save"
+          />
+        </View>
       </Card>
     </Section>
   );

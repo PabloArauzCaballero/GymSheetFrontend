@@ -21,6 +21,8 @@ const INTENTS = {
 } as const;
 /** Rótulo de campo como el del móvil: pequeño, en mayúsculas y espaciado. */
 const FIELD_LABEL = 'text-xs font-semibold uppercase tracking-[0.04em] text-[var(--text-muted)]';
+/** A `legend` is not a grid item, so a fieldset's `gap` never reaches it: the space goes on the legend. */
+const LEGEND = `${FIELD_LABEL} mb-3`;
 
 export function DiscoveryPreferencesCard({
   embedded = false,
@@ -67,10 +69,10 @@ function PreferencesForm({ embedded, initial, saving, onSave }: { embedded: bool
   return (
     <Card>
       {/* The heading lives outside the card (`Section` on the profile); Comunidad brings its own. */}
-      <CardContent className="grid gap-4 [overflow-wrap:anywhere]">
+      <CardContent className="grid gap-6 [overflow-wrap:anywhere]">
         {embedded ? null : <p className="t-subhead hyphens-auto text-[var(--text-muted)] [overflow-wrap:anywhere]">Se aplican a las recomendaciones. Si no las configuras, la baraja no adivina por ti.</p>}
-        <fieldset className="grid gap-2">
-          <legend className={FIELD_LABEL}>Quiero conocer</legend>
+        <fieldset>
+          <legend className={LEGEND}>Quiero conocer</legend>
           <div className="flex flex-wrap gap-2">{genders.map((gender) => (
             <ChoiceChip key={gender} onClick={() => toggle(selectedGenders, gender, setSelectedGenders)} selected={selectedGenders.includes(gender)}>
               {selectedGenders.includes(gender) ? <Check aria-hidden className="mr-1.5 size-4" /> : null}
@@ -78,8 +80,8 @@ function PreferencesForm({ embedded, initial, saving, onSave }: { embedded: bool
             </ChoiceChip>
           ))}</div>
         </fieldset>
-        <fieldset className="grid gap-2">
-          <legend className={FIELD_LABEL}>Busco</legend>
+        <fieldset>
+          <legend className={LEGEND}>Busco</legend>
           <div className="flex flex-wrap gap-2">{intents.map((intent) => {
             const { label, Icon } = INTENTS[intent];
             const selected = selectedIntents.includes(intent);
@@ -91,11 +93,11 @@ function PreferencesForm({ embedded, initial, saving, onSave }: { embedded: bool
             );
           })}</div>
         </fieldset>
-        {/* Three across while they fit; they wrap at 320 px with very large text instead of pushing the page wide. */}
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,6rem),1fr))] gap-3">
-          <label className="grid gap-1.5"><span className={FIELD_LABEL}>Edad mín.</span><Input className="min-w-0 text-center" type="number" min={18} max={100} value={minAge} onChange={(event) => setMinAge(Number(event.target.value))} /></label>
-          <label className="grid gap-1.5"><span className={FIELD_LABEL}>Edad máx.</span><Input className="min-w-0 text-center" type="number" min={18} max={100} value={maxAge} onChange={(event) => setMaxAge(Number(event.target.value))} /></label>
-          <label className="grid gap-1.5"><span className={FIELD_LABEL}>Radio (km)</span><Input className="min-w-0 text-center" type="number" min={1} max={500} value={radiusKm} onChange={(event) => setRadiusKm(Number(event.target.value))} /></label>
+        {/* Three across, as on mobile, down to 320 px; they wrap only with very large text instead of pushing the page wide. */}
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,4.25rem),1fr))] gap-3">
+          <label className="grid gap-2"><span className={FIELD_LABEL}>Edad mín.</span><Input className="min-w-0 text-center" type="number" min={18} max={100} value={minAge} onChange={(event) => setMinAge(Number(event.target.value))} /></label>
+          <label className="grid gap-2"><span className={FIELD_LABEL}>Edad máx.</span><Input className="min-w-0 text-center" type="number" min={18} max={100} value={maxAge} onChange={(event) => setMaxAge(Number(event.target.value))} /></label>
+          <label className="grid gap-2"><span className={FIELD_LABEL}>Radio (km)</span><Input className="min-w-0 text-center" type="number" min={1} max={500} value={radiusKm} onChange={(event) => setRadiusKm(Number(event.target.value))} /></label>
         </div>
         <div className="grid gap-2">
           <Checkbox checked={flexibleAge} label="Ampliar un poco la edad si hay pocas personas" onChange={(event) => setFlexibleAge(event.target.checked)} />

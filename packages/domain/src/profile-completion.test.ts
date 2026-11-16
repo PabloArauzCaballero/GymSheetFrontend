@@ -57,3 +57,34 @@ describe('completionRingLabel', () => {
     expect(completionRingLabel({ hasPhoto: false, percent: null })).toBe('Tu perfil');
   });
 });
+
+describe('award moment and complete state', () => {
+  it('sums only what this read awarded', async () => {
+    const { awardedNowPoints, awardAnnouncement } = await import('./profile-completion');
+    const items = [item('FOTO', true, true, 50), item('BIO', true, true, 40), item('NIVEL', true, true, 20)];
+    expect(awardedNowPoints({ items, awardedNow: ['FOTO', 'BIO'] })).toBe(90);
+    expect(awardedNowPoints({ items, awardedNow: [] })).toBe(0);
+    expect(awardAnnouncement(90)).toBe('+90 puntos por completar tu perfil.');
+  });
+
+  it('celebrates 100 % with the points earned, and without a number when none were', async () => {
+    const { profileCompleteCopy } = await import('./profile-completion');
+    expect(profileCompleteCopy({ percent: 88, pointsEarned: 150 })).toBeNull();
+    expect(profileCompleteCopy({ percent: 100, pointsEarned: 190 })).toEqual({ title: 'Perfil completo', body: 'Ganaste 190 puntos completándolo. Así te ven en Conocer.' });
+    expect(profileCompleteCopy({ percent: 100, pointsEarned: 0 })?.body).toBe('Así te ven en Conocer.');
+  });
+});
+
+describe('points award delta', () => {
+  it('trusts awardedNow, else the rise of pointsEarned since the last read seen', async () => {
+    const { pointsAwardDelta } = await import('./profile-completion');
+    const items = [item('BIO', true, true, 40)];
+    expect(pointsAwardDelta(null, { pointsEarned: 250, items, awardedNow: ['BIO'] })).toBe(40);
+    // Another request (the progression read) awarded it first: this read says nothing, the total rose.
+    expect(pointsAwardDelta(210, { pointsEarned: 250, items, awardedNow: [] })).toBe(40);
+    expect(pointsAwardDelta(null, { pointsEarned: 250, items, awardedNow: [] })).toBe(0);
+    expect(pointsAwardDelta(250, { pointsEarned: 250, items, awardedNow: [] })).toBe(0);
+    // The same awarding read seen by a second screen: not a second celebration.
+    expect(pointsAwardDelta(250, { pointsEarned: 250, items, awardedNow: ['BIO'] })).toBe(0);
+  });
+});

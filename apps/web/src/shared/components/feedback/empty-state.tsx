@@ -46,7 +46,8 @@ export function EmptyState({
           {icon ?? <Inbox />}
         </span>
       )}
-      <Heading className="t-headline">{title}</Heading>
+      {/* Balanced wrap: a heading never ends on one lone word («hoy»), and its accessible name stays plain text. */}
+      <Heading className="t-headline text-balance">{title}</Heading>
       <p className="t-subhead max-w-md text-[var(--text-muted)]">{description}</p>
       {action ? <div className="mt-1">{action}</div> : null}
     </div>

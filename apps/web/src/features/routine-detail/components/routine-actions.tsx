@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Archive, BookmarkPlus, Play, Zap } from 'lucide-react';
+import { Archive, BookmarkPlus, Flag, Play, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { isStaff } from '@gymsheet/domain';
 import { canActivateProgram } from '@gymsheet/hooks';
@@ -119,6 +119,13 @@ export function RoutineActions({
             successMessage="Gracias. Lo revisaremos."
             targetId={routine.id}
             targetKind="ROUTINE"
+            // Same size and icon gap as the row's other actions: a small «Reportar» read as misaligned.
+            trigger={
+              <Button variant="ghost">
+                <Flag aria-hidden className="size-4" />
+                Reportar
+              </Button>
+            }
           />
         </>
       )}

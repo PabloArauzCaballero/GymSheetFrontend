@@ -7,6 +7,8 @@ import {
   interactionKeys,
   interactionsService,
 } from '@/features/interactions/services/interactions-service';
+import { ChatDot } from '@/features/chat/components/chat-dot';
+import { useChatWaiting } from '@/features/chat/hooks/use-chat-waiting';
 import type { SessionPrincipal } from '@/shared/api/contracts';
 import { cn } from '@/shared/lib/cn';
 import { navigationFor, type NavigationItem } from './nav-config';
@@ -60,17 +62,21 @@ function NavLink({
   item,
   active,
   alerts,
+  chat,
   onNavigate,
 }: Readonly<{
   item: NavigationItem;
   active: boolean;
   alerts: number;
+  /** Chat's row: vibrant ink and the glowing dot when chats wait for a reply. */
+  chat?: ReturnType<typeof useChatWaiting>;
   onNavigate?: () => void;
 }>) {
   const Icon = item.icon;
   return (
     <Link
       aria-current={active ? 'page' : undefined}
+      aria-label={chat?.label ? `${item.label}, ${chat.label}` : undefined}
       className={cn(
         'tap relative flex min-h-11 items-center gap-3 rounded-[var(--radius-md)] px-3 text-[15px] font-medium transition-colors duration-[var(--dur-2)]',
         active
@@ -81,11 +87,15 @@ function NavLink({
       href={item.href}
       onClick={onNavigate}
     >
-      <Icon
-        aria-hidden
-        className={cn('size-5 shrink-0', active && 'text-[var(--accent-ink)]')}
-        strokeWidth={active ? 2.25 : 1.75}
-      />
+      {/* Chat: vibrant ink and a plain glowing dot on the icon's tip (the row's name says how many). */}
+      <span className="relative grid shrink-0 place-items-center">
+        <Icon
+          aria-hidden
+          className={cn('size-5 shrink-0', chat ? 'text-[var(--chat-ink)]' : active && 'text-[var(--accent-ink)]')}
+          strokeWidth={active ? 2.25 : 1.75}
+        />
+        {chat?.label ? <ChatDot className="absolute -top-0.5 -right-1" halo="var(--surface-sidebar)" pulseKey={chat.pulseKey} /> : null}
+      </span>
       <span className="truncate">{item.label}</span>
       <NavAlert count={alerts} />
       <LinkPending />
@@ -99,6 +109,7 @@ export function NavigationList({
 }: Readonly<{ session: SessionPrincipal; onNavigate?: () => void }>) {
   const pathname = usePathname();
   const interactionAlerts = useInteractionAlerts();
+  const chatWaiting = useChatWaiting();
   // Cada audiencia recibe su navegación y su orden; la decisión vive en
   // `navigationFor` para que la barra lateral y la de pestañas no discrepen.
   const groups = navigationFor(session.role, session.permissions);
@@ -120,6 +131,7 @@ export function NavigationList({
             <NavLink
               active={item.href === activeHref}
               alerts={item.href === '/interacciones' ? interactionAlerts : 0}
+              chat={item.href === '/chat' ? chatWaiting : undefined}
               item={item}
               key={item.href}
               onNavigate={onNavigate}

@@ -15,6 +15,8 @@ import { BioEditor } from '@/features/profile-edit/bio-editor';
 import { PendingPoints } from '@/features/profile-edit/pending-points';
 import { ProfilePreview } from '@/features/profile-edit/profile-preview';
 import { TrainingEditor } from '@/features/profile-edit/training-editor';
+import { confirmDiscardDrafts, useLeaveGuard } from '@/features/profile-edit/unsaved-guard';
+import { useAwardDetector } from '@/features/profile-hero/points-award';
 import { PROFILE_COMPLETION_KEY, useOwnProfile } from '@/features/profile-hero/use-own-profile';
 import { GOAL_LABEL } from '@/lib/format';
 import { colors, minTouchTarget, radii, spacing } from '@/theme';
@@ -44,6 +46,10 @@ export default function ProfileEditScreen() {
   const own = useOwnProfile();
   const queryClient = useQueryClient();
   const completion = own.completion.data;
+  // An award earned by a save here answers at once (haptic + spoken line); the hero shows it on return.
+  useAwardDetector(completion, own.principal?.id);
+  // Unsaved sections are never dropped silently: leaving or switching to the preview asks first.
+  useLeaveGuard();
 
   // The photo gallery only refreshes its own list: re-read completion after it changes.
   const photosVersion = own.photos.dataUpdatedAt;
@@ -93,7 +99,9 @@ export default function ProfileEditScreen() {
       />
       <SegmentedPill
         fill
-        onChange={setTab}
+        onChange={(next) => {
+          void confirmDiscardDrafts().then((go) => go && setTab(next));
+        }}
         options={[
           { value: 'edit', accessibilityLabel: 'Editar' },
           { value: 'preview', accessibilityLabel: 'Vista previa' },

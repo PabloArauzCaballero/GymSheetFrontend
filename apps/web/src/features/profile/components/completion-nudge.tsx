@@ -1,6 +1,7 @@
-import { noOrphan, pendingProfileItems, pointsChip, profileNudgeTitle, profileProgress } from '@gymsheet/domain';
+import { noOrphan, pendingProfileItems, pointsChip, profileCompleteCopy, profileNudgeTitle, profileProgress } from '@gymsheet/domain';
 import {
   Calendar,
+  CircleCheck,
   ChevronRight,
   CloudOff,
   Gauge,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ProfileCompletion } from '@/shared/api/schemas';
+import { Skeleton } from '@/shared/components/feedback/skeleton';
 import { Button } from '@/shared/components/ui/button';
 import { editHrefFor } from '../lib/edit-routes';
 
@@ -47,7 +49,7 @@ export function PointsChip({ points }: Readonly<{ points: number }>) {
 export function CompletionNudge({ completion }: Readonly<{ completion: ProfileCompletion }>) {
   const title = profileNudgeTitle(completion.pointsAvailable);
   const pending = pendingProfileItems(completion.items);
-  if (!title || pending.length === 0) return null;
+  if (!title || pending.length === 0) return <CompletionDone completion={completion} />;
   const shown = pending.slice(0, 3);
   const rest = pending.length - shown.length;
   const progress = profileProgress(completion);
@@ -112,5 +114,49 @@ export function CompletionError({ onRetry, retrying }: Readonly<{ onRetry: () =>
         Reintentar
       </Button>
     </section>
+  );
+}
+
+/**
+ * 100 % (`CompletionDone` of the app): the nudge becomes a quiet reward — a full
+ * check in accent ink, what completing it earned, and the way to see the result.
+ */
+function CompletionDone({ completion }: Readonly<{ completion: ProfileCompletion }>) {
+  const copy = profileCompleteCopy(completion);
+  if (!copy) return null;
+  return (
+    <Link className="tap panel group flex min-h-16 items-center gap-3 p-5 active:scale-[0.98]" data-testid="profile-complete" href="/profile/editar?tab=preview">
+      <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-full bg-[var(--surface-highest)] text-[var(--accent-ink)]">
+        <CircleCheck className="size-7 fill-[var(--accent-ink)] text-[var(--surface-highest)]" />
+      </span>
+      <span className="grid min-w-0 flex-1 gap-0.5">
+        <span className="t-headline">{copy.title}</span>
+        <span className="t-footnote text-pretty text-[var(--text-muted)]">{noOrphan(copy.body)}</span>
+      </span>
+      <ChevronRight aria-hidden className="size-5 shrink-0 text-[var(--text-muted)] transition-transform duration-[var(--dur-2)] group-hover:translate-x-0.5" />
+    </Link>
+  );
+}
+
+/** Loading: the nudge's own silhouette (title, bar, three rows), so nothing jumps when it arrives. */
+export function CompletionSkeleton() {
+  return (
+    <div aria-busy className="panel grid gap-4 p-5" data-testid="profile-nudge-skeleton">
+      <div className="grid gap-2">
+        <Skeleton className="h-[1lh] w-4/5 t-headline" />
+        <Skeleton className="h-[1lh] w-3/5 t-footnote" />
+        <Skeleton className="h-1.5 rounded-full" />
+      </div>
+      {[0, 1, 2].map((row) => (
+        <div className="flex min-h-14 items-center gap-3" key={row}>
+          <Skeleton className="size-5 rounded-full" />
+          <div className="grid flex-1 gap-1">
+            <Skeleton className="h-[1lh] w-3/4 t-subhead" />
+            <Skeleton className="h-[1lh] w-1/2 t-footnote" />
+          </div>
+          <Skeleton className="h-6 w-14 rounded-full" />
+        </div>
+      ))}
+    </div>
   );
 }

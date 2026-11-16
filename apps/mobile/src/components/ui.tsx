@@ -381,6 +381,7 @@ export function Input({
   hideLabel = 'Ocultar contraseña',
   onBlur,
   onFocus,
+  style,
   ...props
 }: TextInputProps & {
   label: string;
@@ -401,9 +402,8 @@ export function Input({
   const [revealed, setRevealed] = useState(false);
 
   // El orden importa: el error gana al foco. Un campo enfocado y a la vez
-  // inválido tiene que seguir diciendo que está mal — si ganara el foco, el
-  // único aviso desaparecería justo al ir a corregirlo.
-  const borderColor = error ? colors.danger : focused ? colors.volt : colors.border;
+  // inválido tiene que seguir diciendo que está mal. Rest outline: `borderControl` (5.3:1, WCAG 1.4.11); a caller `style` adds to it.
+  const borderColor = error ? colors.danger : focused ? colors.volt : colors.borderControl;
   const glyphColor = error ? colors.danger : focused ? colors.accentInk : colors.textMuted;
 
   return (
@@ -444,7 +444,7 @@ export function Input({
           // grupo muscular…»), no un adorno, y estaba más apagado que la propia
           // etiqueta del campo — al revés de como se lee un formulario.
           placeholderTextColor={colors.textMuted}
-          style={{
+          style={[{
             minHeight: minTouchTarget,
             borderRadius: radii.md,
             borderWidth: 1,
@@ -457,7 +457,7 @@ export function Input({
             paddingLeft: icon ? spacing.md * 2 + iconSizes.md : spacing.md,
             paddingRight: revealable ? spacing.md * 2 + iconSizes.md : spacing.md,
             fontSize: fontSizes.md,
-          }}
+          }, style]}
           {...props}
           // Después de `props` a propósito: cuando el campo gestiona su propio
           // ojo, quien lo usa no debe poder fijar `secureTextEntry` por su

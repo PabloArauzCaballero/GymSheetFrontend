@@ -166,3 +166,4 @@ export type EasingToken = keyof typeof easings;
 export type Theme = typeof theme;
 export * from './tenants';
 export * from './repp-mark';
+export * from './chat';

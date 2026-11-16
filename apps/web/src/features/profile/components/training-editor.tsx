@@ -5,12 +5,15 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { profileService } from '@/features/profile/services/profile-service';
 import { queryKeys } from '@/shared/api/query-keys';
+import { useDraftReport } from '@/features/profile/lib/unsaved-guard';
+import { SaveStatusLine, useSectionSave } from '@/shared/components/feedback/save-status';
 import { Button } from '@/shared/components/ui/button';
 import { ChoiceChip } from '@/shared/components/ui/choice-chip';
 import { notify } from '@/shared/notifications';
 
 type Level = keyof typeof experienceLevelLabels;
 const LEVELS: readonly Level[] = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
+const TRAINING_SAVE_KEY = ['profile', 'training'] as const;
 
 /**
  * Nivel e intereses (`training-editor` del móvil). `PATCH` de preferencias:
@@ -23,15 +26,17 @@ export function TrainingEditor({ level, interests, footer }: Readonly<{ level: L
   const [draftInterests, setDraftInterests] = useState<string[]>([...interests]);
   const dirty = draftLevel !== level || draftInterests.join('|') !== interestsKey;
   const options = [...new Set([...preferenceOptions, ...interests])];
+  const status = useSectionSave(TRAINING_SAVE_KEY, dirty);
+  useDraftReport('training', dirty);
 
   const save = useMutation({
+    mutationKey: TRAINING_SAVE_KEY,
     mutationFn: () => profileService.updateTrainingProfile({ ...(draftLevel ? { experienceLevel: draftLevel } : {}), trainingPreferences: draftInterests }),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.onboarding }),
         queryClient.invalidateQueries({ queryKey: ['progression'] }),
       ]);
-      notify.success('Entreno guardado.');
     },
     onError: (error: Error) => notify.error(error.message),
   });
@@ -62,9 +67,12 @@ export function TrainingEditor({ level, interests, footer }: Readonly<{ level: L
           ))}
         </div>
       </fieldset>
-      <Button className="justify-self-end" disabled={!dirty || (!draftLevel && draftInterests.length === 0)} loading={save.isPending} onClick={() => save.mutate()} size="sm" variant="primary">
-        Guardar entreno
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <SaveStatusLine saved="Entreno guardado." status={status} testId="training-status" />
+        <Button disabled={!dirty || (!draftLevel && draftInterests.length === 0)} loading={save.isPending} onClick={() => save.mutate()} size="sm" variant="primary">
+          Guardar entreno
+        </Button>
+      </div>
     </div>
   );
 }

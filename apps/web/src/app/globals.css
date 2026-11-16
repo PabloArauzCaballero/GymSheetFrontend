@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import './animations.css';
 @import './motion.css';
+@import './chat.css';
+@import './profile-motion.css';
 @import './background.css';
 @import './contraste.css';
 /* Ayudantes de composición (`panel`, `glass`, `display-title`…), en `@layer components`. */

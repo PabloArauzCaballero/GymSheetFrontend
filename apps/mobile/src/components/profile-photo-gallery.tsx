@@ -72,7 +72,7 @@ export function ProfilePhotoGallery({ header }: { header?: ReactNode } = {}) {
   const atLimit = count >= MAX_PHOTOS;
 
   return (
-    <Section icon="images-outline" title="Fotos de perfil">
+    <Section title="Fotos de perfil">
       {photos.isPending ? (
         <Skeleton height={THUMB_SIZE} />
       ) : photos.isError ? (

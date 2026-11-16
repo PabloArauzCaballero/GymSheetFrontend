@@ -5,20 +5,16 @@ import {
   ActivityIndicator,
   Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
   useWindowDimensions,
 } from 'react-native';
-import { SvgXml } from 'react-native-svg';
-import { mascotXml } from '@gymsheet/design-tokens/repi';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { ReppLogo } from '@/components/brand/repp-mark';
 import { Gesture } from 'react-native-gesture-handler';
 import {
   Easing,
@@ -51,10 +47,11 @@ import { Section } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { Button } from '@/components/ui';
 import { ErrorState } from '@/components/feedback';
-import { DiscoveryPreferencesEditor } from '@/components/social-status-editor';
 import { initialsOf } from '@/lib/format';
 import { DeckActionBar, ACTION_BAR_BOTTOM } from '@/features/comunidad/deck-action-bar';
 import { DeckStage } from '@/features/comunidad/deck-stage';
+import { COMUNIDAD_GUTTER, ComunidadHeader } from '@/features/comunidad/comunidad-header';
+import { DeckEmpty, DeckSetup } from '@/features/comunidad/deck-empty';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { TRAINING_GOAL_LABEL } from '@/lib/social-labels';
@@ -454,7 +451,6 @@ export default function ComunidadScreen() {
   const router = useRouter();
   useScreenTour('comunidad');
   const queryClient = useQueryClient();
-  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
   const principal = useAuthStore((state) => state.principal);
@@ -806,158 +802,27 @@ export default function ComunidadScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Cabecera: marca REPP + acciones, y debajo el selector del mazo */}
-      <View
-        style={{
-          paddingTop: Math.max(insets.top, spacing.sm),
-          paddingHorizontal: spacing.md,
-          paddingBottom: spacing.xs,
-          gap: spacing.sm,
-          zIndex: 10,
+      <ComunidadHeader
+        filtersActive={safeObjetivos.length > 0 || sucursalId !== null || genero !== null}
+        onForYou={() => {
+          setCategoryPill('foryou');
+          setObjetivos([]);
         }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <ReppLogo height={26} />
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-            <PressableScale
-              accessibilityLabel="Preferencias de búsqueda"
-              onPress={() => setPrefsVisible(true)}
-              style={{
-                width: minTouchTarget,
-                height: minTouchTarget,
-                borderRadius: radii.full,
-                backgroundColor: colors.surfaceHigh,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 1,
-                borderColor:
-                  safeObjetivos.length > 0 || sucursalId !== null || genero !== null
-                    ? colors.volt
-                    : colors.borderSubtle,
-              }}
-            >
-              <Ionicons
-                color={
-                  safeObjetivos.length > 0 || sucursalId !== null || genero !== null
-                    ? colors.volt
-                    : colors.text
-                }
-                name="options-outline"
-                size={iconSizes.md}
-              />
-              {(safeObjetivos.length > 0 || sucursalId !== null || genero !== null) && (
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    width: 7,
-                    height: 7,
-                    borderRadius: 4,
-                    backgroundColor: colors.volt,
-                  }}
-                />
-              )}
-            </PressableScale>
-
-
-          {/* 3-Dots Menu Button */}
-          <PressableScale
-            accessibilityLabel="Opciones de Comunidad"
-            onPress={() => setOverflowVisible(true)}
-            style={{
-              width: minTouchTarget,
-              height: minTouchTarget,
-              borderRadius: radii.full,
-              backgroundColor: colors.surfaceHigh,
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderWidth: 1,
-              borderColor: colors.borderSubtle,
-            }}
-          >
-            <Ionicons color={colors.text} name="ellipsis-horizontal" size={iconSizes.md} />
-          </PressableScale>
-          </View>
-        </View>
-        <View style={{ alignItems: 'center' }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: colors.surfaceLow,
-              padding: 3,
-              borderRadius: radii.full,
-              borderWidth: 1,
-              borderColor: colors.borderSubtle,
-              gap: 2,
-            }}
-          >
-            <Pressable
-              onPress={() => {
-                setCategoryPill('foryou');
-                setObjetivos([]);
-              }}
-              accessibilityRole="button"
-              accessibilityState={{ selected: categoryPill === 'foryou' }}
-              style={{
-                minHeight: minTouchTarget,
-                justifyContent: 'center',
-                paddingHorizontal: spacing.md,
-                borderRadius: radii.full,
-                backgroundColor: categoryPill === 'foryou' ? colors.surfaceHigh : 'transparent',
-              }}
-            >
-              <Text
-                style={{
-                  color: categoryPill === 'foryou' ? colors.text : colors.textMuted,
-                  fontSize: fontSizes.xs,
-                  fontWeight: categoryPill === 'foryou' ? '700' : '500',
-                }}
-              >
-                Para ti
-              </Text>
-            </Pressable>
-
-            <Pressable
-              onPress={() => {
-                setCategoryPill('goal');
-                const userGoal = myProfile.data?.objetivo ?? 'HIPERTROFIA';
-                setObjetivos([userGoal]);
-              }}
-              accessibilityRole="button"
-              accessibilityState={{ selected: categoryPill === 'goal' }}
-              style={{
-                minHeight: minTouchTarget,
-                justifyContent: 'center',
-                paddingHorizontal: spacing.md,
-                borderRadius: radii.full,
-                backgroundColor: categoryPill === 'goal' ? colors.surfaceHigh : 'transparent',
-              }}
-            >
-              <Text
-                style={{
-                  color: categoryPill === 'goal' ? colors.text : colors.textMuted,
-                  fontSize: fontSizes.xs,
-                  fontWeight: categoryPill === 'goal' ? '700' : '500',
-                }}
-              >
-                Mismo objetivo
-              </Text>
-            </Pressable>
-          </View>
-
-        </View>
-      </View>
+        onGoal={() => {
+          setCategoryPill('goal');
+          setObjetivos([myProfile.data?.objetivo ?? 'HIPERTROFIA']);
+        }}
+        onOpenFilters={() => setPrefsVisible(true)}
+        onOpenOverflow={() => setOverflowVisible(true)}
+        pill={categoryPill}
+      />
 
       {/* Main Tinder Card Deck Canvas */}
       <View
         onLayout={(e) => setStage(e.nativeEvent.layout)}
         style={{
           flex: 1,
-          paddingHorizontal: spacing.sm,
-          paddingTop: spacing.xs,
-          paddingBottom: spacing.xs,
+          paddingHorizontal: COMUNIDAD_GUTTER,
           alignItems: 'center',
           justifyContent: 'center',
         }}
@@ -970,23 +835,7 @@ export default function ComunidadScreen() {
             </Text>
           </View>
         ) : gate === 'setup' || (deck.isError && needsDiscoveryPreferences(deck.error)) ? (
-          // Sin preferencias no se recomienda a nadie (nunca se adivina a quién
-          // quiere conocer alguien): se piden aquí mismo, no un error sin salida.
-          <ScrollView
-            contentContainerStyle={{ gap: spacing.md, padding: spacing.lg }}
-            style={{ flex: 1, width: '100%' }}
-          >
-            <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ alignItems: 'center' }}>
-              <SvgXml height={96} width={96} xml={mascotXml('flirty')} />
-            </View>
-            <Text style={{ color: colors.text, fontSize: fontSizes.lg, fontWeight: '700', textAlign: 'center' }}>
-              Cuéntanos a quién buscas
-            </Text>
-            <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, textAlign: 'center' }}>
-              Elige con quién quieres entrenar o conocer gente. Solo verás personas que encajen.
-            </Text>
-            <DiscoveryPreferencesEditor embedded onSaved={redeal} />
-          </ScrollView>
+          <DeckSetup onSaved={redeal} />
         ) : deck.isError ? (
           <View style={{ flex: 1, width: '100%', justifyContent: 'center', padding: spacing.lg }}>
             <ErrorState error={deck.error} onRetry={redeal} />
@@ -1005,62 +854,13 @@ export default function ComunidadScreen() {
             translateX={translateX}
           />
         ) : (
-          /* Empty State: Out of cards */
-          <View
-            style={{
-              flex: 1,
-              width: '100%',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: spacing.xl,
-              gap: spacing.lg,
-            }}
-          >
-            {/* Repi descansa: el mazo se acabó, no es un error. */}
-            <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-              <SvgXml height={128} width={128} xml={mascotXml('resting')} />
-            </View>
-
-            <View style={{ alignItems: 'center', gap: spacing.xs }}>
-              <Text
-                style={{
-                  color: colors.text,
-                  fontSize: fontSizes.xl,
-                  fontWeight: '700',
-                  textAlign: 'center',
-                }}
-              >
-                Ya viste a todos por hoy
-              </Text>
-              <Text
-                style={{
-                  color: colors.textMuted,
-                  fontSize: fontSizes.sm,
-                  textAlign: 'center',
-                  lineHeight: 20,
-                  maxWidth: 280,
-                }}
-              >
-                Repi también se quedó sin perfiles. Vuelve mañana o abre los filtros de objetivo y sede.
-              </Text>
-            </View>
-
-            <View style={{ width: '100%', maxWidth: 280, gap: spacing.sm }}>
-              {/* The last decision stays undoable once the deck runs out (as on the web empty state). */}
-              {decided.some((item) => item.filterKey === deckKey) ? (
-                <Button
-                  icon="arrow-undo-outline"
-                  label="Deshacer la última"
-                  loading={undo.isPending}
-                  onPress={() => undo.mutate({ filterKey: deckKey })}
-                  testID="comunidad-empty-undo"
-                  variant="ghost"
-                />
-              ) : null}
-              <Button icon="reload-outline" label="Explorar de nuevo" onPress={redeal} variant="primary" />
-              <Button icon="options-outline" label="Cambiar filtros" onPress={() => setPrefsVisible(true)} variant="ghost" />
-            </View>
-          </View>
+          <DeckEmpty
+            canUndo={decided.some((item) => item.filterKey === deckKey)}
+            onChangeFilters={() => setPrefsVisible(true)}
+            onRedeal={redeal}
+            onUndo={() => undo.mutate({ filterKey: deckKey })}
+            undoing={undo.isPending}
+          />
         )}
       </View>
 

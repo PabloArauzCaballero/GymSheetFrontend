@@ -6,9 +6,14 @@
 const SHORT_DATE = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' });
 const SHORT_DATE_YEAR = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', year: 'numeric' });
 
-/** `14 ago`, o `14 ago 2025` si cae fuera del año en curso. */
+/**
+ * `14 ago`, o `14 ago 2025` si cae fuera del año en curso. A calendar date
+ * (`2026-11-15`, DATEONLY) is built in local time: `new Date()` would read it as
+ * UTC midnight and show the day before west of Greenwich.
+ */
 export function shortDate(iso: string): string {
-  const date = new Date(iso);
+  const day = /^(\d{4})-(\d{2})-(\d{2})$/u.exec(iso);
+  const date = day ? new Date(Number(day[1]), Number(day[2]) - 1, Number(day[3])) : new Date(iso);
   if (Number.isNaN(date.getTime())) return '—';
   const sameYear = date.getFullYear() === new Date().getFullYear();
   return (sameYear ? SHORT_DATE : SHORT_DATE_YEAR).format(date);

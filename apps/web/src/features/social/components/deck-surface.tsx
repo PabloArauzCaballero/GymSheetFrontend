@@ -5,6 +5,7 @@ import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { Skeleton, SkeletonScreen } from '@/shared/components/feedback/skeleton';
 import { Repi } from '@/shared/components/media/repi';
+import { DECK_CARD } from './deck-geometry';
 import { DiscoveryPreferencesCard } from './discovery-preferences-card';
 
 /**
@@ -34,7 +35,7 @@ export function DeckSurface({
   if (loading) {
     return (
       <SkeletonScreen className="justify-items-center" label="Cargando la baraja">
-        <Skeleton className="h-[28rem] w-full max-w-md rounded-[var(--radius-xl)] sm:h-[34rem]" />
+        <Skeleton className={`${DECK_CARD} rounded-[var(--radius-xl)]`} />
         <div className="flex gap-4">
           <Skeleton className="size-16 rounded-full" />
           <Skeleton className="size-12 rounded-full" />
@@ -45,8 +46,8 @@ export function DeckSurface({
   }
   if (needsPreferences) {
     return (
-      <section aria-labelledby="deck-setup-title" className="grid gap-4">
-        <div className="grid justify-items-center gap-2 text-center">
+      <section aria-labelledby="deck-setup-title" className="grid gap-6 pt-2">
+        <div className="grid justify-items-center gap-3 text-center">
           <Repi className="size-24" mood="flirty" size={96} />
           <h2 className="text-2xl font-semibold tracking-[-0.02em]" id="deck-setup-title">
             Cuéntanos a quién buscas

@@ -51,6 +51,7 @@ const allowedCases: Array<[string[], string]> = [
   [['me', 'social-status'], '/me/social-status'],
   [['me', 'gym-directory'], '/me/gym-directory'],
   [['me', 'conversations'], '/me/conversations'],
+  [['me', 'conversations', 'pending-replies'], '/me/conversations/pending-replies'],
   [['me', 'conversations', id, 'messages'], `/me/conversations/${id}/messages`],
   [
     ['me', 'conversations', id, 'messages', id, 'media'],

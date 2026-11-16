@@ -6,6 +6,7 @@ import { accountService } from '@/api/services';
 import { Card, Section } from '@/components/layout';
 import { FilterChip } from '@/components/filter-chip';
 import { notify } from '@/notifications';
+import { SaveStatusLine, useSectionSave } from '@/components/save-status';
 import { colors, fontSizes, spacing } from '@/theme';
 
 /**
@@ -27,12 +28,15 @@ const OPTIONS: readonly { value: UserGender; label: string }[] = [
   { value: 'UNSPECIFIED', label: 'Prefiero no decirlo' },
 ];
 
+const GENDER_SAVE_KEY = ['profile', 'gender'] as const;
+
 /** `header`: first row inside the card (pending «+N pts» on the edit screen). */
 export function GenderPreference({ header }: { header?: ReactNode } = {}) {
   const queryClient = useQueryClient();
   const account = useQuery({ queryKey: ['user', 'me'], queryFn: () => accountService.getMe() });
 
   const save = useMutation({
+    mutationKey: GENDER_SAVE_KEY,
     mutationFn: (genero: UserGender) => accountService.setGender(genero),
     onSuccess: async () => {
       await Promise.all([
@@ -41,7 +45,6 @@ export function GenderPreference({ header }: { header?: ReactNode } = {}) {
         // reabrir la aplicación, que es justo el cambio que se acaba de pedir.
         queryClient.invalidateQueries({ queryKey: ['progression'] }),
       ]);
-      notify.success('Preferencia guardada.');
     },
     onError: (error: Error) => notify.error(error.message),
   });
@@ -49,6 +52,8 @@ export function GenderPreference({ header }: { header?: ReactNode } = {}) {
   // Nothing is preselected until the person answers: showing «Prefiero no
   // decirlo» ticked for a null value claimed an answer nobody gave.
   const current = account.data?.genero ?? null;
+  // A one-tap choice saves on tap and confirms in the same status line as the sections with a button.
+  const status = useSectionSave(GENDER_SAVE_KEY, false);
 
   return (
     <Section title="Rangos de tu senda">
@@ -71,6 +76,7 @@ export function GenderPreference({ header }: { header?: ReactNode } = {}) {
             );
           })}
         </View>
+        <SaveStatusLine saved="Preferencia guardada." status={status} testID="gender-status" />
       </Card>
     </Section>
   );

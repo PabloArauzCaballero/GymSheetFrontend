@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 import { IconButton } from '@/components/icon-button';
 import { Skeleton } from '@/components/feedback';
@@ -10,7 +10,8 @@ import { TourTarget, useScreenTour } from '@/components/tour';
 import { WeightIncrementPreference } from '@/components/weight-increment-preference';
 import { AboutSection } from '@/features/profile-hero/about-section';
 import { CompletionAvatar } from '@/features/profile-hero/completion-avatar';
-import { CompletionError, CompletionNudge } from '@/features/profile-hero/completion-nudge';
+import { CompletionError, CompletionNudge, CompletionSkeleton } from '@/features/profile-hero/completion-nudge';
+import { usePointsAward } from '@/features/profile-hero/points-award';
 import { editRouteFor } from '@/features/profile-hero/edit-routes';
 import { fitnessNumbers } from '@/features/profile-hero/fitness-numbers';
 import { FitnessRow } from '@/features/profile-hero/fitness-row';
@@ -22,6 +23,7 @@ import { SendaCard } from '@/features/profile-hero/senda-card';
 import { useOwnProfile } from '@/features/profile-hero/use-own-profile';
 import { initialsOf, shortName } from '@/lib/format';
 import { confirm, notify } from '@/notifications';
+import { EnterUp } from '@/components/motion';
 import { useAuthStore } from '@/state/auth-store';
 import { radii, spacing } from '@/theme';
 
@@ -53,16 +55,8 @@ export default function ProfileScreen() {
   const refetchCompletion = completion.refetch;
   useFocusEffect(useCallback(() => void refetchCompletion(), [refetchCompletion]));
 
-  // Lo recién ganado se celebra una vez: el servidor solo lo marca en la lectura que lo otorga.
-  const celebrated = useRef('');
-  const awardedNow = completion.data?.awardedNow ?? [];
-  useEffect(() => {
-    const key = awardedNow.join(',');
-    if (!key || key === celebrated.current || !completion.data) return;
-    celebrated.current = key;
-    const points = completion.data.items.filter((item) => awardedNow.includes(item.code)).reduce((sum, item) => sum + item.points, 0);
-    notify.success(`+${points} puntos por completar tu perfil.`);
-  }, [awardedNow, completion.data]);
+  // Lo recién ganado se celebra una vez, donde viven los puntos (el servidor solo lo marca en la lectura que lo otorga).
+  const award = usePointsAward(completion.data, principal?.id);
 
   const onLogout = async () => {
     const result = await confirm({
@@ -123,6 +117,7 @@ export default function ProfileScreen() {
       />
 
       <TourTarget id="profile.identity">
+        <EnterUp>
         <HeroSurface testID="profile-hero" watermark watermarkAt="top">
           <CompletionAvatar
             // The face is a button (Tinder): with a photo it shows how others see you; without, it asks for one.
@@ -143,37 +138,47 @@ export default function ProfileScreen() {
               {principal?.role && principal.role !== 'CLIENTE' ? <Badge label={roleLabel} /> : null}
             </View>
           </View>
-          <FitnessRow pending={own.progression.isPending} progress={progress} />
+          {/* The count-up waits for the re-read progression, so it never starts from a stale total. */}
+          <FitnessRow award={award && own.progression.dataUpdatedAt >= award.at ? award : null} pending={own.progression.isPending} progress={progress} />
           <ProfileActions actions={actions} />
         </HeroSurface>
+        </EnterUp>
       </TourTarget>
 
-      {completion.isPending ? (
-        <Skeleton height={180} />
-      ) : completion.data ? (
-        <CompletionNudge completion={completion.data} onItemPress={(code) => router.push(editRouteFor(code))} />
-      ) : completionFailed ? (
-        <CompletionError onRetry={retryCompletion} retrying={completion.isFetching} />
-      ) : null}
+      {/* Sections enter once, in reading order (≤6 × 40 ms); with Reduce Motion they simply appear. */}
+      <EnterUp index={1}>
+        {completion.isPending ? (
+          <CompletionSkeleton />
+        ) : completion.data ? (
+          <CompletionNudge completion={completion.data} onItemPress={(code) => router.push(editRouteFor(code))} onSeePreview={() => router.push('/profile-edit?tab=preview')} />
+        ) : completionFailed ? (
+          <CompletionError onRetry={retryCompletion} retrying={completion.isFetching} />
+        ) : null}
+      </EnterUp>
 
-      <AboutSection bio={own.bio} chips={own.chips} onEdit={() => router.push('/profile-edit?section=BIO')} />
+      <EnterUp index={2}>
+        <AboutSection bio={own.bio} chips={own.chips} onEdit={() => router.push('/profile-edit?section=BIO')} />
+      </EnterUp>
 
-      <SendaCard
-        error={own.progression.error}
-        onRetry={() => void own.progression.refetch()}
-        pending={own.progression.isPending}
-        progress={progress}
-      />
+      <EnterUp index={3}>
+        <SendaCard error={own.progression.error} onRetry={() => void own.progression.refetch()} pending={own.progression.isPending} progress={progress} />
+      </EnterUp>
 
-      <ActivityList />
-      <ConocerList />
-      <AccountList
-        missingProfile={own.missingProfile}
-        onLogout={() => void onLogout()}
-        profile={own.profile.data}
-        profilePending={own.profile.isPending}
-        signingOut={signingOut}
-      />
+      <EnterUp index={4}>
+        <ActivityList />
+      </EnterUp>
+      <EnterUp index={5}>
+        <ConocerList />
+      </EnterUp>
+      <EnterUp index={6}>
+        <AccountList
+          missingProfile={own.missingProfile}
+          onLogout={() => void onLogout()}
+          profile={own.profile.data}
+          profilePending={own.profile.isPending}
+          signingOut={signingOut}
+        />
+      </EnterUp>
       <WeightIncrementPreference />
 
       {principal?.email ? (

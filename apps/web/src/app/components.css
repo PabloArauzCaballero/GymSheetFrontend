@@ -40,8 +40,10 @@
    * contenido que hace scroll). Separa por luminancia + blur, no por sombra. */
   .glass {
     background: color-mix(in srgb, var(--surface) 72%, transparent);
-    backdrop-filter: blur(var(--blur-2));
+    /* Prefixed first, standard last: the CSS minifier keeps only the last of a pair, and with the
+       prefixed one last Chromium/Firefox lost the blur entirely in the build. */
     -webkit-backdrop-filter: blur(var(--blur-2));
+    backdrop-filter: blur(var(--blur-2));
   }
   @supports not (backdrop-filter: blur(1px)) {
     .glass {
@@ -53,8 +55,8 @@
    * de la barra del móvil (`BlurView tint="systemChromeMaterialDark"`). */
   .glass-bar {
     background: var(--header-bg);
-    backdrop-filter: saturate(1.6) blur(var(--blur-3));
     -webkit-backdrop-filter: saturate(1.6) blur(var(--blur-3));
+    backdrop-filter: saturate(1.6) blur(var(--blur-3));
   }
   /* Bottom tab bar: solid, so page text never reads through its labels (even 94 % let it show). */
   .tab-bar-surface {

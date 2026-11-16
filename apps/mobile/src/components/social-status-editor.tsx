@@ -10,6 +10,7 @@ import { Button } from '@/components/ui';
 import { Checkbox } from '@/components/checkbox';
 import { FilterChip } from '@/components/filter-chip';
 import { notify } from '@/notifications';
+import { SaveStatusLine, useSectionSave } from '@/components/save-status';
 import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
 
 const OPTIONS: readonly { value: SocialStatusValue; label: string }[] = [
@@ -31,17 +32,17 @@ export function SocialStatusEditor() {
   });
 
   const save = useMutation({
+    mutationKey: ['profile', 'social-status'],
     mutationFn: (input: { socialStatus: SocialStatusValue | null; visible: boolean }) =>
       socialService.updateSocialStatus(input),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['social', 'status'] });
-      notify.success('Estado social actualizado.');
-    },
+    // Confirmed in place by the status line below (the edit screen's save language), not a toast.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['social', 'status'] }),
     onError: (error: Error) => notify.error(error.message),
   });
 
   const current = status.data?.socialStatus ?? null;
   const visible = status.data?.visible ?? false;
+  const saveStatus = useSectionSave(['profile', 'social-status'], false);
 
   return (
     <Section title="Tu estado social">
@@ -69,6 +70,7 @@ export function SocialStatusEditor() {
           onPress={() => save.mutate({ socialStatus: current, visible: !visible })}
           variant={visible ? 'secondary' : 'ghost'}
         />
+        <SaveStatusLine saved="Estado social guardado." status={saveStatus} testID="social-status-save" />
       </Card>
     </Section>
   );
