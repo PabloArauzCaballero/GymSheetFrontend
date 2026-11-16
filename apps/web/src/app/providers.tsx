@@ -38,7 +38,7 @@ export function Providers({
           onError: (error, query) => {
             // A suspension mid-session is not «sesión expirada»: leave and say why.
             if (leaveIfSuspended(error)) return;
-            if (!shouldToastQueryError(error)) return;
+            if (!shouldToastQueryError(error, query.meta)) return;
             if (query.state.data !== undefined) {
               notify.error('No pudimos actualizar la información.');
               return;

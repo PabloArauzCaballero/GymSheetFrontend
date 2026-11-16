@@ -111,21 +111,18 @@ test('RF-B2 · la plataforma crea, marca y desmarca rutinas oficiales', async ({
 
 test('RF-B2 · un administrador de gimnasio no entra al catálogo REPP', async ({ page, consolaPermitida }, testInfo) => {
   const datos = semilla.combos[comboDe(testInfo.project.name)];
-  // `requireRole` lo manda a `/dashboard?denied=1` y de ahí a su panel; si el aviso
-  // «No tienes permiso…» llega a pintarse, se anuncia con `console.error` a propósito.
-  // Ese panel (Panel del gimnasio) repite una clave de lista con estos datos: es suyo, no de esta pantalla.
-  consolaPermitida.push(/\[notifications\] \{severity: error/u, /Encountered two children with the same key/u);
-  await signIn(page, { email: datos.gym, password: semilla.password });
+  // Since franja 7a a legacy gym ADMIN is a person account: `requireRole` sends it to
+  // `/dashboard?denied=1`, whose «No tienes permiso…» notice is a deliberate `console.error`.
+  consolaPermitida.push(/\[notifications\] \{severity: error/u);
+  await signIn(page, { email: datos.legacyAdmin, password: semilla.password });
   await page.goto('/sistema/rutinas-repp');
-  await page.waitForURL(/\/admin\/operacion/u);
+  await page.waitForURL((url) => !url.pathname.startsWith('/sistema'));
+  expect(new URL(page.url()).searchParams.get('denied')).toBe('1');
   await waitForPageSettled(page);
-  expect(new URL(page.url()).pathname).not.toMatch(/^\/sistema/u);
   await expect(page.getByRole('heading', { name: 'Rutinas REPP' })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Rutinas REPP' })).toHaveCount(0);
-  const estrecho = (page.viewportSize()?.width ?? 0) < 600;
-  await evidencia(page, 'RF-B2', '05', 'sin-acceso-admin-gimnasio', {
-    ...(estrecho
-      ? { sinAxe: 'aterriza en el Panel del gimnasio, que a 390 px incumple scrollable-region-focusable (fuera de este alcance)' }
-      : {}),
-  });
+  // The backend is the authority: the routines back office answers 403 to gym staff.
+  const lista = await page.request.get('/api/backend/admin/routines?limit=5');
+  expect(lista.status()).toBe(403);
+  await evidencia(page, 'RF-B2', '05', 'sin-acceso-admin-gimnasio');
 });

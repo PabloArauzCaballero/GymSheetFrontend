@@ -1,4 +1,5 @@
 import { moderationResolutions } from '@gymsheet/domain';
+import { moderationCaseContentFields } from '@gymsheet/schemas';
 import { z } from 'zod';
 import { apiRequest } from '@/shared/api/api-client';
 
@@ -124,6 +125,8 @@ export const moderationCaseDetailSchema = z.object({
   }),
   contentHidden: z.boolean(),
   tenantId: z.string().nullish().transform((value) => value ?? null),
+  /** The reported target as it is now, hidden or not (backend ADR-0018 §9). */
+  ...moderationCaseContentFields,
 });
 
 export type ModerationCaseDetail = z.infer<typeof moderationCaseDetailSchema>;

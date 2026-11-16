@@ -1,3 +1,4 @@
+import { offersSelfieVerification } from '@gymsheet/domain';
 import type { Metadata } from 'next';
 import { DevicesSection } from '@/features/account-security/components/devices-section';
 import { PrivacySection } from '@/features/privacy/components/privacy-section';
@@ -19,8 +20,8 @@ export default async function SettingsRoute() {
       version={packageJson.version}
     >
       <DevicesSection />
-      {/* Members only: the backend answers 403 to staff. */}
-      {session.role === 'CLIENTE' ? <VerificationStatusCard /> : null}
+      {/* Verified members only: the backend answers 403 to staff and to an unverified email. */}
+      {offersSelfieVerification(session) ? <VerificationStatusCard /> : null}
       <PrivacySection name={session.nombreCompleto} />
     </SettingsPage>
   );

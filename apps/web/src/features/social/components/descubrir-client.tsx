@@ -17,6 +17,11 @@ import { MatchCelebration } from './match-celebration';
 import { MemberDetailSheet } from './member-detail-sheet';
 
 type Decision = { entry: DiscoveryCard; direction: SwipeDirection; filterKey: string };
+/**
+ * Whether the saved discovery preferences exist (from `/me/discovery/readiness`).
+ * Without them the API refuses the deck (400 `DISCOVERY_PREFERENCES_REQUIRED`), so it is not requested.
+ */
+export type DeckPreferencesState = 'checking' | 'missing' | 'ready';
 type FilteredEntry = { entry: DiscoveryCard; filterKey: string };
 
 /** Cartas por reparto. El backend admite hasta 30; diez llenan una sesión corta. */
@@ -36,9 +41,11 @@ const DECK_SIZE = 10;
 export function DescubrirClient({
   objetivo,
   sucursalId,
+  preferencesState = 'ready',
 }: Readonly<{
   objetivo: string;
   sucursalId: string;
+  preferencesState?: DeckPreferencesState;
 }>) {
   const queryClient = useQueryClient();
   const [queue, setQueue] = useState<DiscoveryCard[]>([]);
@@ -70,6 +77,7 @@ export function DescubrirClient({
     // servidor no considera candidatas y rechazaría con un conflicto.
     gcTime: 0,
     staleTime: 0,
+    enabled: preferencesState === 'ready',
   });
 
   // Sincroniza la cola con la baraja recién llegada ajustando estado durante el
@@ -172,7 +180,9 @@ export function DescubrirClient({
       <DeckSurface
         deckError={deck.isError ? deck.error.message : null}
         deckErrorCause={deck.error}
-        needsPreferences={deck.isError && needsDiscoveryPreferences(deck.error)}
+        needsPreferences={
+          preferencesState === 'missing' || (deck.isError && needsDiscoveryPreferences(deck.error))
+        }
         empty={visibleQueue.length === 0}
         emptyAction={
           <div className="flex flex-wrap justify-center gap-2">
@@ -190,7 +200,7 @@ export function DescubrirClient({
             </Button>
           </div>
         }
-        loading={deck.isLoading}
+        loading={preferencesState === 'checking' || deck.isLoading}
         onRefetch={() => deck.refetch()}
       >
         <DirectorySwipeDeck

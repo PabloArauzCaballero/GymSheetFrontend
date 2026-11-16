@@ -1,3 +1,4 @@
+import { offersSelfieVerification, socialSurfaceOpen } from '@gymsheet/domain';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { ComunidadClient } from '@/features/social/components/comunidad-client';
@@ -14,5 +15,10 @@ export default async function ComunidadPage() {
   const session = await requireSession();
   const staffHome = staffHomeFor(session.role);
   if (staffHome) redirect(staffHome);
-  return <ComunidadClient />;
+  return (
+    <ComunidadClient
+      emailVerified={socialSurfaceOpen(session)}
+      offerSelfieVerification={offersSelfieVerification(session)}
+    />
+  );
 }

@@ -21,6 +21,18 @@ export const emailVerificationCopy = {
   },
 } as const;
 
+/**
+ * Whether the social surface (Conocer, interactions, chat, selfie verification)
+ * is open to this session. The API closes it with 403 EMAIL_VERIFICATION_REQUIRED
+ * until the mailbox is proved; clients use this to skip requests that would
+ * predictably fail and show the «Verifica tu correo» step instead. Only an
+ * explicit `false` closes it: an older backend that does not report the flag
+ * keeps the previous behaviour. The API stays the authority.
+ */
+export function socialSurfaceOpen(principal: { emailVerified?: boolean } | null | undefined): boolean {
+  return principal?.emailVerified !== false;
+}
+
 export const deviceCopy = {
   title: 'Dispositivos',
   description: 'Dónde está abierta tu cuenta. Si no reconoces uno, ciérralo.',

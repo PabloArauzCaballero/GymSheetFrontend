@@ -18,6 +18,8 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(serverEnv.APP_URL),
     title: { default: brand.name, template: `%s · ${brand.name}` },
     description: 'Registro técnico de entrenamiento y operaciones de gimnasio.',
+    // The tenant's brand mark is the tab icon (see `app/brand-mark.svg/route.ts`).
+    icons: { icon: [{ url: '/brand-mark.svg', type: 'image/svg+xml' }] },
   };
 }
 

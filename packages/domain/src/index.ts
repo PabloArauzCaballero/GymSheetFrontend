@@ -39,3 +39,4 @@ export * from './platform-moderation';
 export * from './business-onboarding';
 export * from './business-handles';
 export * from './business-signup-failures';
+export * from './safe-href';
