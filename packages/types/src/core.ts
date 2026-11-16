@@ -93,6 +93,8 @@ export type OnboardingState = {
   completedAt: string | null;
   missingFields: string[];
   profileComplete: boolean;
+  /** Optional "Conocer" step; never blocks COMPLETED. Absent from older backends. */
+  socialStep?: 'PENDING' | 'DONE' | 'SKIPPED';
 };
 
 export type BodyMeasurement = {

@@ -13,6 +13,7 @@ import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { BadgeTile } from '@/components/progression';
 import { Button } from '@/components/ui';
 import { HeroStats, ProfileHero, plural } from '@/features/profile-hero/profile-hero';
+import { MemberAbout } from '@/features/social-profile/member-about';
 import { CreateTrainingInviteModal } from '@/features/training-invitations/create-training-invite-modal';
 import { notify } from '@/notifications';
 import { initialsOf } from '@/lib/format';
@@ -291,6 +292,8 @@ export default function PerfilDetailScreen() {
           ) : null}
         </Card>
       ) : null}
+
+      <MemberAbout about={entry.about} />
 
       <Section icon="ribbon-outline" title={`Insignias · ${entry.badges.length}`}>
         {entry.badges.length ? (

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import type { GymDirectoryEntry } from '@/shared/api/schemas';
 import { DomainImage } from '@/shared/components/media/domain-image';
 import { cn } from '@/shared/lib/cn';
+import { InterestChips } from './about/social-about-chips';
 import { experienceLevelLabels, trainingGoalLabels } from './directory-labels';
 
 /** `photos` cuando llega; si no, la portada como única foto. */
@@ -174,6 +175,11 @@ export function DirectoryCardFace({
             </span>
           ) : null}
         </div>
+        {/* Conocer answers: up to three interests, and the bio only on the big deck card. */}
+        {entry.about && entry.about.interests.length > 0 ? (
+          <InterestChips className={OVERLAY_CHIP} codes={entry.about.interests} limit={3} />
+        ) : null}
+        {fill && entry.about?.bio ? <p className="line-clamp-2 text-sm opacity-90">{entry.about.bio}</p> : null}
       </div>
 
       {onInfo && interactive ? (
@@ -192,6 +198,9 @@ export function DirectoryCardFace({
     </div>
   );
 }
+
+const OVERLAY_CHIP =
+  'rounded-full bg-[color-mix(in_srgb,var(--background)_70%,transparent)] px-2.5 py-1 text-xs font-semibold';
 
 /**
  * Los pasos son botones de verdad —no zonas táctiles— para que el teclado

@@ -7,31 +7,36 @@ import {
   toRegisterPayload,
   type RegisterInput,
 } from '@gymsheet/schemas';
-import {
-  authCopy,
-  authErrorMessage,
-  genderOptions,
-  onboardingFlowSteps,
-} from '@gymsheet/domain';
-import type { UserGender } from '@gymsheet/types';
+import { authCopy, authErrorMessage, onboardingFlowSteps } from '@gymsheet/domain';
 import { ApiError } from '@gymsheet/api-client';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 import { Button, Input, textLinkStyle } from '@/components/ui';
 import { AuthAlert, AuthShell } from '@/components/auth-shell';
 import { Checkbox } from '@/components/checkbox';
-import { Select } from '@/components/select';
 import { registerBenefits, registerFormTitle } from '@/features/first-impression/copy';
 import { EmailSuggestion, FieldHint } from '@/features/first-impression/field-hint';
 import { emailTypoSuggestion, passwordChecks } from '@/features/first-impression/signup-hints';
 import { accountEmailTextProps } from '@/lib/credential-input';
+import {
+  isTermsVersionOutdated,
+  legalGateCopy,
+  outdatedCurrentDocuments,
+  termsVersionOf,
+} from '@/features/legal/legal-logic';
+import { legalQueryKeys, legalService } from '@/features/legal/legal-service';
+import { BirthDateField } from '@/features/signup/birth-date-field';
+import { SexField } from '@/features/signup/sex-field';
 import { useAuthStore } from '@/state/auth-store';
 import { authLimits } from '@gymsheet/schemas';
 import { colors, fontSizes, iconSizes, spacing } from '@/theme';
 
 export default function RegisterScreen() {
   const register = useAuthStore((state) => state.register);
+  const queryClient = useQueryClient();
+  const legal = useQuery({ queryKey: legalQueryKeys.current, queryFn: legalService.current, staleTime: 5 * 60_000 });
   const [failure, setFailure] = useState<string | null>(null);
   const {
     control,
@@ -49,14 +54,29 @@ export default function RegisterScreen() {
 
   const onSubmit = handleSubmit(async (values) => {
     setFailure(null);
+    // The version the person is accepting; the server rejects a stale one (409).
+    const termsVersion = termsVersionOf(legal.data ?? (await legal.refetch()).data);
+    if (!termsVersion) {
+      setFailure(legalGateCopy.versionUnavailable);
+      return;
+    }
     try {
-      // La traducción a lo que espera el servidor —quitar la confirmación,
-      // omitir el género vacío— la hace el paquete compartido, no esta
-      // pantalla: era donde web y móvil se desviaban en silencio.
+      // La traducción a lo que espera el servidor —quitar la confirmación—
+      // la hace el paquete compartido, no esta pantalla: era donde web y
+      // móvil se desviaban en silencio.
       // No redirect here: the session flips to authenticated and the onboarding
       // guard in `(app)/_layout.tsx` sends the new CLIENTE to `/onboarding`.
-      await register(toRegisterPayload(values));
+      await register(toRegisterPayload(values, termsVersion));
     } catch (error) {
+      if (isTermsVersionOutdated(error)) {
+        // The terms changed while the form was open: show the new ones, ask again.
+        const fresh = outdatedCurrentDocuments(error.details);
+        if (fresh) queryClient.setQueryData(legalQueryKeys.current, fresh);
+        else void legal.refetch();
+        setValue('acceptedTerms', false);
+        setFailure(legalGateCopy.outdatedAtSignup);
+        return;
+      }
       setFailure(
         error instanceof ApiError
           ? authErrorMessage(error.kind, 'register', error.message)
@@ -176,18 +196,16 @@ export default function RegisterScreen() {
 
       <Controller
         control={control}
+        name="fechaNacimiento"
+        render={({ field: { onChange } }) => (
+          <BirthDateField error={errors.fechaNacimiento?.message} onChange={onChange} />
+        )}
+      />
+      <Controller
+        control={control}
         name="genero"
         render={({ field: { onChange, value } }) => (
-          // Campo de valores cerrados: selector, no chips. Las opciones son las
-          // mismas que sirve la web, desde el paquete compartido.
-          <Select<UserGender | ''>
-            error={errors.genero?.message}
-            hint={authCopy.fields.gender.hint}
-            label={authCopy.fields.gender.label}
-            onChange={onChange}
-            options={genderOptions}
-            value={value}
-          />
+          <SexField error={errors.genero?.message} onChange={onChange} value={value} />
         )}
       />
 

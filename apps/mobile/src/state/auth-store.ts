@@ -12,6 +12,7 @@ import { principalCache, secureStoreAuthStorage } from '@/storage/secure-store';
 import { restoreSession } from '@/lib/session-restore';
 import { env } from '@/config/env';
 import { unregisterPushNotifications } from '@/notifications/push';
+import { useLegalGateStore } from '@/features/legal/legal-store';
 
 /**
  * Lo que `POST /auth/register` espera, ya sin el par de confirmación.
@@ -149,6 +150,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       revokeRefreshToken,
       clearTokens: () => secureStoreAuthStorage.clearTokens(),
     });
+    // The legal block belongs to the account that just left.
+    useLegalGateStore.getState().clear();
     setActiveTenant(null);
     set({ status: 'unauthenticated', principal: null });
   },
@@ -161,6 +164,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
  */
 setSessionLostHandler(() => {
   if (useAuthStore.getState().status === 'unauthenticated') return;
+  useLegalGateStore.getState().clear();
   setActiveTenant(null);
   useAuthStore.setState({ status: 'unauthenticated', principal: null });
 });

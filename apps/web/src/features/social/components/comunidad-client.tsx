@@ -22,6 +22,7 @@ import { queryKeys } from '@/shared/api/query-keys';
 import { Divider, ListCard, NavRow } from '@/shared/components/mobile/nav-row';
 import { cn } from '@/shared/lib/cn';
 import { DescubrirClient } from './descubrir-client';
+import { DiscoveryReadinessCard } from './discovery-readiness-card';
 import { SearchPreferencesDialog, type DeckPreferences } from './search-preferences-dialog';
 
 const EMPTY_PREFERENCES: DeckPreferences = { objetivo: '', sucursalId: '' };
@@ -197,6 +198,9 @@ export function ComunidadClient() {
 
         <OverflowSheet onPreferences={() => setPreferencesOpen(true)} />
       </div>
+
+      {/* The deck shows its own preferences form when they are missing. */}
+      <DiscoveryReadinessCard omit={['PREFERENCES']} />
 
       <DescubrirClient
         key={`${pill}-${goal}`}

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { progressionBadgeSchema } from './progression';
+import { discoveryIntentsSchema, socialAboutSchema } from './social-profile';
 
 /**
  * Contratos de la capa social: solicitudes de conexión entre socios, estado
@@ -71,7 +72,7 @@ export const discoveryPreferencesSchema = z.discriminatedUnion('configured', [
   z.object({
     configured: z.literal(true),
     genders: z.array(z.enum(['MALE', 'FEMALE'])).min(1).max(2),
-    intents: z.array(z.enum(['TRAINING', 'FRIENDSHIP', 'DATING'])).min(1).max(3),
+    intents: discoveryIntentsSchema,
     minAge: z.number().int().min(18).max(100),
     maxAge: z.number().int().min(18).max(100),
     radiusKm: z.number().min(1).max(500),
@@ -84,7 +85,7 @@ export type DiscoveryPreferences = z.infer<typeof discoveryPreferencesSchema>;
 
 export const updateDiscoveryPreferencesSchema = z.object({
   genders: z.array(z.enum(['MALE', 'FEMALE'])).min(1).max(2),
-  intents: z.array(z.enum(['TRAINING', 'FRIENDSHIP', 'DATING'])).min(1).max(3),
+  intents: discoveryIntentsSchema,
   minAge: z.number().int().min(18).max(100),
   maxAge: z.number().int().min(18).max(100),
   radiusKm: z.number().min(1).max(500),
@@ -126,6 +127,8 @@ export const gymDirectoryEntrySchema = z.object({
   experienceLevel: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).nullable(),
   points: z.number().nullable(),
   levelCode: z.string().nullable(),
+  /** The "Conocer" answers. Absent from older backends. */
+  about: socialAboutSchema.optional(),
 });
 export type GymDirectoryEntry = z.infer<typeof gymDirectoryEntrySchema>;
 

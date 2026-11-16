@@ -24,13 +24,17 @@ export function OnboardingGuard({
   // Only a loaded state decides a redirect: a failed GET is not "onboarding
   // pending", and sending the member to /onboarding would hide the real error.
   const status = query.data?.status;
+  const socialStep = query.data?.socialStep;
   const resolved = role !== 'CLIENTE' || status !== undefined;
   const requiresOnboarding = role === 'CLIENTE' && status !== undefined && status !== 'COMPLETED';
   useEffect(() => {
     if (!resolved) return;
     if (requiresOnboarding && pathname !== '/onboarding') router.replace('/onboarding');
-    if (!requiresOnboarding && pathname === '/onboarding') router.replace('/comunidad');
-  }, [pathname, requiresOnboarding, resolved, router]);
+    // `/onboarding/conocer` stays reachable once onboarding is complete: it is the
+    // optional social step, and someone who skipped it can come back to it.
+    if (!requiresOnboarding && pathname === '/onboarding')
+      router.replace(socialStep === 'PENDING' ? '/onboarding/conocer' : '/comunidad');
+  }, [pathname, requiresOnboarding, resolved, router, socialStep]);
   if (role !== 'CLIENTE') return children;
   if (status === undefined)
     return query.isError ? (

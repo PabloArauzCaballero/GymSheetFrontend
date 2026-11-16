@@ -4,6 +4,7 @@ import { registerPayloadSchema } from '@/shared/api/schemas';
 import { isTrustedMutation } from '@/shared/server/csrf';
 import { backendRequest, readBackendJson } from '@/shared/server/backend';
 import { SESSION_COOKIE, sessionCookieOptions } from '@/shared/server/auth-cookie';
+import { CLIENT_PLATFORM_HEADER, WEB_CLIENT_PLATFORM } from '@/shared/server/legal';
 import { TENANT_COOKIE } from '@/shared/theme/tenant-cookie';
 
 /**
@@ -43,7 +44,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ detail: 'Datos de registro inválidos.' }, { status: 400 });
   const backendResponse = await backendRequest('/auth/register', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    // The platform is stored with the terms acceptance as audit evidence.
+    headers: { 'Content-Type': 'application/json', [CLIENT_PLATFORM_HEADER]: WEB_CLIENT_PLATFORM },
     body: JSON.stringify({ ...input.data, tenantId: tenantFromCookie(request) }),
   });
   const payload = await readBackendJson(backendResponse);

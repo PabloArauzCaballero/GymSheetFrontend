@@ -1,6 +1,8 @@
+import { Platform } from 'react-native';
 import { z } from 'zod';
 import { ApiError, classifyStatus, createApiClient } from '@gymsheet/api-client';
 import { env, loopbackRewrite } from '@/config/env';
+import { clientPlatform, isLegalAcceptanceRequired } from '@/features/legal/legal-logic';
 import { notify } from '@/notifications';
 import { secureStoreAuthStorage, secureStoreTokenProvider } from '@/storage/secure-store';
 
@@ -15,6 +17,19 @@ let onSessionLost: SessionLostHandler | null = null;
 export function setSessionLostHandler(handler: SessionLostHandler): void {
   onSessionLost = handler;
 }
+
+/**
+ * Called when the backend answers 428 LEGAL_ACCEPTANCE_REQUIRED. Registered by
+ * the legal gate store for the same reason as `setSessionLostHandler`: no cycle.
+ */
+let onLegalAcceptanceRequired: (() => void) | null = null;
+
+export function setLegalAcceptanceRequiredHandler(handler: () => void): void {
+  onLegalAcceptanceRequired = handler;
+}
+
+/** Sent on every request: the backend stores it with each legal acceptance as audit evidence. */
+const platformHeader = { 'X-Client-Platform': clientPlatform(Platform.OS) } as const;
 
 /**
  * The mobile client talks to the NestJS backend directly with a bearer token
@@ -56,7 +71,7 @@ async function refreshSession(): Promise<boolean> {
   try {
     response = await fetch(`${env.apiUrl}/auth/refresh`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...platformHeader },
       body: JSON.stringify({ refreshToken }),
     });
   } catch {
@@ -137,9 +152,24 @@ const deviceFetch: typeof fetch = rewrite
     }
   : fetch;
 
+/**
+ * Every API call goes through here: it adds the platform header and spots the
+ * legal block (428) once for all screens, so none of them has to handle it.
+ */
+const apiFetch: typeof fetch = async (input, init) => {
+  const headers = new Headers(init?.headers);
+  headers.set('X-Client-Platform', platformHeader['X-Client-Platform']);
+  const response = await deviceFetch(input, { ...init, headers });
+  if (response.status === 428) {
+    const body: unknown = await response.clone().json().catch(() => null);
+    if (isLegalAcceptanceRequired(response.status, body)) onLegalAcceptanceRequired?.();
+  }
+  return response;
+};
+
 export const apiClient = createApiClient({
   baseUrl: env.apiUrl,
-  fetchImpl: deviceFetch,
+  fetchImpl: apiFetch,
   tokenProvider: secureStoreTokenProvider,
   refreshSession,
   onUnauthorized: async () => {

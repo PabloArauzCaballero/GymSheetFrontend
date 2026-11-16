@@ -29,7 +29,7 @@ export function SocialDiscoverySettingsCard() {
   const busy = update.isPending;
 
   return (
-    <Card>
+    <Card className="scroll-mt-24" id="perfil-social">
       <CardHeader
         description="Tu perfil empieza privado. La presencia en otros gimnasios y en el mapa tiene permisos separados."
         title="Descubrimiento social"

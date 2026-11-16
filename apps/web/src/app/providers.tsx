@@ -50,7 +50,9 @@ export function Providers({
             retry: (failureCount, error) => {
               if (
                 error instanceof ApiError &&
-                ['unauthorized', 'forbidden', 'not-found', 'validation'].includes(error.kind)
+                (['unauthorized', 'forbidden', 'not-found', 'validation'].includes(error.kind) ||
+                  // 428: blocked until the person accepts the current legal documents.
+                  error.status === 428)
               )
                 return false;
               return failureCount < 2;

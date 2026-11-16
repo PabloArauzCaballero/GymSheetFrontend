@@ -1,18 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { ScrollView, View, useWindowDimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useReducedMotion } from 'react-native-reanimated';
 import type { GymDirectoryEntry, SwipeDirection } from '@gymsheet/schemas';
 import { profilePhotosService } from '@/api/services';
 import { ErrorState } from '@/components/feedback';
+import { Button } from '@/components/ui';
 import { ProfileDetailSheet } from '@/components/profile-detail-sheet';
 import { useAuthStore } from '@/state/auth-store';
 import { spacing } from '@/theme';
 import { DeckActions } from './deck-actions';
+import { useDiscoveryReadiness } from '@/features/social-profile/use-discovery-readiness';
 import { DeckEmpty, DeckLoading, DeckPreferencesRequired } from './deck-states';
 import { MatchModal } from './match-modal';
 import { NextCard } from './next-card';
+import { ReadinessCard } from './readiness-card';
 import { SwipeCard } from './swipe-card';
 import { useCardOffset, useDeckGestures } from './use-deck-gestures';
 import { useDiscoveryDeck, type DeckFilters } from './use-discovery-deck';
@@ -27,6 +30,8 @@ export function DiscoveryDeck({ filters, onOpenFilters }: { filters: DeckFilters
   const offset = useCardOffset();
   const deck = useDiscoveryDeck(filters, { onUndone: offset.reset });
   const { topCard, nextCard, matchedEntry } = deck;
+  // What keeps this member out of other decks. Browsing still works without it.
+  const gaps = useDiscoveryReadiness();
 
   const myPhotos = useQuery({
     queryKey: ['profile', 'photos'],
@@ -61,6 +66,7 @@ export function DiscoveryDeck({ filters, onOpenFilters }: { filters: DeckFilters
 
   return (
     <>
+      {topCard && gaps.length > 0 ? <ReadinessCard compact gaps={gaps} /> : null}
       <View
         onLayout={(event) => {
           const { width: measured, height } = event.nativeEvent.layout;
@@ -90,6 +96,12 @@ export function DiscoveryDeck({ filters, onOpenFilters }: { filters: DeckFilters
               translateX={offset.translateX}
             />
           </View>
+        ) : gaps.length > 0 ? (
+          // An empty deck while invisible: the checklist is the useful next step.
+          <ScrollView contentContainerStyle={{ gap: spacing.md, padding: spacing.lg }} style={{ flex: 1, width: '100%' }}>
+            <ReadinessCard gaps={gaps} />
+            <Button icon="reload-outline" label="Explorar de nuevo" onPress={deck.redeal} variant="ghost" />
+          </ScrollView>
         ) : (
           <DeckEmpty onOpenFilters={onOpenFilters} onRedeal={deck.redeal} />
         )}

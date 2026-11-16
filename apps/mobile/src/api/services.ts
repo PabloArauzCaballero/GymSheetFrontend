@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { chatMessageSchema, readReceiptSettingsSchema, setDisappearingMessagesResponseSchema, setMessageReactionResponseSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema, musicPlaylistSchema, musicPlaylistPageSchema } from '@gymsheet/schemas';
 import type { RoutineVisibility } from '@gymsheet/types';
-import type { MusicVisibility, SocialMapBounds, SocialMapCoordinates } from '@gymsheet/schemas';
+import type { DiscoveryIntent, MusicVisibility, SocialMapBounds, SocialMapCoordinates } from '@gymsheet/schemas';
 import {
   activationRequestSchema,
   bodyMeasurementSchema,
@@ -694,7 +694,7 @@ updateDiscoverySettings: (input: {
   }) => apiClient.request('/me/social-discovery-settings', socialDiscoverySettingsSchema, { method: 'PATCH', body: input }),
 getDiscoveryPreferences: () => apiClient.request('/me/discovery/preferences', discoveryPreferencesSchema, { method: 'GET' }),
 updateDiscoveryPreferences: (input: {
-    genders: ('MALE' | 'FEMALE')[]; intents: ('TRAINING' | 'FRIENDSHIP' | 'DATING')[];
+    genders: ('MALE' | 'FEMALE')[]; intents: DiscoveryIntent[];
     minAge: number; maxAge: number; radiusKm: number; flexibleAge: boolean;
     flexibleDistance: boolean; expectedVersion: number;
   }) => apiClient.request('/me/discovery/preferences', discoveryPreferencesSchema, { method: 'PUT', body: input }),

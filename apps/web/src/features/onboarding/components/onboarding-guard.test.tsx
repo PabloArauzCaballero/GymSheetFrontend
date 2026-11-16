@@ -62,4 +62,22 @@ describe('OnboardingGuard', () => {
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith('/onboarding'));
   });
+
+  it('sends a completed member with a pending Conocer step from /onboarding to /onboarding/conocer', async () => {
+    pathname.current = '/onboarding';
+    get.mockResolvedValue({ status: 'COMPLETED', socialStep: 'PENDING' });
+    renderGuard();
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/onboarding/conocer'));
+  });
+
+  it('lets a completed member stay on /onboarding/conocer to resume it', async () => {
+    pathname.current = '/onboarding/conocer';
+    get.mockResolvedValue({ status: 'COMPLETED', socialStep: 'SKIPPED' });
+    renderGuard();
+
+    expect(await screen.findByText('Contenido del portal')).toBeTruthy();
+    expect(replace).not.toHaveBeenCalled();
+  });
 });
+

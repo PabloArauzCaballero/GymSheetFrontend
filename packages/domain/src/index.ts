@@ -22,3 +22,5 @@ export * from './profile-completion';
 export * from './marketplace-labels';
 export * from './marketplace-categories';
 export * from './discovery-preferences';
+export * from './social-profile-options';
+export * from './legal';

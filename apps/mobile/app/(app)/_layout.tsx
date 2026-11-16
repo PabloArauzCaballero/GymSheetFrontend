@@ -49,6 +49,8 @@ export default function AppLayout() {
             stack, not something you navigate to. */}
         <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
         <Stack.Screen name="onboarding" />
+        {/* Optional «Conocer» step after the questionnaire; also opened from Perfil. */}
+        <Stack.Screen name="onboarding-conocer" />
         {/* Inicio dejó de ser pestaña (08/11/2026): la barra pasó a Mensajes ·
             Comunidad · Marketplace · Rutinas · Perfil. La pantalla sigue
             existiendo en la pila con la misma URL (`/home`). */}

@@ -12,6 +12,10 @@ export const problemSchema = z.object({
   instance: z.string().optional(),
   requestId: z.string().optional(),
   error: z.object({ message: z.string().optional() }).optional(),
+  /** Per-field messages of a 400 (the backend's flattened Zod issues). */
+  issues: z
+    .object({ fieldErrors: z.record(z.string(), z.array(z.string()).optional()).optional() })
+    .optional(),
 });
 
 /**
@@ -72,6 +76,8 @@ export const onboardingSchema = z.object({
   status: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'REQUIRES_UPDATE']),
   currentStep: z.number().int().min(1).max(5),
   completedSteps: z.array(z.number().int()),
+  /** Optional "Conocer" step; never blocks COMPLETED. Absent from older backends. */
+  socialStep: z.enum(['PENDING', 'DONE', 'SKIPPED']).optional(),
   version: z.number().int(),
   primaryGoal: z
     .enum([

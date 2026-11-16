@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { decideOnboardingGate, type OnboardingGateInput } from './onboarding-gate.ts';
+import { CONOCER_PATH, decideOnboardingGate, type OnboardingGateInput } from './onboarding-gate.ts';
 
 const base: OnboardingGateInput = { role: 'CLIENTE', pathname: '/comunidad', status: undefined, failed: false };
 
@@ -35,4 +35,39 @@ test('staff and admins are never sent to onboarding', () => {
     assert.deepEqual(decideOnboardingGate({ ...base, role }), { kind: 'pass' });
     assert.deepEqual(decideOnboardingGate({ ...base, role, pathname: '/onboarding' }), { kind: 'redirect', to: 'home' });
   }
+});
+
+test('finishing the questionnaire with the Conocer step PENDING offers it once', () => {
+  const done = { ...base, status: 'COMPLETED' as const, pathname: '/onboarding' };
+  assert.deepEqual(decideOnboardingGate({ ...done, socialStep: 'PENDING' }), { kind: 'redirect', to: 'conocer' });
+  for (const socialStep of ['DONE', 'SKIPPED', undefined] as const) {
+    assert.deepEqual(decideOnboardingGate({ ...done, socialStep }), { kind: 'redirect', to: 'home' });
+  }
+});
+
+test('a PENDING Conocer step never pulls a completed member off another screen', () => {
+  assert.deepEqual(decideOnboardingGate({ ...base, status: 'COMPLETED', socialStep: 'PENDING' }), { kind: 'pass' });
+});
+
+test('a completed member can open the Conocer step whatever its state', () => {
+  for (const socialStep of ['PENDING', 'DONE', 'SKIPPED', undefined] as const) {
+    assert.deepEqual(
+      decideOnboardingGate({ ...base, status: 'COMPLETED', socialStep, pathname: CONOCER_PATH }),
+      { kind: 'pass' },
+    );
+  }
+});
+
+test('the Conocer step waits for the questionnaire to be COMPLETED', () => {
+  assert.deepEqual(
+    decideOnboardingGate({ ...base, status: 'IN_PROGRESS', socialStep: 'PENDING', pathname: CONOCER_PATH }),
+    { kind: 'redirect', to: 'onboarding' },
+  );
+});
+
+test('staff are never offered the Conocer step', () => {
+  assert.deepEqual(
+    decideOnboardingGate({ ...base, role: 'COACH', status: 'COMPLETED', socialStep: 'PENDING', pathname: '/onboarding' }),
+    { kind: 'redirect', to: 'home' },
+  );
 });

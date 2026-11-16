@@ -42,6 +42,38 @@ export const loginSchema = z.object({
 });
 export type LoginInput = z.infer<typeof loginSchema>;
 
+/** Same bounds as the backend's `adultBirthDateSchema`. */
+export const SIGNUP_MIN_AGE = 18;
+export const SIGNUP_MAX_AGE = 100;
+
+/** Whole years between a `YYYY-MM-DD` birth date and `today` (local calendar). */
+export function ageOn(birthDate: string, today: Date = new Date()): number | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/u.exec(birthDate);
+  if (!match) return null;
+  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+  let age = today.getFullYear() - year;
+  const beforeBirthday =
+    today.getMonth() < month - 1 || (today.getMonth() === month - 1 && today.getDate() < day);
+  if (beforeBirthday) age -= 1;
+  return age;
+}
+
+const birthDateField = z
+  .string()
+  .min(1, 'Indica tu fecha de nacimiento.')
+  .superRefine((value, context) => {
+    // An empty value already failed `min(1)`; one message per problem.
+    if (value === '') return;
+    const age = ageOn(value);
+    if (age === null) context.addIssue({ code: z.ZodIssueCode.custom, message: 'Indica una fecha válida.' });
+    else if (age < SIGNUP_MIN_AGE)
+      context.addIssue({ code: z.ZodIssueCode.custom, message: `Debes tener al menos ${SIGNUP_MIN_AGE} años.` });
+    else if (age > SIGNUP_MAX_AGE)
+      context.addIssue({ code: z.ZodIssueCode.custom, message: `La edad no puede superar los ${SIGNUP_MAX_AGE} años.` });
+  });
+
 export const registerSchema = z
   .object({
     nombreCompleto: z
@@ -52,11 +84,10 @@ export const registerSchema = z
     email: emailField,
     password: passwordField,
     confirmation: z.string(),
-    /**
-     * Cadena vacía = prefiero no decirlo, tratada igual que ausencia: solo
-     * sirve para elegir con qué arquetipos habla la senda.
-     */
-    genero: z.enum(['', 'MALE', 'FEMALE', 'UNSPECIFIED']),
+    /** `YYYY-MM-DD`. The app is 18+; age is derived, never asked separately. */
+    fechaNacimiento: birthDateField,
+    /** Mandatory at signup. `''` is only the form's initial "not chosen yet". */
+    genero: z.enum(['', 'MALE', 'FEMALE']).refine((value) => value.length > 0, { message: 'Elige tu sexo.' }),
     acceptedTerms: z.boolean(),
   })
   .refine((value) => value.password === value.confirmation, {
@@ -70,16 +101,16 @@ export const registerSchema = z
 export type RegisterInput = z.infer<typeof registerSchema>;
 
 /**
- * Valores por defecto del alta. Viven junto al esquema porque `genero` tiene
- * que arrancar en `''` —la opción «prefiero no decirlo»— y no en `undefined`:
- * un `<select>` sin valor inicial queda no controlado y el primer cambio
- * dispara el aviso de React sobre cambiar de no controlado a controlado.
+ * Valores por defecto del alta. `genero` arranca en `''` (sin elegir) y no en
+ * `undefined`: un control sin valor inicial queda no controlado y el primer
+ * cambio dispara el aviso de React sobre cambiar de no controlado a controlado.
  */
 export const registerDefaults: RegisterInput = {
   nombreCompleto: '',
   email: '',
   password: '',
   confirmation: '',
+  fechaNacimiento: '',
   genero: '',
   acceptedTerms: false,
 };
@@ -105,25 +136,27 @@ export const registerPayloadSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(authLimits.emailMax),
   password: z.string().min(authLimits.passwordMin).max(authLimits.passwordMax),
   nombreCompleto: z.string().trim().min(authLimits.fullNameMin).max(authLimits.fullNameMax),
-  /**
-   * Opcional de verdad: la progresión tiene una rama neutra y nadie debería
-   * tener que declarar su género para poder crear una cuenta.
-   */
-  genero: z.enum(['MALE', 'FEMALE', 'UNSPECIFIED']).optional(),
+  fechaNacimiento: birthDateField,
+  genero: z.enum(['MALE', 'FEMALE']),
+  /** The legal version the person saw (`GET /legal/current`); the server rejects a stale one. */
+  termsVersion: z.string().trim().min(1).max(20),
   acceptedTerms: z.literal(true),
 });
 export type RegisterPayload = z.output<typeof registerPayloadSchema>;
 
-export function toRegisterPayload(values: RegisterInput): RegisterPayload {
+export function toRegisterPayload(values: RegisterInput, termsVersion: string): RegisterPayload {
+  // `registerSchema` rejects an empty `genero`; reaching here without it is a bug.
+  if (values.genero === '') throw new Error('toRegisterPayload called with an unvalidated form');
+  const genero = values.genero;
   return {
     nombreCompleto: values.nombreCompleto.trim(),
     // Same normalization as `registerPayloadSchema` (and the backend), so the
     // payload is already in its canonical form when it leaves the client.
     email: values.email.trim().toLowerCase(),
     password: values.password,
-    // Literal `true` y no `values.acceptedTerms`: el esquema ya ha rechazado el
-    // caso contrario, y el tipo del backend exige el literal.
+    fechaNacimiento: values.fechaNacimiento,
+    genero,
+    termsVersion,
     acceptedTerms: true,
-    ...(values.genero === '' ? {} : { genero: values.genero }),
   };
 }

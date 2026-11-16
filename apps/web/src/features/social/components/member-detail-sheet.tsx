@@ -11,6 +11,7 @@ import {
   levelTitle,
   trainingGoalLabels,
 } from './directory-labels';
+import { SocialAboutSection, hasAboutContent } from './about/social-about-section';
 import { socialStatusLabels } from './social-status-labels';
 import { galleryOf } from './directory-card-face';
 
@@ -22,8 +23,9 @@ type DetailSection = { key: string; title: string; rows: DetailRow[] };
  *
  * Una sección vacía con un guion dentro no informa de nada y deja la ficha
  * llena de huecos esperando datos que este backend no tiene: aquí no hay
- * biografía, ni ubicación, ni distancia, ni intereses, así que tampoco hay
- * sitios reservados para ellos.
+ * ubicación ni distancia, así que tampoco hay sitios reservados para ellos.
+ * Bio, interests and habits live in `SocialAboutSection`, which renders only
+ * what was answered.
  */
 export function detailSectionsOf(entry: GymDirectoryEntry): DetailSection[] {
   const training: DetailRow[] = [];
@@ -158,7 +160,9 @@ export function MemberDetailSheet({
             <DetailSectionBlock key={section.key} section={section} />
           ))}
 
-          {photos.length === 0 && sections.length === 0 ? (
+          <SocialAboutSection about={entry.about} />
+
+          {photos.length === 0 && sections.length === 0 && !hasAboutContent(entry.about) ? (
             <p className="py-8 text-center text-sm text-[var(--text-muted)]">
               Esta persona aún no ha completado su perfil.
             </p>

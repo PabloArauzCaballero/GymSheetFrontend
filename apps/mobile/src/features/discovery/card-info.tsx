@@ -6,6 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import type { GymDirectoryEntry } from '@gymsheet/schemas';
 import { levelTitle } from '@/components/directory-card';
 import { PressableScale } from '@/components/motion';
+import { orientationLabels } from '@gymsheet/domain';
+import { useInterestLabels } from '@/features/social-profile/use-interest-catalog';
 import { TRAINING_GOAL_LABEL } from '@/lib/social-labels';
 import { accentHues, alpha, colors, fontSizes, ink, radii, spacing } from '@/theme';
 import { SCRIM_BOTTOM, SCRIM_BOTTOM_STOPS } from './scrims';
@@ -50,8 +52,15 @@ function Chip({
   );
 }
 
-/** Name, age and metadata chips over the bottom scrim of the top card. */
+/** Cards show three interests at most; the full list lives in the detail sheet. */
+const CARD_INTERESTS = 3;
+
+/** Name, age, metadata chips and a glimpse of the "Conocer" answers over the bottom scrim. */
 export function CardInfo({ entry, onOpenDetail }: { entry: GymDirectoryEntry; onOpenDetail: () => void }) {
+  const interests = useInterestLabels(entry.about?.interests);
+  const bio = entry.about?.bio?.trim();
+  const orientation = entry.about?.orientation;
+  const soft = alpha(ink.white, 0.85);
   return (
     <LinearGradient
       colors={SCRIM_BOTTOM}
@@ -101,6 +110,23 @@ export function CardInfo({ entry, onOpenDetail }: { entry: GymDirectoryEntry; on
             </Chip>
           ) : null}
         </View>
+
+        {bio ? (
+          <Text numberOfLines={2} style={{ color: soft, fontSize: fontSizes.sm, lineHeight: 20 }}>
+            {bio}
+          </Text>
+        ) : null}
+        {interests.length > 0 || orientation ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+            {interests.slice(0, CARD_INTERESTS).map((label) => (
+              <Chip icon="sparkles-outline" iconColor={soft} key={label}>{label}</Chip>
+            ))}
+            {interests.length > CARD_INTERESTS ? (
+              <Chip icon="add" iconColor={soft}>{`${interests.length - CARD_INTERESTS}`}</Chip>
+            ) : null}
+            {orientation ? <Chip icon="person-outline" iconColor={soft}>{orientationLabels[orientation]}</Chip> : null}
+          </View>
+        ) : null}
       </View>
     </LinearGradient>
   );

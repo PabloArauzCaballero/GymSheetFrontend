@@ -79,7 +79,7 @@ const allowedPathPatterns = [
   /^\/membership\/plans$/u,
   new RegExp(`^/membership/plans/${resourceId}$`, 'u'),
   /^\/me\/onboarding$/u,
-  /^\/me\/onboarding\/(profile|goals|preferences|equipment|complete)$/u,
+  /^\/me\/onboarding\/(profile|goals|preferences|equipment|complete|social)$/u,
   /^\/me\/body-measurements$/u,
   /^\/me\/membership$/u,
   /^\/me\/membership\/(options|renewal-intent|extension-intent)$/u,
@@ -129,6 +129,11 @@ const allowedPathPatterns = [
   /^\/me\/discovery\/impressions$/u,
   /^\/me\/discovery\/swipes$/u,
   /^\/me\/discovery\/swipes\/undo$/u,
+  // Conocer profile: the Tinder-style answers, the interest catalog and what
+  // still keeps someone out of the deck (`readiness`).
+  /^\/me\/discovery\/readiness$/u,
+  /^\/me\/social-profile$/u,
+  /^\/social\/catalog\/interests$/u,
   // Stories (R6.2). `/me/stories` es GET del propio + POST multipart; el feed
   // es una ruta hermana y no un parámetro, así que se declara aparte aunque el
   // patrón por identificador de abajo también la aceptaría: quien lea esta

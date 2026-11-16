@@ -248,6 +248,13 @@ export default function ProfileScreen() {
               testID="profile-exercises"
               title="Mis ejercicios y favoritos"
             />,
+            <NavRow
+              key="conocer" leading={<RowGlyph icon="compass-outline" />}
+              onPress={() => router.push({ pathname: '/onboarding-conocer', params: { modo: 'perfil' } })}
+              subtitle="Qué buscas, tus gustos, tu bio y tus fotos"
+              testID="profile-conocer"
+              title="Tu perfil de Conocer"
+            />,
             <NavRow key="chat" leading={<RowGlyph icon="chatbubbles-outline" />} onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />,
             <NavRow key="training-invitations" leading={<RowGlyph icon="people-outline" />} onPress={() => router.push('/training-invitations')} subtitle="Invitaciones recibidas y encuentros" title="Entrenar juntos" />,
           ]}

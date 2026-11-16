@@ -49,7 +49,7 @@ export function ProfilePhotoGallery() {
   const atLimit = count >= MAX_PHOTOS;
 
   return (
-    <Card>
+    <Card className="scroll-mt-24" id="fotos">
       <CardHeader
         description={`Hasta ${MAX_PHOTOS} fotos. ${count}/${MAX_PHOTOS} usadas.`}
         title="Fotos de perfil"

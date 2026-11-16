@@ -23,6 +23,12 @@ export const genderOptions: ReadonlyArray<{ value: UserGender | ''; label: strin
   { value: 'FEMALE', label: 'Mujer' },
 ];
 
+/** Sex at signup: mandatory, two options (product decision 16/11/2026). */
+export const signupSexOptions: ReadonlyArray<{ value: 'MALE' | 'FEMALE'; label: string }> = [
+  { value: 'MALE', label: 'Hombre' },
+  { value: 'FEMALE', label: 'Mujer' },
+];
+
 /**
  * Lo que dice la primera pantalla de acceso (#124 ASO: continuidad entre la
  * ficha de la tienda y lo primero que se ve). Una frase dice qué es la app; la
@@ -62,8 +68,12 @@ export const authCopy = {
     password: { label: 'Contraseña', placeholder: 'Mínimo 8 caracteres' },
     confirmation: { label: 'Confirmar contraseña', placeholder: 'Repite la contraseña' },
     gender: {
-      label: 'Género (opcional)',
-      hint: 'Solo se usa para elegir los rangos e insignias con los que te habla la app. Puedes cambiarlo o dejarlo en blanco.',
+      label: 'Sexo',
+      hint: 'Lo usamos para tus rangos e insignias y para las preferencias de Conocer.',
+    },
+    birthDate: {
+      label: 'Fecha de nacimiento',
+      hint: 'Tienes que tener 18 años o más. Calculamos tu edad a partir de esta fecha.',
     },
   },
   showPassword: 'Mostrar contraseña',

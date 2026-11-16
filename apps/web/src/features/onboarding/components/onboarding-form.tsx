@@ -87,7 +87,8 @@ export function OnboardingForm({ initial }: Readonly<{ initial: OnboardingState 
     mutationFn: onboardingService.complete,
     onSuccess: async (result) => {
       queryClient.setQueryData(queryKeys.onboarding, result);
-      router.replace('/comunidad');
+      // New members continue into the optional "Conocer" step while it is pending.
+      router.replace(result.socialStep === 'PENDING' ? '/onboarding/conocer' : '/comunidad');
       router.refresh();
     },
     onError: (error: Error) => notify.error(error),

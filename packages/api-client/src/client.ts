@@ -144,8 +144,17 @@ export function createApiClient(config: ApiClientConfig) {
       ...(parsed.success && parsed.data.requestId ? { requestId: parsed.data.requestId } : {}),
       ...(parsed.success && parsed.data.code ? { code: parsed.data.code } : {}),
       ...(parsed.success && parsed.data.details ? { details: parsed.data.details } : {}),
+      ...(parsed.success ? { fieldErrors: firstFieldErrors(parsed.data.issues?.fieldErrors) } : {}),
       kind: classifyStatus(response.status),
     });
+  }
+
+  function firstFieldErrors(fieldErrors: Record<string, string[] | undefined> | undefined) {
+    const first: Record<string, string> = {};
+    for (const [field, messages] of Object.entries(fieldErrors ?? {})) {
+      if (messages?.[0]) first[field] = messages[0];
+    }
+    return first;
   }
 
   async function request<T>(

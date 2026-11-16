@@ -25,6 +25,7 @@ import { profileService } from '@/features/profile/services/profile-service';
 import { ProfilePhotoGallery } from '@/features/profile/components/profile-photo-gallery';
 import { GenderPreferenceField } from '@/features/progression/components/gender-preference-field';
 import { progressionService } from '@/features/progression/services/progression-service';
+import { ConocerProfileSection } from '@/features/social/components/conocer/conocer-profile-section';
 import { DiscoveryPreferencesCard } from '@/features/social/components/discovery-preferences-card';
 import { SocialDiscoverySettingsCard } from '@/features/social/components/social-discovery-settings-card';
 import { SocialStatusCard } from '@/features/social/components/social-status-card';
@@ -276,6 +277,7 @@ export function ProfilePageClient() {
           </div>
           <SocialDiscoverySettingsCard />
           <DiscoveryPreferencesCard />
+          <ConocerProfileSection />
         </div>
       </div>
 
