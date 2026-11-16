@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { StoryFeedEntry } from '@gymsheet/schemas';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,6 +11,9 @@ import { profilePhotosService, socialService, storiesService } from '@/api/servi
 import { PressableScale } from '@/components/motion';
 import { StoryViewer } from '@/components/story-viewer';
 import { StoryComposer } from '@/components/story-composer';
+import { storyThumbnailUrl } from '@/components/story-thumbnail';
+import { env } from '@/config/env';
+import { useMediaAccessToken } from '@/features/chat/use-media-access-token';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { Button } from '@/components/ui';
 import { notify } from '@/notifications';
@@ -83,15 +87,26 @@ function ringGradient(): readonly [string, string, string] {
   return [accentPolicy.ink, colors.volt, colors.voltDim];
 }
 
+/** Authenticated thumbnail of the story itself; `null` keeps the avatar. */
+type StoryThumbnail = { uri: string; token: string } | null;
+
 function StoryRing({
   photoUrl,
   fullName,
   state,
+  thumbnail = null,
+  onThumbnailError,
 }: {
   photoUrl: string | null;
   fullName: string;
   state: RingState;
+  thumbnail?: StoryThumbnail;
+  onThumbnailError?: () => void;
 }) {
+  // A broken thumbnail (expired token, purged story) falls back to the avatar
+  // instead of leaving an empty circle.
+  const [failedUri, setFailedUri] = useState<string | null>(null);
+  const showThumbnail = thumbnail !== null && thumbnail.uri !== failedUri;
   return (
     <View style={{ width: RING_OUTER, height: RING_OUTER, alignItems: 'center', justifyContent: 'center' }}>
       {/* Capa 1 — el aro. Con todo visto es un gris apagado y no «nada»: que
@@ -121,8 +136,26 @@ function StoryRing({
           justifyContent: 'center',
         }}
       >
-        {/* Capa 3 — la foto. */}
-        {photoUrl ? (
+        {/* Capa 3 — la story (como el estado de WhatsApp) o, sin ella, la foto. */}
+        {showThumbnail ? (
+          <Image
+            cachePolicy="memory-disk"
+            contentFit="cover"
+            onError={() => {
+              setFailedUri(thumbnail.uri);
+              onThumbnailError?.();
+            }}
+            recyclingKey={thumbnail.uri}
+            source={{ uri: thumbnail.uri, headers: { Authorization: `Bearer ${thumbnail.token}` } }}
+            style={{
+              width: AVATAR_SIZE,
+              height: AVATAR_SIZE,
+              borderRadius: radii.full,
+              backgroundColor: colors.surfaceHigh,
+            }}
+            transition={150}
+          />
+        ) : photoUrl ? (
           <Image
             cachePolicy="memory-disk"
             contentFit="cover"
@@ -424,6 +457,11 @@ export function StoriesBar() {
     staleTime: 60_000,
   });
   const myPhotoUrl = myPhotos.data?.[0]?.url ?? null;
+  const { token: mediaToken, onMediaError } = useMediaAccessToken();
+  const thumbnailOf = (stories: StoryFeedEntry['stories']): StoryThumbnail => {
+    const uri = mediaToken ? storyThumbnailUrl(stories, env.apiUrl) : null;
+    return uri && mediaToken ? { uri, token: mediaToken } : null;
+  };
   const myFullName = principal?.nombreCompleto ?? '';
   const currentUserId = principal?.id;
 
@@ -595,8 +633,10 @@ export function StoriesBar() {
             >
               <StoryRing
                 fullName={myFullName}
+                onThumbnailError={onMediaError}
                 photoUrl={myPhotoUrl}
                 state={!myEntry ? 'none' : myEntry.hasUnviewed ? 'unviewed' : 'viewed'}
+                thumbnail={myEntry ? thumbnailOf(myEntry.stories) : null}
               />
             </PressableScale>
             <Text
@@ -679,8 +719,10 @@ export function StoriesBar() {
             >
               <StoryRing
                 fullName={entry.fullName}
+                onThumbnailError={onMediaError}
                 photoUrl={entry.photoUrl}
                 state={entry.hasUnviewed ? 'unviewed' : 'viewed'}
+                thumbnail={thumbnailOf(entry.stories)}
               />
               <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSizes.xs, maxWidth: COLUMN_WIDTH }}>
                 {entry.fullName.split(' ')[0]}
