@@ -59,20 +59,23 @@ export function Checkbox({
       <label
         className={cn(
           'flex cursor-pointer select-none items-center gap-2 py-1 text-sm text-[var(--text-muted)]',
-          // Relleno y borde del cuadrado al marcar.
-          'peer-checked:[&>span]:border-[var(--volt)] peer-checked:[&>span]:bg-[var(--volt)]',
+          // Relleno y borde del cuadrado al marcar. Only the drawn box (`data-slot=box`): a label passed as a <span>
+          // (the consent text on /register) must not get the fill or the focus outline.
+          'peer-checked:[&>[data-slot=box]]:border-[var(--volt)] peer-checked:[&>[data-slot=box]]:bg-[var(--volt)]',
           // La marca se revela con escala: aparecer de golpe a tamaño final lee
           // como un parpadeo, no como un gesto.
-          'peer-checked:[&_svg]:scale-100 peer-checked:[&_svg]:opacity-100',
+          'peer-checked:[&>[data-slot=box]>svg]:scale-100 peer-checked:[&>[data-slot=box]>svg]:opacity-100',
           // El foco vive en el input real y sólo se dibuja cuando llega por
-          // teclado, que es cuando hace falta verlo.
-          'peer-focus-visible:[&>span]:ring-[3px] peer-focus-visible:[&>span]:ring-[rgb(var(--accent-channels)/0.35)]',
+          // teclado, que es cuando hace falta verlo. The same 2 px accent-ink outline as every other control:
+          // the old 35 % ring measured ≈ 2:1 against the card (WCAG 1.4.11 asks 3:1).
+          'peer-focus-visible:[&>[data-slot=box]]:outline-2 peer-focus-visible:[&>[data-slot=box]]:outline-offset-2 peer-focus-visible:[&>[data-slot=box]]:outline-[var(--accent-ink)]',
           'peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
         )}
         htmlFor={inputId}
       >
         <span
           aria-hidden
+          data-slot="box"
           className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-[6px] border border-[var(--border)] transition-[background-color,border-color] duration-[var(--dur-2)]"
         >
           <svg

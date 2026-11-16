@@ -53,7 +53,7 @@ export function DialogContent({
             aria-label="Cerrar"
             className="absolute right-3 top-3 grid size-11 place-items-center rounded-full bg-[var(--surface-highest)] text-[var(--text)] transition-colors duration-[var(--dur-2)] hover:bg-[var(--border)]"
           >
-            <X className="size-4" />
+            <X aria-hidden className="size-4" />
           </DialogPrimitive.Close>
         </DialogPrimitive.Content>
       </div>

@@ -15,7 +15,9 @@ import { BodyDataWizard } from '@/features/profile-edit/body-data-wizard';
  * fecha de nacimiento, que es a donde lleva el empujón de puntos.
  */
 export default function ProfileDataScreen() {
-  const { step } = useLocalSearchParams<{ step?: string }>();
+  const { step, from } = useLocalSearchParams<{ step?: string; from?: string }>();
+  // Neutral «‹ Perfil», as the other profile screens (and the web); «‹ Editar perfil» when opened from there.
+  const back = <BackLink fallbackHref="/profile" label={from === 'edit' ? 'Editar perfil' : 'Perfil'} neutral />;
   const profile = useQuery({
     queryKey: ['profile', 'me'],
     queryFn: () => profileService.get(),
@@ -27,7 +29,7 @@ export default function ProfileDataScreen() {
   if (profile.isPending) {
     return (
       <ScrollScreen>
-        <BackLink />
+        {back}
         <Skeleton height={90} />
         <Skeleton height={220} />
       </ScrollScreen>
@@ -36,7 +38,7 @@ export default function ProfileDataScreen() {
   if (profile.isError && !isNew) {
     return (
       <ScrollScreen>
-        <BackLink />
+        {back}
         <ErrorState error={profile.error} onRetry={() => void profile.refetch()} />
       </ScrollScreen>
     );
@@ -45,7 +47,7 @@ export default function ProfileDataScreen() {
   const current = profile.data;
   return (
     <ScrollScreen center>
-      <BackLink />
+      {back}
       <ScreenHeader
         subtitle={isNew ? 'Añade tus datos y personaliza tus entrenos.' : 'Mantén tus datos al día y sigue tu progreso.'}
         title={isNew ? 'Tus datos' : 'Editar tus datos'}

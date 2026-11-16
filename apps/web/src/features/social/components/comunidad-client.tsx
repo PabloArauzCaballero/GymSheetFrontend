@@ -193,9 +193,17 @@ export function ComunidadClient() {
         </div>
       </div>
 
+      {/* A radiogroup: one Tab stop (the checked option) and the arrows move the choice, like the shared Segmented. */}
       <div
         aria-label="Qué baraja ver"
         className="flex w-full items-stretch gap-1 rounded-[1.5rem] border border-[var(--border-subtle)] bg-[var(--surface-low)] p-1"
+        onKeyDown={(event) => {
+          if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+          event.preventDefault();
+          const next: Pill = pill === 'foryou' ? 'goal' : 'foryou';
+          setPill(next);
+          event.currentTarget.querySelector<HTMLButtonElement>(`[data-pill="${next}"]`)?.focus();
+        }}
         role="radiogroup"
       >
         {(
@@ -213,9 +221,11 @@ export function ComunidadClient() {
                 ? 'bg-[var(--surface-high)] font-semibold text-[var(--text)]'
                 : 'font-medium text-[var(--text-muted)] hover:text-[var(--text)]',
             )}
+            data-pill={value}
             key={value}
             onClick={() => setPill(value)}
             role="radio"
+            tabIndex={pill === value ? 0 : -1}
             type="button"
           >
             {label}

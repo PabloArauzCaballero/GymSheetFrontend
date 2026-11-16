@@ -134,6 +134,8 @@ export const onMedia = {
   text: ink.white,
   textSoft: alpha(ink.white, 0.86),
   textMuted: alpha(ink.white, 0.75),
+  /** Ring of a round control over a photo (the web card's `border-white/30`). */
+  ring: alpha(ink.white, 0.3),
 } as const;
 
 function luminance(hex: string): number {

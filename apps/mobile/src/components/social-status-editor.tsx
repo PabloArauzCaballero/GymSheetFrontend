@@ -65,7 +65,7 @@ export function SocialStatusEditor() {
         </View>
         <Button
           icon={visible ? 'eye-outline' : 'eye-off-outline'}
-          label={visible ? 'Visible para tus conexiones' : 'Oculto'}
+          label={visible ? 'Visible para tus conexiones' : 'Oculto para tus conexiones'}
           loading={save.isPending}
           onPress={() => save.mutate({ socialStatus: current, visible: !visible })}
           variant={visible ? 'secondary' : 'ghost'}

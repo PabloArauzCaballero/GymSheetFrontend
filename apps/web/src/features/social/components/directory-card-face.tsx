@@ -1,6 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import { noOrphan } from '@gymsheet/domain';
 import { useState } from 'react';
 import type { GymDirectoryEntry } from '@/shared/api/schemas';
 import { DomainImage } from '@/shared/components/media/domain-image';
@@ -81,20 +82,20 @@ export function DirectoryCardFace({
     typeof entry.points === 'number' ? `${entry.points.toLocaleString('es-ES')}\u00A0pts` : null,
   ].filter((part): part is string => Boolean(part));
 
+  const initialsFace = (
+    <span className="grid size-full place-items-center bg-[var(--surface-high)] pb-[25%]">
+      <span aria-hidden className="grid size-[min(6rem,115px)] place-items-center rounded-full bg-[var(--surface-highest)] text-[min(1.5rem,29px)] font-semibold text-[var(--text-muted)]">
+        {initialsOf(entry.displayName)}
+      </span>
+    </span>
+  );
+
   return (
     // Its own size container: the large-text layout (info button under the details) follows the card's width
     // wherever it is shown — deck, list or the profile preview — not whichever ancestor happens to be one.
     <div className={cn('@container relative overflow-hidden bg-[var(--surface-high)]', fill ? 'size-full' : 'aspect-[4/5] w-full')}>
-      {current ? (
-        <DomainImage alt={`Foto de ${entry.displayName}`} src={current.url} />
-      ) : (
-        // Same no-photo face as the app: the person's initials in a disc, not a generic glyph.
-        <span className="grid size-full place-items-center bg-[var(--surface-high)]">
-          <span aria-hidden className="grid size-24 place-items-center rounded-full bg-[var(--surface-highest)] text-2xl font-semibold text-[var(--text-muted)]">
-            {initialsOf(entry.displayName)}
-          </span>
-        </span>
-      )}
+      {/* Same no-photo face as the app (the initials in a disc, above the name band), also when a photo fails. */}
+      {current ? <DomainImage alt={`Foto de ${entry.displayName}`} failed={initialsFace} src={current.url} /> : initialsFace}
 
       {onOpen && interactive ? (
         <button
@@ -137,17 +138,18 @@ export function DirectoryCardFace({
         </>
       ) : null}
 
-      {/* Tres paradas y no dos: con dos, el tramo medio sube demasiado rápido y
-          el degradado vuelve a leerse como una banda cortada a media foto. */}
+      {/* The scrim ramps up over the band's top padding (`--band-pt`) and is ≥ 0.6 from where the name starts,
+          however tall the band grows (short card at 320×568, 200 % text): the name never sits on bare photo. */}
       {/* Insets and controls stop growing past ×1.2 (px caps): at 200 % text the room goes to the words.
           With very large text (a card under 14rem wide, its own `@container`) the info button
           leaves the details' side and drops under them, so the details keep the card's full width. */}
       {/* `data-card-band`: the deck measures it for the card's floor (`useCardFloor`). */}
-      <div className={cn('pointer-events-none absolute inset-x-0 bottom-0 z-10 grid gap-0.5 bg-[linear-gradient(to_top,rgb(var(--scrim-channels)/0.88)_0%,rgb(var(--scrim-channels)/0.45)_55%,transparent_100%)] px-[min(1.25rem,24px)] pb-[min(1.25rem,24px)] pt-16 text-white @max-[14rem]:pt-[min(2rem,24px)]', onInfo && interactive && 'pr-16 @max-[14rem]:pr-[min(1.25rem,24px)]')} data-card-band>
+      <div className={cn('pointer-events-none absolute inset-x-0 bottom-0 z-10 grid gap-0.5 bg-[linear-gradient(to_bottom,transparent_0,rgb(var(--scrim-channels)/0.6)_var(--band-pt),rgb(var(--scrim-channels)/0.88)_100%)] [--band-pt:4rem] [text-shadow:0_1px_3px_rgb(var(--scrim-channels)/0.55)] px-[min(1.25rem,24px)] pb-[min(1.25rem,24px)] pt-[var(--band-pt)] text-white @max-[14rem]:[--band-pt:min(2rem,24px)]', onInfo && interactive && 'pr-16 @max-[14rem]:pr-[min(1.25rem,24px)]')} data-card-band>
         {/* Same steps as the app (2xl 34 / lg 22, bold). Text grows with the reader's size up to ×1.35 for the
             name and ×1.6 for the details (the app's maxFontSizeMultiplier): past that a photo card is all band. */}
         <p className={cn('font-bold leading-[1.1] tracking-[-0.02em] [overflow-wrap:anywhere]', fill ? 'text-[min(2.125rem,46px)]' : 'text-[min(1.375rem,30px)]')}>
-          {entry.displayName}
+          {/* «Lucía P.» stays together (no «P.» alone on a line), as on the app. */}
+          {noOrphan(entry.displayName)}
           {entry.age !== null ? (
             // One no-break space, as in the app's card: the same gap at every text size, and the age never
             // starts a line on its own.
@@ -217,7 +219,7 @@ function GalleryStep({
     <button
       aria-label={label}
       className={cn(
-        'z-10 grid size-[min(2.75rem,56px)] place-items-center rounded-full border border-white/30 bg-[rgb(var(--scrim-channels)/0.45)] text-white transition-opacity duration-[var(--dur-2)] disabled:pointer-events-none disabled:opacity-0',
+        'z-20 grid size-[min(2.75rem,56px)] place-items-center rounded-full border border-white/30 bg-[rgb(var(--scrim-channels)/0.45)] text-white transition-opacity duration-[var(--dur-2)] disabled:pointer-events-none disabled:opacity-0',
         inline
           ? 'pointer-events-auto hidden @max-[14rem]:grid'
           : cn('absolute top-[40%] -translate-y-1/2 @max-[14rem]:hidden', direction === 'prev' ? 'left-3' : 'right-3'),

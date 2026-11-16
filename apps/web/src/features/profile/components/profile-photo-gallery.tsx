@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Trash2, Upload } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import Image from 'next/image';
 import { profilePhotosService } from '@/features/profile/services/profile-photos-service';
@@ -62,14 +62,17 @@ export function ProfilePhotoGallery({ header }: Readonly<{ header?: ReactNode }>
             key={photo.id}
           >
             <Image alt="" className="object-cover" fill src={photo.url} unoptimized />
+            {/* Always shown where there is no hover (touch) and whenever it has focus; a 44 px target around a 28 px disc. */}
             <button
               aria-label="Eliminar foto"
-              className="absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-full bg-[var(--surface-lowest)]/90 text-[var(--danger-text)] opacity-0 transition-opacity group-hover:opacity-100"
+              className="absolute right-0 top-0 grid size-11 place-items-center transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
               disabled={remove.isPending}
               onClick={() => remove.mutate(photo.id)}
               type="button"
             >
-              <Trash2 className="size-4" />
+              <span className="grid size-7 place-items-center rounded-full bg-[var(--surface-lowest)]/90 text-[var(--danger-text)]">
+                <Trash2 aria-hidden className="size-4" />
+              </span>
             </button>
           </div>
         ))}
@@ -82,7 +85,7 @@ export function ProfilePhotoGallery({ header }: Readonly<{ header?: ReactNode }>
             onClick={() => upload.isPending || setPicking(true)}
             type="button"
           >
-            <Upload aria-hidden className="size-5" />
+            <Plus aria-hidden className="size-6" />
             <span className="text-xs font-medium">Agregar foto</span>
           </button>
         ) : null}

@@ -1,6 +1,6 @@
 import { noOrphan } from '@gymsheet/domain';
 import type { Progression } from '@gymsheet/schemas';
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { Skeleton } from '@/components/feedback';
 import { CountUpText } from '@/components/motion';
 import { Text } from '@/components/text';
@@ -35,14 +35,21 @@ function fitnessStats(progress: Progression | undefined): Stat[] {
  * reintento está en la tarjeta de la senda). Nada salta al llegar el dato.
  */
 export function FitnessRow({ progress, pending, award = null }: { progress: Progression | undefined; pending: boolean; award?: PointsAward | null }) {
+  // Dynamic Type past ×1.3: «días de racha» no longer fits a third of the card, so the stats stack as rows
+  // («70 puntos»), divided by a top rule instead of a left one.
+  const stacked = useWindowDimensions().fontScale > 1.3;
   return (
-    <View style={{ flexDirection: 'row', alignSelf: 'stretch' }} testID="profile-fitness-row">
+    <View style={stacked ? { alignSelf: 'stretch' } : { flexDirection: 'row', alignSelf: 'stretch' }} testID="profile-fitness-row">
       {fitnessStats(progress).map((stat, index) => (
         <View
           accessible
           accessibilityLabel={stat.value === null ? `${stat.label}: ${pending ? 'cargando' : 'no disponible'}` : `${stat.value.toLocaleString('es-ES')} ${stat.label}`}
           key={stat.key}
-          style={{ flex: 1, minWidth: 0, alignItems: 'center', gap: spacing.xxs, borderLeftWidth: index > 0 ? 1 : 0, borderColor: colors.border }}
+          style={
+            stacked
+              ? { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: spacing.sm, paddingVertical: spacing.xs, borderTopWidth: index > 0 ? 1 : 0, borderColor: colors.border }
+              : { flex: 1, minWidth: 0, alignItems: 'center', gap: spacing.xxs, borderLeftWidth: index > 0 ? 1 : 0, borderColor: colors.border }
+          }
         >
           {stat.value === null && pending ? (
             <Skeleton height={textVariants.numeric.lineHeight} radius={radii.sm} width={40} />
@@ -58,7 +65,7 @@ export function FitnessRow({ progress, pending, award = null }: { progress: Prog
             </Text>
           )}
           <Text style={{ textAlign: 'center' }} tone="secondary" variant="footnote">
-            {noOrphan(stat.label)}
+            {stacked ? stat.label : noOrphan(stat.label)}
           </Text>
         </View>
       ))}

@@ -41,14 +41,13 @@ export function NavRow({
     >
       {leading}
       <View style={{ flex: 1, gap: spacing.xxs }}>
-        {/* Dos líneas: los títulos suelen llevar prefijo («Plan del coach —
-            Hipertrofia PPL») y lo que se corta es lo que los distingue. */}
-        <Text numberOfLines={2} variant="headline">
+        {/* Never truncated: titles carry prefixes («Plan del coach — Hipertrofia PPL») and what a «…» cuts is
+            what tells rows apart; a 2-line cap still cut subtitles at 320 and at Dynamic Type XL. Rows grow. */}
+        <Text variant="headline">
           {title}
         </Text>
         {subtitle ? (
-          // Two lines too (like the web NavRow): one line cut «Todas tus sesiones, con sus se…».
-          <Text numberOfLines={2} tone="muted" variant="subhead">
+          <Text tone="muted" variant="subhead">
             {subtitle}
           </Text>
         ) : null}

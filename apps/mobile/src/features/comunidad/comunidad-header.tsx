@@ -62,19 +62,24 @@ function PillOption({ label, onPress, selected }: { label: string; onPress: () =
       accessibilityState={{ selected }}
       onPress={onPress}
       style={{
-        // Grow from the label's own width (not equal halves) so «Mismo objetivo» stays on one line at 320.
+        // Grow from the label's own width (not equal halves) so «Mismo objetivo» stays on one line at 320; and
+        // shrink (RN's default is 0) so at XL text it wraps inside the switch instead of running past the screen.
         flexGrow: 1,
+        flexShrink: 1,
         minHeight: minTouchTarget,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: spacing.smd,
-        // Air above and below once the label wraps (Dynamic Type XL); at default size minHeight decides.
-        paddingVertical: spacing.sm,
+        // Air above and below once the label wraps (Dynamic Type XL, ≥ 12 as on the web); at default size
+        // minHeight decides.
+        paddingVertical: spacing.smd,
         borderRadius: radii.full,
         backgroundColor: selected ? colors.surfaceHigh : 'transparent',
       }}
     >
+      {/* Chrome, not content: grows with Dynamic Type up to ×1.4 (the web caps it too), so the room goes to the card. */}
       <Text
+        maxFontSizeMultiplier={1.4}
         style={{
           textAlign: 'center',
           color: selected ? colors.text : colors.textMuted,
@@ -128,9 +133,9 @@ export function ComunidadHeader({
       </View>
       <View
         style={{
-          // The card's full width, as on the web.
+          // The card's full width, as on the web. Both options share the taller one's height when a label wraps.
           flexDirection: 'row',
-          alignItems: 'center',
+          alignItems: 'stretch',
           backgroundColor: colors.surfaceLow,
           padding: spacing.xs,
           borderRadius: radii.full,

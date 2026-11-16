@@ -75,7 +75,7 @@ export default function ProfileEditScreen() {
         <Card list>
           <PendingPoints codes={['DATOS', 'NACIMIENTO']} completion={completion} />
           <NavRow
-            onPress={() => router.push('/profile-data')}
+            onPress={() => router.push('/profile-data?from=edit')}
             subtitle={profile ? `${profile.pesoKg.toLocaleString('es-ES')} kg · ${profile.estaturaCm} cm · ${GOAL_LABEL[profile.objetivo]}` : 'Añade peso, estatura y objetivo'}
             testID="profile-edit-data"
             title="Peso, estatura, nacimiento y objetivo"
@@ -108,12 +108,13 @@ export default function ProfileEditScreen() {
         ]}
         pillColor={colors.surfaceHighest}
         renderItem={(option, active) => (
-          <Text strong={active} tone={active ? 'default' : 'secondary'} variant="subhead">
+          <Text strong={active} style={{ textAlign: 'center' }} tone={active ? 'default' : 'secondary'} variant="subhead">
             {option.value === 'edit' ? 'Editar' : 'Vista previa'}
           </Text>
         )}
         style={{ backgroundColor: colors.surfaceLow, borderRadius: radii.full, padding: spacing.xs }}
-        itemStyle={{ minHeight: minTouchTarget, alignItems: 'center', justifyContent: 'center' }}
+        // Each option fills its half (both as tall as a wrapped «Vista previa» at XL text), label centred.
+        itemStyle={{ flexGrow: 1, minHeight: minTouchTarget, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.sm, paddingVertical: spacing.sm }}
         value={tab}
       />
       {tab === 'preview' ? (

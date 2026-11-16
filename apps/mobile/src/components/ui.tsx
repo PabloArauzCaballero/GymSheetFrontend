@@ -257,7 +257,7 @@ export function Button({
     <ActivityIndicator color={tone.ink} />
   ) : (
     <Animated.View
-      style={[{ flexDirection: trailing ? 'row-reverse' : 'row', alignItems: 'center', gap: spacing.sm }, labelStyle]}
+      style={[{ flexDirection: trailing ? 'row-reverse' : 'row', alignItems: 'center', gap: spacing.sm, maxWidth: '100%' }, labelStyle]}
     >
       {icon ? (
         <Animated.View style={iconStyle}>
@@ -272,8 +272,8 @@ export function Button({
       ) : null}
       <RNText
         maxFontSizeMultiplier={textLimit}
-        numberOfLines={1}
-        style={{ color: ink, fontSize: metrics.fontSize, fontWeight: semibold }}
+        numberOfLines={3}
+        style={{ color: ink, fontSize: metrics.fontSize, fontWeight: semibold, flexShrink: 1, textAlign: 'center' }}
       >
         {label}
       </RNText>
@@ -317,7 +317,7 @@ export function Button({
           borderColor: isDisabled ? colors.surfaceHigh : tone.border,
           backgroundColor: isDisabled ? colors.surfaceHigh : tone.background,
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'center', maxWidth: '100%', paddingVertical: spacing.xs, // a label may wrap (≤ 3 lines) at XL text
           paddingHorizontal: metrics.paddingHorizontal,
           boxShadow: lit ? accentGlow(colors.volt) : undefined,
         },

@@ -68,7 +68,7 @@
         "expo-image-picker",
         {
           "photosPermission": "REPP usa tus fotos y v\u00eddeos para que elijas una imagen de perfil o publiques una story.",
-          "cameraPermission": "REPP usa la c\u00e1mara para que hagas una foto o grabes un v\u00eddeo y lo publiques como story.",
+          "cameraPermission": "REPP usa la c\u00e1mara para que hagas tu foto de perfil, o una foto o un v\u00eddeo que publiques como story.",
           "microphonePermission": "REPP usa el micr\u00f3fono para grabar mensajes de voz y el sonido de los v\u00eddeos que publiques como story."
         }
       ],

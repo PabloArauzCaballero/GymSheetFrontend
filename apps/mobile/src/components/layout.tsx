@@ -502,9 +502,9 @@ export function ScreenHeader({
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }}>
       <Text
         accessibilityRole="header"
-        // Caps the title at two lines: at the largest system text size a long
-        // name would otherwise push the whole screen down.
-        numberOfLines={2}
+        // Never truncated (a 2-line cap cut «Editar tus …» at 320 × XL): the display
+        // size grows only to ×1.3 and a long title wraps instead.
+        maxFontSizeMultiplier={1.3}
         style={{
           flex: 1,
           color: colors.text,

@@ -4,8 +4,9 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, View } from 'react-native';
 import type { GymDirectoryEntry } from '@gymsheet/schemas';
+import { noOrphan } from '@gymsheet/domain';
+import { CardPhoto } from '@/components/card-photo';
 import { MetaLine } from '@/components/meta-line';
-import { initialsOf } from '@/lib/format';
 import {
   EXPERIENCE_LEVEL_LABEL,
   SOCIAL_STATUS_LABEL,
@@ -65,13 +66,13 @@ const SEGMENT_HEIGHT = 3;
  * de una tarjeta improvisada. Tres paradas, no dos: con dos, el tramo medio
  * sube demasiado rápido y vuelve a leerse como una banda.
  */
-const SCRIM_BOTTOM = [overlay.clearDark, alpha(ink.black, 0.45), overlay.scrimStrong] as const;
+const SCRIM_BOTTOM = [overlay.clearDark, alpha(ink.black, 0.5), alpha(ink.black, 0.72), overlay.scrimStrong] as const;
 
 /** Cabecera: sólo lo justo para que las barras blancas no se pierdan en una foto clara. */
 const SCRIM_TOP = [alpha(ink.black, 0.45), overlay.clearDark] as const;
 
-/** Paradas del degradado del pie: el tramo medio es el que evita la banda. */
-const SCRIM_BOTTOM_STOPS = [0, 0.45, 1] as const;
+/** Stops of the bottom scrim: it ramps over the band's top padding, so the name sits on ≥ 0.5 (+ shadow). */
+const SCRIM_BOTTOM_STOPS = [0, 0.16, 0.5, 1] as const;
 
 /** La galería real: `photos` cuando llega, y si no, la portada como única foto. */
 function galleryOf(entry: GymDirectoryEntry): { id: string; url: string }[] {
@@ -162,47 +163,7 @@ export function DirectoryCardFace({
         fill ? { flex: 1 } : { aspectRatio: 4 / 5 },
       ]}
     >
-      {current ? (
-        <Image
-          cachePolicy="memory-disk"
-          contentFit="cover"
-          priority="low"
-          recyclingKey={current.url}
-          source={{ uri: current.url }}
-          style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
-          // Entre fotos de la misma persona el cruce es corto: es navegación
-          // dentro de una tarjeta, no la entrada de una tarjeta nueva.
-          transition={140}
-        />
-      ) : (
-        <View
-          style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: colors.surfaceHigh,
-          }}
-        >
-          <View
-            style={{
-              width: 96,
-              height: 96,
-              borderRadius: radii.full,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: colors.surfaceHighest,
-            }}
-          >
-            <Text style={{ color: colors.textSecondary, fontSize: fontSizes.xl, fontWeight: semibold }}>
-              {initialsOf(entry.displayName, undefined)}
-            </Text>
-          </View>
-        </View>
-      )}
+      <CardPhoto name={entry.displayName} url={current?.url ?? null} />
 
       {showSegments ? (
         <>
@@ -284,8 +245,8 @@ export function DirectoryCardFace({
               a long name (or large text) wraps to a second line, instead of truncating to «Luc…». Grows with
               Dynamic Type up to ×1.35, as other constrained surfaces do: past that the card is all text band.
               One no-break space before the age, as on the web card: the same gap, scaling with the name. */}
-          <Text maxFontSizeMultiplier={NAME_SCALE_LIMIT} numberOfLines={2} style={{ color: onMedia.text, fontSize: nameSize, lineHeight: Math.round(nameSize * 1.1), fontWeight: '700', letterSpacing: nameSize * -0.02 }}>
-            {entry.displayName}
+          <Text maxFontSizeMultiplier={NAME_SCALE_LIMIT} numberOfLines={2} style={{ color: onMedia.text, fontSize: nameSize, lineHeight: Math.round(nameSize * 1.1), fontWeight: '700', letterSpacing: nameSize * -0.02, textShadowColor: overlay.scrimSoft, textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 }}>
+            {noOrphan(entry.displayName)}
             {typeof entry.age === 'number' ? (
               <Text style={{ color: alpha(onMedia.text, 0.92), fontWeight: '400' }}>{`\u00A0${entry.age}`}</Text>
             ) : null}
@@ -347,7 +308,7 @@ export function DirectoryCardFace({
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: radii.full,
-            backgroundColor: overlay.scrimFaint,
+            backgroundColor: overlay.scrimFaint, borderWidth: 1, borderColor: onMedia.ring,
           }}
         >
           <Ionicons color={onMedia.text} name="information-circle-outline" size={iconSizes.lg} />

@@ -149,7 +149,7 @@ function DecisionStamp({
         animated,
       ]}
     >
-      <Text style={{ color, fontSize: fontSizes.xl, fontWeight: '700', letterSpacing: 1 }}>
+      <Text maxFontSizeMultiplier={1.2} style={{ color, fontSize: fontSizes.xl, fontWeight: '700', letterSpacing: 1 }}>
         {label}
       </Text>
     </Animated.View>

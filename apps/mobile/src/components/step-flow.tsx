@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
-import { Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Text, useWindowDimensions, View } from 'react-native';
+import { stepRowLayout } from '@/components/step-row-layout';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useAnimatedStyle,
@@ -9,6 +10,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { DURATION, PREMIUM_EASING } from '@/components/motion';
 import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
+
+const STEP_GAP = spacing.xs;
+const labelStyle = { color: colors.textMuted, fontSize: fontSizes.xs, textAlign: 'center' as const };
 
 export type FlowStep = {
   /** Short label under the rail — two words at most, it is a signpost. */
@@ -58,6 +62,11 @@ export function StepProgress({
     transform: [{ scaleX: progress.value }],
   }));
 
+  const { fontScale } = useWindowDimensions();
+  const [rowWidth, setRowWidth] = useState(0);
+  const [labelWidths, setLabelWidths] = useState<number[]>([]);
+  const layout = stepRowLayout({ count: steps.length, fontScale, gap: STEP_GAP, labelWidths, rowWidth });
+
   return (
     <View style={{ gap: spacing.sm }}>
       <View style={{ height: 3, borderRadius: radii.full, backgroundColor: colors.surfaceHigh }}>
@@ -76,33 +85,56 @@ export function StepProgress({
         />
       </View>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        {steps.map((step, index) => {
-          const done = index <= current;
-          return (
-            <View
-              key={step.label}
-              style={{ alignItems: 'center', gap: 4, flex: 1 }}
-            >
-              <Ionicons
-                color={done ? colors.volt : colors.textDisabled}
-                name={step.icon}
-                size={iconSizes.md}
-              />
-              <Text
-                numberOfLines={1}
-                style={{
-                  color: done ? colors.text : colors.textDisabled,
-                  fontSize: fontSizes.xs,
-                  fontWeight: index === current ? '700' : '500',
-                }}
-              >
-                {step.label}
-              </Text>
-            </View>
-          );
-        })}
+      {/* Equal columns while every label fits its column (measured, not guessed); otherwise — a narrow card, six
+          steps, Dynamic Type XL — one line «Paso N de M: label» with the current step's icon. Never «Nacimie…»,
+          never labels wrapping into a ragged second row. */}
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        style={{ flexDirection: 'row', height: 0, overflow: 'hidden' }}
+      >
+        {steps.map((step, index) => (
+          <Text
+            key={step.label}
+            onLayout={(event) => {
+              const width = event.nativeEvent.layout.width;
+              setLabelWidths((all) => (all[index] === width ? all : Object.assign([...all], { [index]: width })));
+            }}
+            style={[labelStyle, { flexShrink: 0, fontWeight: '700' }]}
+          >
+            {step.label}
+          </Text>
+        ))}
       </View>
+      {layout === 'compact' ? (
+        <View accessibilityRole="text" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <Ionicons color={colors.volt} name={steps[current]?.icon ?? 'ellipse'} size={iconSizes.md} />
+          <Text style={[labelStyle, { flex: 1, color: colors.text, fontWeight: '700', textAlign: 'left' }]}>
+            {`Paso ${current + 1} de ${steps.length}: ${steps[current]?.label ?? ''}`}
+          </Text>
+        </View>
+      ) : (
+        <View onLayout={(event) => setRowWidth(event.nativeEvent.layout.width)} style={{ flexDirection: 'row', gap: STEP_GAP }}>
+          {steps.map((step, index) => {
+            const done = index <= current;
+            return (
+              <View key={step.label} style={{ flex: 1, minWidth: 0, alignItems: 'center', gap: 4 }}>
+                <Ionicons color={done ? colors.volt : colors.textDisabled} name={step.icon} size={iconSizes.md} />
+                <Text
+                  style={[
+                    labelStyle,
+                    // Steps still ahead are information, not disabled controls: muted, never textDisabled.
+                    { color: done ? colors.text : colors.textMuted, fontWeight: index === current ? '700' : '500' },
+                  ]}
+                >
+                  {step.label}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      )}
     </View>
   );
 }

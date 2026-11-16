@@ -42,7 +42,11 @@ export function FilterChip({
         alignItems: 'center',
         gap: spacing.xs + 2,
         minHeight: minTouchTarget - 4,
+        // Never wider than its row: with Dynamic Type XL a long label («Entrenamiento funcional») wraps inside
+        // the chip instead of running off the screen.
+        maxWidth: '100%',
         paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xs,
         borderRadius: radii.full,
         borderCurve: 'continuous',
         borderWidth: StyleSheet.hairlineWidth,
@@ -65,7 +69,7 @@ export function FilterChip({
           size={iconSizes.sm}
         />
       ) : null}
-      <Text strong style={selected ? { color: colors.background } : undefined} tone="secondary" variant="subhead">
+      <Text strong style={{ flexShrink: 1, ...(selected ? { color: colors.background } : null) }} tone="secondary" variant="subhead">
         {label}
       </Text>
     </PressableScale>

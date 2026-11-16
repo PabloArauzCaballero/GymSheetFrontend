@@ -1,7 +1,7 @@
 'use client';
 
 import { ImageOff } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { cn } from '@/shared/lib/cn';
 
 // Redirige URLs externas al proxy del BFF (`/api/media`) para servirlas desde el
@@ -22,12 +22,15 @@ export function DomainImage({
   className,
   src,
   fallbackSrc,
+  failed: failedFace,
   proxy = true,
 }: Readonly<{
   alt: string;
   className?: string;
   src: string;
   fallbackSrc?: string | null;
+  /** What to show when every source fails (a card shows the person's initials, not a broken-image glyph). */
+  failed?: ReactNode;
   proxy?: boolean;
 }>) {
   // Orden de intento: miniatura/fuente principal y luego el respaldo. Así una
@@ -55,6 +58,7 @@ export function DomainImage({
 
   const failed = index >= candidates.length;
 
+  if (failed && failedFace !== undefined) return failedFace;
   if (failed) {
     return (
       <span

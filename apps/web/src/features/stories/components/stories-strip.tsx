@@ -166,7 +166,7 @@ export function StoriesStrip({
             </p>
             <button
               aria-label="Ajustes de story"
-              className="tap grid size-5 place-items-center text-[var(--text-muted)] disabled:opacity-60"
+              className="tap -m-3 grid size-11 shrink-0 place-items-center rounded-full text-[var(--text-muted)] disabled:opacity-60"
               disabled={upload.isPending}
               onClick={openSettings}
               type="button"

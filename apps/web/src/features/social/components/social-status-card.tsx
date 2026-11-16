@@ -72,14 +72,10 @@ export function SocialStatusCard() {
             ))}
           </Select>
         </Field>
-        <Button
-          aria-pressed={visible}
-          onClick={() => setVisibleOverride(!visible)}
-          type="button"
-          variant={visible ? 'secondary' : 'ghost'}
-        >
-          {visible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
-          {visible ? 'Visible' : 'Oculto'}
+        {/* The label is the state, in the app's words; aria-pressed on top would read «Oculto, not pressed». */}
+        <Button onClick={() => setVisibleOverride(!visible)} type="button" variant={visible ? 'secondary' : 'ghost'}>
+          {visible ? <Eye aria-hidden className="size-4" /> : <EyeOff aria-hidden className="size-4" />}
+          {visible ? 'Visible para tus conexiones' : 'Oculto para tus conexiones'}
         </Button>
         {/* The edit page's one save row: status left, the section's own save right. */}
         <div className={`${SAVE_ROW} sm:col-span-full`}>

@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { accentContrast, colors, iconSizes, minTouchTarget, radii, spacing } from '@/theme';
@@ -23,10 +23,13 @@ export type ProfileAction = {
  * de al lado; con texto grande pasa a dos líneas. La principal es la única en relleno de acento.
  */
 export function ProfileActions({ actions }: { actions: readonly ProfileAction[] }) {
+  // Dynamic Type past ×1.3: three columns cannot hold «Compartir» without breaking it mid-word, so the actions
+  // stack as rows (circle, then the label beside it), as iOS does at accessibility sizes.
+  const stacked = useWindowDimensions().fontScale > 1.3;
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'flex-end', alignSelf: 'stretch' }}>
+    <View style={stacked ? { alignSelf: 'stretch', gap: spacing.sm } : { flexDirection: 'row', alignItems: 'flex-end', alignSelf: 'stretch' }}>
       {actions.map((action) => {
-        const size = action.primary ? 64 : 52;
+        const size = action.primary && !stacked ? 64 : 52; // one size when stacked: the labels line up
         return (
           <PressableScale
             accessibilityLabel={action.disabled ? (action.disabledLabel ?? action.label) : action.label}
@@ -37,7 +40,10 @@ export function ProfileActions({ actions }: { actions: readonly ProfileAction[] 
             key={action.key}
             onPress={action.onPress}
             scaleTo={0.94}
-            style={{ flex: 1, minWidth: 0, minHeight: minTouchTarget, alignItems: 'center', gap: spacing.xs, opacity: action.disabled ? 0.45 : 1 }}
+            style={[
+              { minHeight: minTouchTarget, alignItems: 'center', opacity: action.disabled ? 0.45 : 1 },
+              stacked ? { flexDirection: 'row', gap: spacing.smd } : { flex: 1, minWidth: 0, gap: spacing.xs },
+            ]}
             testID={action.testID}
           >
             <View
@@ -59,7 +65,7 @@ export function ProfileActions({ actions }: { actions: readonly ProfileAction[] 
               />
             </View>
             {/* Two lines, then shrink a little: large text never cuts a label to «Compar…». */}
-            <Text adjustsFontSizeToFit minimumFontScale={0.8} numberOfLines={2} strong={action.primary} style={{ textAlign: 'center' }} tone={action.primary ? 'default' : 'secondary'} variant="footnote">
+            <Text adjustsFontSizeToFit={!stacked} minimumFontScale={0.8} numberOfLines={stacked ? undefined : 2} strong={action.primary} style={stacked ? { flex: 1 } : { textAlign: 'center' }} tone={action.primary ? 'default' : 'secondary'} variant="footnote">
               {action.label}
             </Text>
           </PressableScale>
