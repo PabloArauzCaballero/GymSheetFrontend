@@ -68,7 +68,7 @@ test('asking for a copy of the data shows it as pending', async ({ page }) => {
   expect((await requested).status()).toBe(202);
   // The worker may already have built it: pending or ready, never the request button again.
   await expect(
-    page.getByText('Preparando tu copia. Puede tardar unos minutos.').or(page.getByRole('link', { name: 'Descargar copia' })),
+    page.getByText('Preparando tu copia. Te avisamos en la app y por correo cuando esté lista.').or(page.getByRole('link', { name: 'Descargar copia' })),
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Preparar copia' })).toBeHidden();
 
@@ -79,7 +79,7 @@ test('asking for a copy of the data shows it as pending', async ({ page }) => {
   expect((await resumed).status()).toBe(200);
   await page.getByText('Descargar mis datos', { exact: true }).click();
   await expect(
-    page.getByText('Preparando tu copia. Puede tardar unos minutos.').or(page.getByRole('link', { name: 'Descargar copia' })),
+    page.getByText('Preparando tu copia. Te avisamos en la app y por correo cuando esté lista.').or(page.getByRole('link', { name: 'Descargar copia' })),
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Preparar copia' })).toBeHidden();
 });

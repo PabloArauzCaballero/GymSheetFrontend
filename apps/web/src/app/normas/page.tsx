@@ -19,14 +19,17 @@ export default function CommunityRulesPage() {
       </ol>
       <section className="grid gap-2">
         <h2 className="text-lg font-semibold text-[var(--text)]">{communityRulesCopy.enforcementTitle}</h2>
-        {communityRulesCopy.enforcement.map((line) => (
-          <p className="text-sm leading-6 text-[var(--text-muted)]" key={line}>
-            {line}
-          </p>
-        ))}
+        {/* Points 7 and 8 of the summary: numbering continues after the six rules. */}
+        <ol className="grid gap-2" start={communityRules.length + 1}>
+          {communityRulesCopy.enforcement.map((line, index) => (
+            <li className="text-sm leading-6 text-[var(--text-muted)]" key={line}>
+              {`${communityRules.length + index + 1}. ${line}`}
+            </li>
+          ))}
+        </ol>
       </section>
       <p className="rounded-[var(--radius-md)] bg-[var(--surface)] px-4 py-3 text-sm leading-6 text-[var(--text-muted)]" role="note">
-        {communityRulesCopy.pendingNote}
+        {communityRulesCopy.summaryNote}
       </p>
     </LegalDocument>
   );

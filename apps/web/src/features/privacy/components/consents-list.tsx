@@ -1,6 +1,6 @@
 'use client';
 
-import { consentCopy, consentInput, consentsSectionCopy } from '@gymsheet/domain';
+import { consentCopy, consentInput, consentsSectionCopy, settingsConsents } from '@gymsheet/domain';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/shared/api/api-error';
 import { CONSENT_VERSION_OUTDATED, type Consent } from '@/shared/api/schemas';
@@ -61,7 +61,7 @@ export function ConsentsList() {
   return (
     <div className="panel px-5 py-1">
       <ul aria-label={consentsSectionCopy.title} className="divide-y divide-[var(--border)]">
-        {(consents.data ?? []).map((consent) => (
+        {settingsConsents(consents.data ?? []).map((consent) => (
           <ConsentRow
             busy={change.isPending}
             consent={consent}

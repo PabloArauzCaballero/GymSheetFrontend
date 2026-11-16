@@ -52,7 +52,7 @@ describe('AccountExportCard', () => {
     renderCard();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Preparar copia' }));
-    expect(await screen.findByText('Preparando tu copia. Puede tardar unos minutos.')).toBeInTheDocument();
+    expect(await screen.findByText('Preparando tu copia. Te avisamos en la app y por correo cuando esté lista.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Preparar copia' })).toBeNull();
 
     const link = await screen.findByRole('link', { name: 'Descargar copia' });
@@ -65,7 +65,7 @@ describe('AccountExportCard', () => {
     mocks.latestExport.mockResolvedValueOnce(status({})).mockResolvedValue(ready);
     renderCard();
 
-    expect(await screen.findByText('Preparando tu copia. Puede tardar unos minutos.')).toBeInTheDocument();
+    expect(await screen.findByText('Preparando tu copia. Te avisamos en la app y por correo cuando esté lista.')).toBeInTheDocument();
     expect(await screen.findByRole('link', { name: 'Descargar copia' })).toBeInTheDocument();
     expect(mocks.requestExport).not.toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'Preparar copia' })).toBeNull();
@@ -81,7 +81,7 @@ describe('AccountExportCard', () => {
   it('says when a copy could not be built and offers a new request', async () => {
     mocks.latestExport.mockResolvedValue(status({ status: 'FAILED' }));
     renderCard();
-    expect(await screen.findByText('No pudimos preparar tu copia. Inténtalo más tarde.')).toBeInTheDocument();
+    expect(await screen.findByText('No pudimos preparar tu copia. Te avisamos por correo. Inténtalo más tarde.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Preparar copia' })).toBeInTheDocument();
   });
 

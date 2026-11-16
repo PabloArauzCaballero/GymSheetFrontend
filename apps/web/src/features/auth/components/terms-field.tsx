@@ -29,15 +29,19 @@ export function TermsField({
             <Link className={linkClass} href="/privacidad" target="_blank">
               {authCopy.terms.privacyLabel}
             </Link>{' '}
-            {authCopy.terms.rulesConnector}{' '}
+            {authCopy.terms.retentionNote} {authCopy.terms.rulesConnector}{' '}
             <Link className={linkClass} href="/normas" target="_blank">
               {authCopy.terms.rulesLabel}
             </Link>
             .
           </span>
         }
+        aria-describedby="terms-separate-consents"
         {...registration}
       />
+      <p className="mt-1 pl-[30px] text-xs leading-5 text-[var(--text-muted)]" id="terms-separate-consents">
+        {authCopy.terms.separateConsentsNote}
+      </p>
       {error ? (
         <p className="mt-1 text-xs text-[var(--danger-text)]" role="alert">
           {error}
