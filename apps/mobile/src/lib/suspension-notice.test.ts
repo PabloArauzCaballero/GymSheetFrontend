@@ -2,14 +2,42 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { accountSuspensionCopy } from '@gymsheet/domain';
-import { endSuspendedSession, suspensionMessage, type SuspendedSessionSteps } from './suspension-notice.ts';
+import { endSuspendedSession, loginFailureMessage, suspensionMessage, type SuspendedSessionSteps } from './suspension-notice.ts';
 
-const pending = { code: 'ACCOUNT_SUSPENDED', detail: 'Tu cuenta está suspendida mientras revisamos un reporte.', details: { pendingReview: true } };
+const minor = { code: 'MENOR_DE_EDAD', label: 'Menor de edad', text: 'la cuenta parece ser de una persona menor de 18 años' };
+const acoso = { code: 'ACOSO', label: 'Acoso', text: 'mensajes o contenido que hostigan o intimidan a otra persona' };
+const pending = {
+  code: 'ACCOUNT_SUSPENDED',
+  detail: 'Tu cuenta está suspendida mientras revisamos un reporte.',
+  details: { pendingReview: true, reason: minor },
+};
+const pendingNotice = accountSuspensionCopy.notice({ pendingReview: true, until: null, reason: minor });
+const rights =
+  'Mientras dure, no puedes usar la app. Para pedir tus datos, corregirlos, borrarlos o retirar un consentimiento, escribe a {{REPP_CONTACTO_PRIVACIDAD}}.';
 
-test('a 401 ACCOUNT_SUSPENDED is recognised by its code, not by its sentence', () => {
-  assert.equal(suspensionMessage(401, pending), accountSuspensionCopy.pendingReview);
-  const dated = suspensionMessage(401, { code: 'ACCOUNT_SUSPENDED', details: { pendingReview: false, until: '2026-12-01T00:00:00.000Z' } });
-  assert.match(dated ?? '', /hasta el/);
+test('a 401 ACCOUNT_SUSPENDED is recognised by its code, and says its reason and rights', () => {
+  assert.equal(
+    suspensionMessage(401, pending),
+    `Tu cuenta está suspendida mientras revisamos una denuncia. Motivo: Menor de edad (la cuenta parece ser de una persona menor de 18 años). Te avisamos por correo cuando terminemos. ${rights}`,
+  );
+  const dated = suspensionMessage(401, {
+    code: 'ACCOUNT_SUSPENDED',
+    details: { pendingReview: false, until: '2026-12-01T12:00:00.000Z', reason: acoso },
+  });
+  assert.equal(
+    dated,
+    `Tu cuenta está suspendida hasta el 1 de diciembre de 2026. Motivo: Acoso (mensajes o contenido que hostigan o intimidan a otra persona). ${rights}`,
+  );
+});
+
+test('login says a suspension or an expulsion by its code, and falls back otherwise', () => {
+  const fallback = () => 'Correo o contraseña incorrectos.';
+  assert.equal(loginFailureMessage({ status: 403, ...pending }, fallback), pendingNotice);
+  assert.equal(
+    loginFailureMessage({ status: 403, code: 'ACCOUNT_BANNED', details: { reason: acoso } }, fallback),
+    'Tu cuenta fue expulsada por incumplir varias veces las normas de la comunidad. Motivo: Acoso (mensajes o contenido que hostigan o intimidan a otra persona). Para tus datos, escribe a {{REPP_CONTACTO_PRIVACIDAD}}.',
+  );
+  assert.equal(loginFailureMessage({ status: 401, code: 'UNAUTHORIZED' }, fallback), fallback());
 });
 
 test('any other 401 keeps the usual «Sesión expirada», whatever its text says', () => {
@@ -104,6 +132,6 @@ test('wired like the mobile client: a 401 ACCOUNT_SUSPENDED never renews, never 
   assert.deepEqual(events.filter((event) => event !== 'refresh' && event !== 'unauthorized'), [
     'revoke',
     'lost',
-    `notify:${accountSuspensionCopy.pendingReview}`,
+    `notify:${pendingNotice}`,
   ]);
 });

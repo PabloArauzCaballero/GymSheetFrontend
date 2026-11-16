@@ -1,9 +1,4 @@
-import {
-  ACCOUNT_SUSPENDED,
-  accountSuspensionDetailsSchema,
-  type AccountExportStatus,
-  type ClosurePreview,
-} from '@gymsheet/schemas';
+import type { AccountExportStatus, ClosurePreview } from '@gymsheet/schemas';
 
 /** Copy and pure rules of the account rights (rename, email change, export, closure). */
 
@@ -120,46 +115,3 @@ export function waitLabel(seconds: number): string {
   if (seconds >= 3_600) return `${Math.ceil(seconds / 3_600)} h`;
   return `${Math.max(1, Math.ceil(seconds / 60))} min`;
 }
-
-export type AccountSuspension = { pendingReview: boolean; until: string | null };
-
-/**
- * The suspension a failed request reports (`code: ACCOUNT_SUSPENDED`, 403 at
- * login, 401 with a valid token), or null for any other failure. Reads the
- * code and details, never the sentence. Duck-typed: no HTTP client needed.
- */
-export function accountSuspensionOf(error: unknown): AccountSuspension | null {
-  const { code, details } = (error ?? {}) as { code?: unknown; details?: unknown };
-  if (code !== ACCOUNT_SUSPENDED) return null;
-  const parsed = accountSuspensionDetailsSchema.safeParse(details);
-  // A suspension without readable details is still a suspension: say so without a date.
-  if (!parsed.success) return { pendingReview: false, until: null };
-  return parsed.data.pendingReview
-    ? { pendingReview: true, until: null }
-    : { pendingReview: false, until: parsed.data.until };
-}
-
-const longDate = (iso: string) => {
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime())
-    ? null
-    : date.toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' });
-};
-
-const suspensionText = {
-  pendingReview: 'Tu cuenta está suspendida mientras revisamos un reporte. Te avisaremos cuando terminemos.',
-  until: (date: string) => `Tu cuenta está suspendida hasta el ${date} por incumplir las normas de la comunidad.`,
-  undated: 'Tu cuenta está suspendida por incumplir las normas de la comunidad.',
-};
-
-export const accountSuspensionCopy = {
-  title: 'Tu cuenta está suspendida',
-  ...suspensionText,
-  rules: 'Leer las normas',
-  /** The sentence for one suspension (safe to destructure). */
-  message: (suspension: AccountSuspension): string => {
-    if (suspension.pendingReview) return suspensionText.pendingReview;
-    const date = suspension.until ? longDate(suspension.until) : null;
-    return date ? suspensionText.until(date) : suspensionText.undated;
-  },
-} as const;

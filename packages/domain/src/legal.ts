@@ -2,6 +2,15 @@ import { legalDocuments, type LegalDocument, type LegalDocumentVersion } from '@
 
 /** Legal-acceptance rules and copy shared by web and mobile. */
 
+/**
+ * Contact addresses the legal texts point to. The privacy address is still a
+ * visible placeholder until legal approves it: fill it here, once, and every
+ * web and mobile sentence that names it follows.
+ */
+export const legalContacts = {
+  privacy: '{{REPP_CONTACTO_PRIVACIDAD}}',
+} as const;
+
 export const legalDocumentLabels: Readonly<Record<LegalDocument, string>> = {
   TERMS: 'Términos y condiciones',
   PRIVACY: 'Política de privacidad',

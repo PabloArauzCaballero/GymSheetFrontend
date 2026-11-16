@@ -7,8 +7,7 @@ import type { BaseSyntheticEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { AtSign, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
 import {
-  accountSuspensionCopy,
-  accountSuspensionOf,
+  accountSanctionMessage,
   authCopy,
   authDestination,
   authErrorMessage,
@@ -85,8 +84,8 @@ export function RegisterForm() {
       if (error instanceof ApiError && error.code === SIGNUP_REJECTED)
         return form.setError('root', { message: signupCopy.rejected });
       if (isTermsVersionOutdated(error)) return askToAcceptAgain(error);
-      const suspension = accountSuspensionOf(error);
-      if (suspension) return form.setError('root', { message: accountSuspensionCopy.message(suspension) });
+      const sanction = accountSanctionMessage(error);
+      if (sanction) return form.setError('root', { message: sanction });
       const fieldErrors = registerFieldErrors(error);
       fieldErrors.forEach(([field, message], index) =>
         form.setError(field, { message }, { shouldFocus: index === 0 }),

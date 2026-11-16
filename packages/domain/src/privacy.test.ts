@@ -2,14 +2,11 @@ import { currentLegalDocumentsSchema } from "@gymsheet/schemas";
 import { describe, expect, it } from "vitest";
 import {
   accountExportPollInterval,
-  accountSuspensionCopy,
-  accountSuspensionOf,
   closureProofOptions,
   exportRetryAfterSeconds,
   isAccountExportDownloadable,
   waitLabel,
 } from "./account-rights";
-import { identityErrorMessage } from "./account-security";
 import { outdatedCurrentDocuments, signupLegalDocuments, termsVersionOf } from "./legal";
 import {
   consentInput,
@@ -109,34 +106,5 @@ describe("account rights", () => {
     expect(waitLabel(82_800)).toBe("23 h");
     expect(waitLabel(90)).toBe("2 min");
     expect(waitLabel(5)).toBe("1 min");
-  });
-});
-
-describe("account suspension by code", () => {
-  it("reads a pending review and a dated suspension from ACCOUNT_SUSPENDED", () => {
-    expect(accountSuspensionOf({ code: "ACCOUNT_SUSPENDED", details: { pendingReview: true } })).toEqual({
-      pendingReview: true,
-      until: null,
-    });
-    expect(
-      accountSuspensionOf({ code: "ACCOUNT_SUSPENDED", details: { pendingReview: false, until: "2026-12-01T00:00:00.000Z" } }),
-    ).toEqual({ pendingReview: false, until: "2026-12-01T00:00:00.000Z" });
-  });
-
-  it("ignores the wording: a 401 that only says «suspendida» is not a suspension", () => {
-    expect(accountSuspensionOf({ code: undefined, message: "Tu cuenta está suspendida" })).toBeNull();
-    expect(accountSuspensionOf({ code: "UNAUTHORIZED" })).toBeNull();
-  });
-
-  it("words each case, never naming year 9999", () => {
-    expect(accountSuspensionCopy.message({ pendingReview: true, until: null })).toMatch(/mientras revisamos un reporte/u);
-    expect(accountSuspensionCopy.message({ pendingReview: false, until: "2026-12-01T12:00:00.000Z" })).toMatch(/2026/u);
-    expect(accountSuspensionCopy.message({ pendingReview: false, until: null })).toBe(accountSuspensionCopy.undated);
-  });
-
-  it("Google/Apple sign-in says the suspension too", () => {
-    expect(identityErrorMessage("Google", { code: "ACCOUNT_SUSPENDED", status: 403, details: { pendingReview: true } })).toBe(
-      accountSuspensionCopy.pendingReview,
-    );
   });
 });

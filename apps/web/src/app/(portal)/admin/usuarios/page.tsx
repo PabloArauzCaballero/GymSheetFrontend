@@ -8,5 +8,11 @@ export const metadata: Metadata = { title: 'Usuarios' };
 export default async function UsuariosPage() {
   const session = await requireRole(['ADMIN', 'FRONT_DESK']);
   // El enlace a la ficha de entrenamiento sólo aparece a quien puede abrirla.
-  return <UsersPanel canViewTraining={hasPermission(session.permissions, 'support:read')} />;
+  // Closing a staff account is ADMIN-only in the backend; the UI only mirrors it.
+  return (
+    <UsersPanel
+      canViewTraining={hasPermission(session.permissions, 'support:read')}
+      closure={session.role === 'ADMIN' ? { callerId: session.id } : undefined}
+    />
+  );
 }

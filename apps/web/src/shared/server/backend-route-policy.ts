@@ -247,6 +247,8 @@ const allowedPathPatterns = [
   new RegExp(`^/me/verification/${uuid}/selfie$`, 'u'),
   /^\/admin\/verifications$/u,
   new RegExp(`^/admin/verifications/${uuid}/(selfie|decide)$`, 'u'),
+  // An ADMIN closes a staff account of their gym (POST; scope decided by the backend).
+  new RegExp(`^/admin/users/${uuid}/close$`, 'u'),
   // Social: bloqueos, descubrimiento, mapa y confirmaciones de lectura.
   /^\/me\/blocks$/u,
   new RegExp(`^/me/blocks/${resourceId}$`, 'u'),

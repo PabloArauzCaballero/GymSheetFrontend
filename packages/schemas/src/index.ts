@@ -11,6 +11,8 @@ export * from './definitions/account-security';
 export * from './definitions/privacy';
 export * from './definitions/verification';
 export * from './definitions/account-rights';
+export * from './definitions/account-sanction';
+export * from './definitions/notifications';
 export * from './definitions/social-map';
 export * from './definitions/discovery-card';
 export * from './definitions/stories';

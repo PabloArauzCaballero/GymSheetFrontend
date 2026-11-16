@@ -81,16 +81,6 @@ export type AccountExportStatus = z.infer<typeof accountExportStatusSchema>;
 export const latestAccountExportResponseSchema = z.object({ export: accountExportStatusSchema.nullable() });
 export type LatestAccountExportResponse = z.infer<typeof latestAccountExportResponseSchema>;
 
-/**
- * `ACCOUNT_SUSPENDED` details: 403 at login/signup, 401 for a still-valid token.
- * A pending-review suspension has no end date; a dated one carries `until`.
- */
-export const accountSuspensionDetailsSchema = z.union([
-  z.object({ pendingReview: z.literal(true) }),
-  z.object({ pendingReview: z.literal(false), until: z.string() }),
-]);
-export type AccountSuspensionDetails = z.infer<typeof accountSuspensionDetailsSchema>;
-
 /** Stable backend codes of the account rights. */
 export const CURRENT_PASSWORD_INVALID = 'CURRENT_PASSWORD_INVALID';
 export const EMAIL_UNCHANGED = 'EMAIL_UNCHANGED';
@@ -99,4 +89,3 @@ export const ACCOUNT_CLOSURE_STAFF = 'ACCOUNT_CLOSURE_STAFF';
 export const CLOSURE_PROOF_REQUIRED = 'CLOSURE_PROOF_REQUIRED';
 export const ACCOUNT_EXPORT_RATE_LIMITED = 'ACCOUNT_EXPORT_RATE_LIMITED';
 export const ACCOUNT_EXPORT_NOT_READY = 'ACCOUNT_EXPORT_NOT_READY';
-export const ACCOUNT_SUSPENDED = 'ACCOUNT_SUSPENDED';

@@ -10,6 +10,7 @@ import {
 } from '@gymsheet/domain';
 import { ShieldCheck } from 'lucide-react';
 import { Section } from '@/shared/components/mobile/section';
+import { ACCOUNT_EXPORT_SECTION_ID } from '@/shared/lib/account-links';
 import { AccountClosure } from './account-closure';
 import { AccountExportCard } from './account-export-card';
 import { AccountNameForm } from './account-name-form';
@@ -32,7 +33,7 @@ export function PrivacySection({ name }: Readonly<{ name?: string }>) {
         <ConsentsList />
       </div>
       <div className="panel divide-y divide-[var(--border)] px-5 py-1">
-        <PrivacyDisclosure title={accountExportCopy.title}>
+        <PrivacyDisclosure id={ACCOUNT_EXPORT_SECTION_ID} title={accountExportCopy.title}>
           <AccountExportCard />
         </PrivacyDisclosure>
         <PrivacyDisclosure title={emailChangeCopy.title}>

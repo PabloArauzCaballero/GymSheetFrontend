@@ -11,6 +11,8 @@ import { Pagination } from '@/shared/components/ui/pagination';
 import { Input } from '@/shared/components/ui/input';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { insightsService, type PortalUser } from '@/features/admin/services/insights-service';
+import { canCloseStaffAccount } from '@gymsheet/domain';
+import { StaffClosureButton } from './staff-closure-button';
 
 /**
  * Estado de acceso, resuelto a una sola frase.
@@ -34,7 +36,14 @@ function AccessBadge({ user }: { user: PortalUser }) {
  * hacerle adivinar la pestaña correcta es la clase de fricción que termina en
  * «no aparece».
  */
-export function UsersPanel({ canViewTraining = false }: Readonly<{ canViewTraining?: boolean }>) {
+export function UsersPanel({
+  canViewTraining = false,
+  closure,
+}: Readonly<{
+  canViewTraining?: boolean;
+  /** Only for an ADMIN: who is looking, so their own row offers no closure. */
+  closure?: { callerId: string };
+}>) {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
@@ -109,6 +118,7 @@ export function UsersPanel({ canViewTraining = false }: Readonly<{ canViewTraini
                     <th className="px-5 py-3 font-semibold">Acceso</th>
                     <th className="px-5 py-3 font-semibold">Último entreno</th>
                     {canViewTraining ? <th className="px-5 py-3 font-semibold">Soporte</th> : null}
+                    {closure ? <th className="px-5 py-3 font-semibold">Cuenta</th> : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -151,6 +161,13 @@ export function UsersPanel({ canViewTraining = false }: Readonly<{ canViewTraini
                               Entrenamiento
                               <span className="sr-only"> de {user.nombreCompleto}</span>
                             </Link>
+                          ) : null}
+                        </td>
+                      ) : null}
+                      {closure ? (
+                        <td className="px-5 py-3">
+                          {canCloseStaffAccount(user.rol, user.id, closure.callerId) ? (
+                            <StaffClosureButton name={user.nombreCompleto} userId={user.id} />
                           ) : null}
                         </td>
                       ) : null}

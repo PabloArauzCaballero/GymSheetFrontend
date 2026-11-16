@@ -14,6 +14,7 @@ import { Button } from '@/components/ui';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { BackLink } from '@/components/nav';
 import { Text } from '@/components/text';
+import { NoticeLink } from '@/features/notifications/notice-link';
 import { notificationService } from '@/features/notifications/service';
 import { notify } from '@/notifications';
 import { spacing } from '@/theme';
@@ -111,6 +112,7 @@ export default function NotificationInboxScreen() {
                     ) : null}
                   </View>
                   <Text selectable>{item.mensaje}</Text>
+                  <NoticeLink notice={item} />
                   <Text tone="muted" variant="footnote">
                     {DATE_TIME.format(new Date(item.creadoEn))} · {item.canal}
                   </Text>
