@@ -68,6 +68,25 @@ describe('ContentPreview', () => {
     expect(screen.getByText('Su autor lo borró después de la denuncia.')).toBeInTheDocument();
   });
 
+  it('never renders a member-supplied link with a non-http scheme', () => {
+    const { container, rerender } = render(
+      <ContentPreview
+        content={{ kind: 'MUSIC_PLAYLIST', name: 'Lista peligrosa', url: 'javascript:alert(1)', type: 'SPOTIFY', imageUrl: null } as ModerationCaseContent}
+        contentUnavailableReason={null}
+      />,
+    );
+    expect(screen.getByText('Lista peligrosa')).toBeTruthy();
+    expect(container.querySelector('a')).toBeNull();
+    rerender(
+      <ContentPreview
+        content={{ kind: 'COMMENT', text: 'hola', attachmentUrl: 'data:text/html,<b>x</b>', attachmentType: 'FILE', deletedByAuthor: false } as ModerationCaseContent}
+        contentUnavailableReason={null}
+      />,
+    );
+    expect(container.querySelector('a')).toBeNull();
+    expect(screen.getByText(/no seguro/u)).toBeTruthy();
+  });
+
   it('says an erased target is gone, and leaves a chat message to its evidence', () => {
     const { rerender } = render(<ContentPreview content={null} contentUnavailableReason="ERASED" />);
     expect(screen.getByTestId('vista-previa')).toHaveTextContent('Este contenido ya se eliminó');

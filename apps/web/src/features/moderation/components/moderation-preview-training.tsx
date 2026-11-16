@@ -1,4 +1,4 @@
-import { exerciseGroupLabelEs } from '@gymsheet/domain';
+import { exerciseGroupLabelEs, safeHref } from '@gymsheet/domain';
 import type { ModerationExerciseContent, ModerationRoutineContent } from '@gymsheet/schemas';
 import { Dumbbell, Users } from 'lucide-react';
 
@@ -107,14 +107,18 @@ export function ExerciseBody({ exercise }: Readonly<{ exercise: ModerationExerci
         <ul className="flex flex-col gap-1 text-sm">
           {exercise.media.map((media, position) => (
             <li key={`${position}-${media.url}`}>
-              <a
-                className="underline underline-offset-2"
-                href={media.url}
-                rel="noreferrer noopener"
-                target="_blank"
-              >
-                {media.type === 'VIDEO' ? 'Ver video' : 'Ver imagen'} {position + 1}
-              </a>
+              {safeHref(media.url) ? (
+                <a
+                  className="underline underline-offset-2"
+                  href={safeHref(media.url)}
+                  rel="noreferrer noopener"
+                  target="_blank"
+                >
+                  {media.type === 'VIDEO' ? 'Ver video' : 'Ver imagen'} {position + 1}
+                </a>
+              ) : (
+                <span>{media.type === 'VIDEO' ? 'Video' : 'Imagen'} {position + 1} (enlace no seguro)</span>
+              )}
             </li>
           ))}
         </ul>

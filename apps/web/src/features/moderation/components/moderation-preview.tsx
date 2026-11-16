@@ -1,5 +1,6 @@
 'use client';
 
+import { safeHref } from '@gymsheet/domain';
 import type { ModerationCaseContent } from '@gymsheet/schemas';
 import { MessageSquareQuote, Music } from 'lucide-react';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -35,10 +36,12 @@ function CommentBody({ comment }: Readonly<{ comment: Extract<ModerationCaseCont
       {comment.attachmentUrl ? (
         IMAGE_ATTACHMENTS.has(comment.attachmentType ?? '') ? (
           <Photo alt="Imagen adjunta al comentario" src={comment.attachmentUrl} />
-        ) : (
-          <a className="text-sm underline underline-offset-2" href={comment.attachmentUrl} rel="noreferrer noopener" target="_blank">
+        ) : safeHref(comment.attachmentUrl) ? (
+          <a className="text-sm underline underline-offset-2" href={safeHref(comment.attachmentUrl)} rel="noreferrer noopener" target="_blank">
             Abrir el adjunto
           </a>
+        ) : (
+          <Muted>Adjunto con un enlace no seguro (no se abre).</Muted>
         )
       ) : null}
       {comment.deletedByAuthor ? <Muted>Su autor lo borró después de la denuncia.</Muted> : null}
@@ -90,9 +93,13 @@ function ContentBody({ content }: Readonly<{ content: ModerationCaseContent }>) 
       return (
         <p className="flex items-center gap-2 text-sm">
           <Music aria-hidden className="size-4 text-[var(--text-muted)]" />
-          <a className="font-semibold underline underline-offset-2" href={content.url} rel="noreferrer noopener" target="_blank">
-            {content.name}
-          </a>
+          {safeHref(content.url) ? (
+            <a className="font-semibold underline underline-offset-2" href={safeHref(content.url)} rel="noreferrer noopener" target="_blank">
+              {content.name}
+            </a>
+          ) : (
+            <span className="font-semibold">{content.name}</span>
+          )}
         </p>
       );
     default:

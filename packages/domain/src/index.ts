@@ -36,3 +36,4 @@ export * from './sanction-reasons';
 export * from './staff-closure';
 export * from './account-notices';
 export * from './platform-moderation';
+export * from './safe-href';
