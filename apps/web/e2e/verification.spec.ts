@@ -73,7 +73,7 @@ test('member: consent → gesture with countdown → selfie by file → in revie
   await page.getByRole('button', { name: 'Pedir mi gesto' }).click();
   // The consent is asked with its purpose before any gesture or camera exists.
   const dialog = page.getByRole('alertdialog').or(page.getByRole('dialog'));
-  await expect(dialog.getByText('Usaremos una selfie para comprobar que tu perfil es real.')).toBeVisible();
+  await expect(dialog.getByText('Una persona de moderación compara tu selfie con tus fotos para darte la marca «Verificado». Borramos la selfie 30 días después de decidir.')).toBeVisible();
   await expect(page.getByTestId('selfie-file-input')).toHaveCount(0);
   const granted = waitForBackend(page, 'PUT', '/api/backend/me/consents/VERIFICATION_SELFIE');
   const challenged = waitForBackend(page, 'POST', '/api/backend/me/verification/challenge');

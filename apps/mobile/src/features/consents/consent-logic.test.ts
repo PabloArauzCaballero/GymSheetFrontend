@@ -86,14 +86,14 @@ test('a 409 CONSENT_VERSION_OUTDATED records nothing and refreshes; other errors
   await assert.rejects(requestConsent('HEALTH', { ...steps, grant: async () => { throw new Error('sin red'); } }), /sin red/);
 });
 
-test('the list follows the backend order, leaves the selfie out and says each state in words', () => {
+test('the list follows the backend order, includes the selfie and says each state in words', () => {
   const sorted = sortConsents([
     consent('PRECISE_LOCATION', true),
     consent('VERIFICATION_SELFIE', false),
     consent('HEALTH', false),
     consent('ORIENTATION', true, false),
   ]);
-  assert.deepEqual(sorted.map((item) => item.kind), ['HEALTH', 'ORIENTATION', 'PRECISE_LOCATION']);
+  assert.deepEqual(sorted.map((item) => item.kind), ['HEALTH', 'ORIENTATION', 'VERIFICATION_SELFIE', 'PRECISE_LOCATION']);
   assert.equal(consentStatusLabel(consent('HEALTH', false)), consentsSectionCopy.notGranted);
   assert.equal(consentStatusLabel(consent('HEALTH', true)), consentsSectionCopy.granted);
   assert.equal(needsRenewal(consent('ORIENTATION', true, false)), true);

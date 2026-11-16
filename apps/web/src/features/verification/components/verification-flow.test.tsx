@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { consentCopy } from '@gymsheet/domain';
 import { ApiError } from '@/shared/api/api-error';
 import type { MyVerification } from '@/shared/api/schemas';
 import { VerificationFlow } from './verification-flow';
@@ -82,7 +83,7 @@ describe('VerificationFlow', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Pedir mi gesto' }));
 
     await waitFor(() => expect(mocks.confirm).toHaveBeenCalledTimes(1));
-    expect(mocks.confirm.mock.calls[0]?.[0]).toMatchObject({ message: 'Usaremos una selfie para comprobar que tu perfil es real.' });
+    expect(mocks.confirm.mock.calls[0]?.[0]).toMatchObject({ message: consentCopy.VERIFICATION_SELFIE.purpose });
     expect(mocks.challenge).not.toHaveBeenCalled();
     expect(mocks.setConsent).not.toHaveBeenCalled();
     expect(screen.queryByTestId('camera')).toBeNull();

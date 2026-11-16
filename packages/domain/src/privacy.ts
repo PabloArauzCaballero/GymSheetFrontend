@@ -83,13 +83,8 @@ export const consentsSectionCopy = {
 /** Every kind, in the backend's order, so lists look the same on every platform. */
 export const consentKindOrder: readonly ConsentKind[] = consentKinds;
 
-/**
- * The kinds the settings list shows, in `consentKindOrder`. VERIFICATION_SELFIE
- * stays out until the selfie screen exists (franja 6): add it back here.
- */
-export const settingsConsentKinds: readonly ConsentKind[] = consentKindOrder.filter(
-  (kind) => kind !== 'VERIFICATION_SELFIE',
-);
+/** The kinds the settings list shows, in `consentKindOrder`: all four now that the selfie screen exists. */
+export const settingsConsentKinds: readonly ConsentKind[] = consentKindOrder;
 
 /** The consents of the settings list: only `settingsConsentKinds`, in that order. */
 export function settingsConsents<T extends Pick<Consent, 'kind'>>(consents: readonly T[]): T[] {
