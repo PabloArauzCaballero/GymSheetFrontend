@@ -40,10 +40,11 @@ const SMALL = 6;
 const TAIL_W = 8;
 /**
  * Side margin of a message row. The tail hangs `TAIL_W` outside the bubble, so
- * with the old 4 pt it was clipped by the screen edge; this leaves the tail
- * tip 4 pt inside and the bubble body 12 pt in, like WhatsApp.
+ * with the old 4 pt it was clipped by the screen edge. Plus the thread's 4 pt
+ * screen gutter, the tail tip sits 4 pt inside and the bubble body 12 pt in,
+ * like WhatsApp.
  */
-export const BUBBLE_ROW_INSET = TAIL_W + spacing.xs;
+export const BUBBLE_ROW_INSET = TAIL_W;
 const TAIL_H = 13;
 
 /** `pending`: la burbuja optimista, todavía sin confirmar por el servidor (reloj, como WhatsApp). */
