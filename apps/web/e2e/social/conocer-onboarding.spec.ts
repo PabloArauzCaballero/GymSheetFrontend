@@ -59,7 +59,7 @@ test('a new member answers Conocer, skips photos and keeps the answers after a r
 
   // a) What you look for, who you want to see, ages and distance.
   await expect(page.getByRole('heading', { name: '¿Qué buscas?' })).toBeVisible();
-  await page.getByRole('button', { name: 'Todos' }).click();
+  await page.getByRole('button', { name: 'Todos', exact: true }).click();
   await page.getByRole('button', { name: 'Amistad' }).click();
   await page.getByRole('button', { name: 'Aún no lo sé' }).click();
   await expect(page.getByRole('button', { name: 'Amistad' })).toHaveAttribute('aria-pressed', 'false');

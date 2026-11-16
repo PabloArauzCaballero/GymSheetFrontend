@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 /**
  * Signup data for e2e specs: the one place that knows what `POST /auth/register`
@@ -58,6 +58,9 @@ export async function fillSignupForm(
   await page.getByLabel('Contraseña', { exact: true }).fill(fields.password);
   await page.getByLabel('Confirmar contraseña').fill(fields.confirmation ?? fields.password);
   await page.getByLabel('Fecha de nacimiento').fill(fields.fechaNacimiento ?? ADULT_BIRTH_DATE);
-  await page.getByRole('radio', { name: fields.sexo ?? 'Mujer' }).check();
+  // The radio is visually hidden behind its segmented label: click the label, as a person does.
+  const sex = page.getByRole('radio', { name: fields.sexo ?? 'Mujer' });
+  await page.locator('label').filter({ has: sex }).click();
+  await expect(sex).toBeChecked();
   await page.getByRole('checkbox').check();
 }
