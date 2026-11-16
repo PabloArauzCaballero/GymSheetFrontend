@@ -33,13 +33,13 @@ describe("consents", () => {
   });
 
   it("takes the current version from /me/consents or /legal/current", () => {
-    expect(currentConsentVersion([{ kind: "HEALTH", currentVersion: "2026-12-01" }], "HEALTH")).toBe("2026-12-01");
+    expect(currentConsentVersion([{ kind: "HEALTH", currentVersion: "2026-12-02" }], "HEALTH")).toBe("2026-12-02");
     expect(currentConsentVersion([{ kind: "HEALTH", version: "2026-12-02" }], "HEALTH")).toBe("2026-12-02");
     expect(currentConsentVersion([], "HEALTH")).toBeUndefined();
   });
 
   it("builds the PUT body: a grant names its version, a revocation none", () => {
-    expect(consentInput(true, "2026-12-01")).toEqual({ granted: true, version: "2026-12-01" });
+    expect(consentInput(true, "2026-12-02")).toEqual({ granted: true, version: "2026-12-02" });
     expect(consentInput(false)).toEqual({ granted: false });
     expect(() => consentInput(true)).toThrow();
     expect(outdatedConsentVersion({ kind: "HEALTH", currentVersion: "2027-01-01" })).toBe("2027-01-01");
@@ -65,12 +65,12 @@ describe("legal documents with the community rules", () => {
       { document: "TERMS", version: "2026-08-25", contentSha256: null },
       { document: "PRIVACY", version: "2026-08-25", contentSha256: "ab12" },
     ],
-    consents: [{ kind: "HEALTH", version: "2026-12-01" }],
+    consents: [{ kind: "HEALTH", version: "2026-12-02" }],
   };
 
   it("parses GET /legal/current with COMMUNITY and the consent versions", () => {
     const parsed = currentLegalDocumentsSchema.parse(backend);
-    expect(parsed.consents).toEqual([{ kind: "HEALTH", version: "2026-12-01" }]);
+    expect(parsed.consents).toEqual([{ kind: "HEALTH", version: "2026-12-02" }]);
     expect(termsVersionOf(parsed.documents)).toBe("2026-08-25");
     expect(signupLegalDocuments(parsed.documents).map((entry) => entry.document)).toEqual([
       "TERMS",

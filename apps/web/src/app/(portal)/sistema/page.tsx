@@ -52,7 +52,7 @@ export default async function SistemaPage() {
       <section className="panel p-6">
         <h2 className="text-lg font-semibold tracking-[-0.02em]">En construcción</h2>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">
-          Archivos, moderación, soporte corporativo, monitoreo del sistema y analítica de producto
+          Archivos, soporte corporativo, monitoreo del sistema y analítica de producto
           llegan en las fases siguientes del plan. Todavía no existen, así que no aparecen como
           enlaces.
         </p>

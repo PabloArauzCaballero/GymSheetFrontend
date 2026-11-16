@@ -1,5 +1,5 @@
 import 'server-only';
-import { isStaff, isSystemAdmin } from '@gymsheet/domain';
+import { hasAdminPermissionGrants } from '@gymsheet/domain';
 import { cookies } from 'next/headers';
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
@@ -87,16 +87,12 @@ export const getSession = cache(async function getSession(): Promise<PortalSessi
   const user = await readData(userResponse, userSchema);
   if (!principal) return null;
 
-  // Solo el personal (ADMIN/COACH/FRONT_DESK) y el administrador de plataforma
-  // pueden tener permisos granulares de administración; evita un round-trip
-  // extra en cada carga de página para el resto de las cuentas.
-  //
-  // `SYSTEM_ADMIN` no está en `isStaff` —no pertenece a ningún gimnasio— pero sí
-  // necesita la lista: el backend se la resuelve como el catálogo completo, que
-  // es lo que `PermissionGuard` le concede de verdad. Sin esta rama la consola
-  // de sistema escondería los botones que la API sí le permite usar.
+  // Only the roles `/admin/permissions/me` answers for (ADMIN, FRONT_DESK and
+  // SYSTEM_ADMIN, whose list is the whole catalog) ask for it: a coach or a
+  // moderator would get 403, and a moderator needs no grant (ADR-0018). This
+  // also saves a round-trip on every page load for member accounts.
   const permissions =
-    isStaff(principal.role) || isSystemAdmin(principal.role)
+    hasAdminPermissionGrants(principal.role)
       ? await readData(
           await backendRequest('/admin/permissions/me', { token }),
           permissionsMeSchema,

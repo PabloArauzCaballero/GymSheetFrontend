@@ -74,5 +74,5 @@ const MODULE_GROUPS: { title: string; hrefs: string[] }[] = [
     hrefs: ['/admin/operacion', '/admin/usuarios', '/admin/membership', '/admin/people', '/admin/access'],
   },
   { title: 'Gimnasio', hrefs: ['/admin/equipment', '/admin/facilities', '/admin/exercises'] },
-  { title: 'Seguridad y control', hrefs: ['/admin/moderacion', '/admin/permissions', '/admin/auditoria'] },
+  { title: 'Seguridad y control', hrefs: ['/admin/permissions', '/admin/auditoria'] },
 ];

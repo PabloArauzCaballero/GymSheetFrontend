@@ -1,3 +1,4 @@
+import { moderationResolutions } from '@gymsheet/domain';
 import { z } from 'zod';
 import { apiRequest } from '@/shared/api/api-client';
 
@@ -10,6 +11,9 @@ export const moderationTargetKinds = [
   'ROUTINE',
   'EXERCISE',
   'COMMENT',
+  // Public Spotify link: the central queue mixes it with the rest, and an
+  // unknown kind would make the whole queue fail to parse.
+  'MUSIC_PLAYLIST',
 ] as const;
 export type ModerationTargetKind = (typeof moderationTargetKinds)[number];
 
@@ -61,6 +65,7 @@ export const TARGET_LABEL: Record<ModerationTargetKind, string> = {
   ROUTINE: 'Rutina',
   EXERCISE: 'Ejercicio',
   COMMENT: 'Comentario',
+  MUSIC_PLAYLIST: 'Enlace de música',
 };
 
 /**
@@ -86,6 +91,9 @@ export const moderationCaseSchema = z.object({
   claimed_by_name: z.string().nullable(),
   claimed_at: z.string().nullable(),
   content_hidden: z.boolean().nullish().transform((value) => value ?? false),
+  // The queue is central (ADR-0018): each case names the gym of the content.
+  tenant_id: z.string().nullish().transform((value) => value ?? null),
+  tenant_name: z.string().nullish().transform((value) => value ?? null),
 });
 
 export type ModerationCase = z.infer<typeof moderationCaseSchema>;
@@ -115,12 +123,15 @@ export const moderationCaseDetailSchema = z.object({
     days: z.number().int().nullable(),
   }),
   contentHidden: z.boolean(),
+  tenantId: z.string().nullish().transform((value) => value ?? null),
 });
 
 export type ModerationCaseDetail = z.infer<typeof moderationCaseDetailSchema>;
 
 const resolveResultSchema = z.object({
   resolved: z.boolean(),
+  tenantId: z.string().nullish().transform((value) => value ?? null),
+  resolution: z.enum(moderationResolutions),
   reportsClosed: z.number().int(),
   sanction: z.object({ kind: z.string(), days: z.number().int().nullable() }).nullable(),
   contentHidden: z.boolean(),
@@ -136,8 +147,11 @@ function casePath(targetKind: ModerationTargetKind, targetId: string) {
   return `/admin/moderation/cases/${targetKind}/${targetId}`;
 }
 
+export type ModerationVerdict = z.infer<typeof resolveResultSchema>;
+
 export const moderationService = {
-  queue: (page = 1, pageSize = 20) =>
+  // 50 is the backend cap: the queue now mixes every gym.
+  queue: (page = 1, pageSize = 50) =>
     apiRequest(
       `/admin/moderation/queue?page=${page}&pageSize=${pageSize}`,
       z.array(moderationCaseSchema),

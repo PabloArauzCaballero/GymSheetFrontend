@@ -6,6 +6,7 @@ describe('roleLabel', () => {
     expect(roleLabel('SYSTEM_ADMIN')).toBe('Administrador del sistema');
     expect(roleLabel('FRONT_DESK')).toBe('Recepción');
     expect(roleLabel('CLIENTE')).toBe('Socio');
+    expect(roleLabel('MODERATOR')).toBe('Moderación REPP');
   });
   it('humaniza un rol desconocido sin guiones bajos', () => {
     expect(roleLabel('NEW_ROLE')).toBe('New role');

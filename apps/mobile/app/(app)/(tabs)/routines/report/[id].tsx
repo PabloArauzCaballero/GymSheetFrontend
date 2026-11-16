@@ -34,7 +34,7 @@ export default function ReportRoutineScreen() {
   return (
     <ScrollScreen>
       <BackLink />
-      <ScreenHeader title="Reportar rutina" subtitle="Un equipo del gimnasio revisará el contenido." />
+      <ScreenHeader title="Reportar rutina" subtitle="El equipo de moderación de REPP lo revisará." />
       <Card>
         <View style={{ gap: spacing.sm }}>
           {reasons.map((item) => (

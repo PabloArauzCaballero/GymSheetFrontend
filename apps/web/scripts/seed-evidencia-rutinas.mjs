@@ -96,7 +96,10 @@ const sys = await account('sys', `QA Sistema ${run}`, { role: 'SYSTEM_ADMIN' });
 const other = await account('otro', `QA Admin Otro Gimnasio ${run}`, { role: 'ADMIN', tenantId: OTHER_GYM });
 const grant = (user, keys) =>
   Promise.all(keys.map((permissionKey) => call('POST', `/admin/permissions/${user.id}`, sys.token, { permissionKey })));
-await grant(other, ['moderation:read', 'moderation:act']);
+// Moderation is the central REPP team's job (backend ADR-0018): a member account
+// the platform admin adds to the team through the real API, not a gym grant.
+const moderatorAccount = await account('moderacion', `QA Moderación REPP ${run}`, { tenantId: OTHER_GYM });
+await call('PUT', `/admin/platform/moderators/${moderatorAccount.id}`, sys.token);
 
 const isoWeekday = (date) => (date.getDay() === 0 ? 7 : date.getDay());
 const today = new Date();
@@ -122,9 +125,9 @@ async function seedCombo(combo, tenantId, comboIndex) {
   // Quien denuncia tiene que poder ver el contenido, y eso se limita al gimnasio.
   const reporters = [];
   for (const n of [1, 2, 3]) reporters.push(await account(`rep${n}-${combo}`, `Reportero ${n} ${combo}`, { tenantId }));
-  // El administrador modera y atiende soporte; el lector sólo mira.
-  await grant(gym, ['moderation:read', 'moderation:act', 'support:read', 'support:respond', 'analytics:read']);
-  await grant(reader, ['moderation:read', 'support:read']);
+  // El administrador atiende soporte; el lector sólo mira. Ninguno modera (ADR-0018).
+  await grant(gym, ['support:read', 'support:respond', 'analytics:read']);
+  await grant(reader, ['support:read']);
 
   // Una página al azar del catálogo: la huella de publicación impide dos
   // rutinas públicas con los mismos ejercicios, y repetir la siembra chocaría.
@@ -251,6 +254,7 @@ const seed = {
   run,
   password: PASSWORD,
   sys: sys.email,
+  moderator: moderatorAccount.email,
   other: other.email,
   /** Un ejercicio del catálogo, para el buscador del formulario «Crear oficial». */
   catalogExercise: (probe.items ?? probe)[0].nombre,

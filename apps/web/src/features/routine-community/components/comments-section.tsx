@@ -49,7 +49,7 @@ function CommentItem({
             </Button>
           ) : (
             <ReportDialog
-              consequence="Alguien del equipo revisará el comentario."
+              consequence="El equipo de moderación de REPP revisará el comentario."
               defaultReason="ACOSO"
               subjectName="este comentario"
               successMessage="Gracias. Lo revisaremos."

@@ -34,3 +34,4 @@ export * from './account-sanction';
 export * from './sanction-reasons';
 export * from './staff-closure';
 export * from './account-notices';
+export * from './platform-moderation';

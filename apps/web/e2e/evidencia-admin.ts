@@ -33,6 +33,8 @@ export type SemillaRutinas = {
   run: string;
   password: string;
   sys: string;
+  /** A member of the REPP moderation team (`MODERATOR`, ADR-0018). */
+  moderator: string;
   other: string;
   catalogExercise: string;
   combos: Record<ComboEvidencia, JuegoDeDatos>;

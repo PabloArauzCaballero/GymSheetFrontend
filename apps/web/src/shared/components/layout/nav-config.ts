@@ -1,6 +1,5 @@
 import {
   Activity,
-  Award,
   BarChart3,
   Bell,
   Building2,
@@ -16,8 +15,6 @@ import {
   MessageCircle,
   ScanFace,
   ScrollText,
-  ShieldAlert,
-  Server,
   Settings,
   UserRound,
   ShieldCheck,
@@ -28,6 +25,9 @@ import {
   Users2,
 } from 'lucide-react';
 import type { UserRole } from '@/shared/api/contracts';
+import { moderationNavigation, systemNavigation } from './platform-navigation';
+
+export { moderationNavigation, systemNavigation };
 
 export type NavigationItem = {
   href: string;
@@ -142,14 +142,6 @@ export const adminNavigation: NavigationItem[] = [
     description: 'Dispositivos, decisiones y credenciales.',
   },
   {
-    href: '/admin/moderacion',
-    label: 'Moderación',
-    icon: ShieldAlert,
-    roles: ['ADMIN', 'FRONT_DESK'],
-    description: 'Contenido reportado por la comunidad, lo urgente primero.',
-    requiredPermission: 'moderation:read',
-  },
-  {
     href: '/admin/permissions',
     label: 'Permisos',
     icon: ShieldCheck,
@@ -192,42 +184,6 @@ export const accountNavigation: NavigationItem[] = [
 ];
 
 /**
- * Consola de plataforma. Vive aparte de `adminNavigation` porque no es «más
- * administración»: son gimnasios distintos, y mezclar las dos listas pondría
- * módulos de un gimnasio concreto delante de quien no está mirando ninguno.
- */
-export const systemNavigation: NavigationItem[] = [
-  {
-    href: '/sistema',
-    label: 'Sistema',
-    icon: Server,
-    roles: ['SYSTEM_ADMIN'],
-  },
-  {
-    href: '/sistema/auditoria',
-    label: 'Auditoría global',
-    icon: ScrollText,
-    roles: ['SYSTEM_ADMIN'],
-    description: 'Toda la actividad administrativa de la plataforma.',
-  },
-  {
-    href: '/sistema/moderacion',
-    label: 'Moderación global',
-    icon: ShieldAlert,
-    roles: ['SYSTEM_ADMIN'],
-    description: 'Rutinas, ejercicios y comentarios públicos denunciados, lo urgente primero.',
-    requiredPermission: 'moderation:read',
-  },
-  {
-    href: '/sistema/rutinas-repp',
-    label: 'Rutinas REPP',
-    icon: Award,
-    roles: ['SYSTEM_ADMIN'],
-    description: 'Catálogo oficial: crear, marcar y desmarcar rutinas recomendadas por REPP.',
-  },
-];
-
-/**
  * El rol es el piso y el permiso lo estrecha, igual que en el backend
  * (`RolesGuard` y luego `PermissionGuard`). Sin `permissions` no se concede
  * nada que exija permiso: es la misma respuesta que da una cuenta sin
@@ -254,6 +210,8 @@ export type NavigationGroup = { label?: string; items: NavigationItem[] };
  *
  * - `SYSTEM_ADMIN`: la plataforma. No pertenece a ningún gimnasio (la razón
  *   larga está en `isStaff`, en `@gymsheet/domain`).
+ * - `MODERATOR`: the REPP moderation queue first, its own account after
+ *   (ADR-0018). Like gym staff, it does not come to train here.
  * - `ADMIN` / `FRONT_DESK`: el gimnasio primero, su cuenta después. Quien abre
  *   el portal a las siete de la mañana viene a ver quién entró y qué máquina se
  *   está saturando, no a registrar su propia serie.
@@ -269,6 +227,12 @@ export function navigationFor(
     items.filter((item) => canSee(item, role, permissions));
 
   if (role === 'SYSTEM_ADMIN') return [{ items: visible(systemNavigation) }];
+  if (role === 'MODERATOR') {
+    return [
+      { label: 'Moderación REPP', items: visible(moderationNavigation) },
+      { label: 'Tu cuenta', items: visible(accountNavigation) },
+    ];
+  }
   if (role === 'ADMIN' || role === 'FRONT_DESK') {
     return [
       { label: 'Gimnasio', items: visible(adminNavigation) },

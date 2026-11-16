@@ -114,7 +114,7 @@ export function ReportDialog({
           </Field>
 
           <p className="text-xs leading-5 text-[var(--text-muted)]">
-            {consequence ?? 'Al enviarlo, el perfil o contenido deja de aparecerte. Si corresponde, se deshace la conexión. Alguien del equipo lo revisará.'}
+            {consequence ?? 'Al enviarlo, el perfil o contenido deja de aparecerte. Si corresponde, se deshace la conexión. El equipo de moderación de REPP lo revisará.'}
           </p>
 
           <div className="flex justify-end gap-2">
