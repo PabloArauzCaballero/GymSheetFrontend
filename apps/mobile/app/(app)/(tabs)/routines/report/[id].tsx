@@ -6,6 +6,7 @@ import { routineService } from '@/api/services';
 import { BackLink } from '@/components/nav';
 import { Card, ScreenHeader, ScrollScreen } from '@/components/layout';
 import { Button, Input } from '@/components/ui';
+import { notifyReportSent } from '@/features/moderation/report-sent';
 import { notify } from '@/notifications';
 import { colors, fontSizes, minTouchTarget, radii, spacing } from '@/theme';
 
@@ -23,9 +24,9 @@ export default function ReportRoutineScreen() {
   const [details, setDetails] = useState('');
   const report = useMutation({
     mutationFn: () => routineService.report(id, reason, `${reasons.find((item) => item.value === reason)?.label}: ${details.trim()}`),
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       await queryClient.invalidateQueries({ queryKey: ['routines', 'public'] });
-      notify.success('Reporte enviado para revisión.');
+      notifyReportSent(queryClient, result, 'Lo revisaremos y dejará de aparecerte.');
       router.back();
     },
     onError: (error: Error) => notify.error(error),

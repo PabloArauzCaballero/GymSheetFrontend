@@ -114,6 +114,7 @@ const allowedCases: Array<[string[], string]> = [
   ],
   [['admin', 'moderation', 'users', id, 'history'], `/admin/moderation/users/${id}/history`],
   [['me', 'reports'], '/me/reports'],
+  [['me', 'reports', id, 'withdraw'], `/me/reports/${id}/withdraw`],
   [['me', 'training-invitations'], '/me/training-invitations'],
   [['me', 'training-invitations', id, 'respond'], `/me/training-invitations/${id}/respond`],
   [
@@ -133,6 +134,9 @@ const blockedCases: Array<[string[]]> = [
   [['admin', 'media', id]],
   // `targetKind` es el enum cerrado de moderación, no un comodín.
   [['admin', 'moderation', 'cases', 'BOGUS_KIND', id]],
+  // Retirar exige un UUID: ni otra palabra ni un tramo extra.
+  [['me', 'reports', 'all', 'withdraw']],
+  [['me', 'reports', id, 'withdraw', 'x']],
   // La administración del catálogo de la senda no pasa por el BFF: la pantalla
   // que la consumirá todavía no existe, y abrir la ruta antes de tener quien la
   // use sería dejar accesible desde el navegador una API que nadie vigila.

@@ -21,4 +21,9 @@ describe('SettingsPage', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'Claro' }));
     expect(setTheme).toHaveBeenCalledWith('light');
   });
+
+  it('lleva a «Tus denuncias»', () => {
+    render(<SettingsPage email="socia@example.com" role="CLIENTE" version="1.2.3" />);
+    expect(screen.getByRole('link', { name: /Tus denuncias/u })).toHaveAttribute('href', '/settings/denuncias');
+  });
 });

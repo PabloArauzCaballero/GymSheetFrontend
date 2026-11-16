@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Flag } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
@@ -9,6 +9,8 @@ import { Field } from '@/shared/components/ui/field';
 import { Select } from '@/shared/components/ui/select';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { notify } from '@/shared/notifications';
+import { withdrawReport } from '@/features/moderation/hooks/use-withdraw-report';
+import { notifyReportSent } from '@/features/moderation/components/report-sent-toast';
 import {
   reasonsFor,
   moderationService,
@@ -28,6 +30,9 @@ import {
  * Se avisa de la consecuencia inmediata —deja de aparecerte— porque es la parte
  * que le importa a quien denuncia, y prometer «lo revisaremos» sin decir cuándo
  * es lo que hace que la gente denuncie una vez y no vuelva.
+ *
+ * Al enviar sale «Denuncia enviada · Retirar»: una denuncia por error se deshace
+ * ahí mismo, y después desde «Tus denuncias» en Ajustes.
  */
 export function ReportDialog({
   targetKind,
@@ -50,6 +55,7 @@ export function ReportDialog({
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<ModerationReason>(defaultReason ?? 'ACOSO');
   const [details, setDetails] = useState('');
+  const queryClient = useQueryClient();
 
   const submit = useMutation({
     mutationFn: () =>
@@ -62,11 +68,11 @@ export function ReportDialog({
     onSuccess: (result) => {
       setOpen(false);
       setDetails('');
-      notify.success(
-        result.contentHidden
-          ? 'Gracias por avisar. Retiramos el contenido mientras lo revisamos.'
-          : successMessage ?? 'Gracias por avisar. Lo revisaremos y dejará de aparecerte.',
-      );
+      notifyReportSent({
+        contentHidden: result.contentHidden,
+        consequence: successMessage ?? 'Gracias por avisar. Lo revisaremos y dejará de aparecerte.',
+        onWithdraw: () => void withdrawReport(queryClient, result.id),
+      });
     },
     onError: (error: Error) => notify.error(error),
   });

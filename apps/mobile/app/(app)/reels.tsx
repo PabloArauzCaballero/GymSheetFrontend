@@ -15,6 +15,7 @@ import { Card, ScrollScreen, ScreenHeader, Section } from "@/components/layout";
 import { PressableScale } from "@/components/motion";
 import { Button } from "@/components/ui";
 import { ErrorState, Skeleton } from "@/components/feedback";
+import { notifyReportSent } from "@/features/moderation/report-sent";
 import { notify } from "@/notifications";
 import { env } from "@/config/env";
 import { secureStoreTokenProvider } from "@/storage/secure-store";
@@ -234,11 +235,7 @@ export default function ReelsScreen() {
       return reelsService.report(reel.id, reason);
     },
     onSuccess: async (result) => {
-      notify.success(
-        result.contentHidden
-          ? "Gracias por avisar. Retiramos el reel mientras lo revisamos."
-          : "Gracias por avisar.",
-      );
+      notifyReportSent(queryClient, result, "Gracias por avisar. Lo revisaremos.");
       await queryClient.invalidateQueries({ queryKey: ["reels", "feed"] });
     },
     onError: (error: Error) => notify.error(error.message),

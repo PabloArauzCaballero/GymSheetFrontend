@@ -97,6 +97,7 @@ import { CreateTrainingInviteModal } from '@/features/training-invitations/creat
 import { pendingRepliesKey } from '@/features/nudge/keys';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
+import { notifyReportSent } from '@/features/moderation/report-sent';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
 import { presenceLabel } from '@/lib/format';
@@ -321,7 +322,7 @@ export default function ChatThreadScreen() {
   const reportMessage = useMutation({
     mutationFn: ({ messageId, reason }: { messageId: string; reason: 'ACOSO' | 'SPAM' | 'OTRO' }) =>
       moderationService.report('CHAT_MESSAGE', messageId, reason),
-    onSuccess: () => notify.success('Gracias por avisar. Este chat ya no estará disponible.'),
+    onSuccess: (result) => notifyReportSent(queryClient, result, 'Gracias por avisar. Este chat ya no estará disponible.'),
     onError: (error: Error) => notify.error(error.message),
   });
   /** El modo de mensajes temporales en la lista de conversaciones (de ahí lo leen la cabecera y la ficha). */

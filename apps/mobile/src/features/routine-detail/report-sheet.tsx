@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { ApiError } from '@gymsheet/api-client';
@@ -8,6 +8,7 @@ import { communityService } from '@/api/services';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Button, Input } from '@/components/ui';
 import { ChoiceChip } from '@/components/wizard/choice-chip';
+import { notifyReportSent } from '@/features/moderation/report-sent';
 import { notify } from '@/notifications';
 import { colors, fontSizes, spacing } from '@/theme';
 
@@ -16,11 +17,13 @@ export type ReportTarget = { kind: ReportTargetKind; id: string; label: string }
 /**
  * Hoja de denuncia (RF-12): motivos cerrados («Ejercicio peligroso»,
  * «Información engañosa», «Copia de otra rutina»…) y un detalle opcional. Al
- * enviar: «Gracias. Lo revisaremos».
+ * enviar: «Denuncia enviada · Retirar» (deshacer ahí mismo; después, desde
+ * «Tus denuncias» en Ajustes).
  */
 export function ReportSheet({ target, onClose }: { target: ReportTarget | null; onClose: () => void }) {
   const [reason, setReason] = useState<ReportReason | null>(null);
   const [details, setDetails] = useState('');
+  const queryClient = useQueryClient();
 
   const send = useMutation({
     mutationFn: () => {
@@ -32,8 +35,8 @@ export function ReportSheet({ target, onClose }: { target: ReportTarget | null; 
         ...(details.trim() ? { details: details.trim() } : {}),
       });
     },
-    onSuccess: () => {
-      notify.success('Gracias. Lo revisaremos.');
+    onSuccess: (result) => {
+      notifyReportSent(queryClient, result, 'Gracias. Lo revisaremos.');
       close();
     },
     onError: (error: Error) => {

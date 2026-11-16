@@ -90,6 +90,7 @@ export function CasePanel({
   }
 
   const data = detail.data;
+  const withdrawnCount = data.reports.filter((report) => report.withdrawnAt).length;
   const sanctionText = sanctionLabel(
     data.pendingSanction.kind,
     data.pendingSanction.days,
@@ -158,6 +159,7 @@ export function CasePanel({
       <div>
         <h3 className="text-sm font-semibold">
           {data.reports.length === 1 ? '1 reporte' : `${data.reports.length} reportes`}
+          {withdrawnCount > 0 ? ` (${withdrawnCount} ${withdrawnCount === 1 ? 'retirado' : 'retirados'})` : null}
         </h3>
         <ul className="mt-2 flex flex-col gap-2">
           {data.reports.map((report) => (
@@ -171,6 +173,7 @@ export function CasePanel({
               ) : null}
               <p className="mt-1 text-xs text-[var(--text-muted)]">
                 {formatDateTime(report.createdAt)}
+                {report.withdrawnAt ? ` · Retirada por quien la puso el ${formatDateTime(report.withdrawnAt)}` : null}
               </p>
             </li>
           ))}

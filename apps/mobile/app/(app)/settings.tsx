@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Linking, Switch, Text, View } from 'react-native';
 import { chatService } from '@/api/services';
@@ -28,6 +29,7 @@ export default function SettingsScreen() {
   const [signingOut, setSigningOut] = useState(false);
   const [chooseChatsOpen, setChooseChatsOpen] = useState(false);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   // El visto de lectura en general: antes estaba en la ficha de cada contacto,
   // donde parecía que tocaba solo a esa persona.
@@ -169,6 +171,17 @@ export default function SettingsScreen() {
             )}
           />
         </View>
+      </Section>
+
+      <Section icon="shield-half-outline" title="Privacidad">
+        <SheetRow
+          hint="Lo que denunciaste. Puedes retirarlo."
+          icon="flag-outline"
+          label="Tus denuncias"
+          onPress={() => router.push('/denuncias')}
+          testID="settings-my-reports"
+          trailing={<Ionicons color={colors.textMuted} name="chevron-forward" size={iconSizes.md} />}
+        />
       </Section>
 
       <Section icon="phone-portrait-outline" title="Aplicación">

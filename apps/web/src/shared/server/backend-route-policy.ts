@@ -94,6 +94,8 @@ const allowedPathPatterns = [
   new RegExp(`^/me/photos/${resourceId}$`, 'u'),
   // Denunciar contenido (H01): el botón en perfil ajeno, chat y stories.
   /^\/me\/reports$/u,
+  // «Tus denuncias»: retirar la propia (el backend responde 404 a la ajena).
+  new RegExp(`^/me/reports/${uuid}/withdraw$`, 'u'),
   /^\/me\/tutorial-progress$/u,
   new RegExp(`^/me/tutorial-progress/${resourceId}$`, 'u'),
   // Punto 11 (conexiones), 10 (estado social) y 5 (directorio + chat).

@@ -28,3 +28,4 @@ export * from './text-wrap';
 export * from './marketplace-labels';
 export * from './marketplace-categories';
 export * from './discovery-preferences';
+export * from './my-reports';

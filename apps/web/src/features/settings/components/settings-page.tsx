@@ -3,6 +3,7 @@
 import { roleLabel } from '@/shared/lib/roles';
 import {
   CircleUserRound,
+  Flag,
   IdCard,
   KeyRound,
   Mail,
@@ -11,6 +12,7 @@ import {
   Palette,
   PersonStanding,
   ShieldCheck,
+  ShieldHalf,
   Sun,
   Tag,
   UserRound,
@@ -20,7 +22,7 @@ import type { ReactNode } from 'react';
 import { AnatomyCredit } from '@/features/anatomy/components/anatomy-credit';
 import { LogoutButton } from '@/shared/components/layout/logout-button';
 import { PageHeader } from '@/shared/components/layout/page-header';
-import { ListCard } from '@/shared/components/mobile/nav-row';
+import { ListCard, NavRow } from '@/shared/components/mobile/nav-row';
 import { Section } from '@/shared/components/mobile/section';
 import { Segmented } from '@/shared/components/ui/segmented';
 import { useTheme } from '@/shared/theme/theme-provider';
@@ -88,6 +90,15 @@ export function SettingsPage({
             Protegida en una cookie segura
           </span>
         </Row>
+      </Group>
+
+      <Group icon={ShieldHalf} title="Privacidad">
+        <NavRow
+          href="/settings/denuncias"
+          leading={<Flag aria-hidden className="size-5 shrink-0 text-[var(--text-muted)]" />}
+          subtitle="Lo que denunciaste. Puedes retirarlo."
+          title="Tus denuncias"
+        />
       </Group>
 
       <Group icon={Palette} title="Apariencia">

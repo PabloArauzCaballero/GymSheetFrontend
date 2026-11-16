@@ -106,6 +106,8 @@ export const moderationCaseDetailSchema = z.object({
       details: z.string().nullable(),
       createdAt: z.string(),
       status: z.string(),
+      /** Quien denunció la retiró; la fila queda como registro. Opcional para un backend anterior. */
+      withdrawnAt: z.string().nullish().transform((value) => value ?? null),
     }),
   ),
   activeStrikes: z.number().int(),
