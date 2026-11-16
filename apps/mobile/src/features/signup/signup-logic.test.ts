@@ -2,7 +2,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { registerSchema, toRegisterPayload, registerDefaults } from '@gymsheet/schemas';
-import { birthDateFromParts } from './signup-logic.ts';
+import { ApiError } from '@gymsheet/api-client';
+import { birthDateFromParts, signupServerErrors } from './signup-logic.ts';
 
 function partsYearsAgo(years: number, extraDays = 0) {
   const date = new Date();
@@ -60,4 +61,29 @@ test('the payload carries the terms version the person saw', () => {
     termsVersion: '2026-08-25',
     acceptedTerms: true,
   });
+});
+
+test('server field errors go next to their fields, in form order, with no banner', () => {
+  const error = new ApiError({
+    message: 'Datos inválidos.',
+    status: 400,
+    kind: 'validation',
+    fieldErrors: { genero: 'Elige tu sexo.', email: 'Correo inválido.', fechaNacimiento: 'Debes tener al menos 18 años.' },
+  });
+  assert.deepEqual(signupServerErrors(error), {
+    fields: [
+      ['email', 'Correo inválido.'],
+      ['fechaNacimiento', 'Debes tener al menos 18 años.'],
+      ['genero', 'Elige tu sexo.'],
+    ],
+    banner: null,
+  });
+});
+
+test('a failure no form field explains becomes the banner', () => {
+  const unknownField = new ApiError({ message: 'Falta la versión.', status: 400, kind: 'validation', fieldErrors: { termsVersion: 'Falta.' } });
+  assert.deepEqual(signupServerErrors(unknownField), { fields: [], banner: 'Falta la versión.' });
+  const taken = new ApiError({ message: 'x', status: 409, kind: 'conflict' });
+  assert.equal(signupServerErrors(taken).banner, 'Ya existe una cuenta con ese correo.');
+  assert.ok(signupServerErrors(new Error('boom')).banner);
 });

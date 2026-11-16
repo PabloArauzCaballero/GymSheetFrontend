@@ -18,8 +18,12 @@ export function clientPlatform(os: string): ClientPlatform {
   return os === 'ios' || os === 'android' ? os : 'web';
 }
 
-/** A response blocked until the person accepts the current documents. */
-export function isLegalAcceptanceRequired(status: number, body: unknown): boolean {
+/**
+ * A raw response blocked until the person accepts the current documents, seen
+ * by the transport before any ApiError exists. Thrown errors are judged by the
+ * shared `isLegalAcceptanceRequired` of `@gymsheet/api-client` (retries, toasts).
+ */
+export function isLegalAcceptanceResponse(status: number, body: unknown): boolean {
   if (status !== 428) return false;
   // Any 428 from this API is the legal gate; the code only confirms it.
   const code = (body as { code?: unknown } | null)?.code;

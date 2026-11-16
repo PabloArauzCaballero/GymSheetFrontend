@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { notify } from '@/shared/notifications';
 import { directoryKeys } from '@/features/social/services/directory-keys';
 import { socialService } from '@/features/social/services/social-service';
-import { socialProfileKeys } from '@/features/social/services/social-profile-service';
+import { refreshDiscoveryReadiness } from '@/shared/api/query-keys';
 import { genderChoiceOf, gendersFor, toggleIntent, type GenderChoice } from '@/features/social/lib/discovery-choices';
 import { discoveryIntents, type DiscoveryIntent } from '@/shared/api/schemas';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
@@ -44,7 +44,7 @@ export function DiscoveryPreferencesCard({
     onSuccess: async () => {
       await Promise.all([
         client.invalidateQueries({ queryKey: directoryKeys.discoveryPreferences }),
-        client.invalidateQueries({ queryKey: socialProfileKeys.readiness }),
+        refreshDiscoveryReadiness(client),
       ]);
       notify.success('Preferencias de Conocer guardadas.');
       onSaved?.();

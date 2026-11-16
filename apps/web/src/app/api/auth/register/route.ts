@@ -40,8 +40,12 @@ export async function POST(request: NextRequest) {
   if (!isTrustedMutation(request))
     return NextResponse.json({ detail: 'Origen no permitido.' }, { status: 403 });
   const input = registerPayloadSchema.safeParse(await request.json().catch(() => null));
+  // Same problem shape as the backend's 400, so the form can point at each field.
   if (!input.success)
-    return NextResponse.json({ detail: 'Datos de registro inválidos.' }, { status: 400 });
+    return NextResponse.json(
+      { detail: 'Datos de registro inválidos.', issues: { fieldErrors: z.flattenError(input.error).fieldErrors } },
+      { status: 400 },
+    );
   const backendResponse = await backendRequest('/auth/register', {
     method: 'POST',
     // The platform is stored with the terms acceptance as audit evidence.

@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 import { z } from 'zod';
 import { ApiError, classifyStatus, createApiClient } from '@gymsheet/api-client';
 import { env, loopbackRewrite } from '@/config/env';
-import { clientPlatform, isLegalAcceptanceRequired } from '@/features/legal/legal-logic';
+import { clientPlatform, isLegalAcceptanceResponse } from '@/features/legal/legal-logic';
 import { notify } from '@/notifications';
 import { secureStoreAuthStorage, secureStoreTokenProvider } from '@/storage/secure-store';
 
@@ -162,7 +162,7 @@ const apiFetch: typeof fetch = async (input, init) => {
   const response = await deviceFetch(input, { ...init, headers });
   if (response.status === 428) {
     const body: unknown = await response.clone().json().catch(() => null);
-    if (isLegalAcceptanceRequired(response.status, body)) onLegalAcceptanceRequired?.();
+    if (isLegalAcceptanceResponse(response.status, body)) onLegalAcceptanceRequired?.();
   }
   return response;
 };

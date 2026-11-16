@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { ApiError } from '@gymsheet/api-client';
+import { offersConocer } from '@gymsheet/domain';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { GenderPreference } from '@/components/gender-preference';
 import { Badge, Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
@@ -248,13 +249,18 @@ export default function ProfileScreen() {
               testID="profile-exercises"
               title="Mis ejercicios y favoritos"
             />,
-            <NavRow
-              key="conocer" leading={<RowGlyph icon="compass-outline" />}
-              onPress={() => router.push({ pathname: '/onboarding-conocer', params: { modo: 'perfil' } })}
-              subtitle="Qué buscas, tus gustos, tu bio y tus fotos"
-              testID="profile-conocer"
-              title="Tu perfil de Conocer"
-            />,
+            // Conocer is for members only: staff has no deck.
+            ...(offersConocer(principal?.role)
+              ? [
+                  <NavRow
+                    key="conocer" leading={<RowGlyph icon="compass-outline" />}
+                    onPress={() => router.push({ pathname: '/onboarding-conocer', params: { modo: 'perfil' } })}
+                    subtitle="Qué buscas, tus gustos, tu bio y tus fotos"
+                    testID="profile-conocer"
+                    title="Tu perfil de Conocer"
+                  />,
+                ]
+              : []),
             <NavRow key="chat" leading={<RowGlyph icon="chatbubbles-outline" />} onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />,
             <NavRow key="training-invitations" leading={<RowGlyph icon="people-outline" />} onPress={() => router.push('/training-invitations')} subtitle="Invitaciones recibidas y encuentros" title="Entrenar juntos" />,
           ]}

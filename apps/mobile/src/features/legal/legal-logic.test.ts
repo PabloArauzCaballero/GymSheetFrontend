@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   clientPlatform,
-  isLegalAcceptanceRequired,
+  isLegalAcceptanceResponse,
   isReadingLegalDocument,
   isTermsVersionOutdated,
   legalVersionLabel,
@@ -19,11 +19,11 @@ test('the platform header names the store build, anything else is web', () => {
 });
 
 test('only a 428 is the legal gate, with or without its code', () => {
-  assert.equal(isLegalAcceptanceRequired(428, { code: 'LEGAL_ACCEPTANCE_REQUIRED' }), true);
-  assert.equal(isLegalAcceptanceRequired(428, null), true);
-  assert.equal(isLegalAcceptanceRequired(428, { code: 'SOMETHING_ELSE' }), false);
-  assert.equal(isLegalAcceptanceRequired(403, { code: 'LEGAL_ACCEPTANCE_REQUIRED' }), false);
-  assert.equal(isLegalAcceptanceRequired(401, null), false);
+  assert.equal(isLegalAcceptanceResponse(428, { code: 'LEGAL_ACCEPTANCE_REQUIRED' }), true);
+  assert.equal(isLegalAcceptanceResponse(428, null), true);
+  assert.equal(isLegalAcceptanceResponse(428, { code: 'SOMETHING_ELSE' }), false);
+  assert.equal(isLegalAcceptanceResponse(403, { code: 'LEGAL_ACCEPTANCE_REQUIRED' }), false);
+  assert.equal(isLegalAcceptanceResponse(401, null), false);
 });
 
 test('termsVersion is the current TERMS version', () => {

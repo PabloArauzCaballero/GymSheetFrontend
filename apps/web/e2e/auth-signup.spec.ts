@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { fillSignupForm } from './alta-datos';
 
 /**
  * Signup with the mandatory birth date, sex and current terms version.
@@ -15,13 +16,13 @@ function isoYearsAgo(years: number, extraDays = 0) {
 
 async function fillSignup(page: Page, birthDate: string) {
   await page.goto('/register');
-  await page.getByLabel('Nombre completo').fill('Ana Prueba');
-  await page.getByLabel('Correo electrónico').fill(`signup.${Date.now()}@gymsheet.local`);
-  await page.getByLabel('Contraseña', { exact: true }).fill('SignupLocal2026!');
-  await page.getByLabel('Confirmar contraseña').fill('SignupLocal2026!');
-  await page.getByLabel('Fecha de nacimiento').fill(birthDate);
-  await page.getByRole('radio', { name: 'Mujer' }).check();
-  await page.getByRole('checkbox').check();
+  await fillSignupForm(page, {
+    nombreCompleto: 'Ana Prueba',
+    email: `signup.${Date.now()}@gymsheet.local`,
+    password: 'SignupLocal2026!',
+    fechaNacimiento: birthDate,
+    sexo: 'Mujer',
+  });
 }
 
 test('signup with birth date, sex and terms lands on onboarding', async ({ page }) => {

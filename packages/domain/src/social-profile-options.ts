@@ -59,3 +59,11 @@ export const readinessLabels: Record<DiscoveryReadinessCode, { title: string; ac
 export function knownReadinessGaps(missing: readonly string[]): DiscoveryReadinessCode[] {
   return missing.filter((code): code is DiscoveryReadinessCode => code in readinessLabels);
 }
+
+/**
+ * "Conocer" (its onboarding step and editor) is for members only: staff has no
+ * deck and the backend would refuse their social profile.
+ */
+export function offersConocer(role: string | null | undefined): boolean {
+  return role === 'CLIENTE';
+}

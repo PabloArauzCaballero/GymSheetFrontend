@@ -1,6 +1,6 @@
 'use client';
 
-import { completionMessage, profileCompletion, proudStat, roleLabel } from '@gymsheet/domain';
+import { completionMessage, offersConocer, profileCompletion, proudStat, roleLabel } from '@gymsheet/domain';
 import { useQuery } from '@tanstack/react-query';
 import {
   Bell,
@@ -277,7 +277,7 @@ export function ProfilePageClient() {
           </div>
           <SocialDiscoverySettingsCard />
           <DiscoveryPreferencesCard />
-          <ConocerProfileSection />
+          {offersConocer(me?.rol) ? <ConocerProfileSection /> : null}
         </div>
       </div>
 

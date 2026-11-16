@@ -56,12 +56,27 @@ async function call(method, path, token, body, base = API) {
   return json.data ?? json;
 }
 
+// Signup requires the current terms version (`GET /legal/current`), an adult birth date
+// and the sex; same contract as `e2e/alta-datos.ts`.
+let termsVersion;
+async function currentTermsVersion() {
+  termsVersion ??= call('GET', '/legal/current', null).then(({ documents }) => {
+    const terms = documents?.find((entry) => entry.document === 'TERMS');
+    if (!terms) throw new Error('GET /legal/current did not include the TERMS version.');
+    return terms.version;
+  });
+  return termsVersion;
+}
+
 async function account(tag, nombre, { role, tenantId } = {}) {
   const email = `qa-rep-${tag}-${run}@example.test`;
   await call('POST', '/auth/register', null, {
     email,
     password: PASSWORD,
     nombreCompleto: nombre,
+    fechaNacimiento: '1996-03-15',
+    genero: 'FEMALE',
+    termsVersion: await currentTermsVersion(),
     acceptedTerms: true,
     ...(tenantId ? { tenantId } : {}),
   });

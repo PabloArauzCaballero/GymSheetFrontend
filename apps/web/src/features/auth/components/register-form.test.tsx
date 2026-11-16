@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AuthRequestError } from '@/features/auth/services/auth-client';
+import { ApiError } from '@/shared/api/api-error';
 import { RegisterForm } from './register-form';
 
 const { register, fetchCurrentLegal, replace } = vi.hoisted(() => ({
@@ -100,7 +100,7 @@ describe('RegisterForm', () => {
 
   it('on outdated terms, unchecks the box, explains it and sends the new version next time', async () => {
     register.mockRejectedValueOnce(
-      new AuthRequestError({
+      new ApiError({
         message: 'Los términos cambiaron.',
         status: 409,
         kind: 'conflict',
@@ -124,7 +124,7 @@ describe('RegisterForm', () => {
 
   it('shows the server field errors next to their fields', async () => {
     register.mockRejectedValue(
-      new AuthRequestError({
+      new ApiError({
         message: 'Datos inválidos.',
         status: 400,
         kind: 'validation',

@@ -8,7 +8,7 @@
  *
  * `BACKEND_API_URL`/`E2E_BACKEND_URL`: la dirección del backend (con `/api/v1`).
  */
-const BACKEND = process.env.E2E_BACKEND_URL ?? process.env.BACKEND_API_URL ?? 'http://localhost:3011/api/v1';
+import { BACKEND, signupBody } from './alta-datos';
 
 export const PASSWORD = 'QaRutinas2026!';
 
@@ -67,12 +67,7 @@ export function apiDe(cuenta: Pick<Cuenta, 'token'>): Api {
 /** Registra una cuenta de socio, termina su alta y devuelve un token. */
 export async function crearCuenta(etiqueta: string, nombre: string): Promise<Cuenta> {
   const email = `qa.${etiqueta}.${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}@gymsheet.local`;
-  const registro = await llamar('POST', '/auth/register', {
-    email,
-    password: PASSWORD,
-    nombreCompleto: nombre,
-    acceptedTerms: true,
-  });
+  const registro = await llamar('POST', '/auth/register', await signupBody({ email, password: PASSWORD, nombreCompleto: nombre }));
   if (registro.status !== 201) throw new Error(`Registro rechazado (${registro.status}).`);
   const login = await llamar<{ accessToken: string; user: { id: string } }>('POST', '/auth/login', {
     email,

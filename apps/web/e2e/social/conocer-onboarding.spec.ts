@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { dismissTour, signIn } from '../fixtures';
+import { BACKEND, signupBody } from '../alta-datos';
 import { PASSWORD, apiDe } from '../rutinas-datos';
 
 /**
@@ -10,8 +11,6 @@ import { PASSWORD, apiDe } from '../rutinas-datos';
  *
  * Needs the backend (`E2E_BACKEND_URL`) and PostgreSQL running.
  */
-const BACKEND = process.env.E2E_BACKEND_URL ?? process.env.BACKEND_API_URL ?? 'http://localhost:3011/api/v1';
-
 async function post<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch(`${BACKEND}${path}`, {
     method: 'POST',
@@ -26,7 +25,7 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 /** Registers a member and answers onboarding steps 1–3 through the API, leaving step 4 for the UI. */
 async function newMemberAtLastStep() {
   const email = `qa.conocer.${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}@gymsheet.local`;
-  await post('/auth/register', { email, password: PASSWORD, nombreCompleto: 'Conocer QA', acceptedTerms: true });
+  await post('/auth/register', await signupBody({ email, password: PASSWORD, nombreCompleto: 'Conocer QA' }));
   const login = await post<{ accessToken: string }>('/auth/login', { email, password: PASSWORD });
   const api = apiDe({ token: login.accessToken });
   await api('PUT', '/me/onboarding/goals', { primaryGoal: 'GAIN_MUSCLE' });

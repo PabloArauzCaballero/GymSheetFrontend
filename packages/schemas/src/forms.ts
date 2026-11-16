@@ -46,13 +46,28 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export const SIGNUP_MIN_AGE = 18;
 export const SIGNUP_MAX_AGE = 100;
 
-/** Whole years between a `YYYY-MM-DD` birth date and `today` (local calendar). */
-export function ageOn(birthDate: string, today: Date = new Date()): number | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/u.exec(birthDate);
+const isoDate = /^(\d{4})-(\d{2})-(\d{2})$/u;
+
+/** `[year, month, day]` of a real `YYYY-MM-DD` calendar date (no 30 February), else `null`. */
+function calendarParts(value: string): [number, number, number] | null {
+  const match = isoDate.exec(value);
   if (!match) return null;
   const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
-  const date = new Date(year, month - 1, day);
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+  // UTC so the check never depends on the time zone of whoever runs it.
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
+  return [year, month, day];
+}
+
+/**
+ * Whole years between a `YYYY-MM-DD` birth date and `today`, in the local
+ * calendar of the person filling the form. Only the form uses it: the backend
+ * is the single authority on the age of what is sent.
+ */
+export function ageOn(birthDate: string, today: Date = new Date()): number | null {
+  const parts = calendarParts(birthDate);
+  if (!parts) return null;
+  const [year, month, day] = parts;
   let age = today.getFullYear() - year;
   const beforeBirthday =
     today.getMonth() < month - 1 || (today.getMonth() === month - 1 && today.getDate() < day);
@@ -100,6 +115,17 @@ export const registerSchema = z
   });
 export type RegisterInput = z.infer<typeof registerSchema>;
 
+/** Form fields a server 400 can point at (`issues.fieldErrors` keys of `POST /auth/register`), in form order. */
+export const registerServerFields = [
+  'nombreCompleto',
+  'email',
+  'password',
+  'fechaNacimiento',
+  'genero',
+  'acceptedTerms',
+] as const satisfies readonly (keyof RegisterInput)[];
+export type RegisterServerField = (typeof registerServerFields)[number];
+
 /**
  * Valores por defecto del alta. `genero` arranca en `''` (sin elegir) y no en
  * `undefined`: un control sin valor inicial queda no controlado y el primer
@@ -131,12 +157,20 @@ export type RecoverPasswordInput = z.infer<typeof recoverPasswordSchema>;
  * misma traducción por su cuenta —quitar `confirmation`, omitir `genero` si
  * está vacío, forzar `acceptedTerms` a `true`— y basta con que una cambie para
  * que el alta se comporte distinto según el dispositivo.
+ *
+ * It checks shape, not business rules that depend on "today" (see `fechaNacimiento`).
  */
 export const registerPayloadSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(authLimits.emailMax),
   password: z.string().min(authLimits.passwordMin).max(authLimits.passwordMax),
   nombreCompleto: z.string().trim().min(authLimits.fullNameMin).max(authLimits.fullNameMax),
-  fechaNacimiento: birthDateField,
+  /**
+   * Format only (a real `YYYY-MM-DD` date). The age is NOT re-judged here: the
+   * BFF runs on another clock and time zone than the person's browser, so on an
+   * 18th birthday near midnight it would reject what the form accepted. The
+   * backend is the single authority on the 18–100 rule.
+   */
+  fechaNacimiento: z.string().refine((value) => calendarParts(value) !== null, 'Indica una fecha válida.'),
   genero: z.enum(['MALE', 'FEMALE']),
   /** The legal version the person saw (`GET /legal/current`); the server rejects a stale one. */
   termsVersion: z.string().trim().min(1).max(20),

@@ -34,7 +34,7 @@ export function GenderPreferenceField({ value }: Readonly<{ value: UserGender | 
       ]);
       notify.success('Preferencia guardada.');
     },
-    onError: (error: Error) => notify.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
 
   return (

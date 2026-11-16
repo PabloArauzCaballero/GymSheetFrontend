@@ -4,6 +4,7 @@
  */
 import { expect, test } from '@playwright/test';
 import { admin, athlete, openPage, signIn } from './fixtures';
+import { fillSignupForm } from './alta-datos';
 
 
 
@@ -26,11 +27,12 @@ test('login valida el formato del correo antes de enviar', async ({ page }) => {
 
 test('registro rechaza un correo ya existente', async ({ page }) => {
   await page.goto('/register');
-  await page.getByLabel(/Nombre completo/u).fill('QA Duplicado');
-  await page.getByLabel('Correo electrónico').fill('athlete.mock@gymsheet.local');
-  await page.getByLabel('Contraseña', { exact: true }).fill('QaSweep-2026!');
-  await page.getByLabel(/Confirma|Repite/u).fill('QaSweep-2026!');
-  await page.getByRole('checkbox').first().check();
+  // Every field the signup now requires, so the duplicate email is what the server rejects.
+  await fillSignupForm(page, {
+    nombreCompleto: 'QA Duplicado',
+    email: 'athlete.mock@gymsheet.local',
+    password: 'QaSweep-2026!',
+  });
   await page.getByRole('button', { name: /Crear cuenta|Registrarme|Continuar/u }).first().click();
   await expect(page.getByRole('alert').first()).toBeVisible({ timeout: 20_000 });
 });

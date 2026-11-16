@@ -1,7 +1,6 @@
 import { z } from 'zod';
-import { ApiError, classifyStatus } from './api-error';
+import { ApiError, apiErrorFromResponse } from './api-error';
 import { randomUuid } from '@/shared/lib/uuid';
-import { problemSchema } from './schemas';
 
 const successEnvelopeSchema = z.object({ ok: z.literal(true), data: z.unknown() });
 
@@ -16,30 +15,6 @@ function resolveHeaders(options: ApiRequestOptions) {
   headers.set('X-Request-ID', randomUuid());
   if (options.body !== undefined) headers.set('Content-Type', 'application/json');
   return headers;
-}
-
-async function readError(response: Response) {
-  let payload: unknown;
-  try {
-    payload = await response.json();
-  } catch {
-    payload = null;
-  }
-  const parsed = problemSchema.safeParse(payload);
-  const message = parsed.success
-    ? (parsed.data.detail ??
-      parsed.data.error?.message ??
-      parsed.data.title ??
-      'La operación no pudo completarse.')
-    : 'La operación no pudo completarse.';
-  return new ApiError({
-    message,
-    status: response.status,
-    ...(parsed.success && parsed.data.requestId ? { requestId: parsed.data.requestId } : {}),
-    ...(parsed.success && parsed.data.code ? { code: parsed.data.code } : {}),
-    ...(parsed.success && parsed.data.details ? { details: parsed.data.details } : {}),
-    kind: classifyStatus(response.status),
-  });
 }
 
 function createRequestController(
@@ -79,7 +54,7 @@ export async function apiRequest<T>(
       credentials: 'same-origin',
       signal: requestController.signal,
     });
-    if (!response.ok) throw await readError(response);
+    if (!response.ok) throw await apiErrorFromResponse(response);
     const envelope = successEnvelopeSchema.safeParse(await response.json());
     if (!envelope.success) {
       throw new ApiError({
@@ -137,7 +112,7 @@ export async function apiUpload<T>(
       credentials: 'same-origin',
       signal: requestController.signal,
     });
-    if (!response.ok) throw await readError(response);
+    if (!response.ok) throw await apiErrorFromResponse(response);
     const envelope = successEnvelopeSchema.safeParse(await response.json());
     if (!envelope.success) {
       throw new ApiError({
@@ -181,7 +156,7 @@ export async function downloadFromApi(path: string, filename: string) {
       credentials: 'same-origin',
       signal: requestController.signal,
     });
-    if (!response.ok) throw await readError(response);
+    if (!response.ok) throw await apiErrorFromResponse(response);
     const blob = await response.blob();
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');

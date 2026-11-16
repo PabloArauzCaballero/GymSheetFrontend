@@ -25,3 +25,6 @@ export * from './programs';
 
 /** La semana de Inicio: días hechos, de entreno y de descanso (sin React). */
 export * from './home';
+
+/** «Conocer»: readiness invalidation and the 409 merge rule (sin React). */
+export * from './social-profile-sync';

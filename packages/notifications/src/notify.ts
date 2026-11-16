@@ -1,3 +1,4 @@
+import { isLegalAcceptanceRequired } from '@gymsheet/api-client';
 import { Deduplicator } from './dedupe';
 import { resolveError } from './messages';
 import { defaultPolicy, type NotificationPolicy } from './policy';
@@ -71,8 +72,12 @@ export class NotificationEngine {
    * Accepts a thrown value (mapped to friendly copy + telemetry) or an explicit
    * message/request. `toast.error(error.message)` call-sites become
    * `notify.error(error)` and stop leaking technical text.
+   *
+   * A legal-acceptance block (428) is never toasted: the blocking legal screen
+   * already explains it, whichever query or mutation hit it first.
    */
   error(errorOrInput: unknown, options?: Omit<NotificationRequest, 'severity' | 'message'>) {
+    if (isLegalAcceptanceRequired(errorOrInput)) return undefined;
     if (typeof errorOrInput === 'string') {
       return this.emit('error', { message: errorOrInput, ...options });
     }
@@ -123,6 +128,11 @@ export class NotificationEngine {
       });
       return value;
     } catch (error) {
+      if (isLegalAcceptanceRequired(error)) {
+        // The legal screen takes over; a lingering «loading» toast would sit under it.
+        this.adapter.dismiss(id);
+        throw error;
+      }
       if (messages.error) {
         const text = typeof messages.error === 'function' ? messages.error(error) : messages.error;
         this.adapter.show({

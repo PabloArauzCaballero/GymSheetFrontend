@@ -92,6 +92,32 @@ describe('POST /api/auth/register', () => {
     expect(backendRequest).not.toHaveBeenCalled();
   });
 
+  it('answers a malformed birth date with a field error the form can show', async () => {
+    const response = await POST(registerRequest({ ...signup, fechaNacimiento: '2000-02-30' }));
+
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { issues?: { fieldErrors?: Record<string, string[]> } };
+    expect(body.issues?.fieldErrors?.fechaNacimiento?.[0]).toBe('Indica una fecha válida.');
+    expect(backendRequest).not.toHaveBeenCalled();
+  });
+
+  it('leaves the age to the backend: a date that is 18 only in another time zone is forwarded', async () => {
+    // Tomorrow, 18 years ago: under 18 by this clock, maybe 18 in the person's calendar.
+    const edge = new Date();
+    edge.setFullYear(edge.getFullYear() - 18);
+    edge.setDate(edge.getDate() + 1);
+    const fechaNacimiento = edge.toISOString().slice(0, 10);
+    backendRequest.mockResolvedValue(
+      Response.json({ status: 400, issues: { fieldErrors: { fechaNacimiento: ['Debes tener al menos 18 años.'] } } }, { status: 400 }),
+    );
+
+    const response = await POST(registerRequest({ ...signup, fechaNacimiento }));
+
+    expect(backendRequest).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ issues: { fieldErrors: { fechaNacimiento: ['Debes tener al menos 18 años.'] } } });
+  });
+
   it('rejects a payload without accepted terms before reaching the backend', async () => {
     const response = await POST(
       registerRequest({ ...signup, acceptedTerms: false }),

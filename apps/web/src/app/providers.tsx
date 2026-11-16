@@ -1,11 +1,10 @@
 'use client';
 
 import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ApiError } from '@/shared/api/api-error';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Toaster } from 'sonner';
-import { shouldToastQueryError } from '@/shared/api/query-error-policy';
+import { shouldRetryQuery, shouldToastQueryError } from '@/shared/api/query-error-policy';
 import { ConfirmRoot, notify } from '@/shared/notifications';
 import type { TenantBrand } from '@/shared/theme/brand-contract';
 import { BrandProvider } from '@/shared/theme/brand-provider';
@@ -47,16 +46,7 @@ export function Providers({
         defaultOptions: {
           queries: {
             staleTime: 30_000,
-            retry: (failureCount, error) => {
-              if (
-                error instanceof ApiError &&
-                (['unauthorized', 'forbidden', 'not-found', 'validation'].includes(error.kind) ||
-                  // 428: blocked until the person accepts the current legal documents.
-                  error.status === 428)
-              )
-                return false;
-              return failureCount < 2;
-            },
+            retry: shouldRetryQuery,
           },
           mutations: { retry: false },
         },

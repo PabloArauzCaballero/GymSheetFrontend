@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { refreshDiscoveryReadiness } from '@/shared/api/query-keys';
 import { notify } from '@/shared/notifications';
 import { socialService } from '@/features/social/services/social-service';
 import { Button } from '@/shared/components/ui/button';
@@ -17,7 +18,11 @@ export function SocialDiscoverySettingsCard() {
   const update = useMutation({
     mutationFn: socialService.updateDiscoverySettings,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['social', 'discovery-settings'] });
+      // The social profile switch is one of the readiness gaps (PROFILE_ENABLED).
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['social', 'discovery-settings'] }),
+        refreshDiscoveryReadiness(queryClient),
+      ]);
       notify.success('Permisos de descubrimiento actualizados.');
     },
     onError: (error: Error) => notify.error(error),

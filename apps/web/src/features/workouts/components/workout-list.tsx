@@ -5,6 +5,7 @@ import { CirclePlay, CirclePlus, FileJson, Sheet } from 'lucide-react';
 import { useState } from 'react';
 import { notify } from '@/shared/notifications';
 import { workoutService } from '@/features/workouts/services/workout-service';
+import { ApiError } from '@/shared/api/api-error';
 import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
@@ -27,7 +28,8 @@ export function WorkoutList() {
       await (type === 'csv' ? workoutService.exportCsv() : workoutService.exportJson());
       notify.success('Exportación preparada.');
     } catch (error: unknown) {
-      notify.error(error instanceof Error ? error.message : 'No se pudo exportar.');
+      // An ApiError goes as-is so the engine picks the copy (and stays silent on a legal block).
+      notify.error(error instanceof ApiError ? error : error instanceof Error ? error.message : 'No se pudo exportar.');
     } finally {
       setExporting(null);
     }

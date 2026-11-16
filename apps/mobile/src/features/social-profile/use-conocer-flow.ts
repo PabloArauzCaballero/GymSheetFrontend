@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { ApiError } from '@gymsheet/api-client';
 import { authDestination } from '@gymsheet/domain';
+import { socialProfileSaveFailure } from '@gymsheet/hooks';
 import { profilePhotosService } from '@/api/services';
 import { socialProfileService } from '@/api/social-profile-service';
 import { onboardingQueryKey } from '@/features/onboarding-guard/onboarding-gate';
@@ -51,11 +51,13 @@ export function useConocerFlow(mode: ConocerMode, initialStep: number) {
       await refreshDiscoveryReadiness(queryClient);
     },
     onError: async (error: Error) => {
-      if (error instanceof ApiError && error.status === 409) {
-        // Edited elsewhere: the server is the authority, show what it holds now.
-        const fresh = await profile.refetch();
-        if (fresh.data) setDraft(draftFromProfile(fresh.data));
-        notify.warning('Tu perfil cambió en otro dispositivo. Te mostramos lo último guardado.');
+      const failure = socialProfileSaveFailure(error);
+      if (failure.conflict) {
+        // Saved elsewhere meanwhile (shared merge rule, as on web): keep the
+        // draft, re-read the server copy only for its version, save again later.
+        await profile.refetch();
+        setSaveError(undefined);
+        notify.warning(failure.message);
         return;
       }
       setSaveError(resolveError(error).message);

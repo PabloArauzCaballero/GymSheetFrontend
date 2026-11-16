@@ -6,7 +6,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { profilePhotosService } from '@/features/profile/services/profile-photos-service';
 import { ApiError } from '@/shared/api/api-error';
-import { queryKeys } from '@/shared/api/query-keys';
+import { queryKeys, refreshDiscoveryReadiness } from '@/shared/api/query-keys';
 import { MediaSourceDialog } from '@/shared/components/media/media-source-dialog';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { notify } from '@/shared/notifications';
@@ -28,21 +28,29 @@ export function ProfilePhotoGallery() {
   const upload = useMutation({
     mutationFn: (file: File) => profilePhotosService.upload(file, file.name),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.profilePhotos });
+      // Two photos is one of the gaps of the «Para aparecer en Conocer» checklist.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.profilePhotos }),
+        refreshDiscoveryReadiness(queryClient),
+      ]);
       notify.success('Foto agregada.');
     },
     onError: (error: unknown) =>
-      notify.error(error instanceof ApiError ? error.message : 'No se pudo subir la foto.'),
+      notify.error(error instanceof ApiError ? error : 'No se pudo subir la foto.'),
   });
 
   const remove = useMutation({
     mutationFn: (photoId: string) => profilePhotosService.remove(photoId),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.profilePhotos });
+      // Two photos is one of the gaps of the «Para aparecer en Conocer» checklist.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.profilePhotos }),
+        refreshDiscoveryReadiness(queryClient),
+      ]);
       notify.success('Foto eliminada.');
     },
     onError: (error: unknown) =>
-      notify.error(error instanceof ApiError ? error.message : 'No se pudo eliminar la foto.'),
+      notify.error(error instanceof ApiError ? error : 'No se pudo eliminar la foto.'),
   });
 
   const count = photos.data?.length ?? 0;

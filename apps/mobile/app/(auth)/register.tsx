@@ -7,8 +7,7 @@ import {
   toRegisterPayload,
   type RegisterInput,
 } from '@gymsheet/schemas';
-import { authCopy, authErrorMessage, onboardingFlowSteps } from '@gymsheet/domain';
-import { ApiError } from '@gymsheet/api-client';
+import { authCopy, onboardingFlowSteps } from '@gymsheet/domain';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,6 +28,7 @@ import {
 import { legalQueryKeys, legalService } from '@/features/legal/legal-service';
 import { BirthDateField } from '@/features/signup/birth-date-field';
 import { SexField } from '@/features/signup/sex-field';
+import { signupServerErrors } from '@/features/signup/signup-logic';
 import { useAuthStore } from '@/state/auth-store';
 import { authLimits } from '@gymsheet/schemas';
 import { colors, fontSizes, iconSizes, spacing } from '@/theme';
@@ -42,6 +42,7 @@ export default function RegisterScreen() {
     control,
     handleSubmit,
     setValue,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -77,11 +78,10 @@ export default function RegisterScreen() {
         setFailure(legalGateCopy.outdatedAtSignup);
         return;
       }
-      setFailure(
-        error instanceof ApiError
-          ? authErrorMessage(error.kind, 'register', error.message)
-          : authErrorMessage(undefined, 'register'),
-      );
+      // A 400 points at its fields (as on web); only what no field explains is a banner.
+      const { fields, banner } = signupServerErrors(error);
+      fields.forEach(([field, message], index) => setError(field, { message }, { shouldFocus: index === 0 }));
+      setFailure(banner);
     }
   });
 

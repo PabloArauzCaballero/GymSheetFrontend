@@ -4,16 +4,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { draftOf, toUpdateInput, type SocialProfileDraft } from '../lib/social-profile-draft';
 import { socialProfileKeys, socialProfileService } from '../services/social-profile-service';
-import { ApiError } from '@/shared/api/api-error';
+import { refreshDiscoveryReadiness, socialProfileSaveFailure } from '@/shared/api/query-keys';
 import { notify } from '@/shared/notifications';
 
 /**
  * The Conocer answers being edited, shared by the onboarding step and the
  * profile section so both save exactly the same way.
  *
- * On a stale version (409) the fresh profile is fetched and the draft is kept:
- * the person sees the server's message and decides whether to save again, and
- * nothing they typed is thrown away.
+ * On a stale version (409) the shared merge rule applies, as on mobile: the
+ * draft is kept, the server copy is re-read only for its version, and the
+ * person is told the profile changed elsewhere and saves again when ready.
  */
 export function useSocialProfileDraft() {
   const queryClient = useQueryClient();
@@ -27,11 +27,16 @@ export function useSocialProfileDraft() {
       socialProfileService.update(toUpdateInput(next, query.data?.version ?? 0)),
     onSuccess: async (saved) => {
       queryClient.setQueryData(socialProfileKeys.profile, saved);
-      await queryClient.invalidateQueries({ queryKey: socialProfileKeys.readiness });
+      await refreshDiscoveryReadiness(queryClient);
     },
     onError: async (error: Error) => {
-      if (error instanceof ApiError && error.status === 409) await query.refetch();
-      notify.error(error);
+      const failure = socialProfileSaveFailure(error);
+      if (!failure.conflict) {
+        notify.error(error);
+        return;
+      }
+      await query.refetch();
+      notify.warning(failure.message);
     },
   });
 
