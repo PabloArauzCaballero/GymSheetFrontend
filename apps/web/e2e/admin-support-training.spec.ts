@@ -89,21 +89,29 @@ test('RF-B3 · soporte ve el entrenamiento de un socio y recalcula una semana', 
 
 /**
  * Franja 7a: support permissions granted to a gym ADMIN no longer open anything.
- * The seeded gym accounts (`gym`, `reader`, `other`) are legacy ADMINs; the
- * role guard sends them back to the person portal with the denied notice.
+ * The seeded `legacyAdmin` is an ADMIN of the member's own gym holding
+ * `support:read` and `support:respond`: the role guard sends it back to the
+ * person portal with the denied notice, and the backend answers 403 both to
+ * reading the training and to recomputing a week.
  */
-for (const cuenta of ['gym', 'reader', 'other'] as const) {
-  test(`RF-B3 · un ADMIN del gimnasio (${cuenta}) ya no abre la ficha`, async ({ page, consolaPermitida }, testInfo) => {
-    const datos = semilla.combos[comboDe(testInfo.project.name)];
-    // The «No tienes permiso…» notice is announced with `console.error` on purpose.
-    consolaPermitida.push(/\[notifications\] \{severity: error/u);
-    const email = cuenta === 'other' ? semilla.other : datos[cuenta];
-    await signIn(page, { email, password: semilla.password });
-    await page.goto(`/admin/usuarios/${datos.memberA.id}/entrenamiento`);
-    await page.waitForURL((url) => !url.pathname.startsWith('/admin'));
-    expect(new URL(page.url()).searchParams.get('denied')).toBe('1');
-    await waitForPageSettled(page);
-    await expect(page.getByRole('heading', { name: /Entrenamiento de/u })).toHaveCount(0);
-    await evidencia(page, 'RF-B3', '04', `admin-de-gimnasio-sin-acceso-${cuenta}`);
+test('RF-B3 · un ADMIN del gimnasio ya no ve ni recalcula, ni con permisos de soporte', async ({ page, consolaPermitida }, testInfo) => {
+  const datos = semilla.combos[comboDe(testInfo.project.name)];
+  // The «No tienes permiso…» notice is announced with `console.error` on purpose.
+  consolaPermitida.push(/\[notifications\] \{severity: error/u);
+  await signIn(page, { email: datos.legacyAdmin, password: semilla.password });
+  await page.goto(`/admin/usuarios/${datos.memberA.id}/entrenamiento`);
+  await page.waitForURL((url) => !url.pathname.startsWith('/admin'));
+  expect(new URL(page.url()).searchParams.get('denied')).toBe('1');
+  await waitForPageSettled(page);
+  await expect(page.getByRole('heading', { name: /Entrenamiento de/u })).toHaveCount(0);
+
+  // The client door is not the authority: the backend refuses the same calls.
+  const ficha = await page.request.get(`/api/backend/admin/support/users/${datos.memberA.id}/training`);
+  expect(ficha.status()).toBe(403);
+  const recalculo = await page.request.post(`/api/backend/admin/support/programs/${datos.memberB.programId}/recompute-week`, {
+    data: { semana: 1 },
+    headers: { origin: new URL(page.url()).origin },
   });
-}
+  expect(recalculo.status()).toBe(403);
+  await evidencia(page, 'RF-B3', '04', 'admin-de-gimnasio-sin-acceso');
+});

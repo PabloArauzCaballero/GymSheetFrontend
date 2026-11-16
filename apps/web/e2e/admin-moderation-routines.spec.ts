@@ -6,15 +6,18 @@ import { backendComo, cargarSemilla, comboDe, evidencia, test } from './evidenci
  * RF-B1 · moderación de los tipos nuevos (`07_BACKOFFICE.md` §C), hecha por el
  * equipo central de REPP (backend ADR-0018).
  *
- * Una cuenta `MODERATOR` recorre la cola central (todos los gimnasios) con
- * rutinas, ejercicios y comentarios denunciados mezclados con los tipos de
- * siempre, abre cada caso, oculta una rutina, restaura otra y ve el veredicto;
- * un administrador de gimnasio ya no entra a la consola y el backend le
- * responde 403. Cada paso del plan deja su captura (DoD-3).
+ * Una cuenta `MODERATOR` (la de la combinación, que el administrador de
+ * plataforma sumó al equipo por la API) recorre la cola central (todos los
+ * gimnasios) con rutinas, ejercicios y comentarios denunciados mezclados con
+ * los tipos de siempre, abre cada caso, oculta una rutina, restaura otra y ve
+ * el veredicto; un `ADMIN` heredado del gimnasio ya no entra a la consola ni
+ * puede tomar un caso: el backend le responde 403. Cada paso del plan deja su
+ * captura (DoD-3).
  *
  * Los datos salen de `scripts/seed-evidencia-rutinas.mjs`: un juego por
- * combinación, que estos pasos gastan (ocultar y restaurar cierran casos), así
- * que repetir la corrida exige sembrar de nuevo.
+ * combinación, en su propio gimnasio y con nombres que llevan la combinación
+ * (la cola mezcla los cuatro), que estos pasos gastan (ocultar y restaurar
+ * cierran casos), así que repetir la corrida exige sembrar de nuevo.
  */
 const semilla = cargarSemilla();
 
@@ -37,7 +40,7 @@ const fila = (page: Page, texto: string, de: string) =>
 test('RF-B1 · la cola entiende rutinas, ejercicios y comentarios', async ({ page }, testInfo) => {
   const datos = semilla.combos[comboDe(testInfo.project.name)];
   const autora = `Ana Autora ${comboDe(testInfo.project.name)}`;
-  await signIn(page, { email: semilla.moderator, password: semilla.password });
+  await signIn(page, { email: datos.moderator, password: semilla.password });
 
   await test.step('01 · la cola mezcla los tipos nuevos con los de siempre', async () => {
     await openPage(page, '/moderacion');
@@ -66,7 +69,9 @@ test('RF-B1 · la cola entiende rutinas, ejercicios y comentarios', async ({ pag
     await evidencia(page, 'RF-B1', '02', 'vista-previa-ejercicio');
 
     await fila(page, 'Acoso o intimidación', datos.memberB.nombre).filter({ hasText: 'Comentario' }).click();
-    await expect(page.getByTestId('vista-previa')).toContainText('Insulta al autor de la rutina.');
+    // The case file carries the comment itself (ADR-0018 §9); the reporter's words stay in the report list.
+    await expect(page.getByTestId('vista-previa')).toContainText(datos.comment.texto);
+    await expect(page.getByText('Insulta al autor de la rutina.')).toBeVisible();
     await evidencia(page, 'RF-B1', '02', 'vista-previa-comentario');
   });
 
@@ -84,7 +89,7 @@ test('RF-B1 · la cola entiende rutinas, ejercicios y comentarios', async ({ pag
     expect(await estadoDeLaRutina(page, datos.plagiarized.nombre)).toBe('OCULTA_MODERACION');
     const autor = await backendComo(datos.author, semilla.password);
     const avisos = await autor.get<{ items: Array<{ subject?: string; asunto?: string }> }>('/notifications/me');
-    expect(JSON.stringify(avisos)).toContain('Ocultamos tu contenido');
+    expect(JSON.stringify(avisos)).toContain('Ocultamos contenido tuyo');
   });
 
   await test.step('04 · restaurar una rutina oculta la deja visible otra vez', async () => {
@@ -105,8 +110,10 @@ test('RF-B1 · la cola entiende rutinas, ejercicios y comentarios', async ({ pag
   });
 });
 
-test('RF-B1 · el personal del gimnasio ya no modera', async ({ page }) => {
-  await signIn(page, { email: semilla.other, password: semilla.password });
+test('RF-B1 · el personal del gimnasio ya no modera', async ({ page }, testInfo) => {
+  const datos = semilla.combos[comboDe(testInfo.project.name)];
+  // An ADMIN of the very gym whose content was reported: being its staff gives no say.
+  await signIn(page, { email: datos.legacyAdmin, password: semilla.password });
   await openPage(page, '/moderacion');
   await waitForPageSettled(page);
   // The client door sends it away; the backend is the authority and answers 403.
@@ -115,6 +122,11 @@ test('RF-B1 · el personal del gimnasio ya no modera', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Moderación' })).toHaveCount(0);
   const cola = await page.request.get('/api/backend/admin/moderation/queue');
   expect(cola.status()).toBe(403);
+  // Nor can it act on a case of its own gym (403 at the role guard, no side effect).
+  const tomar = await page.request.post(`/api/backend/admin/moderation/cases/ROUTINE/${datos.dangerous.id}/claim`, {
+    headers: { origin: new URL(page.url()).origin },
+  });
+  expect(tomar.status()).toBe(403);
   await evidencia(page, 'RF-B1', '05', 'gimnasio-sin-moderacion');
 });
 

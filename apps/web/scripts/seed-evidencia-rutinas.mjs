@@ -7,16 +7,27 @@
  *   PGPORT=5433 PGHOST=localhost PGUSER=postgres PGDATABASE=gym_sheet \
  *   node scripts/seed-evidencia-rutinas.mjs
  *
+ * Se corre desde `apps/web` (escribe en `apps/web/.e2e-assets/`), con `psql` en
+ * el PATH apuntando a la misma base que usa el backend.
+ *
  * Todo pasa por la API pública salvo lo que la API no expone: subir el rol de
- * una cuenta y dejar vencida una semana de programa (esto último es lo mismo
+ * una cuenta, dar por verificado su correo y dejar vencida una semana de programa (esto último es lo mismo
  * que hace `test/support-training.e2e-spec.ts` del backend). Escribe
  * `.e2e-assets/rutinas-seed.json`, que leen los specs. Cada corrida crea
  * cuentas nuevas, así que se puede repetir sin limpiar nada.
  *
+ * Modelo de plataforma (franja 7a, ADR-0019 del backend): todo `admin/*` es de
+ * REPP. Soporte lo hace el `SYSTEM_ADMIN` (`sys`) operando el gimnasio del juego
+ * (suplantación); la moderación, un `MODERATOR` por juego que `sys` suma al
+ * equipo con `PUT /admin/platform/moderators/:userId` (ADR-0018). Cada juego
+ * trae además un `ADMIN` heredado de su gimnasio, con las concesiones de soporte
+ * que antes le abrían la ficha: es el caso negativo (403 o redirección).
+ *
  * Hay un juego de datos por combinación de la evidencia (390/1440 por claro/
- * oscuro) y cada uno vive en su propio gimnasio: los pasos que cambian cosas
- * (ocultar, restaurar, recalcular) gastan su caso, y así las cuatro corridas no
- * se pisan ni ven las cuentas de las otras. El «otro gimnasio» es `megatlon`.
+ * oscuro) y cada uno vive en su propio gimnasio con nombres que llevan la
+ * combinación: la cola de moderación es central (mezcla todos los gimnasios) y
+ * los pasos que cambian cosas (ocultar, restaurar, recalcular) gastan su caso,
+ * así que cada corrida reconoce sólo lo suyo y las cuatro no se pisan.
  *
  * Denunciar tiene un tope de 20 por hora y por IP, contado en la memoria de
  * cada proceso del backend, y esta siembra hace 28 denuncias (siete por juego).
@@ -32,7 +43,6 @@ import { resolve } from 'node:path';
 const APIS = (process.env.BACKEND_API_URL ?? 'http://localhost:3011/api/v1').split(',');
 const API = APIS[0];
 const PASSWORD = 'QaRutinas2026!';
-const OTHER_GYM = 'megatlon';
 const COMBOS = [
   ['390-claro', 'ultrafit'],
   ['390-oscuro', 'aesgym'],
@@ -68,6 +78,13 @@ async function currentTermsVersion() {
   return termsVersion;
 }
 
+// Every signup carries a form ticket (franja 3 antibot), like the web form.
+async function registerTicket() {
+  const { ticket } = await call('GET', '/auth/register/ticket', null);
+  if (!ticket) throw new Error('GET /auth/register/ticket did not include a ticket.');
+  return ticket;
+}
+
 async function account(tag, nombre, { role, tenantId } = {}) {
   const email = `qa-rep-${tag}-${run}@example.test`;
   await call('POST', '/auth/register', null, {
@@ -78,28 +95,26 @@ async function account(tag, nombre, { role, tenantId } = {}) {
     genero: 'FEMALE',
     termsVersion: await currentTermsVersion(),
     acceptedTerms: true,
+    ticket: await registerTicket(),
     ...(tenantId ? { tenantId } : {}),
   });
-  if (role) sql(`UPDATE public.usuarios SET rol='${role}' WHERE email='${email}'`);
+  // Real operators and members have proved their mailbox; without it every social route
+  // answers 403 EMAIL_VERIFICATION_REQUIRED. The API has no shortcut for the PIN, so SQL.
+  sql(`UPDATE public.usuarios SET email_verified_at=now()${role ? `, rol='${role}'` : ''} WHERE email='${email}'`);
   const session = await call('POST', '/auth/login', null, { email, password: PASSWORD });
   const me = await call('GET', '/users/me', session.accessToken);
   return { email, nombre, id: me.id, token: session.accessToken };
 }
 
 
-// Las siembras anteriores comparten gimnasio con ésta: se cierran sus casos
-// abiertos para que la cola de cada gimnasio sólo tenga los de esta corrida.
+// La cola de moderación es una sola para todos los gimnasios: se cierran los
+// casos abiertos de siembras anteriores para que sólo queden los de esta corrida.
 sql(`UPDATE moderation.reports SET status='DESCARTADO', resolution='SIN_ACCION', resolved_at=now() WHERE status IN ('PENDIENTE','EN_REVISION')
        AND reported_user_id IN (SELECT id FROM public.usuarios WHERE email LIKE 'qa-rep-%@example.test')`);
 
 const sys = await account('sys', `QA Sistema ${run}`, { role: 'SYSTEM_ADMIN' });
-const other = await account('otro', `QA Admin Otro Gimnasio ${run}`, { role: 'ADMIN', tenantId: OTHER_GYM });
 const grant = (user, keys) =>
   Promise.all(keys.map((permissionKey) => call('POST', `/admin/permissions/${user.id}`, sys.token, { permissionKey })));
-// Moderation is the central REPP team's job (backend ADR-0018): a member account
-// the platform admin adds to the team through the real API, not a gym grant.
-const moderatorAccount = await account('moderacion', `QA Moderación REPP ${run}`, { tenantId: OTHER_GYM });
-await call('PUT', `/admin/platform/moderators/${moderatorAccount.id}`, sys.token);
 
 const isoWeekday = (date) => (date.getDay() === 0 ? 7 : date.getDay());
 const today = new Date();
@@ -117,17 +132,20 @@ const day = (nombre, diaSemana, ejercicioIds) => ({
 
 async function seedCombo(combo, tenantId, comboIndex) {
   const tag = `${run}-${combo}`;
-  const gym = await account(`gym-${combo}`, `QA Admin Gimnasio ${combo}`, { role: 'ADMIN', tenantId });
-  const reader = await account(`lector-${combo}`, `QA Soporte Lectura ${combo}`, { role: 'ADMIN', tenantId });
+  // A legacy gym ADMIN holding the support grants that used to open the training view;
+  // since franja 7a (ADR-0019) neither the role nor the grants open any `admin/*` route.
+  const legacyAdmin = await account(`admin-gimnasio-${combo}`, `QA Admin Gimnasio ${combo}`, { role: 'ADMIN', tenantId });
+  // Moderation is the central REPP team (ADR-0018): a member account that the platform
+  // admin adds to the team through the real API, one per combo so each run owns its claims.
+  const moderator = await account(`moderacion-${combo}`, `QA Moderación REPP ${combo}`, { tenantId });
+  await call('PUT', `/admin/platform/moderators/${moderator.id}`, sys.token);
   const author = await account(`autor-${combo}`, `Ana Autora ${combo}`, { tenantId });
   const memberA = await account(`socio-a-${combo}`, `Socio A ${combo}`, { tenantId });
   const memberB = await account(`socio-b-${combo}`, `Socio B ${combo}`, { tenantId });
   // Quien denuncia tiene que poder ver el contenido, y eso se limita al gimnasio.
   const reporters = [];
   for (const n of [1, 2, 3]) reporters.push(await account(`rep${n}-${combo}`, `Reportero ${n} ${combo}`, { tenantId }));
-  // El administrador atiende soporte; el lector sólo mira. Ninguno modera (ADR-0018).
-  await grant(gym, ['support:read', 'support:respond', 'analytics:read']);
-  await grant(reader, ['support:read']);
+  await grant(legacyAdmin, ['support:read', 'support:respond']);
 
   // Una página al azar del catálogo: la huella de publicación impide dos
   // rutinas públicas con los mismos ejercicios, y repetir la siembra chocaría.
@@ -233,9 +251,9 @@ async function seedCombo(combo, tenantId, comboIndex) {
 
   return {
     tenantId,
-    gym: gym.email,
+    legacyAdmin: legacyAdmin.email,
+    moderator: moderator.email,
     author: author.email,
-    reader: reader.email,
     memberA: { email: memberA.email, id: memberA.id, nombre: memberA.nombre, programId: programA },
     memberB: { email: memberB.email, id: memberB.id, nombre: memberB.nombre, programId: programB },
     dangerous: { id: dangerous, nombre: dangerousName },
@@ -254,8 +272,6 @@ const seed = {
   run,
   password: PASSWORD,
   sys: sys.email,
-  moderator: moderatorAccount.email,
-  other: other.email,
   /** Un ejercicio del catálogo, para el buscador del formulario «Crear oficial». */
   catalogExercise: (probe.items ?? probe)[0].nombre,
   combos,

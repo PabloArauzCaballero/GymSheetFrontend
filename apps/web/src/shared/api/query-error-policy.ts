@@ -14,11 +14,16 @@ const HANDLED_BY_THE_SCREEN = new Set([
   'EMAIL_VERIFICATION_REQUIRED',
 ]);
 
-export function shouldToastQueryError(error: unknown): boolean {
+/**
+ * `meta.quietForbidden`: an optional read (e.g. the routine reach in the moderation
+ * queue) whose 403 the screen already renders as «no disponible con tus permisos».
+ */
+export function shouldToastQueryError(error: unknown, meta?: Record<string, unknown>): boolean {
   // The legal gate replaces the portal until the person accepts (same predicate as the gate).
   if (isLegalAcceptanceRequired(error)) return false;
   if (error instanceof ApiError) {
     if (error.kind === 'unauthorized') return false;
+    if (error.kind === 'forbidden' && meta?.quietForbidden === true) return false;
     if (error.code && HANDLED_BY_THE_SCREEN.has(error.code)) return false;
   }
   return true;

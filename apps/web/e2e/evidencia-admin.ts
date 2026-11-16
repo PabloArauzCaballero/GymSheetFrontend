@@ -17,9 +17,11 @@ export type ComboEvidencia = '390-claro' | '390-oscuro' | '1440-claro' | '1440-o
 
 type JuegoDeDatos = {
   tenantId: string;
-  gym: string;
+  /** A legacy gym `ADMIN` of `tenantId` with support grants: since franja 7a it opens no `admin/*` route. */
+  legacyAdmin: string;
+  /** A member of the REPP moderation team (`MODERATOR`, ADR-0018), added by the platform admin. */
+  moderator: string;
   author: string;
-  reader: string;
   memberA: { email: string; id: string; nombre: string; programId: string };
   memberB: { email: string; id: string; nombre: string; programId: string };
   dangerous: { id: string; nombre: string };
@@ -32,10 +34,8 @@ type JuegoDeDatos = {
 export type SemillaRutinas = {
   run: string;
   password: string;
+  /** The platform admin (`SYSTEM_ADMIN`): operates each combo's gym by impersonation. */
   sys: string;
-  /** A member of the REPP moderation team (`MODERATOR`, ADR-0018). */
-  moderator: string;
-  other: string;
   catalogExercise: string;
   combos: Record<ComboEvidencia, JuegoDeDatos>;
 };

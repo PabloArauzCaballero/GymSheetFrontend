@@ -19,6 +19,11 @@ describe('shouldToastQueryError', () => {
     expect(shouldToastQueryError(forbidden())).toBe(true);
     expect(shouldToastQueryError(new Error('boom'))).toBe(true);
   });
+  it('stays quiet on a 403 of an optional read flagged quietForbidden, and only on a 403', () => {
+    expect(shouldToastQueryError(forbidden(), { quietForbidden: true })).toBe(false);
+    expect(shouldToastQueryError(new Error('boom'), { quietForbidden: true })).toBe(true);
+    expect(shouldToastQueryError(forbidden(), {})).toBe(true);
+  });
   it('no avisa de sesión caducada', () => {
     expect(shouldToastQueryError(new ApiError({ kind: 'unauthorized', status: 401, message: 'x' }))).toBe(false);
   });

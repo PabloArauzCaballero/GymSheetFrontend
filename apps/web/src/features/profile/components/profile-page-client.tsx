@@ -60,7 +60,9 @@ const MEMBERSHIP_BADGE = {
  * cuenta). El correo es privado: va al pie, no al héroe. Los datos se editan
  * en `/profile/editar`.
  */
-export function ProfilePageClient() {
+export function ProfilePageClient({
+  offerSelfieVerification = false,
+}: Readonly<{ offerSelfieVerification?: boolean }> = {}) {
   const user = useQuery({ queryKey: ['user', 'me'], queryFn: profileService.getUser });
   const profile = useQuery({
     queryKey: queryKeys.profile,
@@ -217,7 +219,7 @@ export function ProfilePageClient() {
             </div>
           ) : null}
 
-          <VerificationCta enabled={offersConocer(me?.rol)} />
+          <VerificationCta enabled={offerSelfieVerification} />
           <Section title="Tu actividad">
             <RowGroup>
               {[

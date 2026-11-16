@@ -17,6 +17,7 @@ import {
   type VerificationQueueItem,
   type VerificationRejectionReason,
 } from '@gymsheet/schemas';
+import { socialSurfaceOpen } from './account-security';
 
 /** Copy and pure rules of the person verification (franja 6), shared by web and mobile. */
 
@@ -124,6 +125,16 @@ export function verificationView(state: Pick<MyVerification, 'status' | 'lastDec
 /** The CTA shows while there is something to do: never verified, nor in review. Never promises matches. */
 export function offersVerificationCta(status: MyVerificationStatus | undefined): boolean {
   return status !== undefined && status !== 'APPROVED' && status !== 'PENDING_REVIEW';
+}
+
+/**
+ * Whether to ask for the selfie verification status at all: `GET /me/verification`
+ * is member-only (staff gets 403) and needs a verified email.
+ */
+export function offersSelfieVerification(
+  principal: { role?: string | null; emailVerified?: boolean } | null | undefined,
+): boolean {
+  return principal?.role === 'CLIENTE' && socialSurfaceOpen(principal);
 }
 
 /** Whole seconds left before the challenge deadline (never negative). */

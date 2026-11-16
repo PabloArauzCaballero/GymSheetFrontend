@@ -139,9 +139,8 @@ export function CasePanel({
       </div>
 
       <ContentPreview
-        reportDetails={data.reports.flatMap((report) => (report.details ? [report.details] : []))}
-        targetId={data.targetId}
-        targetKind={data.targetKind}
+        content={data.content}
+        contentUnavailableReason={data.contentUnavailableReason}
       />
 
       {/* El historial y la consecuencia, juntos y antes de los botones. */}

@@ -22,6 +22,7 @@ export * from './definitions/directory';
 export * from './definitions/directory-payments';
 export * from './definitions/reviews';
 export * from './definitions/music';
+export * from './definitions/moderation-case-content';
 export * from './forms';
 export * from './catalog';
 export * from './community';
