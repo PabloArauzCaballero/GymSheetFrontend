@@ -65,12 +65,12 @@ describe('ConsentsList', () => {
       .mockResolvedValueOnce({ confirmed: true, action: 'confirm' });
     renderList();
 
-    const revoke = await screen.findByRole('button', { name: 'Retirar: Ubicación en el mapa' });
+    const revoke = await screen.findByRole('button', { name: 'Retirar: Ubicación precisa' });
     fireEvent.click(revoke);
     await waitFor(() => expect(mocks.confirm).toHaveBeenCalledTimes(1));
     expect(mocks.confirm.mock.calls[0]?.[0]).toMatchObject({
       severity: 'danger',
-      message: 'Borramos tu ubicación y te quitamos del mapa.',
+      message: 'Borramos tu ubicación y te quitamos del mapa. Conocer calcula distancias desde tu sede.',
     });
     expect(mocks.setConsent).not.toHaveBeenCalled();
 

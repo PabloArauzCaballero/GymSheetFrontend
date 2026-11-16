@@ -1,9 +1,4 @@
-import {
-  consentCopy,
-  consentKindOrder,
-  consentRequiredKind,
-  consentsSectionCopy,
-} from '@gymsheet/domain';
+import { consentCopy, consentRequiredKind, consentsSectionCopy, settingsConsents } from '@gymsheet/domain';
 import { CONSENT_VERSION_OUTDATED, type Consent, type ConsentKind } from '@gymsheet/schemas';
 
 /**
@@ -16,9 +11,9 @@ export { consentCopy, consentRequiredKind, consentsSectionCopy };
 /** Under every grant prompt: the consent is never a one-way door. */
 export const consentRevocableNote = 'Puedes retirarlo cuando quieras en Ajustes › Privacidad y datos.';
 
-/** Settings order: the backend's, so web and mobile list them alike. */
+/** Settings list: the shared `settingsConsentKinds`, in the backend's order, so web and mobile list them alike. */
 export function sortConsents(consents: readonly Consent[]): Consent[] {
-  return [...consents].sort((a, b) => consentKindOrder.indexOf(a.kind) - consentKindOrder.indexOf(b.kind));
+  return settingsConsents(consents);
 }
 
 /** Granted to an older text: the person is asked again, the row says so. */

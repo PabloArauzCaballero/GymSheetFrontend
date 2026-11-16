@@ -18,6 +18,7 @@ import {
   isConsentActive,
   isSocialMapDisabled,
   outdatedConsentVersion,
+  settingsConsents,
 } from "./privacy";
 
 describe("consents", () => {
@@ -45,6 +46,13 @@ describe("consents", () => {
     expect(consentInput(false)).toEqual({ granted: false });
     expect(() => consentInput(true)).toThrow();
     expect(outdatedConsentVersion({ kind: "HEALTH", currentVersion: "2027-01-01" })).toBe("2027-01-01");
+  });
+
+  it("lists in settings every kind but the selfie, in the backend order", () => {
+    const listed = settingsConsents(
+      (["PRECISE_LOCATION", "VERIFICATION_SELFIE", "ORIENTATION", "HEALTH"] as const).map((kind) => ({ kind })),
+    );
+    expect(listed.map((consent) => consent.kind)).toEqual(["HEALTH", "ORIENTATION", "PRECISE_LOCATION"]);
   });
 
   it("recognizes the closed social map", () => {

@@ -136,11 +136,14 @@ describe('RegisterForm', () => {
     const box = screen.getByRole('checkbox');
     // The accessible-name algorithm pads inline links with spaces; the visible sentence has none.
     expect(box).toHaveAccessibleName(
-      /^Acepto los términos y condiciones ?, la política de privacidad y las normas de la comunidad ?\.$/u,
+      /^Acepto los términos y condiciones ?, la política de privacidad ?\(con su anexo de retención de datos\) y las normas de la comunidad ?\.$/u,
     );
     expect(screen.getByRole('link', { name: 'términos y condiciones' })).toHaveAttribute('href', '/terminos');
     expect(screen.getByRole('link', { name: 'política de privacidad' })).toHaveAttribute('href', '/privacidad');
     expect(screen.getByRole('link', { name: 'normas de la comunidad' })).toHaveAttribute('href', '/normas');
+    expect(box).toHaveAccessibleDescription(
+      'Tu salud, tu orientación, tu selfie y tu ubicación precisa se piden aparte, solo si usas esas funciones.',
+    );
   });
 
   it('asks again when the community rules changed at signup (409 listing COMMUNITY)', async () => {

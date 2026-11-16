@@ -29,7 +29,7 @@ export function OnboardingConsents({
   return (
     <>
       <View style={{ gap: spacing.xs }}>
-        <Checkbox checked={consentHealth} label={`${consentCopy.HEALTH.grantLabel} (opcional)`} onChange={onConsentHealth} />
+        <Checkbox checked={consentHealth} label={consentCopy.HEALTH.grantLabel} onChange={onConsentHealth} />
         {missing ? (
           <Text accessibilityLiveRegion="polite" tone="warning" variant="footnote">
             Marca esta casilla para guardar tus consideraciones físicas, o déjalas en blanco.

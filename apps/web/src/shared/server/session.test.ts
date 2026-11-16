@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   backendRequest: vi.fn(),
@@ -19,6 +19,11 @@ const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 
 describe('requireSession with a suspended account', () => {
+  // The first import transforms the whole server module graph; doing it in the
+  // test body made the test time out on a loaded machine.
+  beforeAll(async () => {
+    await import('./session');
+  });
   beforeEach(() => vi.clearAllMocks());
 
   it('logs out to login with the suspension instead of «sesión expirada»', async () => {
