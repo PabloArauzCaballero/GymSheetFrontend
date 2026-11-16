@@ -92,7 +92,8 @@ test('closing the account with the password logs out, and that login stops worki
   await page.getByText('Cerrar mi cuenta', { exact: true }).click();
   await page.getByRole('button', { name: 'Revisar qué se borra' }).click();
   await expect(page.getByText('Tu cuenta', { exact: true })).toBeVisible();
-  await page.getByLabel('Tu contraseña', { exact: true }).fill(account.password);
+  // The email-change form on the same page has its own "Tu contraseña" field.
+  await page.locator('#closure-password').fill(account.password);
   await page.getByRole('button', { name: 'Cerrar mi cuenta' }).click();
 
   const dialog = page.getByRole('alertdialog').or(page.getByRole('dialog'));
