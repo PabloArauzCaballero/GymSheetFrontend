@@ -20,7 +20,7 @@ const outdated = () =>
   new ApiError({ message: 'Cambió.', status: 409, kind: 'conflict', code: 'CONSENT_VERSION_OUTDATED', details: { kind: 'HEALTH', currentVersion: '2027-01-01' } });
 
 function consent(kind: ConsentKind, granted: boolean, upToDate = granted): Consent {
-  return { kind, granted, version: granted ? '2026-12-01' : null, currentVersion: '2026-12-01', upToDate, grantedAt: null, revokedAt: null };
+  return { kind, granted, version: granted ? '2026-12-02' : null, currentVersion: '2026-12-02', upToDate, grantedAt: null, revokedAt: null };
 }
 
 test('CONSENT_REQUIRED asks for the named consent and retries the write once', async () => {
@@ -63,21 +63,21 @@ test('granting records the current version only after the person accepts', async
   const granted: string[] = [];
   const steps = {
     confirm: async () => true,
-    currentVersion: async () => '2026-12-01',
+    currentVersion: async () => '2026-12-02',
     grant: async (kind: ConsentKind, version: string) => { granted.push(`${kind}@${version}`); },
     onOutdated: () => assert.fail('not outdated'),
   };
   assert.equal(await requestConsent('HEALTH', steps), true);
-  assert.deepEqual(granted, ['HEALTH@2026-12-01']);
+  assert.deepEqual(granted, ['HEALTH@2026-12-02']);
   assert.equal(await requestConsent('HEALTH', { ...steps, confirm: async () => false }), false);
-  assert.deepEqual(granted, ['HEALTH@2026-12-01']);
+  assert.deepEqual(granted, ['HEALTH@2026-12-02']);
 });
 
 test('a 409 CONSENT_VERSION_OUTDATED records nothing and refreshes; other errors throw', async () => {
   let refreshed = 0;
   const steps = {
     confirm: async () => true,
-    currentVersion: async () => '2026-12-01',
+    currentVersion: async () => '2026-12-02',
     grant: async () => { throw outdated(); },
     onOutdated: () => { refreshed += 1; },
   };

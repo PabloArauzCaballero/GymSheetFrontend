@@ -20,7 +20,7 @@ const consent = (overrides: Partial<Consent>): Consent => ({
   kind: 'HEALTH',
   granted: false,
   version: null,
-  currentVersion: '2026-12-01',
+  currentVersion: '2026-12-02',
   upToDate: false,
   grantedAt: null,
   revokedAt: null,
@@ -49,7 +49,7 @@ describe('ConsentsList', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Aceptar: Orientación' }));
 
     await waitFor(() =>
-      expect(mocks.setConsent).toHaveBeenCalledWith('ORIENTATION', { granted: true, version: '2026-12-01' }),
+      expect(mocks.setConsent).toHaveBeenCalledWith('ORIENTATION', { granted: true, version: '2026-12-02' }),
     );
     expect(mocks.confirm).not.toHaveBeenCalled();
     await waitFor(() => expect(mocks.notify.success).toHaveBeenCalledWith('Consentimiento guardado.'));
@@ -57,7 +57,7 @@ describe('ConsentsList', () => {
 
   it('revokes only after a confirmation that says what gets erased', async () => {
     mocks.consents.mockResolvedValue([
-      consent({ kind: 'PRECISE_LOCATION', granted: true, upToDate: true, version: '2026-12-01' }),
+      consent({ kind: 'PRECISE_LOCATION', granted: true, upToDate: true, version: '2026-12-02' }),
     ]);
     mocks.setConsent.mockResolvedValue(consent({ kind: 'PRECISE_LOCATION' }));
     mocks.confirm

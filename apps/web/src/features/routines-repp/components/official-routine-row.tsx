@@ -9,7 +9,10 @@ import {
   type AdminRoutine,
 } from '@/features/routines-repp/services/routines-repp-service';
 
-/** Una rutina del catálogo con lo que decide si puede ser oficial. */
+/**
+ * Una rutina del catálogo con lo que decide si puede ser oficial. Without the
+ * handlers (moderation review, read only) the row shows no actions.
+ */
 export function OfficialRoutineRow({
   routine,
   busy,
@@ -18,8 +21,8 @@ export function OfficialRoutineRow({
 }: Readonly<{
   routine: AdminRoutine;
   busy: boolean;
-  onInsights: () => void;
-  onToggleOfficial: () => void;
+  onInsights?: () => void;
+  onToggleOfficial?: () => void;
 }>) {
   const canMark =
     routine.esOficial ||
@@ -55,22 +58,24 @@ export function OfficialRoutineRow({
           {routine.publicadaEn ? ` · publicada el ${formatDate(routine.publicadaEn)}` : ' · sin publicar'}
         </p>
       </div>
-      <div className="flex shrink-0 flex-wrap gap-2">
-        <Button onClick={onInsights} size="sm" variant="ghost">
-          <BarChart3 aria-hidden className="size-4" />
-          Métricas
-        </Button>
-        <Button
-          disabled={!canMark}
-          loading={busy}
-          onClick={onToggleOfficial}
-          size="sm"
-          title={canMark ? undefined : 'Sólo una rutina pública y visible puede ser oficial.'}
-          variant={routine.esOficial ? 'secondary' : 'primary'}
-        >
-          {routine.esOficial ? 'Quitar de oficiales' : 'Marcar como oficial'}
-        </Button>
-      </div>
+      {onInsights && onToggleOfficial ? (
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Button onClick={onInsights} size="sm" variant="ghost">
+            <BarChart3 aria-hidden className="size-4" />
+            Métricas
+          </Button>
+          <Button
+            disabled={!canMark}
+            loading={busy}
+            onClick={onToggleOfficial}
+            size="sm"
+            title={canMark ? undefined : 'Sólo una rutina pública y visible puede ser oficial.'}
+            variant={routine.esOficial ? 'secondary' : 'primary'}
+          >
+            {routine.esOficial ? 'Quitar de oficiales' : 'Marcar como oficial'}
+          </Button>
+        </div>
+      ) : null}
     </li>
   );
 }

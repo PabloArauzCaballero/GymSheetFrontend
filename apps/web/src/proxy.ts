@@ -60,6 +60,8 @@ export const knownRoutes = new Set([
   'interacciones',
   'marketplace',
   'membership',
+  // REPP moderation console (`MODERATOR`, `SYSTEM_ADMIN`; ADR-0018).
+  'moderacion',
   'notifications',
   'onboarding',
   // Perfil ajeno (`/perfil/:userId`). `/profile` es el propio: rutas distintas

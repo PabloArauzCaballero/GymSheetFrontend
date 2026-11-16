@@ -15,6 +15,7 @@ import {
   REASON_LABEL,
   TARGET_LABEL,
   type ModerationTargetKind,
+  type ModerationVerdict,
 } from '@/features/moderation/services/moderation-service';
 import { ContentPreview } from './moderation-preview';
 import { queueKey, sanctionLabel } from './moderation-labels';
@@ -30,11 +31,14 @@ import { queueKey, sanctionLabel } from './moderation-labels';
 export function CasePanel({
   targetKind,
   targetId,
+  tenantName,
   onResolved,
 }: Readonly<{
   targetKind: ModerationTargetKind;
   targetId: string;
-  onResolved: () => void;
+  /** Gym of the reported content: the queue mixes every gym (ADR-0018). */
+  tenantName: string | null;
+  onResolved: (verdict: ModerationVerdict) => void;
 }>) {
   const [note, setNote] = useState('');
   const queryClient = useQueryClient();
@@ -44,9 +48,9 @@ export function CasePanel({
     queryFn: () => moderationService.getCase(targetKind, targetId),
   });
 
-  const refresh = async () => {
+  const refresh = async (verdict: ModerationVerdict) => {
     await queryClient.invalidateQueries({ queryKey: queueKey });
-    onResolved();
+    onResolved(verdict);
   };
 
   const claim = useMutation({
@@ -72,7 +76,7 @@ export function CasePanel({
           : 'Caso resuelto.',
       );
       setNote('');
-      await refresh();
+      await refresh(result);
     },
     onError: (error: Error) => notify.error(error),
   });
@@ -117,6 +121,9 @@ export function CasePanel({
         <h2 className="text-xl font-semibold tracking-[-0.02em]">
           {TARGET_LABEL[data.targetKind]} de {data.reportedUser.name}
         </h2>
+        {tenantName ? (
+          <p className="mt-1 text-sm text-[var(--text-muted)]">{tenantName}</p>
+        ) : null}
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {data.contentHidden ? (
             <Badge tone="neutral">Contenido retirado</Badge>

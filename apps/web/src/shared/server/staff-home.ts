@@ -1,4 +1,4 @@
-import { isSystemAdmin } from '@gymsheet/domain';
+import { isModerator, isSystemAdmin } from '@gymsheet/domain';
 import type { UserRole } from '@gymsheet/types';
 
 /** Personal que atiende un gimnasio concreto; el `COACH` no, porque entrena. */
@@ -11,9 +11,12 @@ const GYM_STAFF_ROLES: readonly UserRole[] = ['ADMIN', 'FRONT_DESK'];
  * «aún no tienes membresía» para una cuenta que no las usa: al `SYSTEM_ADMIN`
  * se le manda a `/sistema` y a quien atiende el gimnasio (`ADMIN`,
  * `FRONT_DESK`) a su operación del día.
+ *
+ * The central REPP moderation team (`MODERATOR`, ADR-0018) lands on its queue.
  */
 export function staffHomeFor(role: UserRole): string | null {
   if (isSystemAdmin(role)) return '/sistema';
+  if (isModerator(role)) return '/moderacion';
   if (GYM_STAFF_ROLES.includes(role)) return '/admin/operacion';
   return null;
 }
