@@ -3,8 +3,13 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Platform } from 'react-native';
+import { apiClient } from '@/api/client';
 import { env } from '@/config/env';
 import { secureStoreTokenProvider } from '@/storage/secure-store';
+import {
+  requestRoutineProgressFile,
+  type RoutineProgressExportFilters,
+} from './routine-progress-request';
 
 /**
  * Downloads the workout-history export and hands it to the user as a file.
@@ -96,21 +101,20 @@ export async function exportWorkoutHistory(format: ExportFormat): Promise<Export
   return { status: 'saved', location: spec.fileName };
 }
 
-export interface RoutineProgressExportFilters {
-  format: 'excel' | 'csv' | 'pdf';
-  routineId?: string;
-  datePreset?: 'ALL' | 'LAST_30' | 'LAST_90' | 'LAST_YEAR';
-  dateFrom?: string;
-  dateTo?: string;
-  includeHistory?: boolean;
-  includeTargets?: boolean;
-  includePrograms?: boolean;
-}
+export type { RoutineProgressExportFilters } from './routine-progress-request';
 
 export type RoutineProgressExportResult =
   | { readonly status: 'saved'; readonly fileName: string; readonly recordsCount: number }
   | { readonly status: 'cancelled' }
   | { readonly status: 'unsupported' };
+
+const SAFE_EXPORT_FILE_NAME = /^[\w.-]+\.(xlsx|csv|pdf)$/;
+
+function fallbackExtension(mimeType: string): 'pdf' | 'csv' | 'xlsx' {
+  if (mimeType.includes('pdf')) return 'pdf';
+  if (mimeType.includes('csv')) return 'csv';
+  return 'xlsx';
+}
 
 /**
  * Descarga y exporta el progreso completo del sistema de rutinas
@@ -119,40 +123,18 @@ export type RoutineProgressExportResult =
 export async function exportRoutineProgress(
   filters: RoutineProgressExportFilters,
 ): Promise<RoutineProgressExportResult> {
-  const token = await secureStoreTokenProvider.getAccessToken();
-  if (!token) throw new Error('Tu sesión expiró. Inicia sesión otra vez.');
-
   const cacheDirectory = FileSystem.cacheDirectory;
   if (!cacheDirectory) return { status: 'unsupported' };
 
-  const response = await fetch(`${env.apiUrl}/export/routine-progress`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify(filters),
-  });
+  // Errors arrive as ApiError with the server's own message (e.g. «filtra por
+  // rutina o por fechas» when the export is too large), which the wizard shows.
+  const data = await requestRoutineProgressFile(apiClient, filters);
 
-  if (!response.ok) {
-    // El servidor explica qué hacer (p. ej. «filtra por rutina o por fechas»
-    // cuando el progreso es demasiado grande): ese texto es el que se muestra.
-    const body = (await response.json().catch(() => null)) as { error?: { message?: string } } | null;
-    throw new Error(body?.error?.message ?? `El servidor respondió ${response.status} al generar el archivo.`);
-  }
-
-  const data = (await response.json()) as {
-    fileName: string;
-    format: string;
-    mimeType: string;
-    recordsCount: number;
-    base64: string;
-  };
-
-  const fileName =
-    data.fileName ||
-    `repp-progreso-rutinas.${filters.format === 'excel' ? 'xlsx' : filters.format}`;
+  // Never trust a server-provided name as a path: keep it only if it is a
+  // plain file name with a known extension (same rule as the web download).
+  const fileName = SAFE_EXPORT_FILE_NAME.test(data.fileName)
+    ? data.fileName
+    : `repp-progreso-rutinas.${fallbackExtension(data.mimeType)}`;
   const temporaryUri = `${cacheDirectory}${fileName}`;
 
   await FileSystem.writeAsStringAsync(temporaryUri, data.base64, {
@@ -170,11 +152,11 @@ export async function exportRoutineProgress(
             ? 'public.comma-separated-values-text'
             : 'org.openxmlformats.spreadsheetml.sheet',
     });
-    return { status: 'saved', fileName, recordsCount: data.recordsCount ?? 0 };
+    return { status: 'saved', fileName, recordsCount: data.recordsCount };
   }
 
   if (Platform.OS !== 'android') {
-    return { status: 'saved', fileName, recordsCount: data.recordsCount ?? 0 };
+    return { status: 'saved', fileName, recordsCount: data.recordsCount };
   }
 
   const permission = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
@@ -188,6 +170,6 @@ export async function exportRoutineProgress(
   await FileSystem.writeAsStringAsync(target, data.base64, {
     encoding: FileSystem.EncodingType.Base64,
   });
-  return { status: 'saved', fileName, recordsCount: data.recordsCount ?? 0 };
+  return { status: 'saved', fileName, recordsCount: data.recordsCount };
 }
 
