@@ -66,11 +66,11 @@ export function ConfirmRoot() {
 /** One confirmation; mounted per prompt so it remembers which control opened it. */
 function ConfirmPanel({ active }: Readonly<{ active: ActiveConfirmation }>) {
   const cancelRef = useRef<HTMLButtonElement>(null);
-  const returnFocus = useFocusReturn();
+  const focus = useFocusReturn();
   const Icon = SEVERITY_ICON[active.severity] ?? HelpCircle;
   return (
       <DialogPrimitive.Content
-        onCloseAutoFocus={returnFocus}
+        onCloseAutoFocus={focus.restore}
         onEscapeKeyDown={(event) => {
           if (!active.dismissible) event.preventDefault();
         }}
@@ -78,13 +78,14 @@ function ConfirmPanel({ active }: Readonly<{ active: ActiveConfirmation }>) {
           if (!active.dismissible) event.preventDefault();
         }}
         onOpenAutoFocus={(event) => {
+          focus.capture();
           // Safe default on destructive prompts: focus Cancel, not Delete.
           if (active.severity === 'danger' && cancelRef.current) {
             event.preventDefault();
             cancelRef.current.focus();
           }
         }}
-        className="dialog-panel relative max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-[8px] border border-[var(--border)] bg-[var(--surface-lowest)] p-6 shadow-[var(--shadow-dialog)]"
+        className="dialog-panel relative max-h-[90dvh] outline-none w-full max-w-md overflow-y-auto rounded-[8px] border border-[var(--border)] bg-[var(--surface-lowest)] p-6 shadow-[var(--shadow-dialog)]"
       >
         <div className="flex gap-4">
           <span

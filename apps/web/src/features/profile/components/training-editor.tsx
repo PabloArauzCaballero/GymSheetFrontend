@@ -6,7 +6,7 @@ import { useState, type ReactNode } from 'react';
 import { profileService } from '@/features/profile/services/profile-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { useDraftReport } from '@/features/profile/lib/unsaved-guard';
-import { SaveStatusLine, useSectionSave } from '@/shared/components/feedback/save-status';
+import { SAVE_ROW, SaveStatusLine, useSectionSave } from '@/shared/components/feedback/save-status';
 import { Button } from '@/shared/components/ui/button';
 import { ChoiceChip } from '@/shared/components/ui/choice-chip';
 import { notify } from '@/shared/notifications';
@@ -67,7 +67,7 @@ export function TrainingEditor({ level, interests, footer }: Readonly<{ level: L
           ))}
         </div>
       </fieldset>
-      <div className="flex flex-wrap items-center gap-3">
+      <div className={SAVE_ROW}>
         <SaveStatusLine saved="Entreno guardado." status={status} testId="training-status" />
         <Button disabled={!dirty || (!draftLevel && draftInterests.length === 0)} loading={save.isPending} onClick={() => save.mutate()} size="sm" variant="primary">
           Guardar entreno

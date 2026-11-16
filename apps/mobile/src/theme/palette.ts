@@ -48,6 +48,8 @@ export const neutral = {
   textMuted: '#A9B6C2',
   /** Solo controles deshabilitados de verdad; nunca información. */
   textDisabled: '#718091',
+  /** Placeholder: 40 % muted + 60 % disabled (#8796A5), 4,6–5,4:1 on every surface, a third of `text`'s contrast. */
+  textPlaceholder: mixHex('#A9B6C2', '#718091', 0.4),
   /** Placa «papel» para las ilustraciones del dataset (que vienen sobre blanco). */
   plate: '#E9EEF2',
   /** Tinta sobre la placa. */

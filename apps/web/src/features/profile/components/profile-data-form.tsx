@@ -13,7 +13,7 @@ import { profileService } from '@/features/profile/services/profile-service';
 import type { Profile } from '@/shared/api/contracts';
 import { trainingGoals } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
-import { SaveStatusLine, useSectionSave } from '@/shared/components/feedback/save-status';
+import { SAVE_ROW, SaveStatusLine, useSectionSave } from '@/shared/components/feedback/save-status';
 import { Button } from '@/shared/components/ui/button';
 import { Section } from '@/shared/components/mobile/section';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -143,7 +143,7 @@ export function ProfileDataForm({ profile, footer }: Readonly<{ profile: Profile
             </p>
           ) : null}
           {/* One save per section, the same row as every other section: status left, button right. */}
-          <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
+          <div className={`${SAVE_ROW} sm:col-span-2`}>
             <SaveStatusLine saved="Datos guardados." status={status} testId="data-status" />
             <Button disabled={profile !== null && !form.formState.isDirty} loading={save.isPending} size="sm" type="submit" variant="primary">
               <Save aria-hidden className="size-4" />

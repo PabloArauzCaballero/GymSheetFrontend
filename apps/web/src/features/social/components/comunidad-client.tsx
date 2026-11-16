@@ -10,7 +10,7 @@ import { queryKeys } from '@/shared/api/query-keys';
 import { useBrand } from '@/shared/theme/brand-provider';
 import { Divider, ListCard, NavRow } from '@/shared/components/mobile/nav-row';
 import { cn } from '@/shared/lib/cn';
-import { COMUNIDAD_COLUMN } from './deck-geometry';
+import { COMUNIDAD_COLUMN, COMUNIDAD_GAP } from './deck-geometry';
 import { DescubrirClient } from './descubrir-client';
 import { SearchPreferencesDialog, type DirectoryPreferences } from './search-preferences-dialog';
 
@@ -35,7 +35,7 @@ function RoundButton({
   children: ReactNode;
 }>) {
   const className = cn(
-    'tap relative grid size-11 place-items-center rounded-full border bg-[var(--surface-high)] transition-colors duration-[var(--dur-2)] hover:bg-[var(--surface-highest)]',
+    'tap relative grid size-[max(44px,min(2.75rem,52px))] place-items-center rounded-full border bg-[var(--surface-high)] [&>svg]:size-[min(1.25rem,24px)] transition-colors duration-[var(--dur-2)] hover:bg-[var(--surface-highest)]',
     active ? 'border-[var(--volt)] text-[var(--accent-ink)]' : 'border-[var(--border-subtle)] text-[var(--text)]',
   );
   const badge = dot ? (
@@ -99,9 +99,9 @@ function OverflowSheet({ onPreferences }: Readonly<{ onPreferences: () => void }
     <DialogPrimitive.Root onOpenChange={setOpen} open={open}>
       <DialogPrimitive.Trigger
         aria-label="Opciones de Comunidad"
-        className="tap grid size-11 place-items-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-high)] hover:bg-[var(--surface-highest)]"
+        className="tap grid size-[max(44px,min(2.75rem,52px))] place-items-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-high)] hover:bg-[var(--surface-highest)]"
       >
-        <Ellipsis aria-hidden className="size-5" />
+        <Ellipsis aria-hidden className="size-[min(1.25rem,24px)]" />
       </DialogPrimitive.Trigger>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="dialog-overlay fixed inset-0 z-50 bg-[var(--overlay)]" />
@@ -172,13 +172,15 @@ export function ComunidadClient() {
   return (
     // One column the card's width (max-w-md), at least as tall as the space between the app header
     // and the tab bar, so the deck can be a real flex column (see COMUNIDAD_COLUMN).
-    <div className={`mx-auto flex w-full max-w-md flex-col gap-4 ${COMUNIDAD_COLUMN}`}>
+    // Chrome (title, buttons, switch, gaps) grows with the text only up to ×1.2–1.4: at 200 % the room goes
+    // to the card, so its name and the action row still fit on a 390 × 844 phone without scrolling.
+    <div className={`mx-auto flex w-full max-w-md flex-col ${COMUNIDAD_GAP} ${COMUNIDAD_COLUMN}`}>
       {/* Same header as the app: title on the card's left edge, filters and «⋯» on its right edge;
           the deck switch spans the card's width underneath. */}
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-[min(0.75rem,12px)] gap-y-2">
         {/* Never squeezed (shrink-0): with very large text it steps down a size and the buttons wrap under it. */}
-        <h1 className="shrink-0 text-2xl font-semibold tracking-[-0.02em] @max-[14rem]:text-xl">Comunidad</h1>
-        <div className="ml-auto flex items-center gap-2">
+        <h1 className="shrink-0 text-[min(1.5rem,32px)] leading-tight font-semibold tracking-[-0.02em] @max-[14rem]:text-[min(1.25rem,28px)]">Comunidad</h1>
+        <div className="ml-auto flex items-center gap-[min(0.5rem,8px)]">
           <RoundButton
             active={filtersActive}
             dot={filtersActive}
@@ -205,7 +207,8 @@ export function ComunidadClient() {
           <button
             aria-checked={pill === value}
             className={cn(
-              'min-h-11 min-w-0 flex-1 rounded-[calc(1.5rem-4px)] px-3 py-1 text-sm leading-tight text-balance transition-colors duration-[var(--dur-2)]',
+              // Never under 12 px of air above and below the label, even when it wraps (320 px at 200 %).
+              'min-h-[max(44px,min(2.75rem,52px))] min-w-0 flex-1 rounded-[calc(1.5rem-4px)] px-[min(0.75rem,8px)] py-[min(0.75rem,12px)] text-[min(0.875rem,16px)] leading-snug text-balance transition-colors duration-[var(--dur-2)]',
               pill === value
                 ? 'bg-[var(--surface-high)] font-semibold text-[var(--text)]'
                 : 'font-medium text-[var(--text-muted)] hover:text-[var(--text)]',

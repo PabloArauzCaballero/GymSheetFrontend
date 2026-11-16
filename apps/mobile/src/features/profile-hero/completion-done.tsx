@@ -27,7 +27,7 @@ export function CompletionDone({ completion, onPress, seenBefore }: { completion
         style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: minTouchTarget, alignSelf: 'flex-start' }}
         testID="profile-complete-quiet"
       >
-        <Ionicons color={accentPolicy.ink} name="checkmark-circle" size={iconSizes.sm} />
+        <Ionicons color={accentPolicy.ink} name="checkmark-circle-outline" size={iconSizes.sm} />
         <Text style={{ flexShrink: 1 }} tone="secondary" variant="subhead">
           {noOrphan(`${copy.title} · Ver cómo te ven`)}
         </Text>

@@ -82,7 +82,8 @@ export function MediaSourceDialog({
 
   const fileField = (
     <Button
-      className="justify-self-start"
+      // Full width on a phone (an easy thumb target, like the app's sheet rows); its own width from `sm`.
+      className="w-full sm:w-auto sm:justify-self-start"
       disabled={busy}
       onClick={() => fileInputRef.current?.click()}
       type="button"
@@ -123,12 +124,13 @@ export function MediaSourceDialog({
               <TabsTrigger value="file">Archivo</TabsTrigger>
               <TabsTrigger value="camera">Cámara</TabsTrigger>
             </TabsList>
-            <TabsContent value="file">
+            {/* The panels hold controls, so they are not Tab stops of their own (WAI-ARIA tabs pattern). */}
+            <TabsContent tabIndex={-1} value="file">
               <div className="grid gap-4">{fileField}</div>
             </TabsContent>
             {/* Radix desmonta la pestaña inactiva, así que volver a «Archivo»
                 libera la webcam y su piloto se apaga solo. */}
-            <TabsContent value="camera">
+            <TabsContent tabIndex={-1} value="camera">
               <CameraCapture
                 captureLabel={captureLabel}
                 disabled={busy}

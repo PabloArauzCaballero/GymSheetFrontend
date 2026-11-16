@@ -282,11 +282,12 @@ export function DirectoryCardFace({
         <View style={{ paddingRight: onInfoPress ? INFO_BUTTON_SIZE : 0 }}>
           {/* Name and age in one text, the weight setting them apart: the age stays with the last word when
               a long name (or large text) wraps to a second line, instead of truncating to «Luc…». Grows with
-              Dynamic Type up to ×1.35, as other constrained surfaces do: past that the card is all text band. */}
+              Dynamic Type up to ×1.35, as other constrained surfaces do: past that the card is all text band.
+              One no-break space before the age, as on the web card: the same gap, scaling with the name. */}
           <Text maxFontSizeMultiplier={NAME_SCALE_LIMIT} numberOfLines={2} style={{ color: onMedia.text, fontSize: nameSize, lineHeight: Math.round(nameSize * 1.1), fontWeight: '700', letterSpacing: nameSize * -0.02 }}>
             {entry.displayName}
             {typeof entry.age === 'number' ? (
-              <Text style={{ color: alpha(onMedia.text, 0.92), fontWeight: '400' }}>{`  ${entry.age}`}</Text>
+              <Text style={{ color: alpha(onMedia.text, 0.92), fontWeight: '400' }}>{`\u00A0${entry.age}`}</Text>
             ) : null}
           </Text>
 

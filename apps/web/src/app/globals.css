@@ -35,6 +35,11 @@
   --radius-2xl: 24px;
 
   /* Ritmo de tarjeta del móvil (`spacing.ts`): relleno 20, hueco 12, sección 32. */
+  /* Placeholder: derived from the palette (40 % muted + 60 % disabled), so every tenant has it. ≈5:1 on
+   * --surface in both modes (readable), about a third of typed text's contrast (clearly not content).
+   * Mirror of `textPlaceholder` in the app (`apps/mobile/src/theme/palette.ts`). */
+  --text-placeholder: color-mix(in srgb, var(--text-muted) 40%, var(--text-disabled));
+
   --card-padding: 20px;
   --card-gap: 12px;
   --screen-gap: 32px;

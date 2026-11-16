@@ -6,7 +6,7 @@ import { useId, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { notify } from '@/shared/notifications';
 import { socialService } from '@/features/social/services/social-service';
-import { SaveStatusLine, useSectionSave } from '@/shared/components/feedback/save-status';
+import { SAVE_ROW, SaveStatusLine, useSectionSave } from '@/shared/components/feedback/save-status';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Checkbox } from '@/shared/components/ui/checkbox';
@@ -118,11 +118,12 @@ function PreferencesForm({ embedded, initial, saving, onSave }: { embedded: bool
             {saving ? 'Guardando…' : 'Buscar compañeros'}
           </Button>
         ) : (
-          // Same save row as every edit section: its status on the left, a small save on the right.
-          <div className="flex flex-wrap items-center gap-3">
+          // Same save row as every edit section: its status on the left, a small save on the right («Guardar»:
+          // the status names the section, as on mobile, so both fit on one line at 390).
+          <div className={SAVE_ROW}>
             <SaveStatusLine saved="Preferencias guardadas." status={status} testId="preferences-status" />
-            <Button aria-describedby={blocker ? blockerId : undefined} disabled={blocker !== null || !dirty} loading={saving} onClick={submit} size="sm" variant="primary">
-              Guardar preferencias
+            <Button aria-describedby={blocker ? blockerId : undefined} aria-label="Guardar preferencias" disabled={blocker !== null || !dirty} loading={saving} onClick={submit} size="sm" variant="primary">
+              Guardar
             </Button>
           </div>
         )}

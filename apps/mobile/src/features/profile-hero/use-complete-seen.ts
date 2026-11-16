@@ -27,3 +27,8 @@ export function useCompleteSeen(userId: string | undefined, percent: number | un
   }, [percent, seenBefore?.userId, userId]);
   return seenBefore && seenBefore.userId === userId ? seenBefore.seen : undefined;
 }
+
+/** Logout forgets this member's «already saw 100 %» flag (never throws: logging out cannot fail on it). */
+export async function forgetCompleteSeen(userId: string | undefined): Promise<void> {
+  if (userId) await SecureStore.deleteItemAsync(profileCompleteSeenKey(userId)).catch(() => undefined);
+}

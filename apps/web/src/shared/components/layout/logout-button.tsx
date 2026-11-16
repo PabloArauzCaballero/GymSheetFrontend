@@ -4,6 +4,7 @@ import { LoaderCircle, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { logout as logoutRequest } from '@/features/auth/services/auth-client';
+import { forgetCompleteSeen } from '@/features/profile/lib/use-complete-seen';
 import { Button } from '@/shared/components/ui/button';
 import { confirm } from '@/shared/notifications';
 
@@ -32,6 +33,7 @@ export function LogoutButton({
     setLoading(true);
     try {
       await logoutRequest();
+      forgetCompleteSeen();
       router.replace('/login');
       router.refresh();
     } finally {

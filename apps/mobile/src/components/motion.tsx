@@ -1,5 +1,5 @@
 import { countUpDuration } from '@gymsheet/domain';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode, type Ref } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -100,11 +100,8 @@ const HAPTICS: Record<Exclude<PressHaptic, 'none'>, () => void> = {
  * Tactile surface. Scale plus a slight dim: two properties, "polished" on the
  * simplicity scale, and neither one touches layout so nothing around it shifts.
  *
- * `scaleTo` baja de 0.97 para lo pequeño: un icono de 24 px que se hunde un 3 %
- * se hunde 0,7 px, que no se ve; 0.94 es lo que se nota sin salirse de la banda
- * de 0.95–1.05 que recomienda la guía de interacción para controles táctiles.
- * Con «Reducir movimiento» (leído EN VIVO, no al arrancar) no hay escala, sólo
- * el atenuado.
+ * `scaleTo` baja de 0.97 para lo pequeño (un 3 % de 24 px no se ve; 0.94 sí, dentro de 0.95–1.05).
+ * Con «Reducir movimiento» (leído EN VIVO, no al arrancar) no hay escala, sólo el atenuado.
  */
 export function PressableScale({
   children,
@@ -121,8 +118,10 @@ export function PressableScale({
   scaleTo = 0.97,
   style,
   testID,
+  ref,
 }: {
   children: ReactNode;
+  ref?: Ref<View>; // to move VoiceOver focus back onto it (AccessibilityInfo.setAccessibilityFocus)
   /** Opcional: dentro de un `Link asChild` el toque lo pone el enlace. */
   onPress?: () => void;
   onLongPress?: () => void;
@@ -173,6 +172,7 @@ export function PressableScale({
           ? withTiming(0, { duration: DURATION.quick, easing: PREMIUM_EASING })
           : withSpring(0, releaseSpring);
       }}
+      ref={ref}
       style={[animated, style]}
       testID={testID}
     >

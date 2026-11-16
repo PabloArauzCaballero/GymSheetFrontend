@@ -16,7 +16,7 @@ export function DialogContent({
   description,
   className,
 }: Readonly<{ children: ReactNode; title: string; description?: string; className?: string }>) {
-  const returnFocus = useFocusReturn();
+  const focus = useFocusReturn();
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="dialog-overlay fixed inset-0 z-50 bg-[var(--overlay)] backdrop-blur-[2px]" />
@@ -32,9 +32,11 @@ export function DialogContent({
       */}
       <div className="pointer-events-none fixed inset-0 z-50 grid place-items-center p-4">
         <DialogPrimitive.Content
-          onCloseAutoFocus={returnFocus}
+          onCloseAutoFocus={focus.restore}
+          onOpenAutoFocus={focus.capture}
+          // The panel takes focus only as a container (tabIndex −1): no ring on it, the controls keep theirs.
           className={cn(
-            'dialog-panel pointer-events-auto relative max-h-[90dvh] w-full max-w-xl overflow-y-auto rounded-[var(--radius-2xl)] border border-transparent bg-[var(--surface-high)] p-6 shadow-[var(--shadow-dialog)]',
+            'dialog-panel pointer-events-auto relative outline-none max-h-[90dvh] w-full max-w-xl overflow-y-auto rounded-[var(--radius-2xl)] border border-transparent bg-[var(--surface-high)] p-6 shadow-[var(--shadow-dialog)]',
             className,
           )}
         >

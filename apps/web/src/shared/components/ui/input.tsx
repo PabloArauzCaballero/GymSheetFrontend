@@ -16,7 +16,7 @@ import { cn } from '@/shared/lib/cn';
  * marcador es una instrucción, no un adorno: debe cumplir AA).
  */
 export const fieldClasses =
-  'h-12 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-4 text-[17px] text-[var(--text)] placeholder:text-[var(--text-muted)] transition-[border-color,background-color,box-shadow] duration-[var(--dur-2)] hover:border-[var(--text-disabled)] focus:border-[var(--volt)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--volt)_22%,transparent)] focus:outline-none aria-[invalid=true]:border-[var(--danger)] disabled:cursor-not-allowed disabled:opacity-50';
+  'h-12 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-4 text-[17px] text-[var(--text)] placeholder:text-[var(--text-placeholder)] transition-[border-color,background-color,box-shadow] duration-[var(--dur-2)] hover:border-[var(--text-disabled)] focus:border-[var(--volt)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--volt)_22%,transparent)] focus:outline-none aria-[invalid=true]:border-[var(--danger)] disabled:cursor-not-allowed disabled:opacity-50';
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   function Input({ className, ...props }, ref) {

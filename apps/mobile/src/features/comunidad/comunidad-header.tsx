@@ -68,6 +68,8 @@ function PillOption({ label, onPress, selected }: { label: string; onPress: () =
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: spacing.smd,
+        // Air above and below once the label wraps (Dynamic Type XL); at default size minHeight decides.
+        paddingVertical: spacing.sm,
         borderRadius: radii.full,
         backgroundColor: selected ? colors.surfaceHigh : 'transparent',
       }}

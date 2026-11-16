@@ -2,11 +2,11 @@
 
 import { AnimatePresence } from 'framer-motion';
 import { Heart, MessageCircle, Star, Undo2, X } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { GymDirectoryEntry, SwipeDirection } from '@/shared/api/schemas';
 import { ChatDot } from '@/features/chat/components/chat-dot';
 import { deckActions } from '@/shared/theme/metric-colors';
-import { DECK_CARD, DECK_CARD_FILL } from './deck-geometry';
+import { CARD_FLOOR_TOP_ROOM, COMUNIDAD_GAP, DECK_CARD, DECK_CARD_FILL } from './deck-geometry';
 import { SwipeCard } from './swipe-card';
 
 /**
@@ -56,12 +56,14 @@ export function DirectorySwipeDeck({
 }>) {
   const visible = entries.slice(0, 3);
   const top = visible[0];
+  const cardRef = useRef<HTMLDivElement>(null);
+  const floor = useCardFloor(cardRef, fill, top?.userId);
 
   return (
     // A flex column: the card is the only item that gives way, so the actions always fit under it.
     // `@container` lets the buttons size against the deck's width (cqw), not just the text size.
-    <div className="@container flex min-h-0 w-full flex-1 flex-col items-center justify-[safe_center] gap-4 sm:gap-5" data-deck>
-      <div className={fill ? DECK_CARD_FILL : DECK_CARD}>
+    <div className={`@container flex min-h-0 w-full flex-1 flex-col items-center justify-[safe_center] ${COMUNIDAD_GAP}`} data-deck>
+      <div className={fill ? DECK_CARD_FILL : DECK_CARD} ref={cardRef} style={floor ? { minHeight: floor } : undefined}>
         <AnimatePresence>
           {/* Se pintan en orden inverso para que la primera quede arriba en el
               apilado sin recurrir a `z-index` por tarjeta. */}
@@ -129,6 +131,30 @@ export function DirectorySwipeDeck({
       ) : null}
     </div>
   );
+}
+
+/**
+ * The filling card's floor, from its content: the cards' text band (`data-card-band`, absolutely placed
+ * at the bottom, so its height does not depend on the card's) plus room for the progress bars. Re-measured
+ * when the band changes size (text scale, a longer name, the next card) — never a guess in rem.
+ */
+function useCardFloor(cardRef: RefObject<HTMLDivElement | null>, fill: boolean, topId: string | undefined) {
+  const [floor, setFloor] = useState<number>();
+  useLayoutEffect(() => {
+    const card = cardRef.current;
+    if (!fill || !card || typeof ResizeObserver === 'undefined') return undefined;
+    // Every stacked card's band (the top one, the ones under it, one still leaving): the floor holds them all.
+    const bands = [...card.querySelectorAll<HTMLElement>('[data-card-band]')];
+    if (bands.length === 0) return undefined;
+    // The band's top padding is only the gradient's lead-in: at the floor the top room takes its place.
+    const content = (band: HTMLElement) => band.offsetHeight - parseFloat(getComputedStyle(band).paddingTop);
+    const measure = () => setFloor(Math.ceil(Math.max(...bands.map(content)) + CARD_FLOOR_TOP_ROOM));
+    measure();
+    const observer = new ResizeObserver(measure);
+    for (const band of bands) observer.observe(band);
+    return () => observer.disconnect();
+  }, [cardRef, fill, topId]);
+  return floor;
 }
 
 function DeckAction({

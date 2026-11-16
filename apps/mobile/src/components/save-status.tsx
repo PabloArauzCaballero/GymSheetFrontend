@@ -18,7 +18,7 @@ export function useSectionSave(mutationKey: MutationKey, dirty: boolean): SaveSt
 }
 
 const ICON: Partial<Record<SaveStatus, keyof typeof Ionicons.glyphMap>> = {
-  saved: 'checkmark-circle',
+  saved: 'checkmark-circle-outline', // same outline check as the web (lucide CircleCheck)
   failed: 'alert-circle-outline',
   dirty: 'ellipse',
 };

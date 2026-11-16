@@ -1,7 +1,7 @@
 'use client';
 
 import * as TabsPrimitive from '@radix-ui/react-tabs';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, KeyboardEvent } from 'react';
 import { cn } from '@/shared/lib/cn';
 
 /**
@@ -19,9 +19,37 @@ export function Tabs({ className, ...props }: ComponentProps<typeof TabsPrimitiv
   return <TabsPrimitive.Root className={cn('min-w-0', className)} {...props} />;
 }
 
-export function TabsList({ className, ...props }: ComponentProps<typeof TabsPrimitive.List>) {
+const TABBABLE = 'a[href], button:not(:disabled), input:not(:disabled):not([type=hidden]), select:not(:disabled), textarea:not(:disabled), [tabindex]';
+
+/**
+ * Shift+Tab out of a tab strip inside a dialog. Radix's roving group drops its own tab stop only after the
+ * key event, but the dialog's focus trap measures its edges during it: it still counts the strip as a stop,
+ * so it does not wrap, the browser leaves the dialog and the trap pulls focus back onto the tab (stuck).
+ * Here the step back is taken explicitly: the previous stop in the dialog, wrapping to its last one.
+ */
+function shiftTabOutOfDialogStrip(event: KeyboardEvent<HTMLDivElement>) {
+  if (event.key !== 'Tab' || !event.shiftKey) return;
+  const list = event.currentTarget;
+  const dialog = list.closest<HTMLElement>('[role=dialog],[role=alertdialog]');
+  if (!dialog) return;
+  const stops = [...dialog.querySelectorAll<HTMLElement>(TABBABLE)].filter(
+    (el) => el.tabIndex >= 0 && !list.contains(el) && el !== list && el.getClientRects().length > 0,
+  );
+  const before = stops.filter((el) => el.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING);
+  const target = before.at(-1) ?? stops.at(-1);
+  if (!target) return;
+  event.preventDefault();
+  event.stopPropagation();
+  target.focus();
+}
+
+export function TabsList({ className, onKeyDown, ...props }: ComponentProps<typeof TabsPrimitive.List>) {
   return (
     <TabsPrimitive.List
+      onKeyDown={(event) => {
+        onKeyDown?.(event);
+        shiftTabOutOfDialogStrip(event);
+      }}
       className={cn(// Píldora segmentada del móvil (`SegmentedPill`): carril `surfaceLow`,
         // opción activa en `surfaceHighest`, sin subrayado de acento.
         'nav-scroll inline-flex max-w-full flex-wrap gap-1 overflow-x-auto rounded-[1.5rem] bg-[var(--surface-low)] p-1 shadow-[var(--shadow-sm)]', className)}
@@ -47,7 +75,9 @@ export function TabsContent({ className, ...props }: ComponentProps<typeof TabsP
   return (
     <TabsPrimitive.Content
       className={cn(
-        'pt-6 focus:outline-none data-[state=active]:motion-safe:animate-[fade-in_0.35s_ease-out]',
+        // No `outline-none`: a panel with nothing focusable inside is a Tab stop (Radix, tabIndex 0) and shows
+        // the global focus-visible ring; panels holding controls are taken out of the order (`tabIndex={-1}`).
+        'pt-6 data-[state=active]:motion-safe:animate-[fade-in_0.35s_ease-out]',
         className,
       )}
       {...props}

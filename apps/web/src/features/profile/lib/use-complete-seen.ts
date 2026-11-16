@@ -38,3 +38,16 @@ export function useCompleteSeen(userId: string | undefined, percent: number | un
   }, [percent, seenBefore?.userId, userId]);
   return seenBefore && seenBefore.userId === userId ? seenBefore.seen : undefined;
 }
+
+/**
+ * Logout forgets the «already saw 100 %» flags kept in this browser (every member's: the logout control
+ * does not know the id, and the flag is per device anyway), as the app does with SecureStore.
+ */
+export function forgetCompleteSeen(): void {
+  try {
+    const prefix = profileCompleteSeenKey('');
+    for (const key of Object.keys(window.localStorage)) if (key.startsWith(prefix)) window.localStorage.removeItem(key);
+  } catch {
+    // Storage blocked: nothing was remembered either.
+  }
+}

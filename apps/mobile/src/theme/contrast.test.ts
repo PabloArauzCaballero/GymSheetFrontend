@@ -38,6 +38,11 @@ test('el texto neutro cumple AA sobre todas las superficies', () => {
   eachSurface(neutral.textMuted, TEXT_AA, 'textMuted');
 });
 
+test('el placeholder se lee (≥ 3:1) y queda claramente por debajo del texto escrito', () => {
+  eachSurface(neutral.textPlaceholder, NON_TEXT_AA, 'textPlaceholder');
+  for (const bg of Object.values(surfaces)) assert.ok(contrastRatio(neutral.text, bg) / contrastRatio(neutral.textPlaceholder, bg) >= 2, 'placeholder vs text');
+});
+
 test('los estados (aviso, error, grupo) cumplen AA como texto', () => {
   eachSurface(neutral.danger, TEXT_AA, 'danger');
   eachSurface(neutral.warning, TEXT_AA, 'warning');

@@ -443,7 +443,7 @@ export function Input({
           // del 4,5:1 de AA. El marcador de posición es una instrucción («Nombre,
           // grupo muscular…»), no un adorno, y estaba más apagado que la propia
           // etiqueta del campo — al revés de como se lee un formulario.
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.textPlaceholder}
           style={[{
             minHeight: minTouchTarget,
             borderRadius: radii.md,

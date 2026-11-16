@@ -30,6 +30,7 @@ const staticColors = {
   textSecondary: neutral.textSecondary,
   textMuted: neutral.textMuted,
   textDisabled: neutral.textDisabled,
+  textPlaceholder: neutral.textPlaceholder,
   plate: neutral.plate,
   plateInk: neutral.plateInk,
   group: neutral.group,

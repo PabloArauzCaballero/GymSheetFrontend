@@ -12,6 +12,7 @@ import { principalCache, secureStoreAuthStorage } from '@/storage/secure-store';
 import { restoreSession } from '@/lib/session-restore';
 import { env } from '@/config/env';
 import { unregisterPushNotifications } from '@/notifications/push';
+import { forgetCompleteSeen } from '@/features/profile-hero/use-complete-seen';
 
 /**
  * Lo que `POST /auth/register` espera, ya sin el par de confirmación.
@@ -147,7 +148,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       unregisterPush: unregisterPushNotifications,
       getRefreshToken: () => secureStoreAuthStorage.getRefreshToken(),
       revokeRefreshToken,
-      clearTokens: () => secureStoreAuthStorage.clearTokens(),
+      // The «perfil completo visto» memory goes with the session: the next person on this phone starts fresh.
+      clearTokens: () => Promise.all([secureStoreAuthStorage.clearTokens(), forgetCompleteSeen(get().principal?.id)]).then(() => undefined),
     });
     setActiveTenant(null);
     set({ status: 'unauthenticated', principal: null });

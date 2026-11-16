@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { useDraftReport } from '@/features/profile/lib/unsaved-guard';
 import { profileService } from '@/features/profile/services/profile-service';
-import { SaveStatusLine, useSectionSave } from '@/shared/components/feedback/save-status';
+import { SAVE_ROW, SaveStatusLine, useSectionSave } from '@/shared/components/feedback/save-status';
 import { Button } from '@/shared/components/ui/button';
 import { Field } from '@/shared/components/ui/field';
 import { Textarea } from '@/shared/components/ui/textarea';
@@ -59,7 +59,7 @@ export function BioEditor({ bio, footer }: Readonly<{ bio: string | null; footer
         />
       </Field>
       {/* One save per section: its status on the left, its button on the right (same row in every section). */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className={SAVE_ROW}>
         <SaveStatusLine saved={bio ? 'Bio guardada.' : 'Bio borrada.'} status={status} testId="bio-status" />
         <Button disabled={!dirty} loading={save.isPending} size="sm" type="submit" variant="primary">
           Guardar bio

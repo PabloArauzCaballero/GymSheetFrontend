@@ -74,14 +74,16 @@ export function ProfilePhotoGallery({ header }: Readonly<{ header?: ReactNode }>
           </div>
         ))}
         {!atLimit ? (
+          // aria-disabled, not disabled, while uploading: the dialog hands focus back here right after a pick,
+          // and a disabled button cannot take it (focus would fall to <body>).
           <button
-            className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-[8px] border border-dashed border-[var(--border-subtle)] text-[var(--text-muted)] transition-colors hover:border-[var(--volt)] hover:text-[var(--text)] disabled:opacity-50"
-            disabled={upload.isPending}
-            onClick={() => setPicking(true)}
+            aria-disabled={upload.isPending || undefined}
+            className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-[8px] border border-dashed border-[var(--border-subtle)] text-[var(--text-muted)] transition-colors hover:border-[var(--volt)] hover:text-[var(--text)] aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+            onClick={() => upload.isPending || setPicking(true)}
             type="button"
           >
-            <Upload className="size-5" />
-            <span className="text-xs font-medium">Agregar</span>
+            <Upload aria-hidden className="size-5" />
+            <span className="text-xs font-medium">Agregar foto</span>
           </button>
         ) : null}
       </CardContent>

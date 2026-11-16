@@ -265,10 +265,11 @@ export function DiscoveryPreferencesEditor({ embedded = false, onSaved }: { embe
       {embedded ? (
         <Button accessibilityHint={blocker ?? undefined} disabled={blocker !== null} label="Buscar compañeros" loading={save.isPending} onPress={submit} />
       ) : (
-        // Same save row as every edit section: its status on the left, a small save on the right.
+        // Same save row as every edit section: its status on the left, a small save on the right («Guardar»: the
+        // status names the section, so «Preferencias guardadas.» stays on one line at 390).
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
           <SaveStatusLine saved="Preferencias guardadas." status={status} testID="preferences-status" />
-          <Button accessibilityHint={blocker ?? undefined} disabled={blocker !== null || !dirty} label="Guardar preferencias" loading={save.isPending} onPress={submit} size="sm" testID="preferences-save" />
+          <Button accessibilityHint={blocker ?? undefined} accessibilityLabel="Guardar preferencias" disabled={blocker !== null || !dirty} label="Guardar" loading={save.isPending} onPress={submit} size="sm" testID="preferences-save" />
         </View>
       )}
     </View>

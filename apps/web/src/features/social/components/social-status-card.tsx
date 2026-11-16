@@ -15,7 +15,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Field } from '@/shared/components/ui/field';
 import { Select } from '@/shared/components/ui/select';
 import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
-import { SaveStatusLine, useSectionSave } from '@/shared/components/feedback/save-status';
+import { SAVE_ROW, SaveStatusLine, useSectionSave } from '@/shared/components/feedback/save-status';
 import { socialStatusLabels } from './social-status-labels';
 
 const SOCIAL_SAVE_KEY = ['profile', 'social-status'] as const;
@@ -82,7 +82,7 @@ export function SocialStatusCard() {
           {visible ? 'Visible' : 'Oculto'}
         </Button>
         {/* The edit page's one save row: status left, the section's own save right. */}
-        <div className="flex flex-wrap items-center gap-3 sm:col-span-full">
+        <div className={`${SAVE_ROW} sm:col-span-full`}>
           <SaveStatusLine saved="Estado social guardado." status={saveStatus} testId="social-status-save" />
           <Button disabled={!dirty} loading={save.isPending} onClick={() => save.mutate()} size="sm" variant="primary">
             Guardar estado
