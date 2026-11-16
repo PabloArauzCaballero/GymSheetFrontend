@@ -9,6 +9,9 @@ import { chatTimestampLabel } from '@/lib/format';
 import { colors, comfortableTouchTarget, radii, spacing } from '@/theme';
 
 const AVATAR_SIZE = 52;
+const AVATAR_TEXT_GAP = spacing.smd;
+/** Where the row's text starts; list separators align here. */
+export const CHAT_ROW_TEXT_INSET = AVATAR_SIZE + AVATAR_TEXT_GAP;
 
 /** `null` para un chat normal — sin distintivo. */
 const SYSTEM_KIND_ICON: Record<NonNullable<ConversationSummary['systemKind']>, keyof typeof Ionicons.glyphMap> = {
@@ -49,7 +52,7 @@ export function ChatConversationRow({
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.smd,
+        gap: AVATAR_TEXT_GAP,
         minHeight: comfortableTouchTarget,
         paddingVertical: spacing.smd,
       }}

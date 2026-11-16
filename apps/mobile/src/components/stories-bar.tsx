@@ -22,7 +22,7 @@ import { useAuthStore } from '@/state/auth-store';
 import { initialsOf } from '@/lib/format';
 import { requestId } from '@/lib/request-id';
 import { canSubmitStoryAudience, toggleStoryAudienceRecipient } from '@/lib/story-audience-selection';
-import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, overlay, radii, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, gutter, iconSizes, minTouchTarget, overlay, radii, spacing } from '@/theme';
 
 const AVATAR_SIZE = 60;
 /** Diámetro del botón «+» sobre el avatar propio. */
@@ -620,7 +620,15 @@ export function StoriesBar() {
         // Sin esto una caída de red se leía como «nadie ha publicado nada».
         <ErrorState error={feed.error} onRetry={() => void feed.refetch()} />
       ) : (
-        <ScrollView contentContainerStyle={{ gap: spacing.md, paddingVertical: spacing.xs }} horizontal showsHorizontalScrollIndicator={false}>
+        // The strip bleeds to the screen edge (like Instagram/WhatsApp) instead
+        // of being clipped at the gutter mid-avatar; the padding keeps the first
+        // ring aligned with the rest of the content.
+        <ScrollView
+          contentContainerStyle={{ gap: spacing.md, paddingVertical: spacing.xs, paddingHorizontal: gutter }}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ marginHorizontal: -gutter }}
+        >
           {/* Los dos pulsables son hermanos, no uno dentro de otro: en Android
               el padre se queda con el toque destinado al hijo, y el «+» dejaba
               de responder justo en la acción que la tira existe para ofrecer. */}
