@@ -28,3 +28,22 @@ test('no stories, no thumbnail', () => {
 test('a foreign origin never receives the bearer token', () => {
   assert.equal(storyThumbnailUrl([{ mediaUrl: 'https://evil.test/x.jpg', mediaType: 'image', viewedByMe: false }], api), null);
 });
+
+test('uses the server thumbnail instead of the full photo', () => {
+  assert.equal(
+    storyThumbnailUrl([{ ...image('a', false), thumbnailUrl: '/me/stories/a/thumbnail' }], api),
+    'https://api.example.test/api/v1/me/stories/a/thumbnail',
+  );
+});
+
+test('an older backend without thumbnails falls back to the full photo', () => {
+  assert.equal(storyThumbnailUrl([image('a', false)], api), 'https://api.example.test/api/v1/stories/a/media');
+});
+
+test('a null thumbnail means none, not the full media', () => {
+  assert.equal(storyThumbnailUrl([{ ...image('a', false), thumbnailUrl: null }], api), null);
+});
+
+test('a foreign thumbnail origin never receives the bearer token', () => {
+  assert.equal(storyThumbnailUrl([{ ...image('a', false), thumbnailUrl: 'https://evil.test/t.webp' }], api), null);
+});
