@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, Dumbbell, Info, MapPin, Trophy } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Info } from 'lucide-react';
 import { useState } from 'react';
 import type { GymDirectoryEntry } from '@/shared/api/schemas';
 import { DomainImage } from '@/shared/components/media/domain-image';
@@ -16,7 +16,7 @@ export function galleryOf(entry: GymDirectoryEntry): { id: string; url: string }
 
 /**
  * La cara de una persona: foto a sangre y, encima, lo justo para decidir —
- * nombre, edad, objetivo, sucursal y experiencia.
+ * nombre, edad y una línea con objetivo, sucursal, experiencia y puntos.
  *
  * Es sólo la superficie: ni gesto de arrastre ni botones de decisión. Por eso
  * la comparten los tres sitios que enseñan a un socio —la baraja de Descubrir,
@@ -74,10 +74,14 @@ export function DirectoryCardFace({
   };
   const canStep = photos.length > 1 && interactive;
 
-  const objetivo = entry.objetivo ? (trainingGoalLabels[entry.objetivo] ?? entry.objetivo) : null;
-  const experience = entry.experienceLevel
-    ? (experienceLevelLabels[entry.experienceLevel] ?? entry.experienceLevel)
-    : null;
+  const meta = [
+    entry.objetivo ? (trainingGoalLabels[entry.objetivo] ?? entry.objetivo) : null,
+    entry.branchName,
+    entry.experienceLevel ? (experienceLevelLabels[entry.experienceLevel] ?? entry.experienceLevel) : null,
+    typeof entry.points === 'number' ? `${entry.points.toLocaleString('es-ES')}\u00A0pts` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <div className={cn('relative overflow-hidden bg-[var(--surface-high)]', fill ? 'size-full' : 'aspect-[4/5] w-full')}>
@@ -145,39 +149,15 @@ export function DirectoryCardFace({
 
       {/* Tres paradas y no dos: con dos, el tramo medio sube demasiado rápido y
           el degradado vuelve a leerse como una banda cortada a media foto. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 grid gap-2 bg-[linear-gradient(to_top,rgb(var(--scrim-channels)/0.88)_0%,rgb(var(--scrim-channels)/0.45)_55%,transparent_100%)] p-5 pt-16 text-white">
+      <div className={cn('pointer-events-none absolute inset-x-0 bottom-0 z-10 grid gap-0.5 bg-[linear-gradient(to_top,rgb(var(--scrim-channels)/0.88)_0%,rgb(var(--scrim-channels)/0.45)_55%,transparent_100%)] p-5 pt-16 text-white', onInfo && interactive && 'pr-16')}>
         <p className={cn('font-semibold tracking-[-0.02em]', fill ? 'text-3xl' : 'text-xl')}>
           {entry.displayName}
           {entry.age !== null ? (
             <span className="ml-2 font-normal opacity-90">{entry.age}</span>
           ) : null}
         </p>
-        {/* Chips del móvil sobre la foto: sede, objetivo y puntos (este en acento). */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          {entry.branchName ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--background)_70%,transparent)] px-2.5 py-1 text-xs font-semibold">
-              <MapPin aria-hidden className="size-3 opacity-85" />
-              {entry.branchName}
-            </span>
-          ) : null}
-          {objetivo ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--background)_70%,transparent)] px-2.5 py-1 text-xs font-semibold">
-              <Dumbbell aria-hidden className="size-3 text-[var(--accent-ink)]" />
-              {objetivo}
-            </span>
-          ) : null}
-          {typeof entry.points === 'number' ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--volt)_18%,transparent)] px-2.5 py-1 text-xs font-bold tabular-nums text-[var(--accent-ink)]">
-              <Trophy aria-hidden className="size-3" />
-              {`${entry.points.toLocaleString('es-ES')} pts`}
-            </span>
-          ) : null}
-          {experience ? (
-            <span className="rounded-full bg-[color-mix(in_srgb,var(--background)_70%,transparent)] px-2.5 py-1 text-xs font-semibold">
-              {experience}
-            </span>
-          ) : null}
-        </div>
+        {/* One plain line, as on the app: objetivo · sede · nivel · puntos. Chips over a photo were noise. */}
+        {meta ? <p className="line-clamp-2 text-sm leading-[19px] text-white/85">{meta}</p> : null}
       </div>
 
       {onInfo && interactive ? (

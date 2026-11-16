@@ -4,6 +4,7 @@ import { cardDisplayName, experienceLevelLabels } from '@gymsheet/domain';
 import type { GymDirectoryEntry } from '@gymsheet/schemas';
 import {
   accountService,
+  facilitiesService,
   onboardingService,
   profileCompletionService,
   profilePhotosService,
@@ -35,6 +36,9 @@ export function useOwnProfile() {
   const photos = useQuery({ queryKey: ['profile', 'photos'], queryFn: () => profilePhotosService.list(), staleTime: 60_000 });
   const progression = useQuery({ queryKey: ['progression', 'me'], queryFn: () => progressionService.get() });
   const completion = useQuery({ queryKey: PROFILE_COMPLETION_KEY, queryFn: () => profileCompletionService.get() });
+  // Your branch, as the deck shows it: only a branch of your own gym has a name (same rule as the server).
+  const branches = useQuery({ queryKey: ['facilities', 'my-branches'], queryFn: () => facilitiesService.myBranches(), enabled: Boolean(account.data?.sedeId), staleTime: 5 * 60_000 });
+  const branch = branches.data?.find((entry) => entry.id === account.data?.sedeId) ?? null;
 
   const missingProfile = profile.error instanceof ApiError && profile.error.kind === 'not-found';
   const bio = account.data?.bio?.trim() || null;
@@ -50,16 +54,16 @@ export function useOwnProfile() {
   const fullName = account.data?.nombreCompleto ?? principal?.nombreCompleto ?? '';
   /**
    * Tu carta tal como la arma el servidor para los demás (`DirectoryEntry`):
-   * mismo nombre corto, mismas fotos, mismos datos. La sede y el estado social
-   * se dejan fuera porque dependen de quién mira.
+   * mismo nombre corto, mismas fotos, mismos datos y tu sede. El estado social
+   * se deja fuera: solo lo ven tus conexiones.
    */
   const cardEntry: GymDirectoryEntry | null = principal
     ? {
         userId: principal.id,
         displayName: cardDisplayName(fullName) || 'Tú',
         objetivo: profile.data?.objetivo ?? null,
-        branchId: null,
-        branchName: null,
+        branchId: branch?.id ?? null,
+        branchName: branch?.nombre ?? null,
         connectionStatus: 'NONE',
         connectionId: null,
         socialStatus: null,
@@ -74,5 +78,5 @@ export function useOwnProfile() {
       }
     : null;
 
-  return { principal, account, profile, onboarding, photos, progression, completion, missingProfile, bio, chips, cardEntry };
+  return { principal, account, profile, onboarding, photos, progression, completion, branches, missingProfile, bio, chips, cardEntry };
 }

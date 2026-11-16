@@ -13,7 +13,8 @@ import type { Profile } from '@/shared/api/contracts';
 import { trainingGoals } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { Button } from '@/shared/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
+import { Section } from '@/shared/components/mobile/section';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { Field } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
@@ -37,6 +38,31 @@ function DecimalInput({ field, id }: Readonly<{ field: { value: number; onChange
       }}
       type="text"
       value={draft ?? formatDecimalInput(field.value)}
+    />
+  );
+}
+
+/**
+ * The birth date typed as dd/mm/aaaa whatever the browser's locale (a native date input shows
+ * mm/dd/yyyy on an English browser). The form holds `YYYY-MM-DD`, as the API stores it.
+ */
+function BirthDateInput({ field }: Readonly<{ field: { value: string; onChange: (value: string) => void; onBlur: () => void; name: string } }>) {
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <Input
+      autoComplete="bday"
+      id="fechaNacimiento"
+      inputMode="numeric"
+      name={field.name}
+      onBlur={field.onBlur}
+      onChange={(event) => {
+        const masked = birthDate.maskBirthDate(event.target.value);
+        setDraft(masked);
+        field.onChange(birthDate.isoFromDisplay(masked));
+      }}
+      placeholder="dd/mm/aaaa"
+      type="text"
+      value={draft ?? birthDate.displayFromIso(field.value)}
     />
   );
 }
@@ -80,12 +106,15 @@ export function ProfileDataForm({ profile, footer }: Readonly<{ profile: Profile
 
   return (
     <form onSubmit={form.handleSubmit((values) => save.mutate(values))}>
+      {/* «Tus datos», as on the app; the heading sits outside the card like every other section. */}
+      <Section title="Tus datos">
       <Card>
-        <CardHeader description="Ajustan tus cargas y tus rutinas. No son un diagnóstico médico." title="Peso, estatura y objetivo" />
         <CardContent className="grid gap-5 sm:grid-cols-2">
           {footer ? <div className="sm:col-span-2">{footer}</div> : null}
-          <Field error={form.formState.errors.fechaNacimiento?.message} htmlFor="fechaNacimiento" label="Fecha de nacimiento">
-            <Input id="fechaNacimiento" max={birthDate.isoYearsAgo(birthDate.MIN_AGE)} min={birthDate.isoYearsAgo(birthDate.MAX_AGE + 1)} type="date" {...form.register('fechaNacimiento')} />
+          <p className="t-subhead text-[var(--text-muted)] sm:col-span-2">Peso, estatura y objetivo ajustan tus cargas y tus rutinas. No son un diagnóstico médico.</p>
+          <Field error={form.formState.errors.fechaNacimiento?.message} hint="Opcional. Día, mes y año: dd/mm/aaaa." htmlFor="fechaNacimiento" label="Fecha de nacimiento">
+            {/* Keyed by the saved date: a reload of the profile resets the typed text. */}
+            <Controller control={form.control} key={profile?.fechaNacimiento ?? 'none'} name="fechaNacimiento" render={({ field }) => <BirthDateInput field={field} />} />
           </Field>
           <Field error={form.formState.errors.pesoKg?.message} htmlFor="pesoKg" label="Peso (kg)">
             {/* Keyed by the saved weight: a reload of the profile resets the typed text. */}
@@ -115,6 +144,7 @@ export function ProfileDataForm({ profile, footer }: Readonly<{ profile: Profile
           </Button>
         </CardContent>
       </Card>
+      </Section>
     </form>
   );
 }

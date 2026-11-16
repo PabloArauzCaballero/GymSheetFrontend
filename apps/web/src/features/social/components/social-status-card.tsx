@@ -8,7 +8,8 @@ import { socialService } from '@/features/social/services/social-service';
 import type { SocialStatusValue } from '@/shared/api/schemas';
 import { socialStatusValues } from '@/shared/api/schemas';
 import { queryKeys } from '@/shared/api/query-keys';
-import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
+import { Section } from '@/shared/components/mobile/section';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Field } from '@/shared/components/ui/field';
 import { Select } from '@/shared/components/ui/select';
@@ -44,12 +45,10 @@ export function SocialStatusCard() {
   if (status.isLoading) return <LoadingPanel rows={2} />;
 
   return (
+    <Section title="Tu estado social">
     <Card>
-      <CardHeader
-        description="Solo lo ven tus conexiones aceptadas, y solo si lo dejas visible."
-        title="Tu estado social"
-      />
       <CardContent className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end">
+        <p className="t-subhead text-[var(--text-muted)] sm:col-span-full">Solo lo ven tus conexiones aceptadas, y solo si lo dejas visible.</p>
         <Field htmlFor="social-status" label="Estado">
           <Select
             id="social-status"
@@ -79,5 +78,6 @@ export function SocialStatusCard() {
         </Button>
       </CardContent>
     </Card>
+    </Section>
   );
 }

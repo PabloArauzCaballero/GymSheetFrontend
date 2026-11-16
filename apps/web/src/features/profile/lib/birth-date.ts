@@ -19,12 +19,37 @@ export function isoYearsAgo(years: number, today = new Date()): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-/** `<input type="date">` entrega '' o `YYYY-MM-DD`. Vacío es válido: la fecha es opcional. */
-export const birthDateInputSchema = z.string().refine((value) => {
-  if (value === '') return true;
+/** What the user types, digits only, shaped as `dd/mm/aaaa` while typing (P2-13: never the browser's mm/dd). */
+export function maskBirthDate(text: string): string {
+  const digits = text.replace(/\D/g, '').slice(0, 8);
+  return [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4)].filter(Boolean).join('/');
+}
+
+/** `1996-03-15` → `15/03/1996`. */
+export function displayFromIso(iso: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : '';
+}
+
+/** `15/03/1996` → `1996-03-15`; anything incomplete is handed on as typed, so the schema says what is wrong. */
+export function isoFromDisplay(text: string): string {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text);
+  return match ? `${match[3]}-${match[2]}-${match[1]}` : text;
+}
+
+/** '' or `YYYY-MM-DD` of a real past day. Empty is valid: the date is optional. */
+export const birthDateInputSchema = z.string().superRefine((value, ctx) => {
+  if (value === '') return;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return ctx.addIssue({ code: 'custom', message: 'Escribe la fecha como dd/mm/aaaa.' });
+  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return ctx.addIssue({ code: 'custom', message: 'Esa fecha no existe.' });
+  }
   const age = ageFromBirthDate(value);
-  return age >= MIN_AGE && age <= MAX_AGE;
-}, `Debes tener entre ${MIN_AGE} y ${MAX_AGE} años.`);
+  if (age < MIN_AGE || age > MAX_AGE) ctx.addIssue({ code: 'custom', message: `Debes tener entre ${MIN_AGE} y ${MAX_AGE} años.` });
+});
 
 /**
  * Qué enviar como `fechaNacimiento`. Vacío solo borra una fecha que ya existía;

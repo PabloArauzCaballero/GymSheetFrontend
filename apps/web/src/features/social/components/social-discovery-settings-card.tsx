@@ -2,15 +2,20 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Lock, UserRoundPlus } from 'lucide-react';
+import { useId } from 'react';
 import { notify } from '@/shared/notifications';
 import { socialService } from '@/features/social/services/social-service';
 import { Button } from '@/shared/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
 
-/** Independent, versioned consent controls for social, cross-gym and map exposure. */
+/**
+ * Independent, versioned consent controls for social, cross-gym and map exposure.
+ * The heading lives outside the card (`Section`), like every other profile section.
+ */
 export function SocialDiscoverySettingsCard() {
   const queryClient = useQueryClient();
+  const lockedId = useId();
   const settings = useQuery({
     queryKey: ['social', 'discovery-settings'],
     queryFn: socialService.getDiscoverySettings,
@@ -34,12 +39,9 @@ export function SocialDiscoverySettingsCard() {
 
   return (
     <Card>
-      <CardHeader
-        description="Tu perfil empieza privado. La presencia en otros gimnasios y en el mapa tiene permisos separados."
-        title="Descubrimiento social"
-      />
       {/* Side by side only when the card itself is wide: in the profile's narrow column the labels clipped. */}
-      <CardContent className="@container">
+      <CardContent className="@container grid gap-4 [overflow-wrap:anywhere]">
+        <p className="t-subhead hyphens-auto text-[var(--text-muted)] [overflow-wrap:anywhere]">Tu perfil empieza privado. La presencia en otros gimnasios y en el mapa tiene permisos separados.</p>
         <div className="grid gap-3 @xl:grid-cols-3">
         <Button
           // Off: a 3:1 control outline (≈4.8:1 dark, ≈3.6:1 light); the shared --border is only ~1.3:1.
@@ -58,7 +60,7 @@ export function SocialDiscoverySettingsCard() {
           {current.profileEnabled ? 'Pausar perfil social' : 'Activar perfil social'}
         </Button>
         <Button
-          aria-describedby={locked ? 'social-discovery-locked' : undefined}
+          aria-describedby={locked ? lockedId : undefined}
           className={dependent}
           disabled={locked || busy}
           onClick={() => update.mutate({
@@ -70,7 +72,7 @@ export function SocialDiscoverySettingsCard() {
           variant={current.crossGymEnabled ? 'secondary' : 'ghost'}
         >{current.crossGymEnabled ? 'Desactivar entre gimnasios' : 'Permitir otros gimnasios'}</Button>
         <Button
-          aria-describedby={locked ? 'social-discovery-locked' : undefined}
+          aria-describedby={locked ? lockedId : undefined}
           className={dependent}
           disabled={locked || busy}
           onClick={() => update.mutate({
@@ -83,7 +85,7 @@ export function SocialDiscoverySettingsCard() {
         >{current.mapEnabled ? 'Ocultarme del mapa' : 'Aparecer en el mapa'}</Button>
         </div>
         {locked ? (
-          <p className="t-footnote mt-3 flex items-center gap-2 text-[var(--text-muted)]" id="social-discovery-locked">
+          <p className="t-footnote flex items-center gap-2 text-[var(--text-muted)]" id={lockedId}>
             <Lock aria-hidden className="size-4 shrink-0" />
             Activa tu perfil social primero para elegir dónde apareces.
           </p>

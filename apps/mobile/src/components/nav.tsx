@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
 import { Text } from 'react-native';
 import { PressableScale } from '@/components/motion';
-import { accentPolicy, fontSizes, iconSizes, minTouchTarget, semibold, spacing } from '@/theme';
+import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, semibold, spacing } from '@/theme';
 
 /**
  * Explicit way back from a detail screen. Android has the system back gesture
@@ -10,7 +10,17 @@ import { accentPolicy, fontSizes, iconSizes, minTouchTarget, semibold, spacing }
  * works for everyone — including screen reader users, for whom a swipe-only
  * path is no path at all.
  */
-export function BackLink({ label = 'Volver', fallbackHref = '/comunidad-mensajes' }: { label?: string; fallbackHref?: Href }) {
+export function BackLink({
+  label = 'Volver',
+  fallbackHref = '/comunidad-mensajes',
+  neutral = false,
+}: {
+  label?: string;
+  fallbackHref?: Href;
+  /** Neutral ink instead of the quiet brand link (profile screens, mirroring the web «‹ Perfil»). */
+  neutral?: boolean;
+}) {
+  const ink = neutral ? colors.textSecondary : accentPolicy.quietLink;
   const router = useRouter();
   // `router.replace` hacia una pantalla de otro navegador (abrir un entreno
   // desde una rutina o desde cardio) reemplaza la pila entera de pestañas: la
@@ -39,13 +49,13 @@ export function BackLink({ label = 'Volver', fallbackHref = '/comunidad-mensajes
           atención al único control que debería tenerla. */}
       <Ionicons
         accessibilityElementsHidden
-        color={accentPolicy.quietLink}
+        color={ink}
         importantForAccessibility="no-hide-descendants"
         name="chevron-back"
         size={iconSizes.md}
       />
       <Text
-        style={{ color: accentPolicy.quietLink, fontSize: fontSizes.sm, fontWeight: semibold }}
+        style={{ color: ink, fontSize: fontSizes.sm, fontWeight: semibold }}
       >
         {label}
       </Text>

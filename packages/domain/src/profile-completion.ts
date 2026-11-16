@@ -94,6 +94,17 @@ export function profileProgress(completion: { completed: number; total: number; 
   return { ratio, label };
 }
 
+/**
+ * What a screen reader hears on the completion ring. Without a photo the ring
+ * wraps initials, so it speaks of the profile, not of «tu foto». The pill's
+ * «Sin cargar» is said too, so a failed read is never silent.
+ */
+export function completionRingLabel({ hasPhoto, percent, failed = false }: { hasPhoto: boolean; percent: number | null; failed?: boolean }): string {
+  const subject = hasPhoto ? 'Tu foto de perfil' : 'Tu perfil';
+  if (percent !== null) return `${subject}, ${percent} % completo`;
+  return failed ? `${subject}. Progreso sin cargar` : subject;
+}
+
 /** «+50». Lo que vale un dato, listo para una ficha. */
 export function pointsChip(points: number): string {
   return `+${points.toLocaleString('es-ES')}`;

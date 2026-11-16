@@ -2,10 +2,11 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { onboardingService } from '@/features/onboarding/services/onboarding-service';
-import { RecordWeightButton } from '@/features/profile/components/record-weight-dialog';
 import { queryKeys } from '@/shared/api/query-keys';
 import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
-import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
+import { Section } from '@/shared/components/mobile/section';
+import { Card, CardContent } from '@/shared/components/ui/card';
+import { formatDate } from '@/shared/lib/date';
 
 export function ProfileMeasurements() {
   const measurements = useQuery({
@@ -14,16 +15,11 @@ export function ProfileMeasurements() {
   });
 
   return (
+    // «Registrar peso» lives once, in «Peso corporal» right above. The heading sits outside the card.
+    <Section title="Progreso corporal">
     <Card>
-      <CardHeader
-        // La acción vive junto a la evolución que alimenta, igual que en el
-        // móvil: anotar un pesaje es lo que se hace cada semana, y hasta ahora
-        // el histórico sólo se llenaba de rebote al guardar el perfil entero.
-        action={<RecordWeightButton size="sm" />}
-        description="Cada registro se conserva; actualizar el peso no borra mediciones anteriores."
-        title="Progreso corporal"
-      />
-      <CardContent>
+      <CardContent className="grid gap-4">
+        <p className="t-subhead text-[var(--text-muted)]">Cada registro se conserva; actualizar el peso no borra mediciones anteriores.</p>
         {measurements.isLoading ? (
           <LoadingPanel rows={3} />
         ) : measurements.data?.length ? (
@@ -39,7 +35,7 @@ export function ProfileMeasurements() {
               <tbody>
                 {measurements.data.map((item) => (
                   <tr className="border-t border-[var(--border-subtle)]" key={item.id}>
-                    <td className="py-3">{item.measuredOn}</td>
+                    <td className="py-3 tabular-nums">{formatDate(item.measuredOn)}</td>
                     <td className="tabular-nums">
                       {item.weight} {item.unit}
                     </td>
@@ -54,5 +50,6 @@ export function ProfileMeasurements() {
         )}
       </CardContent>
     </Card>
+    </Section>
   );
 }

@@ -1,12 +1,15 @@
 'use client';
 
+import { completionRingLabel } from '@gymsheet/domain';
 import { CloudOff } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { mediaProxyUrl } from '@/shared/components/media/domain-image';
 
 const SIZE = 132;
-const STROKE = 5;
-const GAP = 6;
+// A thicker arc (P2-11), in accent ink: ≥3:1 against its track and the hero in both themes.
+const STROKE = 8;
+const GAP = 5;
 const AVATAR = SIZE - 2 * (STROKE + GAP);
 const RADIUS = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -18,18 +21,26 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
  * Sin dato (`percent === null`) el aro queda en pista: no se pinta un 0 % falso.
  * Si la lectura falló (`failed`), la píldora dice «Sin cargar»: el único
  * «Reintentar» de esa falla es el de la tarjeta de abajo, no dos botones iguales.
+ * Con `href` la cara es un enlace, como en el móvil: con foto lleva a cómo te
+ * ven; sin foto, a añadirla.
  */
 export function CompletionAvatar({
   photoUrl,
   initials,
   percent,
   failed = false,
+  href,
+  hint,
 }: Readonly<{
   photoUrl: string | null;
   initials: string;
   percent: number | null;
   /** The completion read failed: the pill says so; the retry lives in the error card only. */
   failed?: boolean;
+  /** Makes the face a link (preview with a photo, add one without). */
+  href?: string;
+  /** What the link does, read after the label. */
+  hint?: string;
 }>) {
   const [shown, setShown] = useState(0);
   useEffect(() => {
@@ -45,14 +56,14 @@ export function CompletionAvatar({
   const body = (
     <>
       <svg aria-hidden className="absolute top-0 left-0" height={SIZE} width={SIZE}>
-        <circle cx={SIZE / 2} cy={SIZE / 2} fill="none" r={RADIUS} stroke="var(--surface-highest)" strokeWidth={STROKE} />
+        <circle cx={SIZE / 2} cy={SIZE / 2} fill="none" r={RADIUS} stroke="var(--border-subtle)" strokeWidth={STROKE} />
         <circle
           className="transition-[stroke-dashoffset] duration-[var(--dur-5)] ease-[var(--ease-out)] motion-reduce:transition-none"
           cx={SIZE / 2}
           cy={SIZE / 2}
           fill="none"
           r={RADIUS}
-          stroke="var(--volt)"
+          stroke="var(--accent-ink)"
           strokeDasharray={CIRCUMFERENCE}
           strokeDashoffset={CIRCUMFERENCE * (1 - Math.min(Math.max(shown / 100, 0), 1))}
           strokeLinecap="round"
@@ -84,9 +95,23 @@ export function CompletionAvatar({
     </>
   );
   const box = { width: SIZE, height: SIZE + 12 };
+  const label = completionRingLabel({ hasPhoto: Boolean(shownUrl), percent, failed });
 
+  if (href) {
+    return (
+      <Link
+        aria-label={hint ? `${label}. ${hint}` : label}
+        className="tap relative mx-auto grid place-items-center rounded-full"
+        data-testid="profile-avatar"
+        href={href}
+        style={box}
+      >
+        {body}
+      </Link>
+    );
+  }
   return (
-    <figure aria-label={percent === null ? 'Tu foto de perfil' : `Tu foto de perfil. Perfil completo al ${percent} %`} className="relative mx-auto grid place-items-center" role="img" style={box}>
+    <figure aria-label={label} className="relative mx-auto grid place-items-center" role="img" style={box}>
       {body}
     </figure>
   );

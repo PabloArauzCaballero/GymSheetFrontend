@@ -7,6 +7,8 @@ import { goalLabels } from '@/features/profile/components/profile-form-schema';
 import { profilePhotosService } from '@/features/profile/services/profile-photos-service';
 import { profileService } from '@/features/profile/services/profile-service';
 import { progressionService } from '@/features/progression/services/progression-service';
+import { publicFacilitiesClient } from '@/features/public-facilities/services/public-facilities-client';
+import { directoryKeys } from '@/features/social/services/directory-keys';
 import { ApiError } from '@/shared/api/api-error';
 import { queryKeys } from '@/shared/api/query-keys';
 import type { GymDirectoryEntry } from '@/shared/api/schemas';
@@ -38,6 +40,9 @@ export function useOwnProfile() {
   const photos = useQuery({ queryKey: queryKeys.profilePhotos, queryFn: profilePhotosService.list, staleTime: 60_000 });
   const progression = useQuery({ queryKey: ['progression', 'me'], queryFn: progressionService.get, retry: false });
   const completion = useQuery({ queryKey: PROFILE_COMPLETION_KEY, queryFn: profileService.getCompletion, retry: false });
+  // Your branch, as the deck shows it: only a branch of your own gym has a name (same rule as the server).
+  const branches = useQuery({ queryKey: directoryKeys.myBranches, queryFn: publicFacilitiesClient.myBranches, enabled: Boolean(user.data?.sedeId), staleTime: 5 * 60_000 });
+  const branch = branches.data?.find((entry) => entry.id === user.data?.sedeId) ?? null;
 
   const me = user.data;
   const bio = me?.bio?.trim() || null;
@@ -49,14 +54,14 @@ export function useOwnProfile() {
     ...interests.map((interest) => ({ key: `interest-${interest}`, label: interest, kind: 'interest' as const })),
   ];
 
-  /** Tu carta tal como la arma el servidor para los demás; sede y estado dependen de quién mira. */
+  /** Tu carta tal como la arma el servidor para los demás. El estado social depende de quién mira (solo conexiones). */
   const cardEntry: GymDirectoryEntry | null = me
     ? {
         userId: me.id,
         displayName: cardDisplayName(me.nombreCompleto) || 'Tú',
         objetivo: profile.data?.objetivo ?? null,
-        branchId: null,
-        branchName: null,
+        branchId: branch?.id ?? null,
+        branchName: branch?.nombre ?? null,
         connectionStatus: 'NONE',
         connectionId: null,
         socialStatus: null,
@@ -71,5 +76,5 @@ export function useOwnProfile() {
       }
     : null;
 
-  return { user, profile, onboarding, photos, progression, completion, bio, chips, cardEntry };
+  return { user, profile, onboarding, photos, progression, completion, branches, bio, chips, cardEntry };
 }

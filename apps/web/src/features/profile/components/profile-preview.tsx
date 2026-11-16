@@ -1,5 +1,6 @@
 'use client';
 
+import { Expand } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { DirectoryCardFace } from '@/features/social/components/directory-card-face';
 import { MemberDetailSheet } from '@/features/social/components/member-detail-sheet';
@@ -36,6 +37,7 @@ export function ProfilePreview({ entry }: Readonly<{ entry: GymDirectoryEntry }>
           />
         </div>
         <Button onClick={() => setDetail(entry)} ref={ctaRef} variant="ghost">
+          <Expand aria-hidden className="size-5" />
           Ver ficha completa
         </Button>
       </div>

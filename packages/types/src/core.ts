@@ -32,6 +32,8 @@ export type User = {
   pesoIncrementoKg?: number;
   /** Unas líneas sobre ti (160 como máximo). */
   bio?: string | null;
+  /** Sede habitual. Nula = sin elegir. */
+  sedeId?: string | null;
 };
 
 export type SessionPrincipal = {

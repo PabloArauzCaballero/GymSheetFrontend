@@ -43,8 +43,9 @@ const MEMBERSHIP_BADGE = {
  * Perfil, espejo de `apps/mobile/app/(app)/(tabs)/profile.tsx` (rediseño a lo
  * Tinder): la cara con el aro de completitud, puntos · racha · sesiones bajo
  * el nombre, tres acciones en círculo (vista previa, editar, compartir) y el
- * empujón con los puntos reales que da cada dato que falta. Luego «Sobre ti»,
- * la senda y las listas. Se edita en `/profile/editar`.
+ * empujón con los puntos reales que da cada dato que falta. Luego, en el mismo
+ * orden que la app: «Sobre ti», tu senda, tu actividad, Conocer gente, tu
+ * cuenta y el incremento de peso. Se edita en `/profile/editar`.
  */
 export function ProfilePageClient() {
   const own = useOwnProfile();
@@ -102,8 +103,26 @@ export function ProfilePageClient() {
       ? `${profile.data.pesoKg.toLocaleString('es-ES')} kg · ${profile.data.estaturaCm} cm · ${goalLabels[profile.data.objetivo]}`
       : 'Añade peso, estatura y objetivo';
 
-  // One card, two slots: under the nudge on phones, beside the hero on desktop (only one is displayed).
+  // One block, two slots: in reading order on phones, in the side column on desktop (only one is displayed).
   const senda = <SendaCard failed={progression.isError} onRetry={() => void progression.refetch()} pending={progression.isPending} progress={progress} />;
+  const conocer = (
+    <>
+      <Section title="Descubrimiento social">
+        <SocialDiscoverySettingsCard />
+      </Section>
+      <Section title="Preferencias de Conocer">
+        <DiscoveryPreferencesCard />
+      </Section>
+    </>
+  );
+  const weight = (
+    <Section title="Incremento de peso">
+      <div className="panel p-5">
+        <WeightIncrementField value={me.pesoIncrementoKg} />
+      </div>
+    </Section>
+  );
+  const hasPhoto = Boolean(own.cardEntry?.photoUrl);
 
   return (
     <div className="mx-auto grid w-full grid-cols-1 max-w-[560px] gap-8 lg:max-w-[1040px]">
@@ -121,6 +140,8 @@ export function ProfilePageClient() {
         <div className="grid min-w-0 grid-cols-1 gap-8">
           <HeroSurface className="justify-items-center gap-4 py-7" watermark watermarkAt="top">
             <CompletionAvatar
+              hint={hasPhoto ? 'Ver cómo te ven en Conocer' : 'Añadir una foto'}
+              href={hasPhoto ? '/profile/editar?tab=preview' : '/profile/editar#fotos'}
               initials={initialsOf(me.nombreCompleto, me.email)}
               failed={completionFailed}
               percent={completion.data?.percent ?? null}
@@ -165,6 +186,8 @@ export function ProfilePageClient() {
             </RowGroup>
           </Section>
 
+          <div className="grid min-w-0 grid-cols-1 gap-8 lg:hidden">{conocer}</div>
+
           <Section title="Tu cuenta">
             <RowGroup>
               {[
@@ -184,18 +207,14 @@ export function ProfilePageClient() {
               ]}
             </RowGroup>
           </Section>
+          <div className="min-w-0 lg:hidden">{weight}</div>
         </div>
 
         {/* Desktop: «Tu senda» sits beside the hero, above the fold; the weight chips are a setting, so they go last. */}
-        <div className="grid min-w-0 grid-cols-1 gap-5">
-          <div className="hidden lg:block">{senda}</div>
-          <SocialDiscoverySettingsCard />
-          <DiscoveryPreferencesCard />
-          <Section title="Incremento de peso">
-            <div className="panel p-5">
-              <WeightIncrementField value={me.pesoIncrementoKg} />
-            </div>
-          </Section>
+        <div className="hidden min-w-0 grid-cols-1 gap-8 lg:grid">
+          {senda}
+          {conocer}
+          {weight}
         </div>
       </div>
 

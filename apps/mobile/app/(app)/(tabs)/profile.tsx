@@ -17,7 +17,7 @@ import { fitnessNumbers } from '@/features/profile-hero/fitness-numbers';
 import { FitnessRow } from '@/features/profile-hero/fitness-row';
 import { ProfileActions, type ProfileAction } from '@/features/profile-hero/profile-actions';
 import { RankChip } from '@/features/profile-hero/profile-hero';
-import { AccountList, ActivityList } from '@/features/profile-hero/profile-lists';
+import { AccountList, ActivityList, ConocerList } from '@/features/profile-hero/profile-lists';
 import { proudStat, shareMyProfile } from '@/features/profile-hero/profile-share';
 import { SendaCard } from '@/features/profile-hero/senda-card';
 import { useOwnProfile } from '@/features/profile-hero/use-own-profile';
@@ -38,7 +38,9 @@ const ROLE_LABEL: Record<string, string> = {
  * Perfil (rediseño 2026-11-15, a lo Tinder): la cara grande con el aro de
  * completitud, puntos · racha · sesiones bajo el nombre, tres acciones en
  * círculo —vista previa, editar, compartir— y, debajo, el empujón con los puntos reales que da cada dato que
- * falta. Luego «Sobre ti», tu senda y las listas de siempre.
+ * falta. Luego, en el mismo orden que la web: «Sobre ti», tu senda, tu
+ * actividad, Conocer gente, tu cuenta y, al final, el incremento de peso (un
+ * ajuste).
  */
 export default function ProfileScreen() {
   const router = useRouter();
@@ -90,6 +92,7 @@ export default function ProfileScreen() {
   // A failed read with nothing cached is said out loud (ring and card), never hidden.
   const completionFailed = completion.isError && !completion.data;
   const retryCompletion = () => void completion.refetch();
+  const hasPhoto = Boolean(own.cardEntry?.photoUrl);
   const shareStat = progress ? proudStat(fitnessNumbers(progress)) : null;
   const actions: ProfileAction[] = [
     { key: 'preview', label: 'Vista previa', icon: 'eye-outline', onPress: () => router.push('/profile-edit?tab=preview'), testID: 'profile-preview' },
@@ -123,6 +126,9 @@ export default function ProfileScreen() {
       <TourTarget id="profile.identity">
         <HeroSurface testID="profile-hero" watermark watermarkAt="top">
           <CompletionAvatar
+            // The face is a button (Tinder): with a photo it shows how others see you; without, it asks for one.
+            accessibilityHint={hasPhoto ? 'Ver cómo te ven en Conocer' : 'Añadir una foto'}
+            onPress={() => router.push(hasPhoto ? '/profile-edit?tab=preview' : editRouteFor('FOTO'))}
             initials={initialsOf(principal?.nombreCompleto, principal?.email)}
             failed={completionFailed}
             percent={completion.data?.percent ?? null}
@@ -161,8 +167,9 @@ export default function ProfileScreen() {
       />
 
       <ActivityList />
-      <WeightIncrementPreference />
+      <ConocerList />
       <AccountList missingProfile={own.missingProfile} profile={own.profile.data} profilePending={own.profile.isPending} />
+      <WeightIncrementPreference />
 
       <View style={{ gap: spacing.sm }}>
         {principal?.email ? (

@@ -96,7 +96,7 @@ export function SocialDiscoverySettingsEditor() {
     <Section icon="compass-outline" title="Descubrimiento social">
       <Card>
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
-          Tu perfil empieza privado. Puedes aparecer en otros gimnasios y en el mapa por separado.
+          Tu perfil empieza privado. La presencia en otros gimnasios y en el mapa tiene permisos separados.
         </Text>
         <Button
           disabled={!current || update.isPending}
@@ -112,19 +112,10 @@ export function SocialDiscoverySettingsEditor() {
           icon={current?.profileEnabled ? undefined : 'person-add-outline'}
           variant={current?.profileEnabled ? 'danger' : 'ghost'}
         />
-        {current && !current.profileEnabled ? (
-          // Disabled buttons say why, in a secondary tone (repp-diseno §8).
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-            <Ionicons color={colors.textSecondary} name="lock-closed-outline" size={iconSizes.sm} />
-            <Text style={{ flex: 1, color: colors.textSecondary, fontSize: fontSizes.sm, lineHeight: 20 }}>
-              Activa tu perfil social primero para elegir dónde apareces.
-            </Text>
-          </View>
-        ) : null}
         <Button
           accessibilityHint={current && !current.profileEnabled ? 'Activa tu perfil social primero' : undefined}
           disabled={!current?.profileEnabled || update.isPending}
-          label={current?.crossGymEnabled ? 'Desactivar descubrimiento entre gimnasios' : 'Permitir descubrimiento entre gimnasios'}
+          label={current?.crossGymEnabled ? 'Desactivar entre gimnasios' : 'Permitir otros gimnasios'}
           loading={update.isPending}
           onPress={() => current && update.mutate({
             profileEnabled: current.profileEnabled,
@@ -147,6 +138,15 @@ export function SocialDiscoverySettingsEditor() {
           })}
           variant={current?.mapEnabled ? 'secondary' : 'ghost'}
         />
+        {current && !current.profileEnabled ? (
+          // Disabled buttons say why, in a secondary tone (repp-diseno §8).
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <Ionicons color={colors.textSecondary} name="lock-closed-outline" size={iconSizes.sm} />
+            <Text style={{ flex: 1, color: colors.textSecondary, fontSize: fontSizes.sm, lineHeight: 20 }}>
+              Activa tu perfil social primero para elegir dónde apareces.
+            </Text>
+          </View>
+        ) : null}
       </Card>
     </Section>
   );
@@ -198,7 +198,7 @@ export function DiscoveryPreferencesEditor({ embedded = false, onSaved }: { embe
     <View style={{ gap: spacing.lg }}>
       {embedded ? null : (
         <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: 20 }}>
-          Elige a quién quieres conocer. Sin esto, la baraja no adivina por ti.
+          Se aplican a las recomendaciones. Si no las configuras, la baraja no adivina por ti.
         </Text>
       )}
 

@@ -85,7 +85,7 @@ export function CompletionNudge({ completion }: Readonly<{ completion: ProfileCo
       </ul>
       {rest > 0 ? (
         <Link className="t-subhead inline-flex min-h-11 items-center gap-1 font-semibold text-[var(--accent-ink)]" href="/profile/editar">
-          {rest === 1 ? 'Y 1 dato más' : `Y ${rest} datos más`}
+          {rest === 1 ? 'Ver 1 dato más' : `Ver ${rest} datos más`}
           <ChevronRight aria-hidden className="size-4" />
         </Link>
       ) : null}

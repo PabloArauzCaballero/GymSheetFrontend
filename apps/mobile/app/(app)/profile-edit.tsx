@@ -86,7 +86,7 @@ export default function ProfileEditScreen() {
 
   return (
     <ScrollScreen>
-      <BackLink />
+      <BackLink fallbackHref="/profile" label="Perfil" neutral />
       <ScreenHeader
         subtitle={completion ? profileProgress(completion).label : 'Lo que ven los demás y lo que ajusta tus entrenos.'}
         title="Editar perfil"
@@ -109,7 +109,7 @@ export default function ProfileEditScreen() {
         value={tab}
       />
       {tab === 'preview' ? (
-        own.cardEntry && !own.photos.isPending ? <ProfilePreview entry={own.cardEntry} /> : <Skeleton height={420} />
+        own.cardEntry && !own.photos.isPending && !own.branches.isLoading ? <ProfilePreview entry={own.cardEntry} /> : <Skeleton height={420} />
       ) : (
         ordered.map((key) => sections[key])
       )}

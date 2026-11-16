@@ -8,7 +8,8 @@ import { profilePhotosService } from '@/features/profile/services/profile-photos
 import { ApiError } from '@/shared/api/api-error';
 import { queryKeys } from '@/shared/api/query-keys';
 import { MediaSourceDialog } from '@/shared/components/media/media-source-dialog';
-import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
+import { Section } from '@/shared/components/mobile/section';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { notify } from '@/shared/notifications';
 
 const MAX_PHOTOS = 6;
@@ -50,13 +51,11 @@ export function ProfilePhotoGallery({ header }: Readonly<{ header?: ReactNode }>
   const atLimit = count >= MAX_PHOTOS;
 
   return (
+    <Section title="Fotos de perfil">
     <Card>
-      <CardHeader
-        description={`Hasta ${MAX_PHOTOS} fotos. ${count}/${MAX_PHOTOS} usadas.`}
-        title="Fotos de perfil"
-      />
       <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {header ? <div className="col-span-full">{header}</div> : null}
+        <p className="t-subhead col-span-full text-[var(--text-muted)]">{`Hasta ${MAX_PHOTOS} fotos. ${count}/${MAX_PHOTOS} usadas.`}</p>
         {(photos.data ?? []).map((photo) => (
           <div
             className="group relative aspect-square overflow-hidden rounded-[8px] border border-[var(--border-subtle)]"
@@ -98,5 +97,6 @@ export function ProfilePhotoGallery({ header }: Readonly<{ header?: ReactNode }>
         title="Añadir una foto"
       />
     </Card>
+    </Section>
   );
 }

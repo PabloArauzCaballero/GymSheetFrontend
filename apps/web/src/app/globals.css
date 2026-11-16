@@ -148,6 +148,17 @@
     min-width: 320px;
     background: var(--background);
     scroll-behavior: smooth;
+    /* Focus and anchor jumps never land under the sticky header (h-14 / lg:h-16) or the phone tab
+       bar (WCAG 2.4.11): the browser keeps this much room when it scrolls something into view. */
+    scroll-padding-top: calc(3.5rem + env(safe-area-inset-top) + 1rem);
+    scroll-padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  }
+
+  @media (min-width: 64rem) {
+    html {
+      scroll-padding-top: 5rem;
+      scroll-padding-bottom: 1rem;
+    }
   }
 
   body {

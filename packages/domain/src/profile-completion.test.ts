@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cardDisplayName, fitnessEmptyHint, pendingProfileItems, pointsChip, profileNudgeTitle, profileProgress } from './profile-completion';
+import { cardDisplayName, completionRingLabel, fitnessEmptyHint, pendingProfileItems, pointsChip, profileNudgeTitle, profileProgress } from './profile-completion';
 
 const item = (code: string, done: boolean, awarded: boolean, points = 20) => ({ code, label: code, hint: '', points, done, awarded });
 
@@ -43,5 +43,17 @@ describe('fitnessEmptyHint', () => {
   });
   it('says nothing while the streak is alive', () => {
     expect(fitnessEmptyHint({ streak: 3, sessions: 12 })).toBeNull();
+  });
+});
+
+describe('completionRingLabel', () => {
+  it('speaks of the profile, not a photo, when there is none', () => {
+    expect(completionRingLabel({ hasPhoto: false, percent: 25 })).toBe('Tu perfil, 25 % completo');
+    expect(completionRingLabel({ hasPhoto: true, percent: 100 })).toBe('Tu foto de perfil, 100 % completo');
+  });
+
+  it('says when the progress could not be read, and stays plain while loading', () => {
+    expect(completionRingLabel({ hasPhoto: false, percent: null, failed: true })).toBe('Tu perfil. Progreso sin cargar');
+    expect(completionRingLabel({ hasPhoto: false, percent: null })).toBe('Tu perfil');
   });
 });

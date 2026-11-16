@@ -32,7 +32,8 @@ export function ProfileActions({ actions }: { actions: readonly ProfileAction[] 
             accessibilityLabel={action.disabled ? (action.disabledLabel ?? action.label) : action.label}
             accessibilityState={{ disabled: Boolean(action.disabled) }}
             disabled={action.disabled}
-            haptic={action.primary ? 'light' : 'selection'}
+            // Haptic map (repp-diseno §6): the screen's main action lands with medium; the others navigate (light).
+            haptic={action.primary ? 'medium' : 'light'}
             key={action.key}
             onPress={action.onPress}
             scaleTo={0.94}

@@ -137,9 +137,9 @@ export function DirectoryCardFace({
   const meta = [
     entry.objetivo ? (TRAINING_GOAL_LABEL[entry.objetivo] ?? entry.objetivo) : null,
     entry.branchName,
-    entry.experienceLevel
-      ? (EXPERIENCE_LEVEL_LABEL[entry.experienceLevel] ?? entry.experienceLevel)
-      : null,
+    entry.experienceLevel ? (EXPERIENCE_LEVEL_LABEL[entry.experienceLevel] ?? entry.experienceLevel) : null,
+    // Same plain line as the web card: objetivo · sede · nivel · puntos.
+    typeof entry.points === 'number' ? `${entry.points.toLocaleString('es-ES')}\u00A0pts` : null,
   ]
     .filter((part): part is string => Boolean(part))
     .join(' · ');

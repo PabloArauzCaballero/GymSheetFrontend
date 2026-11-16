@@ -36,6 +36,8 @@ export const userSchema = z.object({
   pesoIncrementoKg: z.number().positive().optional(),
   /** Unas líneas sobre ti (160 como máximo). Ausente en servidores anteriores. */
   bio: z.string().nullable().optional(),
+  /** Sede habitual (ya la envía `/users/me`). Nula = sin elegir; ausente en servidores anteriores. */
+  sedeId: z.string().uuid().nullable().optional(),
 });
 
 export const sessionPrincipalSchema = z.object({

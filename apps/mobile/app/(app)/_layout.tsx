@@ -68,6 +68,7 @@ export default function AppLayout() {
         <Stack.Screen name="settings" />
         <Stack.Screen name="profile-edit" />
         <Stack.Screen name="profile-data" />
+        <Stack.Screen name="conocer-ajustes" />
         <Stack.Screen name="registrar-peso" />
         <Stack.Screen name="membership" />
         <Stack.Screen name="notifications" />

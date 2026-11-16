@@ -102,14 +102,15 @@ export function CompletionNudge({
       </View>
       {rest > 0 ? (
         <PressableScale
-          accessibilityLabel={`Ver ${rest} datos más`}
-          haptic="selection"
+          accessibilityLabel={rest === 1 ? 'Ver 1 dato más' : `Ver ${rest} datos más`}
+          haptic="light"
           onPress={() => onItemPress(pending[shown.length]?.code ?? '')}
-          style={{ minHeight: minTouchTarget, justifyContent: 'center' }}
+          style={{ minHeight: minTouchTarget, flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: spacing.xxs }}
         >
           <Text style={{ color: accentPolicy.ink }} strong variant="subhead">
-            {rest === 1 ? 'Y 1 dato más' : `Y ${rest} datos más`}
+            {rest === 1 ? 'Ver 1 dato más' : `Ver ${rest} datos más`}
           </Text>
+          <Ionicons color={accentPolicy.ink} name="chevron-forward" size={iconSizes.sm} />
         </PressableScale>
       ) : null}
     </Card>

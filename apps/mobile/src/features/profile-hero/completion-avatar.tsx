@@ -1,19 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { completionRingLabel } from '@gymsheet/domain';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import { Text } from '@/components/text';
 import { useReduceMotion } from '@/notifications/use-reduce-motion';
-import { DURATION, PREMIUM_EASING } from '@/components/motion';
+import { DURATION, PREMIUM_EASING, PressableScale } from '@/components/motion';
 import { accentPolicy, colors, iconSizes, radii, spacing } from '@/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const SIZE = 132;
-const STROKE = 5;
-const GAP = 6;
+// A thicker arc (P2-11): 8 pt reads at arm's length; the gap keeps the face clear of it.
+const STROKE = 8;
+const GAP = 5;
 const AVATAR = SIZE - 2 * (STROKE + GAP);
 const RADIUS = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -26,18 +28,28 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
  * con «Reducir movimiento» aparece ya lleno. Si la lectura falló (`failed`),
  * la píldora dice «Sin cargar»: el único «Reintentar» de esa falla es el de la
  * tarjeta de abajo, no dos botones iguales.
+ *
+ * El arco es la información, así que va en tinta de acento (≥ 3:1 contra su
+ * pista y contra el héroe; ver `contrast.test.ts`) y no en el relleno volt,
+ * que en esta pantalla es de «Editar». Con `onPress` la cara es un botón
+ * (como en Tinder: tu foto lleva a cómo te ven).
  */
 export function CompletionAvatar({
   photoUrl,
   initials,
   percent,
   failed = false,
+  onPress,
+  accessibilityHint,
 }: {
   photoUrl: string | null;
   initials: string;
   percent: number | null;
   /** The completion read failed: the pill says so; the retry lives in the error card only. */
   failed?: boolean;
+  /** Makes the face a button: preview with a photo, add one without. */
+  onPress?: () => void;
+  accessibilityHint?: string;
 }) {
   const reduceMotion = useReduceMotion();
   const progress = useSharedValue(0);
@@ -57,14 +69,14 @@ export function CompletionAvatar({
   const body = (
     <>
       <Svg height={SIZE} style={{ position: 'absolute' }} width={SIZE}>
-        <Circle cx={SIZE / 2} cy={SIZE / 2} fill="none" r={RADIUS} stroke={colors.surfaceHighest} strokeWidth={STROKE} />
+        <Circle cx={SIZE / 2} cy={SIZE / 2} fill="none" r={RADIUS} stroke={colors.border} strokeWidth={STROKE} />
         <AnimatedCircle
           animatedProps={ringProps}
           cx={SIZE / 2}
           cy={SIZE / 2}
           fill="none"
           r={RADIUS}
-          stroke={colors.volt}
+          stroke={accentPolicy.ink}
           strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
           strokeLinecap="round"
           strokeWidth={STROKE}
@@ -124,9 +136,17 @@ export function CompletionAvatar({
     </>
   );
   const box = { width: SIZE, height: SIZE + spacing.smd, alignItems: 'center', alignSelf: 'center' } as const;
+  const label = completionRingLabel({ hasPhoto: Boolean(shownUrl), percent, failed });
 
+  if (onPress) {
+    return (
+      <PressableScale accessibilityHint={accessibilityHint} accessibilityLabel={label} onPress={onPress} scaleTo={0.97} style={box} testID="profile-avatar">
+        {body}
+      </PressableScale>
+    );
+  }
   return (
-    <View accessible accessibilityLabel={percent === null ? 'Tu foto de perfil' : `Tu foto de perfil. Perfil completo al ${percent} %`} style={box}>
+    <View accessible accessibilityLabel={label} style={box}>
       {body}
     </View>
   );

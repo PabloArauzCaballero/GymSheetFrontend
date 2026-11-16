@@ -1257,8 +1257,7 @@ export default function ComunidadScreen() {
                           </Text>
                         ) : null}
 
-                        {/* Verified Checkmark */}
-                        <Ionicons color={accentHues.sky} name="checkmark-circle" size={22} />
+                        {/* No verified tick: the card carries no verification data, so it would vouch for everyone. */}
                       </View>
 
                       {/* Info Chevron Up Button */}

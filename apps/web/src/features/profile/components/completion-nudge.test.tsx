@@ -5,7 +5,9 @@ import type { ProfileCompletion } from '@/shared/api/schemas';
 import { CompletionAvatar } from './completion-avatar';
 import { CompletionError, CompletionNudge } from './completion-nudge';
 
-vi.mock('next/link', () => ({ default: ({ children, href }: { children: ReactNode; href: string }) => <a href={href}>{children}</a> }));
+vi.mock('next/link', () => ({
+  default: ({ children, href, 'aria-label': label }: { children: ReactNode; href: string; 'aria-label'?: string }) => <a aria-label={label} href={href}>{children}</a>,
+}));
 
 const item = (code: string, points: number, done = false, awarded = false) => ({
   code,
@@ -46,7 +48,7 @@ describe('CompletionNudge', () => {
   it('shows at most three items and links to the rest', () => {
     render(<CompletionNudge completion={completion(['FOTO', 'BIO', 'NIVEL', 'GENERO'].map((code) => item(code, 20)))} />);
     expect(screen.getAllByRole('listitem')).toHaveLength(3);
-    expect(screen.getByRole('link', { name: /Y 1 dato más/ })).toHaveAttribute('href', '/profile/editar');
+    expect(screen.getByRole('link', { name: /Ver 1 dato más/ })).toHaveAttribute('href', '/profile/editar');
   });
 
   it('renders nothing once every point is earned', () => {
@@ -68,12 +70,17 @@ describe('completion read failed', () => {
     render(<CompletionAvatar failed initials="LP" percent={null} photoUrl={null} />);
     // One «Reintentar» per failure: it lives in the error card, the ring only says what happened.
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'Tu foto de perfil' })).toHaveTextContent('Sin cargar');
+    expect(screen.getByRole('img', { name: 'Tu perfil. Progreso sin cargar' })).toHaveTextContent('Sin cargar');
   });
 
   it('keeps the plain ring while the percent is known', () => {
     render(<CompletionAvatar failed initials="LP" percent={25} photoUrl={null} />);
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'Tu foto de perfil. Perfil completo al 25 %' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Tu perfil, 25 % completo' })).toBeInTheDocument();
+  });
+
+  it('becomes a link that says where it goes when given an href', () => {
+    render(<CompletionAvatar hint="Añadir una foto" href="/profile/editar#fotos" initials="LP" percent={25} photoUrl={null} />);
+    expect(screen.getByRole('link', { name: 'Tu perfil, 25 % completo. Añadir una foto' })).toHaveAttribute('href', '/profile/editar#fotos');
   });
 });

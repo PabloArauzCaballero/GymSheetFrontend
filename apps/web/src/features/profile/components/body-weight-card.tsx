@@ -6,7 +6,8 @@ import { onboardingService } from '@/features/onboarding/services/onboarding-ser
 import { RecordWeightButton } from '@/features/profile/components/record-weight-dialog';
 import type { BodyMeasurement } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
-import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
+import { Section } from '@/shared/components/mobile/section';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { formatDate } from '@/shared/lib/date';
 
 /**
@@ -53,8 +54,8 @@ export function BodyWeightCard() {
   const delta = latest ? deltaLabel(latest, ordered[1]) : null;
 
   return (
+    <Section title="Peso corporal">
     <Card>
-      <CardHeader title="Peso corporal" />
       <CardContent className="grid gap-4">
         {latest ? (
           <div className="grid gap-1">
@@ -75,5 +76,6 @@ export function BodyWeightCard() {
         <RecordWeightButton size="sm" variant={latest ? 'secondary' : 'primary'} />
       </CardContent>
     </Card>
+    </Section>
   );
 }

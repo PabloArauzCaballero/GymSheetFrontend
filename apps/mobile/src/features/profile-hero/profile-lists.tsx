@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import type { Profile } from '@gymsheet/types';
-import { membershipService, profileService } from '@/api/services';
+import { membershipService, profileService, socialService } from '@/api/services';
 import { ErrorState } from '@/components/feedback';
 import { Badge, Card, Divider, Section } from '@/components/layout';
 import { NavRow } from '@/components/list';
@@ -47,6 +47,38 @@ export function ActivityList() {
           <NavRow key="ejercicios" leading={<RowGlyph icon="star-outline" />} onPress={() => router.push(routes.exerciseFavorites())} subtitle="Tus favoritos ☆ y el catálogo completo" testID="profile-exercises" title="Mis ejercicios y favoritos" />,
           <NavRow key="chat" leading={<RowGlyph icon="chatbubbles-outline" />} onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />,
           <NavRow key="training-invitations" leading={<RowGlyph icon="people-outline" />} onPress={() => router.push('/training-invitations')} subtitle="Invitaciones recibidas y encuentros" title="Entrenar juntos" />,
+        ]}
+      </RowGroup>
+    </Section>
+  );
+}
+
+type DiscoverySettings = Awaited<ReturnType<typeof socialService.getDiscoverySettings>>;
+
+/** Where the member shows up, in one line (same wording as the web profile's buttons). */
+export function visibilitySubtitle(settings: DiscoverySettings | undefined, pending: boolean): string {
+  if (pending) return 'Cargando…';
+  if (!settings) return 'No se pudo cargar tu visibilidad';
+  if (!settings.profileEnabled) return 'Perfil privado. Actívalo para aparecer en Conocer';
+  return ['Visible en tu gimnasio', settings.crossGymEnabled ? 'otros gimnasios' : null, settings.mapEnabled ? 'mapa' : null].filter(Boolean).join(' · ');
+}
+
+/** «Conocer gente»: the web shows these controls inline; the phone links to their own screen. */
+export function ConocerList() {
+  const router = useRouter();
+  const settings = useQuery({ queryKey: ['social', 'discovery-settings'], queryFn: socialService.getDiscoverySettings });
+  return (
+    <Section title="Conocer gente">
+      <RowGroup>
+        {[
+          <NavRow
+            key="conocer"
+            leading={<RowGlyph icon="compass-outline" />}
+            onPress={() => router.push('/conocer-ajustes')}
+            subtitle={visibilitySubtitle(settings.data, settings.isPending)}
+            testID="profile-conocer"
+            title="Perfil social y preferencias"
+          />,
         ]}
       </RowGroup>
     </Section>

@@ -3,6 +3,9 @@ import {
   ageFromBirthDate,
   birthDateInputSchema,
   birthDatePayload,
+  displayFromIso,
+  isoFromDisplay,
+  maskBirthDate,
   isoYearsAgo,
 } from './birth-date';
 
@@ -28,5 +31,20 @@ describe('birth date helpers', () => {
     expect(birthDatePayload('1996-03-15', false)).toEqual({ fechaNacimiento: '1996-03-15' });
     expect(birthDatePayload('', true)).toEqual({ fechaNacimiento: null });
     expect(birthDatePayload('', false)).toEqual({});
+  });
+
+  it('types and shows the date as dd/mm/aaaa, and hands the API an ISO date', () => {
+    expect(maskBirthDate('15')).toBe('15');
+    expect(maskBirthDate('1503')).toBe('15/03');
+    expect(maskBirthDate('15/03/1996x7')).toBe('15/03/1996');
+    expect(displayFromIso('1996-03-15')).toBe('15/03/1996');
+    expect(isoFromDisplay('15/03/1996')).toBe('1996-03-15');
+    expect(isoFromDisplay('15/03')).toBe('15/03');
+  });
+
+  it('says what is wrong with an incomplete or impossible date', () => {
+    const issue = (value: string) => birthDateInputSchema.safeParse(value).error?.issues[0]?.message;
+    expect(issue('15/03')).toBe('Escribe la fecha como dd/mm/aaaa.');
+    expect(issue('1996-02-30')).toBe('Esa fecha no existe.');
   });
 });

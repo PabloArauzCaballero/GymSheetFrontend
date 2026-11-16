@@ -67,7 +67,7 @@ export function ProfileEditClient() {
   }
 
   return (
-    <div className="mx-auto grid w-full max-w-[640px] gap-8">
+    <div className="mx-auto grid w-full max-w-[640px] grid-cols-1 gap-8">
       <Link className="t-subhead inline-flex min-h-11 w-fit items-center gap-1 text-[var(--text-muted)] hover:text-[var(--text)]" href="/profile">
         <ChevronLeft aria-hidden className="size-4" />
         Perfil
@@ -88,7 +88,7 @@ export function ProfileEditClient() {
       />
 
       {tab === 'preview' ? (
-        own.cardEntry ? <ProfilePreview entry={own.cardEntry} /> : null
+        own.cardEntry && !own.branches.isLoading ? <ProfilePreview entry={own.cardEntry} /> : null
       ) : (
         <>
           {/* Every section says what it still pays in the same place: the first row of its card. */}

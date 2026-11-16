@@ -69,6 +69,15 @@ for (const tenant of Object.values(tenantCatalog)) {
     eachSurface(brand.successOnDark, TEXT_AA, 'success');
   });
 
+  // Completion ring (P2-11): the filled arc is the information, so it reads at 3:1 against its
+  // track (`border`) and against the hero surface it sits on (`surfaceHigh`).
+  test(`${tenant.id}: el arco del aro de completitud se distingue de su pista y del héroe (3:1)`, () => {
+    for (const bg of [neutral.border, neutral.surfaceHigh]) {
+      const ratio = contrastRatio(brand.accentInkOnDark, bg);
+      assert.ok(ratio >= NON_TEXT_AA, `accentInk sobre ${bg}: ${ratio.toFixed(2)}:1`);
+    }
+  });
+
   // Los botones viven sobre el lienzo y las tarjetas, nunca sobre un chip
   // (`surfaceHighest`), así que ese par no se exige.
   test(`${tenant.id}: el relleno de acento se distingue del lienzo y las tarjetas (3:1)`, () => {
