@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openPage, signIn } from './fixtures';
+import { dismissTour, openPage, signIn } from './fixtures';
 import { crearNegocioAprobado, type Negocio } from './negocio-datos';
 import { crearCuenta, sql, type Cuenta } from './rutinas-datos';
 
@@ -55,6 +55,8 @@ test('a person writes to the business from its @handle, with no connection', asy
   expect(response.request().postDataJSON()).toEqual({ entityId: business.entityId });
   conversationId = ((await response.json()) as { data: { conversationId: string } }).data.conversationId;
   await expect(page).toHaveURL(new RegExp(`/chat/${conversationId}$`, 'u'), { timeout: 20_000 });
+  // The chat is the new person's first portal page: the welcome tour opens there.
+  await dismissTour(page);
 
   // The other side is the business: its name, the «Negocio» mark and no location button.
   await expect(page.getByRole('heading', { level: 1, name: business.name })).toBeVisible({ timeout: 20_000 });
