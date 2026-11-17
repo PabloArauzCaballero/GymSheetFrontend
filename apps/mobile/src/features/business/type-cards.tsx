@@ -16,7 +16,8 @@ const TYPE_ICONS: Readonly<Record<EntityType, keyof typeof Ionicons.glyphMap>> =
 
 export type BusinessKind = { type: EntityType | null; legalKind: LegalKind | null };
 
-function Choice({
+/** One big radio card (selected in the text tone, never accent); also the kind cards of a listing. */
+export function ChoiceCard({
   title,
   description,
   icon,
@@ -64,7 +65,7 @@ export function TypeCards({ value, onChange }: { value: BusinessKind; onChange: 
   return (
     <View accessibilityRole="radiogroup" style={{ gap: spacing.smd }}>
       {businessTypeCards.map((card) => (
-        <Choice
+        <ChoiceCard
           description={card.description}
           icon={TYPE_ICONS[card.type]}
           key={card.type}
@@ -77,7 +78,7 @@ export function TypeCards({ value, onChange }: { value: BusinessKind; onChange: 
         <View accessibilityRole="radiogroup" style={{ gap: spacing.smd, marginTop: spacing.sm }}>
           <Text strong variant="subhead">{businessWizardCopy.legalKindLegend}</Text>
           {legalKindChoices.map((choice) => (
-            <Choice
+            <ChoiceCard
               description={choice.description}
               key={choice.value}
               onPress={() => onChange({ ...value, legalKind: choice.value })}

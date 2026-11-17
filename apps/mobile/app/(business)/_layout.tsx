@@ -20,6 +20,10 @@ export default function BusinessLayout() {
       <Stack.Screen name="completar" />
       <Stack.Screen name="verificar" />
       <Stack.Screen name="verificacion" />
+      {/* Franja 8c: a new listing, one listing, and a location of «Perfil». */}
+      <Stack.Screen name="publicacion-nueva" />
+      <Stack.Screen name="publicacion/[id]" />
+      <Stack.Screen name="sede" />
     </Stack>
   );
 }

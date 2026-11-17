@@ -1123,19 +1123,9 @@ export const directoryService = {
 
 
 export const directoryPaymentsService = {
-  allMarketplacePlans: (params: { type?: string; limit?: number } = {}) => {
-    const q = new URLSearchParams();
-    if (params.type) q.append('type', params.type);
-    if (params.limit) q.append('limit', String(params.limit));
-    const qs = q.toString();
-    return apiClient.request(`/public/directory/plans${qs ? `?${qs}` : ''}`, z.array(entityPlanSchema));
-  },
-
+  // The marketplace-wide offers moved to `GET /public/directory/listings` (franja 8c, ADR-0022).
   listPlans: (entityId: string) =>
     apiClient.request(`/public/directory/entities/${entityId}/plans`, z.array(entityPlanSchema)),
-
-  getPlan: (planId: string) =>
-    apiClient.request(`/public/directory/plans/${planId}`, entityPlanSchema),
 
   getPaymentConfig: (entityId: string) =>
     apiClient.request(

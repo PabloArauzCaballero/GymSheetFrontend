@@ -32,17 +32,20 @@ import { EmptyState, ErrorState } from '@/components/feedback';
 import { PressableScale } from '@/components/motion';
 import { Button } from '@/components/ui';
 import {
-  DEFAULT_MARKETPLACE_FILTERS,
+  DEFAULT_MARKETPLACE_QUERY,
   categoryById,
+  entityFiltersOf,
   filterEntities,
-  filterPlans,
-  type MarketplaceFilters,
+  handleFromSearch,
+  listingSearchParams,
+  type MarketplaceQuery,
 } from '@gymsheet/domain';
+import { useRouter } from 'expo-router';
 import { CategoryTiles } from '@/features/marketplace/category-tiles';
 import { FilterBar } from '@/features/marketplace/filter-bar';
 import { useDebouncedValue } from '@/features/marketplace/use-debounced-value';
 import { MarketplaceTabs, type MarketplaceTab } from '@/features/marketplace/tabs';
-import { OfferCard } from '@/features/marketplace/offer-card';
+import { ListingsFeed } from '@/features/marketplace/listings-feed';
 import { SellerCard } from '@/features/marketplace/seller-card';
 import { MyGymRow } from '@/features/marketplace/my-gym-row';
 import { notify } from '@/notifications';
@@ -61,7 +64,9 @@ export default function DirectorioScreen() {
 
   const [viewMode, setViewMode] = useState<MarketplaceTab>('OFFERS');
   const [refreshing, setRefreshing] = useState(false);
-  const [filters, setFilters] = useState<MarketplaceFilters>(DEFAULT_MARKETPLACE_FILTERS);
+  const router = useRouter();
+  // One search value for both tabs (franja 8c): «Ofertas» asks the backend, «Tiendas» filters here.
+  const [filters, setFilters] = useState<MarketplaceQuery>(DEFAULT_MARKETPLACE_QUERY);
   const selectedPillId = filters.category;
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search);
@@ -110,17 +115,6 @@ export default function DirectorioScreen() {
       }),
   });
 
-  // 3. Cargar todas las ofertas de productos y pases del Marketplace
-  const {
-    data: marketplaceOffers = [],
-    isLoading: loadingOffers,
-    error: offersError,
-    refetch: refetchOffers,
-  } = useQuery<EntityPlan[]>({
-    queryKey: ['directory-marketplace-all-plans'],
-    queryFn: () => directoryPaymentsService.allMarketplacePlans({ limit: 50 }),
-  });
-
   // 4. Cargar membresía del usuario para destacar su condición
   const { data: myMembership } = useQuery({
     queryKey: ['my-membership-directorio'],
@@ -134,9 +128,9 @@ export default function DirectorioScreen() {
 
   const myGym = entities.find((e) => isGymOfUser(e));
 
-  const appliedFilters = { ...filters, search: debouncedSearch };
-  const filteredOffers = filterPlans(marketplaceOffers, appliedFilters);
-  const filteredEntities = filterEntities(entities, appliedFilters);
+  const settledQuery = { ...filters, q: debouncedSearch };
+  const filteredEntities = filterEntities(entities, entityFiltersOf(settledQuery));
+  const searchedHandle = handleFromSearch(search);
 
   // 3. Cargar detalle de entidad seleccionada
   const { data: entityDetail, isLoading: loadingDetail } = useQuery<DirectoryEntityDetail | null>({
@@ -357,7 +351,7 @@ export default function DirectorioScreen() {
   const refreshActive = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([refetchOffers(), refetchEntities()]);
+      await refetchEntities();
     } finally {
       setRefreshing(false);
     }
@@ -400,69 +394,56 @@ export default function DirectorioScreen() {
 
       <View style={{ gap: spacing.smd, marginTop: spacing.smd, marginBottom: spacing.md }}>
         <CategoryTiles onChange={(category) => setFilters((current) => ({ ...current, category }))} value={filters.category} />
+        {searchedHandle ? (
+          <View style={{ paddingHorizontal: spacing.lg }}>
+            <Button
+              icon="arrow-forward"
+              iconPosition="end"
+              label={`Ver el perfil de @${searchedHandle}`}
+              onPress={() => router.push({ pathname: '/negocio/[handle]', params: { handle: searchedHandle } })}
+              size="sm"
+              variant="secondary"
+            />
+          </View>
+        ) : null}
         <FilterBar
-          filters={filters}
           onChange={(patch) => setFilters((current) => ({ ...current, ...patch }))}
           onReset={() => {
-            setFilters(DEFAULT_MARKETPLACE_FILTERS);
+            setFilters(DEFAULT_MARKETPLACE_QUERY);
             setSearch('');
           }}
+          query={filters}
+          tab={viewMode}
         />
       </View>
 
       <MarketplaceTabs value={viewMode} onChange={setViewMode} />
       <View style={styles.tabsDivider} />
 
-      {loadingEntities || loadingOffers ? (
+      {viewMode === 'OFFERS' ? (
+        <ListingsFeed
+          contentStyle={{ paddingBottom: tabBarHeight + spacing['2xl'] }}
+          emptyMessage={emptyMessage}
+          header={
+            myGym && (selectedPillId === 'all' || selectedPillId === 'gyms' || selectedPillId === 'passes') ? (
+              <MyGymRow
+                gym={myGym}
+                daysLeft={myMembership?.membership?.estado === 'ACTIVE' ? myMembership.membership.diasRestantes : null}
+                onPress={() => setSelectedEntitySlug(myGym.slug)}
+              />
+            ) : null
+          }
+          onOpen={(listing) => router.push({ pathname: '/publicacion/[id]', params: { id: listing.id } })}
+          query={listingSearchParams(settledQuery)}
+        />
+      ) : loadingEntities ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.textMuted} />
         </View>
-      ) : viewMode === 'OFFERS' && offersError ? (
-        // Un fallo de red no es «sin ofertas»: se dice y se puede reintentar.
-        <View style={{ flex: 1, padding: spacing.xl }}>
-          <ErrorState error={offersError} onRetry={() => void refetchOffers()} />
-        </View>
-      ) : viewMode === 'ENTITIES' && entitiesError ? (
+      ) : entitiesError ? (
         <View style={{ flex: 1, padding: spacing.xl }}>
           <ErrorState error={entitiesError} onRetry={() => void refetchEntities()} />
         </View>
-      ) : viewMode === 'OFFERS' ? (
-        filteredOffers.length === 0 ? (
-          <View style={{ flex: 1, padding: spacing.xl }}>
-            <EmptyState icon="storefront-outline" mascot="asleep" title="Nada por aquí todavía" message={emptyMessage} />
-          </View>
-        ) : (
-          <FlatList
-            key="marketplace-grid-offers"
-            data={filteredOffers}
-            numColumns={2}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={gridContent}
-            columnWrapperStyle={styles.gridRow}
-            refreshing={refreshing}
-            onRefresh={() => void refreshActive()}
-            ListHeaderComponent={
-              myGym && (selectedPillId === 'all' || selectedPillId === 'gyms' || selectedPillId === 'passes') ? (
-                <MyGymRow
-                  gym={myGym}
-                  daysLeft={
-                    myMembership?.membership?.estado === 'ACTIVE' ? myMembership.membership.diasRestantes : null
-                  }
-                  onPress={() => setSelectedEntitySlug(myGym.slug)}
-                />
-              ) : null
-            }
-            renderItem={({ item }) => (
-              <OfferCard
-                plan={item}
-                onPress={() => {
-                  if (item.entity?.slug) setSelectedEntitySlug(item.entity.slug);
-                  else checkoutMutation.mutate(item);
-                }}
-              />
-            )}
-          />
-        )
       ) : filteredEntities.length === 0 ? (
         <View style={{ flex: 1, padding: spacing.xl }}>
           <EmptyState icon="storefront-outline" mascot="asleep" title="Ninguna tienda por aquí" message={emptyMessage} />

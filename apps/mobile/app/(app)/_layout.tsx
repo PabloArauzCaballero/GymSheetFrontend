@@ -77,6 +77,9 @@ export default function AppLayout() {
         <Stack.Screen name="ejercicios" />
         <Stack.Screen name="ejercicio-nuevo" />
         <Stack.Screen name="settings" />
+        {/* Marketplace (franja 8c): a business profile by @handle and a public listing. */}
+        <Stack.Screen name="negocio/[handle]" />
+        <Stack.Screen name="publicacion/[id]" />
         <Stack.Screen name="dispositivos" />
         {/* Privacidad y datos (franja 4): consents, export and account rights. */}
         <Stack.Screen name="datos-privacidad" />
