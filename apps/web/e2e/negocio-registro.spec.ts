@@ -35,7 +35,10 @@ test('a business signs up, verifies its email, reserves its @handle and lands on
 
   // Step 0: one tap on a big card.
   await expect(page.getByText('Paso 1 de 8')).toBeVisible();
-  await page.getByRole('radio', { name: /Gimnasio/u }).check();
+  // The radio is visually hidden inside its card: tap the card, as a person does.
+  const gym = page.getByRole('radio', { name: /Gimnasio/u });
+  await page.locator('label').filter({ has: gym }).click();
+  await expect(gym).toBeChecked();
   await page.getByRole('button', { name: 'Seguir' }).click();
 
   // Step 1: four fields, the legal box links the versioned business texts.
