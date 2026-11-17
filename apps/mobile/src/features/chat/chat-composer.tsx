@@ -112,6 +112,7 @@ export function ChatComposer({
   replying,
   onCancelReply,
   attachOpen,
+  attachHidden,
   onToggleAttach,
   onAttach,
   recording,
@@ -133,6 +134,8 @@ export function ChatComposer({
   onCancelReply: () => void;
   /** El desplegable del «+» está abierto. */
   attachOpen: boolean;
+  /** Attach options this conversation refuses (a BUSINESS chat has no location). */
+  attachHidden?: readonly AttachKind[];
   onToggleAttach: () => void;
   onAttach: (kind: AttachKind) => void;
   recording: boolean;
@@ -302,7 +305,7 @@ export function ChatComposer({
 
   return (
     <View>
-      <ChatAttachMenu onPick={onAttach} open={attachOpen && !editing && !holding} reduceMotion={reduceMotion} />
+      <ChatAttachMenu hidden={attachHidden} onPick={onAttach} open={attachOpen && !editing && !holding} reduceMotion={reduceMotion} />
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing.xs }}>
         {holding ? (
           <View style={[pill, { gap: spacing.sm, paddingHorizontal: spacing.md }]}>

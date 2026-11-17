@@ -185,6 +185,10 @@ export type UndoSwipeResult = z.infer<typeof undoSwipeResultSchema>;
 export const systemConversationKinds = ['CORPORATE'] as const;
 export type SystemConversationKind = (typeof systemConversationKinds)[number];
 
+/** DIRECT (two persons), SYSTEM (REPP support) or BUSINESS (a person with a business, ADR-0023). */
+export const conversationKinds = ['DIRECT', 'SYSTEM', 'BUSINESS'] as const;
+export type ConversationKind = (typeof conversationKinds)[number];
+
 export const conversationSummarySchema = z.object({
   conversationId: z.string().uuid(),
   otherUserId: z.string().uuid(),
@@ -204,6 +208,10 @@ export const conversationSummarySchema = z.object({
   /** `false` en un chat de sistema de solo lectura: el compositor debe ocultarse. */
   canWrite: z.boolean(),
   systemKind: z.enum(systemConversationKinds).nullable(),
+  /** Optional for servers before franja 8f: read it through `conversationKindOf` (domain). */
+  kind: z.enum(conversationKinds).optional(),
+  /** BUSINESS: the listing behind the chat (its public profile); `null` otherwise. */
+  businessEntityId: z.string().uuid().nullable().optional(),
   /** Apodo propio para esta conversación (privado), o `null` si no se puso ninguno. */
   nickname: z.string().nullable(),
   /** Cursores del otro participante: comparar contra `createdAt` de los mensajes propios para pintar el check. */

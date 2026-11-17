@@ -18,6 +18,7 @@ import { Card } from '@/components/layout';
 import { MediaImage } from '@/components/media-image';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
+import { WriteToBusiness } from './write-to-business';
 import { Button } from '@/components/ui';
 import { marketplaceService } from '@/features/business-listings/listings-service';
 import { colors, comfortableTouchTarget, iconSizes, radii, spacing } from '@/theme';
@@ -66,8 +67,8 @@ function Listings({ profile, onOpen }: { profile: PublicBusinessProfile; onOpen:
 
 /**
  * The public profile of a business at `@handle` (plan §4.3): cover, logo,
- * badge, its words, photos, sedes and listings by kind, and «⋯ Reportar».
- * Reviews, «Escribir» and «Hacerme socio» join with franjas 8e and 8f.
+ * badge, its words, photos, sedes and listings by kind, «Escribir» (8f) and
+ * «⋯ Reportar». Reviews and «Hacerme socio» join with franja 8e.
  */
 export function PublicProfileView({ profile, onOpen, onReport }: { profile: PublicBusinessProfile; onOpen: (listing: PublicListing) => void; onReport: () => void }) {
   const { entity, handle } = profile;
@@ -89,6 +90,7 @@ export function PublicProfileView({ profile, onOpen, onReport }: { profile: Publ
           </Text>
         </View>
       </View>
+      <WriteToBusiness entityId={entity.id} />
       {entity.headline ? <Text variant="body">{entity.headline}</Text> : null}
       {entity.description ? <Text tone="secondary" variant="body">{entity.description}</Text> : null}
       {entity.gallery.length > 0 ? (

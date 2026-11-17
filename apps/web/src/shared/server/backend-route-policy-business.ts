@@ -42,6 +42,11 @@ export const businessRoutePatterns: readonly RegExp[] = [
   new RegExp(`^/business/me/listings/${uuid}/media/\\d{1,2}$`, 'u'),
   new RegExp(`^/business/me/locations/${uuid}$`, 'u'),
   /^\/business\/me\/gallery\/\d{1,2}$/u,
+  // Chat with businesses (ADR-0023, franja 8f). The backend authorizes each side: opening is
+  // person-only (a business gets 403 ACCOUNT_KIND_NOT_ALLOWED) and blocking is NEGOCIO-only.
+  // Reading and answering stay on the `/me/conversations/*` routes of the main policy.
+  /^\/me\/business-conversations$/u,
+  new RegExp(`^/business/me/conversations/${uuid}/block$`, 'u'),
   // REPP's «Publicaciones» queue: held, hidden and rejected listings.
   /^\/admin\/business\/listings$/u,
   new RegExp(`^/admin/business/listings/${uuid}/(release|reject)$`, 'u'),

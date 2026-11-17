@@ -12,4 +12,5 @@ export * from './recommendation-services';
 export * from './business-services';
 export * from './business-kyc-services';
 export * from './business-listings-services';
+export * from './business-chat-services';
 export * from './order-services';

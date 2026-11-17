@@ -9,11 +9,12 @@ const SECTIONS = [
   { href: '/negocio', label: 'Inicio' },
   { href: '/negocio/publicaciones', label: 'Publicaciones' },
   { href: '/negocio/pedidos', label: 'Pedidos' },
+  { href: '/negocio/mensajes', label: 'Mensajes' },
   { href: '/negocio/cobro', label: 'Cobro' },
   { href: '/negocio/perfil', label: 'Perfil' },
 ] as const;
 
-/** Sections of the business portal (plan §4.2). «Pedidos» carries the «Por confirmar» count; Mensajes joins with 8f. */
+/** Sections of the business portal (plan §4.2). «Pedidos» carries the «Por confirmar» count; Mensajes since franja 8f. */
 export function BusinessNav() {
   const pathname = usePathname();
   const pending = usePendingOrdersCount();

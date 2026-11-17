@@ -24,6 +24,7 @@ import type { Message } from '@/shared/api/schemas';
 import { queryKeys } from '@/shared/api/query-keys';
 import { ApiError } from '@/shared/api/api-error';
 import { notify } from '@/shared/notifications';
+import { BUSINESS_CHAT_POLL_MS } from '@gymsheet/domain';
 
 /** Mensajes por página. El backend admite hasta 100 y devuelve los más recientes. */
 const PAGE_SIZE = 40;
@@ -45,7 +46,8 @@ export function useChatThread({
   socketOrigin,
 }: {
   conversationId: string;
-  socketOrigin: string;
+  /** `null`: no socket (business account); the history polls while the tab is visible. */
+  socketOrigin: string | null;
 }) {
   const queryClient = useQueryClient();
   const resumeValidation = useResumeValidation(conversationId, queryClient);
@@ -72,6 +74,7 @@ export function useChatThread({
   const history = useQuery({
     queryKey: queryKeys.messages(conversationId),
     queryFn: () => chatService.listMessages(conversationId, { limit: PAGE_SIZE }),
+    refetchInterval: socketOrigin ? false : BUSINESS_CHAT_POLL_MS.thread,
   });
   const historyNotFound = history.error instanceof ApiError && history.error.status === 404;
   if (historyNotFound && historyUnavailableFor !== conversationId) {
@@ -88,15 +91,12 @@ export function useChatThread({
     if (!historyNotFound) return;
     queryClient.setQueryData(queryKeys.messages(conversationId), []);
   }, [conversationId, historyNotFound, queryClient]);
-  // El historial no trae el nombre ni la foto de la otra persona: salen de la
-  // lista de conversaciones, ya en caché si se llegó navegando desde /chat.
+  // Name and photo of the other side come from the conversation list (already cached from /chat).
   const conversations = useQuery({
     queryKey: queryKeys.conversations,
     queryFn: chatService.listConversations,
   });
-  const conversation = conversations.data?.find(
-    (item) => item.conversationId === conversationId,
-  );
+  const conversation = conversations.data?.find((item) => item.conversationId === conversationId);
   const otherUserId = conversation?.otherUserId;
   const liveReceipt =
     liveReceiptState?.conversationId === conversationId ? liveReceiptState.receipt : null;

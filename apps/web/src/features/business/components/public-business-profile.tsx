@@ -1,6 +1,7 @@
 import { businessTypeLabel, initials } from '@gymsheet/domain';
 import { MapPin } from 'lucide-react';
 import type { PublicBusinessProfile as Profile } from '@/shared/api/schemas';
+import { WriteToBusinessButton } from '@/features/business-chat/components/write-to-business-button';
 import { DomainImage } from '@/shared/components/media/domain-image';
 import { ProfileListings } from '@/features/business-listings/components/public/profile-listings';
 import { ProfileLocations } from '@/features/business-listings/components/public/profile-locations';
@@ -10,8 +11,8 @@ import { SellerBadge } from '@/features/business-listings/components/public/sell
 /**
  * The public profile of a business at `/@handle` (franja 8c, plan §4.3):
  * cover, logo, badge, what it says about itself, its photos, sedes and its
- * listings by kind. «⋯ Reportar» for person accounts. Reviews, «Escribir» and
- * «Hacerme socio» join with their franjas (8e, 8f).
+ * listings by kind. «Escribir» opens the chat (8f) and «⋯ Reportar» is for
+ * person accounts. Reviews and «Hacerme socio» join with franja 8e.
  */
 export function PublicBusinessProfile({ profile, viewer }: Readonly<{ profile: Profile; viewer: Viewer }>) {
   const { entity, handle } = profile;
@@ -46,6 +47,7 @@ export function PublicBusinessProfile({ profile, viewer }: Readonly<{ profile: P
               <SellerBadge badge={entity.isVerified ? 'VERIFIED' : 'NEW'} />
             </p>
           </header>
+          <WriteToBusinessButton className="sm:max-w-xs" entityId={entity.id} returnTo={`/@${handle}`} viewer={viewer} />
           {entity.headline ? <p className="text-[17px] leading-7">{entity.headline}</p> : null}
           {place ? (
             <p className="t-subhead flex items-center gap-1.5 text-[var(--text-muted)]">

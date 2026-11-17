@@ -6,8 +6,8 @@ import { BusinessNav } from '@/features/business-listings/components/business-na
 
 /**
  * The business portal's chrome (ADR-0020): brand, account name and sign out.
- * No person navigation at all: Inicio, Publicaciones, Pedidos, Cobro and
- * Perfil (franjas 8c–8d); Mensajes joins with 8f.
+ * No person navigation at all: Inicio, Publicaciones, Pedidos, Mensajes, Cobro
+ * and Perfil (franjas 8c, 8d, 8f).
  */
 export function BusinessShell({ accountName, children }: Readonly<{ accountName: string; children: ReactNode }>) {
   return (

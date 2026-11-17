@@ -1,7 +1,6 @@
 'use client';
 
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { conversationControls, type ChatViewer } from '@gymsheet/domain';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { useChatThread } from '@/features/chat/hooks/use-chat-thread';
 import { useStoryReplyTarget } from '@/features/chat/hooks/use-story-reply-target';
@@ -18,6 +17,7 @@ import { Dialog, DialogContent } from '@/shared/components/ui/dialog';
 import { DayDivider, sameDay } from './day-divider';
 import { MessageBubble } from './message-bubble';
 import { MessageComposer } from './message-composer';
+import { ThreadBackLink } from './thread-back-link';
 import { ThreadHeader } from './thread-header';
 
 /**
@@ -32,19 +32,28 @@ import { ThreadHeader } from './thread-header';
  *
  * Aquí sólo vive el maquetado; la conversación como dato está en
  * `useChatThread`.
+ *
+ * The business inbox (franja 8f) reuses it with `viewer="business"`: no socket
+ * (`socketOrigin` null, the history polls), no report, no presence, and
+ * «Bloquear a esta persona». `conversationControls` decides each control.
  */
 export function MessageThreadClient({
   conversationId,
   currentUserId,
   socketOrigin,
   storyReplyMessageId,
+  viewer = 'person',
+  backHref = '/chat',
 }: Readonly<{
   conversationId: string;
   currentUserId: string;
-  socketOrigin: string;
+  socketOrigin: string | null;
   storyReplyMessageId?: string;
+  viewer?: ChatViewer;
+  backHref?: string;
 }>) {
   const thread = useChatThread({ conversationId, socketOrigin });
+  const controls = conversationControls(thread.conversation, viewer);
   const {
     conversationUnavailable,
     hasMoreOlder,
@@ -91,13 +100,7 @@ export function MessageThreadClient({
   if (thread.isValidatingHistory) {
     return (
       <div className="mx-auto grid w-full max-w-3xl gap-5">
-        <Link
-          className="inline-flex w-fit items-center gap-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
-          href="/chat"
-        >
-          <ArrowLeft aria-hidden className="size-4" />
-          Mensajes
-        </Link>
+        <ThreadBackLink href={backHref} />
         <p className="p-5 text-center text-sm text-[var(--text-muted)]" role="status">
           Verificando disponibilidad de la conversación…
         </p>
@@ -107,13 +110,7 @@ export function MessageThreadClient({
   if (thread.conversationUnavailable) {
     return (
       <div className="mx-auto grid w-full max-w-3xl gap-5">
-        <Link
-          className="inline-flex w-fit items-center gap-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
-          href="/chat"
-        >
-          <ArrowLeft aria-hidden className="size-4" />
-          Mensajes
-        </Link>
+        <ThreadBackLink href={backHref} />
         <p
           className="rounded-[8px] border border-[var(--border-subtle)] p-5 text-center text-sm text-[var(--text-muted)]"
           role="alert"
@@ -133,16 +130,11 @@ export function MessageThreadClient({
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-5">
-      <Link
-        className="inline-flex w-fit items-center gap-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
-        href="/chat"
-      >
-        <ArrowLeft aria-hidden className="size-4" />
-        Mensajes
-      </Link>
+      <ThreadBackLink href={backHref} />
 
       <ThreadHeader
         connectionState={thread.connectionState}
+        controls={controls}
         conversation={thread.conversation}
         onSaveNickname={(nickname) => thread.setNickname.mutate(nickname)}
         otherLastSeenAt={thread.otherLastSeenAt}
@@ -241,6 +233,7 @@ export function MessageThreadClient({
                   revealPending={thread.revealViewOnce.isPending}
                   revealedUrl={thread.revealedMedia[message.id] ?? null}
                   viewerId={currentUserId}
+                  canReport={controls.report}
                   otherName={thread.conversation?.nickname ?? thread.conversation?.otherUserName}
                 />
               </Fragment>
@@ -252,6 +245,7 @@ export function MessageThreadClient({
 
       {canWrite ? (
         <MessageComposer
+          allowLocation={controls.location}
           onSendLocation={thread.sendLocation}
           onSendMedia={(file, viewOnce) => void thread.sendMedia(file, viewOnce)}
           onSendText={(body) => void thread.sendText(body)}
