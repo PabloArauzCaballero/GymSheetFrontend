@@ -60,19 +60,20 @@ test('an approved gym publishes a membership in four steps and it goes live', as
   await expect(page.getByRole('heading', { name: 'Añade fotos' })).toBeVisible();
   await page.getByRole('button', { name: 'Saltar' }).click();
 
-  // Step 3: name, price in Bs (decimal keyboard) and what it includes.
+  // Step 3: name, price in Bs (decimal keyboard) and what it includes. Exact labels: the form itself
+  // is named after the step («Nombre y precio»).
   await expect(page.getByText('Paso 3 de 4')).toBeVisible();
-  await page.getByLabel('Nombre').fill(listingName());
-  await expect(page.getByLabel('Precio')).toHaveAttribute('inputmode', 'decimal');
-  await page.getByLabel('Precio').fill('250');
-  await page.getByLabel('Qué incluye').fill('Acceso libre a la sala de lunes a domingo.');
+  await page.getByLabel('Nombre', { exact: true }).fill(listingName());
+  await expect(page.getByLabel('Precio', { exact: true })).toHaveAttribute('inputmode', 'decimal');
+  await page.getByLabel('Precio', { exact: true }).fill('250');
+  await page.getByLabel('Qué incluye', { exact: true }).fill('Acceso libre a la sala de lunes a domingo.');
   await page.getByRole('button', { name: 'Continuar' }).click();
 
   // Step 4: a membership needs its duration; without it, nothing is sent.
   await expect(page.getByText('Paso 4 de 4')).toBeVisible();
   await page.getByRole('button', { name: 'Publicar' }).click();
   await expect(page.getByText('Escribe cuántos días dura.')).toBeVisible();
-  await page.getByLabel('Duración (días)').fill('30');
+  await page.getByLabel('Duración (días)', { exact: true }).fill('30');
   const created = waitForBff(page, 'POST', '/api/backend/business/me/listings');
   await page.getByRole('button', { name: 'Publicar' }).click();
   const response = await created;
