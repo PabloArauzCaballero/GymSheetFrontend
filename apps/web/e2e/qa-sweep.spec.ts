@@ -29,12 +29,12 @@ const rows: Row[] = [];
 const PUBLIC = ['/', '/login', '/register', '/recover-password', '/terminos', '/privacidad', '/gimnasios'];
 const PORTAL = [
   '/dashboard', '/workouts', '/workouts/new', '/exercises', '/exercises/new', '/routines',
-  '/trayectoria', '/membership', '/access', '/notifications', '/profile', '/plans',
+  '/trayectoria', '/profile/suscripciones', '/notifications', '/profile', '/plans',
   '/tutorials', '/comunidad', '/chat', '/onboarding',
 ];
 const ADMIN = [
-  '/admin', '/admin/access', '/admin/equipment', '/admin/exercises', '/admin/facilities',
-  '/admin/membership', '/admin/operacion', '/admin/people', '/admin/permissions', '/admin/usuarios',
+  '/admin', '/admin/equipment', '/admin/exercises', '/admin/facilities',
+  '/admin/permissions', '/admin/usuarios',
 ];
 
 async function warm(page: Page, paths: string[]): Promise<void> {

@@ -2,12 +2,9 @@ import {
   Activity,
   Award,
   BadgeCheck,
-  BarChart3,
   Building2,
   ClipboardList,
   Dumbbell,
-  KeyRound,
-  ScanFace,
   ScrollText,
   Server,
   ShieldAlert,
@@ -94,17 +91,10 @@ const GYM_OPERATOR: readonly UserRole[] = ['SYSTEM_ADMIN'];
 /**
  * Administration of ONE gym, moved from the gym staff to the platform admin
  * (franja 7a). The pages keep their `/admin/*` addresses; they act on the gym
- * chosen in `/sistema` («Elegir gimnasio»).
+ * chosen in `/sistema` («Elegir gimnasio»). Memberships, customers, staff and
+ * access control left with franja 8e: the marketplace sells the plans.
  */
 export const adminNavigation: NavigationItem[] = [
-  {
-    // First: the screen that says who to call today in the gym being operated.
-    href: '/admin/operacion',
-    label: 'Panel del gimnasio',
-    icon: BarChart3,
-    roles: GYM_OPERATOR,
-    description: 'Uso del equipamiento, flujo de personas y quién no ha renovado.',
-  },
   // Sin `description`: es la propia rejilla, y listarse a sí misma dentro sería
   // un enlace que devuelve a donde ya estás.
   { href: '/admin', label: 'Operaciones', icon: ShieldCheck, roles: GYM_OPERATOR },
@@ -113,7 +103,7 @@ export const adminNavigation: NavigationItem[] = [
     label: 'Usuarios',
     icon: Users,
     roles: GYM_OPERATOR,
-    description: 'Todas las cuentas, con su membresía y su última actividad.',
+    description: 'Todas las cuentas y su última actividad.',
   },
   {
     href: '/admin/equipment',
@@ -135,27 +125,6 @@ export const adminNavigation: NavigationItem[] = [
     icon: Building2,
     roles: GYM_OPERATOR,
     description: 'Sedes, salas, puntos de acceso y mantenimiento.',
-  },
-  {
-    href: '/admin/membership',
-    label: 'Clientes',
-    icon: Users,
-    roles: GYM_OPERATOR,
-    description: 'Planes, clientes, vigencias y personal.',
-  },
-  {
-    href: '/admin/people',
-    label: 'Registrar persona',
-    icon: ScanFace,
-    roles: GYM_OPERATOR,
-    description: 'Alta de personas con credencial facial capturada desde la cámara.',
-  },
-  {
-    href: '/admin/access',
-    label: 'Control de acceso',
-    icon: KeyRound,
-    roles: GYM_OPERATOR,
-    description: 'Dispositivos, decisiones y credenciales.',
   },
   {
     href: '/admin/permissions',

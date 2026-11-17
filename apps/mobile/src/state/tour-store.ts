@@ -28,7 +28,6 @@ export type TourKey =
   | 'comunidad'
   | 'interacciones'
   | 'chat'
-  | 'membership'
   | 'notifications';
 
 const STORAGE_PREFIX = 'gymsheet.tour.v2.';
@@ -128,7 +127,6 @@ const ALL_KEYS: readonly TourKey[] = [
   'comunidad',
   'interacciones',
   'chat',
-  'membership',
   'notifications',
 ];
 

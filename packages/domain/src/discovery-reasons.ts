@@ -7,6 +7,7 @@ export const MAX_DISCOVERY_REASON_CHIPS = 3;
 export type DiscoveryReasonChipCode = Exclude<DiscoveryReasonCode, 'VERIFIED'>;
 
 export const discoveryReasonLabels: Record<DiscoveryReasonChipCode, string> = {
+  SAME_GYM: 'Tu mismo gimnasio',
   SAME_ROUTINE: 'Misma rutina',
   SAME_GOAL: 'Mismo objetivo',
   SHARED_INTERESTS: 'Intereses en común',
@@ -14,8 +15,9 @@ export const discoveryReasonLabels: Record<DiscoveryReasonChipCode, string> = {
   NEW_HERE: 'Acaba de unirse',
 };
 
-/** Chip order: what you share in training first, then place and novelty. */
+/** Chip order: the gym you both belong to, what you share in training, then place and novelty. */
 const CHIP_ORDER: readonly DiscoveryReasonChipCode[] = [
+  'SAME_GYM',
   'SAME_ROUTINE',
   'SAME_GOAL',
   'SHARED_INTERESTS',

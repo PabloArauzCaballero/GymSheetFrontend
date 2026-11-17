@@ -1,6 +1,7 @@
 'use client';
 
 import { orderCopy, orderRejectionLabels, rejectionNoteError } from '@gymsheet/domain';
+import { ApiError } from '@gymsheet/api-client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -10,11 +11,14 @@ import { ChoiceChip } from '@/shared/components/ui/choice-chip';
 import { Field } from '@/shared/components/ui/field';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { confirm, notify } from '@/shared/notifications';
+import { useBusinessMe } from '@/features/business/hooks/use-kyc';
+import { subscriptionErrorText } from '@/features/subscriptions/services/subscriptions-client';
 import { businessOrdersService, orderErrorText } from '../../services/orders-client';
+import { ConfirmMembershipDialog } from './confirm-membership-dialog';
 
 /**
  * Confirmar o Rechazar (plan §4.2). Confirming asks once: it is the money in
- * the account. Rejecting takes a reason chip, and a note with «Otro motivo».
+ * the account; a gym's MEMBERSHIP also asks «También confirmo que es socio» (8e). Rejecting takes a reason chip, and a note with «Otro motivo».
  * Either answer replaces the cached order and refreshes the inbox and badge.
  */
 export function OrderDecision({ order }: Readonly<{ order: BusinessOrderDetail }>) {
@@ -28,11 +32,23 @@ export function OrderDecision({ order }: Readonly<{ order: BusinessOrderDetail }
     void client.invalidateQueries({ queryKey: queryKeys.business.orders, predicate: (query) => query.queryKey[3] !== 'detail' });
     notify.success(message);
   };
+  const me = useBusinessMe();
+  const gymMembership = order.listing.offerKind === 'MEMBERSHIP' && me.data?.entity.entityType === 'GYM';
+  const [asking, setAsking] = useState(false);
   const confirmPayment = useMutation({
-    mutationFn: () => businessOrdersService.confirm(order.id),
-    onSuccess: (updated) => settle(updated, 'Pago confirmado. Le avisamos a la persona.'),
-    onError: (error) => notify.error(orderErrorText(error)),
+    mutationFn: (alsoConfirmAffiliation?: boolean) =>
+      businessOrdersService.confirm(order.id, alsoConfirmAffiliation === undefined ? {} : { alsoConfirmAffiliation }),
+    onSuccess: (updated, alsoSocio) => {
+      setAsking(false);
+      void client.invalidateQueries({ queryKey: queryKeys.business.subscribers });
+      if (alsoSocio) void client.invalidateQueries({ queryKey: queryKeys.business.affiliations });
+      settle(updated, alsoSocio ? 'Pago y socio confirmados. Le avisamos a la persona.' : 'Pago confirmado. Le avisamos a la persona.');
+    },
+    onError: (error) => {
+      if (!(error instanceof ApiError && error.code === 'GYM_NOT_ACTIVE')) notify.error(subscriptionErrorText(error));
+    },
   });
+  const gymNotActive = confirmPayment.error instanceof ApiError && confirmPayment.error.code === 'GYM_NOT_ACTIVE';
   const reject = useMutation({
     mutationFn: (reasonCode: OrderRejectionCode) => businessOrdersService.reject(order.id, { reasonCode, ...(note.trim() ? { note: note.trim() } : {}) }),
     onSuccess: (updated) => settle(updated, 'Pago rechazado. La persona ve el motivo.'),
@@ -40,8 +56,9 @@ export function OrderDecision({ order }: Readonly<{ order: BusinessOrderDetail }
   const noteError = rejectionNoteError(code, note);
 
   async function askConfirm() {
+    if (gymMembership) return setAsking(true);
     const answer = await confirm({ title: orderCopy.confirmQuestion, message: orderCopy.confirmBody, confirmLabel: orderCopy.confirmPayment, cancelLabel: 'Todavía no' });
-    if (answer.confirmed) confirmPayment.mutate();
+    if (answer.confirmed) confirmPayment.mutate(undefined);
   }
 
   if (!order.actions.canDecide) return null;
@@ -54,6 +71,13 @@ export function OrderDecision({ order }: Readonly<{ order: BusinessOrderDetail }
         <Button onClick={() => setRejecting(true)} size="lg" variant="ghost">
           {orderCopy.rejectPayment}
         </Button>
+        <ConfirmMembershipDialog
+          gymNotActive={gymNotActive}
+          onClose={() => setAsking(false)}
+          onConfirm={(alsoSocio) => confirmPayment.mutate(alsoSocio)}
+          open={asking}
+          pending={confirmPayment.isPending}
+        />
       </div>
     );
   }

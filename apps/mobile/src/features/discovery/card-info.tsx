@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { DiscoveryCard } from '@gymsheet/schemas';
 import { levelTitle } from '@/components/directory-card';
 import { PressableScale } from '@/components/motion';
-import { orientationLabels } from '@gymsheet/domain';
+import { gymBadgeLabel, orientationLabels } from '@gymsheet/domain';
 import { useInterestLabels } from '@/features/social-profile/use-interest-catalog';
 import { TRAINING_GOAL_LABEL } from '@/lib/social-labels';
 import { alpha, fontSizes, ink, minTouchTarget, radii, spacing } from '@/theme';
@@ -65,6 +65,7 @@ export function CardInfo({ entry, onOpenDetail }: { entry: DiscoveryCard; onOpen
 
         <CardReasons context={context} />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 }}>
+          {entry.gymBadge ? <Chip icon="ribbon-outline" iconColor={alpha(ink.white, 0.85)}>{gymBadgeLabel(entry.gymBadge)}</Chip> : null}
           {entry.branchName ? <Chip icon="location-outline" iconColor={alpha(ink.white, 0.85)}>{entry.branchName}</Chip> : null}
           {entry.objetivo ? <Chip icon="barbell-outline">{TRAINING_GOAL_LABEL[entry.objetivo] ?? entry.objetivo}</Chip> : null}
           {entry.levelCode ? (

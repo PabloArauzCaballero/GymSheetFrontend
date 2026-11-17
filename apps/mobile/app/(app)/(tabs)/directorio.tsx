@@ -22,8 +22,7 @@ import type {
   EntityReviewsResponse,
   EntityPlan,
 } from '@gymsheet/schemas';
-import { directoryService, directoryPaymentsService, communityService, membershipService } from '@/api/services';
-import { useAuthStore } from '@/state/auth-store';
+import { directoryService, directoryPaymentsService, communityService } from '@/api/services';
 import { AmbientBackground } from '@/components/ambient';
 import { EmptyState, ErrorState } from '@/components/feedback';
 import { PressableScale } from '@/components/motion';
@@ -56,8 +55,6 @@ export default function DirectorioScreen() {
   const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
   const gridContent = [styles.gridContent, { paddingBottom: tabBarHeight + spacing['2xl'] }];
   const queryClient = useQueryClient();
-  const principal = useAuthStore((s) => s.principal);
-  const userTenantId = principal?.tenantId || 'default';
 
   const [viewMode, setViewMode] = useState<MarketplaceTab>('OFFERS');
   const [refreshing, setRefreshing] = useState(false);
@@ -100,19 +97,6 @@ export default function DirectorioScreen() {
         limit: 50,
       }),
   });
-
-  // 4. Cargar membresía del usuario para destacar su condición
-  const { data: myMembership } = useQuery({
-    queryKey: ['my-membership-directorio'],
-    queryFn: () => membershipService.getMine(),
-  });
-
-  // «Tu gimnasio» es el ente del mismo gimnasio que la sesión, sin excepciones
-  // por nombre: el atajo anterior marcaba «topfitness» a cualquiera de `default`.
-  const isGymOfUser = (item: { tenantId?: string | null }) =>
-    Boolean(item.tenantId && item.tenantId === userTenantId);
-
-  const myGym = entities.find((e) => isGymOfUser(e));
 
   const settledQuery = { ...filters, q: debouncedSearch };
   const filteredEntities = filterEntities(entities, entityFiltersOf(settledQuery));
@@ -318,13 +302,8 @@ export default function DirectorioScreen() {
           contentStyle={{ paddingBottom: tabBarHeight + spacing['2xl'] }}
           emptyMessage={emptyMessage}
           header={
-            myGym && (selectedPillId === 'all' || selectedPillId === 'gyms' || selectedPillId === 'passes') ? (
-              <MyGymRow
-                gym={myGym}
-                daysLeft={myMembership?.membership?.estado === 'ACTIVE' ? myMembership.membership.diasRestantes : null}
-                onPress={() => setSelectedEntitySlug(myGym.slug)}
-              />
-            ) : null
+            // «Mi gimnasio» by the confirmed affiliation (ADR-0027), never by the session's tenant.
+            selectedPillId === 'all' || selectedPillId === 'gyms' || selectedPillId === 'passes' ? <MyGymRow /> : null
           }
           onOpen={(listing) => router.push({ pathname: '/publicacion/[id]', params: { id: listing.id } })}
           query={listingSearchParams(settledQuery)}

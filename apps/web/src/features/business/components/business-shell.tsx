@@ -6,10 +6,11 @@ import { BusinessNav } from '@/features/business-listings/components/business-na
 
 /**
  * The business portal's chrome (ADR-0020): brand, account name and sign out.
- * No person navigation at all: Inicio, Publicaciones, Pedidos, Mensajes, Cobro
- * and Perfil (franjas 8c, 8d, 8f).
+ * No person navigation at all: Inicio, Publicaciones, Pedidos, Mensajes,
+ * Suscriptores, Cobro and Perfil (franjas 8c, 8d, 8e, 8f), plus «Socios» for a
+ * gym or «Gimnasios» for a coach (franja 7b).
  */
-export function BusinessShell({ accountName, children }: Readonly<{ accountName: string; children: ReactNode }>) {
+export function BusinessShell({ accountName, entityType = null, children }: Readonly<{ accountName: string; entityType?: string | null; children: ReactNode }>) {
   return (
     <div className="relative isolate min-h-dvh">
       <AmbientBackground fixed />
@@ -22,7 +23,7 @@ export function BusinessShell({ accountName, children }: Readonly<{ accountName:
           <LogoutButton />
         </div>
         <div className="mx-auto w-full max-w-3xl px-4 pb-2 sm:px-6">
-          <BusinessNav />
+          <BusinessNav entityType={entityType} />
         </div>
       </header>
       <main className="mx-auto grid w-full max-w-3xl gap-6 px-4 py-8 sm:px-6 sm:py-10">{children}</main>

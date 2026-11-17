@@ -17,9 +17,10 @@ const sessionToken = jwt({ sub: 'admin', exp: exp + 3600 });
 const scopedToken = jwt({ sub: 'admin', tenantId: 'norte', exp });
 const impersonation = part({ accessToken: scopedToken, tenantId: 'norte', nombre: 'Gimnasio Norte' });
 
+// A gym-scoped admin read that survives franja 8e (`/admin/membership/plans` was retired).
 const call = () =>
-  GET(new NextRequest('http://localhost:3002/api/backend/admin/membership/plans'), {
-    params: Promise.resolve({ path: ['admin', 'membership', 'plans'] }),
+  GET(new NextRequest('http://localhost:3002/api/backend/admin/equipment'), {
+    params: Promise.resolve({ path: ['admin', 'equipment'] }),
   });
 const sentToken = () => (mocks.backendRequest.mock.calls[0]?.[1] as { token?: string }).token;
 

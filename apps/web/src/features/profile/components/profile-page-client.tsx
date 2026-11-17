@@ -6,19 +6,18 @@ import {
   Bell,
   ChevronRight,
   CircleUserRound,
-  CreditCard,
   Dumbbell,
   LifeBuoy,
   MessageCircle,
   Scale,
   Settings,
   Share2,
+  ShoppingBag,
   SquarePen,
   Star,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
-import { membershipService } from '@/features/membership/services/membership-service';
 import { onboardingService } from '@/features/onboarding/services/onboarding-service';
 import { profilePhotosService } from '@/features/profile/services/profile-photos-service';
 import { profileService } from '@/features/profile/services/profile-service';
@@ -31,6 +30,8 @@ import { SocialDiscoverySettingsCard } from '@/features/social/components/social
 import { SocialStatusCard } from '@/features/social/components/social-status-card';
 import { VerificationCta } from '@/features/verification/components/verification-cta';
 import { WeightIncrementField } from '@/features/workouts/components/weight-increment-field';
+import { MyGymBadge, MyGymNavRow } from '@/features/affiliations/components/person/my-gym-profile';
+import { SubscriptionsNavRow } from '@/features/subscriptions/components/person/subscription-rows';
 import { ApiError } from '@/shared/api/api-error';
 import { goalLabels } from '@/features/profile/components/profile-form-schema';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -45,13 +46,6 @@ import { Button, ButtonLink } from '@/shared/components/ui/button';
 import { formatDate } from '@/shared/lib/date';
 import { HeroStats, ProfileHero, plural } from './profile-hero';
 import { RowGlyph, RowGroup, initialsOf, shareProfile } from './profile-rows';
-
-const MEMBERSHIP_BADGE = {
-  ACTIVE: { label: 'Activa', tone: 'success' },
-  SUSPENDED: { label: 'Suspendida', tone: 'warning' },
-  CANCELLED: { label: 'Cancelada', tone: 'danger' },
-  EXPIRED: { label: 'Vencida', tone: 'danger' },
-} as const;
 
 /**
  * Perfil, la misma pantalla que `apps/mobile/app/(app)/(tabs)/profile.tsx`:
@@ -77,7 +71,6 @@ export function ProfilePageClient({
     retry: false,
   });
   const measurements = useQuery({ queryKey: queryKeys.bodyMeasurements, queryFn: onboardingService.measurements });
-  const membership = useQuery({ queryKey: queryKeys.membership, queryFn: membershipService.getMine, retry: false });
   const photos = useQuery({ queryKey: queryKeys.profilePhotos, queryFn: profilePhotosService.list, staleTime: 60_000 });
   const progression = useQuery({ queryKey: ['progression', 'me'], queryFn: progressionService.get, retry: false });
 
@@ -90,7 +83,6 @@ export function ProfilePageClient({
   const points = progress?.points ?? 0;
   const streak = progress ? (progress.streak?.current ?? progress.stats.currentStreakDays) : 0;
   const sessions = progress?.stats.totalSessions ?? 0;
-  const member = membership.data?.membership;
   const ordered = [...(measurements.data ?? [])].sort((a, b) => b.measuredOn.localeCompare(a.measuredOn));
   const lastWeight = ordered[0];
   const firstWeight = ordered[ordered.length - 1];
@@ -149,7 +141,7 @@ export function ProfilePageClient({
         <div className="grid gap-8">
           <ProfileHero
             initials={initialsOf(me?.nombreCompleto, me?.email)}
-            meta={me && me.rol !== 'CLIENTE' ? <Badge>{role}</Badge> : null}
+            meta={<>{me && me.rol !== 'CLIENTE' ? <Badge>{role}</Badge> : null}<MyGymBadge /></>}
             name={me?.nombreCompleto ?? 'Tu perfil'}
             photoUrl={avatarUrl}
             rank={progress ? (rank ?? 'Sin empezar') : null}
@@ -223,6 +215,7 @@ export function ProfilePageClient({
           <Section title="Tu actividad">
             <RowGroup>
               {[
+                <MyGymNavRow key="gym" />,
                 <NavRow href="/workouts" key="entrenos" leading={<RowGlyph icon={Dumbbell} />} subtitle="Todas tus sesiones, con sus series" title="Mis entrenos" />,
                 <NavRow href="/exercises" key="ejercicios" leading={<RowGlyph icon={Star} />} subtitle="Tus favoritos ☆ y el catálogo completo" title="Mis ejercicios y favoritos" />,
                 <NavRow href="/chat" key="chat" leading={<RowGlyph icon={MessageCircle} />} subtitle="Habla con tus conexiones" title="Chat" />,
@@ -249,20 +242,8 @@ export function ProfilePageClient({
                   }
                   title="Registrar peso"
                 />,
-                <NavRow
-                  href="/membership"
-                  key="membresia"
-                  leading={<RowGlyph icon={CreditCard} />}
-                  meta={member ? <Badge tone={MEMBERSHIP_BADGE[member.estado].tone}>{MEMBERSHIP_BADGE[member.estado].label}</Badge> : undefined}
-                  subtitle={
-                    membership.isPending
-                      ? 'Cargando…'
-                      : member
-                        ? `${member.plan?.nombre ?? 'Plan actual'} · vence ${formatDate(member.venceEl)}`
-                        : 'Sin membresía asociada'
-                  }
-                  title="Membresía"
-                />,
+                <SubscriptionsNavRow key="suscripciones" />,
+                <NavRow href="/profile/compras" key="compras" leading={<RowGlyph icon={ShoppingBag} />} subtitle="Tus pedidos y comprobantes" title="Mis compras" />,
                 <NavRow href="/notifications" key="avisos" leading={<RowGlyph icon={Bell} />} subtitle="Qué avisos quieres recibir" title="Notificaciones" />,
                 <NavRow href="/tutorials" key="tour" leading={<RowGlyph icon={LifeBuoy} />} subtitle="Vuelve a ver la bienvenida y las guías de cada pantalla" title="Ver tutorial" />,
                 <NavRow href="/settings" key="ajustes" leading={<RowGlyph icon={Settings} />} subtitle="Cuenta, versión y cierre de sesión" title="Ajustes" />,

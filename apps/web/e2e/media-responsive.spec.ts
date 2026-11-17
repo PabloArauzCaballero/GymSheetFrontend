@@ -17,7 +17,7 @@ test('commercial images load and primary pages do not overflow the viewport', as
   });
 
   await login(page);
-  for (const path of ['/dashboard', '/exercises', '/profile', '/membership']) {
+  for (const path of ['/dashboard', '/exercises', '/profile', '/profile/suscripciones']) {
     await page.goto(path);
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 });
     await expect

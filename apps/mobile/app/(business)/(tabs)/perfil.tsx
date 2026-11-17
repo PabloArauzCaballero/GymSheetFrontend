@@ -5,17 +5,21 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { ErrorState, RowsSkeleton } from '@/components/feedback';
-import { Card, Divider, ScreenHeader, ScrollScreen } from '@/components/layout';
+import { Badge, Card, Divider, ScreenHeader, ScrollScreen } from '@/components/layout';
 import { NavRow } from '@/components/list';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
 import { businessService } from '@/features/business/business-service';
+import { gymAffiliationsService } from '@/features/affiliations/affiliations-service';
 import { listingErrorText, listingsService, photoForm, pickPhotos } from '@/features/business-listings/listings-service';
 import { PhotoStrip } from '@/features/business-listings/photo-strip';
 import { confirmDelete, notify } from '@/notifications';
 import { spacing } from '@/theme';
 
-/** «Perfil» of the business shell (plan §4.2): the way to «Cobro» (8d), sedes and the photos of the public profile (8c). */
+/**
+ * «Perfil» of the business shell (plan §4.2): the way to «Cobro» (8d), sedes and the photos of the public
+ * profile (8c), «Suscriptores» (8e) and the type's own section (7b): a gym's «Socios», a coach's «Mis gimnasios».
+ */
 export default function BusinessProfileScreen() {
   const router = useRouter();
   const client = useQueryClient();
@@ -41,6 +45,10 @@ export default function BusinessProfileScreen() {
     onError: (error) => notify.error(listingErrorText(error)),
   });
   const handle = me.data?.handle?.status === 'ACTIVE' ? me.data.handle.handle : null;
+  const entityType = me.data?.entity.entityType;
+  // Pending requests for the «Socios» row; 409 GYM_NOT_ACTIVE while the gym is not public leaves it at zero.
+  const badge = useQuery({ queryKey: queryKeys.business.affiliationsBadge, queryFn: () => gymAffiliationsService.requests({ limit: 1 }), enabled: entityType === 'GYM', retry: false, refetchInterval: 60_000 });
+  const pending = badge.data?.pendingCount ?? 0;
 
   async function addPhoto() {
     const picked = await pickPhotos(1);
@@ -58,6 +66,20 @@ export default function BusinessProfileScreen() {
       <ScreenHeader subtitle={handle ? `@${handle}` : 'Dónde atiendes y cómo se ve tu negocio.'} title="Perfil" />
       <Card list>
         <NavRow onPress={() => router.push('/(business)/cobro')} subtitle="Tu banco, tu QR y si aceptas efectivo" testID="business-payments" title="Cobro" />
+        <Divider />
+        <NavRow onPress={() => router.push('/(business)/suscriptores')} subtitle="Quién tiene un plan contigo y cuándo vence" testID="business-subscribers" title="Suscriptores" />
+        {entityType === 'GYM' ? (
+          <>
+            <Divider />
+            <NavRow meta={pending > 0 ? <Badge label={`${pending}`} tone="info" /> : undefined} onPress={() => router.push('/(business)/socios')} subtitle={pending > 0 ? `${pending} por decidir` : 'Solicitudes, socios y entrenadores'} testID="business-socios" title="Socios" />
+          </>
+        ) : null}
+        {entityType === 'COACH' ? (
+          <>
+            <Divider />
+            <NavRow onPress={() => router.push('/(business)/gimnasios')} subtitle="Pide a un gimnasio que te muestre como entrenador" testID="business-gym-links" title="Mis gimnasios" />
+          </>
+        ) : null}
       </Card>
       <Card list>
         <View style={{ paddingVertical: spacing.sm }}>

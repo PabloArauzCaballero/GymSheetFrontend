@@ -3,22 +3,20 @@
 import { formatVolume, overloadDelta, summariseTraining, relativeDay, formatTimeOfDay, sessionDuration } from '@gymsheet/domain';
 import { homeWeekDots } from '@gymsheet/hooks';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Award, Bell, CreditCard, Dumbbell, Flame, Store } from 'lucide-react';
+import { ArrowRight, Award, Bell, Dumbbell, Flame, Store } from 'lucide-react';
 import Link from 'next/link';
 import { useSyncExternalStore } from 'react';
 import { TodayCard } from '@/features/home/components/today-card';
 import { RepiCard } from '@/features/nudge/components/repi-card';
 import { MuscleSplit } from '@/features/home/components/muscle-split';
 import { ProgressStrip } from '@/features/home/components/progress-strip';
-import { MembershipGate } from '@/features/membership/components/membership-gate';
-import { membershipService } from '@/features/membership/services/membership-service';
 import { notificationService } from '@/features/notifications/services/notification-service';
 import { progressionService } from '@/features/progression/services/progression-service';
+import { HomeSubscriptionRow } from '@/features/subscriptions/components/person/subscription-rows';
 import { programKeys } from '@/features/routines-v2/keys';
 import { programService } from '@/features/routines-v2/services';
 import { trainingService } from '@/features/training/services/training-service';
 import { workoutService } from '@/features/workouts/services/workout-service';
-import { queryKeys } from '@/shared/api/query-keys';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { Skeleton } from '@/shared/components/feedback/skeleton';
@@ -61,7 +59,6 @@ export function DashboardClient({ firstName }: Readonly<{ firstName?: string }> 
     queryFn: notificationService.unreadCount,
     staleTime: 60_000,
   });
-  const membership = useQuery({ queryKey: queryKeys.membership, queryFn: membershipService.getMine, retry: false });
   const workouts = useQuery({ queryKey: ['workouts', 'recent'], queryFn: () => workoutService.list(1, 40) });
   const assignments = useQuery({ queryKey: ['routines', 'assignments', 'me'], queryFn: trainingService.myAssignments });
   const progression = useQuery({ queryKey: ['progression', 'me'], queryFn: progressionService.get, retry: false });
@@ -86,7 +83,6 @@ export function DashboardClient({ firstName }: Readonly<{ firstName?: string }> 
   const todayLoading =
     programs.isPending || (Boolean(strength?.rutinaId) && routine.isPending) || assignments.isPending;
   const todayError = programs.error ?? routine.error ?? null;
-  const membershipData = membership.data?.membership;
   const unread = unreadQuery.data?.count ?? 0;
   const streak = training.streakWeeks;
   const level = progression.data?.level;
@@ -130,12 +126,6 @@ export function DashboardClient({ firstName }: Readonly<{ firstName?: string }> 
             </span>
             <ArrowRight aria-hidden className="size-5 shrink-0" />
           </Link>
-
-          {/* Si el acceso no está vigente, eso es lo primero que hay que resolver,
-              pero en una franja: el valor de la pantalla tiene que verse igual. */}
-          {membership.data && !membershipData?.vigenteHoy ? (
-            <MembershipGate projection={membership.data} variant="compact" />
-          ) : null}
 
           <RepiCard />
 
@@ -242,41 +232,31 @@ export function DashboardClient({ firstName }: Readonly<{ firstName?: string }> 
             ) : null}
           </Section>
 
-          {/* La senda y la membresía vigente: una sola lista callada al final. */}
-          {level || membershipData?.vigenteHoy ? (
-            <ListCard>
-              {level && progression.data ? (
-                <Link className="tap grid gap-1 py-3" href="/trayectoria">
-                  <span className="flex items-center gap-3">
-                    <IconBadge icon={Award} size={36} tone="record" />
-                    <span className="grid min-w-0 flex-1 gap-0.5">
-                      <span className="t-headline truncate">{level.name}</span>
-                      <span className="t-footnote tabular-nums text-[var(--text-muted)]">
-                        {progression.data.nextLevel && progression.data.pointsToNextLevel !== null
-                          ? `${progression.data.points.toLocaleString('es-ES')} pts · faltan ${progression.data.pointsToNextLevel.toLocaleString('es-ES')} para ${progression.data.nextLevel.name}`
-                          : `${progression.data.points.toLocaleString('es-ES')} pts · senda completa`}
-                      </span>
+          {/* La senda y el plan en curso (franja 8e): una sola lista callada al final. */}
+          <ListCard className="empty:hidden">
+            {level && progression.data ? (
+              <Link className="tap grid gap-1 py-3" href="/trayectoria">
+                <span className="flex items-center gap-3">
+                  <IconBadge icon={Award} size={36} tone="record" />
+                  <span className="grid min-w-0 flex-1 gap-0.5">
+                    <span className="t-headline truncate">{level.name}</span>
+                    <span className="t-footnote tabular-nums text-[var(--text-muted)]">
+                      {progression.data.nextLevel && progression.data.pointsToNextLevel !== null
+                        ? `${progression.data.points.toLocaleString('es-ES')} pts · faltan ${progression.data.pointsToNextLevel.toLocaleString('es-ES')} para ${progression.data.nextLevel.name}`
+                        : `${progression.data.points.toLocaleString('es-ES')} pts · senda completa`}
                     </span>
                   </span>
-                  <span aria-hidden className="block h-1.5 overflow-hidden rounded-full bg-[var(--surface-highest)]">
-                    <span
-                      className="block h-full rounded-full bg-[var(--text-muted)]"
-                      style={{ width: `${Math.round(progression.data.levelProgress * 100)}%` }}
-                    />
-                  </span>
-                </Link>
-              ) : null}
-              {level && membershipData?.vigenteHoy ? <Divider /> : null}
-              {membershipData?.vigenteHoy ? (
-                <NavRow
-                  href="/membership"
-                  leading={<IconBadge icon={CreditCard} size={36} tone="record" />}
-                  subtitle={`${membershipData.diasRestantes} ${membershipData.diasRestantes === 1 ? 'día restante' : 'días restantes'}`}
-                  title={membershipData.plan?.nombre ?? 'Tu membresía'}
-                />
-              ) : null}
-            </ListCard>
-          ) : null}
+                </span>
+                <span aria-hidden className="block h-1.5 overflow-hidden rounded-full bg-[var(--surface-highest)]">
+                  <span
+                    className="block h-full rounded-full bg-[var(--text-muted)]"
+                    style={{ width: `${Math.round(progression.data.levelProgress * 100)}%` }}
+                  />
+                </span>
+              </Link>
+            ) : null}
+            <HomeSubscriptionRow divided={Boolean(level && progression.data)} />
+          </ListCard>
         </div>
       </div>
     </div>

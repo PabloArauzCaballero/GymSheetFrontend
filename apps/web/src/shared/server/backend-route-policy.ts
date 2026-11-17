@@ -15,23 +15,13 @@ const contentKind = 'ROUTINE|EXERCISE|DIRECTORY_ENTITY|DIRECTORY_PRODUCT';
 // matchea la forma codificada, no el literal con dos puntos.
 const permissionKey = '[a-z-]+%3A[a-z-]+';
 // Qué se puede reportar/moderar (`ModerationTargetKind`, enum cerrado): una
-// alternativa explícita en vez de un comodín, igual que el token de activación
-// más abajo — así una URL no puede colar un valor que el backend rechazaría
+// alternativa explícita en vez de un comodín — así una URL no puede colar un valor que el backend rechazaría
 // de todos modos, pero sin llegar a intentarlo.
 const moderationTargetKind =
   'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER|REEL|ROUTINE|EXERCISE|COMMENT|MUSIC_PLAYLIST|BUSINESS_LISTING|BUSINESS_PROFILE|PAYMENT_ORDER';
 
 const allowedPathPatterns = [
-  /^\/access\/me$/u,
-  /^\/access\/credentials\/me$/u,
   /^\/auth\/socket-ticket$/u,
-  /^\/admin\/access\/devices$/u,
-  new RegExp(`^/admin/access/devices/${resourceId}/status$`, 'u'),
-  /^\/admin\/access\/history$/u,
-  new RegExp(`^/admin/access/events/${resourceId}$`, 'u'),
-  new RegExp(`^/admin/access/credentials/user/${resourceId}$`, 'u'),
-  /^\/admin\/access\/credentials\/(pin|external-reference)$/u,
-  new RegExp(`^/admin/access/credentials/${resourceId}/revoke$`, 'u'),
   // Auditoría (H01 de docs/refactor-profesional): un solo endpoint para las
   // dos consolas (/admin/auditoria y /sistema/auditoria) — el alcance lo
   // resuelve `actor.tenantScope` en el backend, no la URL.
@@ -46,17 +36,6 @@ const allowedPathPatterns = [
   new RegExp(`^/admin/facilities/(branches|rooms)/${resourceId}$`, 'u'),
   new RegExp(`^/admin/facilities/maintenance/${resourceId}/(start|complete)$`, 'u'),
   /^\/admin\/media$/u,
-  /^\/admin\/membership\/(plans|customers|memberships|staff|staff-users)$/u,
-  new RegExp(`^/admin/membership/plans/${resourceId}(/scopes)?$`, 'u'),
-  new RegExp(`^/admin/membership/memberships/${resourceId}/status$`, 'u'),
-  new RegExp(`^/admin/membership/staff/${resourceId}/status$`, 'u'),
-  // El token de activación es base64url y no encaja en `resourceId`, que sólo
-  // admite guiones: lleva además guiones bajos. Se acota igualmente el alfabeto
-  // para que esta entrada no se convierta en un comodín hacia el backend.
-  /^\/admin\/membership\/activation\/[A-Za-z0-9_-]{20,120}$/u,
-  /^\/me\/membership\/activation-request$/u,
-  /^\/admin\/membership\/insights\/(equipment-usage|people-flow|lapsed)$/u,
-  /^\/admin\/membership\/users$/u,
   // Moderación (H01): cola, un caso puntual y las tres acciones sobre él, más
   // el historial de un usuario. `targetKind` va acotado al enum cerrado.
   /^\/admin\/moderation\/queue$/u,
@@ -85,15 +64,9 @@ const allowedPathPatterns = [
   /^\/exercises\/equipment-suggestion$/u,
   new RegExp(`^/exercises/${resourceId}(/media)?$`, 'u'),
   /^\/export\/workout-history(\/csv)?$/u,
-  /^\/memberships\/me$/u,
-  /^\/membership\/plans$/u,
-  new RegExp(`^/membership/plans/${resourceId}$`, 'u'),
   /^\/me\/onboarding$/u,
   /^\/me\/onboarding\/(profile|goals|preferences|equipment|complete|social)$/u,
   /^\/me\/body-measurements$/u,
-  /^\/me\/membership$/u,
-  /^\/me\/membership\/(options|renewal-intent|extension-intent)$/u,
-  /^\/me\/accesses$/u,
   // La senda: estado, confirmación de novedades y clasificación del gimnasio.
   /^\/me\/progression$/u,
   /^\/me\/progression\/(acknowledge|leaderboard|rest-days|rules)$/u,
@@ -256,7 +229,8 @@ const allowedPathPatterns = [
   new RegExp(`^/me/verification/${uuid}/selfie$`, 'u'),
   /^\/admin\/verifications$/u,
   new RegExp(`^/admin/verifications/${uuid}/(selfie|decide)$`, 'u'),
-  // The platform admin closes a legacy staff account (POST; scope decided by the backend).
+  // The platform account search (backend ADR-0026 §11) and the closure of a legacy staff account.
+  /^\/admin\/users$/u,
   new RegExp(`^/admin/users/${uuid}/close$`, 'u'),
   // Social: bloqueos, descubrimiento, mapa y confirmaciones de lectura.
   /^\/me\/blocks$/u,

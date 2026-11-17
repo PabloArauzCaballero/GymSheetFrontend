@@ -16,6 +16,7 @@ import { socialStatusLabels } from './social-status-labels';
 import { galleryOf } from './directory-card-face';
 import { DiscoveryContextBlock } from './discovery-card-context';
 import { isDiscoveryCard } from '@gymsheet/domain';
+import { GymBadge } from '@/features/affiliations/components/person/gym-badge';
 
 type DetailRow = { icon: ReactNode; label: string; value: string };
 type DetailSection = { key: string; title: string; rows: DetailRow[] };
@@ -143,6 +144,7 @@ export function MemberDetailSheet({
         <div className="grid gap-6">
           {/* Opened from the deck: why this person shows up, never whether they are online. */}
           {isDiscoveryCard(entry) ? <DiscoveryContextBlock ranking={entry} /> : null}
+          <GymBadge badge={entry.gymBadge} />
           {photos.map((photo, position) => {
             const section = sections[position];
             return (

@@ -22,11 +22,13 @@ import { WeightIncrementPreference } from '@/components/weight-increment-prefere
 import { completionMessage, profileCompletion } from '@/features/profile-hero/profile-completion';
 import { HeroStats, ProfileHero, plural } from '@/features/profile-hero/profile-hero';
 import { VerificationCta } from '@/features/verification/verification-cta';
+import { MyGymNavRow } from '@/features/affiliations/my-gym-nav-row';
+import { SubscriptionsNavRow } from '@/features/subscriptions/subscriptions-nav-row';
 import { VerificationStatusRow } from '@/features/verification/verification-status-row';
 import { proudStat, shareMyProfile } from '@/features/profile-hero/profile-share';
 import { confirm, notify } from '@/notifications';
-import { membershipService, profilePhotosService, profileService, progressionService } from '@/api/services';
-import { GOAL_LABEL, MEMBERSHIP_LABEL, MEMBERSHIP_TONE, formatDate, initialsOf, shortName } from '@/lib/format';
+import { profilePhotosService, profileService, progressionService } from '@/api/services';
+import { GOAL_LABEL, formatDate, initialsOf, shortName } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { useAuthStore } from '@/state/auth-store';
 import { useTourStore } from '@/state/tour-store';
@@ -109,7 +111,6 @@ export default function ProfileScreen() {
     // Sin onboarding no hay perfil: es un estado vacío, no un fallo.
     retry: (failureCount, error) => !(error instanceof ApiError && error.kind === 'not-found') && failureCount < 1,
   });
-  const membership = useQuery({ queryKey: ['membership', 'me'], queryFn: () => membershipService.getMine() });
   const photos = useQuery({
     queryKey: ['profile', 'photos'],
     queryFn: () => profilePhotosService.list(),
@@ -126,7 +127,6 @@ export default function ProfileScreen() {
     lastWeight && firstWeight && lastWeight.id !== firstWeight.id
       ? `${lastWeight.weight - firstWeight.weight > 0 ? '+' : '−'}${Math.abs(lastWeight.weight - firstWeight.weight).toLocaleString('es-ES', { maximumFractionDigits: 1 })} ${lastWeight.unit.toLowerCase()} desde ${formatDate(firstWeight.measuredOn)}`
       : null;
-  const member = membership.data?.membership;
   const displayName = principal?.nombreCompleto ?? shortName(undefined, principal?.email);
   const roleLabel = ROLE_LABEL[principal?.role ?? ''] ?? principal?.role ?? '—';
 
@@ -158,12 +158,11 @@ export default function ProfileScreen() {
     <ScrollScreen
       onRefresh={() => {
         void profile.refetch();
-        void membership.refetch();
         void photos.refetch();
         void progression.refetch();
         void measurements.refetch();
       }}
-      refreshing={profile.isFetching || membership.isFetching || photos.isFetching || progression.isFetching}
+      refreshing={profile.isFetching || photos.isFetching || progression.isFetching}
     >
       <ScreenHeader
         action={<IconButton icon="settings-outline" label="Ajustes" onPress={() => router.push('/settings')} testID="profile-settings" />}
@@ -247,13 +246,9 @@ export default function ProfileScreen() {
         <RowGroup>
           {[
             <NavRow key="entrenos" leading={<RowGlyph icon="barbell-outline" />} onPress={() => router.push('/workouts')} subtitle="Todas tus sesiones, con sus series" title="Mis entrenos" />,
-            <NavRow
-              key="ejercicios" leading={<RowGlyph icon="star-outline" />}
-              onPress={() => router.push(routes.exerciseFavorites())}
-              subtitle="Tus favoritos ☆ y el catálogo completo"
-              testID="profile-exercises"
-              title="Mis ejercicios y favoritos"
-            />,
+            <NavRow key="ejercicios" leading={<RowGlyph icon="star-outline" />} onPress={() => router.push(routes.exerciseFavorites())} subtitle="Tus favoritos ☆ y el catálogo completo" testID="profile-exercises" title="Mis ejercicios y favoritos" />,
+            // The confirmed gym (franja 7c): «Socio de X», a pending request or the way to join.
+            <MyGymNavRow key="gym" leading={<RowGlyph icon="business-outline" />} />,
             // Conocer is for members only: staff has no deck.
             ...(offersConocer(principal?.role)
               ? [
@@ -302,25 +297,7 @@ export default function ProfileScreen() {
               }
               title="Registrar peso"
             />,
-            membership.isError ? (
-              <View key="membresia-error" style={{ paddingVertical: spacing.sm }}>
-                <ErrorState error={membership.error} onRetry={() => void membership.refetch()} />
-              </View>
-            ) : (
-              <NavRow
-                key="membresia" leading={<RowGlyph icon="card-outline" />}
-                meta={member ? <Badge label={MEMBERSHIP_LABEL[member.estado]} tone={MEMBERSHIP_TONE[member.estado]} /> : null}
-                onPress={() => router.push('/membership')}
-                subtitle={
-                  membership.isPending
-                    ? 'Cargando…'
-                    : member
-                      ? `${member.plan?.nombre ?? 'Plan actual'} · vence ${formatDate(member.venceEl)}`
-                      : 'Sin membresía asociada'
-                }
-                title="Membresía"
-              />
-            ),
+            <SubscriptionsNavRow key="suscripciones" leading={<RowGlyph icon="card-outline" />} />,
             <NavRow key="notif" leading={<RowGlyph icon="notifications-outline" />} onPress={() => router.push('/notifications')} subtitle="Qué avisos quieres recibir" title="Notificaciones" />,
             <NavRow
               key="tour"

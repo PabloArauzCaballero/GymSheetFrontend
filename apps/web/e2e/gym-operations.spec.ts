@@ -4,9 +4,9 @@ import { expect, test, type Page } from '@playwright/test';
 import { signInOperatingGym } from './fixtures';
 
 /**
- * Lo añadido al portal para operar un gimnasio: el panel de operación, el
- * listado de cuentas, el catálogo de equipamiento y la activación por pago en
- * efectivo.
+ * Lo añadido al portal para operar un gimnasio: el listado de cuentas y el
+ * catálogo de equipamiento. El panel de operación y la activación por pago en
+ * efectivo se fueron con la franja 8e (ADR-0026).
  *
  * Corre contra el stack real —backend NestJS y PostgreSQL—, como el resto de
  * esta carpeta. Las aserciones miran el efecto observable en pantalla después
@@ -64,22 +64,6 @@ test.describe('Operación del gimnasio', () => {
     await dismissTutorial(page);
   });
 
-  test('el panel responde las tres preguntas de operación', async ({ page }) => {
-    await open(page, '/admin/operacion');
-
-    await expect(page.getByRole('heading', { name: 'Operación' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Uso de máquinas' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Flujo de personas' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'No han renovado' })).toBeVisible();
-
-    // La ventana temporal gobierna las consultas; cambiarla no debe romper la
-    // página aunque el rango no tenga datos.
-    await page.getByLabel('Ventana de tiempo').selectOption('7');
-    await expect(page.getByRole('heading', { name: 'Operación' })).toBeVisible();
-
-    await shot(page, 'panel-operacion');
-  });
-
   test('el listado de cuentas resuelve el acceso y filtra', async ({ page }) => {
     await open(page, '/admin/usuarios');
 
@@ -120,25 +104,6 @@ test.describe('Operación del gimnasio', () => {
     await expect(page.getByText(/seleccionados$/u)).toBeVisible();
 
     await shot(page, 'catalogo-equipamiento');
-  });
-
-  test('el enlace de activación exige sesión de personal', async ({ page, browser }) => {
-    // Sin sesión: el portal debe pedir acceso y conservar el destino, que es lo
-    // que hace inútil reenviar el enlace a un grupo de WhatsApp.
-    const anonimo = await browser.newContext();
-    const anonPage = await anonimo.newPage();
-    await anonPage.goto('/activar/token-de-prueba-que-no-existe-000000');
-    await expect(anonPage).toHaveURL(/\/login\?returnTo=%2Factivar/u, { timeout: 40_000 });
-    await shot(anonPage, 'activacion-sin-sesion');
-    await anonimo.close();
-
-    // Con sesión de administración, un enlace inexistente se rechaza sin
-    // filtrar si alguna vez existió.
-    await open(page, '/activar/token-de-prueba-que-no-existe-000000');
-    await expect(page.getByText('El enlace ya no es válido')).toBeVisible({
-      timeout: 20_000,
-    });
-    await shot(page, 'activacion-enlace-invalido');
   });
 
   // Franja 7a: the gym self-setup tour left with the gym staff; REPP's admin has its own.

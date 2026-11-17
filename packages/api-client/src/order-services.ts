@@ -4,11 +4,13 @@ import {
   businessOrdersPageSchema,
   buyerOrderDetailSchema,
   buyerOrdersPageSchema,
+  confirmOrderInputSchema,
   createOrderInputSchema,
   paymentConfigInputSchema,
   paymentConfigSchema,
   paymentInstructionsSchema,
   rejectOrderInputSchema,
+  type ConfirmOrderInput,
   type CreateOrderInput,
   type OrderStatus,
   type PaymentConfigInput,
@@ -75,7 +77,9 @@ export function createBusinessOrdersServices(request: RequestFn, upload: UploadF
     list: (filter: { status?: OrderStatus; cursor?: string | null; limit?: number } = {}) =>
       request(`/business/me/orders?${pageQuery(filter)}`, businessOrdersPageSchema, { method: 'GET' }),
     get: (orderId: string) => request(order(orderId), businessOrderDetailSchema, { method: 'GET' }),
-    confirm: (orderId: string) => request(`${order(orderId)}/confirm`, businessOrderDetailSchema, { method: 'POST' }),
+    /** For a gym MEMBERSHIP, `alsoConfirmAffiliation: false` confirms only the payment (409 GYM_NOT_ACTIVE otherwise when REPP suspended the gym). */
+    confirm: (orderId: string, input: ConfirmOrderInput = {}) =>
+      request(`${order(orderId)}/confirm`, businessOrderDetailSchema, { method: 'POST', body: confirmOrderInputSchema.parse(input) }),
     reject: (orderId: string, input: RejectOrderInput) =>
       request(`${order(orderId)}/reject`, businessOrderDetailSchema, { method: 'POST', body: rejectOrderInputSchema.parse(input) }),
     receiptPath: (orderId: string) => `${order(orderId)}/receipt`,

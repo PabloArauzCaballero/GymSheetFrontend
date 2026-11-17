@@ -15,6 +15,9 @@ describe('shouldToastQueryError', () => {
   it('no avisa de un correo sin verificar: la pantalla social muestra «Verifica tu correo»', () => {
     expect(shouldToastQueryError(forbidden('EMAIL_VERIFICATION_REQUIRED'))).toBe(false);
   });
+  it('stays quiet without a confirmed gym: the ranking and members show «Únete a tu gimnasio»', () => {
+    expect(shouldToastQueryError(forbidden('GYM_MEMBERSHIP_REQUIRED'))).toBe(false);
+  });
   it('sí avisa de un 403 real y de cualquier otro fallo', () => {
     expect(shouldToastQueryError(forbidden())).toBe(true);
     expect(shouldToastQueryError(new Error('boom'))).toBe(true);

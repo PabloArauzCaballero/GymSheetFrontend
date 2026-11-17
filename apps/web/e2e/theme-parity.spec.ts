@@ -25,14 +25,12 @@ import { signInOperatingGym, waitForPageSettled } from './fixtures';
 const routes = [
   { path: '/dashboard', name: 'dashboard' },
   { path: '/admin', name: 'admin-overview' },
-  { path: '/admin/people', name: 'admin-people' },
   // Las pantallas que listan registros crecen cada vez que alguien da de alta
   // uno —incluidas las propias pruebas funcionales—, así que su captura
   // completa dejaría de coincidir por motivos ajenos al tema. Se compara su
   // encabezado, que reúne fondo, borde, título degradado y botón de acento sin
   // depender de cuántas filas o tarjetas haya.
   { path: '/admin/equipment', name: 'admin-equipment', region: 'header' },
-  { path: '/admin/membership', name: 'admin-membership', region: 'header' },
   { path: '/profile', name: 'profile', region: 'header' },
 ] as const;
 

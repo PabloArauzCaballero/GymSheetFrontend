@@ -19,6 +19,7 @@ import { CreateTrainingInviteModal } from '@/features/training-invitations/creat
 import { notify } from '@/notifications';
 import { initialsOf } from '@/lib/format';
 import { accentPolicy, colors, fontSizes, iconSizes, semibold, spacing } from '@/theme';
+import { GymBadge } from '@/features/affiliations/gym-badge';
 import {
   EXPERIENCE_LEVEL_LABEL,
   GENDER_LABEL,
@@ -184,11 +185,10 @@ export default function PerfilDetailScreen() {
       <ProfileHero
         initials={initialsOf(entry.displayName, undefined)}
         meta={
-          entry.socialStatus ? (
-            <Text style={{ color: colors.textSecondary, fontSize: fontSizes.sm }}>
-              {SOCIAL_STATUS_LABEL[entry.socialStatus]}
-            </Text>
-          ) : null
+          <>
+            {entry.socialStatus ? <Text style={{ color: colors.textSecondary, fontSize: fontSizes.sm }}>{SOCIAL_STATUS_LABEL[entry.socialStatus]}</Text> : null}
+            <GymBadge badge={entry.gymBadge} />
+          </>
         }
         name={entry.displayName}
         photoUrl={entry.photoUrl}

@@ -16,7 +16,6 @@ const tabLabels: Record<string, string> = {
   '/chat': 'Mensajes',
   '/profile': 'Perfil',
   // El personal: rótulos de una palabra, que no partan en dos líneas.
-  '/admin/operacion': 'Panel',
   '/admin': 'Módulos',
   '/admin/usuarios': 'Usuarios',
   '/sistema': 'Sistema',

@@ -98,6 +98,15 @@ describe('createBuyerOrdersServices', () => {
     expect(() => orders.create({ listingId: LISTING, amount: '1' } as never)).toThrow();
   });
 
+  it('carries the SOCIO data of a gym membership strictly (franja 8e)', async () => {
+    const { calls, client } = recordingClient(() => buyer);
+    const orders = createBuyerOrdersServices(client.request, client.upload);
+    await orders.create({ listingId: LISTING, affiliation: { locationId: LISTING, ciLast3: '123', switchGym: true } });
+    expect(calls[0]?.body).toEqual({ listingId: LISTING, affiliation: { locationId: LISTING, ciLast3: '123', switchGym: true } });
+    expect(() => orders.create({ listingId: LISTING, affiliation: { locationId: LISTING, ciLast3: '12' } })).toThrow();
+    expect(() => orders.create({ listingId: LISTING, affiliation: { locationId: LISTING, ciLast3: '123', gymEntityId: LISTING } } as never)).toThrow();
+  });
+
   it('calls the list, detail, instructions, cancel, receipt and report routes', async () => {
     const { calls, client } = recordingClient((url) => {
       if (url.includes('my-orders')) return { items: [buyer], nextCursor: null };
@@ -138,6 +147,7 @@ describe('createBusinessOrdersServices', () => {
     const orders = createBusinessOrdersServices(client.request, client.upload);
     expect((await orders.list({ status: 'PENDING_VERIFICATION' })).pendingCount).toBe(2);
     await orders.confirm(ORDER);
+    await orders.confirm(ORDER, { alsoConfirmAffiliation: false });
     await orders.reject(ORDER, { reasonCode: 'AMOUNT_MISMATCH' });
     await orders.savePaymentConfig({ bankName: 'BNB', accountHolderName: 'Top SRL', acceptsCash: true });
     const form = new FormData();
@@ -146,11 +156,14 @@ describe('createBusinessOrdersServices', () => {
     expect(calls.map((call) => `${call.method} ${call.url}`)).toEqual([
       'GET /business/me/orders?limit=20&status=PENDING_VERIFICATION',
       `POST /business/me/orders/${ORDER}/confirm`,
+      `POST /business/me/orders/${ORDER}/confirm`,
       `POST /business/me/orders/${ORDER}/reject`,
       'PUT /business/me/payment-config',
       'PUT /business/me/payment-config/qr',
     ]);
-    expect(calls[2]?.body).toEqual({ reasonCode: 'AMOUNT_MISMATCH' });
+    expect(calls[1]?.body).toEqual({});
+    expect(calls[2]?.body).toEqual({ alsoConfirmAffiliation: false });
+    expect(calls[3]?.body).toEqual({ reasonCode: 'AMOUNT_MISMATCH' });
     expect(() => orders.reject(ORDER, { reasonCode: 'LATE' } as never)).toThrow();
   });
 });

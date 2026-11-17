@@ -1,5 +1,5 @@
 import type { Ionicons } from '@expo/vector-icons';
-import type { MembershipStatus, TrainingGoal, WorkoutStatus } from '@gymsheet/types';
+import type { TrainingGoal, WorkoutStatus } from '@gymsheet/types';
 import type { BadgeTone } from '@/components/layout';
 
 /** Fechas, horas y duraciones de sesión: compartidas con la web en `@gymsheet/domain`. */
@@ -21,20 +21,6 @@ export const GOAL_LABEL: Record<TrainingGoal, string> = {
   SALUD_GENERAL: 'Salud general',
   RENDIMIENTO_DEPORTIVO: 'Rendimiento deportivo',
   REHABILITACION: 'Rehabilitación',
-};
-
-export const MEMBERSHIP_LABEL: Record<MembershipStatus, string> = {
-  ACTIVE: 'Activa',
-  SUSPENDED: 'Suspendida',
-  CANCELLED: 'Cancelada',
-  EXPIRED: 'Vencida',
-};
-
-export const MEMBERSHIP_TONE: Record<MembershipStatus, BadgeTone> = {
-  ACTIVE: 'success',
-  SUSPENDED: 'warning',
-  CANCELLED: 'danger',
-  EXPIRED: 'danger',
 };
 
 export const WORKOUT_LABEL: Record<WorkoutStatus, string> = {

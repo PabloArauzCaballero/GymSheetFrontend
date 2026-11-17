@@ -1,4 +1,6 @@
+import type { GymGateStatus } from '@gymsheet/domain';
 import type { LeaderboardEntry, LeaderboardSortBy } from '@/shared/api/schemas';
+import { GymGateState } from '@/features/affiliations/components/person/gym-gate-state';
 import { CountUp } from '@/shared/components/motion/count-up';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { cn } from '@/shared/lib/cn';
@@ -61,20 +63,29 @@ const SORT_OPTIONS: ReadonlyArray<{ value: LeaderboardSortBy; label: string }> =
   { value: 'streak', label: 'Racha' },
 ];
 
+/**
+ * The ranking of the person's confirmed gym (ADR-0027). Without one the
+ * backend answers 403 GYM_MEMBERSHIP_REQUIRED: `gate` shows that state with
+ * its next step instead of an empty table.
+ */
 export function LeaderboardCard({
   entries,
   sortBy,
   onSortChange,
+  gate = null,
+  limit = 5,
 }: Readonly<{
   entries: LeaderboardEntry[];
   sortBy: LeaderboardSortBy;
   onSortChange: (sort: LeaderboardSortBy) => void;
+  gate?: GymGateStatus | null;
+  limit?: number;
 }>) {
   return (
     <Card>
       <CardHeader
         action={
-          <div className="flex gap-1 rounded-full bg-[var(--surface-high)] p-1 text-xs">
+          gate ? null : <div className="flex gap-1 rounded-full bg-[var(--surface-high)] p-1 text-xs">
             {SORT_OPTIONS.map((option) => (
               <button
                 aria-pressed={sortBy === option.value}
@@ -93,11 +104,12 @@ export function LeaderboardCard({
             ))}
           </div>
         }
-        description="Los cinco primeros de tu gimnasio. Solo se ve el nombre y la inicial."
+        description={`Los ${limit === 5 ? 'cinco' : limit} primeros de tu gimnasio. Solo se ve el nombre y la inicial.`}
         title="Clasificación del gimnasio"
       />
       <CardContent className="grid gap-3">
-        {entries.map((entry, index) => (
+        {gate ? <GymGateState compact status={gate} /> : null}
+        {(gate ? [] : entries).map((entry, index) => (
           <div className="flex items-center gap-4" key={`${entry.position}-${entry.displayName}`}>
             <span
               className={cn(
@@ -133,7 +145,7 @@ export function LeaderboardCard({
             )}
           </div>
         ))}
-        {entries.length === 0 ? (
+        {!gate && entries.length === 0 ? (
           <p className="text-sm text-[var(--text-muted)]">
             Todavía no hay nadie en la tabla. Entrena y sé el primero.
           </p>

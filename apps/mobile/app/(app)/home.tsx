@@ -5,13 +5,12 @@ import { IconButton } from '@/components/icon-button';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
-import { formatVolume, overloadDelta, summariseTraining } from '@gymsheet/domain';
-import { programService, membershipService, progressionService, routineService, workoutService } from '@/api/services';
+import { daysLeftText, formatVolume, headlineSubscription, overloadDelta, summariseTraining } from '@gymsheet/domain';
+import { programService, progressionService, routineService, workoutService } from '@/api/services';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { Badge, Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
 import { PressableScale } from '@/components/motion';
 import { NavRow } from '@/components/list';
-import { MembershipGate } from '@/components/membership-gate';
 import { ProgressTrack } from '@/components/progression';
 import { Text } from '@/components/text';
 import { TourTarget, useScreenTour } from '@/components/tour';
@@ -24,6 +23,7 @@ import { TodayCard } from '@/features/home/today-card';
 import { RepiCard } from '@/features/nudge/repi-card';
 import { notificationService } from '@/features/notifications/service';
 import { activeProgramsKey } from '@/features/programs/use-active-programs';
+import { useMySubscriptions } from '@/features/subscriptions/subscriptions-service';
 import { WORKOUT_LABEL, WORKOUT_TONE, formatDuration, formatTimeOfDay, relativeDay, shortName } from '@/lib/format';
 import { useAuthStore } from '@/state/auth-store';
 import { accentHues, colors, fontSizes, iconSizes, ink, metricColors, spacing } from '@/theme';
@@ -47,9 +47,9 @@ export default function HomeScreen() {
     staleTime: 60_000,
   });
 
-  const [membership, workouts, assignments, progression, programs] = useQueries({
+  const subscriptions = useMySubscriptions();
+  const [workouts, assignments, progression, programs] = useQueries({
     queries: [
-      { queryKey: ['membership', 'me'], queryFn: () => membershipService.getMine() },
       // 40: la lista enseña tres, pero la semana y la comparación con la
       // anterior necesitan el historial del periodo. Una petición sirve a todo.
       { queryKey: ['workouts', 'recent'], queryFn: () => workoutService.list(40) },
@@ -66,14 +66,14 @@ export default function HomeScreen() {
   });
 
   const refreshing =
-    membership.isFetching ||
+    subscriptions.isFetching ||
     workouts.isFetching ||
     assignments.isFetching ||
     progression.isFetching ||
     programs.isFetching ||
     unreadNotifications.isFetching;
   const refresh = () => {
-    void membership.refetch();
+    void subscriptions.refetch();
     void workouts.refetch();
     void assignments.refetch();
     void progression.refetch();
@@ -91,7 +91,9 @@ export default function HomeScreen() {
   const week = homeWeekDots(sessions, routine.data);
   const todayLoading = programs.isPending || (Boolean(strength?.rutinaId) && routine.isPending) || assignments.isPending;
   const todayError = programs.error ?? routine.error ?? null;
-  const membershipData = membership.data?.membership;
+  // The running plan that ends first (franja 8e); it replaces «Tu membresía».
+  const plan = headlineSubscription(subscriptions.data);
+  const planPeriod = plan?.line.current ?? null;
 
   const unread = unreadNotifications.data?.count ?? 0;
   const streak = training.streakWeeks;
@@ -146,12 +148,6 @@ export default function HomeScreen() {
         </View>
         <Ionicons color={ink.black} name="arrow-forward" size={20} />
       </PressableScale>
-
-      {/* Si el acceso no está vigente, eso es lo primero que hay que resolver,
-          pero en una franja: el valor de la pantalla tiene que verse igual. */}
-      {membership.data && !membershipData?.vigenteHoy ? (
-        <MembershipGate onRenew={() => router.push('/membership')} projection={membership.data} variant="compact" />
-      ) : null}
 
       {/* Repi: el empujón burlón (y los matches que esperan). La acción de entrenar sigue en «Hoy». */}
       <RepiCard />
@@ -273,8 +269,8 @@ export default function HomeScreen() {
         ) : null}
       </Section>
 
-      {/* La senda y la membresía vigente: una sola lista callada al final. */}
-      {progression.data?.level || membershipData?.vigenteHoy ? (
+      {/* La senda y el plan en curso: una sola lista callada al final. */}
+      {progression.data?.level || planPeriod ? (
         <Card list>
           {progression.data?.level ? (
             <PressableScale
@@ -302,13 +298,13 @@ export default function HomeScreen() {
               <ProgressTrack color={colors.textSecondary} ratio={progression.data.levelProgress} />
             </PressableScale>
           ) : null}
-          {progression.data?.level && membershipData?.vigenteHoy ? <Divider /> : null}
-          {membershipData?.vigenteHoy ? (
+          {progression.data?.level && planPeriod ? <Divider /> : null}
+          {plan && planPeriod ? (
             <NavRow
               leading={<IconBadge icon="card-outline" size={36} tone="record" />}
-              onPress={() => router.push('/membership')}
-              subtitle={`${membershipData.diasRestantes} ${membershipData.diasRestantes === 1 ? 'día restante' : 'días restantes'}`}
-              title={membershipData.plan?.nombre ?? 'Tu membresía'}
+              onPress={() => router.push({ pathname: '/suscripciones/[id]', params: { id: planPeriod.id } })}
+              subtitle={[plan.sellerName, daysLeftText(planPeriod)].filter(Boolean).join(' · ')}
+              title={plan.line.listing.name}
             />
           ) : null}
         </Card>

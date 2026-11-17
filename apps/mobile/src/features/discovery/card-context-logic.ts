@@ -9,6 +9,7 @@ import {
 type IconName = keyof typeof Ionicons.glyphMap;
 
 export const REASON_ICON: Record<DiscoveryReasonChipCode, IconName> = {
+  SAME_GYM: 'business-outline',
   SAME_ROUTINE: 'repeat-outline',
   SAME_GOAL: 'flag-outline',
   SHARED_INTERESTS: 'sparkles-outline',

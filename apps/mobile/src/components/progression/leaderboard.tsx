@@ -8,19 +8,33 @@ import { ErrorState, Skeleton } from '@/components/feedback';
 import { Card, Section } from '@/components/layout';
 import { CountUpText, SegmentLabel, SegmentedPill } from '@/components/motion';
 import { RankBadge } from '@/components/rank-badge';
+import { GymGateState } from '@/features/affiliations/gym-gate-state';
+import { gymGateOf } from '@/features/affiliations/affiliations-service';
 import { colors, fontSizes, iconSizes, radii, semibold, spacing } from '@/theme';
 
-/** La clasificación del gimnasio, al final de la senda: es contexto, no el objetivo. */
-export function LeaderboardSection() {
+/**
+ * La clasificación del gimnasio, al final de la senda: es contexto, no el objetivo.
+ * The gym is the confirmed SOCIO affiliation (ADR-0027): without one the 403
+ * GYM_MEMBERSHIP_REQUIRED is shown as «Únete a tu gimnasio», not as an error.
+ */
+export function LeaderboardSection({ limit = 5 }: { limit?: number }) {
   const [leaderboardSort, setLeaderboardSort] = useState<LeaderboardSortBy>('points');
   const leaderboard = useQuery({
-    queryKey: ['progression', 'leaderboard', leaderboardSort],
-    queryFn: () => progressionService.leaderboard(5, leaderboardSort),
+    queryKey: ['progression', 'leaderboard', leaderboardSort, limit],
+    queryFn: () => progressionService.leaderboard(limit, leaderboardSort),
   });
+  const gate = gymGateOf(leaderboard.error);
+  if (gate) {
+    return (
+      <Section icon="podium-outline" title="Clasificación del gimnasio">
+        <GymGateState status={gate} />
+      </Section>
+    );
+  }
   return (
     <Section icon="podium-outline" title="Clasificación del gimnasio">
       <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
-        Los cinco primeros de tu gimnasio.
+        {limit === 5 ? 'Los cinco primeros de tu gimnasio.' : `Los ${limit} primeros de tu gimnasio.`}
       </Text>
       <SegmentedPill
         gap={spacing.xs}

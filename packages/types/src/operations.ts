@@ -1,16 +1,8 @@
 import type {
-  AccessOutcome,
-  CredentialStatus,
-  CredentialType,
-  EmploymentStatus,
   MaintenanceStatus,
   MaintenanceType,
-  MembershipStatus,
   NotificationStatus,
-  PlanType,
   RoomType,
-  StaffPosition,
-  UserRole,
 } from './enums';
 
 /**
@@ -36,24 +28,6 @@ export type MediaFile = {
   estado: string;
   creadoEl: string;
   actualizadoEl: string;
-};
-
-export type StaffProfile = {
-  id: string;
-  usuarioId: string;
-  cargo: StaffPosition;
-  estadoLaboral: EmploymentStatus;
-  contratadoEl: string;
-  terminadoEl: string | null;
-  accesoIlimitado: boolean;
-  sedes: string[];
-  usuario?: {
-    id: string;
-    email: string;
-    nombreCompleto: string;
-    rol: UserRole;
-    estado: string;
-  };
 };
 
 export type Branch = {
@@ -109,140 +83,6 @@ export type MaintenanceEvent = {
   resolucion: string | null;
   costo: number | null;
   moneda: string | null;
-};
-
-export type PlanScope = { sedeId: string; salaId: string | null };
-
-export type MembershipPlan = {
-  id: string;
-  publicId: string;
-  codigo: string;
-  nombre: string;
-  descripcion: string | null;
-  tipo: PlanType;
-  duracionDias: number;
-  diasRecordatorio: number[];
-  estado: 'ACTIVE' | 'INACTIVE';
-  precio: number | null;
-  moneda: string | null;
-  beneficios: string[];
-  orden: number;
-  disponibleNuevo: boolean;
-  disponibleRenovacion: boolean;
-  disponibleExtension: boolean;
-  imagen: {
-    id: string;
-    publicId: string;
-    url: string;
-    altText: string;
-    width: number | null;
-    height: number | null;
-    licencia: string;
-    atribucion: string;
-  } | null;
-  alcances: PlanScope[];
-  metadata: Record<string, unknown>;
-};
-
-export type MembershipProjection = {
-  membership: Membership | null;
-  history: Membership[];
-  paymentStatus: 'PENDING_PAYMENT' | null;
-  renewalActions: { type: 'WHATSAPP'; label: string; phone: string; message: string }[];
-};
-
-export type MembershipAccess = {
-  code: string;
-  name: string;
-  description: string | null;
-  source: 'MEMBERSHIP' | 'PURCHASE' | 'ADMIN_GRANT' | 'PROMOTION' | 'TRIAL' | 'STREAK_REWARD';
-  sourceId: string;
-  startsAt: string;
-  endsAt: string | null;
-};
-
-export type MembershipOptions = {
-  membershipStatus: MembershipStatus | null;
-  plans: MembershipPlan[];
-};
-
-export type MembershipIntent = {
-  id: string;
-  publicId: string;
-  status: 'PENDING_PAYMENT';
-  type: 'RENEWAL' | 'EXTENSION';
-  membershipId: string | null;
-  planId: string;
-  months: number;
-  whatsappUrl: string;
-  message: string;
-  correlationId: string;
-  accessGranted: false;
-};
-
-export type Membership = {
-  id: string;
-  clienteUsuarioId: string;
-  planId: string;
-  plan?: MembershipPlan;
-  iniciaEl: string;
-  venceEl: string;
-  estado: MembershipStatus;
-  diasRestantes: number;
-  venceHoy: boolean;
-  vigenteHoy: boolean;
-  referenciaExterna: string | null;
-  notas: string | null;
-};
-
-export type Customer = {
-  id: string;
-  usuarioId: string;
-  numeroCliente: string;
-  telefono: string | null;
-  registradoEl: string;
-  referenciaExterna: string | null;
-  notas: string | null;
-  usuario?: { id: string; email: string; nombreCompleto: string; estado: string };
-};
-
-export type AccessCredential = {
-  id: string;
-  usuarioId: string;
-  tipo: CredentialType;
-  proveedor: string;
-  estado: CredentialStatus;
-  referenciaExternaRegistrada: boolean;
-  versionConsentimiento: string | null;
-  consentimientoRegistradoEn: string | null;
-  registradoEn: string;
-  verificadoPorUltimaVezEn: string | null;
-  revocadoEn: string | null;
-};
-
-export type AccessDecision = {
-  id: string;
-  eventoDispositivoId: string;
-  usuarioId: string;
-  resultado: AccessOutcome;
-  razon: string;
-  membresiaId: string | null;
-  perfilPersonalId: string | null;
-  diasRestantes: number | null;
-  decididoEn: string;
-  versionPolitica: string;
-};
-
-export type AccessEvent = {
-  id: string;
-  dispositivoId: string;
-  eventoOrigenId: string;
-  credencialId: string;
-  direccion: 'ENTRY' | 'EXIT';
-  ocurridoEn: string;
-  recibidoEn: string;
-  estadoCola: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'DEAD_LETTER';
-  decision: AccessDecision | null;
 };
 
 export type Notification = {

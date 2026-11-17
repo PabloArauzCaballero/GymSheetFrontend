@@ -12,11 +12,6 @@ export const queryKeys = {
   routines: (scope: string) => ['routines', scope] as const,
   routine: (id: string) => ['routine', id] as const,
   routineAssignments: ['routines', 'assignments', 'me'] as const,
-  membership: ['membership', 'me'] as const,
-  membershipAccesses: ['membership', 'accesses'] as const,
-  membershipOptions: ['membership', 'options'] as const,
-  accessHistory: (page: number) => ['access', 'me', page] as const,
-  credentials: ['credentials', 'me'] as const,
   notifications: (page: number) => ['notifications', page] as const,
   notificationPreference: ['notifications', 'preference'] as const,
   tutorialProgress: ['tutorials', 'progress', 'me'] as const,
@@ -58,13 +53,39 @@ export const queryKeys = {
     ordersBadge: ['business', 'me', 'orders', 'badge'] as const,
     order: (orderId: string) => ['business', 'me', 'orders', 'detail', orderId] as const,
     paymentConfig: ['business', 'me', 'payment-config'] as const,
+    /** The gym's «Socios» (franja 7b); every key shares the prefix. `affiliationsBadge` is the nav's `pendingCount`. */
+    affiliations: ['business', 'me', 'affiliations'] as const,
+    affiliationRequests: (kind: string, locationId: string) => ['business', 'me', 'affiliations', 'requests', kind, locationId] as const,
+    affiliationMembers: (locationId: string) => ['business', 'me', 'affiliations', 'members', locationId] as const,
+    affiliationCoaches: ['business', 'me', 'affiliations', 'coaches'] as const,
+    affiliationsBadge: ['business', 'me', 'affiliations', 'badge'] as const,
+    /** «Mis gimnasios» of a coach business. */
+    gymLinks: ['business', 'me', 'gym-links'] as const,
+    /** «Suscriptores» (franja 8e); list pages and one period share the prefix. */
+    subscribers: ['business', 'me', 'subscriptions'] as const,
+    subscribersList: (status: string) => ['business', 'me', 'subscriptions', 'list', status] as const,
   },
+  /** A person's affiliations (franja 7b) and «Mi gimnasio» by the confirmed SOCIO (franja 7c). */
+  affiliations: {
+    all: ['affiliations', 'mine'] as const,
+    list: ['affiliations', 'mine', 'list'] as const,
+  },
+  myGym: ['me', 'gym'] as const,
+  myGymMembers: (q: string) => ['me', 'gym', 'members', q] as const,
+  /** Every ranking read shares this prefix (`/me/progression/leaderboard`, gated by the confirmed gym). */
+  leaderboard: ['progression', 'leaderboard'] as const,
   /** «Mis compras» of the person (franja 8d): list, detail and the payment data of one order. */
   orders: {
     all: ['orders', 'mine'] as const,
     list: ['orders', 'mine', 'list'] as const,
     detail: (orderId: string) => ['orders', 'mine', 'detail', orderId] as const,
     instructions: (orderId: string) => ['orders', 'mine', 'instructions', orderId] as const,
+  },
+  /** «Mis suscripciones» (franja 8e): the grouped list and one period with its history. */
+  subscriptions: {
+    all: ['subscriptions', 'mine'] as const,
+    list: ['subscriptions', 'mine', 'list'] as const,
+    detail: (periodId: string) => ['subscriptions', 'mine', 'detail', periodId] as const,
   },
   /** The public marketplace (franja 8c): search pages, one listing and a profile by handle. */
   marketplace: {
@@ -79,13 +100,7 @@ export const queryKeys = {
     branchesAll: ['admin', 'branches', 'all'] as const,
     rooms: (page: number) => ['admin', 'rooms', page] as const,
     maintenance: (page: number) => ['admin', 'maintenance', page] as const,
-    plans: ['admin', 'plans'] as const,
     media: ['admin', 'media'] as const,
-    staff: (page: number, position: string) => ['admin', 'staff', page, position] as const,
-    customers: (page: number) => ['admin', 'customers', page] as const,
-    memberships: (page: number) => ['admin', 'memberships', page] as const,
-    accessDevices: ['admin', 'access-devices'] as const,
-    accessHistory: (page: number) => ['admin', 'access-history', page] as const,
     verifications: ['admin', 'verifications'] as const,
     /** REPP's KYC console (franja 8b); the queue keys share a prefix so one invalidation refreshes both queues. */
     businessKyc: {

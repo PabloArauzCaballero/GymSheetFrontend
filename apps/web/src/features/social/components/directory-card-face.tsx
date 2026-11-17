@@ -8,6 +8,7 @@ import { cn } from '@/shared/lib/cn';
 import { isVerifiedCard } from '@gymsheet/domain';
 import { InterestChips } from './about/social-about-chips';
 import { DiscoveryReasonChips, DistanceChip, VerifiedBadge, type CardRanking } from './discovery-card-context';
+import { GymBadge } from '@/features/affiliations/components/person/gym-badge';
 import { experienceLevelLabels, trainingGoalLabels } from './directory-labels';
 
 /** `photos` cuando llega; si no, la portada como única foto. */
@@ -156,6 +157,7 @@ export function DirectoryCardFace({
         {/* Chips del móvil sobre la foto: sede, objetivo y puntos (este en acento). */}
         <div className="flex flex-wrap items-center gap-1.5">
           {ranking ? <DistanceChip km={ranking.distanceKm} /> : null}
+          <GymBadge badge={entry.gymBadge} tone="overlay" />
           {entry.branchName ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--background)_70%,transparent)] px-2.5 py-1 text-xs font-semibold">
               <MapPin aria-hidden className="size-3 opacity-85" />

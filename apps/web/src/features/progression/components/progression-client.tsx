@@ -20,6 +20,7 @@ import { NearestBadges } from './nearest-badges';
 import { PrizesCard } from './prize-tickets';
 import { BadgeTile, PathNode, RankHero } from './progression-parts';
 import { LeaderboardCard, RestDaysCard } from './progression-secondary-cards';
+import { gymGateOf } from '@/features/affiliations/services/affiliations-client';
 import { ProgressionStatsCard } from './progression-stats-card';
 import { PointsRulesDialog, usePointRules } from './points-rules-dialog';
 import { StreakCard } from './streak-card';
@@ -217,7 +218,7 @@ export function ProgressionClient() {
 
       <ProgressionStatsCard rules={rules.data} stats={stats} streakShown={Boolean(data.streak)} />
 
-      <LeaderboardCard entries={leaderboard.data ?? []} onSortChange={setLeaderboardSort} sortBy={leaderboardSort} />
+      <LeaderboardCard entries={leaderboard.data ?? []} gate={gymGateOf(leaderboard.error)} onSortChange={setLeaderboardSort} sortBy={leaderboardSort} />
 
       <PointsRulesDialog
         badges={data.badges}

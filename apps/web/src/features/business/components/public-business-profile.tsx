@@ -7,12 +7,13 @@ import { ProfileListings } from '@/features/business-listings/components/public/
 import { ProfileLocations } from '@/features/business-listings/components/public/profile-locations';
 import { ReportButton, type Viewer } from '@/features/business-listings/components/public/report-button';
 import { SellerBadge } from '@/features/business-listings/components/public/seller-badge';
+import { JoinGymPanel } from '@/features/affiliations/components/person/join-gym-panel';
 
 /**
  * The public profile of a business at `/@handle` (franja 8c, plan §4.3):
  * cover, logo, badge, what it says about itself, its photos, sedes and its
- * listings by kind. «Escribir» opens the chat (8f) and «⋯ Reportar» is for
- * person accounts. Reviews and «Hacerme socio» join with franja 8e.
+ * listings by kind. «Escribir» opens the chat (8f), «⋯ Reportar» is for
+ * person accounts and a GYM offers «Hacerme socio» (franja 7b). Reviews join later.
  */
 export function PublicBusinessProfile({ profile, viewer }: Readonly<{ profile: Profile; viewer: Viewer }>) {
   const { entity, handle } = profile;
@@ -47,6 +48,7 @@ export function PublicBusinessProfile({ profile, viewer }: Readonly<{ profile: P
               <SellerBadge badge={entity.isVerified ? 'VERIFIED' : 'NEW'} />
             </p>
           </header>
+          {entity.entityType === 'GYM' ? <JoinGymPanel gym={{ entityId: entity.id, handle, name: entity.name }} locations={profile.locations} viewer={viewer} /> : null}
           <WriteToBusinessButton className="sm:max-w-xs" entityId={entity.id} returnTo={`/@${handle}`} viewer={viewer} />
           {entity.headline ? <p className="text-[17px] leading-7">{entity.headline}</p> : null}
           {place ? (

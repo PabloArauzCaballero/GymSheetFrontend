@@ -21,6 +21,7 @@ import { Text } from '@/components/text';
 import { WriteToBusiness } from './write-to-business';
 import { Button } from '@/components/ui';
 import { marketplaceService } from '@/features/business-listings/listings-service';
+import { JoinGymPanel } from '@/features/affiliations/join-gym-panel';
 import { colors, comfortableTouchTarget, iconSizes, radii, spacing } from '@/theme';
 import { ListingCard } from './listing-card';
 
@@ -68,7 +69,7 @@ function Listings({ profile, onOpen }: { profile: PublicBusinessProfile; onOpen:
 /**
  * The public profile of a business at `@handle` (plan §4.3): cover, logo,
  * badge, its words, photos, sedes and listings by kind, «Escribir» (8f) and
- * «⋯ Reportar». Reviews and «Hacerme socio» join with franja 8e.
+ * «⋯ Reportar». A GYM offers «Hacerme socio» (franja 7b). Reviews join later.
  */
 export function PublicProfileView({ profile, onOpen, onReport }: { profile: PublicBusinessProfile; onOpen: (listing: PublicListing) => void; onReport: () => void }) {
   const { entity, handle } = profile;
@@ -90,6 +91,7 @@ export function PublicProfileView({ profile, onOpen, onReport }: { profile: Publ
           </Text>
         </View>
       </View>
+      {entity.entityType === 'GYM' ? <JoinGymPanel gym={{ entityId: entity.id, handle, name: entity.name }} locations={profile.locations} /> : null}
       <WriteToBusiness entityId={entity.id} />
       {entity.headline ? <Text variant="body">{entity.headline}</Text> : null}
       {entity.description ? <Text tone="secondary" variant="body">{entity.description}</Text> : null}
