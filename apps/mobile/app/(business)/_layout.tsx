@@ -24,6 +24,9 @@ export default function BusinessLayout() {
       <Stack.Screen name="publicacion-nueva" />
       <Stack.Screen name="publicacion/[id]" />
       <Stack.Screen name="sede" />
+      {/* Franja 8d: one order of «Pedidos» and «Cobro» (bank data and QR). */}
+      <Stack.Screen name="pedido/[id]" />
+      <Stack.Screen name="cobro" />
     </Stack>
   );
 }

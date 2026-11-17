@@ -14,7 +14,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomTabBarHeightContext } from 'expo-router/build/react-navigation/bottom-tabs';
 import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import type {
@@ -22,8 +21,6 @@ import type {
   DirectoryEntitySummary,
   EntityReviewsResponse,
   EntityPlan,
-  PublicPaymentConfig,
-  PaymentOrder,
 } from '@gymsheet/schemas';
 import { directoryService, directoryPaymentsService, communityService, membershipService } from '@/api/services';
 import { useAuthStore } from '@/state/auth-store';
@@ -81,17 +78,6 @@ export default function DirectorioScreen() {
   const [composerRating, setComposerRating] = useState(5);
   const [composerTitle, setComposerTitle] = useState('');
   const [composerBody, setComposerBody] = useState('');
-
-  // Estados para Marketplace y Pagos por QR
-  const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<EntityPlan | null>(null);
-  const [currentOrder, setCurrentOrder] = useState<PaymentOrder | null>(null);
-  const [currentPaymentConfig, setCurrentPaymentConfig] = useState<PublicPaymentConfig | null>(null);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [receiptUrl, setReceiptUrl] = useState('');
-  const [receiptReference, setReceiptReference] = useState('');
-  const [athleteNotes, setAthleteNotes] = useState('');
-  const [isReceiptSubmitted, setIsReceiptSubmitted] = useState(false);
-  const [uploadingReceipt, setUploadingReceipt] = useState(false);
 
   // Estados para comentarios del plan (sistema community existente)
   const [selectedPlanForComments, setSelectedPlanForComments] = useState<EntityPlan | null>(null);
@@ -153,13 +139,6 @@ export default function DirectorioScreen() {
     enabled: Boolean(entityDetail?.id),
   });
 
-  // 6. Cargar configuración de pago y QR bancario de la entidad
-  const { data: entityPaymentConfig } = useQuery<PublicPaymentConfig | null>({
-    queryKey: ['directory-entity-payment-config', entityDetail?.id],
-    queryFn: () => (entityDetail?.id ? directoryPaymentsService.getPaymentConfig(entityDetail.id) : null),
-    enabled: Boolean(entityDetail?.id),
-  });
-
   // 7. Cargar comentarios del plan seleccionado (Community)
   const { data: planCommentsData, isLoading: loadingPlanComments, refetch: refetchPlanComments } = useQuery({
     queryKey: ['directory-plan-comments', selectedPlanForComments?.id],
@@ -190,47 +169,6 @@ export default function DirectorioScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       const message = err instanceof Error ? err.message : 'No se pudo guardar la reseña.';
       notify.error(message);
-    },
-  });
-
-  // Mutación para iniciar compra de plan (genera orden con snapshot y QR)
-  const checkoutMutation = useMutation({
-    mutationFn: (plan: EntityPlan) =>
-      directoryPaymentsService.createOrder({
-        planId: plan.id,
-      }),
-    onSuccess: (data, plan) => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      setSelectedPlanForPayment(plan);
-      setCurrentOrder(data.order);
-      setCurrentPaymentConfig(data.paymentConfig ?? entityPaymentConfig ?? null);
-      setReceiptUrl('');
-      setReceiptReference('');
-      setAthleteNotes('');
-      setIsReceiptSubmitted(false);
-      setIsPaymentModalOpen(true);
-    },
-    onError: (err: unknown) => {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      const msg = err instanceof Error ? err.message : 'No se pudo iniciar la compra.';
-      notify.error(msg);
-    },
-  });
-
-  // Mutación para subir comprobante
-  const submitReceiptMutation = useMutation({
-    mutationFn: (input: { orderId: string; receiptUrl: string; receiptReference?: string; athleteNotes?: string }) =>
-      directoryPaymentsService.submitReceipt(input.orderId, input),
-    onSuccess: (updatedOrder) => {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setCurrentOrder(updatedOrder);
-      setIsReceiptSubmitted(true);
-      notify.success('¡Comprobante enviado! El gimnasio validará tu transferencia.');
-    },
-    onError: (err: unknown) => {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      const msg = err instanceof Error ? err.message : 'Error al enviar comprobante.';
-      notify.error(msg);
     },
   });
 
@@ -288,51 +226,6 @@ export default function DirectorioScreen() {
       rating: composerRating,
       title: composerTitle.trim(),
       body: composerBody.trim(),
-    });
-  };
-
-  const handlePickReceiptImage = async () => {
-    try {
-      const res = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        quality: 0.8,
-      });
-      if (!res.canceled && res.assets && res.assets[0]) {
-        Haptics.selectionAsync();
-        const asset = res.assets[0];
-        setUploadingReceipt(true);
-        try {
-          const uploaded = await communityService.uploadAttachment({
-            uri: asset.uri,
-            name: asset.fileName ?? 'comprobante.jpg',
-            mimeType: asset.mimeType ?? 'image/jpeg',
-          });
-          setReceiptUrl(uploaded.url);
-          notify.success('Comprobante subido al servidor correctamente');
-        } catch (uploadErr) {
-          console.warn('[Directorio] Receipt upload fallback to local uri:', uploadErr);
-          setReceiptUrl(asset.uri);
-          notify.info('Comprobante seleccionado localmente.');
-        } finally {
-          setUploadingReceipt(false);
-        }
-      }
-    } catch {
-      notify.warning('No se pudo abrir la galería.');
-    }
-  };
-
-  const handleSubmitReceipt = () => {
-    if (!currentOrder?.id) return;
-    if (!receiptUrl.trim()) {
-      notify.warning('Por favor adjunta la captura o URL de tu comprobante bancario.');
-      return;
-    }
-    submitReceiptMutation.mutate({
-      orderId: currentOrder.id,
-      receiptUrl: receiptUrl.trim(),
-      receiptReference: receiptReference.trim() || undefined,
-      athleteNotes: athleteNotes.trim() || undefined,
     });
   };
 
@@ -575,12 +468,17 @@ export default function DirectorioScreen() {
                           )}
 
                           <View style={styles.planActionsRow}>
+                            {/* Buying goes through the listing and its checkout (franja 8d, ADR-0024). */}
                             <PressableScale
-                              onPress={() => checkoutMutation.mutate(plan)}
+                              accessibilityLabel={`Ver y comprar ${plan.name}`}
+                              onPress={() => {
+                                setSelectedEntitySlug(null);
+                                router.push({ pathname: '/publicacion/[id]', params: { id: plan.id } });
+                              }}
                               style={styles.acquireButton}
                             >
-                              <Ionicons name="qr-code-outline" size={16} color={colors.background} />
-                              <Text style={styles.acquireButtonText}>Adquirir con QR</Text>
+                              <Ionicons name="bag-outline" size={16} color={colors.background} />
+                              <Text style={styles.acquireButtonText}>Ver y comprar</Text>
                             </PressableScale>
 
                             <PressableScale
@@ -794,227 +692,6 @@ export default function DirectorioScreen() {
               </View>
             </View>
           </Modal>
-        </View>
-      </Modal>
-
-      {/* Modal de Pago por QR Bancario y Envío de Comprobante */}
-      <Modal
-        visible={isPaymentModalOpen}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setIsPaymentModalOpen(false)}
-      >
-        <View style={styles.modalContainer}>
-          <StatusBar barStyle="light-content" />
-
-          {/* Barra superior modal */}
-          <View style={styles.modalBar}>
-            <Text style={styles.modalBarTitle} numberOfLines={1}>
-              Pago por QR Bancario
-            </Text>
-            <PressableScale onPress={() => setIsPaymentModalOpen(false)} style={styles.modalCloseButton}>
-              <Ionicons name="close" size={22} color={colors.text} />
-            </PressableScale>
-          </View>
-
-          <ScrollView contentContainerStyle={styles.paymentModalScroll}>
-            {isReceiptSubmitted ? (
-              <View style={styles.successReceiptContainer}>
-                <View style={styles.successIconCircle}>
-                  <Ionicons name="checkmark-done" size={48} color={colors.volt} />
-                </View>
-                <Text style={styles.successReceiptTitle}>¡Comprobante Enviado!</Text>
-                <Text style={styles.successReceiptSubtitle}>
-                  Orden: {currentOrder?.orderNumber}
-                </Text>
-
-                <View style={styles.statusPillPending}>
-                  <Ionicons name="time-outline" size={16} color={accentHues.amber} />
-                  <Text style={styles.statusPillPendingText}>En Verificación por el Gimnasio</Text>
-                </View>
-
-                <View style={styles.successInfoCard}>
-                  <Text style={styles.successInfoText}>
-                    El personal de {entityDetail?.name} cotejará el pago contra su extracto bancario y activará tu suscripción de inmediato.
-                  </Text>
-                  <Text style={[styles.successInfoText, { marginTop: spacing.sm, color: colors.volt }]}>
-                    ℹ️ Esta transacción queda guardada en tu historial y en el Chat oficial para tu respaldo y protección.
-                  </Text>
-                </View>
-
-                <Button
-                  label="Entendido, volver"
-                  onPress={() => {
-                    setIsPaymentModalOpen(false);
-                    setSelectedEntitySlug(null);
-                  }}
-                  style={{ width: '100%', marginTop: spacing.lg }}
-                />
-              </View>
-            ) : (
-              <View style={{ gap: spacing.md }}>
-                {/* Resumen del Plan Adquirido */}
-                <View style={styles.paymentPlanSummary}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.paymentSummaryLabel}>Plan Seleccionado:</Text>
-                    <Text style={styles.paymentSummaryPlanName}>{selectedPlanForPayment?.name}</Text>
-                    {selectedPlanForPayment?.durationDays ? (
-                      <Text style={styles.paymentSummaryDuration}>
-                        {selectedPlanForPayment.durationDays} días de acceso
-                      </Text>
-                    ) : null}
-                  </View>
-                  <View style={styles.paymentSummaryAmountBox}>
-                    <Text style={styles.paymentSummaryAmount}>
-                      {currentOrder?.currency} {currentOrder ? Number(currentOrder.amount).toFixed(2) : ''}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Código de Glosa Obligatorio */}
-                <View style={styles.orderCodeBox}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons name="alert-circle" size={16} color={colors.volt} />
-                    <Text style={styles.orderCodeTitle}>Glosa / Concepto Obligatorio:</Text>
-                  </View>
-                  <View style={styles.orderCodeRow}>
-                    <Text style={styles.orderCodeText}>{currentOrder?.orderNumber}</Text>
-                    <PressableScale
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        notify.success('Código copiado al portapapeles');
-                      }}
-                      style={styles.copyButton}
-                    >
-                      <Ionicons name="copy-outline" size={14} color={colors.volt} />
-                      <Text style={styles.copyButtonText}>Copiar</Text>
-                    </PressableScale>
-                  </View>
-                  <Text style={styles.orderCodeHint}>
-                    Pega este código exacto en el concepto de tu transferencia bancaria para que el gimnasio lo valide al instante.
-                  </Text>
-                </View>
-
-                {/* QR Oficial del Gimnasio */}
-                <View style={styles.qrCard}>
-                  <Text style={styles.qrTitle}>Código QR de Pago</Text>
-                  <Text style={styles.qrSubtitle}>Escanea desde tu app bancaria de preferencia</Text>
-
-                  {currentPaymentConfig?.qrImageUrl ? (
-                    <Image
-                      source={{ uri: currentPaymentConfig.qrImageUrl }}
-                      style={styles.qrImage}
-                      contentFit="contain"
-                    />
-                  ) : (
-                    <View style={styles.qrPlaceholder}>
-                      <Ionicons name="qr-code" size={64} color={colors.volt} />
-                      <Text style={styles.qrPlaceholderText}>QR Bancario del Establecimiento</Text>
-                    </View>
-                  )}
-                </View>
-
-                {/* Datos Bancarios de la Cuenta */}
-                <View style={styles.bankDataCard}>
-                  <Text style={styles.bankDataTitle}>Datos de Transferencia Bancaria</Text>
-
-                  <View style={styles.bankDetailRow}>
-                    <Text style={styles.bankDetailLabel}>Banco:</Text>
-                    <Text style={styles.bankDetailValue}>{currentPaymentConfig?.bankName ?? 'Banco Registrado'}</Text>
-                  </View>
-
-                  <View style={styles.bankDetailRow}>
-                    <Text style={styles.bankDetailLabel}>Titular:</Text>
-                    <Text style={styles.bankDetailValue}>
-                      {currentPaymentConfig?.accountHolderName ?? entityDetail?.name}
-                    </Text>
-                  </View>
-
-                  <View style={styles.bankDetailRow}>
-                    <Text style={styles.bankDetailLabel}>N° de Cuenta:</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={styles.bankDetailValueBold}>{currentPaymentConfig?.accountNumber ?? 'N/D'}</Text>
-                      <PressableScale
-                        onPress={() => {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          notify.success('N° de cuenta copiado');
-                        }}
-                      >
-                        <Ionicons name="copy-outline" size={14} color={colors.volt} />
-                      </PressableScale>
-                    </View>
-                  </View>
-
-                  {currentPaymentConfig?.instructions ? (
-                    <View style={styles.bankInstructionsBox}>
-                      <Text style={styles.bankInstructionsLabel}>Instrucciones del gym:</Text>
-                      <Text style={styles.bankInstructionsText}>{currentPaymentConfig.instructions}</Text>
-                    </View>
-                  ) : null}
-                </View>
-
-                {/* Formulario de Carga de Comprobante */}
-                <View style={styles.submitReceiptCard}>
-                  <Text style={styles.submitReceiptTitle}>Adjuntar Comprobante de Pago</Text>
-                  <Text style={styles.submitReceiptSubtitle}>
-                    Sube la captura de tu transferencia con el monto y número de operación
-                  </Text>
-
-                  <View style={{ flexDirection: 'row', gap: spacing.sm, marginVertical: spacing.sm }}>
-                    <PressableScale
-                      disabled={uploadingReceipt}
-                      onPress={handlePickReceiptImage}
-                      style={styles.pickImageButton}
-                    >
-                      {uploadingReceipt ? (
-                        <ActivityIndicator size="small" color={colors.volt} />
-                      ) : (
-                        <Ionicons name="image-outline" size={18} color={colors.text} />
-                      )}
-                      <Text style={styles.pickImageText}>
-                        {uploadingReceipt ? 'Subiendo al servidor...' : 'Elegir de Galería'}
-                      </Text>
-                    </PressableScale>
-                  </View>
-
-                  {receiptUrl ? (
-                    <View style={styles.receiptPreviewBox}>
-                      <Image source={{ uri: receiptUrl }} style={styles.receiptPreviewImage} />
-                      <View style={{ flex: 1, gap: 2 }}>
-                        <Text style={styles.receiptAttachedText}>✓ Comprobante listo</Text>
-                        <Text style={styles.receiptUrlText} numberOfLines={1}>
-                          {receiptUrl}
-                        </Text>
-                      </View>
-                    </View>
-                  ) : null}
-
-                  <TextInput
-                    placeholder="Número o referencia de operación bancaria (ej. 839210)"
-                    placeholderTextColor={colors.textMuted}
-                    value={receiptReference}
-                    onChangeText={setReceiptReference}
-                    style={styles.composerInput}
-                  />
-
-                  <TextInput
-                    placeholder="Nota adicional para el gimnasio (opcional)"
-                    placeholderTextColor={colors.textMuted}
-                    value={athleteNotes}
-                    onChangeText={setAthleteNotes}
-                    style={styles.composerInput}
-                  />
-
-                  <Button
-                    label="Subir Comprobante y Enviar al Gym"
-                    loading={submitReceiptMutation.isPending}
-                    onPress={handleSubmitReceipt}
-                    style={{ marginTop: spacing.sm }}
-                  />
-                </View>
-              </View>
-            )}
-          </ScrollView>
         </View>
       </Modal>
 
@@ -1604,307 +1281,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: fontSizes.xs,
     fontWeight: semibold,
-  },
-  paymentModalScroll: {
-    padding: spacing.lg,
-    paddingBottom: spacing['2xl'],
-  },
-  successReceiptContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    gap: spacing.md,
-  },
-  successIconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: alpha(colors.volt, 0.16),
-    borderWidth: 2,
-    borderColor: colors.volt,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  successReceiptTitle: {
-    color: colors.text,
-    fontSize: fontSizes.xl,
-    fontWeight: semibold,
-    textAlign: 'center',
-  },
-  successReceiptSubtitle: {
-    color: colors.textMuted,
-    fontSize: fontSizes.sm,
-    textAlign: 'center',
-  },
-  statusPillPending: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: alpha(accentHues.amber, 0.15),
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radii.full,
-    borderWidth: 1,
-    borderColor: accentHues.amber,
-  },
-  statusPillPendingText: {
-    color: accentHues.amber,
-    fontSize: fontSizes.xs,
-    fontWeight: semibold,
-  },
-  successInfoCard: {
-    backgroundColor: colors.surfaceHigh,
-    borderRadius: radii.xl,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginTop: spacing.md,
-  },
-  successInfoText: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    lineHeight: 18,
-    textAlign: 'center',
-  },
-  paymentPlanSummary: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surfaceHigh,
-    borderRadius: radii.xl,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.md,
-  },
-  paymentSummaryLabel: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-  },
-  paymentSummaryPlanName: {
-    color: colors.text,
-    fontSize: fontSizes.md,
-    fontWeight: semibold,
-    marginTop: 2,
-  },
-  paymentSummaryDuration: {
-    color: colors.volt,
-    fontSize: fontSizes.xs,
-    marginTop: 2,
-  },
-  paymentSummaryAmountBox: {
-    backgroundColor: alpha(colors.volt, 0.14),
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: alpha(colors.volt, 0.3),
-  },
-  paymentSummaryAmount: {
-    color: colors.accentInk,
-    fontSize: fontSizes.lg,
-    fontWeight: '800',
-  },
-  orderCodeBox: {
-    backgroundColor: colors.surfaceHigh,
-    borderRadius: radii.xl,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.volt,
-    gap: spacing.xs,
-  },
-  orderCodeTitle: {
-    color: colors.volt,
-    fontSize: fontSizes.xs,
-    fontWeight: semibold,
-  },
-  orderCodeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surfaceLow,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.md,
-    marginVertical: 4,
-  },
-  orderCodeText: {
-    color: colors.text,
-    fontSize: fontSizes.md,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-  copyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: colors.surfaceHigh,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radii.sm,
-  },
-  copyButtonText: {
-    color: colors.volt,
-    fontSize: fontSizes.xs,
-    fontWeight: semibold,
-  },
-  orderCodeHint: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    lineHeight: 16,
-  },
-  qrCard: {
-    backgroundColor: colors.surfaceHigh,
-    borderRadius: radii.xl,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  qrTitle: {
-    color: colors.text,
-    fontSize: fontSizes.md,
-    fontWeight: semibold,
-  },
-  qrSubtitle: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    marginBottom: spacing.xs,
-  },
-  qrImage: {
-    width: 220,
-    height: 220,
-    borderRadius: radii.lg,
-    backgroundColor: ink.white,
-  },
-  qrPlaceholder: {
-    width: 220,
-    height: 220,
-    borderRadius: radii.lg,
-    backgroundColor: colors.surfaceLow,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  qrPlaceholderText: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    textAlign: 'center',
-    paddingHorizontal: spacing.md,
-  },
-  bankDataCard: {
-    backgroundColor: colors.surfaceHigh,
-    borderRadius: radii.xl,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.sm,
-  },
-  bankDataTitle: {
-    color: colors.text,
-    fontSize: fontSizes.sm,
-    fontWeight: semibold,
-    marginBottom: 4,
-  },
-  bankDetailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 2,
-  },
-  bankDetailLabel: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-  },
-  bankDetailValue: {
-    color: colors.text,
-    fontSize: fontSizes.xs,
-    fontWeight: semibold,
-  },
-  bankDetailValueBold: {
-    color: colors.volt,
-    fontSize: fontSizes.sm,
-    fontWeight: '800',
-  },
-  bankInstructionsBox: {
-    marginTop: spacing.xs,
-    backgroundColor: colors.surfaceLow,
-    padding: spacing.sm,
-    borderRadius: radii.md,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.volt,
-  },
-  bankInstructionsLabel: {
-    color: colors.volt,
-    fontSize: fontSizes.micro,
-    fontWeight: semibold,
-  },
-  bankInstructionsText: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    marginTop: 2,
-  },
-  submitReceiptCard: {
-    backgroundColor: colors.surfaceHigh,
-    borderRadius: radii.xl,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.sm,
-  },
-  submitReceiptTitle: {
-    color: colors.text,
-    fontSize: fontSizes.md,
-    fontWeight: semibold,
-  },
-  submitReceiptSubtitle: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-  },
-  pickImageButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: colors.surfaceLow,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  pickImageText: {
-    color: colors.text,
-    fontSize: fontSizes.xs,
-    fontWeight: semibold,
-  },
-  receiptPreviewBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.surfaceLow,
-    padding: spacing.sm,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.volt,
-  },
-  receiptPreviewImage: {
-    width: 48,
-    height: 48,
-    borderRadius: radii.sm,
-    backgroundColor: colors.surfaceHigh,
-  },
-  receiptAttachedText: {
-    color: colors.volt,
-    fontSize: fontSizes.xs,
-    fontWeight: semibold,
-  },
-  receiptUrlText: {
-    color: colors.textMuted,
-    fontSize: fontSizes.micro,
   },
   modalBarSubtitle: {
     color: colors.textMuted,

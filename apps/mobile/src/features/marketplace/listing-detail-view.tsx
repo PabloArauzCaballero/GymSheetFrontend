@@ -11,10 +11,20 @@ import { colors, comfortableTouchTarget, iconSizes, radii, spacing } from '@/the
 
 /**
  * A public listing (plan §4.3): photos, price in Bs, what it includes, the
- * seller and the actions. Buying (franja 8d) and writing (8f) show disabled
- * with «Llega pronto»: never a button that leads nowhere.
+ * seller and the actions. «Comprar» opens the checkout (franja 8d); writing
+ * (8f) shows disabled with «Llega pronto»: never a button that leads nowhere.
  */
-export function ListingDetailView({ listing, onSeller, onReport }: { listing: PublicListing; onSeller: (handle: string) => void; onReport: () => void }) {
+export function ListingDetailView({
+  listing,
+  onSeller,
+  onReport,
+  onBuy,
+}: {
+  listing: PublicListing;
+  onSeller: (handle: string) => void;
+  onReport: () => void;
+  onBuy: () => void;
+}) {
   const { width } = useWindowDimensions();
   const photo = Math.min(width - spacing.lg * 2, 560);
   const terms = listingTerms(listing);
@@ -43,10 +53,17 @@ export function ListingDetailView({ listing, onSeller, onReport }: { listing: Pu
         {listing.inStock === false ? <Text tone="warning" variant="subhead">Sin stock por ahora</Text> : null}
       </View>
       <View style={{ gap: spacing.sm }}>
-        <Button accessibilityHint="Llega pronto" disabled icon="bag-outline" label="Comprar" onPress={() => undefined} />
+        <Button
+          accessibilityHint={listing.inStock === false ? 'Sin stock: no se puede pedir ahora.' : undefined}
+          disabled={listing.inStock === false}
+          icon="bag-outline"
+          label="Comprar"
+          onPress={onBuy}
+          testID="listing-buy"
+        />
         <Button accessibilityHint="Llega pronto" disabled icon="chatbubble-outline" label="Escribir" onPress={() => undefined} variant="ghost" />
         <Text style={{ textAlign: 'center' }} tone="secondary" variant="footnote">
-          Llega pronto: comprar con QR y escribirle al negocio desde REPP.
+          Llega pronto: escribirle al negocio desde REPP.
         </Text>
       </View>
       <View style={{ gap: spacing.sm }}>
