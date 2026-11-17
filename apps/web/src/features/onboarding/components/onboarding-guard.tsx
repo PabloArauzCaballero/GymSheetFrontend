@@ -9,6 +9,12 @@ import type { UserRole } from '@/shared/api/contracts';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { LoadingPanel } from '@/shared/components/feedback/loading-panel';
 
+/**
+ * Reachable while onboarding is pending: the questionnaire itself and the email
+ * PIN, which the portal banner links to from the very first screen.
+ */
+const REACHABLE_DURING_ONBOARDING = new Set(['/onboarding', '/verificar-correo']);
+
 export function OnboardingGuard({
   children,
   role,
@@ -21,22 +27,30 @@ export function OnboardingGuard({
     enabled: role === 'CLIENTE',
     retry: 1,
   });
-  const requiresOnboarding = role === 'CLIENTE' && query.data?.status !== 'COMPLETED';
+  // Only a loaded state decides a redirect: a failed GET is not "onboarding
+  // pending", and sending the member to /onboarding would hide the real error.
+  const status = query.data?.status;
+  const socialStep = query.data?.socialStep;
+  const resolved = role !== 'CLIENTE' || status !== undefined;
+  const requiresOnboarding = role === 'CLIENTE' && status !== undefined && status !== 'COMPLETED';
   useEffect(() => {
-    if (!query.isLoading && requiresOnboarding && pathname !== '/onboarding')
-      router.replace('/onboarding');
-    if (!query.isLoading && !requiresOnboarding && pathname === '/onboarding')
-      router.replace('/comunidad');
-  }, [pathname, query.isLoading, requiresOnboarding, router]);
+    if (!resolved) return;
+    if (requiresOnboarding && !REACHABLE_DURING_ONBOARDING.has(pathname)) router.replace('/onboarding');
+    // `/onboarding/conocer` stays reachable once onboarding is complete: it is the
+    // optional social step, and someone who skipped it can come back to it.
+    if (!requiresOnboarding && pathname === '/onboarding')
+      router.replace(socialStep === 'PENDING' ? '/onboarding/conocer' : '/comunidad');
+  }, [pathname, requiresOnboarding, resolved, router, socialStep]);
   if (role !== 'CLIENTE') return children;
-  if (query.isLoading || (requiresOnboarding && pathname !== '/onboarding'))
-    return <LoadingPanel rows={5} />;
-  if (query.isError)
-    return (
+  if (status === undefined)
+    return query.isError ? (
       <ErrorPanel
         message="No pudimos verificar tu configuración. Reintenta para continuar de forma segura."
         onRetry={() => query.refetch()}
       />
+    ) : (
+      <LoadingPanel rows={5} />
     );
+  if (requiresOnboarding && !REACHABLE_DURING_ONBOARDING.has(pathname)) return <LoadingPanel rows={5} />;
   return children;
 }

@@ -1,12 +1,13 @@
+import { Platform } from 'react-native';
 import { z } from 'zod';
 import { ApiError, classifyStatus, createApiClient } from '@gymsheet/api-client';
 import { env, loopbackRewrite } from '@/config/env';
+import { clientPlatform, isLegalAcceptanceResponse } from '@/features/legal/legal-logic';
 import { notify } from '@/notifications';
 import { secureStoreAuthStorage, secureStoreTokenProvider } from '@/storage/secure-store';
-import {
-  createH5S2M1FixtureFetch,
-  isH5S2M1FixtureEnabled,
-} from '@/api/h5-s2-m1-fixture';
+import { isEmailVerificationResponse } from '@/features/email-verification/email-verification-logic';
+import { endSuspendedSession, suspensionMessage } from '@/lib/suspension-notice';
+import { deviceHeaders } from './device-identity';
 
 /**
  * Called when the backend rejects the stored token. The auth store registers
@@ -18,6 +19,35 @@ let onSessionLost: SessionLostHandler | null = null;
 
 export function setSessionLostHandler(handler: SessionLostHandler): void {
   onSessionLost = handler;
+}
+
+/**
+ * Called when the backend answers 428 LEGAL_ACCEPTANCE_REQUIRED. Registered by
+ * the legal gate store for the same reason as `setSessionLostHandler`: no cycle.
+ */
+let onLegalAcceptanceRequired: (() => void) | null = null;
+
+export function setLegalAcceptanceRequiredHandler(handler: () => void): void {
+  onLegalAcceptanceRequired = handler;
+}
+
+/**
+ * Called when a social endpoint answers 403 EMAIL_VERIFICATION_REQUIRED, so the
+ * auth store can mark the email as unverified and show the banner. Registered
+ * by the store for the same reason as `setSessionLostHandler`: no cycle.
+ */
+let onEmailVerificationRequired: (() => void) | null = null;
+
+export function setEmailVerificationRequiredHandler(handler: () => void): void {
+  onEmailVerificationRequired = handler;
+}
+
+/** Sent on every request: the backend stores it with each legal acceptance as audit evidence. */
+const platformHeader = { 'X-Client-Platform': clientPlatform(Platform.OS) } as const;
+
+/** Platform plus the device headers (installation id, versions, model). */
+async function clientHeaders(): Promise<Record<string, string>> {
+  return { ...platformHeader, ...(await deviceHeaders()) };
 }
 
 /**
@@ -55,12 +85,33 @@ const refreshPayloadSchema = z.object({
 async function refreshSession(): Promise<boolean> {
   const refreshToken = await secureStoreAuthStorage.getRefreshToken();
   if (!refreshToken) return false;
+  const result = await exchangeRefreshToken(refreshToken);
+  if (result === 'rejected') return false;
 
+  const parsed = refreshPayloadSchema.safeParse(result);
+  if (!parsed.success) {
+    throw new ApiError({ message: 'Respuesta de renovación inválida.', status: 502, kind: 'contract' });
+  }
+
+  // Los dos, no sólo el de acceso: el servidor **rota** el refresh en cada uso
+  // y revoca el anterior, así que guardar sólo el nuevo access dejaría en el
+  // Llavero un refresh ya muerto y la siguiente renovación fallaría.
+  await secureStoreAuthStorage.saveTokens(parsed.data.accessToken, parsed.data.refreshToken);
+  return true;
+}
+
+/**
+ * `POST /auth/refresh` itself, shared by the silent renewal above and by the
+ * biometric quick login (`auth-store.loginWithRefreshToken`). Returns the
+ * unwrapped `data` (the full auth response: tokens and `user`), or `'rejected'`
+ * when the server refuses the token. Anything else throws an `ApiError`.
+ */
+export async function exchangeRefreshToken(refreshToken: string): Promise<unknown> {
   let response: Response;
   try {
     response = await fetch(`${env.apiUrl}/auth/refresh`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(await clientHeaders()) },
       body: JSON.stringify({ refreshToken }),
     });
   } catch {
@@ -75,7 +126,7 @@ async function refreshSession(): Promise<boolean> {
   // Sólo un rechazo explícito del refresh significa sesión perdida: 401
   // (revocado, caducado, reutilizado) o 400 (token con forma imposible). Un
   // 5xx o un 429 es el servidor que no puede contestar ahora.
-  if (response.status === 401 || response.status === 400) return false;
+  if (response.status === 401 || response.status === 400) return 'rejected';
   if (!response.ok) {
     throw new ApiError({
       message: 'No se pudo renovar la sesión ahora.',
@@ -85,19 +136,11 @@ async function refreshSession(): Promise<boolean> {
   }
 
   const body: unknown = await response.json().catch(() => null);
-  const envelope = z.object({ data: refreshPayloadSchema }).safeParse(body);
-  if (!envelope.success) {
+  const envelope = z.object({ data: z.unknown() }).safeParse(body);
+  if (!envelope.success || envelope.data.data === undefined) {
     throw new ApiError({ message: 'Respuesta de renovación inválida.', status: 502, kind: 'contract' });
   }
-
-  // Los dos, no sólo el de acceso: el servidor **rota** el refresh en cada uso
-  // y revoca el anterior, así que guardar sólo el nuevo access dejaría en el
-  // Llavero un refresh ya muerto y la siguiente renovación fallaría.
-  await secureStoreAuthStorage.saveTokens(
-    envelope.data.data.accessToken,
-    envelope.data.data.refreshToken,
-  );
-  return true;
+  return envelope.data.data;
 }
 
 /**
@@ -112,7 +155,7 @@ async function refreshSession(): Promise<boolean> {
 export async function revokeRefreshToken(refreshToken: string): Promise<void> {
   await fetch(`${env.apiUrl}/auth/logout`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(await clientHeaders()) },
     body: JSON.stringify({ refreshToken }),
   });
 }
@@ -142,21 +185,40 @@ const deviceFetch: typeof fetch = rewrite
   : fetch;
 
 /**
- * The fixture is compiled into development bundles only, and still needs an
- * explicit local opt-in. It wraps the normal transport so all non-fixture API
- * paths retain the device URL/media behavior above.
+ * Every API call goes through here: it adds the platform and device headers,
+ * reads a 204 as an empty success, and spots the legal block (428) and the
+ * unverified email (403) once for all screens, so none of them has to.
  */
-const h5S2M1Fixture = createH5S2M1FixtureFetch({
-  enabled: isH5S2M1FixtureEnabled(__DEV__, process.env.EXPO_PUBLIC_H5_S2_M1_FIXTURE),
-  baseUrl: env.apiUrl,
-  fetchImpl: deviceFetch,
-});
-
-export const getH5S2M1FixtureSnapshot = h5S2M1Fixture.snapshot;
+const apiFetch: typeof fetch = async (input, init) => {
+  const headers = new Headers(init?.headers);
+  for (const [name, value] of Object.entries(await clientHeaders())) headers.set(name, value);
+  const response = await deviceFetch(input, { ...init, headers });
+  if (response.status === 401) {
+    const body: unknown = await response.clone().json().catch(() => null);
+    const suspension = suspensionMessage(response.status, body);
+    // Ended here, before the shared client tries to renew: with the tokens gone
+    // it finds no refresh, does not retry, and `onUnauthorized` stays quiet.
+    if (suspension) {
+      await endSuspendedSession({
+        getRefreshToken: () => secureStoreAuthStorage.getRefreshToken(),
+        revokeRefreshToken,
+        clearTokens: () => secureStoreTokenProvider.clear(),
+        sessionLost: () => onSessionLost?.(),
+        notify: (message) => notify.warning({ title: 'Cuenta suspendida', message, deduplicationKey: 'session-expired' }),
+      }, suspension);
+    }
+  }
+  if (response.status === 428 || response.status === 403) {
+    const body: unknown = await response.clone().json().catch(() => null);
+    if (isLegalAcceptanceResponse(response.status, body)) onLegalAcceptanceRequired?.();
+    if (isEmailVerificationResponse(response.status, body)) onEmailVerificationRequired?.();
+  }
+  return response;
+};
 
 export const apiClient = createApiClient({
   baseUrl: env.apiUrl,
-  fetchImpl: h5S2M1Fixture.fetch,
+  fetchImpl: apiFetch,
   tokenProvider: secureStoreTokenProvider,
   refreshSession,
   onUnauthorized: async () => {

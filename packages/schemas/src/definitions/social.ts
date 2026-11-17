@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { progressionBadgeSchema } from './progression';
+import { discoveryIntentsSchema, socialAboutSchema } from './social-profile';
 
 /**
  * Contratos de la capa social: solicitudes de conexión entre socios, estado
@@ -71,7 +72,7 @@ export const discoveryPreferencesSchema = z.discriminatedUnion('configured', [
   z.object({
     configured: z.literal(true),
     genders: z.array(z.enum(['MALE', 'FEMALE'])).min(1).max(2),
-    intents: z.array(z.enum(['TRAINING', 'FRIENDSHIP', 'DATING'])).min(1).max(3),
+    intents: discoveryIntentsSchema,
     minAge: z.number().int().min(18).max(100),
     maxAge: z.number().int().min(18).max(100),
     radiusKm: z.number().min(1).max(500),
@@ -84,7 +85,7 @@ export type DiscoveryPreferences = z.infer<typeof discoveryPreferencesSchema>;
 
 export const updateDiscoveryPreferencesSchema = z.object({
   genders: z.array(z.enum(['MALE', 'FEMALE'])).min(1).max(2),
-  intents: z.array(z.enum(['TRAINING', 'FRIENDSHIP', 'DATING'])).min(1).max(3),
+  intents: discoveryIntentsSchema,
   minAge: z.number().int().min(18).max(100),
   maxAge: z.number().int().min(18).max(100),
   radiusKm: z.number().min(1).max(500),
@@ -126,6 +127,8 @@ export const gymDirectoryEntrySchema = z.object({
   experienceLevel: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).nullable(),
   points: z.number().nullable(),
   levelCode: z.string().nullable(),
+  /** The "Conocer" answers. Absent from older backends. */
+  about: socialAboutSchema.optional(),
 });
 export type GymDirectoryEntry = z.infer<typeof gymDirectoryEntrySchema>;
 
@@ -174,8 +177,12 @@ export const undoSwipeResultSchema = z.object({
 });
 export type UndoSwipeResult = z.infer<typeof undoSwipeResultSchema>;
 
-/** `null` para un chat normal entre socios; fija el chat arriba de la lista. */
-export const systemConversationKinds = ['CORPORATE', 'TENANT_ADMIN'] as const;
+/**
+ * `null` para un chat normal entre socios; fija el chat arriba de la lista.
+ * Only REPP's own chat remains: the gym admin chat (`TENANT_ADMIN`) was removed
+ * in franja 7a, and the backend no longer creates or lists it.
+ */
+export const systemConversationKinds = ['CORPORATE'] as const;
 export type SystemConversationKind = (typeof systemConversationKinds)[number];
 
 export const conversationSummarySchema = z.object({
@@ -186,6 +193,13 @@ export const conversationSummarySchema = z.object({
   otherUserOnline: z.boolean(),
   otherUserLastSeenAt: z.string().nullable(),
   lastMessage: z.string().nullable(),
+  /**
+   * Tipo del último elemento (`text`, `audio`, `image`, `system`, `deleted`…) para el icono de la
+   * vista previa. Texto libre y opcional: un tipo nuevo del servidor no debe tumbar la lista.
+   */
+  lastMessageType: z.string().nullish(),
+  /** `true` si el último mensaje es mío — la vista previa lo antepone con «Tú:». */
+  lastMessageFromMe: z.boolean().optional(),
   lastMessageAt: z.string().nullable(),
   /** `false` en un chat de sistema de solo lectura: el compositor debe ocultarse. */
   canWrite: z.boolean(),

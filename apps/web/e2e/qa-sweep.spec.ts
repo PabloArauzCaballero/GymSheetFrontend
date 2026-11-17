@@ -7,7 +7,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { admin, athlete, signIn } from './fixtures';
+import { athlete, signIn, signInOperatingGym } from './fixtures';
 
 type Row = {
   path: string;
@@ -134,7 +134,8 @@ test('barrido atleta', async ({ page }) => {
 
 test('barrido admin', async ({ page }) => {
   test.setTimeout(900_000);
-  await signIn(page, admin);
+  // Franja 7a: the admin screens are swept as the platform admin operating the seeded gym.
+  await signInOperatingGym(page);
   await warm(page, [...PORTAL, ...ADMIN]);
   for (const path of [...PORTAL, ...ADMIN]) await visit(page, path, 'admin', page.viewportSize()?.width + 'px');
 });

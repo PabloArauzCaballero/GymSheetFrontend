@@ -5,7 +5,7 @@ import { IconButton } from '@/components/icon-button';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
-import { formatVolume, isStaff, overloadDelta, summariseTraining } from '@gymsheet/domain';
+import { formatVolume, overloadDelta, summariseTraining } from '@gymsheet/domain';
 import { programService, membershipService, progressionService, routineService, workoutService } from '@/api/services';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { Badge, Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
@@ -120,7 +120,7 @@ export default function HomeScreen() {
             ) : null}
           </View>
         }
-        subtitle={isStaff(principal?.role) ? 'El panel de staff vive en la versión web.' : LONG_DATE.format(new Date())}
+        subtitle={LONG_DATE.format(new Date())}
         title={`Hola, ${firstName}`}
         tourKey="home"
       />

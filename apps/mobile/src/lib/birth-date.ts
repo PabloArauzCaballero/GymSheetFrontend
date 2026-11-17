@@ -1,4 +1,5 @@
-export const MIN_PROFILE_AGE = 12;
+/** The whole app is 18+ (product decision, F1.11): no profile may hold a younger age. */
+export const MIN_PROFILE_AGE = 18;
 export const MAX_PROFILE_AGE = 100;
 
 /** The three fields a birth date is typed into: day, month and year. */
@@ -40,9 +41,8 @@ export function birthDateError(dia: string, mes: string, anio: string): string |
   }
   if (date > new Date()) return 'La fecha no puede ser futura.';
   const age = ageOn(year, month, day);
-  if (age < MIN_PROFILE_AGE || age > MAX_PROFILE_AGE) {
-    return `Debes tener entre ${MIN_PROFILE_AGE} y ${MAX_PROFILE_AGE} años.`;
-  }
+  if (age < MIN_PROFILE_AGE) return `Debes tener ${MIN_PROFILE_AGE} años o más.`;
+  if (age > MAX_PROFILE_AGE) return `Debes tener entre ${MIN_PROFILE_AGE} y ${MAX_PROFILE_AGE} años.`;
   return null;
 }
 

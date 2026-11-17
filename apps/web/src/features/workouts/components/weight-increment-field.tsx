@@ -26,7 +26,7 @@ export function WeightIncrementField({ value }: Readonly<{ value: number | undef
       await queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
       notify.success('Preferencia guardada.');
     },
-    onError: (error: Error) => notify.error(error.message),
+    onError: (error: Error) => notify.error(error),
   });
 
   return (

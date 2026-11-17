@@ -1,5 +1,10 @@
 import { expect, test, type Route } from '@playwright/test';
 import { athlete, openPage, signIn } from '../fixtures';
+import { stubDiscoveryReady } from './discovery-ready';
+
+test.beforeEach(async ({ page }) => {
+  await stubDiscoveryReady(page);
+});
 
 const ANA_ID = '00000000-0000-4000-8000-000000000011';
 const BLOCKED_ID = '00000000-0000-4000-8000-000000000012';
@@ -146,7 +151,7 @@ test('H3.S2.M3 deshacer un paso devuelve la carta y conserva los bloqueos', asyn
   // el endpoint undo sólo revierte la decisión sobre Ana y nunca debe tocar el bloqueo.
   let unblockCalls = 0;
   await page.route('**/api/backend/me/discovery/deck**', async (route) => {
-    await fulfill(route, passed && !undone ? [] : [entry()]);
+    await fulfill(route, passed && !undone ? [] : [{ ...entry(), reasons: [], distanceKm: null }]);
   });
   await page.route('**/api/backend/me/discovery/swipes', async (route) => {
     passed = route.request().postDataJSON().direction === 'PASS';
@@ -178,7 +183,7 @@ test('H3.S2.M3 deshacer un paso devuelve la carta y conserva los bloqueos', asyn
   });
 
   await signIn(page, athlete);
-  await openPage(page, '/descubrir');
+  await openPage(page, '/comunidad');
   await expect(page.getByRole('button', { name: 'Pasar de Ana de prueba' })).toBeVisible();
   await page.getByRole('button', { name: 'Pasar de Ana de prueba' }).click();
   await expect(page.getByRole('heading', { name: 'Ya viste a todos por hoy' })).toBeVisible();

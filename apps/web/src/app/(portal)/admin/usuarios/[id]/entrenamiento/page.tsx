@@ -25,7 +25,7 @@ export default async function UsuarioEntrenamientoPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ nombre?: string | string[] }>;
 }>) {
-  const session = await requireRole(['ADMIN', 'FRONT_DESK']);
+  const session = await requireRole(['SYSTEM_ADMIN']);
   if (!hasPermission(session.permissions, 'support:read')) redirect('/admin?denied=1');
 
   const parsedParams = paramsSchema.safeParse(await params);

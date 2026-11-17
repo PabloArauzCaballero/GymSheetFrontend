@@ -1,11 +1,11 @@
 'use client';
 
-import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ApiError } from '@/shared/api/api-error';
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Toaster } from 'sonner';
-import { shouldToastQueryError } from '@/shared/api/query-error-policy';
+import { shouldRetryQuery, shouldToastQueryError } from '@/shared/api/query-error-policy';
+import { leaveIfSuspended } from '@/shared/auth/suspension';
 import { ConfirmRoot, notify } from '@/shared/notifications';
 import type { TenantBrand } from '@/shared/theme/brand-contract';
 import { BrandProvider } from '@/shared/theme/brand-provider';
@@ -36,7 +36,9 @@ export function Providers({
          */
         queryCache: new QueryCache({
           onError: (error, query) => {
-            if (!shouldToastQueryError(error)) return;
+            // A suspension mid-session is not «sesión expirada»: leave and say why.
+            if (leaveIfSuspended(error)) return;
+            if (!shouldToastQueryError(error, query.meta)) return;
             if (query.state.data !== undefined) {
               notify.error('No pudimos actualizar la información.');
               return;
@@ -44,17 +46,11 @@ export function Providers({
             notify.error(error instanceof Error ? error : 'No pudimos cargar la información.');
           },
         }),
+        mutationCache: new MutationCache({ onError: (error) => void leaveIfSuspended(error) }),
         defaultOptions: {
           queries: {
             staleTime: 30_000,
-            retry: (failureCount, error) => {
-              if (
-                error instanceof ApiError &&
-                ['unauthorized', 'forbidden', 'not-found', 'validation'].includes(error.kind)
-              )
-                return false;
-              return failureCount < 2;
-            },
+            retry: shouldRetryQuery,
           },
           mutations: { retry: false },
         },

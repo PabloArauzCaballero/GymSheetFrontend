@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { Building2, Target, Users2 } from 'lucide-react';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { publicFacilitiesClient } from '@/features/public-facilities/services/public-facilities-client';
 import { directoryKeys } from '@/features/social/services/directory-keys';
@@ -13,33 +14,37 @@ import { Dialog, DialogContent } from '@/shared/components/ui/dialog';
 import { cn } from '@/shared/lib/cn';
 import { trainingGoalLabels } from './directory-labels';
 
-export type DirectoryPreferences = {
+/** Session filters of the discovery deck. */
+export type DeckPreferences = {
   objetivo: string;
   sucursalId: string;
+};
+
+/** The member directory also filters by gender for the current session. */
+export type DirectoryPreferences = DeckPreferences & {
   genero: string;
 };
 
 /**
- * Todos los filtros de descubrimiento en un solo panel, detrás de un botón —
- * no ocupando la pantalla principal.
+ * All search filters in one panel behind a button, not on the main screen.
  *
- * Empieza con Objetivo, Sucursal y Género, pero es el lugar donde cualquier
- * filtro nuevo de «a quién quiero ver» entra sin volver a rediseñar Comunidad.
- * Género no es un añadido de la web: `directoryQuerySchema` lo valida en el
- * backend y el móvil lo manda desde el principio; el portal era el único sitio
- * donde no se podía usar.
+ * Goal and branch apply to both the deck and the directory. Gender is shown
+ * only for the directory: in the deck, who you want to meet comes from the
+ * saved discovery preferences, and a session filter contradicting them would
+ * be a second source of truth.
  */
-export function SearchPreferencesDialog({
+export function SearchPreferencesDialog<T extends DeckPreferences | DirectoryPreferences>({
   onChange,
   onClose,
   open,
   value,
 }: Readonly<{
-  onChange: (next: DirectoryPreferences) => void;
+  onChange: (next: T) => void;
   onClose: () => void;
   open: boolean;
-  value: DirectoryPreferences;
+  value: T;
 }>) {
+  const genero = 'genero' in value ? value.genero : null;
   // Las sedes del gimnasio propio, no el directorio público de marcas: el
   // directorio de socios está acotado al gimnasio de quien mira, así que
   // filtrar por una sede ajena no puede devolver a nadie — y no decir por qué
@@ -55,7 +60,11 @@ export function SearchPreferencesDialog({
     <Dialog onOpenChange={(next) => !next && onClose()} open={open}>
       <DialogContent
         className="max-w-lg"
-        description="Acotan a quién ves en el directorio y en la baraja de Descubrir."
+        description={
+          genero === null
+            ? 'Acotan a quién ves en la baraja.'
+            : 'Acotan a quién ves en el directorio de socios.'
+        }
         title="Preferencias de búsqueda"
       >
         <div className="grid gap-7">
@@ -106,23 +115,29 @@ export function SearchPreferencesDialog({
             )}
           </FilterSection>
 
-          <FilterSection icon={<Users2 aria-hidden className="size-4" />} title="Género">
-            <FilterChip
-              active={!value.genero}
-              label="Todos"
-              onClick={() => onChange({ ...value, genero: '' })}
-            />
-            <FilterChip
-              active={value.genero === 'MALE'}
-              label="Hombre"
-              onClick={() => onChange({ ...value, genero: 'MALE' })}
-            />
-            <FilterChip
-              active={value.genero === 'FEMALE'}
-              label="Mujer"
-              onClick={() => onChange({ ...value, genero: 'FEMALE' })}
-            />
-          </FilterSection>
+          {genero === null ? (
+            <p className="text-sm text-[var(--text-muted)]">
+              A quién quieres conocer se ajusta en tus{' '}
+              <Link className="font-semibold text-[var(--text)] underline" href="/profile">
+                preferencias de descubrimiento
+              </Link>
+              .
+            </p>
+          ) : (
+            <FilterSection icon={<Users2 aria-hidden className="size-4" />} title="Género">
+              <FilterChip active={!genero} label="Todos" onClick={() => onChange({ ...value, genero: '' })} />
+              <FilterChip
+                active={genero === 'MALE'}
+                label="Hombre"
+                onClick={() => onChange({ ...value, genero: 'MALE' })}
+              />
+              <FilterChip
+                active={genero === 'FEMALE'}
+                label="Mujer"
+                onClick={() => onChange({ ...value, genero: 'FEMALE' })}
+              />
+            </FilterSection>
+          )}
 
           <Button onClick={onClose} variant="primary">
             Listo

@@ -64,3 +64,38 @@ test('borra los tokens aunque fallen el push y la revocación', async () => {
   await endSession(steps);
   assert.deepEqual(calls, ['read', 'clear']);
 });
+
+test('con acceso rápido, aparca el refresh en vez de revocarlo y borra lo local', async () => {
+  const parked: string[] = [];
+  const { calls, steps } = recorder({
+    parkForQuickLogin: async (token) => {
+      parked.push(token);
+      return true;
+    },
+  });
+  await endSession(steps);
+  assert.deepEqual(parked, ['r'.repeat(64)]);
+  assert.deepEqual(calls, ['push', 'read', 'clear']);
+});
+
+test('si aparcar falla o se cancela, revoca como siempre', async () => {
+  for (const park of [async () => false, async () => Promise.reject(new Error('cancelado'))]) {
+    const { calls, steps } = recorder({ parkForQuickLogin: park });
+    await endSession(steps);
+    assert.deepEqual(calls, ['push', 'read', 'revoke:64', 'clear']);
+  }
+});
+
+test('borra el archivo de datos descargado aunque falle, después de los tokens', async () => {
+  const { calls, steps } = recorder({
+    revokeRefreshToken: async () => {
+      throw new Error('offline');
+    },
+    clearCachedFiles: async () => {
+      calls.push('files');
+      throw new Error('disk');
+    },
+  });
+  await endSession(steps);
+  assert.deepEqual(calls, ['push', 'read', 'clear', 'files']);
+});

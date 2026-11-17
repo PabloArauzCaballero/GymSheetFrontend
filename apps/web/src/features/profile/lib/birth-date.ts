@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-export const MIN_AGE = 12;
+/** The whole app is 18+; mirrors `MIN_PROFILE_AGE` in the backend. */
+export const MIN_AGE = 18;
 export const MAX_AGE = 100;
 
 /** Años cumplidos a partir de `YYYY-MM-DD`, contados en calendario local. */

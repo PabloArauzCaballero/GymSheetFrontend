@@ -19,6 +19,7 @@ export function ListSurface({
   emptyDescription,
   emptyTitle,
   errorMessage,
+  error,
   loading,
   onRetry,
 }: Readonly<{
@@ -28,11 +29,13 @@ export function ListSurface({
   emptyDescription: string;
   emptyTitle: string;
   errorMessage: string | null;
+  /** The query error, so a 403 EMAIL_VERIFICATION_REQUIRED shows its own step. */
+  error?: unknown;
   loading: boolean;
   onRetry: () => void;
 }>) {
   if (loading) return <SkeletonList rows={4} variant="stacked" />;
-  if (errorMessage) return <ErrorPanel message={errorMessage} onRetry={onRetry} />;
+  if (errorMessage) return <ErrorPanel error={error} message={errorMessage} onRetry={onRetry} />;
   if (empty) {
     return (
       <EmptyState action={emptyAction} description={emptyDescription} title={emptyTitle} />

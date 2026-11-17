@@ -1,200 +1,135 @@
 'use client';
 
-import { exerciseGroupLabelEs } from '@gymsheet/domain';
-import { useQuery } from '@tanstack/react-query';
-import { Dumbbell, MessageSquareQuote, Users } from 'lucide-react';
+import { safeHref } from '@gymsheet/domain';
+import type { ModerationCaseContent } from '@gymsheet/schemas';
+import { MessageSquareQuote, Music } from 'lucide-react';
 import { Card, CardContent } from '@/shared/components/ui/card';
-import {
-  moderationPreviewService,
-  type ExercisePreview,
-  type RoutinePreview,
-  type RoutineReach,
-} from '@/features/moderation/services/moderation-preview-service';
-import type { ModerationTargetKind } from '@/features/moderation/services/moderation-service';
+import { DomainImage } from '@/shared/components/media/domain-image';
+import type { ModerationCaseDetail } from '@/features/moderation/services/moderation-service';
+import { BusinessProfileBody, ListingBody } from './moderation-preview-business';
+import { ExerciseBody, RoutineBody } from './moderation-preview-training';
 
-const WEEKDAY = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
-
-function PreviewSkeleton() {
-  return <div aria-busy="true" className="h-28 animate-pulse rounded-[8px] bg-[var(--surface-low)]" />;
-}
-
-function Unavailable({ children }: Readonly<{ children: string }>) {
+function Muted({ children }: Readonly<{ children: string }>) {
   return <p className="text-sm text-[var(--text-muted)]">{children}</p>;
 }
 
-function repsText(min: number | null, max: number | null) {
-  if (min === null && max === null) return null;
-  return min === max || max === null || min === null ? `${max ?? min} reps` : `${min}–${max} reps`;
-}
-
-function RoutineBody({
-  routine,
-  reach,
-}: Readonly<{ routine: RoutinePreview; reach: RoutineReach | null }>) {
-  const exerciseCount = routine.dias.reduce((sum, day) => sum + day.ejercicios.length, 0);
+function Photo({ alt, src }: Readonly<{ alt: string; src: string }>) {
   return (
-    <div className="flex flex-col gap-3">
-      <div>
-        <p className="text-base font-semibold">{routine.nombre}</p>
-        {routine.descripcion ? (
-          <p className="mt-1 text-sm text-[var(--text-muted)]">{routine.descripcion}</p>
-        ) : null}
-        <p className="mt-1 text-xs text-[var(--text-muted)]">
-          {routine.dias.length === 1 ? '1 día' : `${routine.dias.length} días`} ·{' '}
-          {exerciseCount === 1 ? '1 ejercicio' : `${exerciseCount} ejercicios`}
-        </p>
-      </div>
-
-      {reach ? (
-        <p
-          className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-[4px] border border-[var(--border-subtle)] p-3 text-sm"
-          data-testid="alcance"
-        >
-          <Users aria-hidden className="size-4 text-[var(--text-muted)]" />
-          <span>
-            <strong>Alcance</strong>
-          </span>
-          <span>{reach.copiasVivas} con una copia activa</span>
-          <span>{reach.copias} copias en total</span>
-          <span>{reach.activaciones} activaciones</span>
-        </p>
-      ) : (
-        <Unavailable>El alcance no está disponible con tus permisos.</Unavailable>
-      )}
-
-      <ul className="flex flex-col gap-2">
-        {routine.dias.map((day, index) => (
-          <li
-            className="rounded-[4px] border border-[var(--border-subtle)] p-3"
-            key={`${day.nombre ?? 'dia'}-${index}`}
-          >
-            <p className="text-sm font-medium">
-              {day.nombre ?? `Día ${index + 1}`}
-              {day.diaSemana ? (
-                <span className="font-normal text-[var(--text-muted)]">
-                  {' '}
-                  · {WEEKDAY[day.diaSemana - 1]}
-                </span>
-              ) : null}
-            </p>
-            <ul className="mt-1 text-sm text-[var(--text-muted)]">
-              {day.ejercicios.map((exercise, position) => (
-                <li key={`${exercise.ejercicio.nombre}-${position}`}>
-                  {[
-                    exercise.ejercicio.nombre,
-                    `${exercise.seriesObjetivo} series`,
-                    repsText(exercise.repsMin, exercise.repsMax),
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
+    <div className="relative aspect-square w-40 overflow-hidden rounded-[8px] bg-[var(--surface-low)]">
+      <DomainImage alt={alt} className="object-cover" src={src} />
     </div>
   );
 }
 
-function RoutinePreviewView({ id }: Readonly<{ id: string }>) {
-  const routine = useQuery({
-    queryKey: ['admin', 'moderation', 'preview', 'ROUTINE', id],
-    queryFn: () => moderationPreviewService.routine(id),
-  });
-  const reach = useQuery({
-    queryKey: ['admin', 'moderation', 'reach', id],
-    queryFn: () => moderationPreviewService.routineReach(id),
-    retry: false,
-  });
-  if (routine.isPending) return <PreviewSkeleton />;
-  if (routine.isError) return <Unavailable>No pudimos cargar la rutina denunciada.</Unavailable>;
-  return <RoutineBody reach={reach.data ?? null} routine={routine.data} />;
-}
+/** Comment attachment kinds the backend stores (`community.schemas.ts`) that render as a picture. */
+const IMAGE_ATTACHMENTS = new Set(['IMAGEN', 'GIF', 'STICKER']);
 
-function ExerciseBody({ exercise }: Readonly<{ exercise: ExercisePreview }>) {
-  const steps = Object.values(exercise.instructions);
-  return (
-    <div className="flex flex-col gap-2">
-      <p className="flex items-center gap-2 text-base font-semibold">
-        <Dumbbell aria-hidden className="size-4 text-[var(--text-muted)]" />
-        {exercise.nombre}
-      </p>
-      <p className="text-xs text-[var(--text-muted)]">
-        {exerciseGroupLabelEs(exercise.grupoMuscular) || 'Sin grupo muscular'} ·{' '}
-        {exercise.media.length === 1 ? '1 archivo' : `${exercise.media.length} archivos`} de
-        medios
-      </p>
-      {exercise.descripcion ? <p className="text-sm">{exercise.descripcion}</p> : null}
-      {steps.length > 0 ? (
-        <ol className="list-decimal pl-5 text-sm text-[var(--text-muted)]">
-          {steps.map((step) => (
-            <li key={step}>{step}</li>
-          ))}
-        </ol>
-      ) : null}
-    </div>
-  );
-}
-
-function ExercisePreviewView({ id }: Readonly<{ id: string }>) {
-  const exercise = useQuery({
-    queryKey: ['admin', 'moderation', 'preview', 'EXERCISE', id],
-    queryFn: () => moderationPreviewService.exercise(id),
-  });
-  if (exercise.isPending) return <PreviewSkeleton />;
-  if (exercise.isError) return <Unavailable>No pudimos cargar el ejercicio denunciado.</Unavailable>;
-  return <ExerciseBody exercise={exercise.data} />;
-}
-
-/**
- * El texto de un comentario no se puede pedir por su id: el backend sólo lo
- * sirve colgando de su rutina o ejercicio. Lo que sí hay es lo que dijeron
- * quienes lo denunciaron, que es lo que se enseña.
- */
-function CommentPreview({ details }: Readonly<{ details: readonly string[] }>) {
+function CommentBody({ comment }: Readonly<{ comment: Extract<ModerationCaseContent, { kind: 'COMMENT' }> }>) {
   return (
     <div className="flex flex-col gap-2">
       <p className="flex items-center gap-2 text-sm font-semibold">
         <MessageSquareQuote aria-hidden className="size-4 text-[var(--text-muted)]" />
         Comentario denunciado
       </p>
-      <p className="text-sm text-[var(--text-muted)]">
-        {details.length > 0
-          ? 'El texto original no está disponible en la cola; esto es lo que dijeron quienes lo denunciaron:'
-          : 'El texto original no está disponible en la cola y quienes lo denunciaron no añadieron detalles.'}
-      </p>
-      {details.map((detail) => (
-        <blockquote
-          className="border-l-2 border-[var(--border)] pl-3 text-sm"
-          key={detail}
-        >
-          {detail}
-        </blockquote>
-      ))}
+      {comment.text ? (
+        <blockquote className="border-l-2 border-[var(--border)] pl-3 text-sm">{comment.text}</blockquote>
+      ) : null}
+      {comment.attachmentUrl ? (
+        IMAGE_ATTACHMENTS.has(comment.attachmentType ?? '') ? (
+          <Photo alt="Imagen adjunta al comentario" src={comment.attachmentUrl} />
+        ) : safeHref(comment.attachmentUrl) ? (
+          <a className="text-sm underline underline-offset-2" href={safeHref(comment.attachmentUrl)} rel="noreferrer noopener" target="_blank">
+            Abrir el adjunto
+          </a>
+        ) : (
+          <Muted>Adjunto con un enlace no seguro (no se abre).</Muted>
+        )
+      ) : null}
+      {comment.deletedByAuthor ? <Muted>Su autor lo borró después de la denuncia.</Muted> : null}
     </div>
   );
 }
 
-/** Vista previa del contenido, según el tipo. Los tipos antiguos no la tienen. */
-export function ContentPreview({
-  targetKind,
-  targetId,
-  reportDetails,
-}: Readonly<{
-  targetKind: ModerationTargetKind;
-  targetId: string;
-  reportDetails: readonly string[];
-}>) {
-  if (targetKind !== 'ROUTINE' && targetKind !== 'EXERCISE' && targetKind !== 'COMMENT') {
-    return null;
+type MediaContent = Extract<ModerationCaseContent, { kind: 'REEL' | 'STORY' | 'PROFILE_PHOTO' }>;
+
+function MediaBody({ media }: Readonly<{ media: MediaContent }>) {
+  const isVideo = media.kind === 'REEL' || (media.mediaType ?? '').toUpperCase().startsWith('VIDEO');
+  return (
+    <div className="flex flex-col gap-2">
+      {isVideo ? (
+        <video
+          className="aspect-[9/16] w-40 rounded-[8px] bg-[var(--surface-low)]"
+          controls
+          preload="metadata"
+          src={media.mediaUrl.startsWith('/') ? `/api/backend${media.mediaUrl}` : media.mediaUrl}
+        />
+      ) : (
+        <Photo alt="Contenido denunciado" src={media.mediaUrl} />
+      )}
+      {media.caption ? <p className="text-sm">{media.caption}</p> : null}
+    </div>
+  );
+}
+
+function ContentBody({ content }: Readonly<{ content: ModerationCaseContent }>) {
+  switch (content.kind) {
+    case 'ROUTINE':
+      return <RoutineBody routine={content} />;
+    case 'EXERCISE':
+      return <ExerciseBody exercise={content} />;
+    case 'COMMENT':
+      return <CommentBody comment={content} />;
+    case 'BUSINESS_LISTING':
+      return <ListingBody listing={content} />;
+    case 'BUSINESS_PROFILE':
+      return <BusinessProfileBody profile={content} />;
+    case 'USER':
+      return (
+        <div className="flex flex-col gap-2">
+          <p className="text-base font-semibold">{content.displayName}</p>
+          {content.mainPhotoUrl ? (
+            <Photo alt={`Foto principal de ${content.displayName}`} src={content.mainPhotoUrl} />
+          ) : (
+            <Muted>Sin foto de perfil.</Muted>
+          )}
+        </div>
+      );
+    case 'MUSIC_PLAYLIST':
+      return (
+        <p className="flex items-center gap-2 text-sm">
+          <Music aria-hidden className="size-4 text-[var(--text-muted)]" />
+          {safeHref(content.url) ? (
+            <a className="font-semibold underline underline-offset-2" href={safeHref(content.url)} rel="noreferrer noopener" target="_blank">
+              {content.name}
+            </a>
+          ) : (
+            <span className="font-semibold">{content.name}</span>
+          )}
+        </p>
+      );
+    default:
+      return <MediaBody media={content} />;
   }
+}
+
+/**
+ * The reported content, read from the case file (`content`): the moderator
+ * cannot open the author's routes, so nothing else is fetched here.
+ */
+export function ContentPreview({
+  content,
+  contentUnavailableReason,
+}: Readonly<Pick<ModerationCaseDetail, 'content' | 'contentUnavailableReason'>>) {
+  // A chat message is reviewed from its evidence copy, not from here.
+  if (!content && contentUnavailableReason !== 'ERASED') return null;
   return (
     <Card>
       <CardContent className="p-4" data-testid="vista-previa">
-        {targetKind === 'ROUTINE' ? <RoutinePreviewView id={targetId} /> : null}
-        {targetKind === 'EXERCISE' ? <ExercisePreviewView id={targetId} /> : null}
-        {targetKind === 'COMMENT' ? <CommentPreview details={reportDetails} /> : null}
+        {content ? (
+          <ContentBody content={content} />
+        ) : (
+          <Muted>Este contenido ya se eliminó: solo quedan los reportes.</Muted>
+        )}
       </CardContent>
     </Card>
   );

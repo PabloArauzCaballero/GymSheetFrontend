@@ -9,7 +9,9 @@ import { Field } from '@/shared/components/ui/field';
 import { Select } from '@/shared/components/ui/select';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { notify } from '@/shared/notifications';
+import { businessReportReasonLabels, type BusinessReportReason } from '@gymsheet/domain';
 import {
+  isBusinessTarget,
   reasonsFor,
   moderationService,
   REASON_LABEL,
@@ -48,7 +50,9 @@ export function ReportDialog({
   consequence?: string;
 }>) {
   const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState<ModerationReason>(defaultReason ?? 'ACOSO');
+  const [reason, setReason] = useState<ModerationReason>(defaultReason ?? (isBusinessTarget(targetKind) ? 'SPAM' : 'ACOSO'));
+  const labelOf = (value: ModerationReason) =>
+    isBusinessTarget(targetKind) ? businessReportReasonLabels[value as BusinessReportReason] : REASON_LABEL[value];
   const [details, setDetails] = useState('');
 
   const submit = useMutation({
@@ -97,7 +101,7 @@ export function ReportDialog({
             >
               {reasonsFor(targetKind).map((value) => (
                 <option key={value} value={value}>
-                  {REASON_LABEL[value]}
+                  {labelOf(value)}
                 </option>
               ))}
             </Select>
@@ -114,7 +118,7 @@ export function ReportDialog({
           </Field>
 
           <p className="text-xs leading-5 text-[var(--text-muted)]">
-            {consequence ?? 'Al enviarlo, el perfil o contenido deja de aparecerte. Si corresponde, se deshace la conexión. Alguien del equipo lo revisará.'}
+            {consequence ?? 'Al enviarlo, el perfil o contenido deja de aparecerte. Si corresponde, se deshace la conexión. El equipo de moderación de REPP lo revisará.'}
           </p>
 
           <div className="flex justify-end gap-2">

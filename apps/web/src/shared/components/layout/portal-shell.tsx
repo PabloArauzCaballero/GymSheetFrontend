@@ -3,7 +3,9 @@
 import { roleLabel } from '@/shared/lib/roles';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import type { SessionPrincipal } from '@/shared/api/contracts';
+import type { PortalSession } from '@/shared/auth/portal-session';
+import { EmailVerificationBannerSlot } from '@/features/account-security/components/email-verification-banner-slot';
+import { ImpersonationBanner } from '@/features/impersonation/components/impersonation-banner';
 import { AmbientBackground } from '@/shared/components/background/ambient-background';
 import {
   TutorialLauncher,
@@ -19,8 +21,14 @@ import { ThemeToggle } from './theme-toggle';
 
 export function PortalShell({
   session,
+  gymName = null,
   children,
-}: Readonly<{ session: SessionPrincipal; children: ReactNode }>) {
+}: Readonly<{
+  session: PortalSession;
+  /** The gym the platform admin is operating, or `null` (see `shared/server/impersonation.ts`). */
+  gymName?: string | null;
+  children: ReactNode;
+}>) {
   const pathname = usePathname();
   return (
     <TutorialProvider role={session.role} userId={session.id}>
@@ -62,6 +70,8 @@ export function PortalShell({
               <LogoutButton />
             </div>
           </div>
+          {gymName ? <ImpersonationBanner gymName={gymName} /> : null}
+          <EmailVerificationBannerSlot emailVerified={session.emailVerified} />
         </header>
         <main
           className="page-enter mx-auto w-full max-w-[1200px] px-6 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-6 sm:px-8 sm:pt-8 lg:px-12 lg:pb-[calc(3rem+env(safe-area-inset-bottom))] lg:pt-10"

@@ -18,15 +18,14 @@ import { tabBarFor } from './tab-bar-config';
  */
 export function TabBar({ session }: Readonly<{ session: SessionPrincipal }>) {
   const pathname = usePathname();
-  const interactionAlerts = useInteractionAlerts();
+  const interactionAlerts = useInteractionAlerts(session);
   const tabs = tabBarFor(session.role, session.permissions);
   const all = navigationFor(session.role, session.permissions).flatMap((group) => group.items);
   const ownHref = activeHrefFor(pathname, all.map((item) => item.href));
   // Pantallas que en el móvil se abren DESDE una pestaña y la dejan encendida:
-  // Descubrir, Interacciones y Reels cuelgan de Comunidad; Ejercicios, de
+  // Interacciones y Reels cuelgan de Comunidad; Ejercicios, de
   // Rutinas; Entrenos y Ajustes, de Perfil.
   const parentTab: Record<string, string> = {
-    '/descubrir': '/comunidad',
     '/interacciones': '/comunidad',
     '/reels': '/comunidad',
     '/exercises': '/routines',

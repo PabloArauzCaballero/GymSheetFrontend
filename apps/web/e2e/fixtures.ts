@@ -17,10 +17,39 @@ import { expect, type Page } from '@playwright/test';
  * `apps/web/.env.e2e` (ignorado por git) es la forma cómoda de fijarlos una vez;
  * `playwright.config.ts` lo carga si existe.
  */
-export const admin = {
+/**
+ * El administrador de plataforma (`SYSTEM_ADMIN`) que siembra `SEED_ADMIN_*`. Desde la franja 7a
+ * es el único que administra un gimnasio, operándolo con `operateGym`; el `ADMIN` del gimnasio
+ * ya no tiene consola.
+ */
+export const systemAdmin = {
   email: process.env.E2E_ADMIN_EMAIL ?? 'admin@gymsheet.local',
   password: process.env.E2E_ADMIN_PASSWORD ?? 'AdminLocal2026!',
 };
+
+/** El gimnasio sembrado que operan las pruebas (`DEFAULT_TENANT_ID` del backend). */
+export const e2eTenantId = process.env.E2E_TENANT_ID ?? 'default';
+
+/**
+ * Empieza a operar un gimnasio por la misma ruta BFF que «Elegir gimnasio» en `/sistema`. Va por
+ * `page.request`, que comparte las cookies del contexto: la cookie HttpOnly del token suplantado
+ * queda puesta para las páginas siguientes. Devuelve el nombre que pinta la franja.
+ */
+export async function operateGym(page: Page, tenantId: string = e2eTenantId): Promise<string> {
+  const response = await page.request.post('/api/auth/impersonation', {
+    data: { tenantId },
+    headers: { origin: new URL(page.url()).origin },
+  });
+  expect(response.status(), `operar el gimnasio ${tenantId}`).toBe(200);
+  const body = (await response.json()) as { data: { nombre: string } };
+  return body.data.nombre;
+}
+
+/** Entra como administrador de plataforma y deja operando el gimnasio de las pruebas. */
+export async function signInOperatingGym(page: Page, tenantId: string = e2eTenantId): Promise<string> {
+  await signIn(page, systemAdmin);
+  return operateGym(page, tenantId);
+}
 
 export const athlete = {
   email: process.env.E2E_ATHLETE_EMAIL ?? 'active.mock@gymsheet.local',

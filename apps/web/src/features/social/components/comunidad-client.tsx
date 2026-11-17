@@ -21,10 +21,14 @@ import { profileService } from '@/features/profile/services/profile-service';
 import { queryKeys } from '@/shared/api/query-keys';
 import { Divider, ListCard, NavRow } from '@/shared/components/mobile/nav-row';
 import { cn } from '@/shared/lib/cn';
-import { DescubrirClient } from './descubrir-client';
-import { SearchPreferencesDialog, type DirectoryPreferences } from './search-preferences-dialog';
+import { EmailVerificationRequired } from '@/shared/components/feedback/email-verification-required';
+import { VerificationCta } from '@/features/verification/components/verification-cta';
+import { socialProfileKeys, socialProfileService } from '../services/social-profile-service';
+import { DescubrirClient, type DeckPreferencesState } from './descubrir-client';
+import { DiscoveryReadinessCard } from './discovery-readiness-card';
+import { SearchPreferencesDialog, type DeckPreferences } from './search-preferences-dialog';
 
-const EMPTY_PREFERENCES: DirectoryPreferences = { objetivo: '', sucursalId: '', genero: '' };
+const EMPTY_PREFERENCES: DeckPreferences = { objetivo: '', sucursalId: '' };
 
 type Pill = 'foryou' | 'goal';
 
@@ -113,7 +117,7 @@ function OverflowSheet({ onPreferences }: Readonly<{ onPreferences: () => void }
               <SlidersHorizontal aria-hidden className="size-5 text-[var(--text-muted)]" />
               <span className="grid flex-1 gap-0.5">
                 <span className="t-headline">Preferencias de búsqueda</span>
-                <span className="t-subhead text-[var(--text-muted)]">Filtra por objetivos, sedes y género</span>
+                <span className="t-subhead text-[var(--text-muted)]">Filtra por objetivo y sede</span>
               </span>
             </button>
             {rows.map((row) => (
@@ -139,19 +143,41 @@ function OverflowSheet({ onPreferences }: Readonly<{ onPreferences: () => void }
  * la baraja es la pantalla. Arriba, los filtros a la izquierda, «Para ti /
  * Mismo objetivo» en el centro, y mensajes y «⋯» a la derecha. El directorio
  * de personas, el podio, el mapa y lo demás viven en el «⋯», como en el móvil.
+ *
+ * With an unverified email (`emailVerified={false}`) the deck is not requested:
+ * the API would answer 403 EMAIL_VERIFICATION_REQUIRED, so the next step shows instead.
  */
-export function ComunidadClient() {
-  const [preferences, setPreferences] = useState<DirectoryPreferences>(EMPTY_PREFERENCES);
+export function ComunidadClient({
+  emailVerified = true,
+  offerSelfieVerification = false,
+}: Readonly<{ emailVerified?: boolean; offerSelfieVerification?: boolean }> = {}) {
+  const [preferences, setPreferences] = useState<DeckPreferences>(EMPTY_PREFERENCES);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [pill, setPill] = useState<Pill>('foryou');
 
+  // Only «Mismo objetivo» needs the goal: asking on every visit 404s for whoever has no body profile yet.
   const profile = useQuery({
     queryKey: queryKeys.profile,
     queryFn: () => profileService.getProfile().catch(() => null),
     retry: false,
+    enabled: pill === 'goal',
+  });
+  // Same query as the readiness card: one request tells whether the deck can be asked for at all.
+  const readiness = useQuery({
+    queryKey: socialProfileKeys.readiness,
+    queryFn: socialProfileService.readiness,
+    retry: false,
   });
   const filtersActive = Object.values(preferences).some(Boolean);
+  const goalPending = pill === 'goal' && profile.isPending;
   const goal = pill === 'goal' ? (profile.data?.objetivo ?? 'HIPERTROFIA') : preferences.objetivo;
+  // A failed readiness check does not hold the deck back: the deck answers for itself.
+  const deckPreferences: DeckPreferencesState =
+    readiness.isPending || goalPending
+      ? 'checking'
+      : readiness.data?.missing.includes('PREFERENCES')
+        ? 'missing'
+        : 'ready';
 
   return (
     <div className="mx-auto grid w-full max-w-xl gap-5">
@@ -198,13 +224,20 @@ export function ComunidadClient() {
         <OverflowSheet onPreferences={() => setPreferencesOpen(true)} />
       </div>
 
-      <DescubrirClient
-        embedded
-        genero={preferences.genero}
-        key={`${pill}-${goal}`}
-        objetivo={goal}
-        sucursalId={preferences.sucursalId}
-      />
+      {/* The deck shows its own preferences form when they are missing. */}
+      <DiscoveryReadinessCard omit={emailVerified ? ['PREFERENCES'] : ['PREFERENCES', 'EMAIL_VERIFICATION']} />
+      <VerificationCta enabled={offerSelfieVerification} />
+
+      {emailVerified ? (
+        <DescubrirClient
+          key={`${pill}-${goal}`}
+          objetivo={goal}
+          preferencesState={deckPreferences}
+          sucursalId={preferences.sucursalId}
+        />
+      ) : (
+        <EmailVerificationRequired />
+      )}
 
       <SearchPreferencesDialog
         onChange={(next) => {

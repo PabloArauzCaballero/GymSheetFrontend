@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 import { ApiError } from '@/shared/api/api-error';
 import { queryKeys } from '@/shared/api/query-keys';
-import type { UserRole } from '@/shared/api/contracts';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { SkeletonList, SkeletonPageHeader, SkeletonScreen } from '@/shared/components/feedback/skeleton';
 import { PageHeader } from '@/shared/components/layout/page-header';
@@ -30,7 +29,7 @@ import { VersionBanner } from './version-banner';
  * Semana / Mes y hoja del día. La comunidad, publicar, copiar y compartir
  * cuelgan de aquí (F4) y activar (F5).
  */
-export function RoutineDetailV2({ id, role }: Readonly<{ id: string; role: UserRole }>) {
+export function RoutineDetailV2({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
   const params = useSearchParams();
   const routine = useQuery({
@@ -96,7 +95,6 @@ export function RoutineDetailV2({ id, role }: Readonly<{ id: string; role: UserR
         actions={
           <RoutineActions
             onStart={() => start.mutate(undefined)}
-            role={role}
             routine={data}
             starting={start.isPending && start.variables === undefined}
           />

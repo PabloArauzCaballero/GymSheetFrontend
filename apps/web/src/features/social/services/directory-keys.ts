@@ -20,6 +20,8 @@ export const directoryKeys = {
   member: (userId: string) => ['gym-directory', 'member', userId] as const,
   /** Las sedes del gimnasio propio, que alimentan el filtro por sucursal. */
   myBranches: ['facilities', 'my-branches'] as const,
+  /** Saved discovery preferences: the shared key, so web and mobile invalidate the same entry. */
+  discoveryPreferences: queryKeys.discoveryPreferences,
 };
 
 /**

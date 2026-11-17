@@ -11,8 +11,11 @@ import {
   levelTitle,
   trainingGoalLabels,
 } from './directory-labels';
+import { SocialAboutSection, hasAboutContent } from './about/social-about-section';
 import { socialStatusLabels } from './social-status-labels';
 import { galleryOf } from './directory-card-face';
+import { DiscoveryContextBlock } from './discovery-card-context';
+import { isDiscoveryCard } from '@gymsheet/domain';
 
 type DetailRow = { icon: ReactNode; label: string; value: string };
 type DetailSection = { key: string; title: string; rows: DetailRow[] };
@@ -21,9 +24,10 @@ type DetailSection = { key: string; title: string; rows: DetailRow[] };
  * Las secciones que la persona ha rellenado. Nada más.
  *
  * Una sección vacía con un guion dentro no informa de nada y deja la ficha
- * llena de huecos esperando datos que este backend no tiene: aquí no hay
- * biografía, ni ubicación, ni distancia, ni intereses, así que tampoco hay
- * sitios reservados para ellos.
+ * llena de huecos esperando datos que no llegan. The rounded distance exists
+ * only on deck cards and is shown by `DiscoveryContextBlock`, not here.
+ * Bio, interests and habits live in `SocialAboutSection`, which renders only
+ * what was answered.
  */
 export function detailSectionsOf(entry: GymDirectoryEntry): DetailSection[] {
   const training: DetailRow[] = [];
@@ -137,6 +141,8 @@ export function MemberDetailSheet({
         }
       >
         <div className="grid gap-6">
+          {/* Opened from the deck: why this person shows up, never whether they are online. */}
+          {isDiscoveryCard(entry) ? <DiscoveryContextBlock ranking={entry} /> : null}
           {photos.map((photo, position) => {
             const section = sections[position];
             return (
@@ -158,7 +164,9 @@ export function MemberDetailSheet({
             <DetailSectionBlock key={section.key} section={section} />
           ))}
 
-          {photos.length === 0 && sections.length === 0 ? (
+          <SocialAboutSection about={entry.about} />
+
+          {photos.length === 0 && sections.length === 0 && !hasAboutContent(entry.about) ? (
             <p className="py-8 text-center text-sm text-[var(--text-muted)]">
               Esta persona aún no ha completado su perfil.
             </p>

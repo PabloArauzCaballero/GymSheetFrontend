@@ -6,9 +6,7 @@ import { Play, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { confirm, notify } from '@/shared/notifications';
-import { isStaff } from '@gymsheet/domain';
 import { trainingService } from '@/features/training/services/training-service';
-import type { UserRole } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import {
@@ -20,11 +18,9 @@ import { PageHeader } from '@/shared/components/layout/page-header';
 import { Button } from '@/shared/components/ui/button';
 import { Field } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
-import { AssignRoutineDialog } from './assign-routine-dialog';
 import { ScheduleRoutine } from './schedule-routine';
 
-export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: UserRole }>) {
-  const staff = isStaff(role);
+export function RoutineDetailClient({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: queryKeys.routine(id), queryFn: () => trainingService.get(id) });
@@ -86,7 +82,6 @@ export function RoutineDetailClient({ id, role }: Readonly<{ id: string; role: U
               <Play className="size-4" />
               Empezar entreno
             </Button>
-            {staff ? <AssignRoutineDialog routineId={id} /> : null}
           </div>
         }
         description={routine.descripcion ?? 'Sin descripción.'}

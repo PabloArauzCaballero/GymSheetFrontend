@@ -40,7 +40,16 @@ export type SessionPrincipal = {
   tenantId?: string | null;
   /** Permisos granulares de administración otorgados a esta cuenta (solo staff). */
   permissions?: string[];
+  /** Whether the account proved its mailbox. Absent from older backends. */
+  emailVerified?: boolean;
+  /** Person or business (ADR-0020); absent from older backends, derive it from the role. */
+  accountKind?: AccountKind;
+  /** The business listing of a business account; null for a person. */
+  businessEntityId?: string | null;
 };
+
+/** Which shell an account mounts: the person portal or the business portal (ADR-0020). */
+export type AccountKind = 'PERSON' | 'BUSINESS';
 
 export type Profile = {
   id: string;
@@ -93,6 +102,8 @@ export type OnboardingState = {
   completedAt: string | null;
   missingFields: string[];
   profileComplete: boolean;
+  /** Optional "Conocer" step; never blocks COMPLETED. Absent from older backends. */
+  socialStep?: 'PENDING' | 'DONE' | 'SKIPPED';
 };
 
 export type BodyMeasurement = {

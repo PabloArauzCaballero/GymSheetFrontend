@@ -1,45 +1,97 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import Link from 'next/link';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import type { BaseSyntheticEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { AtSign, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
-import { authCopy, authDestination, authErrorMessage, genderOptions } from '@gymsheet/domain';
 import {
+  accountSanctionMessage,
+  authCopy,
+  authDestination,
+  authErrorMessage,
+} from '@gymsheet/domain';
+import {
+  SIGNUP_REJECTED,
   registerDefaults,
   registerSchema,
   toRegisterPayload,
   type RegisterInput,
 } from '@/shared/api/schemas';
 import { register as createAccount } from '@/features/auth/services/auth-client';
+import { currentLegalQueryKey, useCurrentLegal } from '@/features/auth/hooks/use-current-legal';
+import { useSignupProtection } from '@/features/auth/hooks/use-signup-protection';
+import { registerFieldErrors } from '@/features/auth/lib/register-errors';
+import { signupCopy } from '@/features/auth/lib/signup';
+import { honeypotValue } from '@/features/auth/lib/honeypot';
+import {
+  isTermsVersionOutdated,
+  legalGateCopy,
+  outdatedCurrentDocuments,
+  termsVersionOf,
+} from '@/features/legal/lib/legal-documents';
 import { ApiError } from '@/shared/api/api-error';
 import { AuthAlert } from '@/features/auth/components/auth-alert';
+import { BirthDateField } from '@/features/auth/components/birth-date-field';
+import { SexField } from '@/features/auth/components/sex-field';
+import { SignupProtectionFields } from '@/features/auth/components/signup-protection-fields';
+import { TermsField } from '@/features/auth/components/terms-field';
 import { Button } from '@/shared/components/ui/button';
-import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Field } from '@/shared/components/ui/field';
 import { InputWithIcon, PasswordInput } from '@/shared/components/ui/input';
-import { Select } from '@/shared/components/ui/select';
 
 export function RegisterForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const legal = useCurrentLegal();
+  const protection = useSignupProtection();
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: registerDefaults,
   });
 
-  async function submit(values: RegisterInput) {
+  /** The terms changed while the form was open: show the new ones and ask again. */
+  function askToAcceptAgain(error: ApiError) {
+    const fresh = outdatedCurrentDocuments(error.details);
+    if (fresh) queryClient.setQueryData(currentLegalQueryKey, fresh);
+    else void legal.refetch();
+    form.setValue('acceptedTerms', false);
+    form.setError('root', { message: legalGateCopy.outdatedAtSignup });
+  }
+
+  async function submit(values: RegisterInput, event?: BaseSyntheticEvent) {
     form.clearErrors('root');
+    // The version the person is accepting; the server rejects a stale one (409).
+    const termsVersion = termsVersionOf(legal.data ?? (await legal.refetch()).data);
+    if (!termsVersion) {
+      form.setError('root', { message: legalGateCopy.versionUnavailable });
+      return;
+    }
     try {
-      // La traducción a lo que espera el servidor —quitar la confirmación,
-      // omitir el género vacío— la hace el paquete compartido, no esta pantalla.
-      await createAccount(toRegisterPayload(values));
+      // La traducción a lo que espera el servidor —quitar la confirmación—
+      // la hace el paquete compartido, no esta pantalla.
+      const evidence = await protection.evidence(honeypotValue(event));
+      await createAccount({ ...toRegisterPayload(values, termsVersion), ...evidence });
       // Al onboarding directamente, igual que el móvil. Antes iba al panel y
       // un guardia la rebotaba, así que la cuenta recién creada veía medio
       // panel antes del cuestionario.
       router.replace(authDestination.web.afterRegister);
       router.refresh();
     } catch (error: unknown) {
+      // The ticket is single-use: any refused attempt asks for a new one.
+      void protection.renew();
+      // Never say why: the generic message is the whole answer.
+      if (error instanceof ApiError && error.code === SIGNUP_REJECTED)
+        return form.setError('root', { message: signupCopy.rejected });
+      if (isTermsVersionOutdated(error)) return askToAcceptAgain(error);
+      const sanction = accountSanctionMessage(error);
+      if (sanction) return form.setError('root', { message: sanction });
+      const fieldErrors = registerFieldErrors(error);
+      fieldErrors.forEach(([field, message], index) =>
+        form.setError(field, { message }, { shouldFocus: index === 0 }),
+      );
+      if (fieldErrors.length > 0) return;
       form.setError('root', {
         message:
           error instanceof ApiError
@@ -118,55 +170,24 @@ export function RegisterForm() {
         </Field>
       </div>
 
-      <Field
-        error={form.formState.errors.genero?.message}
-        hint={authCopy.fields.gender.hint}
-        htmlFor="genero"
-        label={authCopy.fields.gender.label}
-      >
-        {/* Campo de valores cerrados: selector, no texto libre ni botones
-            sueltos. Las opciones vienen del paquete compartido, así que el
-            móvil ofrece exactamente las mismas y en el mismo orden. */}
-        <Select id="genero" {...form.register('genero')}>
-          {genderOptions.map((option) => (
-            <option key={option.label} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
-      </Field>
-
-      <div>
-        <Checkbox
-          label={
-            <span>
-              {authCopy.terms.prefix}{' '}
-              <Link
-                className="font-semibold text-[var(--text)] underline decoration-[var(--volt)] underline-offset-4"
-                href="/terminos"
-                target="_blank"
-              >
-                {authCopy.terms.termsLabel}
-              </Link>{' '}
-              {authCopy.terms.connector}{' '}
-              <Link
-                className="font-semibold text-[var(--text)] underline decoration-[var(--volt)] underline-offset-4"
-                href="/privacidad"
-                target="_blank"
-              >
-                {authCopy.terms.privacyLabel}
-              </Link>
-              .
-            </span>
-          }
-          {...form.register('acceptedTerms')}
+      <div className="grid gap-5 lg:grid-cols-2 lg:gap-4">
+        <BirthDateField
+          error={form.formState.errors.fechaNacimiento?.message}
+          registration={form.register('fechaNacimiento')}
         />
-        {form.formState.errors.acceptedTerms?.message ? (
-          <p className="mt-1 text-xs text-[var(--danger-text)]" role="alert">
-            {form.formState.errors.acceptedTerms.message}
-          </p>
-        ) : null}
+
+        <SexField error={form.formState.errors.genero?.message} registration={form.register('genero')} />
       </div>
+
+      <TermsField
+        error={form.formState.errors.acceptedTerms?.message}
+        registration={form.register('acceptedTerms')}
+      />
+
+      <SignupProtectionFields
+        onTurnstileToken={protection.onTurnstileToken}
+        turnstileKey={protection.turnstileKey}
+      />
 
       {form.formState.errors.root?.message ? (
         <AuthAlert message={form.formState.errors.root.message} />
@@ -184,3 +205,4 @@ export function RegisterForm() {
     </form>
   );
 }
+

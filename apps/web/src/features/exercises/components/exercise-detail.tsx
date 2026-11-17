@@ -90,7 +90,7 @@ export function ExerciseDetail({
   const ownsPersonalExercise =
     item.tipoEjercicio === 'PERSONAL' && item.createdByUsuarioId === currentUserId;
   const canManageMedia =
-    ownsPersonalExercise || (item.tipoEjercicio === 'GLOBAL' && role === 'ADMIN');
+    ownsPersonalExercise || (item.tipoEjercicio === 'GLOBAL' && role === 'SYSTEM_ADMIN');
   const originLabel = exerciseOriginLabel(item.dataSource);
   const media = item.media.find((entry) => entry.isPrimary) ?? item.media[0];
   const video = selectExerciseVideo(item.media, account.data?.genero ?? null);

@@ -1,9 +1,9 @@
 'use client';
 
 import { AnimatePresence } from 'framer-motion';
-import { Heart, RotateCcw, Star, X, Zap } from 'lucide-react';
+import { Heart, RotateCcw, Star, X } from 'lucide-react';
 import type { ReactNode } from 'react';
-import type { GymDirectoryEntry, SwipeDirection } from '@/shared/api/schemas';
+import type { DiscoveryCard, SwipeDirection } from '@/shared/api/schemas';
 import { deckActions } from '@/shared/theme/metric-colors';
 import { SwipeCard } from './swipe-card';
 
@@ -18,11 +18,12 @@ import { SwipeCard } from './swipe-card';
  * visible y la cola del servidor no acaben contando dos historias distintas:
  * quien manda es el contenedor.
  *
- * Cinco botones, como la baraja del móvil (`(tabs)/comunidad.tsx`): deshacer,
- * paso, super like, me interesa y mensaje directo. El backend no distingue un
- * «super like»: la estrella envía el mismo `LIKE` que el corazón, igual que en
- * el móvil. El rayo abre una conversación de verdad (`startConversation`).
- * Los dos que deciden son mayores que los demás.
+ * Cuatro botones: deshacer, paso, super like y me interesa. El backend no
+ * distingue un «super like»: la estrella envía el mismo `LIKE` que el corazón,
+ * igual que en el móvil. Los dos que deciden son mayores que los demás.
+ *
+ * There is no direct-message button: the backend only opens a chat once the
+ * connection is accepted (403 otherwise), so it could never succeed here.
  */
 export function DirectorySwipeDeck({
   entries,
@@ -32,15 +33,10 @@ export function DirectorySwipeDeck({
   canUndo,
   decidePending,
   undoPending,
-  onMessage,
-  messagePending = false,
 }: Readonly<{
-  /** Rayo: abre un chat directo con la persona de arriba. */
-  onMessage?: (entry: GymDirectoryEntry) => void;
-  messagePending?: boolean;
-  entries: GymDirectoryEntry[];
-  onDecide: (entry: GymDirectoryEntry, direction: SwipeDirection) => void;
-  onInfo: (entry: GymDirectoryEntry) => void;
+  entries: DiscoveryCard[];
+  onDecide: (entry: DiscoveryCard, direction: SwipeDirection) => void;
+  onInfo: (entry: DiscoveryCard) => void;
   onUndo: () => void;
   canUndo: boolean;
   decidePending: boolean;
@@ -66,7 +62,7 @@ export function DirectorySwipeDeck({
           ))}
         </AnimatePresence>
       </div>
-      {/* La botonera del móvil: deshacer · paso · super like · me interesa · mensaje. */}
+      {/* Deck actions: undo · pass · super like · like. */}
       <div className="flex items-center gap-3">
         <DeckAction disabled={!canUndo || undoPending} label="Deshacer la última decisión" onClick={onUndo} size="sm" tone="undo">
           <RotateCcw aria-hidden className="size-5" />
@@ -96,17 +92,6 @@ export function DirectorySwipeDeck({
         >
           <Heart aria-hidden className="size-8 fill-current" />
         </DeckAction>
-        {onMessage ? (
-          <DeckAction
-            disabled={!top || messagePending}
-            label={top ? `Enviar mensaje directo a ${top.displayName}` : 'Enviar mensaje directo'}
-            onClick={() => top && onMessage(top)}
-            size="sm"
-            tone="boost"
-          >
-            <Zap aria-hidden className="size-5 fill-current" />
-          </DeckAction>
-        ) : null}
       </div>
       <p className="text-center text-xs text-[var(--text-muted)]">
         Arrastra la tarjeta o usa los botones. Tu decisión se guarda.

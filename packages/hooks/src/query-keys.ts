@@ -12,7 +12,6 @@ export const queryKeys = {
   routines: (scope: string) => ['routines', scope] as const,
   routine: (id: string) => ['routine', id] as const,
   routineAssignments: ['routines', 'assignments', 'me'] as const,
-  coachAssignments: ['routines', 'assignments', 'coach'] as const,
   membership: ['membership', 'me'] as const,
   membershipAccesses: ['membership', 'accesses'] as const,
   membershipOptions: ['membership', 'options'] as const,
@@ -23,9 +22,44 @@ export const queryKeys = {
   tutorialProgress: ['tutorials', 'progress', 'me'] as const,
   connections: ['connections', 'me'] as const,
   socialStatus: ['social-status', 'me'] as const,
+  discoveryPreferences: ['social', 'discovery-preferences'] as const,
+  socialProfile: ['social', 'profile', 'me'] as const,
+  interestCatalog: ['social', 'catalog', 'interests'] as const,
+  discoveryReadiness: ['social', 'discovery-readiness'] as const,
   gymDirectory: (filters: string) => ['gym-directory', filters] as const,
   conversations: ['conversations', 'me'] as const,
   messages: (conversationId: string) => ['messages', conversationId] as const,
+  /** Public current legal versions (`GET /legal/current`). */
+  legalCurrent: ['legal', 'current'] as const,
+  /** Privacy and account rights (franja 4). */
+  consents: ['privacy', 'consents'] as const,
+  accountClosurePreview: ['account', 'closure-preview'] as const,
+  accountExport: (exportId: string) => ['account', 'export', exportId] as const,
+  accountExportLatest: ['account', 'export', 'latest'] as const,
+  /** Person verification by selfie (franja 6). */
+  verification: ['verification', 'me'] as const,
+  /** Business accounts (ADR-0020, franja 8a). */
+  business: {
+    me: ['business', 'me'] as const,
+    legalCurrent: ['legal', 'current', 'BUSINESS'] as const,
+    categories: (entityType: string) => ['business', 'categories', entityType] as const,
+    handleAvailability: (handle: string) => ['business', 'handle-availability', handle] as const,
+    publicHandle: (handle: string) => ['public', 'handle', handle] as const,
+    /** `GET /business/me/kyc` (ADR-0021, franja 8b): where the wizard resumes. */
+    kyc: ['business', 'me', 'kyc'] as const,
+    /** Own listings (franja 8c); every listing key shares the prefix so one invalidation refreshes all. */
+    listings: ['business', 'me', 'listings'] as const,
+    listingsByStatus: (status: string) => ['business', 'me', 'listings', 'list', status] as const,
+    listing: (listingId: string) => ['business', 'me', 'listings', 'detail', listingId] as const,
+    locations: ['business', 'me', 'locations'] as const,
+  },
+  /** The public marketplace (franja 8c): search pages, one listing and a profile by handle. */
+  marketplace: {
+    all: ['marketplace'] as const,
+    search: (query: string) => ['marketplace', 'search', query] as const,
+    listing: (listingId: string) => ['marketplace', 'listing', listingId] as const,
+    profile: (handle: string) => ['marketplace', 'profile', handle] as const,
+  },
   admin: {
     branches: (page: number) => ['admin', 'branches', page] as const,
     /** Todas las sedes (para el mapa); comparte prefijo para invalidarse con la lista. */
@@ -39,5 +73,15 @@ export const queryKeys = {
     memberships: (page: number) => ['admin', 'memberships', page] as const,
     accessDevices: ['admin', 'access-devices'] as const,
     accessHistory: (page: number) => ['admin', 'access-history', page] as const,
+    verifications: ['admin', 'verifications'] as const,
+    /** REPP's KYC console (franja 8b); the queue keys share a prefix so one invalidation refreshes both queues. */
+    businessKyc: {
+      all: ['admin', 'business-kyc'] as const,
+      queue: (queue: string, overdue: boolean) => ['admin', 'business-kyc', 'queue', queue, overdue] as const,
+      detail: (submissionId: string) => ['admin', 'business-kyc', 'detail', submissionId] as const,
+      accounts: (search: string) => ['admin', 'business-accounts', search] as const,
+    },
+    /** REPP's «Publicaciones» tab (franja 8c). */
+    businessListings: (status: string) => ['admin', 'business-listings', status] as const,
   },
 };

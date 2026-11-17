@@ -1,6 +1,6 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { THEME_COOKIE } from '../src/shared/theme/theme-script';
-import { admin, signIn, waitForPageSettled } from './fixtures';
+import { signInOperatingGym, waitForPageSettled } from './fixtures';
 
 /**
  * Red de seguridad visual para el paso a temas configurables por inquilino.
@@ -90,7 +90,8 @@ test.describe('paridad visual del tema', () => {
       reducedMotion: 'reduce',
     });
     page = await context.newPage();
-    await signIn(page, admin);
+    // The /admin screens belong to the platform admin operating a gym (franja 7a).
+    await signInOperatingGym(page);
     await dismissTutorial(page);
   });
 

@@ -16,6 +16,7 @@ import {
   UserRound,
   type LucideIcon,
 } from 'lucide-react';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { AnatomyCredit } from '@/features/anatomy/components/anatomy-credit';
 import { LogoutButton } from '@/shared/components/layout/logout-button';
@@ -63,7 +64,18 @@ export function SettingsPage({
   role,
   name,
   version,
-}: Readonly<{ email: string; role: string; name?: string; version: string }>) {
+  emailVerified,
+  children,
+}: Readonly<{
+  email: string;
+  role: string;
+  name?: string;
+  version: string;
+  /** `undefined`: the backend does not report it, so nothing is said. */
+  emailVerified?: boolean;
+  /** Sections owned by other features (Dispositivos), rendered after Apariencia. */
+  children?: ReactNode;
+}>) {
   const { theme, setTheme } = useTheme();
 
   return (
@@ -78,6 +90,14 @@ export function SettingsPage({
         ) : null}
         <Row icon={Mail} label="Correo">
           <span className="break-all">{email}</span>
+          {emailVerified === false ? (
+            <Link
+              className="ml-2 whitespace-nowrap font-semibold text-[var(--accent-ink)] underline-offset-4 hover:underline"
+              href="/verificar-correo"
+            >
+              Verificar
+            </Link>
+          ) : null}
         </Row>
         <Row icon={IdCard} label="Tipo de cuenta">
           {roleLabel(role)}
@@ -95,6 +115,8 @@ export function SettingsPage({
           <Segmented label="Tema" onChange={setTheme} options={THEME_OPTIONS} value={theme} />
         </Row>
       </Group>
+
+      {children}
 
       <Group icon={MonitorSmartphone} title="Aplicación">
         <Row icon={Tag} label="Versión">

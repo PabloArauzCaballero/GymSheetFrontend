@@ -1,3 +1,5 @@
+import type { OfferKind } from '@gymsheet/schemas';
+
 /**
  * Marketplace: categorías, orden y filtros compartidos por móvil y web.
  * Una sola lista (antes estaba duplicada en cada app) y una sola función de
@@ -17,23 +19,23 @@ export type MarketplaceCategoryId =
 export type MarketplaceCategory = {
   id: MarketplaceCategoryId;
   label: string;
-  /** Tipo de ente del backend, si la categoría lo fija. */
+  /** Tipo de ente del backend, si la categoría lo fija (`entity_type`). */
   entityType?: 'GYM' | 'STORE' | 'COACH' | 'CENTER';
   /** Ruta de categoría del backend (`category_path`, por prefijo). */
   path?: string;
-  /** Tipos de plan que entran en «Ofertas»; vacío = todos. */
-  planTypes?: ReadonlyArray<'MEMBERSHIP_PLAN' | 'PASS' | 'SERVICE' | 'PRODUCT'>;
+  /** Tipo de publicación (`offer_kind`, ADR-0022) que fija la categoría en «Ofertas». */
+  offerKind?: OfferKind;
 };
 
 export const MARKETPLACE_CATEGORIES: readonly MarketplaceCategory[] = [
   { id: 'all', label: 'Todo' },
-  { id: 'gyms', label: 'Gimnasios', entityType: 'GYM', path: 'gimnasios', planTypes: ['MEMBERSHIP_PLAN', 'PASS'] },
+  { id: 'gyms', label: 'Gimnasios', entityType: 'GYM', path: 'gimnasios' },
   { id: 'supplements', label: 'Suplementos', entityType: 'STORE', path: 'tiendas.nutricion' },
   { id: 'apparel', label: 'Indumentaria', entityType: 'STORE', path: 'tiendas.indumentaria' },
   { id: 'equipment', label: 'Equipamiento', entityType: 'STORE', path: 'tiendas.equipamiento' },
-  { id: 'coaches', label: 'Coaches', entityType: 'COACH', path: 'coaches', planTypes: ['SERVICE'] },
+  { id: 'coaches', label: 'Coaches', entityType: 'COACH', path: 'coaches' },
   { id: 'centers', label: 'Centros', entityType: 'CENTER', path: 'centros' },
-  { id: 'passes', label: 'Pases', planTypes: ['PASS', 'MEMBERSHIP_PLAN'] },
+  { id: 'passes', label: 'Pases', offerKind: 'DAY_PASS' },
 ];
 
 export type MarketplaceSort = 'relevance' | 'rating' | 'price-asc' | 'price-desc';
@@ -101,36 +103,6 @@ export function filterEntities<T extends Seller & { entityType: string; headline
     return true;
   });
   if (filters.sort === 'rating') return [...result].sort((a, b) => (b.ratingAverage ?? 0) - (a.ratingAverage ?? 0));
-  return result;
-}
-
-/** Ofertas (planes): categoría por tipo de plan y vendedor, puntaje del vendedor y búsqueda. */
-export function filterPlans<
-  T extends { type: string; name: string; description: string; currentPrice: string; entity?: (Seller & { entityType: string }) | undefined },
->(items: readonly T[], filters: MarketplaceFilters): T[] {
-  const category = categoryById(filters.category);
-  const query = filters.search.trim().toLowerCase();
-  const result = items.filter((plan) => {
-    if (category.planTypes && category.id !== 'all') {
-      const byType = category.planTypes.includes(plan.type as never);
-      const bySeller = category.path ? pathMatches(plan.entity?.primaryCategory?.path, category.path) : false;
-      if (!byType && !bySeller) return false;
-    } else if (category.path && category.id !== 'all') {
-      if (!pathMatches(plan.entity?.primaryCategory?.path, category.path)) return false;
-    }
-    if (!matchesSeller(plan.entity, filters)) return false;
-    if (query) {
-      const hay = `${plan.name} ${plan.description} ${plan.entity?.name ?? ''}`.toLowerCase();
-      if (!hay.includes(query)) return false;
-    }
-    return true;
-  });
-  const price = (plan: T) => Number.parseFloat(plan.currentPrice) || 0;
-  if (filters.sort === 'price-asc') return [...result].sort((a, b) => price(a) - price(b));
-  if (filters.sort === 'price-desc') return [...result].sort((a, b) => price(b) - price(a));
-  if (filters.sort === 'rating') {
-    return [...result].sort((a, b) => (b.entity?.ratingAverage ?? 0) - (a.entity?.ratingAverage ?? 0));
-  }
   return result;
 }
 

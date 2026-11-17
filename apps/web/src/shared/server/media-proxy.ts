@@ -155,7 +155,21 @@ export async function fetchExternalMedia(
 ): Promise<MediaResult> {
   const safeUrl = await resolveSafeUrl(raw);
   if (!safeUrl) return { ok: false, status: 400 };
+  return fetchMediaFrom(safeUrl, range);
+}
 
+/**
+ * Same as `fetchExternalMedia` for a URL the server itself built from its own
+ * configuration (the backend's local media mount, see `backend-media.ts`). It
+ * skips the private-range check on purpose: in local and compose setups the
+ * backend lives on `localhost` or a private network, which is exactly what that
+ * check refuses. Type and size limits still apply.
+ */
+export function fetchTrustedMedia(url: URL, range: string | null = null): Promise<MediaResult> {
+  return fetchMediaFrom(url, range);
+}
+
+async function fetchMediaFrom(safeUrl: URL, range: string | null): Promise<MediaResult> {
   const controller = new AbortController();
   /*
    * El reloj cubre la fase de CABECERAS, no el cuerpo.

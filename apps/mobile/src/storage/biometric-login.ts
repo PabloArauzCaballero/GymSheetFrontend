@@ -1,16 +1,42 @@
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import {
+  clearParkedToken,
+  consumeParkedToken,
+  disableQuickLogin,
+  bindQuickLoginToAccount,
+  enableQuickLogin,
+  hasParkedToken,
+  migrateLegacyCredentials,
+  parkRefreshToken,
+  quickLoginKeys,
+  type QuickLoginOutcome,
+  type QuickLoginStore,
+} from './quick-login';
 
-const CREDENTIALS_KEY = 'gymsheet.biometricCredentials';
-const PROMPTED_KEY = 'gymsheet.biometricPrompted';
+/**
+ * Expo binding of `quick-login.ts`. A protected entry uses
+ * `requireAuthentication`: the OS asks for the face or fingerprint to read it
+ * (and, on Android, to write it). If the biometric set changes the OS
+ * invalidates the key and the read fails: the password is asked again.
+ */
+const store: QuickLoginStore = {
+  get: (key, protectedRead) =>
+    SecureStore.getItemAsync(
+      key,
+      protectedRead ? { requireAuthentication: true, authenticationPrompt: protectedRead.prompt } : undefined,
+    ),
+  set: (key, value, protectedWrite) =>
+    SecureStore.setItemAsync(
+      key,
+      value,
+      protectedWrite ? { requireAuthentication: true, authenticationPrompt: protectedWrite.prompt } : undefined,
+    ),
+  remove: (key) => SecureStore.deleteItemAsync(key),
+};
 
 export type BiometricKind = 'face' | 'fingerprint' | 'generic';
-
-export interface BiometricCredentials {
-  email: string;
-  password: string;
-}
 
 /** Face ID en iPhone, huella en Android; cualquier otra cosa, texto genérico. */
 export async function biometricKind(): Promise<BiometricKind | null> {
@@ -37,59 +63,63 @@ export function biometricLabel(kind: BiometricKind): string {
   return 'biometría';
 }
 
+/** Runs once per install after the update; never blocks the launch. */
+export async function migrateBiometricLogin(): Promise<void> {
+  await migrateLegacyCredentials(store).catch(() => undefined);
+}
+
+export async function turnOnQuickLogin(userId: string): Promise<void> {
+  await enableQuickLogin(store, userId).catch(() => undefined);
+}
+
+/** After any sign-in: quick login of another account on this phone is turned off. */
+export async function bindQuickLoginTo(userId: string): Promise<void> {
+  await bindQuickLoginToAccount(store, userId).catch(() => undefined);
+}
+
+/** A token is parked and the login screen can offer (or launch) the biometric entry. */
+export async function hasQuickLogin(): Promise<boolean> {
+  return hasParkedToken(store).catch(() => false);
+}
+
 /**
- * La credencial queda en el Llavero/Keystore protegida con
- * `requireAuthentication`: el propio sistema pide rostro o huella al leerla, así
- * que no hay forma de sacarla sin pasar por ahí. Si la persona cambia sus datos
- * biométricos el sistema invalida la clave y la lectura falla: se pide la
- * contraseña de nuevo, que es lo correcto.
+ * Parks the refresh token at logout. Just after parking, the login screen must
+ * not launch the prompt on its own: on Android the person has just confirmed
+ * with the fingerprint, and a second prompt right away reads as a loop.
  */
-export async function saveBiometricCredentials(credentials: BiometricCredentials): Promise<void> {
-  await SecureStore.setItemAsync(CREDENTIALS_KEY, JSON.stringify(credentials), {
-    requireAuthentication: true,
-    authenticationPrompt: 'Confirma para activar el acceso rápido',
-  });
+let skipNextAutoPrompt = false;
+
+export async function parkForQuickLogin(refreshToken: string, userId: string): Promise<boolean> {
+  const parked = await parkRefreshToken(store, refreshToken, userId).catch(() => false);
+  if (parked) skipNextAutoPrompt = true;
+  return parked;
 }
 
-export async function hasBiometricCredentials(): Promise<boolean> {
-  try {
-    // No exige autenticación: sólo mira si hay algo guardado.
-    const stored = await SecureStore.getItemAsync(CREDENTIALS_KEY, { requireAuthentication: false });
-    return stored !== null;
-  } catch {
-    // En algunas versiones leer sin autenticar lanza; entonces existe.
-    return true;
-  }
+/** `true` once after a logout that parked a token; the caller skips the auto prompt. */
+export function takeAutoPromptSkip(): boolean {
+  const skip = skipNextAutoPrompt;
+  skipNextAutoPrompt = false;
+  return skip;
 }
 
-/** Pide rostro/huella y devuelve la credencial, o `null` si se cancela o falla. */
-export async function readBiometricCredentials(): Promise<BiometricCredentials | null> {
-  try {
-    const raw = await SecureStore.getItemAsync(CREDENTIALS_KEY, {
-      requireAuthentication: true,
-      authenticationPrompt: 'Entra a REPP',
-    });
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<BiometricCredentials>;
-    return typeof parsed.email === 'string' && typeof parsed.password === 'string'
-      ? { email: parsed.email, password: parsed.password }
-      : null;
-  } catch {
-    return null;
-  }
+export function signInWithParkedToken<T>(
+  exchange: (refreshToken: string) => Promise<T | 'rejected'>,
+): Promise<QuickLoginOutcome<T>> {
+  return consumeParkedToken(store, exchange);
 }
 
-export async function clearBiometricCredentials(): Promise<void> {
-  try {
-    await SecureStore.deleteItemAsync(CREDENTIALS_KEY);
-  } catch {
-    // Nada que borrar.
-  }
+/** Closed account: quick login off and any parked token gone. Throws on a Keychain error. */
+export async function turnOffQuickLogin(): Promise<void> {
+  await disableQuickLogin(store);
+}
+
+export async function forgetParkedToken(): Promise<void> {
+  await clearParkedToken(store).catch(() => undefined);
 }
 
 export async function wasBiometricOffered(): Promise<boolean> {
   try {
-    return (await SecureStore.getItemAsync(PROMPTED_KEY)) === '1';
+    return (await SecureStore.getItemAsync(quickLoginKeys.offered)) === '1';
   } catch {
     return false;
   }
@@ -97,7 +127,7 @@ export async function wasBiometricOffered(): Promise<boolean> {
 
 export async function markBiometricOffered(): Promise<void> {
   try {
-    await SecureStore.setItemAsync(PROMPTED_KEY, '1');
+    await SecureStore.setItemAsync(quickLoginKeys.offered, '1');
   } catch {
     // Sólo evita repetir la pregunta.
   }

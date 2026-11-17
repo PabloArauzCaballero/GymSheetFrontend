@@ -63,7 +63,7 @@ export function MemberProfileDialog({
             <Skeleton className="h-4 w-2/5 rounded" />
           </SkeletonScreen>
         ) : profile.isError ? (
-          <ErrorPanel message={profile.error.message} onRetry={() => profile.refetch()} />
+          <ErrorPanel error={profile.error} message={profile.error.message} onRetry={() => profile.refetch()} />
         ) : member ? (
           <div className="grid gap-6">
             <MemberProfileBody compact member={member} />

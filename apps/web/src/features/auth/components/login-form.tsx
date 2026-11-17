@@ -5,11 +5,19 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { AtSign, LockKeyhole } from 'lucide-react';
-import { authCopy, authDestination, authErrorMessage } from '@gymsheet/domain';
+import {
+  accountSanctionMessage,
+  accountSuspensionCopy,
+  authCopy,
+  authDestination,
+  authErrorMessage,
+} from '@gymsheet/domain';
+import { suspensionFromParams } from '@/shared/auth/suspension';
 import { loginDefaults, loginSchema, type LoginInput } from '@/shared/api/schemas';
 import { login } from '@/features/auth/services/auth-client';
 import { ApiError } from '@/shared/api/api-error';
 import { AuthAlert } from '@/features/auth/components/auth-alert';
+import { GoogleSignIn } from '@/features/auth/components/google-sign-in';
 import { Button } from '@/shared/components/ui/button';
 import { Field } from '@/shared/components/ui/field';
 import { InputWithIcon, PasswordInput } from '@/shared/components/ui/input';
@@ -23,6 +31,8 @@ function safeReturnTo(value: string | null) {
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Arrived from a session the backend refused as suspended (portal or a request).
+  const arrivedSuspended = suspensionFromParams(searchParams);
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: loginDefaults,
@@ -38,9 +48,12 @@ export function LoginForm() {
       // El mapeo vive en `@gymsheet/domain` para que el móvil diga exactamente
       // lo mismo ante el mismo fallo. Un 401 aquí significa credenciales
       // incorrectas, no sesión caducada.
+      // A sanction is told by its code (403 ACCOUNT_SUSPENDED / ACCOUNT_BANNED), never by matching the text.
+      const sanction = accountSanctionMessage(error);
       form.setError('root', {
-        message:
-          error instanceof ApiError
+        message: sanction
+          ? sanction
+          : error instanceof ApiError
             ? authErrorMessage(error.kind, 'login', error.message)
             : authErrorMessage(undefined, 'login'),
       });
@@ -48,6 +61,7 @@ export function LoginForm() {
   }
 
   return (
+    <div className="grid gap-6">
     <form className="grid gap-5" method="post" onSubmit={form.handleSubmit(submit)} noValidate>
       <Field
         error={form.formState.errors.email?.message}
@@ -82,6 +96,8 @@ export function LoginForm() {
 
       {form.formState.errors.root?.message ? (
         <AuthAlert message={form.formState.errors.root.message} />
+      ) : arrivedSuspended && !form.formState.isSubmitted ? (
+        <AuthAlert message={accountSuspensionCopy.notice(arrivedSuspended)} />
       ) : null}
 
       <Button
@@ -105,5 +121,7 @@ export function LoginForm() {
         </Link>
       </p>
     </form>
+    <GoogleSignIn returnTo={safeReturnTo(searchParams.get('returnTo'))} />
+    </div>
   );
 }

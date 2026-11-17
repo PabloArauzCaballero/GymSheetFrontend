@@ -20,6 +20,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { Pagination } from '@/shared/components/ui/pagination';
 import { formatDateTime } from '@/shared/lib/date';
+import { NoticeAction } from './notice-action';
 import { NotificationPreferenceForm } from './notification-preference-form';
 import { WebPushCard } from './web-push-card';
 
@@ -71,6 +72,7 @@ export function NotificationsPageClient() {
                       {!item.leidoEn ? <Badge tone="success">Nuevo</Badge> : null}
                     </div>
                     <p className="text-[17px] leading-6 break-words">{item.mensaje}</p>
+                    <NoticeAction notice={item} />
                     <p className="t-footnote text-[var(--text-muted)]">
                       {formatDateTime(item.creadoEn)} · {item.canal}
                     </p>

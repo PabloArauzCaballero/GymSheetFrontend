@@ -5,6 +5,9 @@ import { useState } from 'react';
 import type { GymDirectoryEntry } from '@/shared/api/schemas';
 import { DomainImage } from '@/shared/components/media/domain-image';
 import { cn } from '@/shared/lib/cn';
+import { isVerifiedCard } from '@gymsheet/domain';
+import { InterestChips } from './about/social-about-chips';
+import { DiscoveryReasonChips, DistanceChip, VerifiedBadge, type CardRanking } from './discovery-card-context';
 import { experienceLevelLabels, trainingGoalLabels } from './directory-labels';
 
 /** `photos` cuando llega; si no, la portada como única foto. */
@@ -36,6 +39,7 @@ export function DirectoryCardFace({
   onOpen,
   onStepPhoto,
   photoIndex,
+  ranking,
 }: Readonly<{
   entry: GymDirectoryEntry;
   /** Ocupa el contenedor entero en vez de reservar un 4:5. Lo usa la baraja. */
@@ -58,6 +62,8 @@ export function DirectoryCardFace({
   onStepPhoto?: (delta: number) => void;
   /** Foto visible. La posición la lleva quien monta la tarjeta. */
   photoIndex?: number;
+  /** Deck cards only: reasons, distance and the verified badge. */
+  ranking?: CardRanking;
 }>) {
   // Carrusel no controlado cuando nadie lo gobierna desde fuera: una tarjeta de
   // lista quiere pasar fotos sin que la pantalla entera tenga que llevar cuenta.
@@ -142,14 +148,14 @@ export function DirectoryCardFace({
       {/* Tres paradas y no dos: con dos, el tramo medio sube demasiado rápido y
           el degradado vuelve a leerse como una banda cortada a media foto. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 grid gap-2 bg-[linear-gradient(to_top,rgb(var(--scrim-channels)/0.88)_0%,rgb(var(--scrim-channels)/0.45)_55%,transparent_100%)] p-5 pt-16 text-white">
-        <p className={cn('font-semibold tracking-[-0.02em]', fill ? 'text-3xl' : 'text-xl')}>
+        <p className={cn('flex flex-wrap items-center gap-x-2 font-semibold tracking-[-0.02em]', fill ? 'text-3xl' : 'text-xl')}>
           {entry.displayName}
-          {entry.age !== null ? (
-            <span className="ml-2 font-normal opacity-90">{entry.age}</span>
-          ) : null}
+          {entry.age !== null ? <span className="font-normal opacity-90">{entry.age}</span> : null}
+          {ranking && isVerifiedCard(ranking) ? <VerifiedBadge /> : null}
         </p>
         {/* Chips del móvil sobre la foto: sede, objetivo y puntos (este en acento). */}
         <div className="flex flex-wrap items-center gap-1.5">
+          {ranking ? <DistanceChip km={ranking.distanceKm} /> : null}
           {entry.branchName ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--background)_70%,transparent)] px-2.5 py-1 text-xs font-semibold">
               <MapPin aria-hidden className="size-3 opacity-85" />
@@ -174,6 +180,12 @@ export function DirectoryCardFace({
             </span>
           ) : null}
         </div>
+        {ranking ? <DiscoveryReasonChips ranking={ranking} /> : null}
+        {/* Conocer answers: up to three interests, and the bio only on the big deck card. */}
+        {entry.about && entry.about.interests.length > 0 ? (
+          <InterestChips className={OVERLAY_CHIP} codes={entry.about.interests} limit={3} />
+        ) : null}
+        {fill && entry.about?.bio ? <p className="line-clamp-2 text-sm opacity-90">{entry.about.bio}</p> : null}
       </div>
 
       {onInfo && interactive ? (
@@ -192,6 +204,9 @@ export function DirectoryCardFace({
     </div>
   );
 }
+
+const OVERLAY_CHIP =
+  'rounded-full bg-[color-mix(in_srgb,var(--background)_70%,transparent)] px-2.5 py-1 text-xs font-semibold';
 
 /**
  * Los pasos son botones de verdad —no zonas táctiles— para que el teclado

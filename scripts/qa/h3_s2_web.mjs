@@ -205,7 +205,7 @@ async function runM3(page, { role, apiBase, token, fixture, actor }) {
   if (!Array.isArray(deck) || !deck.some((item) => item.userId === fixture.targetUserId)) throw precondition('reserved target is not in A discovery deck');
   const blocksBefore = await apiData(apiBase, token, '/me/blocks');
   if (!Array.isArray(blocksBefore)) throw new Error('block list API returned invalid data');
-  await open(page, new URL('/descubrir', process.env.QA_WEB_BASE_URL).toString());
+  await open(page, new URL('/comunidad', process.env.QA_WEB_BASE_URL).toString());
   const target = deck.find((item) => item.userId === fixture.targetUserId);
   const pass = page.getByRole('button', { name: `Pasar de ${target.displayName}`, exact: true });
   try { await pass.waitFor({ state: 'visible' }); }

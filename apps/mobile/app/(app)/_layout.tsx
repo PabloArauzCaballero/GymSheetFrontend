@@ -2,7 +2,9 @@ import { useEffect } from 'react';
 import { Redirect, Stack } from 'expo-router';
 import { TourOverlay } from '@/components/tour';
 import { NudgeSync } from '@/features/nudge/nudge-sync';
+import { OnboardingGuard } from '@/features/onboarding-guard/onboarding-guard';
 import { detailStackOptions } from '@/lib/screen-options';
+import { personShellRedirect } from '@/features/business/business-routing';
 import { useAuthStore } from '@/state/auth-store';
 import { useTourStore } from '@/state/tour-store';
 
@@ -23,11 +25,14 @@ import { useTourStore } from '@/state/tour-store';
  * tarjeta destacada en Inicio, que además la pone en el recorrido diario en vez
  * de esconderla detrás de un sexto icono.
  *
- * The session guard and the tour live here rather than one level down so both
- * cover the pushed screens too.
+ * The session guard, the onboarding guard and the tour live here rather than one
+ * level down so they cover the pushed screens too. The onboarding guard is the
+ * only thing that routes a CLIENTE into (or out of) `/onboarding`.
  */
 export default function AppLayout() {
   const status = useAuthStore((state) => state.status);
+  const farewell = useAuthStore((state) => state.farewell);
+  const principal = useAuthStore((state) => state.principal);
   // Se hidrata una vez, aqui: montarlo en una pantalla haria que el tour
   // reapareciera cada vez que esa pantalla se remonta.
   const hydrateTour = useTourStore((state) => state.hydrate);
@@ -36,9 +41,13 @@ export default function AppLayout() {
   }, [hydrateTour]);
 
   // Protect the entire private group from unauthenticated access.
+  // A closed account says goodbye first; any other exit goes to login.
   if (status === 'unauthenticated') {
-    return <Redirect href="/(auth)/login" />;
+    return <Redirect href={farewell ? '/(auth)/hasta-pronto' : '/(auth)/login'} />;
   }
+  // A business account never mounts the person tabs (ADR-0020).
+  const businessHome = personShellRedirect(principal);
+  if (businessHome) return <Redirect href={businessHome} />;
 
   return (
     <>
@@ -47,6 +56,8 @@ export default function AppLayout() {
             stack, not something you navigate to. */}
         <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
         <Stack.Screen name="onboarding" />
+        {/* Optional «Conocer» step after the questionnaire; also opened from Perfil. */}
+        <Stack.Screen name="onboarding-conocer" />
         {/* Inicio dejó de ser pestaña (08/11/2026): la barra pasó a Mensajes ·
             Comunidad · Marketplace · Rutinas · Perfil. La pantalla sigue
             existiendo en la pila con la misma URL (`/home`). */}
@@ -66,6 +77,16 @@ export default function AppLayout() {
         <Stack.Screen name="ejercicios" />
         <Stack.Screen name="ejercicio-nuevo" />
         <Stack.Screen name="settings" />
+        {/* Marketplace (franja 8c): a business profile by @handle and a public listing. */}
+        <Stack.Screen name="negocio/[handle]" />
+        <Stack.Screen name="publicacion/[id]" />
+        <Stack.Screen name="dispositivos" />
+        {/* Privacidad y datos (franja 4): consents, export and account rights. */}
+        <Stack.Screen name="datos-privacidad" />
+        <Stack.Screen name="cambiar-correo" />
+        <Stack.Screen name="cambiar-nombre" />
+        <Stack.Screen name="cerrar-cuenta" />
+        <Stack.Screen name="verificar-correo" />
         <Stack.Screen name="profile-edit" />
         <Stack.Screen name="registrar-peso" />
         <Stack.Screen name="membership" />
@@ -73,15 +94,13 @@ export default function AppLayout() {
         <Stack.Screen name="notifications-inbox" />
         <Stack.Screen name="reels" />
         <Stack.Screen name="training-invitations" />
-        {/* La baraja de descubrimiento: se abre desde Comunidad y se cierra
-            volviendo, así que es una hermana del resto de pantallas de detalle
-            y no una sexta pestaña. */}
-        <Stack.Screen name="descubrir" />
         <Stack.Screen name="chat" />
       </Stack>
       <TourOverlay />
       {/* Repi: widgets, tarjeta de Inicio y notificaciones. Solo con sesión. */}
       {status === 'authenticated' ? <NudgeSync /> : null}
+      {/* Last, so its overlay covers the stack and the tour while it decides. */}
+      <OnboardingGuard />
     </>
   );
 }

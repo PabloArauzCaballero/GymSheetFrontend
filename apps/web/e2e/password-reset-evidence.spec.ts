@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
+import { fillSignupForm } from './alta-datos';
 
 /**
  * Documentary evidence for the F0 auth work: registration, sign-out, and the
@@ -47,10 +48,7 @@ test('registration, logout, and PIN-based password reset work end to end', async
     await page.goto('/register');
     await page.screenshot({ path: join(EVIDENCE_DIR, '01-register-empty.png'), fullPage: true });
 
-    await page.getByLabel('Nombre completo').fill('Evidencia Web QA');
-    await page.getByLabel('Correo electrónico').fill(email);
-    await page.getByLabel('Contraseña', { exact: true }).fill(originalPassword);
-    await page.getByLabel('Confirmar contraseña').fill(originalPassword);
+    await fillSignupForm(page, { nombreCompleto: 'Evidencia Web QA', email, password: originalPassword });
     await page.screenshot({ path: join(EVIDENCE_DIR, '02-register-filled.png'), fullPage: true });
 
     await page.getByRole('button', { name: 'Crear cuenta' }).click();

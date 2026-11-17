@@ -6,7 +6,7 @@ import type {
   DirectoryEntityDetail,
   DirectoryEntitySummary,
   DirectoryFilterQuery,
-  EntityPaymentConfig,
+  PublicPaymentConfig,
   EntityPlan,
   EntityReviewsResponse,
   ListReviewsQuery,
@@ -15,7 +15,7 @@ import {
   categoryTreeNodeSchema,
   directoryEntityDetailSchema,
   directoryEntitySummarySchema,
-  entityPaymentConfigSchema,
+  publicPaymentConfigSchema,
   entityPlanSchema,
   entityReviewsResponseSchema,
 } from '@/shared/api/schemas';
@@ -91,21 +91,11 @@ export const getEntityPlans = cache(
 );
 
 export const getEntityPaymentConfig = cache(
-  async (entityId: string): Promise<EntityPaymentConfig | null> => {
+  async (entityId: string): Promise<PublicPaymentConfig | null> => {
     const response = await backendRequest(
       `/public/directory/entities/${encodeURIComponent(entityId)}/payment-config`
     );
-    return readData(response, entityPaymentConfigSchema);
+    return readData(response, publicPaymentConfigSchema.nullable());
   }
 );
 
-
-/**
- * Ofertas de todo el Marketplace (`GET /public/directory/plans`), las mismas
- * que la pestaña «Ofertas» del móvil. `null` = el backend no respondió o el
- * contrato no encaja: la pestaña lo dice, no se confunde con «no hay ofertas».
- */
-export async function listMarketplacePlans(limit = 50): Promise<EntityPlan[] | null> {
-  const response = await backendRequest(`/public/directory/plans?limit=${limit}`);
-  return readData(response, z.array(entityPlanSchema));
-}

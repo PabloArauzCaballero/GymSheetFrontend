@@ -1,27 +1,10 @@
-import type { Metadata } from 'next';
-import { DescubrirClient } from '@/features/social/components/descubrir-client';
-
-export const metadata: Metadata = { title: 'Descubrir' };
+import { redirect } from 'next/navigation';
 
 /**
- * La baraja como destino propio, no como pestaña de Comunidad.
- *
- * Los filtros llegan por la URL y no por estado compartido: es lo que permite
- * que «Descubrir» desde Comunidad se lleve el gimnasio ya acotado, y de paso
- * que la baraja filtrada se pueda guardar en marcadores o recargar sin volver
- * al ajuste por defecto.
+ * The deck lives inside Comunidad (as in the mobile app); this route only keeps
+ * old links and bookmarks working. Comunidad keeps its filters in local state
+ * and reads no query params, so none are carried over.
  */
-export default async function DescubrirPage({
-  searchParams,
-}: Readonly<{ searchParams: Promise<Record<string, string | string[] | undefined>> }>) {
-  const params = await searchParams;
-  const single = (value: string | string[] | undefined) =>
-    (Array.isArray(value) ? value[0] : value) ?? '';
-  return (
-    <DescubrirClient
-      genero={single(params.genero)}
-      objetivo={single(params.objetivo)}
-      sucursalId={single(params.sucursalId)}
-    />
-  );
+export default function DescubrirPage() {
+  redirect('/comunidad');
 }

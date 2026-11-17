@@ -1,3 +1,7 @@
+import { businessRoutePatterns } from './backend-route-policy-business';
+
+export { isAnonymousBackendPath, isNoStoreBackendPath } from './backend-route-policy-business';
+
 const resourceId = '[A-Za-z0-9-]+';
 // Código de músculo del catálogo anatómico (`BICEPS_BRACHII`): mayúsculas y guion bajo.
 const muscleCode = '[A-Z0-9_]+';
@@ -5,7 +9,7 @@ const muscleCode = '[A-Z0-9_]+';
 const uuid = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
 // Qué se comenta o valora (`contentKinds` en `@gymsheet/types`, enum cerrado).
 const contentKind = 'ROUTINE|EXERCISE|DIRECTORY_ENTITY|DIRECTORY_PRODUCT';
-// Clave de permiso granular, p. ej. `admin-access:manage` o `moderation:read`
+// Clave de permiso granular, p. ej. `admin-access:manage` o `support:read`
 // (dominio:acción, `admin-permission.catalog.ts`). Va URL-encodeada en el
 // segmento (`encodeURIComponent` convierte `:` en `%3A`), así que el patrón
 // matchea la forma codificada, no el literal con dos puntos.
@@ -14,7 +18,8 @@ const permissionKey = '[a-z-]+%3A[a-z-]+';
 // alternativa explícita en vez de un comodín, igual que el token de activación
 // más abajo — así una URL no puede colar un valor que el backend rechazaría
 // de todos modos, pero sin llegar a intentarlo.
-const moderationTargetKind = 'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER';
+const moderationTargetKind =
+  'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER|REEL|ROUTINE|EXERCISE|COMMENT|MUSIC_PLAYLIST|BUSINESS_LISTING|BUSINESS_PROFILE';
 
 const allowedPathPatterns = [
   /^\/access\/me$/u,
@@ -61,6 +66,11 @@ const allowedPathPatterns = [
     'u',
   ),
   new RegExp(`^/admin/moderation/users/${resourceId}/history$`, 'u'),
+  // The REPP moderation team (ADR-0018), managed by SYSTEM_ADMIN: list, assign, revoke.
+  /^\/admin\/platform\/moderators$/u,
+  new RegExp(`^/admin/platform/moderators/${uuid}$`, 'u'),
+  // Gym catalog for «Elegir gimnasio» (SYSTEM_ADMIN only; franja 7a impersonation).
+  /^\/admin\/tenants$/u,
   // Permisos granulares del personal (H01): catálogo, los de un usuario,
   // otorgar y revocar. `/me` es la vista propia (qué puedo hacer yo).
   /^\/admin\/permissions\/me$/u,
@@ -79,7 +89,7 @@ const allowedPathPatterns = [
   /^\/membership\/plans$/u,
   new RegExp(`^/membership/plans/${resourceId}$`, 'u'),
   /^\/me\/onboarding$/u,
-  /^\/me\/onboarding\/(profile|goals|preferences|equipment|complete)$/u,
+  /^\/me\/onboarding\/(profile|goals|preferences|equipment|complete|social)$/u,
   /^\/me\/body-measurements$/u,
   /^\/me\/membership$/u,
   /^\/me\/membership\/(options|renewal-intent|extension-intent)$/u,
@@ -129,6 +139,11 @@ const allowedPathPatterns = [
   /^\/me\/discovery\/impressions$/u,
   /^\/me\/discovery\/swipes$/u,
   /^\/me\/discovery\/swipes\/undo$/u,
+  // Conocer profile: the Tinder-style answers, the interest catalog and what
+  // still keeps someone out of the deck (`readiness`).
+  /^\/me\/discovery\/readiness$/u,
+  /^\/me\/social-profile$/u,
+  /^\/social\/catalog\/interests$/u,
   // Stories (R6.2). `/me/stories` es GET del propio + POST multipart; el feed
   // es una ruta hermana y no un parámetro, así que se declara aparte aunque el
   // patrón por identificador de abajo también la aceptaría: quien lea esta
@@ -171,7 +186,8 @@ const allowedPathPatterns = [
   /^\/muscle-groups$/u,
   /^\/routines$/u,
   /^\/routines\/import$/u,
-  /^\/routines\/assignments\/(me|coach)$/u,
+  // Only the member's own assignments: coach assignment was removed in franja 7a.
+  /^\/routines\/assignments\/me$/u,
   // Programas de fuerza (`@gymsheet/api-client` → `createProgramServices`):
   // «Hoy» de Inicio, la activación y las tarjetas de programa los usan, y sin
   // estas entradas el BFF los rechazaba con «Ruta no permitida».
@@ -180,7 +196,7 @@ const allowedPathPatterns = [
   new RegExp(`^/programs/${resourceId}/(stop|progress|next-loads|close)$`, 'u'),
   new RegExp(`^/routines/exercises/${resourceId}$`, 'u'),
   new RegExp(`^/routines/${resourceId}$`, 'u'),
-  new RegExp(`^/routines/${resourceId}/(exercises|assign|start)$`, 'u'),
+  new RegExp(`^/routines/${resourceId}/(exercises|start)$`, 'u'),
   /^\/user-exercises$/u,
   new RegExp(`^/user-exercises/${resourceId}$`, 'u'),
   /^\/users\/me$/u,
@@ -202,7 +218,7 @@ const allowedPathPatterns = [
   // ── Rutas que la web ya llamaba y el BFF rechazaba (auditoría 2026-11-09). ──
   // Cada una existe en el backend (`GymSheetBackend`, rama `dev`, controlador
   // indicado) y lo autoriza ahí: este allowlist es defensa en profundidad.
-  // Administración (roles ADMIN/FRONT_DESK/SYSTEM_ADMIN en el backend).
+  // Administración (SYSTEM_ADMIN en el backend desde la franja 7a).
   /^\/admin\/routines$/u,
   new RegExp(`^/admin/routines/${resourceId}/(insights|official)$`, 'u'),
   new RegExp(`^/admin/support/programs/${resourceId}/recompute-week$`, 'u'),
@@ -225,6 +241,25 @@ const allowedPathPatterns = [
   new RegExp(`^/exercises/${resourceId}/(like|muscles)$`, 'u'),
   new RegExp(`^/me/exercises/${resourceId}/preference$`, 'u'),
   new RegExp(`^/muscles/${muscleCode}(/exercises)?$`, 'u'),
+  // Privacy and account rights (franja 4): consents per closed kind, rename,
+  // closure preview/PIN/close, email change and the full data export.
+  /^\/me\/consents$/u,
+  /^\/me\/consents\/(HEALTH|ORIENTATION|VERIFICATION_SELFIE|PRECISE_LOCATION)$/u,
+  /^\/me\/account$/u,
+  /^\/me\/account\/(closure-preview|closure-pin)$/u,
+  /^\/me\/email\/change(\/confirm)?$/u,
+  /^\/me\/export$/u,
+  // The latest request (resumes a pending or ready copy after a reload).
+  /^\/me\/export\/latest$/u,
+  new RegExp(`^/me/export/${uuid}(/download)?$`, 'u'),
+  // Person verification (franja 6): own status, challenge and selfie upload;
+  // the staff queue, its signed selfie link and the decision.
+  /^\/me\/verification(\/challenge)?$/u,
+  new RegExp(`^/me/verification/${uuid}/selfie$`, 'u'),
+  /^\/admin\/verifications$/u,
+  new RegExp(`^/admin/verifications/${uuid}/(selfie|decide)$`, 'u'),
+  // The platform admin closes a legacy staff account (POST; scope decided by the backend).
+  new RegExp(`^/admin/users/${uuid}/close$`, 'u'),
   // Social: bloqueos, descubrimiento, mapa y confirmaciones de lectura.
   /^\/me\/blocks$/u,
   new RegExp(`^/me/blocks/${resourceId}$`, 'u'),
@@ -245,6 +280,7 @@ const allowedPathPatterns = [
   new RegExp(`^/routines/${resourceId}/(copy|publish|unpublish|schedule|shares|structure|sync-from-source|calendar)$`, 'u'),
   new RegExp(`^/routines/${resourceId}/(shares|weeks)/${resourceId}$`, 'u'),
   new RegExp(`^/workouts/${resourceId}/apply-to-routine$`, 'u'),
+  ...businessRoutePatterns,
 ];
 
 export function resolveAllowedBackendPath(parts: string[]) {

@@ -8,6 +8,9 @@ const serverEnvSchema = z.object({
   // Opcional: sin él se usa el valor horneado en el build (ver backend-origin.ts).
   BACKEND_PUBLIC_ORIGIN: z.string().url().optional(),
   BACKEND_REQUEST_TIMEOUT_MS: z.coerce.number().int().min(1_000).max(120_000).default(15_000),
+  // Reverse proxies in front of Next that append to X-Forwarded-For. The client
+  // IP is the entry those proxies wrote, counted from the right; 0 = no proxy.
+  TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
 });
 
 const parsed = serverEnvSchema.safeParse({
@@ -15,6 +18,7 @@ const parsed = serverEnvSchema.safeParse({
   APP_URL: process.env.APP_URL,
   BACKEND_PUBLIC_ORIGIN: process.env.BACKEND_PUBLIC_ORIGIN || undefined,
   BACKEND_REQUEST_TIMEOUT_MS: process.env.BACKEND_REQUEST_TIMEOUT_MS,
+  TRUSTED_PROXY_HOPS: process.env.TRUSTED_PROXY_HOPS,
 });
 
 if (!parsed.success) {

@@ -67,6 +67,7 @@ export function ProfileViewsPanel() {
         empty={viewers.length === 0}
         emptyDescription="Cuando alguien abra tu perfil desde el descubrimiento o desde el chat, lo verás aquí."
         emptyTitle="Nadie vio tu perfil todavía"
+        error={views.error}
         errorMessage={views.isError ? views.error.message : null}
         loading={views.isLoading}
         onRetry={() => views.refetch()}

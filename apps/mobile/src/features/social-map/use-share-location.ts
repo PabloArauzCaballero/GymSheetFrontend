@@ -4,9 +4,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError } from '@gymsheet/api-client';
 import type { SocialMapCoordinates } from '@gymsheet/schemas';
 import { profileService, socialService } from '@/api/services';
+import { useConsentGate } from '@/features/consents/ask-consent';
 import { notify } from '@/notifications';
 
 const SETTINGS_KEY = ['social', 'discovery-settings'] as const;
+const LOCATION_DECLINED = 'Sin tu consentimiento de ubicación no podemos mostrarte en el mapa.';
 
 async function currentPosition(): Promise<SocialMapCoordinates | null> {
   try {
@@ -28,6 +30,7 @@ export function useShareLocation() {
   const queryClient = useQueryClient();
   const [coords, setCoords] = useState<SocialMapCoordinates | null>(null);
   const savedRef = useRef(false);
+  const consent = useConsentGate();
   const settings = useQuery({ queryKey: SETTINGS_KEY, queryFn: socialService.getDiscoverySettings });
   const sharing = Boolean(settings.data?.profileEnabled && settings.data.mapEnabled);
   const profile = useQuery({
@@ -56,8 +59,11 @@ export function useShareLocation() {
   useEffect(() => {
     if (!sharing || !coords || savedRef.current) return;
     savedRef.current = true;
-    void socialService.saveMapLocation(coords).catch(() => { savedRef.current = false; });
-  }, [coords, sharing]);
+    // Shared before consents existed: the server asks for PRECISE_LOCATION once.
+    void consent.withConsent(() => socialService.saveMapLocation(coords))
+      .then((result) => { if (!result.done) savedRef.current = false; })
+      .catch(() => { savedRef.current = false; });
+  }, [coords, sharing, consent]);
 
   const locate = useCallback(async () => {
     const permission = await Location.requestForegroundPermissionsAsync();
@@ -74,6 +80,8 @@ export function useShareLocation() {
     /** `ageJustSaved`: the birth date sheet saved it a moment ago, before `profile` refetched. */
     mutationFn: async ({ ageJustSaved = false }: { ageJustSaved?: boolean } = {}) => {
       if (missingAge && !ageJustSaved) throw new Error('Añade tu fecha de nacimiento en tu perfil para aparecer en el mapa.');
+      // The position is a sensitive datum with its own consent (ADR-0014), asked before it is sent.
+      if (!(await consent.ensure('PRECISE_LOCATION'))) throw new Error(LOCATION_DECLINED);
       const current = settings.data ?? (await socialService.getDiscoverySettings());
       const position = coords ?? (await locate());
       if (!position) throw new Error('Necesitamos tu ubicación para mostrarte en el mapa.');
@@ -83,7 +91,8 @@ export function useShareLocation() {
         mapEnabled: true,
         expectedVersion: current.version,
       });
-      await socialService.saveMapLocation(position);
+      const saved = await consent.withConsent(() => socialService.saveMapLocation(position));
+      if (!saved.done) throw new Error(LOCATION_DECLINED);
       savedRef.current = true;
     },
     onSuccess: async () => {

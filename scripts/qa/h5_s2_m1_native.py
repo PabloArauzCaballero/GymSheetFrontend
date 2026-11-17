@@ -30,7 +30,7 @@ def build_native_flow(email: str, candidate_name: str) -> str:
         f"appId: {PACKAGE}", "---",
         f"- openLink: {quote('gymsheet://profile')}",
         f"- assertVisible: {quote(email)}",
-        f"- openLink: {quote('gymsheet://descubrir')}",
+        f"- openLink: {quote('gymsheet://comunidad')}",
         "- extendedWaitUntil:", f"    visible: {quote('Descubrir')}", "    timeout: 60000",
         f"- assertVisible: {quote('Fixture QA H5.S2.M1 activa')}",
         f"- assertVisible: {quote(candidate_name)}",

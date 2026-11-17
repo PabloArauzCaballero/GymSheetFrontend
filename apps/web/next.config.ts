@@ -1,5 +1,16 @@
 import type { NextConfig } from 'next';
 
+/**
+ * Third-party origins the CSP allows only when their feature is configured:
+ * Cloudflare Turnstile on signup and Google Identity Services on login/signup.
+ * Without the env vars the policy stays exactly as it was.
+ */
+const turnstile = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? ['https://challenges.cloudflare.com'] : [];
+const googleIdentity = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? ['https://accounts.google.com/gsi/'] : [];
+// Both load a script and render their widget in an iframe from the same origin.
+const thirdPartyOrigins = [...turnstile, ...googleIdentity];
+const withSources = (base: string, extra: readonly string[]) => [base, ...extra].join(' ');
+
 const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
@@ -24,14 +35,15 @@ const securityHeaders = [
       "default-src 'self'",
       // `unsafe-inline`/`unsafe-eval`: hoy Next los necesita en desarrollo. Al
       // pasar a modo bloqueo hay que sustituirlos por nonce.
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-      "style-src 'self' 'unsafe-inline'",
+      withSources("script-src 'self' 'unsafe-inline' 'unsafe-eval'", thirdPartyOrigins),
+      withSources("style-src 'self' 'unsafe-inline'", googleIdentity),
       // `https:` cubre las teselas de OSM y las imágenes de medios remotos.
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
       // `ws:` es el recarga-en-caliente del servidor de desarrollo; `wss:` y el
       // propio origen cubren socket.io en producción.
       "connect-src 'self' ws: wss: https:",
+      ...(thirdPartyOrigins.length > 0 ? [withSources("frame-src 'self'", thirdPartyOrigins)] : []),
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

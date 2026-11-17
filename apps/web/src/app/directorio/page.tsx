@@ -1,6 +1,8 @@
+import { listingSearchParams, marketplaceQueryFromParams } from '@gymsheet/domain';
 import type { Metadata } from 'next';
+import { searchPublicListings } from '@/features/business-listings/services/marketplace-server';
 import { MarketplaceClient } from '@/features/directory/components/marketplace-client';
-import { listDirectoryEntities, listMarketplacePlans } from '@/features/directory/services/directory-server';
+import { listDirectoryEntities } from '@/features/directory/services/directory-server';
 import { PublicFooter } from '@/features/public-facilities/components/public-footer';
 import { PublicHeader } from '@/features/public-facilities/components/public-header';
 import { AmbientBackground } from '@/shared/components/background/ambient-background';
@@ -14,22 +16,20 @@ export const metadata: Metadata = {
 export default async function DirectorioPage({
   searchParams,
 }: Readonly<{
-  searchParams: Promise<{
-    category_path?: string;
-    type?: string;
-    search?: string;
-  }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }>) {
-  const params = await searchParams;
+  const raw = await searchParams;
+  const params = Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value]));
+  const query = marketplaceQueryFromParams((key) => params[key]);
 
-  const [entities, plans] = await Promise.all([
+  const [entities, page] = await Promise.all([
     listDirectoryEntities({
       categoryPath: params.category_path,
       type: params.type as Parameters<typeof listDirectoryEntities>[0]['type'],
       search: params.search,
       limit: 50,
     }),
-    listMarketplacePlans(50),
+    searchPublicListings(listingSearchParams(query)),
   ]);
 
   return (
@@ -46,7 +46,7 @@ export default async function DirectorioPage({
             Gimnasios, tiendas, coaches, planes y pases, con reseñas de atletas.
           </p>
         </header>
-        <MarketplaceClient entities={entities} plans={plans} />
+        <MarketplaceClient entities={entities} initialPage={page} initialQuery={query} />
       </main>
 
       <PublicFooter />

@@ -256,6 +256,8 @@ export type Notification = {
   leidoEn: string | null;
   enviadoEn: string | null;
   creadoEn: string;
+  /** Backend `metadata.type`: where the notice opens (null for plain notices). */
+  tipo: string | null;
 };
 
 export type NotificationPreference = {

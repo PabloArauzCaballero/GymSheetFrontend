@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { problemSchema } from '@gymsheet/schemas';
-import { ApiError, classifyStatus } from './api-error';
+import { ApiError } from './api-error';
+import { apiErrorFromResponse } from './error-response';
+import { ACCOUNT_SUSPENDED } from '@gymsheet/schemas';
 import { noopTokenProvider, type TokenProvider } from './token-provider';
 
 const successEnvelopeSchema = z.object({ ok: z.literal(true), data: z.unknown() });
@@ -31,6 +32,14 @@ export type ApiClientConfig = {
    * `refreshOnce`); la implementación no tiene que preocuparse de eso.
    */
   refreshSession?: () => Promise<boolean>;
+  /**
+   * Called when a 401 carries `code: ACCOUNT_SUSPENDED`. A suspended account
+   * is not an expired token: it is never refreshed (a new token would be
+   * refused the same way, so refreshing would loop) and `onUnauthorized` is
+   * not called. The request rejects with that `ApiError` (code and details
+   * intact) so the app can sign out and show the suspension by its code.
+   */
+  onAccountSuspended?: (error: ApiError) => void | Promise<void>;
 };
 
 export type RequestOptions = Omit<RequestInit, 'body'> & {
@@ -108,6 +117,14 @@ export function createApiClient(config: ApiClientConfig) {
    * correcta y el servidor la vuelve a rechazar, el problema no es el token y
    * reintentar otra vez sería una espiral.
    */
+  /** A suspended account's 401: reported and rethrown, never refreshed. */
+  async function rejectIfSuspended(response: Response): Promise<void> {
+    const error = await apiErrorFromResponse(response.clone());
+    if (error.code !== ACCOUNT_SUSPENDED) return;
+    await config.onAccountSuspended?.(error);
+    throw error;
+  }
+
   async function handleUnauthorized(retrying: boolean): Promise<boolean> {
     if (!retrying && (await refreshOnce())) return true;
     await config.onUnauthorized?.();
@@ -122,30 +139,6 @@ export function createApiClient(config: ApiClientConfig) {
     const token = await tokenProvider.getAccessToken();
     if (token) headers.set('Authorization', `Bearer ${token}`);
     return headers;
-  }
-
-  async function readError(response: Response): Promise<ApiError> {
-    let payload: unknown = null;
-    try {
-      payload = await response.json();
-    } catch {
-      payload = null;
-    }
-    const parsed = problemSchema.safeParse(payload);
-    const message = parsed.success
-      ? (parsed.data.detail ??
-        parsed.data.error?.message ??
-        parsed.data.title ??
-        'La operación no pudo completarse.')
-      : 'La operación no pudo completarse.';
-    return new ApiError({
-      message,
-      status: response.status,
-      ...(parsed.success && parsed.data.requestId ? { requestId: parsed.data.requestId } : {}),
-      ...(parsed.success && parsed.data.code ? { code: parsed.data.code } : {}),
-      ...(parsed.success && parsed.data.details ? { details: parsed.data.details } : {}),
-      kind: classifyStatus(response.status),
-    });
   }
 
   async function request<T>(
@@ -187,6 +180,7 @@ export function createApiClient(config: ApiClientConfig) {
         signal: controller.signal,
       });
       if (response.status === 401) {
+        await rejectIfSuspended(response);
         // El reintento se lanza **fuera** de este `try`: aquí dentro sigue vivo
         // el `AbortController` con su temporizador, y reusarlo le daría a la
         // segunda petición lo que quedara del plazo de la primera.
@@ -194,8 +188,8 @@ export function createApiClient(config: ApiClientConfig) {
           return { retry: true as const };
         }
       }
-      if (!response.ok) throw await readError(response);
-      const envelope = successEnvelopeSchema.safeParse(await response.json());
+      if (!response.ok) throw await apiErrorFromResponse(response);
+      const envelope = successEnvelopeSchema.safeParse(await readSuccessBody(response));
       if (!envelope.success) {
         throw new ApiError({
           message: 'El servidor devolvió un contrato inválido.',
@@ -300,11 +294,12 @@ export function createApiClient(config: ApiClientConfig) {
         body: form,
         signal: controller.signal,
       });
+      if (response.status === 401) await rejectIfSuspended(response);
       if (response.status === 401 && (await handleUnauthorized(retrying))) {
         return { retry: true as const };
       }
-      if (!response.ok) throw await readError(response);
-      const envelope = successEnvelopeSchema.safeParse(await response.json());
+      if (!response.ok) throw await apiErrorFromResponse(response);
+      const envelope = successEnvelopeSchema.safeParse(await readSuccessBody(response));
       if (!envelope.success) {
         throw new ApiError({
           message: 'El servidor devolvió un contrato inválido.',
@@ -345,3 +340,13 @@ export function createApiClient(config: ApiClientConfig) {
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>;
+
+/**
+ * The success body. A `204 No Content` (revoking a device, signing out the
+ * others) is a success with no data: it reads as `{ ok: true, data: null }` so
+ * every endpoint shares one envelope contract.
+ */
+async function readSuccessBody(response: Response): Promise<unknown> {
+  if (response.status === 204) return { ok: true, data: null };
+  return response.json();
+}

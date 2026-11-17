@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import type { FitnessGoal } from '@gymsheet/types';
 import { Ionicons } from '@expo/vector-icons';
-import { equipmentOptions, goalOptions, preferenceOptions } from '@gymsheet/domain';
+import {
+  equipmentOptions,
+  goalOptions,
+  onboardingFlowSteps,
+  preferenceOptions,
+  type OnboardingFlowStepKey,
+} from '@gymsheet/domain';
 import { onboardingService } from '@/api/services';
 import { BackLink } from '@/components/nav';
-import { Checkbox } from '@/components/checkbox';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { numericInputProps } from '@/components/keyboard';
 import { Card, ScrollScreen } from '@/components/layout';
@@ -23,15 +27,24 @@ import {
 } from '@/features/first-impression/copy';
 import { shortName } from '@/lib/format';
 import { notify } from '@/notifications';
+import { onboardingQueryKey } from '@/features/onboarding-guard/onboarding-gate';
+import { OnboardingConsents, preferencesConsentsReady } from '@/features/consents/onboarding-consents';
+import { consentVersionOf } from '@/features/consents/consent-service';
 import { useAuthStore } from '@/state/auth-store';
 import { accentPolicy, colors, fontSizes, iconSizes, minTouchTarget, radii, semibold, spacing } from '@/theme';
 
-const STEPS: readonly FlowStep[] = [
-  { label: 'Objetivo', icon: 'flag-outline' },
-  { label: 'Medidas', icon: 'barbell-outline' },
-  { label: 'Entreno', icon: 'options-outline' },
-  { label: 'Material', icon: 'construct-outline' },
-];
+// Steps come from `@gymsheet/domain` so signup's «N pasos» always matches this rail.
+const STEP_ICON: Record<OnboardingFlowStepKey, keyof typeof Ionicons.glyphMap> = {
+  goal: 'flag-outline',
+  profile: 'barbell-outline',
+  preferences: 'options-outline',
+  equipment: 'construct-outline',
+};
+const STEPS: readonly FlowStep[] = onboardingFlowSteps.map((flowStep) => ({
+  label: flowStep.label,
+  icon: STEP_ICON[flowStep.key],
+}));
+const LAST_STEP = STEPS.length - 1;
 
 const preferenceAlreadyAsked: Partial<Record<FitnessGoal, string>> = {
   GAIN_MUSCLE: 'Hipertrofia',
@@ -111,10 +124,10 @@ function ChoiceGroup({
 }
 
 export default function OnboardingScreen() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const principal = useAuthStore((state) => state.principal);
-  const state = useQuery({ queryKey: ['onboarding', 'me'], queryFn: () => onboardingService.get() });
+  const queryKey = onboardingQueryKey(principal?.id);
+  const state = useQuery({ queryKey, queryFn: () => onboardingService.get() });
 
   const [step, setStep] = useState(0);
   const [goal, setGoal] = useState<FitnessGoal>('GENERAL_HEALTH');
@@ -137,7 +150,7 @@ export default function OnboardingScreen() {
   // esta pantalla no debe reiniciar el cuestionario desde cero.
   useEffect(() => {
     if (!state.data) return;
-    setStep(Math.min(3, state.data.currentStep - 1));
+    setStep(Math.min(LAST_STEP, state.data.currentStep - 1));
     if (state.data.primaryGoal) setGoal(state.data.primaryGoal);
     setWeightUnit(state.data.weightUnit);
     setHeightUnit(state.data.heightUnit);
@@ -174,13 +187,14 @@ export default function OnboardingScreen() {
           trainingPreferences: preferences,
           physicalConsiderations: considerations || null,
           consentHealth,
+          consentHealthVersion: consentHealth ? await consentVersionOf(queryClient, 'HEALTH') : undefined,
           consentData,
         });
       return onboardingService.saveEquipment(trainingLocation === 'GYM' ? [] : equipment);
     },
     onSuccess: (result) => {
-      queryClient.setQueryData(['onboarding', 'me'], result);
-      if (step < 3) setStep((current) => current + 1);
+      queryClient.setQueryData(queryKey, result);
+      if (step < LAST_STEP) setStep((current) => current + 1);
       else notify.success('Progreso guardado.');
     },
     onError: (error: Error) => notify.error(error),
@@ -188,13 +202,15 @@ export default function OnboardingScreen() {
 
   const complete = useMutation({
     mutationFn: () => onboardingService.complete(),
-    onSuccess: () => {
+    onSuccess: (result) => {
       // Lo que se acaba de contar cambia el perfil y las recomendaciones: sin
       // esto «Para ti» seguía pidiendo «Cuéntanos tu objetivo» varios minutos.
       void queryClient.invalidateQueries({ queryKey: ['profile'] });
       void queryClient.invalidateQueries({ queryKey: ['routines'] });
       notify.success(onboardingDone);
-      router.replace('/comunidad');
+      // No redirect here: with COMPLETED in the cache the onboarding guard
+      // moves the person to Comunidad.
+      queryClient.setQueryData(queryKey, result);
     },
     onError: (error: Error) => notify.error(error),
   });
@@ -219,7 +235,7 @@ export default function OnboardingScreen() {
   const weightValid = Number.isFinite(Number(weight.replace(',', '.'))) && Number(weight) > 0;
   const heightValid = Number.isFinite(Number(height.replace(',', '.'))) && Number(height) > 0;
   const stepValid = step !== 1 || (weightValid && heightValid);
-  const consentGiven = step !== 2 || (consentHealth && consentData);
+  const consentGiven = step !== 2 || preferencesConsentsReady(considerations, consentHealth, consentData);
 
   // Un protagonista por paso: la pregunta. El último no pregunta, celebra, y
   // apunta a lo que viene después —elegir la rutina del primer entreno—.
@@ -237,11 +253,11 @@ export default function OnboardingScreen() {
       <View key={step} style={{ gap: spacing.sm }}>
         <EnterUp index={0}>
           <AppText tone="muted" variant="footnote">
-            {`Paso ${step + 1} de 4 · Se guarda en tu cuenta`}
+            {`Paso ${step + 1} de ${STEPS.length} · Se guarda en tu cuenta`}
           </AppText>
         </EnterUp>
         <EnterUp index={1} style={{ gap: spacing.sm }}>
-          {step === 3 ? (
+          {step === LAST_STEP ? (
             <Ionicons
               accessibilityElementsHidden
               color={accentPolicy.ink}
@@ -393,20 +409,17 @@ export default function OnboardingScreen() {
               onChangeText={setConsiderations}
               value={considerations}
             />
-            <Checkbox
-              checked={consentHealth}
-              label="Confirmo que la información física es correcta y puedo actualizarla después."
-              onChange={setConsentHealth}
-            />
-            <Checkbox
-              checked={consentData}
-              label="Acepto el uso de estos datos para personalizar mi entrenamiento."
-              onChange={setConsentData}
+            <OnboardingConsents
+              consentData={consentData}
+              consentHealth={consentHealth}
+              considerations={considerations}
+              onConsentData={setConsentData}
+              onConsentHealth={setConsentHealth}
             />
           </View>
         ) : null}
 
-        {step === 3 ? (
+        {step === LAST_STEP ? (
           trainingLocation === 'GYM' ? (
             <View style={{ gap: spacing.sm }}>
               <Text style={{ color: colors.text, fontSize: fontSizes.md }}>
@@ -435,7 +448,7 @@ export default function OnboardingScreen() {
           )
         ) : null}
 
-        {step < 3 ? (
+        {step < LAST_STEP ? (
           <Button
             disabled={!stepValid || !consentGiven}
             icon="arrow-forward"

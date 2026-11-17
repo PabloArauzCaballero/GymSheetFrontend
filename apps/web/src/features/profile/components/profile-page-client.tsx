@@ -1,6 +1,6 @@
 'use client';
 
-import { completionMessage, profileCompletion, proudStat, roleLabel } from '@gymsheet/domain';
+import { completionMessage, offersConocer, profileCompletion, proudStat, roleLabel } from '@gymsheet/domain';
 import { useQuery } from '@tanstack/react-query';
 import {
   Bell,
@@ -25,9 +25,11 @@ import { profileService } from '@/features/profile/services/profile-service';
 import { ProfilePhotoGallery } from '@/features/profile/components/profile-photo-gallery';
 import { GenderPreferenceField } from '@/features/progression/components/gender-preference-field';
 import { progressionService } from '@/features/progression/services/progression-service';
+import { ConocerProfileSection } from '@/features/social/components/conocer/conocer-profile-section';
 import { DiscoveryPreferencesCard } from '@/features/social/components/discovery-preferences-card';
 import { SocialDiscoverySettingsCard } from '@/features/social/components/social-discovery-settings-card';
 import { SocialStatusCard } from '@/features/social/components/social-status-card';
+import { VerificationCta } from '@/features/verification/components/verification-cta';
 import { WeightIncrementField } from '@/features/workouts/components/weight-increment-field';
 import { ApiError } from '@/shared/api/api-error';
 import { goalLabels } from '@/features/profile/components/profile-form-schema';
@@ -58,7 +60,9 @@ const MEMBERSHIP_BADGE = {
  * cuenta). El correo es privado: va al pie, no al héroe. Los datos se editan
  * en `/profile/editar`.
  */
-export function ProfilePageClient() {
+export function ProfilePageClient({
+  offerSelfieVerification = false,
+}: Readonly<{ offerSelfieVerification?: boolean }> = {}) {
   const user = useQuery({ queryKey: ['user', 'me'], queryFn: profileService.getUser });
   const profile = useQuery({
     queryKey: queryKeys.profile,
@@ -215,6 +219,7 @@ export function ProfilePageClient() {
             </div>
           ) : null}
 
+          <VerificationCta enabled={offerSelfieVerification} />
           <Section title="Tu actividad">
             <RowGroup>
               {[
@@ -276,6 +281,7 @@ export function ProfilePageClient() {
           </div>
           <SocialDiscoverySettingsCard />
           <DiscoveryPreferencesCard />
+          {offersConocer(me?.rol) ? <ConocerProfileSection /> : null}
         </div>
       </div>
 

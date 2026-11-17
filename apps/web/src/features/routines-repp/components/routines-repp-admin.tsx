@@ -27,11 +27,14 @@ type OfficialFilter = 'todas' | 'oficiales' | 'socios';
 /**
  * El catálogo de la plataforma: qué es oficial y qué no.
  *
- * Sólo `SYSTEM_ADMIN` llega aquí (lo decide el layout de `/sistema` y, de
+ * Sólo `SYSTEM_ADMIN` escribe aquí (lo decide el layout de `/sistema` y, de
  * verdad, el backend con `OFFICIAL_FORBIDDEN`). Sin esta pantalla, la única
  * manera de publicar una rutina oficial sería tocar la base a mano.
+ *
+ * `readOnly` is the REPP moderation team's review (ADR-0018): it lists hidden
+ * and reported routines but cannot create, mark official or read metrics.
  */
-export function RoutinesReppAdmin() {
+export function RoutinesReppAdmin({ readOnly = false }: Readonly<{ readOnly?: boolean }>) {
   const [search, setSearch] = useState('');
   const [official, setOfficial] = useState<OfficialFilter>('todas');
   const [moderation, setModeration] = useState<RoutineModerationState | ''>('');
@@ -86,13 +89,19 @@ export function RoutinesReppAdmin() {
     <div className="flex flex-col gap-6">
       <PageHeader
         actions={
-          <Button onClick={() => setCreating(true)} variant="primary">
-            <Plus aria-hidden className="size-4" />
-            Crear oficial
-          </Button>
+          readOnly ? undefined : (
+            <Button onClick={() => setCreating(true)} variant="primary">
+              <Plus aria-hidden className="size-4" />
+              Crear oficial
+            </Button>
+          )
         }
-        description="Qué rutinas muestra la plataforma como «Recomendada por REPP». Cada cambio queda en la auditoría."
-        title="Rutinas REPP"
+        description={
+          readOnly
+            ? 'Rutinas públicas de todos los gimnasios: cuáles están ocultas y cuáles tienen denuncias abiertas.'
+            : 'Qué rutinas muestra la plataforma como «Recomendada por REPP». Cada cambio queda en la auditoría.'
+        }
+        title={readOnly ? 'Rutinas denunciadas' : 'Rutinas REPP'}
       />
 
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_200px_240px]">
@@ -138,7 +147,11 @@ export function RoutinesReppAdmin() {
         <ErrorPanel message={list.error.message} onRetry={() => void list.refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState
-          description="Ninguna rutina coincide con estos filtros. Crea una oficial o cambia la búsqueda."
+          description={
+            readOnly
+              ? 'Ninguna rutina coincide con estos filtros. Cambia la búsqueda.'
+              : 'Ninguna rutina coincide con estos filtros. Crea una oficial o cambia la búsqueda.'
+          }
           icon={<Award className="size-6" />}
           title="No hay rutinas que mostrar"
         />
@@ -150,8 +163,12 @@ export function RoutinesReppAdmin() {
                 <OfficialRoutineRow
                   busy={toggle.isPending && toggle.variables?.id === routine.id}
                   key={routine.id}
-                  onInsights={() => setInsightsOf(routine)}
-                  onToggleOfficial={() => void askAndToggle(routine)}
+                  {...(readOnly
+                    ? {}
+                    : {
+                        onInsights: () => setInsightsOf(routine),
+                        onToggleOfficial: () => void askAndToggle(routine),
+                      })}
                   routine={routine}
                 />
               ))}

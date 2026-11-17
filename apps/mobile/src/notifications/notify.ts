@@ -6,6 +6,7 @@ import {
 } from '@gymsheet/notifications';
 import { ApiError } from '@gymsheet/api-client';
 import { consoleLogger } from '@gymsheet/observability';
+import { isEmailVerificationRequired } from '@/features/email-verification/email-verification-logic';
 
 /**
  * The visible toast stack. Two at a time: a phone screen has no room for the
@@ -34,5 +35,19 @@ setTelemetrySink((event) => {
   }
 });
 
+/**
+ * Like the shared engine, plus one rule: a 403 EMAIL_VERIFICATION_REQUIRED is
+ * never toasted. The banner and the inline state already say what to do, the
+ * same way the shared engine stays quiet on the legal block (428). Only thrown
+ * errors carry the code; `notify.error(error.message)` call sites cannot be told
+ * apart, which is why the rule belongs in `@gymsheet/notifications` eventually.
+ */
+class MobileNotificationEngine extends NotificationEngine {
+  override error(...args: Parameters<NotificationEngine['error']>) {
+    if (isEmailVerificationRequired(args[0])) return undefined;
+    return super.error(...args);
+  }
+}
+
 /** Canonical singleton used across the mobile app. */
-export const notify = new NotificationEngine(toastQueue, nativePolicy);
+export const notify = new MobileNotificationEngine(toastQueue, nativePolicy);

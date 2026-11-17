@@ -1,17 +1,13 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { chatService } from '@/features/chat/services/chat-service';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { interactionKeys } from '@/features/interactions/services/interactions-service';
 import { discoveryService } from '@/features/social/services/discovery-service';
 import { directoryKeys } from '@/features/social/services/directory-keys';
 import { needsDiscoveryPreferences } from '@gymsheet/domain';
 import { ApiError } from '@/shared/api/api-error';
-import type { GymDirectoryEntry, SwipeDirection, UndoSwipeResult } from '@/shared/api/schemas';
+import type { DiscoveryCard, SwipeDirection, UndoSwipeResult } from '@/shared/api/schemas';
 import { queryKeys } from '@/shared/api/query-keys';
 import { Button } from '@/shared/components/ui/button';
 import { notify } from '@/shared/notifications';
@@ -20,48 +16,40 @@ import { DirectorySwipeDeck } from './directory-swipe-deck';
 import { MatchCelebration } from './match-celebration';
 import { MemberDetailSheet } from './member-detail-sheet';
 
-type Decision = { entry: GymDirectoryEntry; direction: SwipeDirection; filterKey: string };
-type FilteredEntry = { entry: GymDirectoryEntry; filterKey: string };
+type Decision = { entry: DiscoveryCard; direction: SwipeDirection; filterKey: string };
+/**
+ * Whether the saved discovery preferences exist (from `/me/discovery/readiness`).
+ * Without them the API refuses the deck (400 `DISCOVERY_PREFERENCES_REQUIRED`), so it is not requested.
+ */
+export type DeckPreferencesState = 'checking' | 'missing' | 'ready';
+type FilteredEntry = { entry: DiscoveryCard; filterKey: string };
 
 /** Cartas por reparto. El backend admite hasta 30; diez llenan una sesión corta. */
 const DECK_SIZE = 10;
 
 /**
- * La baraja de descubrimiento, a pantalla completa.
- *
- * El directorio de Comunidad sirve para recorrer el gimnasio; esto es lo
- * contrario — una sola carta, dos salidas, y la siguiente sólo aparece cuando
- * la anterior se ha resuelto. Por eso es un destino propio y no una pestaña:
- * ocupa el ancho entero, como en el móvil, en vez de quedarse en un rectángulo
- * pequeño flotando dentro de una página con cabecera y filtros.
+ * La baraja de descubrimiento, embebida en Comunidad como en el móvil.
  *
  * La cola visible se mantiene en local para que la tarjeta salga en el mismo
  * fotograma del gesto, pero la verdad está en el servidor: cada decisión es un
  * `POST` y, si falla, la tarjeta vuelve a su sitio en vez de desaparecer en
  * silencio.
+ *
+ * Who appears (gender, age, intent) comes from the saved discovery
+ * preferences; only goal and branch are session filters.
  */
 export function DescubrirClient({
-  genero,
   objetivo,
   sucursalId,
-  embedded = false,
+  preferencesState = 'ready',
 }: Readonly<{
-  genero: string;
   objetivo: string;
   sucursalId: string;
-  /** Dentro de Comunidad (como en el móvil): sin cabecera propia ni «volver». */
-  embedded?: boolean;
+  preferencesState?: DeckPreferencesState;
 }>) {
   const queryClient = useQueryClient();
-  const router = useRouter();
-  // El rayo de la botonera: chat directo con la persona de arriba, como en el móvil.
-  const message = useMutation({
-    mutationFn: (entry: GymDirectoryEntry) => chatService.startConversation(entry.userId),
-    onSuccess: (conversation) => router.push(`/chat/${conversation.conversationId}`),
-    onError: (error: Error) => notify.error(error),
-  });
-  const [queue, setQueue] = useState<GymDirectoryEntry[]>([]);
-  const [history, setHistory] = useState<GymDirectoryEntry[]>([]);
+  const [queue, setQueue] = useState<DiscoveryCard[]>([]);
+  const [history, setHistory] = useState<DiscoveryCard[]>([]);
   const [match, setMatch] = useState<FilteredEntry | null>(null);
   const [detail, setDetail] = useState<FilteredEntry | null>(null);
 
@@ -69,12 +57,11 @@ export function DescubrirClient({
     () => ({
       objetivo: objetivo || undefined,
       sucursalId: sucursalId || undefined,
-      genero: genero || undefined,
       limit: DECK_SIZE,
     }),
-    [genero, objetivo, sucursalId],
+    [objetivo, sucursalId],
   );
-  const filterKey = `${objetivo}|${sucursalId}|${genero}`;
+  const filterKey = `${objetivo}|${sucursalId}`;
   const activeFilterKeyRef = useRef(filterKey);
   useLayoutEffect(() => {
     activeFilterKeyRef.current = filterKey;
@@ -90,13 +77,14 @@ export function DescubrirClient({
     // servidor no considera candidatas y rechazaría con un conflicto.
     gcTime: 0,
     staleTime: 0,
+    enabled: preferencesState === 'ready',
   });
 
   // Sincroniza la cola con la baraja recién llegada ajustando estado durante el
   // render (patrón admitido por React, el mismo que usa `DomainImage`). Un
   // `useEffect` pintaría un fotograma con la cola anterior justo después de
   // cambiar de filtro, que es cuando más se nota.
-  const [syncedDeck, setSyncedDeck] = useState<GymDirectoryEntry[] | null>(null);
+  const [syncedDeck, setSyncedDeck] = useState<DiscoveryCard[] | null>(null);
   if (deck.data && deck.data !== syncedDeck) {
     setSyncedDeck(deck.data);
     setQueue(deck.data);
@@ -189,27 +177,12 @@ export function DescubrirClient({
 
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
-      {embedded ? null : (
-      <header className="grid gap-2">
-        <Link
-          className="inline-flex w-fit items-center gap-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
-          href="/comunidad"
-        >
-          <ArrowLeft aria-hidden className="size-4" />
-          Comunidad
-        </Link>
-        <h1 className="text-3xl font-semibold tracking-[-0.03em]">Descubrir</h1>
-        {/* Una línea, no dos: cada renglón de aquí arriba se lo quita a la
-            carta, que es lo único que la pantalla necesita enseñar. */}
-        <p className="text-sm text-[var(--text-muted)]">
-          Arrastra a la derecha si te interesa, a la izquierda si no.
-        </p>
-      </header>
-      )}
-
       <DeckSurface
         deckError={deck.isError ? deck.error.message : null}
-        needsPreferences={deck.isError && needsDiscoveryPreferences(deck.error)}
+        deckErrorCause={deck.error}
+        needsPreferences={
+          preferencesState === 'missing' || (deck.isError && needsDiscoveryPreferences(deck.error))
+        }
         empty={visibleQueue.length === 0}
         emptyAction={
           <div className="flex flex-wrap justify-center gap-2">
@@ -227,7 +200,7 @@ export function DescubrirClient({
             </Button>
           </div>
         }
-        loading={deck.isLoading}
+        loading={preferencesState === 'checking' || deck.isLoading}
         onRefetch={() => deck.refetch()}
       >
         <DirectorySwipeDeck
@@ -236,8 +209,6 @@ export function DescubrirClient({
           entries={visibleQueue}
           onDecide={(entry, direction) => decide.mutate({ entry, direction, filterKey })}
           onInfo={(entry) => setDetail({ entry, filterKey })}
-          onMessage={(entry) => message.mutate(entry)}
-          messagePending={message.isPending}
           onUndo={() => undo.mutate({ filterKey })}
           undoPending={undo.isPending}
         />

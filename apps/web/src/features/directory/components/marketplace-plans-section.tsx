@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import type { EntityPaymentConfig, EntityPlan } from '@gymsheet/schemas';
+import type { PublicPaymentConfig, EntityPlan } from '@gymsheet/schemas';
 import { OrderCheckoutModal } from './order-checkout-modal';
 
 interface MarketplacePlansSectionProps {
   plans: EntityPlan[];
-  paymentConfig: EntityPaymentConfig | null;
+  paymentConfig: PublicPaymentConfig | null;
   entityId: string;
   entityName: string;
 }

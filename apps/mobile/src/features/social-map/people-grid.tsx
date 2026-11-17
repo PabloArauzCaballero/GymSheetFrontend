@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { formatDistanceKm } from '@gymsheet/domain';
 import type { SocialMapNearbyPerson } from '@gymsheet/schemas';
 import { MediaImage } from '@/components/media-image';
 import { PressableScale } from '@/components/motion';
@@ -10,18 +11,13 @@ import { colors, fontSizes, heroScrim, mediaChip, radii, semibold, spacing, stag
 const COLUMNS = 3;
 const GAP = spacing.xxs;
 
-function distanceLabel(km: number | null): string | null {
-  if (km === null) return null;
-  return km <= 1 ? 'a < 1 km' : `a ${km} km`;
-}
-
 function PersonTile({ person, size, index, onPress }: {
   person: SocialMapNearbyPerson;
   size: number;
   index: number;
   onPress: () => void;
 }) {
-  const distance = distanceLabel(person.distanceKm);
+  const distance = formatDistanceKm(person.distanceKm);
   const label = [person.displayName, person.age ? `${person.age} años` : null, distance].filter(Boolean).join(', ');
   return (
     <Animated.View entering={FadeIn.delay(Math.min(index, 12) * stagger).duration(220)}>

@@ -17,6 +17,8 @@ import { Select } from '@/shared/components/ui/select';
 import { equipmentOptions, goalOptions, preferenceOptions } from '../onboarding-options';
 import { onboardingService } from '../services/onboarding-service';
 import { ChoiceGroup } from './choice-group';
+import { OnboardingConsents } from './onboarding-consents';
+import { useHealthConsentVersion } from '../hooks/use-health-consent-version';
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -52,6 +54,9 @@ export function OnboardingForm({ initial }: Readonly<{ initial: OnboardingState 
   const [considerations, setConsiderations] = useState(initial.physicalConsiderations ?? '');
   const [consentHealth, setConsentHealth] = useState(initial.consentHealth);
   const [consentData, setConsentData] = useState(initial.consentData);
+  // Health consent is optional; it is only required once a health datum is written.
+  const healthNeeded = considerations.trim().length > 0;
+  const healthVersion = useHealthConsentVersion();
   const save = useMutation({
     mutationFn: async () => {
       if (step === 1) return onboardingService.saveGoals(goal);
@@ -70,8 +75,9 @@ export function OnboardingForm({ initial }: Readonly<{ initial: OnboardingState 
           weeklyFrequency,
           trainingLocation,
           trainingPreferences: preferences,
-          physicalConsiderations: considerations || null,
+          physicalConsiderations: considerations.trim() || null,
           consentHealth,
+          ...(consentHealth && healthVersion.version ? { consentHealthVersion: healthVersion.version } : {}),
           consentData,
         });
       return onboardingService.saveEquipment(equipment);
@@ -81,13 +87,14 @@ export function OnboardingForm({ initial }: Readonly<{ initial: OnboardingState 
       if (step < 4) setStep(step + 1);
       notify.success('Progreso guardado.');
     },
-    onError: (error: Error) => notify.error(error),
+    onError: (error: Error) => healthVersion.handleError(error),
   });
   const complete = useMutation({
     mutationFn: onboardingService.complete,
     onSuccess: async (result) => {
       queryClient.setQueryData(queryKeys.onboarding, result);
-      router.replace('/comunidad');
+      // New members continue into the optional "Conocer" step while it is pending.
+      router.replace(result.socialStep === 'PENDING' ? '/onboarding/conocer' : '/comunidad');
       router.refresh();
     },
     onError: (error: Error) => notify.error(error),
@@ -230,22 +237,13 @@ export function OnboardingForm({ initial }: Readonly<{ initial: OnboardingState 
                   value={considerations}
                 />
               </Field>
-              <label className="flex gap-3 text-sm">
-                <input
-                  checked={consentHealth}
-                  onChange={(event) => setConsentHealth(event.target.checked)}
-                  type="checkbox"
-                />
-                Confirmo que la información física es correcta y puedo actualizarla después.
-              </label>
-              <label className="flex gap-3 text-sm">
-                <input
-                  checked={consentData}
-                  onChange={(event) => setConsentData(event.target.checked)}
-                  type="checkbox"
-                />
-                Acepto el uso de estos datos para personalizar mi entrenamiento.
-              </label>
+              <OnboardingConsents
+                consentData={consentData}
+                consentHealth={consentHealth}
+                healthNeeded={healthNeeded}
+                onDataChange={setConsentData}
+                onHealthChange={setConsentHealth}
+              />
             </div>
           ) : null}
           {step === 4 ? (
@@ -266,7 +264,7 @@ export function OnboardingForm({ initial }: Readonly<{ initial: OnboardingState 
             </Button>
             {step < 4 ? (
               <Button
-                disabled={!valid || (step === 3 && (!consentData || !consentHealth))}
+                disabled={!valid || (step === 3 && (!consentData || (healthNeeded && !consentHealth)))}
                 loading={save.isPending}
                 onClick={() => save.mutate()}
                 variant="primary"

@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { chatMessageSchema, readReceiptSettingsSchema, setDisappearingMessagesResponseSchema, setMessageReactionResponseSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema, musicPlaylistSchema, musicPlaylistPageSchema } from '@gymsheet/schemas';
+import { chatMessageSchema, readReceiptSettingsSchema, setDisappearingMessagesResponseSchema, setMessageReactionResponseSchema, routineRecommendationSchema, socialDiscoverySettingsSchema, discoveryPreferencesSchema, socialMapAreasSchema, socialMapPeopleSchema, socialMapGymsSchema, socialMapCitiesSchema, socialMapNearbySchema, discoveryDeckSchema, musicPlaylistSchema, musicPlaylistPageSchema } from '@gymsheet/schemas';
 import type { RoutineVisibility } from '@gymsheet/types';
-import type { MusicVisibility, SocialMapBounds, SocialMapCoordinates } from '@gymsheet/schemas';
+import type { DiscoveryIntent, MusicVisibility, SocialMapBounds, SocialMapCoordinates } from '@gymsheet/schemas';
 import {
   activationRequestSchema,
   bodyMeasurementSchema,
@@ -56,7 +56,7 @@ import {
   entityReviewsResponseSchema,
   reviewItemSchema,
   entityPlanSchema,
-  entityPaymentConfigSchema,
+  publicPaymentConfigSchema,
   paymentOrderSchema,
   restSettingsResultSchema,
   skippedSetSchema,
@@ -177,6 +177,7 @@ export const onboardingService = {
     trainingPreferences: string[];
     physicalConsiderations?: string | null;
     consentHealth: boolean;
+    consentHealthVersion?: string;
     consentData: boolean;
   }) =>
     apiClient.request('/me/onboarding/preferences', onboardingSchema, {
@@ -694,7 +695,7 @@ updateDiscoverySettings: (input: {
   }) => apiClient.request('/me/social-discovery-settings', socialDiscoverySettingsSchema, { method: 'PATCH', body: input }),
 getDiscoveryPreferences: () => apiClient.request('/me/discovery/preferences', discoveryPreferencesSchema, { method: 'GET' }),
 updateDiscoveryPreferences: (input: {
-    genders: ('MALE' | 'FEMALE')[]; intents: ('TRAINING' | 'FRIENDSHIP' | 'DATING')[];
+    genders: ('MALE' | 'FEMALE')[]; intents: DiscoveryIntent[];
     minAge: number; maxAge: number; radiusKm: number; flexibleAge: boolean;
     flexibleDistance: boolean; expectedVersion: number;
   }) => apiClient.request('/me/discovery/preferences', discoveryPreferencesSchema, { method: 'PUT', body: input }),
@@ -737,7 +738,7 @@ export const discoveryService = {
   deck: (filters: DirectoryFilters = {}) =>
     apiClient.request(
       `/me/discovery/deck?${socialQueryString(filters)}`,
-      z.array(gymDirectoryEntrySchema),
+      discoveryDeckSchema,
       { method: 'GET' },
     ),
   /** «Me gusta» mutuo = match automático: la respuesta llega con `matched: true`. */
@@ -1122,24 +1123,14 @@ export const directoryService = {
 
 
 export const directoryPaymentsService = {
-  allMarketplacePlans: (params: { type?: string; limit?: number } = {}) => {
-    const q = new URLSearchParams();
-    if (params.type) q.append('type', params.type);
-    if (params.limit) q.append('limit', String(params.limit));
-    const qs = q.toString();
-    return apiClient.request(`/public/directory/plans${qs ? `?${qs}` : ''}`, z.array(entityPlanSchema));
-  },
-
+  // The marketplace-wide offers moved to `GET /public/directory/listings` (franja 8c, ADR-0022).
   listPlans: (entityId: string) =>
     apiClient.request(`/public/directory/entities/${entityId}/plans`, z.array(entityPlanSchema)),
-
-  getPlan: (planId: string) =>
-    apiClient.request(`/public/directory/plans/${planId}`, entityPlanSchema),
 
   getPaymentConfig: (entityId: string) =>
     apiClient.request(
       `/public/directory/entities/${entityId}/payment-config`,
-      entityPaymentConfigSchema.nullable()
+      publicPaymentConfigSchema.nullable()
     ),
 
   createOrder: (input: { planId: string; athleteNotes?: string }) =>
@@ -1147,7 +1138,7 @@ export const directoryPaymentsService = {
       '/directory/payments/orders',
       z.object({
         order: paymentOrderSchema,
-        paymentConfig: entityPaymentConfigSchema.nullable(),
+        paymentConfig: publicPaymentConfigSchema.nullable(),
       }),
       {
         method: 'POST',

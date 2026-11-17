@@ -23,6 +23,12 @@ export const genderOptions: ReadonlyArray<{ value: UserGender | ''; label: strin
   { value: 'FEMALE', label: 'Mujer' },
 ];
 
+/** Sex at signup: mandatory, two options (product decision 16/11/2026). */
+export const signupSexOptions: ReadonlyArray<{ value: 'MALE' | 'FEMALE'; label: string }> = [
+  { value: 'MALE', label: 'Hombre' },
+  { value: 'FEMALE', label: 'Mujer' },
+];
+
 /**
  * Lo que dice la primera pantalla de acceso (#124 ASO: continuidad entre la
  * ficha de la tienda y lo primero que se ve). Una frase dice qué es la app; la
@@ -62,8 +68,12 @@ export const authCopy = {
     password: { label: 'Contraseña', placeholder: 'Mínimo 8 caracteres' },
     confirmation: { label: 'Confirmar contraseña', placeholder: 'Repite la contraseña' },
     gender: {
-      label: 'Género (opcional)',
-      hint: 'Solo se usa para elegir los rangos e insignias con los que te habla la app. Puedes cambiarlo o dejarlo en blanco.',
+      label: 'Sexo',
+      hint: 'Lo usamos para tus rangos e insignias y para las preferencias de Conocer.',
+    },
+    birthDate: {
+      label: 'Fecha de nacimiento',
+      hint: 'Tienes que tener 18 años o más. Calculamos tu edad a partir de esta fecha.',
     },
   },
   showPassword: 'Mostrar contraseña',
@@ -73,15 +83,30 @@ export const authCopy = {
     termsLabel: 'términos y condiciones',
     connector: 'y la',
     privacyLabel: 'política de privacidad',
+    /** Right after the privacy link: the retention annex is part of that policy. */
+    retentionNote: '(con su anexo de retención de datos)',
+    /**
+     * «Acepto los términos y condiciones, la política de privacidad (con su
+     * anexo de retención de datos) y las normas de la comunidad.»
+     */
+    listSeparator: ', la',
+    rulesConnector: 'y las',
+    rulesLabel: 'normas de la comunidad',
     /**
      * La misma frase sin enlaces dentro. La web la compone en piezas porque
      * puede incrustar dos enlaces en mitad del texto; el móvil no —una casilla
      * de React Native lleva una etiqueta de texto plano— y ahí los documentos
      * se abren desde dos enlaces aparte, bajo la casilla.
      */
-    plain: 'Acepto los términos y condiciones y la política de privacidad',
+    plain:
+      'Acepto los términos y condiciones, la política de privacidad (con su anexo de retención de datos) y las normas de la comunidad.',
+    /** Under the checkbox: the sensitive data are never part of this acceptance. */
+    separateConsentsNote:
+      'Tu salud, tu orientación, tu selfie y tu ubicación precisa se piden aparte, solo si usas esas funciones.',
     readTerms: 'Leer términos',
     readPrivacy: 'Leer privacidad',
+    readRules: 'Leer normas',
+    required: 'Acepta los términos, la privacidad y las normas para seguir.',
   },
 } as const;
 
@@ -93,7 +118,7 @@ export const authCopy = {
  * expirado») es falso cuando lo que ha ocurrido es que la contraseña está mal,
  * y nadie que acaba de escribirla entiende que le digan que expiró.
  */
-export const authErrors = {
+const authErrors = {
   invalidCredentials: 'Correo o contraseña incorrectos.',
   loginFailed: 'No se pudo iniciar sesión.',
   registerFailed: 'No se pudo crear la cuenta.',
@@ -101,19 +126,17 @@ export const authErrors = {
 } as const;
 
 /**
- * A dónde va cada plataforma cuando la sesión queda establecida.
+ * Where each platform lands once a session is established.
  *
- * Las rutas no coinciden literalmente —la web usa `/dashboard` y el móvil
- * `/home` para la misma pantalla— pero **la intención sí** debe coincidir, y es
- * lo que se declara aquí: tras un alta se va a completar el onboarding, tras un
- * acceso se va a Comunidad, la primera pestaña (12/11/2026). Antes el acceso
- * llevaba a Inicio, que ya no es pestaña: se entraba por una pantalla a la que
- * luego no había forma de volver, y al reabrir la app se caía en Comunidad.
- * El personal del gimnasio no se queda ahí: `/comunidad` lo manda a su panel.
+ * After a login both go to Comunidad, the first tab (12/11/2026). Mobile has no
+ * `afterRegister`: its onboarding guard (`src/features/onboarding-guard`) is the
+ * single source of truth and sends any CLIENTE whose onboarding is not COMPLETED
+ * to `/onboarding`, whatever screen the session started on. Staff are never sent
+ * there.
  */
 export const authDestination = {
   web: { afterLogin: '/comunidad', afterRegister: '/onboarding' },
-  mobile: { afterLogin: '/comunidad', afterRegister: '/onboarding' },
+  mobile: { afterLogin: '/comunidad' },
 } as const;
 
 /**
@@ -158,6 +181,21 @@ export const onboardingSteps = [
     subline: 'Tu nivel, tus días y dónde lo haces.',
   },
 ] as const;
+
+/**
+ * The real steps of the onboarding flow, in order: goal, measurements, training
+ * and equipment. `onboardingSteps` above is only the question copy of the first
+ * three; anything that tells people how long onboarding is, or draws its
+ * progress rail, must count this list so every screen agrees.
+ */
+export const onboardingFlowSteps = [
+  { key: 'goal', label: 'Objetivo' },
+  { key: 'profile', label: 'Medidas' },
+  { key: 'preferences', label: 'Entreno' },
+  { key: 'equipment', label: 'Material' },
+] as const;
+
+export type OnboardingFlowStepKey = (typeof onboardingFlowSteps)[number]['key'];
 
 export function onboardingFinish(firstName: string, atGym: boolean) {
   return {

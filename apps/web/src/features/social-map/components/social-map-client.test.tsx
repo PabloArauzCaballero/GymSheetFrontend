@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '@/shared/api/api-error';
 import { SocialMapClient } from './social-map-client';
 
 const { mapAreas, mapPeople, mapGyms, searchMapCities, branches, mapHarness } = vi.hoisted(() => {
@@ -150,5 +151,23 @@ describe('SocialMapClient', () => {
     zoneA.resolve({ cells: [{ id: 'zone-a', center: { latitude: -16.5, longitude: -68.15 }, count: 9 }] });
     await waitFor(() => expect(screen.getByRole('button', { name: /3 personas elegibles/ })).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: /9 personas elegibles/ })).not.toBeInTheDocument();
+  });
+
+  it('explains that you must share to see others when the map is closed to you (403 SOCIAL_MAP_DISABLED)', async () => {
+    mapAreas.mockRejectedValue(
+      new ApiError({
+        message: 'Para ver a otras personas en el mapa, activa tu perfil social y tu visibilidad en el mapa.',
+        status: 403,
+        kind: 'forbidden',
+        code: 'SOCIAL_MAP_DISABLED',
+      }),
+    );
+    renderMap();
+    fireEvent.click(screen.getByRole('button', { name: 'Buscar en esta zona' }));
+
+    expect(await screen.findByRole('heading', { name: 'Comparte para ver' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Activar en mi perfil' })).toHaveAttribute('href', '/profile#perfil-social');
+    // Not a generic failure: the error line of a broken map is not shown.
+    expect(screen.queryByText('No se pudo cargar el mapa. Intenta otra vez.')).toBeNull();
   });
 });

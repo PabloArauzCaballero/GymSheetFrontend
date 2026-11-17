@@ -1,18 +1,24 @@
 import { z } from 'zod';
 import { apiRequest } from '@/shared/api/api-client';
 import type {
-  GymDirectoryEntry,
+  DiscoveryCard,
   SwipeDirection,
   SwipeResult,
   UndoSwipeResult,
 } from '@/shared/api/schemas';
 import {
-  gymDirectoryEntrySchema,
+  discoveryDeckSchema,
   swipeResultSchema,
   undoSwipeResultSchema,
 } from '@/shared/api/schemas';
 import type { DirectoryFilters } from './social-service';
 import { directoryQueryString } from './social-service';
+
+/**
+ * Deck filters. Gender is deliberately absent: the saved discovery
+ * preferences (`genders`) are the single source of who appears in the deck.
+ */
+export type DeckFilters = Pick<DirectoryFilters, 'objetivo' | 'sucursalId' | 'limit'>;
 
 /**
  * Descubrimiento: la baraja y los swipes.
@@ -25,11 +31,11 @@ import { directoryQueryString } from './social-service';
  * se evaporaba al recargar.
  */
 export const discoveryService = {
-  /** Candidatos sin decidir. El backend acota `limit`; por defecto trae 10. */
-  deck: (filters: DirectoryFilters = {}) =>
-    apiRequest<GymDirectoryEntry[]>(
+  /** Candidatos sin decidir, con sus razones y distancia. El backend acota `limit`; por defecto trae 10. */
+  deck: (filters: DeckFilters = {}) =>
+    apiRequest<DiscoveryCard[]>(
       `/me/discovery/deck?${directoryQueryString(filters)}`,
-      z.array(gymDirectoryEntrySchema),
+      discoveryDeckSchema,
     ),
   observeImpression: (impressionId: string) =>
     apiRequest<{ observed: true }>(

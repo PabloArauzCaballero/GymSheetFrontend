@@ -16,6 +16,8 @@ export class ApiError extends Error {
   /** Código estable de dominio (`ROUTINE_HAS_NO_DAYS`…) cuando el backend lo declara. */
   readonly code?: string;
   readonly details?: Record<string, unknown>;
+  /** First message per field of a 400, so forms can show each one next to its input. */
+  readonly fieldErrors: Readonly<Record<string, string>>;
 
   constructor(input: {
     message: string;
@@ -24,6 +26,7 @@ export class ApiError extends Error {
     kind: ApiErrorKind;
     code?: string;
     details?: Record<string, unknown>;
+    fieldErrors?: Record<string, string>;
   }) {
     super(input.message);
     this.name = 'ApiError';
@@ -32,6 +35,7 @@ export class ApiError extends Error {
     this.kind = input.kind;
     this.code = input.code;
     this.details = input.details;
+    this.fieldErrors = input.fieldErrors ?? {};
   }
 }
 

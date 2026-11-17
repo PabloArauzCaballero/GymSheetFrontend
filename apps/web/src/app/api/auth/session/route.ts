@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { BackendUnavailableError, getSession } from '@/shared/server/session';
+import { ACCOUNT_SUSPENDED } from '@/shared/api/schemas';
+import { AccountSuspendedError, BackendUnavailableError, getSession } from '@/shared/server/session';
 
 export async function GET() {
   let session;
@@ -10,6 +11,20 @@ export async function GET() {
     // llevaría a volver a autenticarse por un fallo pasajero del backend.
     if (error instanceof BackendUnavailableError) {
       return NextResponse.json({ ok: false, detail: error.message }, { status: 503 });
+    }
+    // The code travels so the client shows the suspension, never «sesión expirada».
+    if (error instanceof AccountSuspendedError) {
+      const { pendingReview, until, reason } = error.suspension;
+      const withReason = reason ? { reason } : {};
+      return NextResponse.json(
+        {
+          ok: false,
+          code: ACCOUNT_SUSPENDED,
+          detail: error.message,
+          details: pendingReview ? { pendingReview, ...withReason } : { pendingReview, until, ...withReason },
+        },
+        { status: 401 },
+      );
     }
     throw error;
   }

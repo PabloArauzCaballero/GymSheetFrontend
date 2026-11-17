@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Text, View } from 'react-native';
+import { genderOptions } from '@gymsheet/domain';
 import type { UserGender } from '@gymsheet/types';
 import { accountService } from '@/api/services';
 import { Card, Section } from '@/components/layout';
@@ -18,13 +19,14 @@ import { colors, fontSizes, spacing } from '@/theme';
  * Se guarda al tocar, sin botón de confirmar: es una preferencia reversible de
  * un solo campo, y añadirle un «Guardar» sería fricción sin contrapartida.
  *
- * Mismo control y mismo texto que en el portal web.
+ * Las opciones salen de `genderOptions` (`@gymsheet/domain`), la misma lista
+ * que el alta: «Prefiero no decirlo» es la opción `''`.
  */
-const OPTIONS: readonly { value: UserGender; label: string }[] = [
-  { value: 'MALE', label: 'Hombre' },
-  { value: 'FEMALE', label: 'Mujer' },
-  { value: 'UNSPECIFIED', label: 'Prefiero no decirlo' },
-];
+// The shared list hides UNSPECIFIED on purpose: it is what the API stores when
+// someone chooses not to answer, so '' maps to it on save and back on read.
+const toStored = (option: UserGender | ''): UserGender => (option === '' ? 'UNSPECIFIED' : option);
+const toOption = (stored: UserGender | null | undefined): UserGender | '' =>
+  stored === 'MALE' || stored === 'FEMALE' ? stored : '';
 
 export function GenderPreference() {
   const queryClient = useQueryClient();
@@ -44,7 +46,7 @@ export function GenderPreference() {
     onError: (error: Error) => notify.error(error.message),
   });
 
-  const current = account.data?.genero ?? 'UNSPECIFIED';
+  const current = toOption(account.data?.genero);
 
   return (
     <Section title="Rangos de tu senda">
@@ -53,14 +55,14 @@ export function GenderPreference() {
           Elige con qué rangos e insignias te habla tu senda. Puedes cambiarlo cuando quieras.
         </Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-          {OPTIONS.map((option) => {
+          {genderOptions.map((option) => {
             const active = option.value === current;
             return (
               <FilterChip
                 accessibilityLabel={option.label}
                 key={String(option.value)}
                 label={option.label}
-                onPress={() => save.mutate(option.value)}
+                onPress={() => save.mutate(toStored(option.value))}
                 selected={active}
               />
             );

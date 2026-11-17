@@ -4,15 +4,18 @@ import type { ConversationSummary } from '@gymsheet/schemas';
 import { PressableScale } from '@/components/motion';
 import { PersonAvatar } from '@/components/person-avatar';
 import { Text } from '@/components/text';
+import { conversationPreview } from '@/lib/conversation-preview';
 import { chatTimestampLabel } from '@/lib/format';
 import { colors, comfortableTouchTarget, radii, spacing } from '@/theme';
 
 const AVATAR_SIZE = 52;
+const AVATAR_TEXT_GAP = spacing.smd;
+/** Where the row's text starts; list separators align here. */
+export const CHAT_ROW_TEXT_INSET = AVATAR_SIZE + AVATAR_TEXT_GAP;
 
 /** `null` para un chat normal — sin distintivo. */
 const SYSTEM_KIND_ICON: Record<NonNullable<ConversationSummary['systemKind']>, keyof typeof Ionicons.glyphMap> = {
   CORPORATE: 'business',
-  TENANT_ADMIN: 'shield-checkmark',
 };
 
 /**
@@ -35,19 +38,20 @@ export function ChatConversationRow({
   onPress: () => void;
 }) {
   const name = conversation.nickname ?? conversation.otherUserName;
-  const preview = conversation.lastMessage ?? 'Todavía sin mensajes.';
+  const preview = conversationPreview(conversation);
+  const previewLabel = `${preview.prefix ?? ''}${preview.text}`;
   const time = conversation.lastMessageAt ? chatTimestampLabel(conversation.lastMessageAt) : null;
   const online = conversation.otherUserOnline;
 
   return (
     <PressableScale
       accessibilityHint="Abre el chat"
-      accessibilityLabel={[name, online ? 'en línea' : null, preview, time].filter(Boolean).join('. ')}
+      accessibilityLabel={[name, online ? 'en línea' : null, previewLabel, time].filter(Boolean).join('. ')}
       onPress={onPress}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.smd,
+        gap: AVATAR_TEXT_GAP,
         minHeight: comfortableTouchTarget,
         paddingVertical: spacing.smd,
       }}
@@ -105,9 +109,24 @@ export function ChatConversationRow({
             </Text>
           ) : null}
         </View>
-        <Text numberOfLines={2} tone="muted" variant="subhead">
-          {preview}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xxs }}>
+          {preview.icon ? (
+            <Ionicons
+              color={colors.textMuted}
+              name={preview.icon as keyof typeof Ionicons.glyphMap}
+              size={15}
+            />
+          ) : null}
+          <Text
+            numberOfLines={1}
+            style={[{ flex: 1 }, preview.subdued ? { fontStyle: 'italic' } : null]}
+            tone="muted"
+            variant="subhead"
+          >
+            {preview.prefix}
+            {preview.text}
+          </Text>
+        </View>
       </View>
     </PressableScale>
   );

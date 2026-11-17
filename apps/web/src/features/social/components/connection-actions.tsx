@@ -11,6 +11,7 @@ import { queryKeys } from '@/shared/api/query-keys';
 import { Button } from '@/shared/components/ui/button';
 import { notify } from '@/shared/notifications';
 import { directoryKeys } from '@/features/social/services/directory-keys';
+import { connectionOutcomeMessage, isMatchOutcome } from '@gymsheet/domain';
 
 /**
  * Las tres mutaciones que resuelven una relación con otro socio: pedir
@@ -35,9 +36,13 @@ export function useConnectionActions() {
 
   const connect = useMutation({
     mutationFn: (userId: string) => socialService.sendConnection(userId),
-    onSuccess: async () => {
-      await refresh();
-      notify.success('Solicitud enviada.');
+    // Connecting is a LIKE: a mutual one comes back ACCEPTED with the chat open.
+    onSuccess: async (connection) => {
+      await Promise.all([
+        refresh(),
+        isMatchOutcome(connection) ? queryClient.invalidateQueries({ queryKey: queryKeys.conversations }) : null,
+      ]);
+      notify.success(connectionOutcomeMessage(connection));
     },
     onError: (error: Error) => notify.error(error),
   });

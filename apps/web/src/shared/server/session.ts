@@ -1,15 +1,20 @@
 import 'server-only';
-import { isStaff, isSystemAdmin } from '@gymsheet/domain';
+import { hasAdminPermissionGrants } from '@gymsheet/domain';
 import { cookies } from 'next/headers';
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import type { SessionPrincipal, UserRole } from '@/shared/api/contracts';
+import type { UserRole } from '@/shared/api/contracts';
+import type { PortalSession } from '@/shared/auth/portal-session';
 import { sessionPrincipalSchema, userSchema } from '@/shared/api/schemas';
 import { SESSION_COOKIE } from '@/shared/auth/constants';
+import { accountSuspensionOf, type AccountSuspension } from '@gymsheet/domain';
+import { apiErrorFromProblem } from '@/shared/api/api-error';
+import { suspendedExitPath } from '@/shared/auth/suspension';
 import { backendRequest, isBackendUnreachable, readBackendJson } from './backend';
 
 const envelopeSchema = z.object({ ok: z.literal(true), data: z.unknown() });
+const principalSchema = sessionPrincipalSchema;
 const permissionsMeSchema = z.object({ permissionKeys: z.array(z.string()) });
 
 async function readData<T>(response: Response, schema: z.ZodType<T>) {
@@ -35,6 +40,17 @@ export class BackendUnavailableError extends Error {
 }
 
 /**
+ * The backend refused the token because the account is suspended (401
+ * `ACCOUNT_SUSPENDED`). Not «no session»: the person must be told why.
+ */
+export class AccountSuspendedError extends Error {
+  constructor(readonly suspension: AccountSuspension) {
+    super('Cuenta suspendida.');
+    this.name = 'AccountSuspendedError';
+  }
+}
+
+/**
  * Memoizada por petición.
  *
  * El layout del portal resuelve la sesión y luego casi cada página vuelve a
@@ -49,7 +65,7 @@ export class BackendUnavailableError extends Error {
  * deseable: si el backend no contestó, no tiene sentido insistir tres veces
  * dentro del mismo render.
  */
-export const getSession = cache(async function getSession(): Promise<SessionPrincipal | null> {
+export const getSession = cache(async function getSession(): Promise<PortalSession | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
@@ -61,20 +77,22 @@ export const getSession = cache(async function getSession(): Promise<SessionPrin
   // sesión sea inválida. `readData` devuelve `null` tanto para un 401 como para
   // un timeout, y ahí es donde se perdía la distinción.
   if (isBackendUnreachable(principalResponse)) throw new BackendUnavailableError();
-  const principal = await readData(principalResponse, sessionPrincipalSchema);
+  if (principalResponse.status === 401) {
+    const suspension = accountSuspensionOf(
+      apiErrorFromProblem(401, await readBackendJson(principalResponse.clone())),
+    );
+    if (suspension) throw new AccountSuspendedError(suspension);
+  }
+  const principal = await readData(principalResponse, principalSchema);
   const user = await readData(userResponse, userSchema);
   if (!principal) return null;
 
-  // Solo el personal (ADMIN/COACH/FRONT_DESK) y el administrador de plataforma
-  // pueden tener permisos granulares de administración; evita un round-trip
-  // extra en cada carga de página para el resto de las cuentas.
-  //
-  // `SYSTEM_ADMIN` no está en `isStaff` —no pertenece a ningún gimnasio— pero sí
-  // necesita la lista: el backend se la resuelve como el catálogo completo, que
-  // es lo que `PermissionGuard` le concede de verdad. Sin esta rama la consola
-  // de sistema escondería los botones que la API sí le permite usar.
+  // Only the platform admin asks for `/admin/permissions/me` (its list is the
+  // whole catalog): since franja 7a every other role, legacy gym staff
+  // included, gets 403 there, and a moderator needs no grant (ADR-0018). This
+  // also saves a round-trip on every page load for member accounts.
   const permissions =
-    isStaff(principal.role) || isSystemAdmin(principal.role)
+    hasAdminPermissionGrants(principal.role)
       ? await readData(
           await backendRequest('/admin/permissions/me', { token }),
           permissionsMeSchema,
@@ -98,7 +116,14 @@ export const getSession = cache(async function getSession(): Promise<SessionPrin
  * usuario sigue dentro.
  */
 export async function requireSession() {
-  const session = await getSession();
+  let session: PortalSession | null;
+  try {
+    session = await getSession();
+  } catch (error: unknown) {
+    // Clears the cookie and lands on login with the suspension, not «sesión expirada».
+    if (error instanceof AccountSuspendedError) redirect(suspendedExitPath(error.suspension));
+    throw error;
+  }
   if (!session) redirect('/api/auth/logout?returnTo=/login');
   return session;
 }
