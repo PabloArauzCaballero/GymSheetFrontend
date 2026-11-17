@@ -104,7 +104,8 @@ test('a person buys the membership, sees the QR and bank data and uploads a rece
   await expect(dialog.getByText('Bs 250,00')).toBeVisible();
   // The method is a visually hidden radio inside its card: tap the card, as a person does.
   const qrRadio = dialog.getByRole('radio', { name: /Pagar con QR/u });
-  await dialog.locator('label').filter({ has: qrRadio }).click();
+  // `has` resolves inside each label, so it takes a page-rooted locator, not one under the dialog.
+  await dialog.locator('label').filter({ has: page.getByRole('radio', { name: /Pagar con QR/u }) }).click();
   await expect(qrRadio).toBeChecked();
   const created = waitForBff(page, 'POST', '/api/backend/directory/payments/orders');
   await dialog.getByRole('button', { name: 'Confirmar pedido' }).click();
