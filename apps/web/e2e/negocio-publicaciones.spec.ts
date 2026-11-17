@@ -115,12 +115,13 @@ test('the listing is in the marketplace and on the @handle, and a person reports
   await expect(page.getByRole('heading', { level: 1, name: business.name })).toBeVisible({ timeout: 20_000 });
   await expect(page.getByRole('list', { name: 'Publicaciones del negocio' }).getByText(listingName())).toBeVisible();
 
-  // The listing: since franja 8d a person can buy it (this replaces the 8c assertion that «Comprar»
-  // was disabled); writing still says «Llega pronto». «Reportar» sends it to REPP.
+  // The listing: since franja 8d a person can buy it and since 8f write to the seller (this replaces
+  // the earlier «Llega pronto» assertions). «Reportar» sends it to REPP.
   await openPage(page, `/publicacion/${listingId}`);
   await expect(page.getByRole('heading', { level: 1, name: listingName() })).toBeVisible({ timeout: 20_000 });
   await expect(page.getByRole('button', { name: 'Comprar', exact: true })).toBeEnabled();
-  await expect(page.getByText('Llega pronto', { exact: false })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Escribir', exact: true })).toBeEnabled();
+  await expect(page.getByText('Llega pronto', { exact: false })).toHaveCount(0);
   await page.getByRole('button', { name: 'Reportar publicación' }).click();
   const dialog = page.getByRole('dialog', { name: 'Reportar' });
   await dialog.getByLabel('¿Qué ocurre?').selectOption('CONTENIDO_SEXUAL');
