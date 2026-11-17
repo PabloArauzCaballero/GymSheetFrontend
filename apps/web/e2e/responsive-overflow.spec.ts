@@ -22,8 +22,7 @@ const ROUTES = [
   '/exercises',
   '/routines',
   '/plans',
-  '/membership',
-  '/access',
+  '/profile/suscripciones',
   '/notifications',
   '/profile',
 ] as const;

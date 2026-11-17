@@ -7,7 +7,8 @@ import { crearCuenta, type Cuenta } from './rutinas-datos';
 
 /**
  * Marketplace orders, franja 8d (ADR-0024), against the real backend: an
- * approved gym configures its QR cobro in «Cobro» (bank data in two steps +
+ * approved CENTER (since 8e a GYM's membership also needs the buyer's SOCIO,
+ * covered by suscripciones.spec) configures its QR cobro in «Cobro» (bank data in two steps +
  * the private QR) and has a membership on sale → a person buys it from
  * /publicacion/:id, sees the business's QR and bank data, uploads a receipt →
  * the business opens «Pedidos», sees it in «Por confirmar», views the receipt
@@ -20,7 +21,7 @@ import { crearCuenta, type Cuenta } from './rutinas-datos';
  *
  * Needs: backend with `BUSINESS_SIGNUP_ENABLED=true`, the 8d migration and
  * `KYC_ENCRYPTION_KEY` (receipts and QR are encrypted, else 503), directory
- * categories seeded for the GYM scope, `psql` (`E2E_PG*`) and `E2E_BACKEND_URL`.
+ * categories seeded for the CENTER scope, `psql` (`E2E_PG*`) and `E2E_BACKEND_URL`.
  */
 test.describe.configure({ mode: 'serial' });
 test.setTimeout(180_000);
@@ -39,7 +40,7 @@ function waitForBff(page: Page, method: string, pathEnd: string) {
 
 test.beforeAll(async ({}, testInfo) => {
   const label = testInfo.project.name.replace(/[^a-z0-9]/giu, '').slice(0, 8);
-  business = await crearNegocioAprobado(`ped${label}`);
+  business = await crearNegocioAprobado(`ped${label}`, 'CENTER');
   person = await crearCuenta(`ped-${label}`, 'Persona Pedidos QA');
   // The listing itself is covered by negocio-publicaciones.spec: here it is created through the API.
   const created = await business.api<{ id: string; visibility: string }>('POST', '/business/me/listings', {

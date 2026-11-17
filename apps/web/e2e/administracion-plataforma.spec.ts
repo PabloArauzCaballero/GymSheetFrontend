@@ -13,7 +13,8 @@ import { e2eTenantId } from './fixtures';
 import { apiDe, crearCuenta, promover, sql } from './rutinas-datos';
 import { abrirComo, comboLabel, combos, expect } from './rutinas-pagina';
 
-const ADMIN_PAGES = ['/admin', '/admin/operacion', '/admin/membership', '/admin/usuarios', '/admin/facilities'];
+// `/admin/operacion` and `/admin/membership` left with franja 8e (ADR-0026).
+const ADMIN_PAGES = ['/admin', '/admin/equipment', '/admin/usuarios', '/admin/facilities'];
 
 for (const combo of combos) {
   test.describe(`administración de plataforma · ${comboLabel(combo)}`, () => {
@@ -38,7 +39,7 @@ for (const combo of combos) {
         await page.waitForURL((url) => !url.pathname.startsWith('/admin'));
         expect(new URL(page.url()).searchParams.get('denied')).toBe('1');
       }
-      const api = await page.request.get('/api/backend/admin/membership/plans');
+      const api = await page.request.get('/api/backend/admin/equipment/catalog');
       expect(api.status()).toBe(403);
     });
 
@@ -63,10 +64,10 @@ for (const combo of combos) {
       expect(await page.evaluate(() => document.cookie)).not.toContain('gymsheet_impersonation');
 
       // The banner follows every page, and the BFF answers for the gym being operated.
-      await page.goto('/admin/membership');
+      await page.goto('/admin/equipment');
       await expect(banner).toContainText(gimnasio!.nombre);
-      const planes = await page.request.get('/api/backend/admin/membership/plans');
-      expect(planes.status()).toBe(200);
+      const equipos = await page.request.get('/api/backend/admin/equipment/catalog');
+      expect(equipos.status()).toBe(200);
       await page.reload();
       await expect(banner).toContainText(gimnasio!.nombre);
 

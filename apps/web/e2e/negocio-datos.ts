@@ -9,7 +9,7 @@ import { apiDe, sql, type Api } from './rutinas-datos';
  * ACTIVE and verified, handle ACTIVE), exactly what `kyc-effects.repository.ts`
  * writes on a human approval. Needs `BUSINESS_SIGNUP_ENABLED=true` and `psql`.
  */
-export type Negocio = { email: string; password: string; name: string; handle: string; entityId: string; api: Api };
+export type Negocio = { email: string; password: string; name: string; handle: string; entityId: string; api: Api; token: string };
 
 type LegalDocument = { document: string; version: string; contentSha256?: string | null };
 
@@ -30,8 +30,8 @@ async function post<T>(path: string, body: unknown): Promise<{ status: number; d
   return { status: response.status, data: (json?.data ?? json) as T };
 }
 
-/** `entityType` COACH builds an approved coach business (franja 7b, «Mis gimnasios»); GYM by default. */
-export async function crearNegocioAprobado(etiqueta: string, entityType: 'GYM' | 'COACH' = 'GYM'): Promise<Negocio> {
+/** `entityType` COACH builds an approved coach business (franja 7b, «Mis gimnasios»), CENTER a seller whose membership needs no SOCIO (8e); GYM by default. */
+export async function crearNegocioAprobado(etiqueta: string, entityType: 'GYM' | 'COACH' | 'CENTER' = 'GYM'): Promise<Negocio> {
   const run = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
   const name = `Pub ${etiqueta} ${run}`;
   const email = `negocio.pub.${etiqueta}.${run}@gymsheet.local`.toLowerCase();
@@ -65,5 +65,5 @@ export async function crearNegocioAprobado(etiqueta: string, entityType: 'GYM' |
   );
   await sql(`UPDATE directory.entities SET status = 'ACTIVE', is_verified = true, updated_at = now() WHERE id = '${entityId}'`);
   await sql(`UPDATE directory.handles SET status = 'ACTIVE', updated_at = now() WHERE owner_entity_id = '${entityId}'`);
-  return { email, password, name, handle, entityId, api };
+  return { email, password, name, handle, entityId, api, token: signup.data.accessToken };
 }

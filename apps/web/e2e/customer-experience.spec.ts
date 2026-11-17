@@ -14,38 +14,5 @@ test('new clients are required to continue onboarding', async ({ page }) => {
   await expect(page.getByText('Paso 1 de 4')).toBeVisible();
 });
 
-test('active members see their plan, entitlements and extension action in Membresía', async ({
-  page,
-}) => {
-  await login(page, 'active.mock@gymsheet.local');
-  // Como en el móvil, Perfil enlaza a Membresía (fila «Membresía»); el detalle vive allí.
-  await openPage(page, '/membership');
-  await expect(page.getByText('Plan mensual · Desarrollo').first()).toBeVisible();
-  await expect(page.getByText('Biblioteca de ejercicios').first()).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Añadir meses' }).first()).toBeVisible();
-});
-
-test('expired members can open an idempotent WhatsApp renewal without gaining access', async ({
-  page,
-}) => {
-  await login(page, 'expired.mock@gymsheet.local');
-  await openPage(page, '/membership');
-  await expect(page.getByText('Vencida', { exact: true }).first()).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Planes disponibles' })).toBeVisible();
-  // La confirmación es un diálogo propio de la aplicación, no el `confirm()` del
-  // navegador: la prueba esperaba el evento nativo, que nunca llega, mientras la
-  // capa del modal —ya abierto— se comía los reintentos del clic.
-  await page
-    .getByRole('button', { name: /Renovar por WhatsApp/u })
-    .first()
-    .click();
-  const popupPromise = page.waitForEvent('popup');
-  await page.getByRole('button', { name: 'Continuar' }).click();
-  const popup = await popupPromise;
-  await expect.poll(() => new URL(popup.url()).searchParams.get('phone')).toBe('59177377232');
-  expect(new URL(popup.url()).searchParams.get('text')).toBe('Hola, quisiera renovar mi membresía');
-  const response = await page.request.get('/api/backend/me/membership');
-  const payload = await response.json();
-  expect(payload.data.membership.estado).toBe('EXPIRED');
-  expect(payload.data.paymentStatus).toBe('PENDING_PAYMENT');
-});
+// «Membresía» (/membership) and its WhatsApp renewal left with franja 8e (ADR-0026):
+// «Mis suscripciones» is covered by `suscripciones.spec.ts`.
