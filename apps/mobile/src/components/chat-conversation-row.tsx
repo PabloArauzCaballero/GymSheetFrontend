@@ -32,7 +32,8 @@ const SYSTEM_KIND_ICON: Record<NonNullable<ConversationSummary['systemKind']>, k
  * es `PersonAvatar` en los dos sitios.
  *
  * Franja 8f: a chat with a business is marked «Negocio» for the person; the
- * business inbox reuses the row (`viewer="business"`) without presence.
+ * business inbox reuses the row (`viewer="business"`) without presence. A
+ * chat whose business closed its account reads «Negocio cerrado» (ADR-0028).
  */
 export function ChatConversationRow({
   conversation,
@@ -53,7 +54,7 @@ export function ChatConversationRow({
   return (
     <PressableScale
       accessibilityHint="Abre el chat"
-      accessibilityLabel={[name, controls.businessBadge ? 'negocio' : null, online ? 'en línea' : null, previewLabel, time].filter(Boolean).join('. ')}
+      accessibilityLabel={[name, controls.badge?.toLowerCase() ?? null, online ? 'en línea' : null, previewLabel, time].filter(Boolean).join('. ')}
       onPress={onPress}
       style={{
         flexDirection: 'row',
@@ -110,9 +111,9 @@ export function ChatConversationRow({
           <Text numberOfLines={1} style={{ flexShrink: 1 }} variant="headline">
             {name}
           </Text>
-          {controls.businessBadge ? (
+          {controls.badge ? (
             <Text tone="muted" variant="caption">
-              Negocio
+              {controls.badge}
             </Text>
           ) : null}
           <View style={{ flex: 1 }} />

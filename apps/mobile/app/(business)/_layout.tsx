@@ -7,12 +7,14 @@ import { useAuthStore } from '@/state/auth-store';
  * The business shell (ADR-0020): mounted only for a business session. A
  * person goes to the person tabs; a signed-out session to login. Above the
  * tabs, «completar» finishes the signup (steps 2–3), «verificar» the KYC
- * (steps 4–7) and «verificacion» shows its status.
+ * (steps 4–7) and «verificacion» shows its status. A business that just
+ * closed its account goes to the goodbye screen, not to login.
  */
 export default function BusinessLayout() {
   const status = useAuthStore((state) => state.status);
   const principal = useAuthStore((state) => state.principal);
-  const away = businessShellRedirect(status, principal);
+  const farewell = useAuthStore((state) => state.farewell);
+  const away = businessShellRedirect(status, principal, farewell);
   if (away) return <Redirect href={away} />;
   return (
     <Stack screenOptions={detailStackOptions}>
@@ -31,8 +33,11 @@ export default function BusinessLayout() {
       <Stack.Screen name="socios" />
       <Stack.Screen name="suscriptores" />
       <Stack.Screen name="gimnasios" />
-      {/* Franja 8f: one conversation of «Mensajes». */}
+      {/* Franja 8f: one conversation of «Mensajes»; «Cuenta» with the KYC erasure and the closure. */}
       <Stack.Screen name="conversacion/[id]" />
+      <Stack.Screen name="cuenta" />
+      <Stack.Screen name="borrar-verificacion" />
+      <Stack.Screen name="cerrar-cuenta" />
     </Stack>
   );
 }

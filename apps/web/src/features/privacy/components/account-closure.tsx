@@ -1,6 +1,12 @@
 'use client';
 
-import { accountClosureCopy, closureProofOptions } from '@gymsheet/domain';
+import {
+  accountClosureCopy,
+  businessClosureCopy,
+  closureBlockerFromError,
+  closureBlockerNotices,
+  closureProofOptions,
+} from '@gymsheet/domain';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { CloseAccountInput } from '@/shared/api/schemas';
@@ -11,6 +17,7 @@ import { Button } from '@/shared/components/ui/button';
 import { confirm } from '@/shared/notifications';
 import { closureErrorMessage } from '../lib/account-errors';
 import { leaveClosedAccount, privacyService } from '../services/privacy-service';
+import { BusinessClosureEffects, ClosureBlockers } from './closure-blockers';
 import { ClosurePreviewList } from './closure-preview-list';
 import { ClosureProofForm } from './closure-proof-form';
 
@@ -18,8 +25,10 @@ import { ClosureProofForm } from './closure-proof-form';
  * «Cerrar mi cuenta»: first what the closure deletes, anonymizes and keeps
  * (and why), then the proof, then one last confirmation. On success the
  * session cookie is cleared and the person lands on the goodbye page.
+ * `business` (ADR-0028): the effects on the listing, orders and members, and
+ * the blockers (receipts to decide) in place of the proof while they last.
  */
-export function AccountClosure() {
+export function AccountClosure({ business = false }: Readonly<{ business?: boolean }>) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const preview = useQuery({
@@ -36,15 +45,20 @@ export function AccountClosure() {
   const close = useMutation({
     mutationFn: (input: CloseAccountInput) => privacyService.closeAccount(input),
     onSuccess: () => leaveClosedAccount(),
-    onError: (failure: Error) => setError(closureErrorMessage(failure)),
+    onError: (failure: Error) => {
+      setError(closureErrorMessage(failure));
+      // A receipt arrived after the preview: read it again so the blocker shows with its way out.
+      if (closureBlockerFromError(failure)) void preview.refetch();
+    },
   });
+  const copy = business ? businessClosureCopy : accountClosureCopy;
 
   async function submit(input: CloseAccountInput) {
     const answer = await confirm({
-      title: accountClosureCopy.confirmTitle,
-      message: accountClosureCopy.confirmMessage,
+      title: copy.confirmTitle,
+      message: copy.confirmMessage,
       severity: 'danger',
-      confirmLabel: accountClosureCopy.confirmLabel,
+      confirmLabel: copy.confirmLabel,
     });
     if (answer.confirmed) close.mutate(input);
   }
@@ -52,7 +66,7 @@ export function AccountClosure() {
   if (!open) {
     return (
       <div className="grid gap-3">
-        <p className="t-subhead text-[var(--text-muted)]">{accountClosureCopy.description}</p>
+        <p className="t-subhead text-[var(--text-muted)]">{copy.description}</p>
         <Button className="justify-self-start" onClick={() => setOpen(true)} size="sm" variant="ghost">
           {accountClosureCopy.start}
         </Button>
@@ -68,18 +82,24 @@ export function AccountClosure() {
     return <p className="t-subhead text-[var(--text-muted)]">{accountClosureCopy.notAllowed}</p>;
   }
 
+  const blockers = closureBlockerNotices(preview.data);
   return (
     <div className="grid gap-5">
+      <ClosureBlockers notices={blockers} />
+      {business ? <BusinessClosureEffects effects={businessClosureCopy.effects} title={businessClosureCopy.effectsTitle} /> : null}
       <ClosurePreviewList preview={preview.data} />
-      <ClosureProofForm
-        closing={close.isPending}
-        error={error}
-        onSendPin={() => sendPin.mutate()}
-        onSubmit={(input) => void submit(input)}
-        pinSent={sendPin.isSuccess}
-        proofs={closureProofOptions(preview.data)}
-        sendingPin={sendPin.isPending}
-      />
+      {blockers.length === 0 ? (
+        <ClosureProofForm
+          closing={close.isPending}
+          error={error}
+          onSendPin={() => sendPin.mutate()}
+          onSubmit={(input) => void submit(input)}
+          pinSent={sendPin.isSuccess}
+          proofs={closureProofOptions(preview.data)}
+          sendingPin={sendPin.isPending}
+          submitLabel={copy.submit}
+        />
+      ) : null}
     </div>
   );
 }

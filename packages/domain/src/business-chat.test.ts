@@ -20,6 +20,17 @@ describe('conversationControls', () => {
     expect(controls).toMatchObject({ realtime: false, report: false, forward: false, block: true, receiptSettings: false, location: false, disappearing: false, presence: false });
   });
 
+  it('a chat whose business closed reads «Negocio cerrado» and says why it is read-only (ADR-0028)', () => {
+    const closed = conversationControls({ kind: 'BUSINESS', systemKind: null, businessClosed: true }, 'person');
+    expect(closed).toMatchObject({ businessBadge: true, businessClosed: true, badge: 'Negocio cerrado' });
+    expect(closed.readOnlyNotice).toMatch(/cerró su cuenta/u);
+    const open = conversationControls({ kind: 'BUSINESS', systemKind: null, businessClosed: false }, 'person');
+    expect(open).toMatchObject({ businessClosed: false, badge: 'Negocio', readOnlyNotice: 'Esta conversación es de solo lectura.' });
+    // The flag only means something in a BUSINESS chat seen by the person.
+    expect(conversationControls({ kind: 'DIRECT', systemKind: null, businessClosed: true }, 'person').businessClosed).toBe(false);
+    expect(conversationControls({ kind: 'BUSINESS', systemKind: null, businessClosed: true }, 'business')).toMatchObject({ businessClosed: false, badge: null });
+  });
+
   it('a business in REPP support chat cannot block it', () => {
     expect(conversationControls({ kind: 'SYSTEM', systemKind: 'CORPORATE' }, 'business').block).toBe(false);
   });
@@ -37,6 +48,9 @@ describe('conversationControls', () => {
       openProfile: true,
       presence: true,
       businessBadge: false,
+      businessClosed: false,
+      badge: null,
+      readOnlyNotice: 'Esta conversación es de solo lectura.',
     });
   });
 });

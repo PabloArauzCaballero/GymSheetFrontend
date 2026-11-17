@@ -38,7 +38,7 @@ vi.mock('./message-bubble', () => ({
     </li>
   ),
 }));
-vi.mock('./message-composer', () => ({ MessageComposer: () => null }));
+vi.mock('./message-composer', () => ({ MessageComposer: () => <div data-testid="composer" /> }));
 vi.mock('./thread-header', () => ({ ThreadHeader: () => null }));
 
 const message: Message = {
@@ -228,5 +228,14 @@ describe('MessageThreadClient story reply navigation', () => {
     );
 
     expect(screen.getByRole('status')).toHaveTextContent('No se encontró la respuesta a la story');
+  });
+
+  it('shows «Negocio cerrado» and no composer once the business closed its account (ADR-0028)', () => {
+    const { thread } = makeThread();
+    thread.conversation = { ...thread.conversation, kind: 'BUSINESS', systemKind: null, businessClosed: true, canWrite: false } as typeof thread.conversation;
+    threadState.current = thread;
+    render(<MessageThreadClient conversationId={message.conversationId} currentUserId="viewer" socketOrigin="http://localhost" />);
+    expect(screen.queryByTestId('composer')).toBeNull();
+    expect(screen.getByRole('status')).toHaveTextContent('Este negocio cerró su cuenta en REPP');
   });
 });

@@ -211,10 +211,10 @@ export const conversationSummarySchema = z.object({
   /** `false` en un chat de sistema de solo lectura: el compositor debe ocultarse. */
   canWrite: z.boolean(),
   systemKind: z.enum(systemConversationKinds).nullable(),
-  /** Optional for servers before franja 8f: read it through `conversationKindOf` (domain). */
+  /** Optional before 8f (read it via `conversationKindOf`). BUSINESS: its listing (`null` otherwise); `businessClosed` = read-only (ADR-0028). */
   kind: z.enum(conversationKinds).optional(),
-  /** BUSINESS: the listing behind the chat (its public profile); `null` otherwise. */
   businessEntityId: z.string().uuid().nullable().optional(),
+  businessClosed: z.boolean().optional(),
   /** Apodo propio para esta conversación (privado), o `null` si no se puso ninguno. */
   nickname: z.string().nullable(),
   /** Cursores del otro participante: comparar contra `createdAt` de los mensajes propios para pintar el check. */

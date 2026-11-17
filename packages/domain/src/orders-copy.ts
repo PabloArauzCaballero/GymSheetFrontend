@@ -49,6 +49,8 @@ export const orderCopy = {
   disputeConsequence: 'REPP lo revisa y puede suspender al negocio. REPP no devuelve dinero: pagaste directo al negocio.',
   disputeSent: 'Recibimos tu reporte. REPP lo revisará.',
   doNotPay: 'No pagues: este negocio no está disponible.',
+  /** An order cancelled because the business closed its account (ADR-0028). */
+  businessClosed: 'El negocio cerró su cuenta en REPP y canceló este pedido. No pagues.',
   receiptPrivate: 'Tu comprobante es privado: solo lo ven el negocio y, si reportas un problema, REPP.',
   businessOnly: 'Las cuentas de negocio no compran en el marketplace.',
   signIn: 'Inicia sesión para comprar',
@@ -67,6 +69,8 @@ export const orderCopy = {
 const ERRORS: Readonly<Record<string, string>> = {
   ORDER_ALREADY_OPEN: 'Ya tienes un pedido abierto de esta publicación.',
   ORDER_BUSINESS_UNAVAILABLE: orderCopy.doNotPay,
+  // A business only approved automatically («Nuevo») holds a bounded number of open orders (ADR-0028 §9).
+  ORDER_SELLER_OPEN_LIMIT: 'Este negocio es nuevo en REPP y ya tiene muchos pedidos por confirmar. Inténtalo más tarde o escríbele por el chat.',
   ORDER_INVALID_TRANSITION: 'El pedido ya cambió. Recarga para verlo.',
   ORDER_REJECTION_NOTE_REQUIRED: 'Explica el motivo para que la persona sepa qué corregir.',
   PAYMENT_CONFIG_REQUIRED: 'Primero guarda los datos de cobro.',
@@ -97,6 +101,22 @@ export function orderErrorMessage(code: string | null | undefined, fallback: str
     default:
       return (code && ERRORS[code]) || fallback;
   }
+}
+
+/**
+ * A refusal that means «do not pay this business» (it stopped being public:
+ * suspended, paused or closed): the payment and receipt steps stop there
+ * instead of offering a retry.
+ */
+export function orderRefusalStopsPayment(code: string | null | undefined): boolean {
+  return code === 'ORDER_BUSINESS_UNAVAILABLE';
+}
+
+/** The line a cancelled order shows when the business caused it; null for any other cancellation. */
+export function cancelledByBusinessNotice(cancelReason: string | null | undefined): string | null {
+  if (cancelReason === 'BUSINESS_CLOSED') return orderCopy.businessClosed;
+  if (cancelReason === 'BUSINESS_UNAVAILABLE') return orderCopy.doNotPay;
+  return null;
 }
 
 export type PaymentConfigForm = {

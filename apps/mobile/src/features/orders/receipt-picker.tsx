@@ -1,5 +1,5 @@
 import { queryKeys } from '@gymsheet/hooks';
-import { orderCopy } from '@gymsheet/domain';
+import { orderCopy, orderRefusalStopsPayment } from '@gymsheet/domain';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { useState } from 'react';
@@ -9,14 +9,16 @@ import { Button, Input } from '@/components/ui';
 import { pickKycPhoto, takeKycPhoto } from '@/features/business/kyc/pick-photo';
 import type { KycLocalFile } from '@/features/business/kyc/kyc-photo';
 import { notify } from '@/notifications';
-import { colors, radii, spacing } from '@/theme';
-import { buyerOrdersService, imageForm, orderErrorText } from './orders-service';
+import { colors, radii, spacing, tones } from '@/theme';
+import { buyerOrdersService, imageForm, orderErrorCode, orderErrorText } from './orders-service';
 
 /**
  * Step 3 of the checkout: the receipt from the camera or the gallery (JPEG or
  * PNG), sent as a private multipart file. Never a community attachment and
  * never a local `file://` path in place of a URL (D6): if the upload fails,
- * nothing is sent and the person retries.
+ * nothing is sent and the person retries. A business that stopped being
+ * public answers 409 ORDER_BUSINESS_UNAVAILABLE (ADR-0028 §10): the step ends
+ * in «No pagues» instead of offering another try.
  */
 export function ReceiptPicker({ orderId }: { orderId: string }) {
   const client = useQueryClient();
@@ -29,12 +31,24 @@ export function ReceiptPicker({ orderId }: { orderId: string }) {
       void client.invalidateQueries({ queryKey: queryKeys.orders.list });
       notify.success('Comprobante enviado. El negocio lo revisa.');
     },
+    onError: (error) => {
+      // The order itself may have changed (cancelled with the closure): read it again.
+      if (orderRefusalStopsPayment(orderErrorCode(error))) void client.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+    },
   });
 
   async function choose(source: 'camera' | 'library') {
     const result = source === 'camera' ? await takeKycPhoto('comprobante', 'back') : await pickKycPhoto('comprobante');
     if ('error' in result) notify.warning(result.error);
     else if ('file' in result) setFile(result.file);
+  }
+
+  if (orderRefusalStopsPayment(orderErrorCode(send.error))) {
+    return (
+      <View accessibilityRole="alert" style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: tones.dark.danger.bg }}>
+        <Text strong style={{ color: tones.dark.danger.text }} variant="subhead">{orderCopy.doNotPay}</Text>
+      </View>
+    );
   }
 
   return (

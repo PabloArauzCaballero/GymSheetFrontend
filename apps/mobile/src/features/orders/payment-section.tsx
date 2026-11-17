@@ -1,4 +1,4 @@
-import { formatDateTime, formatMoney, orderCopy } from '@gymsheet/domain';
+import { formatDateTime, formatMoney, orderCopy, orderRefusalStopsPayment } from '@gymsheet/domain';
 import { queryKeys } from '@gymsheet/hooks';
 import type { BuyerOrderDetail } from '@gymsheet/schemas';
 import { useQuery } from '@tanstack/react-query';
@@ -32,7 +32,7 @@ export function PaymentSection({ order, uploadFirst = false }: { order: BuyerOrd
   const instructions = useQuery({ queryKey: queryKeys.orders.instructions(order.id), queryFn: () => buyerOrdersService.instructions(order.id), retry: false });
   if (instructions.isPending) return <RowsSkeleton rows={3} thumb={40} />;
   if (instructions.isError) {
-    const unavailable = orderErrorCode(instructions.error) === 'ORDER_BUSINESS_UNAVAILABLE';
+    const unavailable = orderRefusalStopsPayment(orderErrorCode(instructions.error));
     return (
       <View accessibilityRole="alert" style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: tones.dark.danger.bg }}>
         <Text strong style={{ color: tones.dark.danger.text }} variant="subhead">{unavailable ? orderCopy.doNotPay : orderErrorText(instructions.error)}</Text>

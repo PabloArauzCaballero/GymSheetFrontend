@@ -18,7 +18,7 @@ import { spacing } from '@/theme';
 
 /**
  * «Perfil» of the business shell (plan §4.2): the way to «Cobro» (8d), sedes and the photos of the public
- * profile (8c), «Suscriptores» (8e) and the type's own section (7b): a gym's «Socios», a coach's «Mis gimnasios».
+ * profile (8c), «Suscriptores» (8e), «Cuenta» (8f) and the type's own section (7b): a gym's «Socios», a coach's «Mis gimnasios».
  */
 export default function BusinessProfileScreen() {
   const router = useRouter();
@@ -68,6 +68,8 @@ export default function BusinessProfileScreen() {
         <NavRow onPress={() => router.push('/(business)/cobro')} subtitle="Tu banco, tu QR y si aceptas efectivo" testID="business-payments" title="Cobro" />
         <Divider />
         <NavRow onPress={() => router.push('/(business)/suscriptores')} subtitle="Quién tiene un plan contigo y cuándo vence" testID="business-subscribers" title="Suscriptores" />
+        <Divider />
+        <NavRow onPress={() => router.push('/(business)/cuenta')} subtitle="Documentos, tus datos y el cierre del negocio" testID="business-account" title="Cuenta" />
         {entityType === 'GYM' ? (
           <>
             <Divider />

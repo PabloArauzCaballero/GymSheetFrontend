@@ -1,6 +1,6 @@
 'use client';
 
-import { formatDateTime, formatMoney, orderCopy } from '@gymsheet/domain';
+import { formatDateTime, formatMoney, orderCopy, orderRefusalStopsPayment } from '@gymsheet/domain';
 import { useQuery } from '@tanstack/react-query';
 import { ShieldAlert } from 'lucide-react';
 import { useState } from 'react';
@@ -33,7 +33,7 @@ export function PaymentPanel({ order, uploadFirst = false }: Readonly<{ order: B
 
   if (instructions.isPending) return <SkeletonText lines={4} />;
   if (instructions.isError) {
-    const unavailable = orderErrorCode(instructions.error) === 'ORDER_BUSINESS_UNAVAILABLE';
+    const unavailable = orderRefusalStopsPayment(orderErrorCode(instructions.error));
     return (
       <div className="flex items-start gap-3 rounded-[var(--radius-lg)] bg-[var(--danger-bg)] p-4 text-[var(--danger-text)]" role="alert">
         <ShieldAlert aria-hidden className="mt-0.5 size-5 shrink-0" />

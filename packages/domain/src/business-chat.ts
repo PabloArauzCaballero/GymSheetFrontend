@@ -16,7 +16,7 @@ export const BUSINESS_CHATS_PER_DAY = 10;
  */
 export const BUSINESS_CHAT_POLL_MS = { thread: 8_000, inbox: 20_000 } as const;
 
-type ConversationShape = { kind?: ChatConversationKind | null; systemKind?: string | null };
+type ConversationShape = { kind?: ChatConversationKind | null; systemKind?: string | null; businessClosed?: boolean | null };
 
 /** A server before franja 8f sends no `kind`: a system chat still says so with `systemKind`. */
 export function conversationKindOf(conversation: ConversationShape): ChatConversationKind {
@@ -47,12 +47,20 @@ export type ConversationControls = {
   presence: boolean;
   /** The «Negocio» mark on the other side: a person talking to a business. */
   businessBadge: boolean;
+  /** The business closed its account (ADR-0028): the chat is read-only for the person, no composer. */
+  businessClosed: boolean;
+  /** What the mark says: «Negocio», «Negocio cerrado», or nothing. */
+  badge: string | null;
+  /** The line shown in place of the composer when the chat cannot be written. */
+  readOnlyNotice: string;
 };
 
 export function conversationControls(conversation: ConversationShape | undefined, viewer: ChatViewer): ConversationControls {
   const kind = conversation ? conversationKindOf(conversation) : 'DIRECT';
   const person = viewer === 'person';
   const direct = kind === 'DIRECT';
+  const businessClosed = person && kind === 'BUSINESS' && conversation?.businessClosed === true;
+  const businessBadge = person && kind === 'BUSINESS';
   return {
     realtime: person,
     disappearing: direct,
@@ -64,7 +72,10 @@ export function conversationControls(conversation: ConversationShape | undefined
     block: !person && kind === 'BUSINESS',
     openProfile: person && direct,
     presence: person && kind !== 'BUSINESS',
-    businessBadge: person && kind === 'BUSINESS',
+    businessBadge,
+    businessClosed,
+    badge: businessClosed ? businessChatCopy.closed : businessBadge ? businessChatCopy.badge : null,
+    readOnlyNotice: businessClosed ? businessChatCopy.closedNotice : businessChatCopy.readOnly,
   };
 }
 
@@ -91,6 +102,9 @@ export const businessChatCopy = {
   writing: 'Abriendo chat…',
   signIn: 'Inicia sesión para escribir',
   badge: 'Negocio',
+  closed: 'Negocio cerrado',
+  closedNotice: 'Este negocio cerró su cuenta en REPP. Puedes leer la conversación, pero ya no recibe mensajes.',
+  readOnly: 'Esta conversación es de solo lectura.',
   block: 'Bloquear a esta persona',
   blockTitle: '¿Bloquear a esta persona?',
   blockConsequence: 'Se cierra este chat y no podrá volver a escribirte. Esto no se deshace desde la app.',

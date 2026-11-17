@@ -154,6 +154,16 @@ describe('createBusinessKycServices', () => {
     expect(calls[6]?.form).toEqual({ kind: 'CI_FRONT' });
     expect(calls[7]?.form).toEqual({ slot: 'LOGO' });
   });
+
+  it('erases the own KYC with the password and reads the suspension (ADR-0028)', async () => {
+    const result = { status: 'SUSPENDED', suspensionReasonCode: 'KYC_MISSING', kycStatus: 'SUSPENDED', documentsErased: 4 };
+    const { calls, client } = recordingClient(() => result);
+    const kyc = createBusinessKycServices(client.request, client.upload);
+    await expect(kyc.erase('secreta')).resolves.toEqual(result);
+    expect(calls[0]).toMatchObject({ method: 'POST', url: '/business/me/kyc/erase', body: { password: 'secreta' } });
+    // An empty password never leaves the client: the backend would answer 400 anyway.
+    expect(() => kyc.erase('')).toThrow();
+  });
 });
 
 describe('createBusinessKycAdminServices', () => {

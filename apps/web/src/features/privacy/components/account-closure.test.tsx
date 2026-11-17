@@ -119,12 +119,12 @@ describe('AccountClosure', () => {
     await waitFor(() => expect(mocks.leave).toHaveBeenCalled());
   });
 
-  it('tells a platform or business account it cannot close here', async () => {
+  it('tells a platform account it cannot close here', async () => {
     mocks.closurePreview.mockResolvedValue({ ...preview(false), allowed: false });
     renderClosure();
     fireEvent.click(screen.getByRole('button', { name: 'Revisar qué se borra' }));
     expect(
-      await screen.findByText('Las cuentas de REPP y las de negocio no se cierran desde la app.'),
+      await screen.findByText('Las cuentas del equipo de REPP no se cierran desde la app.'),
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cerrar mi cuenta' })).toBeNull();
   });

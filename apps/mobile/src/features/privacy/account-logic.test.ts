@@ -59,6 +59,11 @@ test('closure failures: wrong password on the field, staff and missing proof as 
   });
   assert.equal(closureFailure(error(400, 'CLOSURE_PROOF_REQUIRED')).field, null);
   assert.equal(closureFailure(error(400, 'EMAIL_PIN_INVALID')).field, 'pin');
+  // A business with receipts to decide (ADR-0028): a banner that names «Pedidos».
+  assert.deepEqual(closureFailure(error(409, 'BUSINESS_HAS_PENDING_VERIFICATIONS', { details: { count: 1 } })), {
+    field: null,
+    message: accountClosureCopy.errors.BUSINESS_HAS_PENDING_VERIFICATIONS,
+  });
 });
 
 test('the preview lists only groups with rows, each with its count', () => {

@@ -25,6 +25,8 @@ test('the business shell refuses persons and signed-out sessions, waits while lo
   assert.equal(businessShellRedirect('unauthenticated', null), '/(auth)/login');
   assert.equal(businessShellRedirect('loading', null), null);
   assert.equal(businessShellRedirect('authenticated', business), null);
+  // A closed business account says goodbye instead of landing on login (ADR-0028).
+  assert.equal(businessShellRedirect('unauthenticated', null, true), '/(auth)/hasta-pronto');
 });
 
 test('the business shell resumes the signup where nextSteps say', () => {

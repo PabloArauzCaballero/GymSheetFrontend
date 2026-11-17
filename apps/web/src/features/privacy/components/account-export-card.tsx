@@ -20,7 +20,7 @@ const dateLabel = (iso: string) =>
   new Date(iso).toLocaleDateString('es', { day: 'numeric', month: 'long' });
 
 /** «Descargar mis datos»: ask for the archive, follow it while it builds, download it when ready. */
-export function AccountExportCard() {
+export function AccountExportCard({ description = accountExportCopy.description }: Readonly<{ description?: string }>) {
   const queryClient = useQueryClient();
   const [limited, setLimited] = useState<string | null>(null);
 
@@ -53,7 +53,7 @@ export function AccountExportCard() {
 
   return (
     <div className="grid gap-3">
-      <p className="t-subhead text-[var(--text-muted)]">{accountExportCopy.description}</p>
+      <p className="t-subhead text-[var(--text-muted)]">{description}</p>
       {current?.status === 'PENDING' ? (
         <p className="t-subhead inline-flex items-center gap-2" role="status">
           <LoaderCircle aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />

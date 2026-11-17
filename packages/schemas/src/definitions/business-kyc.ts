@@ -161,3 +161,18 @@ export const kycDraftPatchSchema = z
   .partial()
   .strict();
 export type KycDraftPatch = z.infer<typeof kycDraftPatchSchema>;
+
+/** `POST /business/me/kyc/erase` body (strict, ADR-0028): the account password confirms it. */
+export const kycEraseInputSchema = z
+  .object({ password: z.string().min(1, 'Escribe tu contraseña.').max(128) })
+  .strict();
+export type KycEraseInput = z.infer<typeof kycEraseInputSchema>;
+
+/** `POST /business/me/kyc/erase` (200): the business is left suspended until a new KYC. */
+export const kycEraseResultSchema = z.object({
+  status: z.literal('SUSPENDED'),
+  suspensionReasonCode: z.literal('KYC_MISSING'),
+  kycStatus: z.string(),
+  documentsErased: z.number().int().nonnegative(),
+});
+export type KycEraseResult = z.infer<typeof kycEraseResultSchema>;
