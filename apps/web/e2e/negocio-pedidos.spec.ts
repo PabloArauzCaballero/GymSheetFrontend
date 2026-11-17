@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openPage, signIn } from './fixtures';
+import { dismissTour, openPage, signIn } from './fixtures';
 import { readablePhoto } from './kyc-datos';
 import { BACKEND } from './alta-datos';
 import { crearNegocioAprobado, type Negocio } from './negocio-datos';
@@ -118,6 +118,8 @@ test('a person buys the membership, sees the QR and bank data and uploads a rece
   orderId = body.data.id;
 
   await expect(page).toHaveURL(new RegExp(`/profile/compras/${orderId}$`, 'u'), { timeout: 20_000 });
+  // The order page is the new person's first portal page: the welcome tour opens there.
+  await dismissTour(page);
   await expect(page.getByText('Pendiente de pago').first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Paga con el QR del negocio' })).toBeVisible();
   await expect(page.getByRole('img', { name: `QR de pago de ${business.name}` })).toHaveAttribute('src', /^blob:/u, { timeout: 20_000 });
