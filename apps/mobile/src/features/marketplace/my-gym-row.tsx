@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { myGymCardOf } from '@gymsheet/domain';
+import { myGymCardOf, myGymPlanText } from '@gymsheet/domain';
 import { queryKeys } from '@gymsheet/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
@@ -8,21 +8,25 @@ import { MediaImage } from '@/components/media-image';
 import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { personAffiliationsService } from '@/features/affiliations/affiliations-service';
+import { useMySubscriptions } from '@/features/subscriptions/subscriptions-service';
 import { colors, radii, spacing } from '@/theme';
 import { initials } from './format';
 
 /**
  * «Mi gimnasio» en una fila, no en una tarjeta de portada: lo primero, sin gritar.
  * Driven by `GET /me/gym` (ADR-0027): the confirmed SOCIO affiliation, never the
- * session's tenant. Tapping it opens «Mi gimnasio».
+ * session's tenant, with the gym membership's plan (8e). Tapping it opens «Mi gimnasio».
  */
 export function MyGymRow() {
   const router = useRouter();
   const myGym = useQuery({ queryKey: queryKeys.myGym, queryFn: personAffiliationsService.myGym, staleTime: 30_000 });
+  const subscriptions = useMySubscriptions(myGym.data?.status === 'CONFIRMED');
   if (!myGym.data) return null;
   const card = myGymCardOf(myGym.data);
+  // «Socio activo hasta …» / «Socio · plan vencido» (franja 8e) once the gym confirmed.
+  const plan = myGymPlanText(myGym.data, subscriptions.data);
   const name = card.state === 'NONE' ? 'Hazte socio de tu gimnasio' : card.gymName;
-  const status = card.state === 'CONFIRMED' ? card.detail || card.title : card.state === 'REQUESTED' ? 'Solicitud enviada' : 'Busca tu gimnasio y pide ser socio';
+  const status = card.state === 'CONFIRMED' ? plan?.label ?? (card.detail || card.title) : card.state === 'REQUESTED' ? 'Solicitud enviada' : 'Busca tu gimnasio y pide ser socio';
   return (
     <PressableScale
       accessibilityLabel={`Mi gimnasio, ${name}. ${status}`}

@@ -10,6 +10,7 @@ import { ChoiceChip } from '@/shared/components/ui/choice-chip';
 import { Select } from '@/shared/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { businessListingsService } from '@/features/business-listings/services/listings-client';
+import { useSocioPlans } from '@/features/subscriptions/components/business/use-socio-plans';
 import { gymAffiliationsService } from '../../services/affiliations-client';
 import { AffiliationList } from './affiliation-list';
 import { usePendingAffiliationsCount } from './socios-badge';
@@ -22,7 +23,7 @@ const KIND_FILTERS: ReadonlyArray<{ value: AffiliationKind | ''; label: string }
 
 /**
  * «Socios» of a GYM business (plan §4.2): Solicitudes (oldest first) to
- * confirm or reject, Socios by sede and Entrenadores (persons and coaches).
+ * confirm or reject, Socios by sede with their plan, and Entrenadores (persons and coaches).
  */
 export function SociosPanel() {
   const [tab, setTab] = useState('requests');
@@ -31,6 +32,7 @@ export function SociosPanel() {
   const pending = usePendingAffiliationsCount(true);
   const locations = useQuery({ queryKey: queryKeys.business.locations, queryFn: businessListingsService.locations });
   const sedes = locations.data ?? [];
+  const planOf = useSocioPlans(tab === 'members');
 
   return (
     <div className="grid gap-6">
@@ -80,6 +82,7 @@ export function SociosPanel() {
           <AffiliationList
             empty={affiliationCopy.emptyMembers}
             load={(cursor) => gymAffiliationsService.members({ locationId: locationId || null, cursor })}
+            planOf={planOf}
             queryKey={queryKeys.business.affiliationMembers(locationId)}
           />
         </TabsContent>

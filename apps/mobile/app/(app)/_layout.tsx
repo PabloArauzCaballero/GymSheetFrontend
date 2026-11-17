@@ -95,7 +95,9 @@ export default function AppLayout() {
         <Stack.Screen name="verificar-correo" />
         <Stack.Screen name="profile-edit" />
         <Stack.Screen name="registrar-peso" />
-        <Stack.Screen name="membership" />
+        {/* «Mis suscripciones» (franja 8e) replaces «Membresía». */}
+        <Stack.Screen name="suscripciones/index" />
+        <Stack.Screen name="suscripciones/[id]" />
         <Stack.Screen name="notifications" />
         <Stack.Screen name="notifications-inbox" />
         <Stack.Screen name="reels" />

@@ -2,7 +2,7 @@ import type { TutorialDefinition } from '../../model/types';
 import { adminOperations } from './admin';
 import { exerciseLibrary } from './exercises';
 import { helpCenterTour, platformIntro } from './intro';
-import { membershipOverview } from './membership';
+import { subscriptionsOverview } from './subscriptions';
 import { mainNavigation } from './navigation';
 import { profileBasics } from './profile';
 import { sendaOverview } from './senda';
@@ -26,7 +26,7 @@ export const allTutorialDefinitions: readonly TutorialDefinition[] = [
   workoutHistory,
   exerciseLibrary,
   routinesAndPlans,
-  membershipOverview,
+  subscriptionsOverview,
   adminOperations,
   helpCenterTour,
 ];

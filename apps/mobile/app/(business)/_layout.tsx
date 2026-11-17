@@ -29,6 +29,7 @@ export default function BusinessLayout() {
       <Stack.Screen name="cobro" />
       {/* Franja 7b: a gym's «Socios» and a coach's «Mis gimnasios». */}
       <Stack.Screen name="socios" />
+      <Stack.Screen name="suscriptores" />
       <Stack.Screen name="gimnasios" />
     </Stack>
   );

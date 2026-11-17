@@ -268,26 +268,6 @@ const SCREEN_TOURS: Record<Exclude<TourKey, 'welcome'>, readonly TourStep[]> = {
       target: 'chat.list',
     },
   ],
-  membership: [
-    {
-      icon: 'shield-checkmark-outline',
-      title: 'Tu plan hoy',
-      body: 'Si está vigente, cuántos días le quedan y cuándo vence.',
-      target: 'membership.status',
-    },
-    {
-      icon: 'refresh-outline',
-      title: 'Renovar',
-      body: 'Eliges el plan, confirmas y pagas con el código QR. Después envías el comprobante por WhatsApp.',
-      target: 'membership.renew',
-    },
-    {
-      icon: 'key-outline',
-      title: 'Tus accesos',
-      body: 'Cada entrada al gimnasio queda registrada aquí.',
-      target: 'membership.accesses',
-    },
-  ],
   notifications: [
     {
       icon: 'notifications-outline',

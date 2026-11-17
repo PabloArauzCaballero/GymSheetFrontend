@@ -9,6 +9,7 @@ import type { MyGym } from '@/shared/api/schemas';
 import { DomainImage } from '@/shared/components/media/domain-image';
 import { Button, ButtonLink } from '@/shared/components/ui/button';
 import { confirm, notify } from '@/shared/notifications';
+import { MyGymPlan } from '@/features/subscriptions/components/person/my-gym-plan';
 import { affiliationErrorText, personAffiliationsService } from '../../services/affiliations-client';
 
 function useCloseAffiliation() {
@@ -88,6 +89,7 @@ export function MyGymCard({ myGym }: Readonly<{ myGym: MyGym }>) {
           ) : null}
         </div>
       </div>
+      <MyGymPlan myGym={myGym} />
       {card.switching ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-lg)] bg-[var(--info-bg)] px-4 py-3 text-[var(--info-text)]">
           <p className="t-subhead">{`Pediste cambiarte a ${card.switching.gymName}. Sigues aquí hasta que te confirme.`}</p>

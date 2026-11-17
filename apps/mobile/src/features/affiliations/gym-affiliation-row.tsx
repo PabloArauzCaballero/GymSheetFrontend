@@ -4,7 +4,7 @@ import { affiliationEndReasons, affiliationRejectReasons, type GymAffiliation } 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Card } from '@/components/layout';
+import { Badge, Card } from '@/components/layout';
 import { PersonAvatar } from '@/components/person-avatar';
 import { Text } from '@/components/text';
 import { Button, Input } from '@/components/ui';
@@ -17,9 +17,9 @@ const isOneOf = <T extends string>(list: readonly T[], value: string): value is 
 
 /**
  * A row of «Socios» (plan §4.2): photo, name, sede, date and «CI termina en
- * 123»; Confirmar / Rechazar on a request, Terminar on a member or coach.
+ * 123», a SOCIO's plan (8e); Confirmar / Rechazar on a request, Terminar on a member or coach.
  */
-export function GymAffiliationRow({ row }: { row: GymAffiliation }) {
+export function GymAffiliationRow({ row, plan = null }: { row: GymAffiliation; plan?: { label: string; tone: 'success' | 'warning' | 'danger' | 'neutral' | 'info' } | null }) {
   const client = useQueryClient();
   const [mode, setMode] = useState<'reject' | 'end' | null>(null);
   const [code, setCode] = useState<string | null>(null);
@@ -62,6 +62,7 @@ export function GymAffiliationRow({ row }: { row: GymAffiliation }) {
           <Text numberOfLines={1} strong variant="body">{name}</Text>
           <Text tone="secondary" variant="footnote">{[affiliationKindLabels[row.kind], row.location?.name, date].filter(Boolean).join(' · ')}</Text>
           {ci ? <Text strong tabular variant="subhead">{ci}</Text> : null}
+          {plan ? <View style={{ flexDirection: 'row' }}><Badge label={plan.label} tone={plan.tone} /></View> : null}
         </View>
       </View>
       {mode ? (

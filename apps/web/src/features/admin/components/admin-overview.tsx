@@ -71,7 +71,7 @@ export function AdminOverview({
 const MODULE_GROUPS: { title: string; hrefs: string[] }[] = [
   {
     title: 'Día a día',
-    hrefs: ['/admin/operacion', '/admin/usuarios', '/admin/membership', '/admin/people', '/admin/access'],
+    hrefs: ['/admin/usuarios'],
   },
   { title: 'Gimnasio', hrefs: ['/admin/equipment', '/admin/facilities', '/admin/exercises'] },
   { title: 'Seguridad y control', hrefs: ['/admin/permissions', '/admin/auditoria'] },

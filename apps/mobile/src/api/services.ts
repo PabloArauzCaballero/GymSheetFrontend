@@ -3,7 +3,6 @@ import { chatMessageSchema, readReceiptSettingsSchema, setDisappearingMessagesRe
 import type { RoutineVisibility } from '@gymsheet/types';
 import type { DiscoveryIntent, MusicVisibility, SocialMapBounds, SocialMapCoordinates } from '@gymsheet/schemas';
 import {
-  activationRequestSchema,
   bodyMeasurementSchema,
   connectionSchema,
   conversationSummarySchema,
@@ -33,7 +32,6 @@ import {
   prizeListSchema,
   publicBranchSummarySchema,
   restDaysSchema,
-  membershipProjectionSchema,
   pageSchema,
   profileSchema,
   profileViewersPageSchema,
@@ -210,22 +208,6 @@ export interface ProfileInput {
   estaturaCm: number;
   objetivo: TrainingGoal;
 }
-
-export const membershipService = {
-  getMine: () => apiClient.request('/me/membership', membershipProjectionSchema, { method: 'GET' }),
-  /**
-   * Pide que el gimnasio active la cuenta tras un pago que la app no vio.
-   *
-   * Devuelve el enlace que el administrador abrirá. La app no lo interpreta:
-   * sólo lo mete en el mensaje de WhatsApp, porque quién puede usarlo lo decide
-   * el backend y no este teléfono.
-   */
-  requestActivation: (nota: string | null) =>
-    apiClient.request('/me/membership/activation-request', activationRequestSchema, {
-      method: 'POST',
-      body: { nota },
-    }),
-};
 
 export const workoutService = {
   /** Most recent sessions first, as the backend orders them. */

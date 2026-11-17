@@ -109,9 +109,18 @@ export const createOrderInputSchema = z
     quantity: z.number().int().min(1).max(1000).optional(),
     method: orderMethodSchema.optional(),
     note: z.string().trim().min(1).max(500).optional(),
+    /** A gym's MEMBERSHIP bought by someone not yet SOCIO there (ADR-0026): the REQUESTED SOCIO is created with the order. */
+    affiliation: z
+      .object({ locationId: z.string().uuid(), ciLast3: z.string().regex(/^[0-9]{3}$/u), switchGym: z.boolean().optional() })
+      .strict()
+      .optional(),
   })
   .strict();
 export type CreateOrderInput = z.infer<typeof createOrderInputSchema>;
+
+/** `POST /business/me/orders/:id/confirm`: «También confirmo que es socio» (default true on the backend). */
+export const confirmOrderInputSchema = z.object({ alsoConfirmAffiliation: z.boolean().optional() }).strict();
+export type ConfirmOrderInput = z.infer<typeof confirmOrderInputSchema>;
 
 export const rejectOrderInputSchema = z
   .object({ reasonCode: orderRejectionCodeSchema, note: z.string().trim().min(3).max(500).optional() })

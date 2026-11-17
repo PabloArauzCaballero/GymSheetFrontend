@@ -9,6 +9,7 @@ import { Card } from '@/components/layout';
 import { MediaImage } from '@/components/media-image';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
+import { MyGymPlan } from '@/features/subscriptions/my-gym-plan';
 import { confirm, notify } from '@/notifications';
 import { radii, spacing } from '@/theme';
 import { affiliationErrorText, personAffiliationsService } from './affiliations-service';
@@ -64,6 +65,7 @@ export function MyGymCard({ myGym }: { myGym: MyGym }) {
           <Text tone="secondary" variant="subhead">{card.detail || card.title}</Text>
         </View>
       </View>
+      <MyGymPlan myGym={myGym} />
       {card.switching ? (
         <View style={{ gap: spacing.xs }}>
           <Text tone="secondary" variant="subhead">{`Pediste cambiarte a ${card.switching.gymName}. Sigues aquí hasta que te confirme.`}</Text>

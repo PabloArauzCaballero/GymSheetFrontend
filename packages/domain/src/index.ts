@@ -55,3 +55,5 @@ export * from './orders-copy';
 export * from './affiliations';
 export * from './affiliations-copy';
 export * from './my-gym';
+export * from './subscriptions';
+export * from './subscriptions-copy';

@@ -23,9 +23,17 @@ describe('navigationFor (franja 7a)', () => {
     expect(groups.map((group) => group.label)).toEqual(['Plataforma', 'Gimnasio']);
     const gym = groups[1]?.items.map((item) => item.href) ?? [];
     expect(gym).toEqual(
-      expect.arrayContaining(['/admin/operacion', '/admin/membership', '/admin/facilities', '/admin/permissions']),
+      expect.arrayContaining(['/admin/usuarios', '/admin/facilities', '/admin/permissions']),
     );
+    // Franja 8e: the gym-operated memberships and access control are gone.
+    expect(gym.filter((href) => ['/admin/operacion', '/admin/membership', '/admin/people', '/admin/access'].includes(href))).toEqual([]);
     expect(groups[0]?.items.map((item) => item.href)).toContain('/sistema');
+  });
+
+  it('a person reaches «Mis suscripciones» and no longer «Membresía» or «Acceso» (franja 8e)', () => {
+    const all = hrefs('CLIENTE');
+    expect(all).toEqual(expect.arrayContaining(['/profile/suscripciones', '/profile/compras', '/mi-gimnasio']));
+    expect(all.filter((href) => href === '/membership' || href === '/access')).toEqual([]);
   });
 
   it('permission-gated gym modules still need the grant', () => {

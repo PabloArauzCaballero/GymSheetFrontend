@@ -11,6 +11,7 @@ import { Button } from '@/components/ui';
 import { errorCodeOf, gymAffiliationsService } from '@/features/affiliations/affiliations-service';
 import { GymAffiliationRow } from '@/features/affiliations/gym-affiliation-row';
 import { listingsService } from '@/features/business-listings/listings-service';
+import { useSocioPlans } from '@/features/subscriptions/use-socio-plans';
 import { spacing } from '@/theme';
 
 type Tab = 'requests' | 'members' | 'coaches';
@@ -20,7 +21,7 @@ const TABS: ReadonlyArray<{ id: Tab; label: string; empty: string }> = [
   { id: 'coaches', label: affiliationCopy.coaches, empty: affiliationCopy.emptyCoaches },
 ];
 
-/** «Socios» of a GYM business (plan §4.2): Solicitudes to decide, Socios by sede and Entrenadores. */
+/** «Socios» of a GYM business (plan §4.2): Solicitudes to decide, Socios by sede with their plan, and Entrenadores. */
 export default function BusinessSociosScreen() {
   const [tab, setTab] = useState<Tab>('requests');
   const [kind, setKind] = useState<AffiliationKind | ''>('');
@@ -36,6 +37,7 @@ export default function BusinessSociosScreen() {
   const pages = useInfiniteQuery({ queryKey: key, queryFn: ({ pageParam }) => load(pageParam), initialPageParam: null as string | null, getNextPageParam: (page) => page.nextCursor, retry: false });
   const rows = itemsOfPages(pages.data);
   const sedes = locations.data ?? [];
+  const planOf = useSocioPlans(tab === 'members');
   const current = TABS.find((item) => item.id === tab) ?? TABS[0];
   return (
     <ScrollScreen onRefresh={() => void pages.refetch()} refreshing={pages.isRefetching}>
@@ -67,7 +69,7 @@ export default function BusinessSociosScreen() {
       ) : rows.length === 0 ? (
         <EmptyState icon="people-outline" message={current?.empty ?? ''} title="Nada por aquí" />
       ) : (
-        rows.map((row) => <GymAffiliationRow key={row.id} row={row} />)
+        rows.map((row) => <GymAffiliationRow key={row.id} plan={tab === 'members' ? planOf(row.id) : null} row={row} />)
       )}
       {pages.hasNextPage ? <Button label="Ver más" loading={pages.isFetchingNextPage} onPress={() => void pages.fetchNextPage()} variant="ghost" /> : null}
     </ScrollScreen>

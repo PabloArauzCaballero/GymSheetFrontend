@@ -9,6 +9,7 @@ import { ErrorPanel } from '@/shared/components/feedback/error-panel';
 import { SkeletonList } from '@/shared/components/feedback/skeleton';
 import { Button } from '@/shared/components/ui/button';
 import { errorCodeOf } from '../../services/affiliations-client';
+import type { PlanChip } from '@/features/subscriptions/components/business/use-socio-plans';
 import { AffiliationRow } from './affiliation-row';
 
 /**
@@ -19,7 +20,8 @@ export function AffiliationList({
   queryKey,
   load,
   empty,
-}: Readonly<{ queryKey: readonly unknown[]; load: (cursor: string | null) => Promise<GymAffiliationsPage>; empty: string }>) {
+  planOf,
+}: Readonly<{ queryKey: readonly unknown[]; load: (cursor: string | null) => Promise<GymAffiliationsPage>; empty: string; planOf?: (affiliationId: string) => PlanChip | null }>) {
   const pages = useInfiniteQuery({
     queryKey,
     queryFn: ({ pageParam }) => load(pageParam),
@@ -38,7 +40,7 @@ export function AffiliationList({
     <div className="grid gap-3">
       <ul className="m-0 grid list-none gap-3 p-0">
         {rows.map((row) => (
-          <AffiliationRow key={row.id} row={row} />
+          <AffiliationRow key={row.id} plan={planOf?.(row.id) ?? null} row={row} />
         ))}
       </ul>
       {pages.hasNextPage ? (

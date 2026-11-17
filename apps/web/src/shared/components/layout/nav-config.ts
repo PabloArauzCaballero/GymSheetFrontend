@@ -10,7 +10,6 @@ import {
   GraduationCap,
   House,
   IdCard,
-  KeyRound,
   MessageCircle,
   Settings,
   ShoppingBag,
@@ -67,10 +66,9 @@ export const primaryNavigation: NavigationItem[] = [
   { href: '/interacciones', label: 'Interacciones', icon: Sparkles },
   { href: '/chat', label: 'Mensajes', icon: MessageCircle },
   { href: '/entrenar-juntos', label: 'Entrenar juntos', icon: CalendarCheck },
-  { href: '/membership', label: 'Membresía', icon: IdCard },
-  // What the person bought in the marketplace (franja 8d), under the profile.
+  // Plans bought in the marketplace (franja 8e) and every order (franja 8d), under the profile.
+  { href: '/profile/suscripciones', label: 'Mis suscripciones', icon: IdCard },
   { href: '/profile/compras', label: 'Mis compras', icon: ShoppingBag },
-  { href: '/access', label: 'Acceso', icon: KeyRound },
   { href: '/notifications', label: 'Avisos', icon: Bell },
   { href: '/profile', label: 'Mi perfil', icon: UserRound },
   { href: '/settings', label: 'Ajustes', icon: Settings },
@@ -82,8 +80,7 @@ export const primaryNavigation: NavigationItem[] = [
  * avisos y sus conversaciones, detrás de la cola y no mezclado con ella.
  */
 export const accountNavigation: NavigationItem[] = [
-  { href: '/membership', label: 'Mi membresía', icon: IdCard },
-  { href: '/access', label: 'Mi acceso', icon: KeyRound },
+  { href: '/profile/suscripciones', label: 'Mis suscripciones', icon: IdCard },
   { href: '/notifications', label: 'Avisos', icon: Bell },
   { href: '/chat', label: 'Mensajes', icon: MessageCircle },
   { href: '/profile', label: 'Mi perfil', icon: UserRound },

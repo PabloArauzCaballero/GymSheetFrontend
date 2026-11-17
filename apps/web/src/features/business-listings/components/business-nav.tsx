@@ -12,6 +12,8 @@ const SECTIONS: readonly Section[] = [
   { href: '/negocio', label: 'Inicio' },
   { href: '/negocio/publicaciones', label: 'Publicaciones' },
   { href: '/negocio/pedidos', label: 'Pedidos' },
+  // Every seller type (franja 8e): who holds a plan and when it ends.
+  { href: '/negocio/suscriptores', label: 'Suscriptores' },
   { href: '/negocio/cobro', label: 'Cobro' },
   { href: '/negocio/perfil', label: 'Perfil' },
 ];

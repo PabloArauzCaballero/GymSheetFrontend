@@ -11,8 +11,6 @@ const allowedCases: Array<[string[], string]> = [
   ],
   [['notifications', 'preferences', 'me'], '/notifications/preferences/me'],
   [['admin', 'media'], '/admin/media'],
-  [['admin', 'membership', 'staff-users'], '/admin/membership/staff-users'],
-  [['admin', 'membership', 'staff'], '/admin/membership/staff'],
   [['me', 'progression'], '/me/progression'],
   [['programs', 'active'], '/programs/active'],
   // Auditoría 2026-11-09: rutas que la web llamaba y el BFF rechazaba.
@@ -183,6 +181,9 @@ const allowedCases: Array<[string[], string]> = [
 ];
 const blockedCases: Array<[string[]]> = [
   [['admin', 'access', 'mock', 'events']],
+  // Retired in franja 8e (backend ADR-0026): these two were allowed before.
+  [['admin', 'membership', 'staff-users']],
+  [['admin', 'membership', 'staff']],
   [['admin', 'unknown']],
   [['..', 'secrets']],
   [['gateway', 'events']],

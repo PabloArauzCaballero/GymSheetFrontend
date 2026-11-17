@@ -82,20 +82,6 @@ export type RoutineStatus = (typeof routineStatuses)[number];
 export const routineAssignmentStatuses = ['ACTIVE', 'COMPLETED', 'CANCELLED'] as const;
 export type RoutineAssignmentStatus = (typeof routineAssignmentStatuses)[number];
 
-export const membershipStatuses = ['ACTIVE', 'SUSPENDED', 'CANCELLED', 'EXPIRED'] as const;
-export type MembershipStatus = (typeof membershipStatuses)[number];
-
-export const planTypes = [
-  'DAY_PASS',
-  'WEEKLY',
-  'MONTHLY',
-  'QUARTERLY',
-  'SEMIANNUAL',
-  'ANNUAL',
-  'CUSTOM',
-] as const;
-export type PlanType = (typeof planTypes)[number];
-
 export const roomTypes = [
   'TRAINING',
   'CARDIO',
@@ -113,21 +99,6 @@ export type MaintenanceType = (typeof maintenanceTypes)[number];
 
 export const maintenanceStatuses = ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const;
 export type MaintenanceStatus = (typeof maintenanceStatuses)[number];
-
-export const staffPositions = ['COACH', 'FRONT_DESK', 'ADMINISTRATION'] as const;
-export type StaffPosition = (typeof staffPositions)[number];
-
-export const employmentStatuses = ['ACTIVE', 'SUSPENDED', 'TERMINATED'] as const;
-export type EmploymentStatus = (typeof employmentStatuses)[number];
-
-export const credentialTypes = ['PIN', 'FACE', 'FINGERPRINT'] as const;
-export type CredentialType = (typeof credentialTypes)[number];
-
-export const credentialStatuses = ['ACTIVE', 'SUSPENDED', 'REVOKED'] as const;
-export type CredentialStatus = (typeof credentialStatuses)[number];
-
-export const accessOutcomes = ['GRANTED', 'DENIED'] as const;
-export type AccessOutcome = (typeof accessOutcomes)[number];
 
 export const notificationStatuses = ['PENDING', 'SENT', 'FAILED', 'DEAD_LETTER', 'READ'] as const;
 export type NotificationStatus = (typeof notificationStatuses)[number];
