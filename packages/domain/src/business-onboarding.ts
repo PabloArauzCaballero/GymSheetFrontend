@@ -15,13 +15,14 @@ export function accountKindOf(principal: { role: UserRole; accountKind?: Account
 }
 
 export const businessDestination = {
-  web: { home: '/negocio', signup: '/negocio/registro', kyc: '/negocio/verificacion' },
+  web: { home: '/negocio', signup: '/negocio/registro', kyc: '/negocio/verificacion', newListing: '/negocio/publicaciones/nueva' },
   mobile: {
     home: '/(business)',
     signup: '/(auth)/negocio-registro',
     completion: '/(business)/completar',
     kycWizard: '/(business)/verificar',
     kyc: '/(business)/verificacion',
+    newListing: '/(business)/publicacion-nueva',
   },
 } as const;
 

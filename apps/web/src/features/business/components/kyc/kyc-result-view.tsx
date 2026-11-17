@@ -19,7 +19,7 @@ const TONE = {
 
 /**
  * The KYC result (plan §4.1): published, in review, to correct or final. The
- * CTAs of franjas 8c/8d (first listing, QR payments) show disabled with
+ * first listing opens the creation (franja 8c); QR payments (8d) shows disabled with
  * «Llega pronto» instead of linking to a screen that does not exist.
  * `heading` renders the title here; the wizard's frame renders it otherwise.
  */
@@ -49,6 +49,7 @@ export function KycResultView({ outcome, heading = false }: Readonly<{ outcome: 
         </Button>
       );
     }
+    if (item.key === 'firstListing') return <ButtonLink href={businessDestination.web.newListing} key={item.key} size="lg" variant={variant}>{item.label}</ButtonLink>;
     if (item.key === 'portal') return <ButtonLink href={businessDestination.web.home} key={item.key} size="lg" variant={variant}>{item.label}</ButtonLink>;
     if (item.key === 'publicProfile' && outcome.handle) {
       return <ButtonLink href={`/@${outcome.handle}`} key={item.key} size="lg" variant={variant}>{item.label}</ButtonLink>;

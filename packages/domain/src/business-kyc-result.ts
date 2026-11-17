@@ -39,7 +39,7 @@ export const userFacingCheckCopy: Readonly<Record<string, string>> = {
 
 const publishedActions: KycOutcomeAction[] = [
   { key: 'portal', label: 'Ir a mi panel', available: true },
-  { key: 'firstListing', label: 'Publica tu primer plan o producto', available: false, hint: SOON },
+  { key: 'firstListing', label: 'Publica tu primer plan o producto', available: true },
   { key: 'qrPayments', label: 'Configura tu cobro por QR', available: false, hint: SOON },
 ];
 

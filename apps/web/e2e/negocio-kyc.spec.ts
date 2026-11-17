@@ -196,7 +196,7 @@ test('the business reads its approval and its @handle is public', async ({ page 
   await page.goto('/negocio/verificacion');
   await expect(page.getByRole('heading', { name: `¡Listo! Tu negocio ya está publicado en @${handle}` })).toBeVisible({ timeout: 20_000 });
   await expect(page.getByText('REPP ya revisó tus datos. Tu ficha lleva «Verificado por REPP».')).toBeVisible();
-  await expect(page.getByRole('button', { name: /Publica tu primer plan o producto/u })).toBeDisabled();
+  await expect(page.getByRole('link', { name: 'Publica tu primer plan o producto' })).toHaveAttribute('href', '/negocio/publicaciones/nueva');
   await page.goto('/negocio');
   await expect(page.getByRole('status', { name: 'Estado de tu negocio' })).toContainText('Verificado por REPP');
   expect((await page.goto(`/@${handle}`))?.status()).toBeLessThan(400);

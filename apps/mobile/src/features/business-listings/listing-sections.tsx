@@ -20,7 +20,7 @@ export function ListingContentSection({ listing, entityType, locked }: { listing
   const [errors, setErrors] = useState<ListingFormErrors>({});
   const save = useListingWrite(listing.id, (patch: NonNullable<ReturnType<typeof listingPatch>>) => listingsService.update(listing.id, patch), 'Cambios guardados.');
   const categories = useQuery({
-    queryKey: queryKeys.business.categories(entityType ?? 'ALL'),
+    queryKey: queryKeys.business.categories(entityType ?? 'STORE'),
     queryFn: () => businessService.categories(entityType ?? 'STORE'),
     enabled: listing.offerKind === 'PRODUCT',
   });

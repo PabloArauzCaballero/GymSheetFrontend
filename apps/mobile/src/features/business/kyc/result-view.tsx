@@ -56,6 +56,8 @@ export function ResultView({ outcome }: { outcome: KycOutcome }) {
           const onPress =
             action.key === 'portal'
               ? () => router.replace(businessDestination.mobile.home)
+              : action.key === 'firstListing'
+                ? () => router.push(businessDestination.mobile.newListing)
               : () => reopen.mutate(action.key === 'resubmit' ? 'resubmit' : 'startChange');
           return (
             <Button

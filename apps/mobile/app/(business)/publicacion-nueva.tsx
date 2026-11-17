@@ -39,7 +39,7 @@ export default function NewListingScreen() {
   const [errors, setErrors] = useState<ListingFormErrors>({});
   const lastStep: Step = form.offerKind && !hasListingDetail(form.offerKind) ? 3 : 4;
   const categories = useQuery({
-    queryKey: queryKeys.business.categories(entityType ?? 'ALL'),
+    queryKey: queryKeys.business.categories(entityType ?? 'STORE'),
     queryFn: () => businessService.categories(entityType ?? 'STORE'),
     enabled: form.offerKind === 'PRODUCT',
   });

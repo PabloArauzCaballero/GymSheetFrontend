@@ -166,12 +166,13 @@ describe('step 7 and the result', () => {
     await waitFor(() => expect(onEdit).toHaveBeenCalledWith(6, undefined, 'Te falta completar algo. Te llevamos ahí.'));
   });
 
-  it('publishes with CTAs of later phases disabled, never a dead link', () => {
+  it('publishes with the first-listing link and the CTAs of later phases disabled, never a dead link', () => {
     const outcome = kycOutcomeFromSubmit({ submissionId: submission.id, status: 'AUTO_APPROVED', reviewDueAt: null, postReviewDueAt: null, userFacingCodes: [], handle: 'topfit' });
     wrap(<KycResultView heading outcome={outcome} />);
     expect(screen.getByRole('heading', { name: '¡Listo! Tu negocio ya está publicado en @topfit' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Ver mi ficha' })).toHaveAttribute('href', '/@topfit');
-    expect(screen.getByRole('button', { name: /Publica tu primer plan o producto/u })).toBeDisabled();
+    // Franja 8c shipped the listings: the first listing is a real link now; QR payments wait for 8d.
+    expect(screen.getByRole('link', { name: 'Publica tu primer plan o producto' })).toHaveAttribute('href', '/negocio/publicaciones/nueva');
     expect(screen.getByRole('button', { name: /Configura tu cobro por QR/u })).toBeDisabled();
   });
 });

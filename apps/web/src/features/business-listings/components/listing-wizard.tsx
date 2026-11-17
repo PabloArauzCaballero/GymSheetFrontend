@@ -39,7 +39,7 @@ export function ListingWizard({ entityType }: Readonly<{ entityType: EntityType 
   const mounted = useRef(false);
   const lastStep: Step = form.offerKind && !hasListingDetail(form.offerKind) ? 3 : 4;
   const categories = useQuery({
-    queryKey: queryKeys.business.categories(entityType ?? 'ALL'),
+    queryKey: queryKeys.business.categories(entityType ?? 'STORE'),
     queryFn: () => businessService.categories(entityType ?? 'STORE'),
     enabled: form.offerKind === 'PRODUCT',
   });
