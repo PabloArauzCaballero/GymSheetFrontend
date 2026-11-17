@@ -20,6 +20,7 @@ export * from './definitions/reels';
 export * from './definitions/public-facilities';
 export * from './definitions/directory';
 export * from './definitions/directory-payments';
+export * from './definitions/business-orders';
 export * from './definitions/business';
 export * from './definitions/business-kyc';
 export * from './definitions/business-kyc-admin';

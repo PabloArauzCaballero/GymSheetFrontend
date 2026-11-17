@@ -223,7 +223,8 @@ export function CasePanel({
           <ShieldCheck aria-hidden className="mr-1 size-4" />
           {data.contentHidden ? 'Restaurar contenido' : 'Sin infracción'}
         </Button>
-        {data.contentHidden || data.targetKind === 'BUSINESS_PROFILE' ? null : (
+        {/* A profile is suspended, never hidden; an order is never hidden at all (ADR-0024). */}
+        {data.contentHidden || data.targetKind === 'BUSINESS_PROFILE' || data.targetKind === 'PAYMENT_ORDER' ? null : (
           <Button
             disabled={resolve.isPending}
             onClick={() => act({ hideContent: true, sanction: false })}

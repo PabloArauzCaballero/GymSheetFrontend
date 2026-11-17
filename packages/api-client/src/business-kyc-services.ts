@@ -35,7 +35,7 @@ export type UploadFn = <T>(
   path: string,
   schema: z.ZodType<T>,
   form: FormData,
-  options?: { timeoutMs?: number; signal?: AbortSignal | null },
+  options?: { timeoutMs?: number; signal?: AbortSignal | null; method?: 'POST' | 'PUT' },
 ) => Promise<T>;
 
 const noContentSchema = z.null();

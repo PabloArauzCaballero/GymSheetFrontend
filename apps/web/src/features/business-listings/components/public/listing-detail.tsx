@@ -1,10 +1,10 @@
 import { formatPrice, initials, listingTerms, offerKindName } from '@gymsheet/domain';
-import { Check, ShoppingBag } from 'lucide-react';
+import { Check } from 'lucide-react';
 import Link from 'next/link';
 import type { PublicListing } from '@/shared/api/schemas';
 import { WriteToBusinessButton } from '@/features/business-chat/components/write-to-business-button';
 import { DomainImage } from '@/shared/components/media/domain-image';
-import { Button } from '@/shared/components/ui/button';
+import { BuyButton } from '@/features/orders/components/buy-button';
 import { ReportButton, type Viewer } from './report-button';
 import { SellerBadge } from './seller-badge';
 
@@ -27,9 +27,8 @@ function Carousel({ listing }: Readonly<{ listing: PublicListing }>) {
 
 /**
  * A public listing (plan §4.3): photos, price in BOB, what it includes, the
- * seller and the actions. «Escribir» opens the chat with the seller (franja
- * 8f); buying arrives with the orders (8d) and shows disabled with «Llega
- * pronto», never as a link that leads nowhere.
+ * seller and the actions. «Comprar» opens the checkout (franja 8d) and
+ * «Escribir» the chat with the seller (franja 8f).
  */
 export function ListingDetail({ listing, viewer }: Readonly<{ listing: PublicListing; viewer: Viewer }>) {
   const terms = listingTerms(listing);
@@ -50,13 +49,7 @@ export function ListingDetail({ listing, viewer }: Readonly<{ listing: PublicLis
         </header>
 
         <div className="grid gap-2">
-          <Button aria-describedby="listing-soon" className="w-full" disabled size="lg" variant="primary">
-            <ShoppingBag aria-hidden className="size-5" />
-            Comprar
-          </Button>
-          <p className="t-footnote text-center text-[var(--text-muted)]" id="listing-soon">
-            Llega pronto: comprar con QR desde REPP.
-          </p>
+          <BuyButton listing={listing} viewer={viewer} />
           <WriteToBusinessButton entityId={seller.id} returnTo={`/publicacion/${listing.id}`} variant="secondary" viewer={viewer} />
         </div>
 

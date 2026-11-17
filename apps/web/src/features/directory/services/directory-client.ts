@@ -2,27 +2,21 @@ import { z } from 'zod';
 import { apiRequest } from '@/shared/api/api-client';
 import type {
   CategoryTreeNode,
-  CreatePaymentOrderInput,
   CreateReviewInput,
   CreateReviewReplyInput,
   DirectoryEntitySummary,
   DirectoryFilterQuery,
-  PublicPaymentConfig,
   EntityPlan,
   EntityReviewsResponse,
   ListReviewsQuery,
-  PaymentOrder,
   ReviewItem,
-  SubmitReceiptInput,
   UpdateReviewInput,
 } from '@/shared/api/schemas';
 import {
   categoryTreeNodeSchema,
   directoryEntitySummarySchema,
-  publicPaymentConfigSchema,
   entityPlanSchema,
   entityReviewsResponseSchema,
-  paymentOrderSchema,
   reviewItemSchema,
 } from '@/shared/api/schemas';
 
@@ -126,46 +120,6 @@ export const directoryClient = {
     return apiRequest<EntityPlan[]>(
       `/public/directory/entities/${encodeURIComponent(entityId)}/plans`,
       z.array(entityPlanSchema)
-    );
-  },
-
-  getEntityPaymentConfig: (entityId: string) => {
-    return apiRequest<PublicPaymentConfig | null>(
-      `/public/directory/entities/${encodeURIComponent(entityId)}/payment-config`,
-      publicPaymentConfigSchema.nullable()
-    );
-  },
-
-  createPaymentOrder: (input: CreatePaymentOrderInput) => {
-    return apiRequest<PaymentOrder>(
-      '/directory/payments/orders',
-      paymentOrderSchema,
-      {
-        method: 'POST',
-        body: input,
-      }
-    );
-  },
-
-  submitReceipt: (orderId: string, input: SubmitReceiptInput) => {
-    return apiRequest<PaymentOrder>(
-      `/directory/payments/orders/${encodeURIComponent(orderId)}/receipt`,
-      paymentOrderSchema,
-      {
-        method: 'POST',
-        body: input,
-      }
-    );
-  },
-
-  getMyOrders: (query: { status?: string; limit?: number } = {}) => {
-    const params = new URLSearchParams();
-    if (query.status) params.set('status', query.status);
-    if (query.limit) params.set('limit', String(query.limit));
-
-    return apiRequest<PaymentOrder[]>(
-      `/directory/payments/orders/my-orders?${params.toString()}`,
-      z.array(paymentOrderSchema)
     );
   },
 };

@@ -1,4 +1,4 @@
-import { businessReportReasons, businessReportTargetKinds, moderationResolutions } from '@gymsheet/domain';
+import { businessReportReasons, businessReportTargetKinds, moderationResolutions, orderDisputeReasons } from '@gymsheet/domain';
 import { moderationCaseContentFields } from '@gymsheet/schemas';
 import { z } from 'zod';
 import { apiRequest } from '@/shared/api/api-client';
@@ -18,6 +18,8 @@ export const moderationTargetKinds = [
   // Marketplace (ADR-0022, franja 8c): a public listing and a business profile.
   'BUSINESS_LISTING',
   'BUSINESS_PROFILE',
+  // A buyer's dispute about an order (ADR-0024, franja 8d): the reported account is the business.
+  'PAYMENT_ORDER',
 ] as const;
 export type ModerationTargetKind = (typeof moderationTargetKinds)[number];
 
@@ -39,11 +41,12 @@ export type ModerationReason = (typeof moderationReasons)[number];
 
 const TRAINING_REASONS: ModerationReason[] = ['EJERCICIO_PELIGROSO', 'INFORMACION_ENGANOSA', 'PLAGIO'];
 /** Marketplace cases: no sanction ladder (the business is suspended instead). */
-export function isBusinessTarget(kind: ModerationTargetKind): kind is 'BUSINESS_LISTING' | 'BUSINESS_PROFILE' {
-  return (businessReportTargetKinds as readonly string[]).includes(kind);
+export function isBusinessTarget(kind: ModerationTargetKind): kind is 'BUSINESS_LISTING' | 'BUSINESS_PROFILE' | 'PAYMENT_ORDER' {
+  return kind === 'PAYMENT_ORDER' || (businessReportTargetKinds as readonly string[]).includes(kind);
 }
 
 export function reasonsFor(kind: ModerationTargetKind): ModerationReason[] {
+  if (kind === 'PAYMENT_ORDER') return [...orderDisputeReasons];
   if (isBusinessTarget(kind)) return [...businessReportReasons];
   return kind === 'ROUTINE' || kind === 'EXERCISE' || kind === 'COMMENT'
     ? [...moderationReasons]
@@ -78,6 +81,7 @@ export const TARGET_LABEL: Record<ModerationTargetKind, string> = {
   MUSIC_PLAYLIST: 'Enlace de música',
   BUSINESS_LISTING: 'Publicación',
   BUSINESS_PROFILE: 'Perfil de negocio',
+  PAYMENT_ORDER: 'Pedido',
 };
 
 /**

@@ -1,40 +1,12 @@
 import { z } from 'zod';
 import { directoryEntitySummarySchema } from './directory';
 
-export const entityPaymentConfigSchema = z.object({
-  id: z.string().optional(),
-  entityId: z.string().optional(),
-  bankName: z.string().trim().min(2).max(100),
-  accountHolderName: z.string().trim().min(2).max(180),
-  taxId: z.string().trim().min(3).max(50),
-  accountNumber: z.string().trim().min(4).max(100),
-  aliasOrPhone: z.string().trim().max(100).nullable().optional(),
-  qrImageUrl: z.string().trim().min(5),
-  qrPayload: z.string().trim().nullable().optional(),
-  instructions: z.string().trim().max(2000).nullable().optional(),
-  isActive: z.boolean().default(true),
-});
-export type EntityPaymentConfig = z.infer<typeof entityPaymentConfigSchema>;
-export type EntityPaymentConfigInput = z.input<typeof entityPaymentConfigSchema>;
-
 /**
- * What a buyer sees to pay (`GET /public/directory/entities/:id/payment-config`
- * and `paymentConfig` of a new order): no tax id, ids or dates since franja 8a
- * (D5), and `null` when the seller has no active method. `taxId` stays
- * optional so an older backend that still sends it keeps parsing.
+ * A listing as `GET /public/directory/entities/:id/plans` still returns it.
+ * Its id is the listing id: buying goes through `/publicacion/:id` and the
+ * orders of `business-orders.ts` (ADR-0024); the old public payment config,
+ * `{ planId }` orders and receipt URLs are gone with franja 8d.
  */
-export const publicPaymentConfigSchema = z.object({
-  bankName: z.string(),
-  accountHolderName: z.string(),
-  accountNumber: z.string(),
-  aliasOrPhone: z.string().nullable().optional(),
-  qrImageUrl: z.string(),
-  qrPayload: z.string().nullable().optional(),
-  instructions: z.string().nullable().optional(),
-  taxId: z.string().optional(),
-  isActive: z.boolean(),
-});
-export type PublicPaymentConfig = z.infer<typeof publicPaymentConfigSchema>;
 
 export const entityPlanTypeEnum = z.enum(['MEMBERSHIP_PLAN', 'PASS', 'SERVICE', 'PRODUCT']);
 export type EntityPlanType = z.infer<typeof entityPlanTypeEnum>;
@@ -62,88 +34,3 @@ export const entityPlanSchema = z.object({
   updatedAt: z.string().optional(),
 });
 export type EntityPlan = z.infer<typeof entityPlanSchema>;
-
-export const planPriceHistorySchema = z.object({
-  id: z.string(),
-  planId: z.string(),
-  price: z.string(),
-  currency: z.string().length(3),
-  effectiveFrom: z.string(),
-  effectiveTo: z.string().nullable(),
-  changedByUserId: z.string(),
-  changeReason: z.string(),
-  isPromotional: z.boolean(),
-  createdAt: z.string(),
-});
-export type PlanPriceHistory = z.infer<typeof planPriceHistorySchema>;
-
-export const createEntityPlanSchema = z.object({
-  type: entityPlanTypeEnum.optional().default('MEMBERSHIP_PLAN'),
-  name: z.string().trim().min(2).max(180),
-  slug: z.string().trim().min(2).max(180).optional(),
-  description: z.string().trim().min(5).max(5000),
-  benefits: z.array(z.string().trim().min(1)).optional().default([]),
-  durationDays: z.number().int().min(1).max(3650).nullable().optional(),
-  price: z.number().nonnegative(),
-  currency: z.string().trim().length(3).regex(/^[A-Z]{3}$/).optional().default('USD'),
-  displayOrder: z.number().int().optional().default(0),
-  mediaUrls: z.array(z.string().trim()).optional().default([]),
-  metadata: z.record(z.string(), z.unknown()).optional().default({}),
-  initialReason: z.string().trim().min(3).max(500).optional().default('Precio de lanzamiento inicial'),
-});
-export type CreateEntityPlanInput = z.input<typeof createEntityPlanSchema>;
-
-export const updatePlanPriceSchema = z.object({
-  newPrice: z.number().nonnegative(),
-  currency: z.string().trim().length(3).regex(/^[A-Z]{3}$/).optional(),
-  reason: z.string().trim().min(5).max(500),
-  isPromotional: z.boolean().optional().default(false),
-});
-export type UpdatePlanPriceInput = z.input<typeof updatePlanPriceSchema>;
-
-export const paymentOrderStatusEnum = z.enum([
-  'PENDING_PAYMENT',
-  'PENDING_VERIFICATION',
-  'CONFIRMED',
-  'REJECTED',
-  'CANCELLED',
-]);
-export type PaymentOrderStatus = z.infer<typeof paymentOrderStatusEnum>;
-
-export const paymentOrderSchema = z.object({
-  id: z.string(),
-  orderNumber: z.string(),
-  entityId: z.string(),
-  planId: z.string(),
-  athleteUserId: z.string(),
-  priceHistoryId: z.string(),
-  amount: z.string(),
-  currency: z.string().length(3),
-  planSnapshot: z.record(z.string(), z.unknown()),
-  status: paymentOrderStatusEnum,
-  receiptUrl: z.string().nullable(),
-  receiptReference: z.string().nullable(),
-  athleteNotes: z.string().nullable(),
-  submittedAt: z.string().nullable(),
-  verifiedByUserId: z.string().nullable(),
-  verifiedAt: z.string().nullable(),
-  rejectionReason: z.string().nullable(),
-  membershipId: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-export type PaymentOrder = z.infer<typeof paymentOrderSchema>;
-
-export const createPaymentOrderSchema = z.object({
-  planId: z.string(),
-  athleteNotes: z.string().trim().max(500).nullable().optional(),
-});
-export type CreatePaymentOrderInput = z.infer<typeof createPaymentOrderSchema>;
-
-export const submitReceiptSchema = z.object({
-  receiptUrl: z.string().trim().min(5),
-  receiptStorageKey: z.string().trim().nullable().optional(),
-  receiptReference: z.string().trim().max(100).nullable().optional(),
-  athleteNotes: z.string().trim().max(500).nullable().optional(),
-});
-export type SubmitReceiptInput = z.infer<typeof submitReceiptSchema>;

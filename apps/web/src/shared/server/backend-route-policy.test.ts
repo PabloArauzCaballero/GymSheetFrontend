@@ -280,6 +280,7 @@ describe('isNoStoreBackendPath', () => {
     expect(isNoStoreBackendPath('/admin/business/kyc/queue')).toBe(true);
     expect(isNoStoreBackendPath('/business/me')).toBe(false);
   });
+
 });
 
 describe('anonymous public marketplace reads (franja 8c)', () => {

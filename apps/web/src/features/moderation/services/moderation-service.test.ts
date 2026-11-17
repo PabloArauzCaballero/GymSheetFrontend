@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  isBusinessTarget,
   moderationCaseDetailSchema,
   moderationCaseSchema,
   moderationReasons,
@@ -58,6 +59,7 @@ describe('moderación: tipos y motivos', () => {
         'COMMENT',
         'EXERCISE',
         'MUSIC_PLAYLIST',
+        'PAYMENT_ORDER',
         'PROFILE_PHOTO',
         'REEL',
         'ROUTINE',
@@ -84,6 +86,12 @@ describe('moderación: motivos al denunciar', () => {
     expect(reasonsFor('BUSINESS_LISTING')).toEqual(['SPAM', 'INFORMACION_ENGANOSA', 'PERFIL_FALSO', 'DROGAS', 'CONTENIDO_SEXUAL', 'OTRO']);
     expect(reasonsFor('BUSINESS_PROFILE')).not.toContain('EJERCICIO_PELIGROSO');
     expect(reasonsFor('BUSINESS_PROFILE')).not.toContain('MENOR_DE_EDAD');
+  });
+
+  it('an order dispute is a marketplace case with its own reasons (franja 8d)', () => {
+    expect(isBusinessTarget('PAYMENT_ORDER')).toBe(true);
+    expect(reasonsFor('PAYMENT_ORDER')).toEqual(['SPAM', 'INFORMACION_ENGANOSA', 'ACOSO', 'OTRO']);
+    expect(TARGET_LABEL.PAYMENT_ORDER).toBe('Pedido');
   });
 
   it('los motivos de entrenamiento sólo se ofrecen para rutina, ejercicio y comentario', () => {

@@ -12,11 +12,20 @@ import { WriteToBusiness } from './write-to-business';
 
 /**
  * A public listing (plan §4.3): photos, price in Bs, what it includes, the
- * seller and the actions. «Escribir» opens the chat with the seller (8f);
- * buying (franja 8d) shows disabled with «Llega pronto»: never a button that
- * leads nowhere.
+ * seller and the actions. «Comprar» opens the checkout (franja 8d) and
+ * «Escribir» the chat with the seller (franja 8f).
  */
-export function ListingDetailView({ listing, onSeller, onReport }: { listing: PublicListing; onSeller: (handle: string) => void; onReport: () => void }) {
+export function ListingDetailView({
+  listing,
+  onSeller,
+  onReport,
+  onBuy,
+}: {
+  listing: PublicListing;
+  onSeller: (handle: string) => void;
+  onReport: () => void;
+  onBuy: () => void;
+}) {
   const { width } = useWindowDimensions();
   const photo = Math.min(width - spacing.lg * 2, 560);
   const terms = listingTerms(listing);
@@ -45,10 +54,14 @@ export function ListingDetailView({ listing, onSeller, onReport }: { listing: Pu
         {listing.inStock === false ? <Text tone="warning" variant="subhead">Sin stock por ahora</Text> : null}
       </View>
       <View style={{ gap: spacing.sm }}>
-        <Button accessibilityHint="Llega pronto" disabled icon="bag-outline" label="Comprar" onPress={() => undefined} />
-        <Text style={{ textAlign: 'center' }} tone="secondary" variant="footnote">
-          Llega pronto: comprar con QR desde REPP.
-        </Text>
+        <Button
+          accessibilityHint={listing.inStock === false ? 'Sin stock: no se puede pedir ahora.' : undefined}
+          disabled={listing.inStock === false}
+          icon="bag-outline"
+          label="Comprar"
+          onPress={onBuy}
+          testID="listing-buy"
+        />
         <WriteToBusiness entityId={seller.id} variant="ghost" />
       </View>
       <View style={{ gap: spacing.sm }}>

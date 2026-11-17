@@ -15,7 +15,7 @@ export function accountKindOf(principal: { role: UserRole; accountKind?: Account
 }
 
 export const businessDestination = {
-  web: { home: '/negocio', signup: '/negocio/registro', kyc: '/negocio/verificacion', newListing: '/negocio/publicaciones/nueva' },
+  web: { home: '/negocio', signup: '/negocio/registro', kyc: '/negocio/verificacion', newListing: '/negocio/publicaciones/nueva', orders: '/negocio/pedidos', payments: '/negocio/cobro' },
   mobile: {
     home: '/(business)',
     signup: '/(auth)/negocio-registro',
@@ -23,6 +23,8 @@ export const businessDestination = {
     kycWizard: '/(business)/verificar',
     kyc: '/(business)/verificacion',
     newListing: '/(business)/publicacion-nueva',
+    orders: '/(business)/(tabs)/pedidos',
+    payments: '/(business)/cobro',
   },
 } as const;
 

@@ -15,7 +15,7 @@ import { PhotoStrip } from '@/features/business-listings/photo-strip';
 import { confirmDelete, notify } from '@/notifications';
 import { spacing } from '@/theme';
 
-/** «Perfil» of the business shell (plan §4.2, franja 8c): sedes and the photos of the public profile. */
+/** «Perfil» of the business shell (plan §4.2): the way to «Cobro» (8d), sedes and the photos of the public profile (8c). */
 export default function BusinessProfileScreen() {
   const router = useRouter();
   const client = useQueryClient();
@@ -56,6 +56,9 @@ export default function BusinessProfileScreen() {
   return (
     <ScrollScreen onRefresh={() => void Promise.all([me.refetch(), locations.refetch()])} refreshing={me.isRefetching || locations.isRefetching}>
       <ScreenHeader subtitle={handle ? `@${handle}` : 'Dónde atiendes y cómo se ve tu negocio.'} title="Perfil" />
+      <Card list>
+        <NavRow onPress={() => router.push('/(business)/cobro')} subtitle="Tu banco, tu QR y si aceptas efectivo" testID="business-payments" title="Cobro" />
+      </Card>
       <Card list>
         <View style={{ paddingVertical: spacing.sm }}>
           <Text accessibilityRole="header" variant="headline">

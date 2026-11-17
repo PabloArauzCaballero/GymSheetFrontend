@@ -267,6 +267,7 @@ export default function ProfileScreen() {
                   <VerificationStatusRow key="verificacion" leading={<RowGlyph icon="shield-checkmark-outline" />} />,
                 ]
               : []),
+            <NavRow key="compras" leading={<RowGlyph icon="bag-outline" />} onPress={() => router.push('/compras')} subtitle="Lo que compraste en el marketplace" testID="profile-orders" title="Mis compras" />,
             <NavRow key="chat" leading={<RowGlyph icon="chatbubbles-outline" />} onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />,
             <NavRow key="training-invitations" leading={<RowGlyph icon="people-outline" />} onPress={() => router.push('/training-invitations')} subtitle="Invitaciones recibidas y encuentros" title="Entrenar juntos" />,
           ]}

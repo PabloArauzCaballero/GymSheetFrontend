@@ -19,8 +19,8 @@ const TONE = {
 
 /**
  * The KYC result (plan §4.1): published, in review, to correct or final. The
- * first listing opens the creation (franja 8c); QR payments (8d) shows disabled with
- * «Llega pronto» instead of linking to a screen that does not exist.
+ * first listing opens the creation (franja 8c) and QR payments the «Cobro»
+ * page (8d). An action not available yet shows disabled with its hint.
  * `heading` renders the title here; the wizard's frame renders it otherwise.
  */
 export function KycResultView({ outcome, heading = false }: Readonly<{ outcome: KycOutcome; heading?: boolean }>) {
@@ -50,6 +50,7 @@ export function KycResultView({ outcome, heading = false }: Readonly<{ outcome: 
       );
     }
     if (item.key === 'firstListing') return <ButtonLink href={businessDestination.web.newListing} key={item.key} size="lg" variant={variant}>{item.label}</ButtonLink>;
+    if (item.key === 'qrPayments') return <ButtonLink href={businessDestination.web.payments} key={item.key} size="lg" variant={variant}>{item.label}</ButtonLink>;
     if (item.key === 'portal') return <ButtonLink href={businessDestination.web.home} key={item.key} size="lg" variant={variant}>{item.label}</ButtonLink>;
     if (item.key === 'publicProfile' && outcome.handle) {
       return <ButtonLink href={`/@${outcome.handle}`} key={item.key} size="lg" variant={variant}>{item.label}</ButtonLink>;
