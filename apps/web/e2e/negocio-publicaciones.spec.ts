@@ -152,7 +152,8 @@ test('a REPP moderator hides it from the queue and it disappears from the market
   const resolved = waitForBff(page, 'POST', `/api/backend/admin/moderation/cases/BUSINESS_LISTING/${listingId}/resolve`);
   await page.getByRole('button', { name: 'Ocultar publicación' }).click();
   const verdict = await resolved;
-  expect(verdict.status()).toBe(200);
+  // The verdict is a POST that creates the resolution: 201, as for every other case kind.
+  expect(verdict.status()).toBe(201);
   expect(verdict.request().postDataJSON()).toMatchObject({ hideContent: true, sanction: false });
   await expect(page.getByTestId('ultimo-veredicto')).toContainText('Contenido oculto');
   await context.close();
