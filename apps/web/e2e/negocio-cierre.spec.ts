@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { dismissTour, openPage, signIn } from './fixtures';
 import { readablePhoto } from './kyc-datos';
 import { BACKEND } from './alta-datos';
-import { crearNegocioAprobado, type Negocio } from './negocio-datos';
+import { crearNegocioAprobado, sqlValue, type Negocio } from './negocio-datos';
 import { apiDe, crearCuenta, sql, type Cuenta } from './rutinas-datos';
 
 /**
@@ -144,7 +144,8 @@ test('with nothing pending, the business closes with its password', async ({ pag
   const response = await deleted;
   expect(response.status()).toBe(200);
   expect(response.request().postDataJSON()).toEqual({ password: business.password });
-  expect(((await response.json()) as { data: { closed: boolean } }).data.closed).toBe(true);
+  // The page navigates to /adios right after the answer, so its body is gone: check the effect in the database.
+  expect(await sqlValue(`SELECT status FROM directory.entities WHERE id = '${business.entityId}'`)).toBe('CLOSED');
   closed = true;
   await expect(page).toHaveURL(/\/adios$/u, { timeout: 20_000 });
   await expect(page.getByRole('heading', { level: 1, name: 'Tu cuenta está cerrada' })).toBeVisible();
