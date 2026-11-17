@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { consentVersionSchema } from './privacy';
+import { consentKinds } from './privacy';
 
 /**
  * Legal documents of the backend's `src/modules/legal` catalog. A person
@@ -22,10 +22,18 @@ export const publishedLegalDocumentSchema = legalDocumentVersionSchema.extend({
 });
 export type PublishedLegalDocument = z.infer<typeof publishedLegalDocumentSchema>;
 
+/**
+ * Separate consents `GET /legal/current` can list: the person's privacy consents plus the business
+ * set's `KYC_SELFIE` (ADR-0021). Kept apart from `consentKinds`, which drives the person's settings.
+ */
+export const legalConsentKinds = [...consentKinds, 'KYC_SELFIE'] as const;
+export const legalConsentVersionSchema = z.object({ kind: z.enum(legalConsentKinds), version: z.string() });
+export type LegalConsentVersion = z.infer<typeof legalConsentVersionSchema>;
+
 /** `GET /legal/current` (public): documents and the current version of each separate consent. */
 export const currentLegalDocumentsSchema = z.object({
   documents: z.array(publishedLegalDocumentSchema),
-  consents: z.array(consentVersionSchema).default([]),
+  consents: z.array(legalConsentVersionSchema).default([]),
 });
 export type CurrentLegalDocuments = z.infer<typeof currentLegalDocumentsSchema>;
 
