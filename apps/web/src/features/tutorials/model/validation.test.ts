@@ -69,7 +69,7 @@ describe('validateTutorials', () => {
       tutorial({
         id: 'a',
         roles: ['CLIENTE'],
-        steps: [{ id: 's', title: 't', description: 'd', target: 'x', roles: ['ADMIN'] }],
+        steps: [{ id: 's', title: 't', description: 'd', target: 'x', roles: ['SYSTEM_ADMIN'] }],
       }),
     ]);
     expect(issues.some((i) => i.code === 'step-role-unreachable')).toBe(true);
@@ -78,7 +78,7 @@ describe('validateTutorials', () => {
   it('flags prerequisites whose roles never overlap', () => {
     const issues = validateTutorials([
       tutorial({ id: 'a', roles: ['CLIENTE'], prerequisites: ['b'] }),
-      tutorial({ id: 'b', roles: ['ADMIN'] }),
+      tutorial({ id: 'b', roles: ['SYSTEM_ADMIN'] }),
     ]);
     expect(issues.some((i) => i.code === 'prerequisite-role-mismatch')).toBe(true);
   });

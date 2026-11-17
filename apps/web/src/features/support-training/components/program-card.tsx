@@ -33,8 +33,7 @@ function WeekStatus({ week }: Readonly<{ week: ProgramWeek }>) {
 export function ProgramCard({
   program,
   userId,
-  canRespond,
-}: Readonly<{ program: SupportProgram; userId: string; canRespond: boolean }>) {
+}: Readonly<{ program: SupportProgram; userId: string }>) {
   const [results, setResults] = useState<ReadonlyMap<number, RecomputeResult>>(new Map());
 
   return (
@@ -72,7 +71,6 @@ export function ProgramCard({
                   </p>
                   {closed ? (
                     <RecomputeWeekButton
-                      canRespond={canRespond}
                       onResult={(number, outcome) =>
                         setResults(new Map(results).set(number, outcome))
                       }

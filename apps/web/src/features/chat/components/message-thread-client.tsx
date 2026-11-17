@@ -126,7 +126,8 @@ export function MessageThreadClient({
     );
   }
 
-  const canWrite = thread.conversation?.canWrite !== false && !thread.conversationRevoked;
+  // A closed business (ADR-0028) already sends `canWrite: false`; the flag is checked too, so no composer ever shows.
+  const canWrite = thread.conversation?.canWrite !== false && !controls.businessClosed && !thread.conversationRevoked;
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-5">
@@ -253,8 +254,8 @@ export function MessageThreadClient({
           sendingMedia={thread.sendingMedia}
         />
       ) : (
-        <p className="text-center text-sm text-[var(--text-muted)]">
-          Esta conversación es de solo lectura.
+        <p className="text-center text-sm text-[var(--text-muted)]" role="status">
+          {controls.readOnlyNotice}
         </p>
       )}
 

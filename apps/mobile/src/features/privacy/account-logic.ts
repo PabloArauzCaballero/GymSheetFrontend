@@ -2,6 +2,7 @@ import { ApiError } from '@gymsheet/api-client';
 import { accountClosureCopy, closureProofOptions, emailChangeCopy } from '@gymsheet/domain';
 import {
   ACCOUNT_CLOSURE_STAFF,
+  BUSINESS_HAS_PENDING_VERIFICATIONS,
   CLOSURE_PROOF_REQUIRED,
   CURRENT_PASSWORD_INVALID,
   EMAIL_CHANGE_BLOCKED_BY_SANCTION,
@@ -58,6 +59,8 @@ export function closureFailure(error: unknown): FormFailure {
   if (code === CURRENT_PASSWORD_INVALID) return { field: 'password', message: accountClosureCopy.errors.CURRENT_PASSWORD_INVALID };
   if (code === ACCOUNT_CLOSURE_STAFF) return { field: null, message: accountClosureCopy.errors.ACCOUNT_CLOSURE_STAFF };
   if (code === CLOSURE_PROOF_REQUIRED) return { field: null, message: accountClosureCopy.errors.CLOSURE_PROOF_REQUIRED };
+  // A business with receipts to decide (ADR-0028): a banner, and the screen re-reads its blockers.
+  if (code === BUSINESS_HAS_PENDING_VERIFICATIONS) return { field: null, message: accountClosureCopy.errors.BUSINESS_HAS_PENDING_VERIFICATIONS };
   const pin = pinErrorMessage(error);
   if (pin) return { field: 'pin', message: pin };
   return { field: null, message: serverMessage(error, 'No pudimos cerrar tu cuenta. Inténtalo de nuevo.') };

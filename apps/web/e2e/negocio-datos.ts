@@ -67,3 +67,16 @@ export async function crearNegocioAprobado(etiqueta: string, entityType: 'GYM' |
   await sql(`UPDATE directory.handles SET status = 'ACTIVE', updated_at = now() WHERE owner_entity_id = '${entityId}'`);
   return { email, password, name, handle, entityId, api, token: signup.data.accessToken };
 }
+
+/** One value read with `psql` from the e2e database (same connection variables as `sql`). */
+export async function sqlValue(consulta: string): Promise<string> {
+  const { execFileSync } = await import('node:child_process');
+  const host = process.env.E2E_PGHOST ?? 'localhost';
+  const port = process.env.E2E_PGPORT ?? '5433';
+  const user = process.env.E2E_PGUSER ?? 'postgres';
+  const database = process.env.E2E_PGDATABASE ?? 'gym_sheet';
+  const output = execFileSync('psql', ['-h', host, '-p', port, '-U', user, database, '-At', '-v', 'ON_ERROR_STOP=1', '-c', consulta], {
+    env: { ...process.env, PGPASSWORD: process.env.E2E_PGPASSWORD ?? 'postgres' },
+  });
+  return output.toString().trim();
+}

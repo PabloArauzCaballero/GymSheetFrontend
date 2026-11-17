@@ -39,8 +39,6 @@ export type NavigationItem = {
    * rejilla. Derivar una de la otra evita que vuelvan a separarse.
    */
   description?: string;
-  /** Permiso granular exigido además del rol. Sin él, la entrada no se muestra. */
-  requiredPermission?: string;
 };
 
 export const primaryNavigation: NavigationItem[] = [
@@ -89,19 +87,11 @@ export const accountNavigation: NavigationItem[] = [
 ];
 
 /**
- * El rol es el piso y el permiso lo estrecha, igual que en el backend
- * (`RolesGuard` y luego `PermissionGuard`). Sin `permissions` no se concede
- * nada que exija permiso: es la misma respuesta que da una cuenta sin
- * concesiones, y así una sesión aún sin resolver no enseña de más.
+ * The role alone decides, as in the backend (`RolesGuard`): the permission
+ * catalog left with franja 7d (backend ADR-0029).
  */
-export function canSee(
-  item: NavigationItem,
-  role: UserRole,
-  permissions?: readonly string[],
-) {
-  if (item.roles && !item.roles.includes(role)) return false;
-  if (!item.requiredPermission) return true;
-  return permissions?.includes(item.requiredPermission) ?? false;
+export function canSee(item: NavigationItem, role: UserRole) {
+  return !item.roles || item.roles.includes(role);
 }
 
 /** Un bloque de navegación con su rótulo; sin rótulo cuando hay uno solo. */
@@ -114,16 +104,11 @@ export type NavigationGroup = { label?: string; items: NavigationItem[] };
  *   (franja 7a: REPP opera los gimnasios; ver `platform-navigation.ts`).
  * - `MODERATOR`: the REPP moderation queue first, its own account after
  *   (ADR-0018). It does not come to train here.
- * - Todo lo demás (`CLIENTE` y los roles heredados del gimnasio: `ADMIN`,
- *   `FRONT_DESK`, `COACH`, `ENTRENADOR_EXTERNO`): la aplicación de la persona.
- *   Since franja 7a gym roles carry no administration at all.
+ * - `CLIENTE`: la aplicación de la persona. A `NEGOCIO` mounts the business
+ *   portal (`accountKind`), never this navigation.
  */
-export function navigationFor(
-  role: UserRole,
-  permissions?: readonly string[],
-): NavigationGroup[] {
-  const visible = (items: NavigationItem[]) =>
-    items.filter((item) => canSee(item, role, permissions));
+export function navigationFor(role: UserRole): NavigationGroup[] {
+  const visible = (items: NavigationItem[]) => items.filter((item) => canSee(item, role));
 
   if (role === 'SYSTEM_ADMIN') {
     return [

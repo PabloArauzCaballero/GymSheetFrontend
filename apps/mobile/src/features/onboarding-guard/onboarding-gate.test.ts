@@ -30,8 +30,8 @@ test('a failed check shows an error instead of redirecting', () => {
   assert.deepEqual(decideOnboardingGate({ ...base, failed: true, pathname: '/onboarding' }), { kind: 'error' });
 });
 
-test('staff and admins are never sent to onboarding', () => {
-  for (const role of ['COACH', 'FRONT_DESK', 'ENTRENADOR_EXTERNO', 'ADMIN', 'SYSTEM_ADMIN'] as const) {
+test('platform and business accounts are never sent to onboarding', () => {
+  for (const role of ['SYSTEM_ADMIN', 'MODERATOR', 'NEGOCIO'] as const) {
     assert.deepEqual(decideOnboardingGate({ ...base, role }), { kind: 'pass' });
     assert.deepEqual(decideOnboardingGate({ ...base, role, pathname: '/onboarding' }), { kind: 'redirect', to: 'home' });
   }
@@ -65,9 +65,9 @@ test('the Conocer step waits for the questionnaire to be COMPLETED', () => {
   );
 });
 
-test('staff are never offered the Conocer step', () => {
+test('a platform account is never offered the Conocer step', () => {
   assert.deepEqual(
-    decideOnboardingGate({ ...base, role: 'COACH', status: 'COMPLETED', socialStep: 'PENDING', pathname: '/onboarding' }),
+    decideOnboardingGate({ ...base, role: 'MODERATOR', status: 'COMPLETED', socialStep: 'PENDING', pathname: '/onboarding' }),
     { kind: 'redirect', to: 'home' },
   );
 });

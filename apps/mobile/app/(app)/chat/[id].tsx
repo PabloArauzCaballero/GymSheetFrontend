@@ -322,7 +322,7 @@ export default function ChatThreadScreen() {
   const otherPhotoUrl = otherConversation?.otherUserPhotoUrl ?? null;
   const otherUserId = otherConversation?.otherUserId;
   const canWrite = canWriteWhileHistoryAccessPending(
-    otherConversation?.canWrite !== false && !conversationRevoked &&
+    otherConversation?.canWrite !== false && otherConversation?.businessClosed !== true && !conversationRevoked &&
     !isChatHistoryNotFound(history.error) &&
     unavailableConversationRef.current !== conversationId,
     historyAccessPending,
@@ -1380,7 +1380,7 @@ export default function ChatThreadScreen() {
   const gutter = Math.max(spacing.xs, (width - (wide ? maxWideContentWidth : maxContentWidth)) / 2);
   const topInset = Math.max(insets.top, StatusBar.currentHeight ?? 0);
   const canTrainTogether = controls.trainTogether && otherConversation?.systemKind === null && canWrite && Boolean(otherUserId);
-  const presence = controls.presence ? presenceLabel(otherOnline, otherLastSeenAt) : controls.businessBadge ? 'Negocio' : '';
+  const presence = controls.presence ? presenceLabel(otherOnline, otherLastSeenAt) : (controls.badge ?? '');
 
   return (
     <>
@@ -1521,7 +1521,7 @@ export default function ChatThreadScreen() {
             >
               <Ionicons color={colors.textMuted} name="lock-closed-outline" size={fontSizes.sm} />
               <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>
-                Solo lectura — no puedes escribir en esta conversación.
+                {controls.businessClosed ? controls.readOnlyNotice : 'Solo lectura — no puedes escribir en esta conversación.'}
               </Text>
             </View>
           )}

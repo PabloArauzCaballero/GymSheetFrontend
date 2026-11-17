@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  hasAdminPermissionGrants,
-  isModerator,
-  isPlatformModerator,
-  isSystemAdmin,
-} from './permissions';
+import { isModerator, isPlatformModerator, isSystemAdmin } from './permissions';
 import {
   MODERATOR_NOT_ASSIGNABLE,
   moderationResolutionLabel,
@@ -16,7 +11,7 @@ describe('platform moderation roles', () => {
   it('only the REPP team and the platform admin moderate', () => {
     expect(isPlatformModerator('MODERATOR')).toBe(true);
     expect(isPlatformModerator('SYSTEM_ADMIN')).toBe(true);
-    for (const role of ['ADMIN', 'FRONT_DESK', 'COACH', 'CLIENTE', 'ENTRENADOR_EXTERNO'] as const) {
+    for (const role of ['CLIENTE', 'NEGOCIO'] as const) {
       expect(isPlatformModerator(role)).toBe(false);
     }
     expect(isPlatformModerator(null)).toBe(false);
@@ -26,13 +21,6 @@ describe('platform moderation roles', () => {
     expect(isModerator('MODERATOR')).toBe(true);
     expect(isModerator('SYSTEM_ADMIN')).toBe(false);
     expect(isSystemAdmin('MODERATOR')).toBe(false);
-  });
-
-  it('asks for permission grants only where the backend answers them (franja 7a: platform admin only)', () => {
-    expect(hasAdminPermissionGrants('SYSTEM_ADMIN')).toBe(true);
-    for (const role of ['ADMIN', 'FRONT_DESK', 'COACH', 'ENTRENADOR_EXTERNO', 'MODERATOR', 'CLIENTE'] as const) {
-      expect(hasAdminPermissionGrants(role)).toBe(false);
-    }
   });
 });
 

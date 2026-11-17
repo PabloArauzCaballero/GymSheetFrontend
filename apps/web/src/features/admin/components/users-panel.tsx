@@ -11,8 +11,6 @@ import { Pagination } from '@/shared/components/ui/pagination';
 import { Input } from '@/shared/components/ui/input';
 import { PageHeader } from '@/shared/components/layout/page-header';
 import { insightsService, type PortalUser } from '@/features/admin/services/insights-service';
-import { canCloseStaffAccount } from '@gymsheet/domain';
-import { StaffClosureButton } from './staff-closure-button';
 
 /**
  * Estado de acceso, resuelto a una sola frase.
@@ -29,21 +27,13 @@ function AccessBadge({ user }: { user: PortalUser }) {
 }
 
 /**
- * Todas las cuentas del gimnasio.
+ * Todas las cuentas, en una sola lista: personas, negocios y el equipo de REPP.
  *
- * Se muestran juntas, clientes y personal, y no en dos pestañas: quien busca a
- * una persona en recepción no sabe de antemano con qué rol fue dada de alta, y
- * hacerle adivinar la pestaña correcta es la clase de fricción que termina en
- * «no aparece».
+ * Only the platform admin reaches it (the `/admin` layout); since franja 7d
+ * (backend ADR-0029) there are no gym staff accounts nor a closure for them, and
+ * the support training view needs no grant beyond the role.
  */
-export function UsersPanel({
-  canViewTraining = false,
-  closure,
-}: Readonly<{
-  canViewTraining?: boolean;
-  /** Only for an ADMIN: who is looking, so their own row offers no closure. */
-  closure?: { callerId: string };
-}>) {
+export function UsersPanel() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
@@ -117,8 +107,7 @@ export function UsersPanel({
                     <th className="px-5 py-3 font-semibold">Plan</th>
                     <th className="px-5 py-3 font-semibold">Acceso</th>
                     <th className="px-5 py-3 font-semibold">Último entreno</th>
-                    {canViewTraining ? <th className="px-5 py-3 font-semibold">Soporte</th> : null}
-                    {closure ? <th className="px-5 py-3 font-semibold">Cuenta</th> : null}
+                    <th className="px-5 py-3 font-semibold">Soporte</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -151,26 +140,17 @@ export function UsersPanel({
                       <td className="px-5 py-3 text-[var(--text-muted)]">
                         {user.ultimaSesion ?? 'Nunca'}
                       </td>
-                      {canViewTraining ? (
-                        <td className="px-5 py-3">
-                          {user.rol === 'CLIENTE' ? (
-                            <Link
-                              className="text-sm font-semibold underline-offset-4 hover:underline"
-                              href={`/admin/usuarios/${user.id}/entrenamiento?nombre=${encodeURIComponent(user.nombreCompleto)}`}
-                            >
-                              Entrenamiento
-                              <span className="sr-only"> de {user.nombreCompleto}</span>
-                            </Link>
-                          ) : null}
-                        </td>
-                      ) : null}
-                      {closure ? (
-                        <td className="px-5 py-3">
-                          {canCloseStaffAccount(user.rol, user.id, closure.callerId) ? (
-                            <StaffClosureButton name={user.nombreCompleto} userId={user.id} />
-                          ) : null}
-                        </td>
-                      ) : null}
+                      <td className="px-5 py-3">
+                        {user.rol === 'CLIENTE' ? (
+                          <Link
+                            className="text-sm font-semibold underline-offset-4 hover:underline"
+                            href={`/admin/usuarios/${user.id}/entrenamiento?nombre=${encodeURIComponent(user.nombreCompleto)}`}
+                          >
+                            Entrenamiento
+                            <span className="sr-only"> de {user.nombreCompleto}</span>
+                          </Link>
+                        ) : null}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

@@ -9,6 +9,8 @@ import {
   kycDecideInputSchema,
   kycDecisionResultSchema,
   kycDocumentSchema,
+  kycEraseInputSchema,
+  kycEraseResultSchema,
   kycNewVersionSchema,
   kycQueuePageSchema,
   kycReleaseResultSchema,
@@ -69,6 +71,9 @@ export function createBusinessKycServices(request: RequestFn, upload: UploadFn) 
     submit: () => request('/business/me/kyc/submit', kycSubmitResultSchema, { method: 'POST' }),
     resubmit: () => request('/business/me/kyc/resubmit', kycNewVersionSchema, { method: 'POST' }),
     startChange: () => request('/business/me/kyc/changes', kycNewVersionSchema, { method: 'POST' }),
+    /** Erases the own KYC on request (ADR-0028): the account is left SUSPENDED with KYC_MISSING. */
+    erase: (password: string) =>
+      request('/business/me/kyc/erase', kycEraseResultSchema, { method: 'POST', body: kycEraseInputSchema.parse({ password }) }),
   };
 }
 

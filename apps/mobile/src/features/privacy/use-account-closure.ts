@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
-import { accountClosureCopy } from '@gymsheet/domain';
+import { accountClosureCopy, businessClosureCopy, closureBlockerFromError, closureBlockerNotices } from '@gymsheet/domain';
 import { queryKeys } from '@gymsheet/hooks';
 import {
   acceptedResponseSchema,
@@ -26,8 +26,10 @@ const closureService = {
  * «Cerrar mi cuenta»: the preview of what is deleted, anonymized and kept;
  * the proof (password, or an emailed code for Google/Apple accounts); a last
  * confirmation; then this phone forgets the account and says goodbye.
+ * `business` (ADR-0028): its own confirmation, and the blockers (receipts to
+ * decide) that hold the closure back.
  */
-export function useAccountClosure() {
+export function useAccountClosure(business = false) {
   const queryClient = useQueryClient();
   const endClosedAccount = useAuthStore((state) => state.endClosedAccount);
   const preview = useQuery({ queryKey: queryKeys.accountClosurePreview, queryFn: closureService.preview, staleTime: 0 });
@@ -57,8 +59,14 @@ export function useAccountClosure() {
         deleteCachedExport,
       ]);
     },
-    onError: (error) => setFailure(closureFailure(error)),
+    onError: (error) => {
+      setFailure(closureFailure(error));
+      // A receipt arrived after the preview: read it again so the blocker shows with its way out.
+      if (closureBlockerFromError(error)) void preview.refetch();
+    },
   });
+  const blockers = preview.data ? closureBlockerNotices(preview.data) : [];
+  const copy = business ? businessClosureCopy : accountClosureCopy;
 
   const submit = async () => {
     const proof = closureProof(method, value);
@@ -67,9 +75,9 @@ export function useAccountClosure() {
       return;
     }
     const answer = await confirm({
-      title: accountClosureCopy.confirmTitle,
-      message: accountClosureCopy.confirmMessage,
-      confirmLabel: accountClosureCopy.confirmLabel,
+      title: copy.confirmTitle,
+      message: copy.confirmMessage,
+      confirmLabel: copy.confirmLabel,
       cancelLabel: 'Volver',
       severity: 'danger',
     });
@@ -80,6 +88,7 @@ export function useAccountClosure() {
 
   return {
     preview,
+    blockers,
     methods,
     method,
     choose: (next: ProofMethod) => {

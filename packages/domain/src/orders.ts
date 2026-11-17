@@ -116,6 +116,7 @@ export function timelineEntryText(entry: Pick<OrderTimelineEntry, 'status' | 'by
       return 'Venció sin pago';
     case 'CANCELLED':
       if (entry.reasonCode === 'BUSINESS_UNAVAILABLE') return 'Cancelado: el negocio no está disponible';
+      if (entry.reasonCode === 'BUSINESS_CLOSED') return 'Cancelado: el negocio cerró su cuenta';
       return entry.by === 'BUYER' ? 'Cancelaste el pedido' : 'Pedido cancelado';
   }
 }

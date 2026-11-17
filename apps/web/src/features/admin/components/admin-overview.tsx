@@ -14,13 +14,8 @@ import { Section } from '@/shared/components/mobile/section';
  * `description`, que es lo único que una tarjeta necesita y una entrada de menú
  * no.
  */
-export function AdminOverview({
-  role,
-  permissions,
-}: Readonly<{ role: UserRole; permissions?: readonly string[] }>) {
-  const visibleModules = adminNavigation.filter(
-    (module) => module.description && canSee(module, role, permissions),
-  );
+export function AdminOverview({ role }: Readonly<{ role: UserRole }>) {
+  const visibleModules = adminNavigation.filter((module) => module.description && canSee(module, role));
 
   // Agrupadas como los ajustes del móvil: filas que navegan dentro de una
   // tarjeta por grupo, glifo callado, título 17/600 y su descripción.
@@ -74,5 +69,5 @@ const MODULE_GROUPS: { title: string; hrefs: string[] }[] = [
     hrefs: ['/admin/usuarios'],
   },
   { title: 'Gimnasio', hrefs: ['/admin/equipment', '/admin/facilities', '/admin/exercises'] },
-  { title: 'Seguridad y control', hrefs: ['/admin/permissions', '/admin/auditoria'] },
+  { title: 'Seguridad y control', hrefs: ['/admin/auditoria'] },
 ];

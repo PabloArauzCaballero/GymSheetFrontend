@@ -25,7 +25,8 @@ const SYSTEM_LABEL = { CORPORATE: 'Corporativo' } as const;
  *
  * Franja 8f: a person sees a chat with a business marked «Negocio»; the
  * business inbox reuses the row (`viewer="business"`, its own thread route)
- * without presence, which the backend never sends to a business.
+ * without presence, which the backend never sends to a business. A chat
+ * whose business closed its account reads «Negocio cerrado» (ADR-0028).
  */
 export function ConversationRow({
   conversation,
@@ -73,9 +74,9 @@ export function ConversationRow({
               {conversation.nickname ?? conversation.otherUserName}
             </span>
             {online ? <span className="sr-only">En línea</span> : null}
-            {controls.businessBadge ? (
+            {controls.badge ? (
               <span className="shrink-0 rounded-full bg-[var(--surface-high)] px-2 py-0.5 text-xs font-semibold text-[var(--text-muted)]">
-                Negocio
+                {controls.badge}
               </span>
             ) : null}
           </span>

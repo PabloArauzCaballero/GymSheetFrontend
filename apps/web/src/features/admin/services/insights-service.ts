@@ -39,9 +39,6 @@ export const portalUserPageSchema = z.object({
 
 export type PortalUserPage = z.infer<typeof portalUserPageSchema>;
 
-/** Roles con los que se puede trabajar en el gimnasio (todo menos el cliente). */
-export const STAFF_ROLE_FILTER = 'ADMIN,COACH,FRONT_DESK,ENTRENADOR_EXTERNO';
-
 export const insightsService = {
   /**
    * `roles` lo aplica el servidor, no el navegador.

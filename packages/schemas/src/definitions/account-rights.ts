@@ -38,10 +38,20 @@ export const closurePreviewItemSchema = z.object({
 });
 export type ClosurePreviewItem = z.infer<typeof closurePreviewItemSchema>;
 
+/**
+ * Something to solve before the closure can go ahead (ADR-0028): a business
+ * with QR receipts still waiting for its decision. The code stays a string so
+ * a newer backend's blocker does not break the preview.
+ */
+export const closureBlockerSchema = z.object({ code: z.string(), count: z.number().int().nonnegative() });
+export type ClosureBlocker = z.infer<typeof closureBlockerSchema>;
+
 /** `GET /me/account/closure-preview`: what closing deletes, anonymizes and keeps. */
 export const closurePreviewSchema = z.object({
-  /** False for staff accounts: the gym closes them. */
+  /** False for platform accounts (REPP staff). */
   allowed: z.boolean(),
+  /** Empty when the closure can go ahead now; optional for servers before franja 8f. */
+  blockers: z.array(closureBlockerSchema).optional(),
   /** The password always works; an emailed PIN too for Google/Apple accounts. */
   proof: z.object({ password: z.boolean(), emailPin: z.boolean() }),
   account: z.object({ label: z.string(), disposition: z.string(), reason: z.string() }),
@@ -89,3 +99,5 @@ export const ACCOUNT_CLOSURE_STAFF = 'ACCOUNT_CLOSURE_STAFF';
 export const CLOSURE_PROOF_REQUIRED = 'CLOSURE_PROOF_REQUIRED';
 export const ACCOUNT_EXPORT_RATE_LIMITED = 'ACCOUNT_EXPORT_RATE_LIMITED';
 export const ACCOUNT_EXPORT_NOT_READY = 'ACCOUNT_EXPORT_NOT_READY';
+/** 409 of `DELETE /me/account` while a business still has QR receipts to decide (ADR-0028). */
+export const BUSINESS_HAS_PENDING_VERIFICATIONS = 'BUSINESS_HAS_PENDING_VERIFICATIONS';

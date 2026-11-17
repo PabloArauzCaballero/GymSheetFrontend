@@ -1,5 +1,4 @@
 import 'server-only';
-import { hasAdminPermissionGrants } from '@gymsheet/domain';
 import { cookies } from 'next/headers';
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
@@ -15,7 +14,6 @@ import { backendRequest, isBackendUnreachable, readBackendJson } from './backend
 
 const envelopeSchema = z.object({ ok: z.literal(true), data: z.unknown() });
 const principalSchema = sessionPrincipalSchema;
-const permissionsMeSchema = z.object({ permissionKeys: z.array(z.string()) });
 
 async function readData<T>(response: Response, schema: z.ZodType<T>) {
   if (!response.ok) return null;
@@ -87,22 +85,12 @@ export const getSession = cache(async function getSession(): Promise<PortalSessi
   const user = await readData(userResponse, userSchema);
   if (!principal) return null;
 
-  // Only the platform admin asks for `/admin/permissions/me` (its list is the
-  // whole catalog): since franja 7a every other role, legacy gym staff
-  // included, gets 403 there, and a moderator needs no grant (ADR-0018). This
-  // also saves a round-trip on every page load for member accounts.
-  const permissions =
-    hasAdminPermissionGrants(principal.role)
-      ? await readData(
-          await backendRequest('/admin/permissions/me', { token }),
-          permissionsMeSchema,
-        )
-      : null;
-
+  // No `/admin/permissions/me` any more: the backend retired the permission
+  // catalog in franja 7d (ADR-0029) and that route only returns every key to
+  // `SYSTEM_ADMIN`, so the operator UI is decided by role alone.
   return {
     ...principal,
     ...(user?.nombreCompleto ? { nombreCompleto: user.nombreCompleto } : {}),
-    ...(permissions ? { permissions: permissions.permissionKeys } : {}),
   };
 });
 

@@ -1,5 +1,5 @@
 import { ApiError } from '@gymsheet/api-client';
-import { buyerNextStep, buyerOrderChip, formatMoney, orderCopy, orderItemLine } from '@gymsheet/domain';
+import { buyerNextStep, buyerOrderChip, cancelledByBusinessNotice, formatMoney, orderCopy, orderItemLine } from '@gymsheet/domain';
 import { queryKeys } from '@gymsheet/hooks';
 import type { BuyerOrderDetail } from '@gymsheet/schemas';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -32,7 +32,8 @@ function NextStep({ order }: { order: BuyerOrderDetail }) {
   }
   if (next === 'wait') return <Text variant="body">El negocio está revisando tu comprobante. Te avisamos cuando lo confirme.</Text>;
   if (next === 'done') return <Text strong variant="body">Listo: el negocio confirmó tu pago.</Text>;
-  if (order.cancelReason === 'BUSINESS_UNAVAILABLE') return <Text strong tone="danger" variant="body">{orderCopy.doNotPay}</Text>;
+  const byBusiness = cancelledByBusinessNotice(order.cancelReason);
+  if (byBusiness) return <Text strong tone="danger" variant="body">{byBusiness}</Text>;
   return <Text tone="secondary" variant="body">{order.status === 'EXPIRED' ? 'Venció sin pago. Si todavía lo quieres, haz un pedido nuevo.' : order.status === 'REJECTED' ? 'Ya no puedes enviar otro comprobante.' : 'Este pedido se canceló.'}</Text>;
 }
 

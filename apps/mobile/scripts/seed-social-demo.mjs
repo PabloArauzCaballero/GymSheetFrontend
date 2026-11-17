@@ -587,19 +587,19 @@ const PLAN_VISTAS = [
  */
 const MOCKS_EXISTENTES = [
   { clave: "active", email: "active.mock@gymsheet.local", nombre: "Active Membership Mock", password: "MockLocal2026!", genero: "FEMALE", edad: 28, pesoKg: 62.0, estaturaCm: 167, objetivo: "HIPERTROFIA", fotos: 5 },
-  { clave: "coach", email: "coach.mock@gymsheet.local", nombre: "Coach Mock", password: "MockLocal2026!", genero: "MALE", edad: 36, pesoKg: 84.0, estaturaCm: 180, objetivo: "FUERZA", fotos: 4, rol: "COACH" },
+  { clave: "coach", email: "coach.mock@gymsheet.local", nombre: "Coach Mock", password: "MockLocal2026!", genero: "MALE", edad: 36, pesoKg: 84.0, estaturaCm: 180, objetivo: "FUERZA", fotos: 4 },
   { clave: "expired", email: "expired.mock@gymsheet.local", nombre: "Expired Membership Mock", password: "MockLocal2026!", genero: "FEMALE", edad: 41, pesoKg: 68.0, estaturaCm: 164, objetivo: "SALUD_GENERAL", fotos: 3 },
   { clave: "expiring", email: "expiring.mock@gymsheet.local", nombre: "Expiring Membership Mock", password: "MockLocal2026!", genero: "MALE", edad: 33, pesoKg: 79.0, estaturaCm: 175, objetivo: "PERDIDA_GRASA", fotos: 4 },
   { clave: "new", email: "new.mock@gymsheet.local", nombre: "New User Mock", password: "MockLocal2026!", genero: "MALE", edad: 23, pesoKg: 72.0, estaturaCm: 177, objetivo: "HIPERTROFIA", fotos: 4 },
   { clave: "onboarding", email: "onboarding.mock@gymsheet.local", nombre: "Incomplete Onboarding Mock", password: "MockLocal2026!", genero: "FEMALE", edad: 26, pesoKg: 59.0, estaturaCm: 161, objetivo: "RESISTENCIA", fotos: 4 },
   { clave: "pending", email: "pending.mock@gymsheet.local", nombre: "Pending Renewal Mock", password: "MockLocal2026!", genero: "MALE", edad: 44, pesoKg: 86.0, estaturaCm: 172, objetivo: "REHABILITACION", fotos: 3 },
-  // El administrador del gimnasio también sale en la baraja: el directorio y el
+  // El administrador de plataforma (`SEED_ADMIN_*`) también sale en la baraja: el directorio y el
   // deck filtran por gimnasio y por estado, no por rol (`SocialRepository.directory`
   // no mira `usuarios.rol`). Con «GymSheet Administrator» ordenando en quinto
   // lugar por nombre, se cuela en las diez primeras cartas, y sin esto quedaría
   // como la única tarjeta vacía de la captura. Se le toca lo mismo que a los
   // demás: perfil y fotos, nada de permisos ni de membresías.
-  { clave: "admin", email: "admin@gymsheet.local", nombre: "GymSheet Administrator", password: "AdminLocal2026!", genero: "MALE", edad: 39, pesoKg: 80.0, estaturaCm: 179, objetivo: "SALUD_GENERAL", fotos: 3, rol: "ADMIN" },
+  { clave: "admin", email: "admin@gymsheet.local", nombre: "GymSheet Administrator", password: "AdminLocal2026!", genero: "MALE", edad: 39, pesoKg: 80.0, estaturaCm: 179, objetivo: "SALUD_GENERAL", fotos: 3, rol: "SYSTEM_ADMIN" },
   // `inactive.mock@gymsheet.local` queda fuera a propósito: está INACTIVO y el
   // directorio filtra por `u.estado = 'ACTIVO'`, así que nunca aparece en la
   // baraja y darle fotos sería trabajo que nadie va a ver.

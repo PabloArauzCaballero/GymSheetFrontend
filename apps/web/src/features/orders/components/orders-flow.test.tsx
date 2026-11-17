@@ -8,6 +8,7 @@ import { Dialog, DialogContent } from '@/shared/components/ui/dialog';
 import { OrderDecision } from './business/order-decision';
 import { CheckoutForm } from './checkout-form';
 import { OrderDetail } from './order-detail';
+import { ReceiptUpload } from './receipt-upload';
 
 const mocks = vi.hoisted(() => ({
   create: vi.fn(),
@@ -16,10 +17,11 @@ const mocks = vi.hoisted(() => ({
   reject: vi.fn(),
   confirm: vi.fn(),
   push: vi.fn(),
+  uploadReceipt: vi.fn(),
 }));
 vi.mock('../services/orders-client', async (original) => ({
   ...(await original<typeof import('../services/orders-client')>()),
-  buyerOrdersService: { create: mocks.create, get: mocks.get, instructions: mocks.instructions, paymentQrPath: () => '/qr' },
+  buyerOrdersService: { create: mocks.create, get: mocks.get, instructions: mocks.instructions, uploadReceipt: mocks.uploadReceipt, paymentQrPath: () => '/qr' },
   businessOrdersService: { reject: mocks.reject, confirm: mocks.confirm },
 }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: mocks.push, replace: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }) }));
@@ -132,5 +134,34 @@ describe('business decision', () => {
     fireEvent.click(screen.getByRole('button', { name: 'El monto no coincide' }));
     fireEvent.click(screen.getByRole('button', { name: 'Rechazar pago' }));
     await waitFor(() => expect(mocks.reject).toHaveBeenCalledWith(ID, { reasonCode: 'AMOUNT_MISMATCH' }));
+  });
+});
+
+describe('refusals caused by the business (ADR-0028)', () => {
+  const conflict = (code: string, message = 'x') => new ApiError({ message, status: 409, kind: 'conflict', code });
+
+  it('tells the person a new business has too many orders to confirm', async () => {
+    mocks.create.mockRejectedValue(conflict('ORDER_SELLER_OPEN_LIMIT'));
+    wrap(inDialog(<CheckoutForm listing={listing} />));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar pedido' }));
+    expect(await screen.findByText(/^Este negocio es nuevo en REPP/u)).toBeTruthy();
+  });
+
+  it('ends the receipt step in «No pagues» when the business stopped being public', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:preview');
+    URL.revokeObjectURL = vi.fn();
+    mocks.uploadReceipt.mockRejectedValue(conflict('ORDER_BUSINESS_UNAVAILABLE'));
+    wrap(<ReceiptUpload orderId={ID} />);
+    const file = new File([new Uint8Array([1, 2, 3])], 'pago.png', { type: 'image/png' });
+    fireEvent.change(screen.getByLabelText('Foto del comprobante'), { target: { files: [file] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar comprobante' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('No pagues: este negocio no está disponible.');
+    expect(screen.queryByRole('button', { name: 'Enviar comprobante' })).toBeNull();
+  });
+
+  it('explains an order cancelled because the business closed', async () => {
+    mocks.get.mockResolvedValue({ ...order, status: 'CANCELLED', cancelReason: 'BUSINESS_CLOSED', rejection: null, actions: { canUploadReceipt: false, canCancel: false, canReport: false } });
+    wrap(<OrderDetail orderId={ID} />);
+    expect(await screen.findByText('El negocio cerró su cuenta en REPP y canceló este pedido. No pagues.')).toBeTruthy();
   });
 });

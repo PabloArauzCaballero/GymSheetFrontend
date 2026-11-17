@@ -20,13 +20,12 @@ describe('/onboarding/conocer', () => {
     expect(mocks.redirect).not.toHaveBeenCalled();
   });
 
-  it('sends platform roles to their console and legacy gym roles to the person portal', async () => {
-    // Franja 7a: the gym has no staff console any more.
-    mocks.requireSession.mockResolvedValue({ role: 'FRONT_DESK' });
-    await expect(ConocerOnboardingPage()).rejects.toThrow('redirect:/comunidad');
+  it('sends platform roles to their console and any other non-member to the default destination', async () => {
     mocks.requireSession.mockResolvedValue({ role: 'SYSTEM_ADMIN' });
     await expect(ConocerOnboardingPage()).rejects.toThrow('redirect:/sistema');
-    mocks.requireSession.mockResolvedValue({ role: 'COACH' });
+    mocks.requireSession.mockResolvedValue({ role: 'MODERATOR' });
+    await expect(ConocerOnboardingPage()).rejects.toThrow('redirect:/moderacion');
+    mocks.requireSession.mockResolvedValue({ role: 'NEGOCIO' });
     await expect(ConocerOnboardingPage()).rejects.toThrow('redirect:/comunidad');
   });
 });

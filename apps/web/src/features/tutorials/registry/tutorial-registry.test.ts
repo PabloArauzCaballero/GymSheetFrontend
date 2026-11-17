@@ -21,7 +21,7 @@ const defs: TutorialDefinition[] = [
     category: 'ADMIN',
     difficulty: 'INTERMEDIATE',
     estimatedMinutes: 1,
-    roles: ['ADMIN'],
+    roles: ['SYSTEM_ADMIN'],
     steps: [{ id: 's1', title: 't', description: 'd', target: 'x' }],
   },
   {
@@ -34,7 +34,7 @@ const defs: TutorialDefinition[] = [
     estimatedMinutes: 1,
     steps: [
       { id: 's1', title: 'everyone', description: 'd', target: 'x' },
-      { id: 's2', title: 'admins', description: 'd', target: 'y', roles: ['ADMIN'] },
+      { id: 's2', title: 'admins', description: 'd', target: 'y', roles: ['SYSTEM_ADMIN'] },
     ],
   },
 ];
@@ -45,13 +45,13 @@ describe('TutorialRegistry', () => {
     const forClient = registry.forRole('CLIENTE').map((t) => t.id);
     expect(forClient).toContain('all');
     expect(forClient).not.toContain('admin-only');
-    expect(registry.forRole('ADMIN').map((t) => t.id)).toContain('admin-only');
+    expect(registry.forRole('SYSTEM_ADMIN').map((t) => t.id)).toContain('admin-only');
   });
 
   it('filters steps by role within a tutorial', () => {
     const registry = new TutorialRegistry(defs);
     expect(registry.resolveForRole('mixed-steps', 'CLIENTE')?.steps).toHaveLength(1);
-    expect(registry.resolveForRole('mixed-steps', 'ADMIN')?.steps).toHaveLength(2);
+    expect(registry.resolveForRole('mixed-steps', 'SYSTEM_ADMIN')?.steps).toHaveLength(2);
   });
 
   it('returns null when no step is visible to the role', () => {
@@ -64,7 +64,7 @@ describe('TutorialRegistry', () => {
         category: 'TRAINING',
         difficulty: 'BEGINNER',
         estimatedMinutes: 1,
-        steps: [{ id: 's', title: 't', description: 'd', target: 'x', roles: ['ADMIN'] }],
+        steps: [{ id: 's', title: 't', description: 'd', target: 'x', roles: ['SYSTEM_ADMIN'] }],
       },
     ]);
     expect(registry.resolveForRole('x', 'CLIENTE')).toBeNull();

@@ -134,7 +134,7 @@ export function ThreadHeader({
         ) : (
           <div className="flex items-center gap-2">
             <h1 className="truncate text-xl font-semibold tracking-[-0.02em]">{displayName}</h1>
-            {controls.businessBadge ? <Badge tone="neutral">Negocio</Badge> : null}
+            {controls.badge ? <Badge tone="neutral">{controls.badge}</Badge> : null}
             <button
               aria-label="Poner un apodo a esta conversación"
               className="grid size-8 shrink-0 place-items-center rounded-full text-[var(--text-muted)] hover:bg-[var(--surface-low)] hover:text-[var(--text)]"

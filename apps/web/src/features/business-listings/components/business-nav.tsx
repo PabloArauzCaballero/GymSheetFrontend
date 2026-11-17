@@ -17,6 +17,8 @@ const SECTIONS: readonly Section[] = [
   { href: '/negocio/suscriptores', label: 'Suscriptores' },
   { href: '/negocio/cobro', label: 'Cobro' },
   { href: '/negocio/perfil', label: 'Perfil' },
+  // Franja 8f: legal documents, data export, KYC erasure and closure.
+  { href: '/negocio/cuenta', label: 'Cuenta' },
 ];
 
 /** The section only one business type has (franja 7b): a gym's «Socios», a coach's «Mis gimnasios». */

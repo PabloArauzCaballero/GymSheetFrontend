@@ -42,11 +42,11 @@ function route(emailPin: boolean, close: () => unknown = () => ({ closed: true, 
   });
 }
 
-function renderClosure() {
+function renderClosure(business = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   client.setQueryData(['chat', 'conversations'], [{ id: 'privado' }]);
   const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-  return { client, ...renderHook(() => useAccountClosure(), { wrapper }) };
+  return { client, ...renderHook(() => useAccountClosure(business), { wrapper }) };
 }
 
 beforeEach(() => {
@@ -122,4 +122,25 @@ test('an incomplete proof is caught before anything is asked', async () => {
   await act(async () => result.current.submit());
   expect(result.current.failure?.field).toBe('password');
   expect(mocks.confirm).not.toHaveBeenCalled();
+});
+
+test('a business with receipts to decide gets its blocker, and a 409 re-reads it (ADR-0028)', async () => {
+  let blockers: unknown[] = [];
+  mocks.request.mockImplementation(async (path: string, _schema: unknown, options: { method: string }) => {
+    if (path === '/me/account/closure-preview') return { ...preview(false), blockers };
+    if (path === '/me/account' && options.method === 'DELETE') {
+      blockers = [{ code: 'BUSINESS_HAS_PENDING_VERIFICATIONS', count: 2 }];
+      throw new ApiError({ message: 'x', status: 409, kind: 'conflict', code: 'BUSINESS_HAS_PENDING_VERIFICATIONS', details: { count: 2 } });
+    }
+    throw new Error(`unexpected ${path}`);
+  });
+  const { result } = renderClosure(true);
+  await waitFor(() => expect(result.current.preview.isSuccess).toBe(true));
+  expect(result.current.blockers).toEqual([]);
+  act(() => result.current.setValue('secreta'));
+  await act(async () => result.current.submit());
+  expect(mocks.confirm).toHaveBeenCalledWith(expect.objectContaining({ title: '¿Cerrar tu negocio para siempre?' }));
+  await waitFor(() => expect(result.current.blockers[0]?.title).toBe('Tienes 2 comprobantes de pago por revisar'));
+  expect(result.current.failure).toEqual({ field: null, message: accountClosureCopy.errors.BUSINESS_HAS_PENDING_VERIFICATIONS });
+  expect(mocks.endClosedAccount).not.toHaveBeenCalled();
 });

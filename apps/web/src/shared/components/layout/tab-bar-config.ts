@@ -32,8 +32,8 @@ function withTabLabel(item: NavigationItem): NavigationItem {
 
 const memberTabs = ['/comunidad', '/chat', '/marketplace', '/routines', '/profile'] as const;
 
-export function tabBarFor(role: UserRole, permissions?: readonly string[]): NavigationItem[] {
-  const all = navigationFor(role, permissions).flatMap((group) => group.items);
+export function tabBarFor(role: UserRole): NavigationItem[] {
+  const all = navigationFor(role).flatMap((group) => group.items);
   const byHref = new Map(all.map((item) => [item.href, item]));
   const member = memberTabs
     .map((href) => byHref.get(href))

@@ -7,10 +7,8 @@ import type { UserRole } from '@gymsheet/types';
  * Las pantallas de socio (Comunidad, Inicio) abren con una baraja vacía o
  * «aún no tienes membresía» para una cuenta que no las usa: al `SYSTEM_ADMIN`
  * se le manda a `/sistema` y al equipo de moderación de REPP (`MODERATOR`,
- * ADR-0018) a su cola.
- *
- * Since franja 7a the gym has no staff surfaces: a legacy ADMIN, FRONT_DESK or
- * COACH account is a person and lands on the person portal like any member.
+ * ADR-0018) a su cola. A former gym staff account is a `CLIENTE` since franja
+ * 7d (backend ADR-0029) and lands on the person portal like any member.
  */
 export function staffHomeFor(role: UserRole): string | null {
   if (isSystemAdmin(role)) return '/sistema';

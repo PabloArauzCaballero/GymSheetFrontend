@@ -38,8 +38,6 @@ export type SessionPrincipal = {
   role: UserRole;
   nombreCompleto?: string;
   tenantId?: string | null;
-  /** Permisos granulares de administración otorgados a esta cuenta (solo staff). */
-  permissions?: string[];
   /** Whether the account proved its mailbox. Absent from older backends. */
   emailVerified?: boolean;
   /** Person or business (ADR-0020); absent from older backends, derive it from the role. */

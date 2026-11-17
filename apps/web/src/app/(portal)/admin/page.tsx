@@ -20,7 +20,7 @@ export default async function AdminPage() {
           </ButtonLink>
         </aside>
       )}
-      <AdminOverview permissions={session.permissions} role={session.role} />
+      <AdminOverview role={session.role} />
     </div>
   );
 }

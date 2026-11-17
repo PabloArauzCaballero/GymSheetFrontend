@@ -7,14 +7,14 @@ import { apiDe, crearCuenta, promover, sql, type Cuenta } from './rutinas-datos'
  * Person verification by selfie (franja 6) against the real backend:
  * the member grants the VERIFICATION_SELFIE consent, gets a gesture with its
  * countdown, uploads a selfie through the file input and lands on «en
- * revisión»; gym staff cannot open the review (a selfie is biometric data, the
- * gym never sees it: 403); a REPP moderator (`MODERATOR`, ADR-0018) sees the
+ * revisión»; another person of the same gym cannot open the review (a selfie is
+ * biometric data, only REPP's moderation sees it: 403); a REPP moderator (`MODERATOR`, ADR-0018) sees the
  * member's gym, approves side by side with the profile photos and the member's
  * state turns verified, on the server and after a reload.
  *
  * Needs the backend (`E2E_BACKEND_URL`), PostgreSQL (`sql()` prepares what the
  * API does not let a test create: a verified email, the member in the seeded
- * gym, a legacy gym `ADMIN` and the `MODERATOR` role) and writable (non-immutable) media
+ * gym, another person of that gym and the `MODERATOR` role) and writable (non-immutable) media
  * storage — on immutable storage the backend answers 503 by design.
  */
 test.describe.configure({ mode: 'serial' });
@@ -28,7 +28,7 @@ const PNG = Buffer.from(
 
 let member: Cuenta;
 let moderator: Cuenta;
-let gymAdmin: Cuenta;
+let gymMember: Cuenta;
 
 async function uploadProfilePhoto(account: Cuenta, name: string) {
   const form = new FormData();
@@ -53,9 +53,9 @@ test.beforeAll(async () => {
     `UPDATE public.usuarios SET email_verified_at = now(), tenant_id = '${e2eTenantId}'
      WHERE id = '${member.id}'`,
   );
-  // Franja 7a: the seeded admin is the platform admin; gym staff is a legacy role set by hand.
-  gymAdmin = await crearCuenta('verif-gym', 'Admin Gimnasio QA');
-  await sql(`UPDATE public.usuarios SET rol = 'ADMIN', tenant_id = '${e2eTenantId}' WHERE id = '${gymAdmin.id}'`);
+  // No gym staff since franja 7d (backend ADR-0029): the negative case is another person of the gym.
+  gymMember = await crearCuenta('verif-gym', 'Persona Gimnasio QA');
+  await sql(`UPDATE public.usuarios SET tenant_id = '${e2eTenantId}' WHERE id = '${gymMember.id}'`);
   // The selfie review belongs to the central REPP team, not to the gym.
   moderator = await promover(await crearCuenta('verif-mod', 'Moderación QA'), 'MODERATOR');
   // A moderator needs at least two visible photos to compare the selfie with.
@@ -95,15 +95,15 @@ test('member: consent → gesture with countdown → selfie by file → in revie
   await expect(page.getByText('Tu selfie está en revisión')).toBeVisible({ timeout: 20_000 });
 });
 
-test('gym staff: no selfie review, neither the old address nor the API', async ({ page }) => {
-  await signIn(page, gymAdmin);
-  // The old gym address redirects to the REPP console, whose role guard turns staff away.
+test('another person of the gym: no selfie review, neither the old address nor the API', async ({ page }) => {
+  await signIn(page, gymMember);
+  // The old gym address redirects to the REPP console, whose role guard turns a person away.
   await openPage(page, '/admin/verificaciones');
   await waitForPageSettled(page);
   await expect(page).not.toHaveURL(/verificaciones/u);
   await expect(page.getByRole('heading', { level: 1, name: 'Verificaciones' })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Verificaciones' })).toHaveCount(0);
-  // The backend is the authority: 403 to a gym role whatever grants it holds.
+  // The backend is the authority: 403 to a person, whatever gym it belongs to.
   const queue = await page.request.get('/api/backend/admin/verifications?status=PENDING_REVIEW&limit=50');
   expect(queue.status()).toBe(403);
 });

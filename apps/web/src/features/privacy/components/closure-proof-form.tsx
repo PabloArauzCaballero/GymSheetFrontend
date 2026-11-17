@@ -20,6 +20,7 @@ export function ClosureProofForm({
   sendingPin,
   onSendPin,
   onSubmit,
+  submitLabel = accountClosureCopy.submit,
 }: Readonly<{
   proofs: readonly Proof[];
   error: string | null;
@@ -28,6 +29,7 @@ export function ClosureProofForm({
   sendingPin: boolean;
   onSendPin: () => void;
   onSubmit: (input: CloseAccountInput) => void;
+  submitLabel?: string;
 }>) {
   const [proof, setProof] = useState<Proof>(proofs[0] ?? 'password');
   const [password, setPassword] = useState('');
@@ -85,7 +87,7 @@ export function ClosureProofForm({
         </div>
       )}
       <Button className="justify-self-start" loading={closing} size="sm" type="submit" variant="danger">
-        {accountClosureCopy.submit}
+        {submitLabel}
       </Button>
     </form>
   );

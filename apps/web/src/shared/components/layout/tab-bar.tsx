@@ -19,8 +19,8 @@ import { tabBarFor } from './tab-bar-config';
 export function TabBar({ session }: Readonly<{ session: SessionPrincipal }>) {
   const pathname = usePathname();
   const interactionAlerts = useInteractionAlerts(session);
-  const tabs = tabBarFor(session.role, session.permissions);
-  const all = navigationFor(session.role, session.permissions).flatMap((group) => group.items);
+  const tabs = tabBarFor(session.role);
+  const all = navigationFor(session.role).flatMap((group) => group.items);
   const ownHref = activeHrefFor(pathname, all.map((item) => item.href));
   // Pantallas que en el móvil se abren DESDE una pestaña y la dejan encendida:
   // Interacciones y Reels cuelgan de Comunidad; Ejercicios, de

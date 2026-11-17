@@ -20,7 +20,7 @@ function renderButton() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
-      <RecomputeWeekButton canRespond onResult={vi.fn()} programId="p1" userId="u1" week={2} />
+      <RecomputeWeekButton onResult={vi.fn()} programId="p1" userId="u1" week={2} />
     </QueryClientProvider>,
   );
 }

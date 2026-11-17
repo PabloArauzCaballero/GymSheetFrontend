@@ -20,12 +20,17 @@ export function personShellRedirect(principal: Principal | null): string | null 
   return principal && accountKindOf(principal) === 'BUSINESS' ? businessDestination.mobile.home : null;
 }
 
-/** Where the business group sends this session instead of rendering, or null to render. */
+/**
+ * Where the business group sends this session instead of rendering, or null to
+ * render. A business that just closed its account (`farewell`, ADR-0028) says
+ * goodbye first, like a person.
+ */
 export function businessShellRedirect(
   status: 'loading' | 'authenticated' | 'unauthenticated',
   principal: Principal | null,
+  farewell = false,
 ): string | null {
-  if (status === 'unauthenticated') return '/(auth)/login';
+  if (status === 'unauthenticated') return farewell ? '/(auth)/hasta-pronto' : '/(auth)/login';
   if (status === 'authenticated' && principal && accountKindOf(principal) !== 'BUSINESS') {
     return authDestination.mobile.afterLogin;
   }
