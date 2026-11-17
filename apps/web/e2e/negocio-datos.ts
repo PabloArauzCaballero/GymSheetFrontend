@@ -30,7 +30,8 @@ async function post<T>(path: string, body: unknown): Promise<{ status: number; d
   return { status: response.status, data: (json?.data ?? json) as T };
 }
 
-export async function crearNegocioAprobado(etiqueta: string): Promise<Negocio> {
+/** `entityType` COACH builds an approved coach business (franja 7b, «Mis gimnasios»); GYM by default. */
+export async function crearNegocioAprobado(etiqueta: string, entityType: 'GYM' | 'COACH' = 'GYM'): Promise<Negocio> {
   const run = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
   const name = `Pub ${etiqueta} ${run}`;
   const email = `negocio.pub.${etiqueta}.${run}@gymsheet.local`.toLowerCase();
@@ -39,7 +40,7 @@ export async function crearNegocioAprobado(etiqueta: string): Promise<Negocio> {
     email,
     password,
     businessName: name,
-    entityType: 'GYM',
+    entityType,
     acceptances: await businessAcceptances(),
     ticket: await registerTicket(),
   });
@@ -51,10 +52,10 @@ export async function crearNegocioAprobado(etiqueta: string): Promise<Negocio> {
   const handle = `pub${run}`.slice(0, 28);
   const claimed = await api('PUT', '/business/me/handle', { handle });
   if (claimed.status !== 200) throw new Error(`PUT /business/me/handle answered ${claimed.status} ${claimed.code ?? ''}.`);
-  const categories = await api<Array<{ id: string }>>('GET', '/public/directory/categories?scope=GYM');
-  // An ACTIVE listing needs a category (ck_directory_entity_primary_category): seed the GYM scope first.
+  const categories = await api<Array<{ id: string }>>('GET', `/public/directory/categories?scope=${entityType}`);
+  // An ACTIVE listing needs a category (ck_directory_entity_primary_category): seed the scope first.
   const category = categories.data[0]?.id;
-  if (!category) throw new Error('No directory category for the GYM scope: seed the categories first.');
+  if (!category) throw new Error(`No directory category for the ${entityType} scope: seed the categories first.`);
   const profile = await api('PATCH', '/business/me/profile', { city: 'Santa Cruz', primaryCategoryId: category });
   if (profile.status !== 200) throw new Error(`PATCH /business/me/profile answered ${profile.status} ${profile.code ?? ''}.`);
 

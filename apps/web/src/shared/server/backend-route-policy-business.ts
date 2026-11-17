@@ -1,3 +1,5 @@
+import { affiliationRoutePatterns, isAffiliationNoStorePath } from './backend-route-policy-affiliations';
+
 // UUID: KYC submissions, documents and business accounts are addressed by UUID only.
 const uuid = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
 // A public `@handle` (the backend normalizes it); `%40` is an encoded leading `@`.
@@ -56,6 +58,8 @@ export const businessRoutePatterns: readonly RegExp[] = [
   // REPP sees a receipt only inside a PAYMENT_ORDER case (MODERATOR, SYSTEM_ADMIN; audited by the backend).
   new RegExp(`^/admin/moderation/cases/PAYMENT_ORDER/${uuid}/receipt$`, 'u'),
   ...publicMarketplacePatterns,
+  // Affiliations and «Mi gimnasio» (franjas 7b–7c).
+  ...affiliationRoutePatterns,
 ];
 
 /** Multipart uploads of the orders: a receipt photo or the business's QR (same allowance as the other media). */
@@ -72,7 +76,8 @@ export function isNoStoreBackendPath(path: string): boolean {
     path.startsWith('/directory/payments/orders') ||
     path.startsWith('/business/me/orders') ||
     path.startsWith('/business/me/payment-config') ||
-    /^\/admin\/moderation\/cases\/PAYMENT_ORDER\/[^/]+\/receipt$/u.test(path)
+    /^\/admin\/moderation\/cases\/PAYMENT_ORDER\/[^/]+\/receipt$/u.test(path) ||
+    isAffiliationNoStorePath(path)
   );
 }
 

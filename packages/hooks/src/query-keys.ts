@@ -58,7 +58,24 @@ export const queryKeys = {
     ordersBadge: ['business', 'me', 'orders', 'badge'] as const,
     order: (orderId: string) => ['business', 'me', 'orders', 'detail', orderId] as const,
     paymentConfig: ['business', 'me', 'payment-config'] as const,
+    /** The gym's «Socios» (franja 7b); every key shares the prefix. `affiliationsBadge` is the nav's `pendingCount`. */
+    affiliations: ['business', 'me', 'affiliations'] as const,
+    affiliationRequests: (kind: string, locationId: string) => ['business', 'me', 'affiliations', 'requests', kind, locationId] as const,
+    affiliationMembers: (locationId: string) => ['business', 'me', 'affiliations', 'members', locationId] as const,
+    affiliationCoaches: ['business', 'me', 'affiliations', 'coaches'] as const,
+    affiliationsBadge: ['business', 'me', 'affiliations', 'badge'] as const,
+    /** «Mis gimnasios» of a coach business. */
+    gymLinks: ['business', 'me', 'gym-links'] as const,
   },
+  /** A person's affiliations (franja 7b) and «Mi gimnasio» by the confirmed SOCIO (franja 7c). */
+  affiliations: {
+    all: ['affiliations', 'mine'] as const,
+    list: ['affiliations', 'mine', 'list'] as const,
+  },
+  myGym: ['me', 'gym'] as const,
+  myGymMembers: (q: string) => ['me', 'gym', 'members', q] as const,
+  /** Every ranking read shares this prefix (`/me/progression/leaderboard`, gated by the confirmed gym). */
+  leaderboard: ['progression', 'leaderboard'] as const,
   /** «Mis compras» of the person (franja 8d): list, detail and the payment data of one order. */
   orders: {
     all: ['orders', 'mine'] as const,

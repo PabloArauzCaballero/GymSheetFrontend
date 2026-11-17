@@ -27,6 +27,9 @@ export default function BusinessLayout() {
       {/* Franja 8d: one order of «Pedidos» and «Cobro» (bank data and QR). */}
       <Stack.Screen name="pedido/[id]" />
       <Stack.Screen name="cobro" />
+      {/* Franja 7b: a gym's «Socios» and a coach's «Mis gimnasios». */}
+      <Stack.Screen name="socios" />
+      <Stack.Screen name="gimnasios" />
     </Stack>
   );
 }

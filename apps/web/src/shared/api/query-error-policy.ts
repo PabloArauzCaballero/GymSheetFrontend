@@ -7,7 +7,11 @@ import { ApiError, isLegalAcceptanceRequired } from '@/shared/api/api-error';
  */
 // `DISCOVERY_PREFERENCES_REQUIRED`: Comunidad enseña ahí el formulario de preferencias.
 // `EMAIL_VERIFICATION_REQUIRED`: social screens show the «Verifica tu correo» step instead.
+// `GYM_MEMBERSHIP_REQUIRED`: the ranking and the members of «Mi gimnasio» show «Únete a tu gimnasio».
+// `GYM_NOT_ACTIVE`: the gym's «Solicitudes» explain that the gym must be public first.
 const HANDLED_BY_THE_SCREEN = new Set([
+  'GYM_MEMBERSHIP_REQUIRED',
+  'GYM_NOT_ACTIVE',
   'SHARE_PENDING',
   'CONTENT_HIDDEN',
   'DISCOVERY_PREFERENCES_REQUIRED',

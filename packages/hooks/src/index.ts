@@ -37,3 +37,5 @@ export * from './listings-cache';
 
 /** Marketplace orders: cache updates and the inbox split (sin React). */
 export * from './orders-cache';
+/** Affiliations and «Mi gimnasio»: cache updates (sin React). */
+export * from './affiliations-cache';
