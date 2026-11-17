@@ -23,6 +23,33 @@ const routine: ModerationCaseContent = {
 describe('ContentPreview', () => {
   afterEach(() => vi.restoreAllMocks());
 
+  it('shows a reported marketplace listing with its seller, price and terms (franja 8c)', () => {
+    render(
+      <ContentPreview
+        content={{
+          kind: 'BUSINESS_LISTING',
+          name: 'Pack 10 clases',
+          description: 'Funcional o spinning.',
+          benefits: ['Toalla'],
+          offerKind: 'CLASS_PACK',
+          price: '300.00',
+          currency: 'BOB',
+          validityDays: 60,
+          sessionsCount: 10,
+          mediaUrls: [],
+          status: 'ACTIVE',
+          moderationStatus: 'LIVE',
+          seller: { entityId: '4e0b2a6c-1f3d-4b8a-9c2e-7d6f5a4b3c21', name: 'Top Fitness', handle: 'topfit' },
+        }}
+        contentUnavailableReason={null}
+      />,
+    );
+    const preview = screen.getByTestId('vista-previa');
+    expect(preview).toHaveTextContent('Paquete de clases · Top Fitness (@topfit)');
+    expect(preview).toHaveTextContent('10 sesiones · vence a los 60 días');
+    expect(preview).toHaveTextContent('Toalla');
+  });
+
   it('shows the routine from the case file, days, sets and reach, without any other request', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
     render(<ContentPreview content={routine} contentUnavailableReason={null} />);

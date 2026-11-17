@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isNoStoreBackendPath, resolveAllowedBackendPath } from './backend-route-policy';
+import { isAnonymousBackendPath, isNoStoreBackendPath, resolveAllowedBackendPath } from './backend-route-policy';
 
 const id = '0190e2cb-a6d4-7ec3-8f91-a6c735631501';
 const allowedCases: Array<[string[], string]> = [
@@ -45,6 +45,19 @@ const allowedCases: Array<[string[], string]> = [
   [['admin', 'business', 'kyc', id, 'decide'], `/admin/business/kyc/${id}/decide`],
   [['admin', 'business', 'kyc', id, 'documents', id], `/admin/business/kyc/${id}/documents/${id}`],
   [['admin', 'business', 'accounts', id, 'reinstate'], `/admin/business/accounts/${id}/reinstate`],
+  // Franja 8c: listings, locations, gallery, the public marketplace and REPP's queue.
+  [['business', 'me', 'listings'], '/business/me/listings'],
+  [['business', 'me', 'listings', id, 'price'], `/business/me/listings/${id}/price`],
+  [['business', 'me', 'listings', id, 'media'], `/business/me/listings/${id}/media`],
+  [['business', 'me', 'listings', id, 'media', '3'], `/business/me/listings/${id}/media/3`],
+  [['business', 'me', 'locations', id], `/business/me/locations/${id}`],
+  [['business', 'me', 'gallery', '0'], '/business/me/gallery/0'],
+  [['public', 'directory', 'listings'], '/public/directory/listings'],
+  [['public', 'directory', 'listings', id], `/public/directory/listings/${id}`],
+  [['public', 'directory', 'profiles', '@topfit'], '/public/directory/profiles/%40topfit'],
+  [['admin', 'business', 'listings'], '/admin/business/listings'],
+  [['admin', 'business', 'listings', id, 'reject'], `/admin/business/listings/${id}/reject`],
+  [['admin', 'moderation', 'cases', 'BUSINESS_LISTING', id], `/admin/moderation/cases/BUSINESS_LISTING/${id}`],
   [['me', 'consents', 'ORIENTATION'], '/me/consents/ORIENTATION'],
   [['me', 'account'], '/me/account'],
   [['me', 'account', 'closure-preview'], '/me/account/closure-preview'],
@@ -177,6 +190,13 @@ const blockedCases: Array<[string[]]> = [
   // Business routes outside the 8a contract, and a handle with a slash.
   [['business', 'signup']],
   [['business', 'me', 'media', 'GALLERY']],
+  // Listings: UUID ids, exact verbs and numeric photo positions only.
+  [['business', 'me', 'listings', 'not-a-uuid']],
+  [['business', 'me', 'listings', id, 'publish']],
+  [['business', 'me', 'listings', id, 'media', 'first']],
+  [['business', 'me', 'gallery', 'all']],
+  [['admin', 'business', 'listings', id, 'hide']],
+  [['public', 'directory', 'profiles', 'a/b']],
   [['public', 'handles', 'a/b']],
   // KYC: only the declared verbs, documents by UUID, and none of the 8b admin extras yet.
   [['business', 'me', 'kyc', 'documents', 'not-a-uuid']],
@@ -252,5 +272,16 @@ describe('isNoStoreBackendPath', () => {
     expect(isNoStoreBackendPath('/business/me/kyc')).toBe(true);
     expect(isNoStoreBackendPath('/admin/business/kyc/queue')).toBe(true);
     expect(isNoStoreBackendPath('/business/me')).toBe(false);
+  });
+});
+
+describe('anonymous public marketplace reads (franja 8c)', () => {
+  it('only the public listings and profiles go without a session', () => {
+    expect(isAnonymousBackendPath('/public/directory/listings')).toBe(true);
+    expect(isAnonymousBackendPath(`/public/directory/listings/${id}`)).toBe(true);
+    expect(isAnonymousBackendPath('/public/directory/profiles/topfit')).toBe(true);
+    expect(isAnonymousBackendPath('/business/me/listings')).toBe(false);
+    expect(isAnonymousBackendPath('/me/reports')).toBe(false);
+    expect(isAnonymousBackendPath('/public/directory/entities')).toBe(false);
   });
 });

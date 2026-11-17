@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { SESSION_COOKIE } from '@/shared/auth/constants';
 import { expiredSessionCookieOptions } from '@/shared/server/auth-cookie';
 import { backendRequest } from '@/shared/server/backend';
-import { isNoStoreBackendPath, resolveAllowedBackendPath } from '@/shared/server/backend-route-policy';
+import { isAnonymousBackendPath, isNoStoreBackendPath, resolveAllowedBackendPath } from '@/shared/server/backend-route-policy';
 import { isTrustedMutation } from '@/shared/server/csrf';
 import {
   decodeImpersonation,
@@ -18,9 +18,11 @@ async function forward(request: NextRequest, parts: string[]) {
   if (!path) return NextResponse.json({ detail: 'Ruta no permitida.' }, { status: 404 });
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(SESSION_COOKIE)?.value;
-  if (!sessionToken) return NextResponse.json({ detail: 'Autenticación requerida.' }, { status: 401 });
+  // The public marketplace reads work without a session (and then without a token).
+  const anonymous = !sessionToken && request.method === 'GET' && isAnonymousBackendPath(path);
+  if (!sessionToken && !anonymous) return NextResponse.json({ detail: 'Autenticación requerida.' }, { status: 401 });
   // While a platform admin operates a gym, every proxied call carries the scoped token.
-  const impersonation = decodeImpersonation(cookieStore.get(IMPERSONATION_COOKIE)?.value, sessionToken);
+  const impersonation = sessionToken ? decodeImpersonation(cookieStore.get(IMPERSONATION_COOKIE)?.value, sessionToken) : null;
   const token = impersonation?.accessToken ?? sessionToken;
   const headers = new Headers();
   const contentType = request.headers.get('content-type');
@@ -46,7 +48,9 @@ async function forward(request: NextRequest, parts: string[]) {
       path.endsWith('/messages/media') ||
       (path.startsWith('/me/verification/') && path.endsWith('/selfie')) ||
       path === '/business/me/kyc/documents' ||
-      path === '/business/me/media'
+      path === '/business/me/media' ||
+      path === '/business/me/gallery' ||
+      (path.startsWith('/business/me/listings/') && path.endsWith('/media'))
         ? 60_000
         : undefined,
     headers,

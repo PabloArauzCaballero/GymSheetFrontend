@@ -40,6 +40,8 @@ const publicContentRoutes = [
   '/negocio/terminos',
   '/negocio/datos',
   '/n/',
+  // A public listing of the marketplace (franja 8c), shareable like `/@handle`.
+  '/publicacion/',
 ];
 
 /** `/@topfit` → the handle, when the segment can be one (the backend normalizes and decides). */
@@ -91,6 +93,8 @@ export const knownRoutes = new Set([
   // porque son cosas distintas — una se edita, la otra se mira.
   'perfil',
   'plans',
+  // Public listing detail of the marketplace (franja 8c).
+  'publicacion',
   'profile',
   // Programas de pesas y cardio activos (`/programs/:id`).
   'programs',

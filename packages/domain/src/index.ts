@@ -45,3 +45,8 @@ export * from './business-kyc-copy';
 export * from './business-kyc-errors';
 export * from './business-kyc-result';
 export * from './business-kyc-review';
+export * from './business-listings';
+export * from './business-listing-status';
+export * from './business-locations';
+export * from './marketplace-query';
+export * from './marketplace-reports';

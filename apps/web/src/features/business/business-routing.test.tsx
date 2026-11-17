@@ -67,6 +67,7 @@ function meWith(nextSteps: BusinessMe['nextSteps']): BusinessMe {
       coverUrl: null,
       contactInfo: {},
       businessHours: {},
+      gallery: [],
     },
     handle: null,
     nextSteps,

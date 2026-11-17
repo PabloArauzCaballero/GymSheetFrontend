@@ -47,6 +47,18 @@ export const queryKeys = {
     publicHandle: (handle: string) => ['public', 'handle', handle] as const,
     /** `GET /business/me/kyc` (ADR-0021, franja 8b): where the wizard resumes. */
     kyc: ['business', 'me', 'kyc'] as const,
+    /** Own listings (franja 8c); every listing key shares the prefix so one invalidation refreshes all. */
+    listings: ['business', 'me', 'listings'] as const,
+    listingsByStatus: (status: string) => ['business', 'me', 'listings', 'list', status] as const,
+    listing: (listingId: string) => ['business', 'me', 'listings', 'detail', listingId] as const,
+    locations: ['business', 'me', 'locations'] as const,
+  },
+  /** The public marketplace (franja 8c): search pages, one listing and a profile by handle. */
+  marketplace: {
+    all: ['marketplace'] as const,
+    search: (query: string) => ['marketplace', 'search', query] as const,
+    listing: (listingId: string) => ['marketplace', 'listing', listingId] as const,
+    profile: (handle: string) => ['marketplace', 'profile', handle] as const,
   },
   admin: {
     branches: (page: number) => ['admin', 'branches', page] as const,
@@ -69,5 +81,7 @@ export const queryKeys = {
       detail: (submissionId: string) => ['admin', 'business-kyc', 'detail', submissionId] as const,
       accounts: (search: string) => ['admin', 'business-accounts', search] as const,
     },
+    /** REPP's «Publicaciones» tab (franja 8c). */
+    businessListings: (status: string) => ['admin', 'business-listings', status] as const,
   },
 };

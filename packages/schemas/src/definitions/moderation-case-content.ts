@@ -60,6 +60,35 @@ export const moderationCaseContentSchema = z.discriminatedUnion('kind', [
   }),
   z.object({ kind: z.literal('USER'), displayName: z.string(), mainPhotoUrl: z.string().nullable() }),
   z.object({
+    kind: z.literal('BUSINESS_LISTING'),
+    name: z.string(),
+    description: z.string(),
+    benefits: z.array(z.string()),
+    offerKind: z.string(),
+    price: z.string(),
+    currency: z.string(),
+    validityDays: z.number().int().nullable(),
+    sessionsCount: z.number().int().nullable(),
+    mediaUrls: z.array(z.string()),
+    status: z.string(),
+    moderationStatus: z.string(),
+    seller: z.object({ entityId: z.string(), name: z.string(), handle: z.string().nullable() }),
+  }),
+  z.object({
+    kind: z.literal('BUSINESS_PROFILE'),
+    name: z.string(),
+    entityType: z.string(),
+    headline: z.string().nullable(),
+    description: z.string(),
+    logoUrl: z.string().nullable(),
+    coverUrl: z.string().nullable(),
+    gallery: z.array(z.string()),
+    city: z.string().nullable(),
+    status: z.string(),
+    isVerified: z.boolean(),
+    handle: z.string().nullable(),
+  }),
+  z.object({
     kind: z.literal('MUSIC_PLAYLIST'),
     name: z.string(),
     url: z.string(),
@@ -70,6 +99,8 @@ export const moderationCaseContentSchema = z.discriminatedUnion('kind', [
 export type ModerationCaseContent = z.infer<typeof moderationCaseContentSchema>;
 export type ModerationRoutineContent = Extract<ModerationCaseContent, { kind: 'ROUTINE' }>;
 export type ModerationExerciseContent = Extract<ModerationCaseContent, { kind: 'EXERCISE' }>;
+export type ModerationListingContent = Extract<ModerationCaseContent, { kind: 'BUSINESS_LISTING' }>;
+export type ModerationBusinessProfileContent = Extract<ModerationCaseContent, { kind: 'BUSINESS_PROFILE' }>;
 
 export const moderationContentUnavailableReasons = ['ERASED', 'CHAT_EVIDENCE'] as const;
 

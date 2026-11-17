@@ -6,6 +6,7 @@ import { MessageSquareQuote, Music } from 'lucide-react';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { DomainImage } from '@/shared/components/media/domain-image';
 import type { ModerationCaseDetail } from '@/features/moderation/services/moderation-service';
+import { BusinessProfileBody, ListingBody } from './moderation-preview-business';
 import { ExerciseBody, RoutineBody } from './moderation-preview-training';
 
 function Muted({ children }: Readonly<{ children: string }>) {
@@ -78,6 +79,10 @@ function ContentBody({ content }: Readonly<{ content: ModerationCaseContent }>) 
       return <ExerciseBody exercise={content} />;
     case 'COMMENT':
       return <CommentBody comment={content} />;
+    case 'BUSINESS_LISTING':
+      return <ListingBody listing={content} />;
+    case 'BUSINESS_PROFILE':
+      return <BusinessProfileBody profile={content} />;
     case 'USER':
       return (
         <div className="flex flex-col gap-2">

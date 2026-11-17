@@ -11,6 +11,7 @@ export const moderationResolutions = [
   'USUARIO_SUSPENDIDO',
   'USUARIO_EXPULSADO',
   'MENOR_CONFIRMADO',
+  'NEGOCIO_SUSPENDIDO',
 ] as const;
 export type ModerationResolution = (typeof moderationResolutions)[number];
 
@@ -21,6 +22,7 @@ const RESOLUTION_LABEL: Readonly<Record<ModerationResolution, string>> = {
   USUARIO_SUSPENDIDO: 'Suspensión',
   USUARIO_EXPULSADO: 'Cuenta expulsada',
   MENOR_CONFIRMADO: 'Menor de edad confirmado',
+  NEGOCIO_SUSPENDIDO: 'Negocio suspendido',
 };
 
 /** Label of a verdict; an unknown code is humanized instead of shown raw. */

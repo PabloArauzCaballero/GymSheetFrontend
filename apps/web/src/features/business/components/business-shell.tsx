@@ -2,11 +2,12 @@ import type { ReactNode } from 'react';
 import { AmbientBackground } from '@/shared/components/background/ambient-background';
 import { BrandLockup } from '@/shared/components/brand/brand-mark';
 import { LogoutButton } from '@/shared/components/layout/logout-button';
+import { BusinessNav } from '@/features/business-listings/components/business-nav';
 
 /**
  * The business portal's chrome (ADR-0020): brand, account name and sign out.
- * No person navigation at all. Its sections (Publicaciones, Pedidos,
- * Mensajes) join this header when their franjas ship (8c–8f).
+ * No person navigation at all: Inicio, Publicaciones and Perfil (franja 8c);
+ * Pedidos and Mensajes join when their franjas ship (8d, 8f).
  */
 export function BusinessShell({ accountName, children }: Readonly<{ accountName: string; children: ReactNode }>) {
   return (
@@ -19,6 +20,9 @@ export function BusinessShell({ accountName, children }: Readonly<{ accountName:
             <span className="data-label truncate">{accountName}</span>
           </div>
           <LogoutButton />
+        </div>
+        <div className="mx-auto w-full max-w-3xl px-4 pb-2 sm:px-6">
+          <BusinessNav />
         </div>
       </header>
       <main className="mx-auto grid w-full max-w-3xl gap-6 px-4 py-8 sm:px-6 sm:py-10">{children}</main>

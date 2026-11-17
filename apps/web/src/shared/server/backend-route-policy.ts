@@ -1,6 +1,6 @@
 import { businessRoutePatterns } from './backend-route-policy-business';
 
-export { isNoStoreBackendPath } from './backend-route-policy-business';
+export { isAnonymousBackendPath, isNoStoreBackendPath } from './backend-route-policy-business';
 
 const resourceId = '[A-Za-z0-9-]+';
 // Código de músculo del catálogo anatómico (`BICEPS_BRACHII`): mayúsculas y guion bajo.
@@ -19,7 +19,7 @@ const permissionKey = '[a-z-]+%3A[a-z-]+';
 // más abajo — así una URL no puede colar un valor que el backend rechazaría
 // de todos modos, pero sin llegar a intentarlo.
 const moderationTargetKind =
-  'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER|REEL|ROUTINE|EXERCISE|COMMENT|MUSIC_PLAYLIST';
+  'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER|REEL|ROUTINE|EXERCISE|COMMENT|MUSIC_PLAYLIST|BUSINESS_LISTING|BUSINESS_PROFILE';
 
 const allowedPathPatterns = [
   /^\/access\/me$/u,

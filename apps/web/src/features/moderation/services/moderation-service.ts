@@ -1,4 +1,4 @@
-import { moderationResolutions } from '@gymsheet/domain';
+import { businessReportReasons, businessReportTargetKinds, moderationResolutions } from '@gymsheet/domain';
 import { moderationCaseContentFields } from '@gymsheet/schemas';
 import { z } from 'zod';
 import { apiRequest } from '@/shared/api/api-client';
@@ -15,6 +15,9 @@ export const moderationTargetKinds = [
   // Public Spotify link: the central queue mixes it with the rest, and an
   // unknown kind would make the whole queue fail to parse.
   'MUSIC_PLAYLIST',
+  // Marketplace (ADR-0022, franja 8c): a public listing and a business profile.
+  'BUSINESS_LISTING',
+  'BUSINESS_PROFILE',
 ] as const;
 export type ModerationTargetKind = (typeof moderationTargetKinds)[number];
 
@@ -35,7 +38,13 @@ export const moderationReasons = [
 export type ModerationReason = (typeof moderationReasons)[number];
 
 const TRAINING_REASONS: ModerationReason[] = ['EJERCICIO_PELIGROSO', 'INFORMACION_ENGANOSA', 'PLAGIO'];
+/** Marketplace cases: no sanction ladder (the business is suspended instead). */
+export function isBusinessTarget(kind: ModerationTargetKind): kind is 'BUSINESS_LISTING' | 'BUSINESS_PROFILE' {
+  return (businessReportTargetKinds as readonly string[]).includes(kind);
+}
+
 export function reasonsFor(kind: ModerationTargetKind): ModerationReason[] {
+  if (isBusinessTarget(kind)) return [...businessReportReasons];
   return kind === 'ROUTINE' || kind === 'EXERCISE' || kind === 'COMMENT'
     ? [...moderationReasons]
     : moderationReasons.filter((reason) => !TRAINING_REASONS.includes(reason));
@@ -67,6 +76,8 @@ export const TARGET_LABEL: Record<ModerationTargetKind, string> = {
   EXERCISE: 'Ejercicio',
   COMMENT: 'Comentario',
   MUSIC_PLAYLIST: 'Enlace de música',
+  BUSINESS_LISTING: 'Publicación',
+  BUSINESS_PROFILE: 'Perfil de negocio',
 };
 
 /**
@@ -181,7 +192,7 @@ export const moderationService = {
   resolve: (
     targetKind: ModerationTargetKind,
     targetId: string,
-    input: { hideContent: boolean; sanction: boolean; note?: string },
+    input: { hideContent: boolean; sanction: boolean; suspendBusiness?: boolean; note?: string },
   ) =>
     apiRequest(`${casePath(targetKind, targetId)}/resolve`, resolveResultSchema, {
       method: 'POST',

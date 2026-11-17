@@ -1,79 +1,31 @@
 'use client';
 
 import {
-  DEFAULT_MARKETPLACE_FILTERS,
-  MARKETPLACE_SORTS,
-  MARKETPLACE_TOP_RATING,
+  DEFAULT_MARKETPLACE_QUERY,
+  entityFiltersOf,
   filterEntities,
-  filterPlans,
-  formatPrice,
-  hasActiveFilters,
+  handleFromSearch,
+  hasActiveMarketplaceQuery,
   initials,
-  offerKindLabel,
+  listingSearchParams,
+  marketplaceUrlParams,
   ratingLabel,
   sellerKindLabel,
-  type MarketplaceFilters,
-  type MarketplaceSort,
+  type MarketplaceQuery,
 } from '@gymsheet/domain';
-import { ArrowDownUp, BadgeCheck, CircleX, CreditCard, Dumbbell, Search, ShieldCheck, ShoppingBag, Star, Tag, Ticket } from 'lucide-react';
+import { ArrowRight, BadgeCheck, CircleX, Search } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
-import type { DirectoryEntitySummary, EntityPlan } from '@/shared/api/schemas';
+import { useEffect, useMemo, useState } from 'react';
+import type { DirectoryEntitySummary, PublicListingsPage } from '@/shared/api/schemas';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { DomainImage } from '@/shared/components/media/domain-image';
+import { useDebouncedValue } from '@/shared/hooks/use-debounced-value';
 import { cn } from '@/shared/lib/cn';
+import { ListingsGrid } from '@/features/business-listings/components/public/listings-grid';
+import { MarketplaceFilters } from '@/features/business-listings/components/public/marketplace-filters';
 import { MarketplaceCategoryRail } from './marketplace-category-rail';
 
 type Tab = 'OFFERS' | 'ENTITIES';
-
-function FilterChipButton({ active, children, onClick }: Readonly<{ active: boolean; children: React.ReactNode; onClick: () => void }>) {
-  return (
-    <button
-      aria-pressed={active}
-      className={cn(
-        'tap inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-[15px] font-semibold transition-colors duration-[var(--dur-2)]',
-        active
-          ? 'border-[var(--text)] bg-[var(--text)] text-[var(--background)]'
-          : 'border-[var(--border)] bg-[var(--surface-low)] text-[var(--text-muted)] hover:text-[var(--text)]',
-      )}
-      onClick={onClick}
-      type="button"
-    >
-      {children}
-    </button>
-  );
-}
-
-const KIND_ICON = {
-  MEMBERSHIP_PLAN: CreditCard,
-  PASS: Ticket,
-  PRODUCT: ShoppingBag,
-  SERVICE: Dumbbell,
-} as const;
-
-function OfferCard({ plan }: Readonly<{ plan: EntityPlan }>) {
-  const price = formatPrice(plan.currentPrice, plan.currency, plan.durationDays);
-  const uri = plan.mediaUrls[0] ?? plan.entity?.coverUrl ?? plan.entity?.logoUrl ?? null;
-  const seller = [plan.entity?.name, plan.entity?.city].filter(Boolean).join(' · ');
-  const Icon = KIND_ICON[plan.type] ?? Tag;
-  const href = plan.entity?.slug ? `/directorio/${plan.entity.slug}` : '/directorio';
-  return (
-    <Link className="tap group grid content-start gap-2" href={href}>
-      <span className="grid aspect-square place-items-center overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface-high)]">
-        {uri ? (
-          <DomainImage alt="" className="size-full object-cover transition-transform duration-[var(--dur-4)] group-hover:scale-[1.03]" src={uri} />
-        ) : (
-          <Icon aria-hidden className="size-7 text-[var(--text-muted)]" />
-        )}
-      </span>
-      <span className="grid gap-0.5">
-        <span className="t-headline tabular-nums">{price}</span>
-        <span className="t-subhead line-clamp-2">{plan.name}</span>
-        <span className="t-caption truncate text-[var(--text-muted)]">{seller || offerKindLabel(plan.type)}</span>
-      </span>
-    </Link>
-  );
-}
 
 function SellerCard({ seller }: Readonly<{ seller: DirectoryEntitySummary }>) {
   const meta = [sellerKindLabel(seller.entityType), seller.city].filter(Boolean).join(' · ');
@@ -102,25 +54,34 @@ function SellerCard({ seller }: Readonly<{ seller: DirectoryEntitySummary }>) {
 }
 
 /**
- * Marketplace, la misma pantalla que `apps/mobile/app/(app)/directorio.tsx`:
- * buscador, píldoras de categoría, pestañas de texto «Ofertas / Tiendas» con
- * subrayado y una cuadrícula de dos columnas (cuatro en escritorio).
+ * Marketplace, la misma pantalla que la pestaña del móvil: buscador que
+ * entiende `@handle`, píldoras de categoría, filtros, pestañas «Ofertas /
+ * Tiendas» y la cuadrícula. «Ofertas» busca en el backend
+ * (`GET /public/directory/listings`, ADR-0022) con paginación por cursor;
+ * los filtros viven en la URL para poder compartir la búsqueda.
  */
 export function MarketplaceClient({
   entities,
-  plans,
-}: Readonly<{ entities: DirectoryEntitySummary[]; plans: EntityPlan[] | null }>) {
-  const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<MarketplaceFilters>(DEFAULT_MARKETPLACE_FILTERS);
+  initialQuery = DEFAULT_MARKETPLACE_QUERY,
+  initialPage = null,
+}: Readonly<{ entities: DirectoryEntitySummary[]; initialQuery?: MarketplaceQuery; initialPage?: PublicListingsPage | null }>) {
+  const [query, setQuery] = useState<MarketplaceQuery>(initialQuery);
   const [tab, setTab] = useState<Tab>('OFFERS');
-  const query = search.trim().toLowerCase();
-  const applied = useMemo(() => ({ ...filters, search }), [filters, search]);
-  const sellers = useMemo(() => filterEntities(entities, applied), [entities, applied]);
-  const offers = useMemo(() => filterPlans(plans ?? [], applied), [plans, applied]);
+  // Typing is debounced: the backend is asked once the person pauses.
+  const settled = useDebouncedValue(query, 350);
+  const backendQuery = listingSearchParams(settled);
+  const handle = handleFromSearch(query.q);
+  const sellers = useMemo(() => filterEntities(entities, entityFiltersOf(query)), [entities, query]);
+  const active = hasActiveMarketplaceQuery(query);
+  const patch = (next: Partial<MarketplaceQuery>) => setQuery((current) => ({ ...current, ...next }));
 
-  const emptyMessage = query
-    ? 'Prueba con otra palabra o quita el filtro.'
-    : 'Cuando los vendedores publiquen, aparecerán aquí.';
+  // The search lives in the URL (replaceState: no server round trip on every key).
+  useEffect(() => {
+    const search = marketplaceUrlParams(settled);
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}${search ? `?${search}` : ''}`);
+  }, [settled]);
+
+  const emptyMessage = query.q.trim() || active ? 'Prueba con otra palabra o quita algún filtro.' : 'Cuando los negocios publiquen, aparecerán aquí.';
 
   return (
     <div className="grid gap-5">
@@ -130,65 +91,33 @@ export function MarketplaceClient({
           aria-label="Buscar en Marketplace"
           autoComplete="off"
           className="min-w-0 flex-1 bg-transparent text-[17px] outline-none placeholder:text-[var(--text-muted)]"
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Busca un plan, producto o tienda…"
+          maxLength={100}
+          onChange={(event) => patch({ q: event.target.value })}
+          placeholder="Busca un plan, un producto o @negocio…"
           spellCheck={false}
           type="search"
-          value={search}
+          value={query.q}
         />
-        {search ? (
-          <button aria-label="Borrar búsqueda" className="grid size-8 place-items-center text-[var(--text-muted)]" onClick={() => setSearch('')} type="button">
+        {query.q ? (
+          <button aria-label="Borrar búsqueda" className="grid size-11 place-items-center text-[var(--text-muted)]" onClick={() => patch({ q: '' })} type="button">
             <CircleX aria-hidden className="size-[18px]" />
           </button>
         ) : null}
       </label>
 
-      <MarketplaceCategoryRail onChange={(category) => setFilters((current) => ({ ...current, category }))} value={filters.category} />
-
-      <div aria-label="Filtros" className="nav-scroll -mx-1 flex items-center gap-2 overflow-x-auto px-1" role="group">
-        <label
-          className={cn(
-            'relative inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-[15px] font-semibold',
-            filters.sort !== 'relevance'
-              ? 'border-[var(--text)] bg-[var(--text)] text-[var(--background)]'
-              : 'border-[var(--border)] bg-[var(--surface-low)] text-[var(--text-muted)]',
-          )}
+      {handle ? (
+        <Link
+          className="flex min-h-12 items-center justify-between gap-3 rounded-[var(--radius-lg)] bg-[var(--surface-low)] px-4 text-[15px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--volt)]"
+          href={`/@${handle}`}
         >
-          <ArrowDownUp aria-hidden className="size-4" />
-          <select
-            aria-label="Ordenar por"
-            className="cursor-pointer appearance-none bg-transparent pr-1 outline-none"
-            onChange={(event) => setFilters((current) => ({ ...current, sort: event.target.value as MarketplaceSort }))}
-            value={filters.sort}
-          >
-            {MARKETPLACE_SORTS.map((option) => (
-              <option className="text-[var(--text)]" key={option.id} value={option.id}>
-                {option.id === 'relevance' ? 'Ordenar' : option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <FilterChipButton active={filters.topRated} onClick={() => setFilters((current) => ({ ...current, topRated: !current.topRated }))}>
-          <Star aria-hidden className="size-4" />
-          {String(MARKETPLACE_TOP_RATING).replace('.', ',')} o más
-        </FilterChipButton>
-        <FilterChipButton active={filters.verifiedOnly} onClick={() => setFilters((current) => ({ ...current, verifiedOnly: !current.verifiedOnly }))}>
-          <ShieldCheck aria-hidden className="size-4" />
-          Verificados
-        </FilterChipButton>
-        {hasActiveFilters(applied) ? (
-          <button
-            className="shrink-0 px-2 text-sm text-[var(--text-muted)] underline"
-            onClick={() => {
-              setFilters(DEFAULT_MARKETPLACE_FILTERS);
-              setSearch('');
-            }}
-            type="button"
-          >
-            Borrar
-          </button>
-        ) : null}
-      </div>
+          Ver el perfil de @{handle}
+          <ArrowRight aria-hidden className="size-4" />
+        </Link>
+      ) : null}
+
+      <MarketplaceCategoryRail onChange={(category) => patch({ category })} value={query.category} />
+
+      <MarketplaceFilters active={active} onChange={patch} onReset={() => setQuery(DEFAULT_MARKETPLACE_QUERY)} query={query} tab={tab} />
 
       <div className="grid">
         <div className="flex gap-6" role="tablist">
@@ -201,10 +130,8 @@ export function MarketplaceClient({
             <button
               aria-selected={tab === value}
               className={cn(
-                'border-b-2 py-2 text-[17px] transition-colors duration-[var(--dur-2)]',
-                tab === value
-                  ? 'border-[var(--text)] font-semibold text-[var(--text)]'
-                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]',
+                'min-h-11 border-b-2 py-2 text-[17px] transition-colors duration-[var(--dur-2)]',
+                tab === value ? 'border-[var(--text)] font-semibold text-[var(--text)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]',
               )}
               key={value}
               onClick={() => setTab(value)}
@@ -219,17 +146,11 @@ export function MarketplaceClient({
       </div>
 
       {tab === 'OFFERS' ? (
-        plans === null ? (
-          <EmptyState flat description="No pudimos cargar las ofertas. Vuelve a intentarlo en un momento." level={2} title="Ofertas no disponibles" />
-        ) : offers.length === 0 ? (
-          <EmptyState description={emptyMessage} level={2} mascot="asleep" title="Nada por aquí todavía" />
-        ) : (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-4">
-            {offers.map((plan) => (
-              <OfferCard key={plan.id} plan={plan} />
-            ))}
-          </div>
-        )
+        <ListingsGrid
+          empty={{ title: 'Nada por aquí todavía', description: emptyMessage }}
+          initial={{ query: listingSearchParams(initialQuery), page: initialPage }}
+          query={backendQuery}
+        />
       ) : sellers.length === 0 ? (
         <EmptyState description={emptyMessage} level={2} mascot="asleep" title="Ninguna tienda por aquí" />
       ) : (

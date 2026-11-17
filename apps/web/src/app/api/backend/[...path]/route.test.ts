@@ -79,3 +79,24 @@ describe('/api/backend with KYC documents', () => {
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(new Uint8Array([0xff, 0xd8, 0xff]));
   });
 });
+
+describe('/api/backend without a session (public marketplace, franja 8c)', () => {
+  const get = (parts: string[], method = 'GET') =>
+    GET(new NextRequest(`http://localhost:3002/api/backend/${parts.join('/')}?limit=24`, { method }), {
+      params: Promise.resolve({ path: parts }),
+    });
+
+  it('forwards a public listings read with no token', async () => {
+    mocks.jar.clear();
+    const response = await get(['public', 'directory', 'listings']);
+    expect(response.status).toBe(200);
+    expect(mocks.backendRequest.mock.calls[0]?.[0]).toBe('/public/directory/listings?limit=24');
+    expect(sentToken()).toBeUndefined();
+  });
+
+  it('still asks for a session anywhere else', async () => {
+    mocks.jar.clear();
+    expect((await get(['business', 'me', 'listings'])).status).toBe(401);
+    expect(mocks.backendRequest).not.toHaveBeenCalled();
+  });
+});

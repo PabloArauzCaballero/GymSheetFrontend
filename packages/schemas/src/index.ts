@@ -24,6 +24,7 @@ export * from './definitions/business';
 export * from './definitions/business-kyc';
 export * from './definitions/business-kyc-admin';
 export * from './definitions/business-kyc-forms';
+export * from './definitions/business-listings';
 export * from './definitions/reviews';
 export * from './definitions/music';
 export * from './definitions/moderation-case-content';

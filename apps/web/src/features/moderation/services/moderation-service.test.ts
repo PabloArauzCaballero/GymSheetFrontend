@@ -51,7 +51,19 @@ afterEach(() => vi.unstubAllGlobals());
 describe('moderación: tipos y motivos', () => {
   it('conoce todos los tipos que la cola central puede traer', () => {
     expect([...moderationTargetKinds].sort()).toEqual(
-      ['CHAT_MESSAGE', 'COMMENT', 'EXERCISE', 'MUSIC_PLAYLIST', 'PROFILE_PHOTO', 'REEL', 'ROUTINE', 'STORY', 'USER'].sort(),
+      [
+        'BUSINESS_LISTING',
+        'BUSINESS_PROFILE',
+        'CHAT_MESSAGE',
+        'COMMENT',
+        'EXERCISE',
+        'MUSIC_PLAYLIST',
+        'PROFILE_PHOTO',
+        'REEL',
+        'ROUTINE',
+        'STORY',
+        'USER',
+      ].sort(),
     );
   });
 
@@ -68,6 +80,12 @@ describe('moderación: tipos y motivos', () => {
 });
 
 describe('moderación: motivos al denunciar', () => {
+  it('a business listing or profile is reported with the marketplace reasons only', () => {
+    expect(reasonsFor('BUSINESS_LISTING')).toEqual(['SPAM', 'INFORMACION_ENGANOSA', 'PERFIL_FALSO', 'DROGAS', 'CONTENIDO_SEXUAL', 'OTRO']);
+    expect(reasonsFor('BUSINESS_PROFILE')).not.toContain('EJERCICIO_PELIGROSO');
+    expect(reasonsFor('BUSINESS_PROFILE')).not.toContain('MENOR_DE_EDAD');
+  });
+
   it('los motivos de entrenamiento sólo se ofrecen para rutina, ejercicio y comentario', () => {
     expect(reasonsFor('ROUTINE')).toContain('EJERCICIO_PELIGROSO');
     expect(reasonsFor('COMMENT')).toContain('PLAGIO');

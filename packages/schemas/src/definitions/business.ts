@@ -114,6 +114,8 @@ export const businessMeSchema = z.object({
     coverUrl: z.string().nullable(),
     contactInfo: z.record(z.string(), z.string()),
     businessHours: z.record(z.string(), hours),
+    /** Public profile gallery (franja 8c); absent on an older backend. */
+    gallery: z.array(z.string()).optional().transform((value) => value ?? []),
   }),
   handle: currentHandleSchema.nullable(),
   // Unknown future steps are dropped instead of failing the whole shell.
