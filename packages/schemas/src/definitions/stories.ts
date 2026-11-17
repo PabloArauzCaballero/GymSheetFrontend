@@ -31,6 +31,11 @@ export const storyFeedEntrySchema = z.object({
     z.object({
       id: z.string().uuid(),
       mediaUrl: z.string(),
+      /**
+       * Miniatura cuadrada para el anillo; `null` en un video. Ausente con un
+       * backend anterior, que no la generaba.
+       */
+      thumbnailUrl: z.string().nullish(),
       mediaType: z.enum(storyMediaTypes),
       caption: z.string().nullish(),
       createdAt: z.string(),
