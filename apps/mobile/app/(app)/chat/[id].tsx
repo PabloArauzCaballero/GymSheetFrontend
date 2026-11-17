@@ -20,6 +20,7 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardVisible } from '@/lib/use-keyboard-visible';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -167,6 +168,9 @@ export default function ChatThreadScreen() {
   const realtime = viewer === 'person';
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
+  const keyboardVisible = useKeyboardVisible();
+  /** Under the composer: clear of the home indicator, or just a breath above the keyboard. */
+  const bottomSpace = (keyboardVisible ? 0 : insets.bottom) + spacing.sm;
   const { wide, width } = useResponsive();
   /** A qué conversación se unió el socket **actual**; se limpia al caerse. */
   const joinedRef = useRef<string | null>(null);
@@ -1408,9 +1412,11 @@ export default function ChatThreadScreen() {
           // Android reduce la ventana con el teclado abierto; iOS no, y sin esto
           // el redactor queda detrás del teclado justo mientras se escribe.
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          // No `paddingBottom` here: with `behavior="padding"` the view replaces
+          // it with the keyboard height (0 when closed), so the composer sat on
+          // the home indicator. The bottom space goes on the composer instead.
           style={{
             flex: 1,
-            paddingBottom: insets.bottom + spacing.sm,
             paddingLeft: gutter + insets.left,
             paddingRight: gutter + insets.right,
           }}
@@ -1470,7 +1476,7 @@ export default function ChatThreadScreen() {
           </View>
 
           {canWrite ? (
-            <View style={{ paddingTop: spacing.xs, paddingHorizontal: spacing.xs }}>
+            <View style={{ paddingTop: spacing.xs, paddingHorizontal: spacing.xs, paddingBottom: bottomSpace }}>
               <ChatComposer
                 attachHidden={controls.location ? undefined : ['location']}
                 attachOpen={attachOpen}
@@ -1507,6 +1513,7 @@ export default function ChatThreadScreen() {
                 gap: spacing.xs,
                 marginTop: spacing.sm,
                 marginHorizontal: spacing.sm,
+                marginBottom: bottomSpace,
                 borderRadius: radii.lg,
                 backgroundColor: colors.surfaceHigh,
                 padding: spacing.sm,

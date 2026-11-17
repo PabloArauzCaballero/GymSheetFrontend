@@ -197,6 +197,13 @@ export const conversationSummarySchema = z.object({
   otherUserOnline: z.boolean(),
   otherUserLastSeenAt: z.string().nullable(),
   lastMessage: z.string().nullable(),
+  /**
+   * Tipo del último elemento (`text`, `audio`, `image`, `system`, `deleted`…) para el icono de la
+   * vista previa. Texto libre y opcional: un tipo nuevo del servidor no debe tumbar la lista.
+   */
+  lastMessageType: z.string().nullish(),
+  /** `true` si el último mensaje es mío — la vista previa lo antepone con «Tú:». */
+  lastMessageFromMe: z.boolean().optional(),
   lastMessageAt: z.string().nullable(),
   /** `false` en un chat de sistema de solo lectura: el compositor debe ocultarse. */
   canWrite: z.boolean(),

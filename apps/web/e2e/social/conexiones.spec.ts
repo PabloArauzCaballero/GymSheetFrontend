@@ -1,5 +1,10 @@
 import { expect, test, type Route } from '@playwright/test';
 import { athlete, openPage, signIn } from '../fixtures';
+import { stubDiscoveryReady } from './discovery-ready';
+
+test.beforeEach(async ({ page }) => {
+  await stubDiscoveryReady(page);
+});
 
 const ANA_ID = '00000000-0000-4000-8000-000000000011';
 const BLOCKED_ID = '00000000-0000-4000-8000-000000000012';

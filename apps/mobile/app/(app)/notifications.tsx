@@ -209,6 +209,16 @@ export default function NotificationsScreen() {
             label="Recordatorios de vencimiento"
             onChange={(value) => apply({ recordatoriosVencimiento: value })}
           />
+          <Divider />
+          <PreferenceSwitch
+            accessibilityLabel="Mostrar el texto de los mensajes en las notificaciones"
+            checked={current.vistaPreviaMensajes}
+            description="El aviso de un chat muestra lo que te escribieron. Apágalo para ver solo «Tienes un mensaje nuevo.»."
+            disabled={saving}
+            icon="chatbubble-ellipses-outline"
+            label="Vista previa de mensajes"
+            onChange={(value) => apply({ vistaPreviaMensajes: value })}
+          />
         </Card>
       </Section>
       </TourTarget>
