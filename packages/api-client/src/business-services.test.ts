@@ -4,7 +4,7 @@ import {
   businessSignupPayloadSchema,
   businessSignupResponseSchema,
   handleResolutionSchema,
-  publicPaymentConfigSchema,
+  paymentConfigSchema,
   sessionPrincipalSchema,
 } from '@gymsheet/schemas';
 import { createApiClient } from './client';
@@ -99,28 +99,31 @@ describe('business schemas', () => {
   });
 });
 
-describe('public payment config (franja 8a, D5)', () => {
+describe('payment config is private (franja 8d, D5)', () => {
   const config = {
     bankName: 'Banco Unión',
     accountHolderName: 'Top Fitness SRL',
     accountNumber: '1234-5678',
     aliasOrPhone: null,
-    qrImageUrl: 'https://cdn.repp.app/qr.png',
-    qrPayload: null,
     instructions: null,
+    acceptsCash: false,
     isActive: true,
+    hasQr: true,
+    holderMatch: 'PASS',
+    updatedAt: '2026-11-17T10:00:00.000Z',
   };
 
-  it('parses the public shape without tax id, ids or dates', () => {
-    expect(publicPaymentConfigSchema.parse(config).taxId).toBeUndefined();
+  // Replaces the 8a assertions on the public shape: that route is gone, and the business's own
+  // config carries no tax id and no QR URL (the QR is a private file, `hasQr`).
+  it('parses the own config without tax id or QR URL', () => {
+    const parsed = paymentConfigSchema.parse({ ...config, taxId: '1029384756', qrImageUrl: 'https://cdn/qr.png' });
+    expect(parsed).not.toHaveProperty('taxId');
+    expect(parsed).not.toHaveProperty('qrImageUrl');
+    expect(parsed.hasQr).toBe(true);
   });
 
-  it('accepts null when the seller has no active method', () => {
-    expect(publicPaymentConfigSchema.nullable().parse(null)).toBeNull();
-  });
-
-  it('still parses an older backend that sends the tax id', () => {
-    expect(publicPaymentConfigSchema.parse({ ...config, taxId: '1029384756', id: 'x' }).taxId).toBe('1029384756');
+  it('accepts null before the business saves one', () => {
+    expect(paymentConfigSchema.nullable().parse(null)).toBeNull();
   });
 });
 

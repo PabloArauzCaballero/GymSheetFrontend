@@ -52,6 +52,19 @@ export const queryKeys = {
     listingsByStatus: (status: string) => ['business', 'me', 'listings', 'list', status] as const,
     listing: (listingId: string) => ['business', 'me', 'listings', 'detail', listingId] as const,
     locations: ['business', 'me', 'locations'] as const,
+    /** The orders inbox (franja 8d); list and detail share the prefix. `ordersBadge` is the nav's `pendingCount`. */
+    orders: ['business', 'me', 'orders'] as const,
+    ordersList: ['business', 'me', 'orders', 'list'] as const,
+    ordersBadge: ['business', 'me', 'orders', 'badge'] as const,
+    order: (orderId: string) => ['business', 'me', 'orders', 'detail', orderId] as const,
+    paymentConfig: ['business', 'me', 'payment-config'] as const,
+  },
+  /** «Mis compras» of the person (franja 8d): list, detail and the payment data of one order. */
+  orders: {
+    all: ['orders', 'mine'] as const,
+    list: ['orders', 'mine', 'list'] as const,
+    detail: (orderId: string) => ['orders', 'mine', 'detail', orderId] as const,
+    instructions: (orderId: string) => ['orders', 'mine', 'instructions', orderId] as const,
   },
   /** The public marketplace (franja 8c): search pages, one listing and a profile by handle. */
   marketplace: {

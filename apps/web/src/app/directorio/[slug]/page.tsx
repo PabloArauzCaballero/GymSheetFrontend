@@ -5,7 +5,6 @@ import { DirectoryReviewsSection } from '@/features/directory/components/directo
 import { MarketplacePlansSection } from '@/features/directory/components/marketplace-plans-section';
 import {
   getDirectoryEntity,
-  getEntityPaymentConfig,
   getEntityPlans,
   listDirectoryReviews,
 } from '@/features/directory/services/directory-server';
@@ -43,13 +42,12 @@ export default async function DirectoryEntityDetailPage({ params }: PageProps) {
   const entity = await getDirectoryEntity(slug);
   if (!entity) notFound();
 
-  const [reviewsResponse, plans, paymentConfig] = await Promise.all([
+  const [reviewsResponse, plans] = await Promise.all([
     listDirectoryReviews(entity.id, {
       sortBy: 'helpful',
       limit: 20,
     }),
     getEntityPlans(entity.id),
-    getEntityPaymentConfig(entity.id),
   ]);
 
   const typeName = TYPE_NAMES[entity.entityType] ?? entity.entityType;
@@ -215,13 +213,8 @@ export default async function DirectoryEntityDetailPage({ params }: PageProps) {
           </div>
         </section>
 
-        {/* Marketplace de Planes y Membresías con Pago QR */}
-        <MarketplacePlansSection
-          plans={plans}
-          paymentConfig={paymentConfig}
-          entityId={entity.id}
-          entityName={entity.name}
-        />
+        {/* Plans of the listing: each one opens its page, where the checkout of franja 8d lives. */}
+        <MarketplacePlansSection plans={plans} />
 
         {/* Galería si existe */}
         {entity.gallery.length > 0 && (

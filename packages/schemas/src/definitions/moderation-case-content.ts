@@ -89,6 +89,40 @@ export const moderationCaseContentSchema = z.discriminatedUnion('kind', [
     handle: z.string().nullable(),
   }),
   z.object({
+    kind: z.literal('PAYMENT_ORDER'),
+    orderNumber: z.string(),
+    status: z.string(),
+    method: z.string(),
+    quantity: z.number().int(),
+    unitAmount: z.string(),
+    amount: z.string(),
+    currency: z.string(),
+    listingName: z.string().nullable(),
+    buyerNote: z.string().nullable(),
+    /** `path` is the audited, case-only route of the receipt image (ADR-0024): fetched through the BFF, never stored. */
+    receipt: z.object({
+      uploaded: z.boolean(),
+      sha256: z.string().nullable(),
+      reference: z.string().nullable(),
+      attempts: z.number().int(),
+      path: z.string().nullable(),
+    }),
+    rejection: z.object({ code: z.string(), note: z.string().nullable() }).nullable(),
+    cancelReason: z.string().nullable(),
+    createdAt: z.string(),
+    submittedAt: z.string().nullable(),
+    decidedAt: z.string().nullable(),
+    seller: z.object({
+      entityId: z.string(),
+      name: z.string(),
+      handle: z.string().nullable(),
+      status: z.string(),
+      isVerified: z.boolean(),
+      holderMatch: z.string().nullable(),
+    }),
+    timeline: z.array(z.object({ status: z.string(), at: z.string(), reasonCode: z.string().nullable() })),
+  }),
+  z.object({
     kind: z.literal('MUSIC_PLAYLIST'),
     name: z.string(),
     url: z.string(),
@@ -101,6 +135,7 @@ export type ModerationRoutineContent = Extract<ModerationCaseContent, { kind: 'R
 export type ModerationExerciseContent = Extract<ModerationCaseContent, { kind: 'EXERCISE' }>;
 export type ModerationListingContent = Extract<ModerationCaseContent, { kind: 'BUSINESS_LISTING' }>;
 export type ModerationBusinessProfileContent = Extract<ModerationCaseContent, { kind: 'BUSINESS_PROFILE' }>;
+export type ModerationOrderContent = Extract<ModerationCaseContent, { kind: 'PAYMENT_ORDER' }>;
 
 export const moderationContentUnavailableReasons = ['ERASED', 'CHAT_EVIDENCE'] as const;
 

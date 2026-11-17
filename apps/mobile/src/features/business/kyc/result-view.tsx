@@ -14,8 +14,9 @@ import { kycService } from './kyc-service';
 const ICON = { success: 'checkmark-circle', info: 'time-outline', warning: 'alert-circle-outline', danger: 'shield-outline' } as const;
 
 /**
- * The KYC result: published, in review, to correct or final. CTAs of 8c/8d
- * show disabled with «Llega pronto» (no dead links). The mobile has no public
+ * The KYC result: published, in review, to correct or final. The first
+ * listing (8c) and «Configura tu cobro por QR» (8d) open their screens; an
+ * action not available yet shows disabled with its hint (no dead links). The mobile has no public
  * profile screen for a business yet, so «Ver mi ficha» is the web's job.
  */
 export function ResultView({ outcome }: { outcome: KycOutcome }) {
@@ -58,6 +59,8 @@ export function ResultView({ outcome }: { outcome: KycOutcome }) {
               ? () => router.replace(businessDestination.mobile.home)
               : action.key === 'firstListing'
                 ? () => router.push(businessDestination.mobile.newListing)
+              : action.key === 'qrPayments'
+                ? () => router.push(businessDestination.mobile.payments)
               : () => reopen.mutate(action.key === 'resubmit' ? 'resubmit' : 'startChange');
           return (
             <Button

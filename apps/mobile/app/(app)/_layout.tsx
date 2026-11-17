@@ -80,6 +80,9 @@ export default function AppLayout() {
         {/* Marketplace (franja 8c): a business profile by @handle and a public listing. */}
         <Stack.Screen name="negocio/[handle]" />
         <Stack.Screen name="publicacion/[id]" />
+        {/* «Mis compras» under Perfil and one order (franja 8d). */}
+        <Stack.Screen name="compras/index" />
+        <Stack.Screen name="compras/[id]" />
         <Stack.Screen name="dispositivos" />
         {/* Privacidad y datos (franja 4): consents, export and account rights. */}
         <Stack.Screen name="datos-privacidad" />

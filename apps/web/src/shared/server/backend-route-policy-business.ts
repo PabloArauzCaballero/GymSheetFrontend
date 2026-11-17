@@ -45,11 +45,34 @@ export const businessRoutePatterns: readonly RegExp[] = [
   // REPP's «Publicaciones» queue: held, hidden and rejected listings.
   /^\/admin\/business\/listings$/u,
   new RegExp(`^/admin/business/listings/${uuid}/(release|reject)$`, 'u'),
+  // Orders (ADR-0024, franja 8d). The person's side (a business account gets 403 from the backend):
+  // create, «Mis compras», one order, its payment data and private QR, the multipart receipt, cancel.
+  /^\/directory\/payments\/orders(\/my-orders)?$/u,
+  new RegExp(`^/directory/payments/orders/${uuid}(/(payment-instructions|payment-qr|receipt|cancel))?$`, 'u'),
+  // The business's side (NEGOCIO only; persons and REPP get 403): inbox, receipt, decisions, payment config and QR.
+  /^\/business\/me\/orders$/u,
+  new RegExp(`^/business/me/orders/${uuid}(/(receipt|confirm|reject))?$`, 'u'),
+  /^\/business\/me\/payment-config(\/qr)?$/u,
+  // REPP sees a receipt only inside a PAYMENT_ORDER case (MODERATOR, SYSTEM_ADMIN; audited by the backend).
+  new RegExp(`^/admin/moderation/cases/PAYMENT_ORDER/${uuid}/receipt$`, 'u'),
   ...publicMarketplacePatterns,
 ];
 
-/** Responses that carry identity data in clear or its decrypted photos: never stored by any cache. */
+/** Multipart uploads of the orders: a receipt photo or the business's QR (same allowance as the other media). */
+export function isOrderUploadPath(path: string): boolean {
+  return /^\/directory\/payments\/orders\/[^/]+\/receipt$/u.test(path) || path === '/business/me/payment-config/qr';
+}
+
+/** Responses that carry identity or payment data in clear or decrypted photos: never stored by any cache. */
 export function isNoStoreBackendPath(path: string): boolean {
-  return /^\/admin\/business\/kyc\/[^/]+(\/documents\/[^/]+)?$/u.test(path) || path.startsWith('/business/me/kyc');
+  return (
+    /^\/admin\/business\/kyc\/[^/]+(\/documents\/[^/]+)?$/u.test(path) ||
+    path.startsWith('/business/me/kyc') ||
+    // Bank data, QR images and receipts of the orders (ADR-0024): financial data of a person or a business.
+    path.startsWith('/directory/payments/orders') ||
+    path.startsWith('/business/me/orders') ||
+    path.startsWith('/business/me/payment-config') ||
+    /^\/admin\/moderation\/cases\/PAYMENT_ORDER\/[^/]+\/receipt$/u.test(path)
+  );
 }
 

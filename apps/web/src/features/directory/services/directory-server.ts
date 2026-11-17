@@ -6,7 +6,6 @@ import type {
   DirectoryEntityDetail,
   DirectoryEntitySummary,
   DirectoryFilterQuery,
-  PublicPaymentConfig,
   EntityPlan,
   EntityReviewsResponse,
   ListReviewsQuery,
@@ -15,7 +14,6 @@ import {
   categoryTreeNodeSchema,
   directoryEntityDetailSchema,
   directoryEntitySummarySchema,
-  publicPaymentConfigSchema,
   entityPlanSchema,
   entityReviewsResponseSchema,
 } from '@/shared/api/schemas';
@@ -89,13 +87,3 @@ export const getEntityPlans = cache(
     return plans ?? [];
   }
 );
-
-export const getEntityPaymentConfig = cache(
-  async (entityId: string): Promise<PublicPaymentConfig | null> => {
-    const response = await backendRequest(
-      `/public/directory/entities/${encodeURIComponent(entityId)}/payment-config`
-    );
-    return readData(response, publicPaymentConfigSchema.nullable());
-  }
-);
-

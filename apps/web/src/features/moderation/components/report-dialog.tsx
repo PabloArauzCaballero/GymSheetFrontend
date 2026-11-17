@@ -9,7 +9,7 @@ import { Field } from '@/shared/components/ui/field';
 import { Select } from '@/shared/components/ui/select';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { notify } from '@/shared/notifications';
-import { businessReportReasonLabels, type BusinessReportReason } from '@gymsheet/domain';
+import { businessReportReasonLabels, orderDisputeReasonLabels, type BusinessReportReason, type OrderDisputeReason } from '@gymsheet/domain';
 import {
   isBusinessTarget,
   reasonsFor,
@@ -52,7 +52,11 @@ export function ReportDialog({
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<ModerationReason>(defaultReason ?? (isBusinessTarget(targetKind) ? 'SPAM' : 'ACOSO'));
   const labelOf = (value: ModerationReason) =>
-    isBusinessTarget(targetKind) ? businessReportReasonLabels[value as BusinessReportReason] : REASON_LABEL[value];
+    targetKind === 'PAYMENT_ORDER'
+      ? orderDisputeReasonLabels[value as OrderDisputeReason]
+      : isBusinessTarget(targetKind)
+        ? businessReportReasonLabels[value as BusinessReportReason]
+        : REASON_LABEL[value];
   const [details, setDetails] = useState('');
 
   const submit = useMutation({

@@ -56,8 +56,6 @@ import {
   entityReviewsResponseSchema,
   reviewItemSchema,
   entityPlanSchema,
-  publicPaymentConfigSchema,
-  paymentOrderSchema,
   restSettingsResultSchema,
   skippedSetSchema,
   workoutRoutineLinkSchema,
@@ -1122,52 +1120,13 @@ export const directoryService = {
 
 
 
+/**
+ * The plans of a directory listing. The marketplace-wide offers moved to `GET /public/directory/listings`
+ * (franja 8c, ADR-0022); buying goes through `/publicacion/[id]` and `@/features/orders` (franja 8d, ADR-0024).
+ */
 export const directoryPaymentsService = {
-  // The marketplace-wide offers moved to `GET /public/directory/listings` (franja 8c, ADR-0022).
   listPlans: (entityId: string) =>
     apiClient.request(`/public/directory/entities/${entityId}/plans`, z.array(entityPlanSchema)),
-
-  getPaymentConfig: (entityId: string) =>
-    apiClient.request(
-      `/public/directory/entities/${entityId}/payment-config`,
-      publicPaymentConfigSchema.nullable()
-    ),
-
-  createOrder: (input: { planId: string; athleteNotes?: string }) =>
-    apiClient.request(
-      '/directory/payments/orders',
-      z.object({
-        order: paymentOrderSchema,
-        paymentConfig: publicPaymentConfigSchema.nullable(),
-      }),
-      {
-        method: 'POST',
-        body: input,
-      }
-    ),
-
-  submitReceipt: (
-    orderId: string,
-    input: {
-      receiptUrl: string;
-      receiptStorageKey?: string;
-      receiptReference?: string;
-      athleteNotes?: string;
-    }
-  ) =>
-    apiClient.request(`/directory/payments/orders/${orderId}/receipt`, paymentOrderSchema, {
-      method: 'POST',
-      body: input,
-    }),
-
-  myOrders: () =>
-    apiClient.request('/directory/payments/orders/my-orders', z.object({
-      items: z.array(paymentOrderSchema),
-      total: z.number(),
-    })),
-
-  getOrder: (id: string) =>
-    apiClient.request(`/directory/payments/orders/${id}`, paymentOrderSchema),
 };
 
 /** Música para entrenar: enlaces a Spotify de la comunidad (públicas) o tuyos (privadas). */

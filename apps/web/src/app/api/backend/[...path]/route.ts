@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { SESSION_COOKIE } from '@/shared/auth/constants';
 import { expiredSessionCookieOptions } from '@/shared/server/auth-cookie';
 import { backendRequest } from '@/shared/server/backend';
-import { isAnonymousBackendPath, isNoStoreBackendPath, resolveAllowedBackendPath } from '@/shared/server/backend-route-policy';
+import { isAnonymousBackendPath, isNoStoreBackendPath, isOrderUploadPath, resolveAllowedBackendPath } from '@/shared/server/backend-route-policy';
 import { isTrustedMutation } from '@/shared/server/csrf';
 import {
   decodeImpersonation,
@@ -50,7 +50,8 @@ async function forward(request: NextRequest, parts: string[]) {
       path === '/business/me/kyc/documents' ||
       path === '/business/me/media' ||
       path === '/business/me/gallery' ||
-      (path.startsWith('/business/me/listings/') && path.endsWith('/media'))
+      (path.startsWith('/business/me/listings/') && path.endsWith('/media')) ||
+      isOrderUploadPath(path)
         ? 60_000
         : undefined,
     headers,
@@ -62,7 +63,7 @@ async function forward(request: NextRequest, parts: string[]) {
     const value = backendResponse.headers.get(key);
     if (value) responseHeaders.set(key, value);
   }
-  // Identity data in clear and decrypted KYC photos never land in a browser or proxy cache,
+  // Identity data in clear, decrypted KYC photos and order receipts/QR never land in a browser or proxy cache,
   // whatever the backend header says (it already sends `private, no-store`).
   if (isNoStoreBackendPath(path)) responseHeaders.set('cache-control', 'private, no-store');
   const response = new NextResponse(backendResponse.body, {

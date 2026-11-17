@@ -1,14 +1,8 @@
-'use client';
-
-import { useState } from 'react';
-import type { PublicPaymentConfig, EntityPlan } from '@gymsheet/schemas';
-import { OrderCheckoutModal } from './order-checkout-modal';
+import Link from 'next/link';
+import type { EntityPlan } from '@gymsheet/schemas';
 
 interface MarketplacePlansSectionProps {
   plans: EntityPlan[];
-  paymentConfig: PublicPaymentConfig | null;
-  entityId: string;
-  entityName: string;
 }
 
 const PLAN_TYPE_LABELS: Record<string, string> = {
@@ -18,14 +12,12 @@ const PLAN_TYPE_LABELS: Record<string, string> = {
   PRODUCT: 'Producto Físico',
 };
 
-export function MarketplacePlansSection({
-  plans,
-  paymentConfig,
-  entityId,
-  entityName,
-}: MarketplacePlansSectionProps) {
-  const [selectedPlan, setSelectedPlan] = useState<EntityPlan | null>(null);
-
+/**
+ * The plans of a directory listing. Buying goes through the listing page and
+ * its checkout (franja 8d, ADR-0024): the plan id is the listing id. The old
+ * QR modal that read a public payment config and sent a receipt URL is gone.
+ */
+export function MarketplacePlansSection({ plans }: MarketplacePlansSectionProps) {
   if (!plans || plans.length === 0) {
     return null;
   }
@@ -41,7 +33,7 @@ export function MarketplacePlansSection({
             Planes y Membresías Disponibles
           </h2>
           <p className="text-xs text-[var(--text-muted)] mt-1">
-            Adquiere tu plan con pago directo vía QR y activación de membresía verificada.
+            Compra con el QR del negocio o en efectivo. El negocio confirma tu pago.
           </p>
         </div>
       </div>
@@ -116,31 +108,18 @@ export function MarketplacePlansSection({
               </div>
 
               <div className="mt-6 pt-4 border-t border-[var(--border-subtle)]">
-                <button
-                  type="button"
-                  onClick={() => setSelectedPlan(plan)}
-                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-xs font-bold bg-[var(--volt)] hover:bg-[var(--volt)] text-[var(--accent-contrast)] transition-all shadow-md hover:scale-[1.02] active:scale-[0.98]"
+                <Link
+                  aria-label={`Ver y comprar ${plan.name}`}
+                  href={`/publicacion/${plan.id}`}
+                  className="w-full inline-flex min-h-12 items-center justify-center gap-2 px-5 py-3 rounded-2xl text-[15px] font-bold bg-[var(--volt)] text-[var(--accent-contrast)] transition-transform active:scale-[0.98] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--volt)]"
                 >
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                    <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h3v2h-3v-2zm-3 2h2v3h-2v-3zm3 3h3v3h-3v-3zm-5 1h2v2h-2v-2zm0-4h2v2h-2v-2z" />
-                  </svg>
-                  Adquirir / Pagar con QR
-                </button>
+                  Ver y comprar
+                </Link>
               </div>
             </div>
           );
         })}
       </div>
-
-      {selectedPlan && (
-        <OrderCheckoutModal
-          plan={selectedPlan}
-          paymentConfig={paymentConfig}
-          entityId={entityId}
-          entityName={entityName}
-          onClose={() => setSelectedPlan(null)}
-        />
-      )}
     </section>
   );
 }
