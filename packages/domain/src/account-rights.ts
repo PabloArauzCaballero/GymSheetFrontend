@@ -52,7 +52,8 @@ export const accountClosureCopy = {
   deleted: 'Se borra',
   anonymized: 'Queda sin datos tuyos',
   kept: 'Se conserva',
-  staff: 'Las cuentas del personal las cierra el administrador del gimnasio.',
+  /** `allowed: false`: platform and business accounts (`ACCOUNT_CLOSURE_STAFF`); no gym staff since 7d. */
+  notAllowed: 'Las cuentas de REPP y las de negocio no se cierran desde la app.',
   proofTitle: 'Confirma que eres tú',
   passwordLabel: 'Tu contraseña',
   usePassword: 'Confirmar con contraseña',
@@ -70,7 +71,7 @@ export const accountClosureCopy = {
   errors: {
     CURRENT_PASSWORD_INVALID: 'La contraseña no es correcta.',
     CLOSURE_PROOF_REQUIRED: 'Confirma el cierre con tu contraseña.',
-    ACCOUNT_CLOSURE_STAFF: 'Las cuentas del personal las cierra el administrador del gimnasio.',
+    ACCOUNT_CLOSURE_STAFF: 'Las cuentas de REPP y las de negocio no se cierran desde la app.',
   },
 } as const;
 

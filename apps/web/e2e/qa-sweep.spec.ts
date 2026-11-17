@@ -33,8 +33,7 @@ const PORTAL = [
   '/tutorials', '/comunidad', '/chat', '/onboarding',
 ];
 const ADMIN = [
-  '/admin', '/admin/equipment', '/admin/exercises', '/admin/facilities',
-  '/admin/permissions', '/admin/usuarios',
+  '/admin', '/admin/equipment', '/admin/exercises', '/admin/facilities', '/admin/usuarios',
 ];
 
 async function warm(page: Page, paths: string[]): Promise<void> {

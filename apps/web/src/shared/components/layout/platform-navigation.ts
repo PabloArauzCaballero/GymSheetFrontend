@@ -18,8 +18,8 @@ import type { NavigationItem } from './nav-config';
 
 /**
  * The REPP moderation console (backend ADR-0018): the central team
- * (`MODERATOR`) and the platform admin. Gym staff never sees it; the backend
- * answers 403 to them whatever grants they hold.
+ * (`MODERATOR`) and the platform admin. Any other role never sees it; the
+ * backend answers 403 to it.
  */
 export const moderationNavigation: NavigationItem[] = [
   {
@@ -127,19 +127,10 @@ export const adminNavigation: NavigationItem[] = [
     description: 'Sedes, salas, puntos de acceso y mantenimiento.',
   },
   {
-    href: '/admin/permissions',
-    label: 'Permisos',
-    icon: ShieldCheck,
-    roles: GYM_OPERATOR,
-    description: 'Otorgar y revocar permisos granulares de administración.',
-    requiredPermission: 'admin-access:manage',
-  },
-  {
     href: '/admin/auditoria',
     label: 'Auditoría',
     icon: ScrollText,
     roles: GYM_OPERATOR,
     description: 'Quién hizo qué, cuándo y sobre qué cuenta.',
-    requiredPermission: 'admin-access:manage',
   },
 ];

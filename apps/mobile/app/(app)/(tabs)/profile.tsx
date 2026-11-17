@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { ApiError } from '@gymsheet/api-client';
-import { offersConocer } from '@gymsheet/domain';
+import { offersConocer, roleLabel as labelOfRole } from '@gymsheet/domain';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { GenderPreference } from '@/components/gender-preference';
 import { Badge, Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
@@ -33,15 +33,6 @@ import { routes } from '@/lib/routes';
 import { useAuthStore } from '@/state/auth-store';
 import { useTourStore } from '@/state/tour-store';
 import { colors, iconSizes, spacing } from '@/theme';
-
-const ROLE_LABEL: Record<string, string> = {
-  ADMIN: 'Administración',
-  CLIENTE: 'Socio',
-  ENTRENADOR_EXTERNO: 'Entrenador externo',
-  COACH: 'Entrenador',
-  FRONT_DESK: 'Recepción',
-  MODERATOR: 'Moderación REPP',
-};
 
 /**
  * Glifo de fila, callado: un trazo gris en vez de una ficha de color animada
@@ -128,7 +119,7 @@ export default function ProfileScreen() {
       ? `${lastWeight.weight - firstWeight.weight > 0 ? '+' : '−'}${Math.abs(lastWeight.weight - firstWeight.weight).toLocaleString('es-ES', { maximumFractionDigits: 1 })} ${lastWeight.unit.toLowerCase()} desde ${formatDate(firstWeight.measuredOn)}`
       : null;
   const displayName = principal?.nombreCompleto ?? shortName(undefined, principal?.email);
-  const roleLabel = ROLE_LABEL[principal?.role ?? ''] ?? principal?.role ?? '—';
+  const roleLabel = principal?.role ? labelOfRole(principal.role) : '—';
 
   const progress = progression.data;
   const rank = progress?.level?.name ?? null;

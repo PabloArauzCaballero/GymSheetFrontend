@@ -19,7 +19,7 @@ export const metadata: Metadata = { title: 'Sistema' };
 export default async function SistemaPage() {
   const [session, gym] = await Promise.all([requireRole(['SYSTEM_ADMIN']), impersonatedGym()]);
   const visible = (items: NavigationItem[]) =>
-    items.filter((module) => module.description && canSee(module, session.role, session.permissions));
+    items.filter((module) => module.description && canSee(module, session.role));
 
   return (
     <div className="grid gap-8">

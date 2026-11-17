@@ -1,8 +1,9 @@
 /**
  * Franja 7a · REPP operates the gyms.
  *
- * 1. A gym `ADMIN` (legacy role) sees no administration entry anywhere and is
- *    sent away from every `/admin/*` page; the backend answers 403 on `admin/*`.
+ * 1. A person (`CLIENTE`, what a former gym staff account is since franja 7d,
+ *    backend ADR-0029) sees no administration entry anywhere and is sent away
+ *    from every `/admin/*` page; the backend answers 403 on `admin/*`.
  * 2. The platform admin chooses a gym in `/sistema`, the banner «Operando …»
  *    follows it on every page, the BFF calls go out with the scoped token, and
  *    «Salir» goes back to its own token. Proven through the real API and the
@@ -10,7 +11,7 @@
  */
 import { test } from '@playwright/test';
 import { e2eTenantId } from './fixtures';
-import { apiDe, crearCuenta, promover, sql } from './rutinas-datos';
+import { apiDe, crearCuenta, promover } from './rutinas-datos';
 import { abrirComo, comboLabel, combos, expect } from './rutinas-pagina';
 
 // `/admin/operacion` and `/admin/membership` left with franja 8e (ADR-0026).
@@ -21,9 +22,8 @@ for (const combo of combos) {
     test.use({ viewport: { width: combo.width, height: combo.height } });
     test.setTimeout(240_000);
 
-    test('un ADMIN del gimnasio no ve administración y sale de /admin', async ({ page, context, baseURL }) => {
-      const cuenta = await crearCuenta('admin-gym', `Admin Heredado ${Date.now().toString(36)}`);
-      await sql(`UPDATE public.usuarios SET rol='ADMIN' WHERE id='${cuenta.id}'`);
+    test('una persona (CLIENTE) no ve administración y sale de /admin', async ({ page, context, baseURL }) => {
+      const cuenta = await crearCuenta('persona', `Persona QA ${Date.now().toString(36)}`);
       await abrirComo(page, context, baseURL, combo, cuenta);
 
       await page.goto('/dashboard');

@@ -20,8 +20,9 @@
  * REPP. Soporte lo hace el `SYSTEM_ADMIN` (`sys`) operando el gimnasio del juego
  * (suplantación); la moderación, un `MODERATOR` por juego que `sys` suma al
  * equipo con `PUT /admin/platform/moderators/:userId` (ADR-0018). Cada juego
- * trae además un `ADMIN` heredado de su gimnasio, con las concesiones de soporte
- * que antes le abrían la ficha: es el caso negativo (403 o redirección).
+ * trae además una persona más de su gimnasio (`gymMember`): es el caso negativo
+ * (403 o redirección). Since franja 7d (backend ADR-0029) there are no gym staff
+ * roles nor permission grants: a former staff account is a `CLIENTE` like this one.
  *
  * Hay un juego de datos por combinación de la evidencia (390/1440 por claro/
  * oscuro) y cada uno vive en su propio gimnasio con nombres que llevan la
@@ -113,8 +114,6 @@ sql(`UPDATE moderation.reports SET status='DESCARTADO', resolution='SIN_ACCION',
        AND reported_user_id IN (SELECT id FROM public.usuarios WHERE email LIKE 'qa-rep-%@example.test')`);
 
 const sys = await account('sys', `QA Sistema ${run}`, { role: 'SYSTEM_ADMIN' });
-const grant = (user, keys) =>
-  Promise.all(keys.map((permissionKey) => call('POST', `/admin/permissions/${user.id}`, sys.token, { permissionKey })));
 
 const isoWeekday = (date) => (date.getDay() === 0 ? 7 : date.getDay());
 const today = new Date();
@@ -132,9 +131,8 @@ const day = (nombre, diaSemana, ejercicioIds) => ({
 
 async function seedCombo(combo, tenantId, comboIndex) {
   const tag = `${run}-${combo}`;
-  // A legacy gym ADMIN holding the support grants that used to open the training view;
-  // since franja 7a (ADR-0019) neither the role nor the grants open any `admin/*` route.
-  const legacyAdmin = await account(`admin-gimnasio-${combo}`, `QA Admin Gimnasio ${combo}`, { role: 'ADMIN', tenantId });
+  // Another person of the same gym: belonging to it opens no `admin/*` route (franja 7d, ADR-0029).
+  const gymMember = await account(`persona-gimnasio-${combo}`, `QA Persona Gimnasio ${combo}`, { tenantId });
   // Moderation is the central REPP team (ADR-0018): a member account that the platform
   // admin adds to the team through the real API, one per combo so each run owns its claims.
   const moderator = await account(`moderacion-${combo}`, `QA Moderación REPP ${combo}`, { tenantId });
@@ -145,7 +143,6 @@ async function seedCombo(combo, tenantId, comboIndex) {
   // Quien denuncia tiene que poder ver el contenido, y eso se limita al gimnasio.
   const reporters = [];
   for (const n of [1, 2, 3]) reporters.push(await account(`rep${n}-${combo}`, `Reportero ${n} ${combo}`, { tenantId }));
-  await grant(legacyAdmin, ['support:read', 'support:respond']);
 
   // Una página al azar del catálogo: la huella de publicación impide dos
   // rutinas públicas con los mismos ejercicios, y repetir la siembra chocaría.
@@ -251,7 +248,7 @@ async function seedCombo(combo, tenantId, comboIndex) {
 
   return {
     tenantId,
-    legacyAdmin: legacyAdmin.email,
+    gymMember: gymMember.email,
     moderator: moderator.email,
     author: author.email,
     memberA: { email: memberA.email, id: memberA.id, nombre: memberA.nombre, programId: programA },

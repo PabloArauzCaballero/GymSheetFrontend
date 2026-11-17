@@ -9,11 +9,6 @@ const muscleCode = '[A-Z0-9_]+';
 const uuid = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
 // Qué se comenta o valora (`contentKinds` en `@gymsheet/types`, enum cerrado).
 const contentKind = 'ROUTINE|EXERCISE|DIRECTORY_ENTITY|DIRECTORY_PRODUCT';
-// Clave de permiso granular, p. ej. `admin-access:manage` o `support:read`
-// (dominio:acción, `admin-permission.catalog.ts`). Va URL-encodeada en el
-// segmento (`encodeURIComponent` convierte `:` en `%3A`), así que el patrón
-// matchea la forma codificada, no el literal con dos puntos.
-const permissionKey = '[a-z-]+%3A[a-z-]+';
 // Qué se puede reportar/moderar (`ModerationTargetKind`, enum cerrado): una
 // alternativa explícita en vez de un comodín — así una URL no puede colar un valor que el backend rechazaría
 // de todos modos, pero sin llegar a intentarlo.
@@ -50,12 +45,6 @@ const allowedPathPatterns = [
   new RegExp(`^/admin/platform/moderators/${uuid}$`, 'u'),
   // Gym catalog for «Elegir gimnasio» (SYSTEM_ADMIN only; franja 7a impersonation).
   /^\/admin\/tenants$/u,
-  // Permisos granulares del personal (H01): catálogo, los de un usuario,
-  // otorgar y revocar. `/me` es la vista propia (qué puedo hacer yo).
-  /^\/admin\/permissions\/me$/u,
-  /^\/admin\/permissions\/catalog$/u,
-  new RegExp(`^/admin/permissions/${resourceId}$`, 'u'),
-  new RegExp(`^/admin/permissions/${resourceId}/${permissionKey}$`, 'u'),
   /^\/equipment$/u,
   new RegExp(`^/exercise-media/${resourceId}$`, 'u'),
   /^\/exercises$/u,
@@ -229,9 +218,8 @@ const allowedPathPatterns = [
   new RegExp(`^/me/verification/${uuid}/selfie$`, 'u'),
   /^\/admin\/verifications$/u,
   new RegExp(`^/admin/verifications/${uuid}/(selfie|decide)$`, 'u'),
-  // The platform account search (backend ADR-0026 §11) and the closure of a legacy staff account.
+  // The platform account search (backend ADR-0026 §11); the staff closure left with 7d (ADR-0029).
   /^\/admin\/users$/u,
-  new RegExp(`^/admin/users/${uuid}/close$`, 'u'),
   // Social: bloqueos, descubrimiento, mapa y confirmaciones de lectura.
   /^\/me\/blocks$/u,
   new RegExp(`^/me/blocks/${resourceId}$`, 'u'),

@@ -34,10 +34,3 @@ export type AccountBanDetails = z.infer<typeof accountBanDetailsSchema>;
 
 export const ACCOUNT_SUSPENDED = 'ACCOUNT_SUSPENDED';
 export const ACCOUNT_BANNED = 'ACCOUNT_BANNED';
-
-/** `POST /admin/users/:id/close` refusals (404 covers out of scope or already closed). */
-export const STAFF_CLOSURE_NOT_STAFF = 'STAFF_CLOSURE_NOT_STAFF';
-export const STAFF_CLOSURE_SELF = 'STAFF_CLOSURE_SELF';
-export const STAFF_CLOSURE_LAST_ADMIN = 'STAFF_CLOSURE_LAST_ADMIN';
-export const staffClosureCodes = [STAFF_CLOSURE_NOT_STAFF, STAFF_CLOSURE_SELF, STAFF_CLOSURE_LAST_ADMIN] as const;
-export type StaffClosureCode = (typeof staffClosureCodes)[number];

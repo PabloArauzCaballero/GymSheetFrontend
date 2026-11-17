@@ -109,19 +109,19 @@ test('RF-B2 · la plataforma crea, marca y desmarca rutinas oficiales', async ({
   });
 });
 
-test('RF-B2 · un administrador de gimnasio no entra al catálogo REPP', async ({ page, consolaPermitida }, testInfo) => {
+test('RF-B2 · una persona del gimnasio no entra al catálogo REPP', async ({ page, consolaPermitida }, testInfo) => {
   const datos = semilla.combos[comboDe(testInfo.project.name)];
-  // Since franja 7a a legacy gym ADMIN is a person account: `requireRole` sends it to
+  // A person account of the gym (no staff since franja 7d): `requireRole` sends it to
   // `/dashboard?denied=1`, whose «No tienes permiso…» notice is a deliberate `console.error`.
   consolaPermitida.push(/\[notifications\] \{severity: error/u);
-  await signIn(page, { email: datos.legacyAdmin, password: semilla.password });
+  await signIn(page, { email: datos.gymMember, password: semilla.password });
   await page.goto('/sistema/rutinas-repp');
   await page.waitForURL((url) => !url.pathname.startsWith('/sistema'));
   expect(new URL(page.url()).searchParams.get('denied')).toBe('1');
   await waitForPageSettled(page);
   await expect(page.getByRole('heading', { name: 'Rutinas REPP' })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Rutinas REPP' })).toHaveCount(0);
-  // The backend is the authority: the routines back office answers 403 to gym staff.
+  // The backend is the authority: the routines back office answers 403 to a person.
   const lista = await page.request.get('/api/backend/admin/routines?limit=5');
   expect(lista.status()).toBe(403);
   await evidencia(page, 'RF-B2', '05', 'sin-acceso-admin-gimnasio');

@@ -33,7 +33,7 @@ function section(title, report) {
 }
 
 md += section('Rutas cliente + públicas + logout', main);
-md += section('Rutas admin (rol ADMIN)', admin);
+md += section('Rutas admin (rol SYSTEM_ADMIN)', admin);
 
 md += `## Estructura de carpetas\n\n`;
 md += '```\n';
@@ -42,7 +42,7 @@ md += `01_active_mock/ todas las rutas del portal (CLIENTE activo)\n`;
 md += `02_new_mock/    onboarding (cliente nuevo)\n`;
 md += `03_expired_mock/membership + dashboard (membresía vencida)\n`;
 md += `04_logout/      cierre de sesión\n`;
-md += `05_admin/       panel de operaciones (rol ADMIN)\n`;
+md += `05_admin/       panel de operaciones (rol SYSTEM_ADMIN)\n`;
 md += '```\n\n';
 md += `Cada carpeta de ruta contiene: \`NNN_page.png\` (estado base) y un \`NNN_<elemento>.png\` por cada click, con sufijo \`__nav_<ruta>\` si navegó o \`__popup\` si abrió una pestaña externa.\n\n`;
 md += `> Datos: app poblada con datos reales — 1324 ejercicios importados, 8 rutinas propias, 14 entrenamientos con series registradas (estados FINALIZADA/EN_PROGRESO/CANCELADA) y 3 planes asignados por el coach. El sweep cubre una ruta \`/exercises/<uuid>\` real y su edición.\n`;

@@ -34,7 +34,6 @@ const allowedCases: Array<[string[], string]> = [
   [['public', 'handles', 'top.fitness_bo'], '/public/handles/top.fitness_bo'],
   [['public', 'handles', '@Top.Fit', 'availability'], '/public/handles/%40Top.Fit/availability'],
   [['admin', 'users'], '/admin/users'],
-  [['admin', 'users', id, 'close'], `/admin/users/${id}/close`],
   // Franja 8b: the business KYC and REPP's console.
   [['business', 'me', 'phone', 'verify', 'request'], '/business/me/phone/verify/request'],
   [['business', 'me', 'kyc'], '/business/me/kyc'],
@@ -129,16 +128,9 @@ const allowedCases: Array<[string[], string]> = [
   // F4: push web. Sin estas dos el navegador no puede ni preguntar si hay push.
   [['notifications', 'push', 'web-config'], '/notifications/push/web-config'],
   [['notifications', 'device-tokens'], '/notifications/device-tokens'],
-  // H01 (docs/refactor-profesional/trabajo/HALLAZGOS.md): auditoría, permisos,
-  // moderación y reportar contenido nunca habían llegado a este allowlist.
+  // H01 (docs/refactor-profesional/trabajo/HALLAZGOS.md): auditoría, moderación
+  // y reportar contenido nunca habían llegado a este allowlist.
   [['admin', 'audit'], '/admin/audit'],
-  [['admin', 'permissions', 'me'], '/admin/permissions/me'],
-  [['admin', 'permissions', 'catalog'], '/admin/permissions/catalog'],
-  [['admin', 'permissions', id], `/admin/permissions/${id}`],
-  [
-    ['admin', 'permissions', id, 'admin-access:manage'],
-    `/admin/permissions/${id}/admin-access%3Amanage`,
-  ],
   [['admin', 'moderation', 'queue'], '/admin/moderation/queue'],
   [
     ['admin', 'moderation', 'cases', 'CHAT_MESSAGE', id],
@@ -213,9 +205,14 @@ const blockedCases: Array<[string[]]> = [
   [['admin', 'business', 'kyc', id, 'approve']],
   [['admin', 'business', 'blocklist']],
   [['admin', 'business', 'handles', 'reservations']],
-  // Only `close` on a UUID under `/admin/users`, nothing else of that prefix.
+  // Only the account search under `/admin/users`: the staff closure left with 7d (ADR-0029).
   [['admin', 'users', id]],
-  [['admin', 'users', 'not-a-uuid', 'close']],
+  [['admin', 'users', id, 'close']],
+  // Franja 7d: the permission catalog left the backend; nothing under `/admin/permissions` passes.
+  [['admin', 'permissions', 'me']],
+  [['admin', 'permissions', 'catalog']],
+  [['admin', 'permissions', id]],
+  [['admin', 'permissions', id, 'admin-access:manage']],
   // `targetKind` es el enum cerrado de moderación, no un comodín.
   [['admin', 'moderation', 'cases', 'BOGUS_KIND', id]],
   // Moderators are addressed by UUID only, and nothing else lives under `/admin/platform`.

@@ -19,8 +19,8 @@ import { expect, type Page } from '@playwright/test';
  */
 /**
  * El administrador de plataforma (`SYSTEM_ADMIN`) que siembra `SEED_ADMIN_*`. Desde la franja 7a
- * es el único que administra un gimnasio, operándolo con `operateGym`; el `ADMIN` del gimnasio
- * ya no tiene consola.
+ * es el único que administra un gimnasio, operándolo con `operateGym`; desde la 7d el gimnasio no
+ * tiene personal (ADR-0029 del backend).
  */
 export const systemAdmin = {
   email: process.env.E2E_ADMIN_EMAIL ?? 'admin@gymsheet.local',

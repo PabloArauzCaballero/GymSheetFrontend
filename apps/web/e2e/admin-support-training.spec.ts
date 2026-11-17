@@ -9,7 +9,7 @@ import { backendComo, cargarSemilla, comboDe, evidencia, test } from './evidenci
  * Soporte abre la ficha de un socio desde la lista de usuarios, recalcula una
  * semana vencida (con confirmación y resultado) y comprueba que repetirlo no
  * paga dos veces. Desde la franja 7a soporte es el administrador de plataforma
- * operando el gimnasio del socio; el `ADMIN` del gimnasio ya no entra. Los datos
+ * operando el gimnasio del socio; otra persona del gimnasio no entra. Los datos
  * salen de `scripts/seed-evidencia-rutinas.mjs`: el socio A entrenó la semana 1
  * sin que se contara (recalcular la cumple) y el socio B no entrenó (sigue sin
  * cumplirse).
@@ -88,17 +88,16 @@ test('RF-B3 · soporte ve el entrenamiento de un socio y recalcula una semana', 
 });
 
 /**
- * Franja 7a: support permissions granted to a gym ADMIN no longer open anything.
- * The seeded `legacyAdmin` is an ADMIN of the member's own gym holding
- * `support:read` and `support:respond`: the role guard sends it back to the
- * person portal with the denied notice, and the backend answers 403 both to
- * reading the training and to recomputing a week.
+ * Support is the platform admin's alone. The seeded `gymMember` is another person
+ * of the member's own gym (what a former staff account is since franja 7d, ADR-0029):
+ * the role guard sends it back to the person portal with the denied notice, and the
+ * backend answers 403 both to reading the training and to recomputing a week.
  */
-test('RF-B3 · un ADMIN del gimnasio ya no ve ni recalcula, ni con permisos de soporte', async ({ page, consolaPermitida }, testInfo) => {
+test('RF-B3 · otra persona del gimnasio no ve ni recalcula el entrenamiento de un socio', async ({ page, consolaPermitida }, testInfo) => {
   const datos = semilla.combos[comboDe(testInfo.project.name)];
   // The «No tienes permiso…» notice is announced with `console.error` on purpose.
   consolaPermitida.push(/\[notifications\] \{severity: error/u);
-  await signIn(page, { email: datos.legacyAdmin, password: semilla.password });
+  await signIn(page, { email: datos.gymMember, password: semilla.password });
   await page.goto(`/admin/usuarios/${datos.memberA.id}/entrenamiento`);
   await page.waitForURL((url) => !url.pathname.startsWith('/admin'));
   expect(new URL(page.url()).searchParams.get('denied')).toBe('1');

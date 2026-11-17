@@ -44,10 +44,6 @@ test('an unknown server type falls back to plain text', () => {
 });
 
 test('an empty system chat says what it is instead of «sin mensajes»', () => {
-  assert.equal(
-    conversationPreview({ lastMessage: null, lastMessageAt: null, systemKind: 'TENANT_ADMIN' }).text,
-    'Avisos de la administración de tu gimnasio.',
-  );
   assert.equal(conversationPreview({ lastMessage: null, lastMessageAt: null, systemKind: 'CORPORATE' }).text, 'Novedades y avisos de GymSheet.');
 });
 

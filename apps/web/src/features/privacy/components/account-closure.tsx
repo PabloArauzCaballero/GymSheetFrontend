@@ -65,7 +65,7 @@ export function AccountClosure() {
   }
   if (!preview.data) return null;
   if (!preview.data.allowed) {
-    return <p className="t-subhead text-[var(--text-muted)]">{accountClosureCopy.staff}</p>;
+    return <p className="t-subhead text-[var(--text-muted)]">{accountClosureCopy.notAllowed}</p>;
   }
 
   return (

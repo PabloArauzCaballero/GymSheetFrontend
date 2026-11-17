@@ -15,7 +15,7 @@ describe('offersSelfieVerification', () => {
   it('asks only verified members', () => {
     expect(offersSelfieVerification({ role: 'CLIENTE', emailVerified: true })).toBe(true);
     expect(offersSelfieVerification({ role: 'CLIENTE', emailVerified: false })).toBe(false);
-    expect(offersSelfieVerification({ role: 'ADMIN', emailVerified: true })).toBe(false);
+    expect(offersSelfieVerification({ role: 'NEGOCIO', emailVerified: true })).toBe(false);
     expect(offersSelfieVerification({ role: 'MODERATOR', emailVerified: true })).toBe(false);
     expect(offersSelfieVerification(null)).toBe(false);
   });

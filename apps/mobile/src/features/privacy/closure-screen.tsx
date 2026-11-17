@@ -31,7 +31,7 @@ export function ClosureScreen() {
       ) : !preview.data.allowed ? (
         <Card>
           <Text variant="headline">No puedes cerrarla desde la app</Text>
-          <Text tone="secondary">{accountClosureCopy.staff}</Text>
+          <Text tone="secondary">{accountClosureCopy.notAllowed}</Text>
         </Card>
       ) : (
         <>

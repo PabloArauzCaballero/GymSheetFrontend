@@ -17,8 +17,8 @@ export type ComboEvidencia = '390-claro' | '390-oscuro' | '1440-claro' | '1440-o
 
 type JuegoDeDatos = {
   tenantId: string;
-  /** A legacy gym `ADMIN` of `tenantId` with support grants: since franja 7a it opens no `admin/*` route. */
-  legacyAdmin: string;
+  /** Another person (`CLIENTE`) of `tenantId`: belonging to the gym opens no `admin/*` route. */
+  gymMember: string;
   /** A member of the REPP moderation team (`MODERATOR`, ADR-0018), added by the platform admin. */
   moderator: string;
   author: string;

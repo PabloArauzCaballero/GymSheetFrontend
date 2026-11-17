@@ -23,7 +23,6 @@ type PreviewInput = {
  */
 const EMPTY_SYSTEM_PREVIEW: Record<string, string> = {
   CORPORATE: 'Novedades y avisos de GymSheet.',
-  TENANT_ADMIN: 'Avisos de la administración de tu gimnasio.',
 };
 
 const ICON_BY_TYPE: Record<string, string> = {

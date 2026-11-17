@@ -10,8 +10,8 @@ import { backendComo, cargarSemilla, comboDe, evidencia, test } from './evidenci
  * plataforma sumó al equipo por la API) recorre la cola central (todos los
  * gimnasios) con rutinas, ejercicios y comentarios denunciados mezclados con
  * los tipos de siempre, abre cada caso, oculta una rutina, restaura otra y ve
- * el veredicto; un `ADMIN` heredado del gimnasio ya no entra a la consola ni
- * puede tomar un caso: el backend le responde 403. Cada paso del plan deja su
+ * el veredicto; una persona del gimnasio no entra a la consola ni puede tomar
+ * un caso: el backend le responde 403. Cada paso del plan deja su
  * captura (DoD-3).
  *
  * Los datos salen de `scripts/seed-evidencia-rutinas.mjs`: un juego por
@@ -110,10 +110,10 @@ test('RF-B1 · la cola entiende rutinas, ejercicios y comentarios', async ({ pag
   });
 });
 
-test('RF-B1 · el personal del gimnasio ya no modera', async ({ page }, testInfo) => {
+test('RF-B1 · una persona del gimnasio no modera', async ({ page }, testInfo) => {
   const datos = semilla.combos[comboDe(testInfo.project.name)];
-  // An ADMIN of the very gym whose content was reported: being its staff gives no say.
-  await signIn(page, { email: datos.legacyAdmin, password: semilla.password });
+  // A person of the very gym whose content was reported: belonging to it gives no say.
+  await signIn(page, { email: datos.gymMember, password: semilla.password });
   await openPage(page, '/moderacion');
   await waitForPageSettled(page);
   // The client door sends it away; the backend is the authority and answers 403.

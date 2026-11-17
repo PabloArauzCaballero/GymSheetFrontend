@@ -18,17 +18,13 @@
  * `NEGOCIO` is a marketplace business account (backend ADR-0020): one login
  * per gym, coach, center, store or service provider. It is not a person, so
  * it never reaches the person portal (`accountKind` decides the shell).
+ *
+ * The gym staff roles (`ADMIN`, `FRONT_DESK`, `COACH`, `ENTRENADOR_EXTERNO`)
+ * left with backend franja 7d (ADR-0029): their accounts became `CLIENTE` and
+ * the `ck_usuarios_rol` CHECK admits only these four, so the backend can no
+ * longer return them.
  */
-export const userRoles = [
-  'SYSTEM_ADMIN',
-  'MODERATOR',
-  'NEGOCIO',
-  'ADMIN',
-  'CLIENTE',
-  'ENTRENADOR_EXTERNO',
-  'COACH',
-  'FRONT_DESK',
-] as const;
+export const userRoles = ['SYSTEM_ADMIN', 'MODERATOR', 'NEGOCIO', 'CLIENTE'] as const;
 export type UserRole = (typeof userRoles)[number];
 
 export const trainingGoals = [

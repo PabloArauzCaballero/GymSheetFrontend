@@ -17,19 +17,17 @@ export const supportKey = (userId: string) => ['admin', 'soporte', 'entrenamient
  *
  * El backend sólo puede AÑADIR el bono que faltaba y es idempotente, así que el
  * diálogo lo dice antes de preguntar: quien lo pulsa no teme quitarle puntos al
- * socio. Sin `support:respond` el botón se ve, pero desactivado.
+ * socio. Only the platform admin reaches it (the `/admin` layout).
  */
 export function RecomputeWeekButton({
   userId,
   programId,
   week,
-  canRespond,
   onResult,
 }: Readonly<{
   userId: string;
   programId: string;
   week: number;
-  canRespond: boolean;
   onResult: (week: number, result: RecomputeResult) => void;
 }>) {
   const queryClient = useQueryClient();
@@ -61,11 +59,9 @@ export function RecomputeWeekButton({
   return (
     <Button
       aria-label={`Recalcular la semana ${week}`}
-      disabled={!canRespond}
       loading={recompute.isPending}
       onClick={() => void ask()}
       size="sm"
-      title={canRespond ? undefined : 'Necesitas el permiso de responder en soporte (support:respond).'}
       variant="secondary"
     >
       {/* Con la mutación en marcha el botón ya muestra su propio indicador. */}

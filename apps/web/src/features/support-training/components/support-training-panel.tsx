@@ -30,8 +30,7 @@ function Section({ title, children }: Readonly<{ title: string; children: React.
 export function SupportTrainingPanel({
   userId,
   displayName,
-  canRespond,
-}: Readonly<{ userId: string; displayName: string | null; canRespond: boolean }>) {
+}: Readonly<{ userId: string; displayName: string | null }>) {
   const training = useQuery({
     queryKey: supportKey(userId),
     queryFn: () => supportTrainingService.training(userId),
@@ -74,7 +73,6 @@ export function SupportTrainingPanel({
             ) : (
               training.data.programas.map((program) => (
                 <ProgramCard
-                  canRespond={canRespond}
                   key={program.id}
                   program={program}
                   userId={userId}

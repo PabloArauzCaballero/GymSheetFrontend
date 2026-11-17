@@ -107,7 +107,7 @@ export function NavigationList({
   const interactionAlerts = useInteractionAlerts(session);
   // Cada audiencia recibe su navegación y su orden; la decisión vive en
   // `navigationFor` para que la barra lateral y la de pestañas no discrepen.
-  const groups = navigationFor(session.role, session.permissions);
+  const groups = navigationFor(session.role);
   const activeHref = activeHrefFor(
     pathname,
     groups.flatMap((group) => group.items).map((item) => item.href),

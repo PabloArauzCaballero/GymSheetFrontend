@@ -10,7 +10,6 @@ import {
 import { identityErrorMessage } from './account-security';
 import { legalContacts } from './legal';
 import { sanctionReasonFromCode } from './sanction-reasons';
-import { canCloseStaffAccount, staffClosureCopy, staffClosureErrorMessage } from './staff-closure';
 import { noticeActionLabel, noticeDestination } from './account-notices';
 
 const acoso = { code: 'ACOSO', label: 'Acoso', text: 'mensajes o contenido que hostigan o intimidan a otra persona' };
@@ -117,28 +116,6 @@ describe('sanction reasons by code', () => {
     expect(sanctionReasonFromCode('<script>')).toBeNull();
     expect(sanctionReasonFromCode('toString')).toBeNull();
     expect(sanctionReasonFromCode(null)).toBeNull();
-  });
-});
-
-describe('staff closure', () => {
-  it('is offered for staff rows other than the caller', () => {
-    expect(canCloseStaffAccount('COACH', 'u2', 'u1')).toBe(true);
-    expect(canCloseStaffAccount('ENTRENADOR_EXTERNO', 'u2', 'u1')).toBe(true);
-    expect(canCloseStaffAccount('ADMIN', 'u1', 'u1')).toBe(false);
-    expect(canCloseStaffAccount('CLIENTE', 'u2', 'u1')).toBe(false);
-    expect(canCloseStaffAccount('SYSTEM_ADMIN', 'u2', 'u1')).toBe(false);
-  });
-
-  it('says each refusal by its code or status', () => {
-    expect(staffClosureErrorMessage({ code: 'STAFF_CLOSURE_LAST_ADMIN', status: 403 })).toBe(
-      staffClosureCopy.errors.STAFF_CLOSURE_LAST_ADMIN,
-    );
-    expect(staffClosureErrorMessage({ code: 'STAFF_CLOSURE_SELF', status: 403 })).toBe(staffClosureCopy.errors.STAFF_CLOSURE_SELF);
-    expect(staffClosureErrorMessage({ code: 'STAFF_CLOSURE_NOT_STAFF', status: 400 })).toBe(
-      staffClosureCopy.errors.STAFF_CLOSURE_NOT_STAFF,
-    );
-    expect(staffClosureErrorMessage({ status: 404 })).toBe(staffClosureCopy.errors.notFound);
-    expect(staffClosureErrorMessage(new Error('boom'))).toBe(staffClosureCopy.errors.failed);
   });
 });
 
