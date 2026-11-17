@@ -1,6 +1,6 @@
 import { businessRoutePatterns } from './backend-route-policy-business';
 
-export { isAnonymousBackendPath, isNoStoreBackendPath } from './backend-route-policy-business';
+export { isAnonymousBackendPath, isNoStoreBackendPath, isOrderUploadPath } from './backend-route-policy-business';
 
 const resourceId = '[A-Za-z0-9-]+';
 // Código de músculo del catálogo anatómico (`BICEPS_BRACHII`): mayúsculas y guion bajo.
@@ -19,7 +19,7 @@ const permissionKey = '[a-z-]+%3A[a-z-]+';
 // más abajo — así una URL no puede colar un valor que el backend rechazaría
 // de todos modos, pero sin llegar a intentarlo.
 const moderationTargetKind =
-  'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER|REEL|ROUTINE|EXERCISE|COMMENT|MUSIC_PLAYLIST|BUSINESS_LISTING|BUSINESS_PROFILE';
+  'STORY|PROFILE_PHOTO|CHAT_MESSAGE|USER|REEL|ROUTINE|EXERCISE|COMMENT|MUSIC_PLAYLIST|BUSINESS_LISTING|BUSINESS_PROFILE|PAYMENT_ORDER';
 
 const allowedPathPatterns = [
   /^\/access\/me$/u,
@@ -232,10 +232,8 @@ const allowedPathPatterns = [
   new RegExp(`^/comments/${uuid}(/like)?$`, 'u'),
   new RegExp(`^/comments/(${contentKind})/${resourceId}$`, 'u'),
   new RegExp(`^/ratings/(${contentKind})/${resourceId}$`, 'u'),
-  // Marketplace: pedidos y comprobantes propios, planes y datos de cobro públicos.
-  /^\/directory\/payments\/orders(\/my-orders)?$/u,
-  new RegExp(`^/directory/payments/orders/${resourceId}/receipt$`, 'u'),
-  new RegExp(`^/public/directory/entities/${resourceId}/(plans|payment-config)$`, 'u'),
+  // Marketplace: the public plans of a listing (orders and payment data: backend-route-policy-business).
+  new RegExp(`^/public/directory/entities/${resourceId}/plans$`, 'u'),
   /^\/public\/directory\/plans$/u,
   // Ejercicios y anatomía.
   new RegExp(`^/exercises/${resourceId}/(like|muscles)$`, 'u'),

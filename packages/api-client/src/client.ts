@@ -254,7 +254,7 @@ export function createApiClient(config: ApiClientConfig) {
     path: string,
     schema: z.ZodType<T>,
     form: FormData,
-    options: { timeoutMs?: number; signal?: AbortSignal | null } = {},
+    options: { timeoutMs?: number; signal?: AbortSignal | null; method?: 'POST' | 'PUT' } = {},
   ): Promise<T> {
     const first = await uploadAttempt(path, schema, form, options, false);
     if (!first.retry) return first.value;
@@ -271,7 +271,7 @@ export function createApiClient(config: ApiClientConfig) {
     path: string,
     schema: z.ZodType<T>,
     form: FormData,
-    options: { timeoutMs?: number; signal?: AbortSignal | null },
+    options: { timeoutMs?: number; signal?: AbortSignal | null; method?: 'POST' | 'PUT' },
     retrying: boolean,
   ): Promise<{ retry: true } | { retry: false; value: T }> {
     const controller = new AbortController();
@@ -289,7 +289,7 @@ export function createApiClient(config: ApiClientConfig) {
       // el `boundary` del multipart, y escribirlo a mano lo rompería.
 
       const response = await fetchImpl(`${config.baseUrl}${path}`, {
-        method: 'POST',
+        method: options.method ?? 'POST',
         headers,
         body: form,
         signal: controller.signal,

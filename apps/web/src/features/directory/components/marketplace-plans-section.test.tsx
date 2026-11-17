@@ -1,6 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { PublicPaymentConfig, EntityPlan } from '@gymsheet/schemas';
+import type { EntityPlan } from '@gymsheet/schemas';
 import { MarketplacePlansSection } from './marketplace-plans-section';
 
 describe('MarketplacePlansSection', () => {
@@ -21,51 +21,20 @@ describe('MarketplacePlansSection', () => {
     metadata: {},
   };
 
-  const mockPaymentConfig: PublicPaymentConfig = {
-    bankName: 'Banco Nacional',
-    accountHolderName: 'Gimnasio Central SRL',
-    accountNumber: '1234-5678-9012',
-    aliasOrPhone: 'gimnasio.central',
-    qrImageUrl: 'https://cdn.gymsheet.com/qr/sample.png',
-    instructions: 'Envía tu comprobante con el número de orden.',
-    isActive: true,
-  };
-
   it('no renderiza nada si no hay planes disponibles', () => {
-    const { container } = render(
-      <MarketplacePlansSection
-        plans={[]}
-        paymentConfig={mockPaymentConfig}
-        entityId="22222222-2222-4222-8222-222222222222"
-        entityName="Gimnasio Central"
-      />
-    );
+    const { container } = render(<MarketplacePlansSection plans={[]} />);
     expect(container.firstChild).toBeNull();
   });
 
-  it('muestra la tarjeta del plan con su precio, beneficios y abre el modal al hacer clic en adquirir', () => {
-    render(
-      <MarketplacePlansSection
-        plans={[mockPlan]}
-        paymentConfig={mockPaymentConfig}
-        entityId="22222222-2222-4222-8222-222222222222"
-        entityName="Gimnasio Central"
-      />
-    );
+  // Franja 8d replaces the old QR modal (public bank data, receipt URL): the equivalent assertion
+  // is that the card leads to the listing page, where the new checkout lives.
+  it('muestra la tarjeta del plan con su precio y beneficios y lleva al checkout de la publicación', () => {
+    render(<MarketplacePlansSection plans={[mockPlan]} />);
 
     expect(screen.getByText('Plan Mensual Completo')).toBeInTheDocument();
     expect(screen.getByText('45.00')).toBeInTheDocument();
     expect(screen.getByText('Área de pesas')).toBeInTheDocument();
-
-    const buyBtn = screen.getByRole('button', { name: /Adquirir \/ Pagar con QR/i });
-    expect(buyBtn).toBeInTheDocument();
-
-    fireEvent.click(buyBtn);
-
-    // Modal se abre
-    expect(screen.getByText('Banco Nacional')).toBeInTheDocument();
-    expect(screen.getByText('Gimnasio Central SRL')).toBeInTheDocument();
-    expect(screen.getByText('1234-5678-9012')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Continuar y Subir Comprobante/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Ver y comprar Plan Mensual Completo' })).toHaveAttribute('href', `/publicacion/${mockPlan.id}`);
+    expect(screen.queryByText('Banco Nacional')).not.toBeInTheDocument();
   });
 });

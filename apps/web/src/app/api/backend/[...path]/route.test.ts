@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { GET } from './route';
+import { GET, POST } from './route';
 
 const mocks = vi.hoisted(() => ({ backendRequest: vi.fn(), jar: new Map<string, string>() }));
 vi.mock('next/headers', () => ({
@@ -98,5 +98,38 @@ describe('/api/backend without a session (public marketplace, franja 8c)', () =>
     mocks.jar.clear();
     expect((await get(['business', 'me', 'listings'])).status).toBe(401);
     expect(mocks.backendRequest).not.toHaveBeenCalled();
+  });
+});
+
+describe('/api/backend with an order receipt (franja 8d)', () => {
+  const id = '0190e2cb-a6d4-7ec3-8f91-a6c735631501';
+  it('forwards the multipart bytes and its boundary untouched, with the upload timeout', async () => {
+    // A hand-built multipart body with binary bytes (0x00, 0xff) that a text decode would corrupt.
+    const boundary = '----repp-test-boundary';
+    const contentType = `multipart/form-data; boundary=${boundary}`;
+    const head = new TextEncoder().encode(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="c.png"\r\nContent-Type: image/png\r\n\r\n`);
+    const tail = new TextEncoder().encode(`\r\n--${boundary}--\r\n`);
+    const bytes = new Uint8Array([...head, 0x89, 0x50, 0x4e, 0x47, 0x00, 0xff, ...tail]);
+    const request = new NextRequest(`http://localhost:3002/api/backend/directory/payments/orders/${id}/receipt`, {
+      method: 'POST',
+      body: bytes,
+      headers: { 'content-type': contentType },
+    });
+    await POST(request, { params: Promise.resolve({ path: ['directory', 'payments', 'orders', id, 'receipt'] }) });
+    const [path, init] = mocks.backendRequest.mock.calls[0] as [string, { method: string; body: ArrayBuffer; headers: Headers; timeoutMs?: number }];
+    expect(path).toBe(`/directory/payments/orders/${id}/receipt`);
+    expect(init.method).toBe('POST');
+    expect(init.timeoutMs).toBe(60_000);
+    expect(init.headers.get('Content-Type')).toBe(contentType);
+    expect(contentType).toMatch(/^multipart\/form-data; boundary=/u);
+    expect(new Uint8Array(init.body)).toEqual(bytes);
+  });
+
+  it('never lets a browser cache the payment QR', async () => {
+    mocks.backendRequest.mockResolvedValue(new Response(new Uint8Array([1]), { headers: { 'content-type': 'image/png' } }));
+    const response = await GET(new NextRequest(`http://localhost:3002/api/backend/directory/payments/orders/${id}/payment-qr`), {
+      params: Promise.resolve({ path: ['directory', 'payments', 'orders', id, 'payment-qr'] }),
+    });
+    expect(response.headers.get('cache-control')).toBe('private, no-store');
   });
 });

@@ -104,12 +104,12 @@ export async function apiUpload<T>(
   path: string,
   schema: z.ZodType<T>,
   form: FormData,
-  options: { timeoutMs?: number; signal?: AbortSignal | null } = {},
+  options: { timeoutMs?: number; signal?: AbortSignal | null; method?: 'POST' | 'PUT' } = {},
 ): Promise<T> {
   const requestController = createRequestController(options.signal, options.timeoutMs ?? 60_000);
   try {
     const response = await fetch(`/api/backend${path}`, {
-      method: 'POST',
+      method: options.method ?? 'POST',
       headers: { Accept: 'application/json', 'X-Request-ID': randomUuid() },
       body: form,
       credentials: 'same-origin',

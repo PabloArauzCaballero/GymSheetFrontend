@@ -115,10 +115,11 @@ test('the listing is in the marketplace and on the @handle, and a person reports
   await expect(page.getByRole('heading', { level: 1, name: business.name })).toBeVisible({ timeout: 20_000 });
   await expect(page.getByRole('list', { name: 'Publicaciones del negocio' }).getByText(listingName())).toBeVisible();
 
-  // The listing: buying is not here yet (8d) and says so; «Reportar» sends it to REPP.
+  // The listing: since franja 8d a person can buy it (this replaces the 8c assertion that «Comprar»
+  // was disabled); writing still says «Llega pronto». «Reportar» sends it to REPP.
   await openPage(page, `/publicacion/${listingId}`);
   await expect(page.getByRole('heading', { level: 1, name: listingName() })).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByRole('button', { name: 'Comprar' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Comprar', exact: true })).toBeEnabled();
   await expect(page.getByText('Llega pronto', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Reportar publicación' }).click();
   const dialog = page.getByRole('dialog', { name: 'Reportar' });

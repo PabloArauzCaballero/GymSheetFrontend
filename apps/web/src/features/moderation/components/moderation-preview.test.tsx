@@ -1,5 +1,5 @@
 import type { ModerationCaseContent } from '@gymsheet/schemas';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { moderationCaseDetailSchema } from '@/features/moderation/services/moderation-service';
 import { ContentPreview } from './moderation-preview';
@@ -112,6 +112,47 @@ describe('ContentPreview', () => {
     );
     expect(container.querySelector('a')).toBeNull();
     expect(screen.getByText(/no seguro/u)).toBeTruthy();
+  });
+
+  it('shows a disputed order and loads its receipt only through the audited case route (franja 8d)', async () => {
+    const orderId = '44444444-4444-4444-8444-444444444444';
+    const fetchMock = vi.fn(async () => new Response(new Blob([new Uint8Array([1])], { type: 'image/png' })));
+    vi.stubGlobal('fetch', fetchMock);
+    URL.createObjectURL = vi.fn(() => 'blob:receipt');
+    URL.revokeObjectURL = vi.fn();
+    render(
+      <ContentPreview
+        content={{
+          kind: 'PAYMENT_ORDER',
+          orderNumber: 'GS-ORD-1',
+          status: 'REJECTED',
+          method: 'QR',
+          quantity: 1,
+          unitAmount: '250.00',
+          amount: '250.00',
+          currency: 'BOB',
+          listingName: 'Mensual libre',
+          buyerNote: null,
+          receipt: { uploaded: true, sha256: 'ab', reference: 'OP-9', attempts: 1, path: `/admin/moderation/cases/PAYMENT_ORDER/${orderId}/receipt` },
+          rejection: { code: 'AMOUNT_MISMATCH', note: null },
+          cancelReason: null,
+          createdAt: '2026-11-17T10:00:00.000Z',
+          submittedAt: '2026-11-17T11:00:00.000Z',
+          decidedAt: '2026-11-17T12:00:00.000Z',
+          seller: { entityId: orderId, name: 'Top', handle: 'top', status: 'ACTIVE', isVerified: false, holderMatch: 'WARN' },
+          timeline: [{ status: 'PENDING_PAYMENT', at: '2026-11-17T10:00:00.000Z', reasonCode: null }],
+        }}
+        contentUnavailableReason={null}
+      />,
+    );
+    const preview = screen.getByTestId('vista-previa');
+    expect(preview).toHaveTextContent('Pedido GS-ORD-1');
+    expect(preview).toHaveTextContent('Bs 250,00');
+    expect(preview).toHaveTextContent('El monto no coincide');
+    expect(preview).toHaveTextContent('no se parece al KYC');
+    await waitFor(() => expect(screen.getByRole('img', { name: 'Comprobante del pedido GS-ORD-1' })).toHaveAttribute('src', 'blob:receipt'));
+    expect(fetchMock).toHaveBeenCalledWith(`/api/backend/admin/moderation/cases/PAYMENT_ORDER/${orderId}/receipt`, expect.objectContaining({ cache: 'no-store' }));
+    vi.unstubAllGlobals();
   });
 
   it('says an erased target is gone, and leaves a chat message to its evidence', () => {

@@ -25,8 +25,6 @@ export type KycOutcome = {
   handle: string | null;
 };
 
-const SOON = 'Llega pronto';
-
 /** What sent an attempt to manual review, in words the business can act on. */
 export const userFacingCheckCopy: Readonly<Record<string, string>> = {
   PHONE_VERIFIED: 'Confirmamos tu teléfono a mano.',
@@ -40,7 +38,7 @@ export const userFacingCheckCopy: Readonly<Record<string, string>> = {
 const publishedActions: KycOutcomeAction[] = [
   { key: 'portal', label: 'Ir a mi panel', available: true },
   { key: 'firstListing', label: 'Publica tu primer plan o producto', available: true },
-  { key: 'qrPayments', label: 'Configura tu cobro por QR', available: false, hint: SOON },
+  { key: 'qrPayments', label: 'Configura tu cobro por QR', available: true },
 ];
 
 function published(handle: string | null, postReviewDueAt: string | null, verified: boolean): KycOutcome {

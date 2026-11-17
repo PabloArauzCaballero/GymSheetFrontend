@@ -12,6 +12,7 @@ import {
   KeyRound,
   MessageCircle,
   Settings,
+  ShoppingBag,
   UserRound,
   Signpost,
   Sparkles,
@@ -64,6 +65,8 @@ export const primaryNavigation: NavigationItem[] = [
   { href: '/chat', label: 'Mensajes', icon: MessageCircle },
   { href: '/entrenar-juntos', label: 'Entrenar juntos', icon: CalendarCheck },
   { href: '/membership', label: 'Membresía', icon: IdCard },
+  // What the person bought in the marketplace (franja 8d), under the profile.
+  { href: '/profile/compras', label: 'Mis compras', icon: ShoppingBag },
   { href: '/access', label: 'Acceso', icon: KeyRound },
   { href: '/notifications', label: 'Avisos', icon: Bell },
   { href: '/profile', label: 'Mi perfil', icon: UserRound },

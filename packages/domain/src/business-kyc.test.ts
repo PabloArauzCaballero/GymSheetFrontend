@@ -171,8 +171,9 @@ describe('result screen', () => {
     const outcome = kycOutcomeFromSubmit({ submissionId: 's1', status: 'AUTO_APPROVED', reviewDueAt: null, postReviewDueAt: null, userFacingCodes: [], handle: 'topfit' });
     expect(outcome.title).toBe('¡Listo! Tu negocio ya está publicado en @topfit');
     expect(outcome.body).toMatch(/72 horas/u);
-    // The first listing has its screen since franja 8c; only QR payments (8d) still waits.
-    expect(outcome.actions.filter((action) => !action.available).map((action) => action.key)).toEqual(['qrPayments']);
+    // The first listing has its screen since franja 8c and QR payments since 8d: nothing waits.
+    expect(outcome.actions.filter((action) => !action.available)).toEqual([]);
+    expect(outcome.actions.find((action) => action.key === 'qrPayments')?.available).toBe(true);
     expect(outcome.actions.find((action) => action.key === 'firstListing')?.available).toBe(true);
   });
 
