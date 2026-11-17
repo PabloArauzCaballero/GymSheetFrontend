@@ -27,6 +27,8 @@ export type TypingUpdate = { conversationId: string; userId: string; typing: boo
 export type ChatSocketExtras = {
   onReaction?: (update: MessageReactionsUpdate) => void;
   onTyping?: (update: TypingUpdate) => void;
+  /** No socket at all: a business account has no ticket (ADR-0023); sends go over REST and the thread polls. */
+  disabled?: boolean;
 };
 export type ReceiptUpdate = { conversationId: string; userId: string; deliveredAt?: string; readAt?: string; readFrom?: string | null; settingsChanged?: boolean; conversationRevoked?: boolean };
 
@@ -59,7 +61,8 @@ export function useChatSocket(
   const onMessageDeletedRef = useRef(onMessageDeleted);
   const onMessageUpdatedRef = useRef(onMessageUpdated);
   const extrasRef = useRef(extras);
-  const [connectionState, setConnectionState] = useState<ChatSocketConnectionState>('connecting');
+  const disabled = extras?.disabled === true;
+  const [connectionState, setConnectionState] = useState<ChatSocketConnectionState>(disabled ? 'disconnected' : 'connecting');
 
   useEffect(() => {
     onMessageRef.current = onMessage;
@@ -86,6 +89,7 @@ export function useChatSocket(
   }, [extras]);
 
   useEffect(() => {
+    if (disabled) return;
     const socket = io(`${backendOrigin()}/chat`, {
       transports: ['websocket'],
       auth: (callback: (data: object) => void) => {
@@ -144,7 +148,7 @@ export function useChatSocket(
       activeConversationRef.current = null;
       joinedConversationRef.current = null;
     };
-  }, []);
+  }, [disabled]);
 
   const joinConversation = useCallback((conversationId: string): Promise<boolean> => {
     return new Promise((resolve) => {

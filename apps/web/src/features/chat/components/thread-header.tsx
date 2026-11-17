@@ -1,5 +1,6 @@
 'use client';
 
+import { conversationControls, type ConversationControls } from '@gymsheet/domain';
 import { Check, MoreVertical, Pencil, X } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -13,6 +14,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { chatService } from '@/features/chat/services/chat-service';
 import { CreateTrainingInviteDialog } from '@/features/training-invitations/components/create-training-invite-dialog';
+import { BlockPersonButton } from '@/features/business-chat/components/block-person-button';
 
 /**
  * Quién está al otro lado.
@@ -25,9 +27,14 @@ import { CreateTrainingInviteDialog } from '@/features/training-invitations/comp
  * El apodo se edita aquí y no en un ajuste aparte porque sólo tiene sentido
  * mirando a la persona a la que se le pone. Es privado de quien lo escribe: el
  * backend no se lo enseña a nadie más.
+ *
+ * `controls` (franja 8f) trims it per conversation: a business viewer has no
+ * presence, socket badge or read-receipt menu, and gets «Bloquear»; a person
+ * talking to a business sees the «Negocio» mark and no «Entrenemos juntos».
  */
 export function ThreadHeader({
   connectionState,
+  controls: controlsProp,
   conversation,
   onSaveNickname,
   otherLastSeenAt,
@@ -35,12 +42,15 @@ export function ThreadHeader({
   savingNickname,
 }: Readonly<{
   connectionState: ChatSocketConnectionState;
+  /** Defaults to a person's view of the conversation. */
+  controls?: ConversationControls;
   conversation: ConversationSummary | undefined;
   onSaveNickname: (nickname: string | null) => void;
   otherLastSeenAt: string | null;
   otherOnline: boolean;
   savingNickname: boolean;
 }>) {
+  const controls = controlsProp ?? conversationControls(conversation, 'person');
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [selectingConversations, setSelectingConversations] = useState(false);
@@ -53,7 +63,7 @@ export function ThreadHeader({
   const receiptSettings = useQuery({
     queryKey: ['chat', 'read-receipts', conversation?.conversationId],
     queryFn: () => chatService.getReadReceiptSettings(conversation?.conversationId),
-    enabled: Boolean(conversation?.conversationId),
+    enabled: Boolean(conversation?.conversationId) && controls.receiptSettings,
   });
   const updateReceiptSettings = useMutation({
     mutationFn: chatService.updateReadReceiptSettings,
@@ -78,7 +88,7 @@ export function ThreadHeader({
           photoUrl={conversation?.otherUserPhotoUrl ?? null}
           size="md"
         />
-        {otherOnline ? (
+        {controls.presence && otherOnline ? (
           <span
             aria-hidden
             className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-[var(--background)] bg-[var(--success-text)]"
@@ -124,6 +134,7 @@ export function ThreadHeader({
         ) : (
           <div className="flex items-center gap-2">
             <h1 className="truncate text-xl font-semibold tracking-[-0.02em]">{displayName}</h1>
+            {controls.businessBadge ? <Badge tone="neutral">Negocio</Badge> : null}
             <button
               aria-label="Poner un apodo a esta conversación"
               className="grid size-8 shrink-0 place-items-center rounded-full text-[var(--text-muted)] hover:bg-[var(--surface-low)] hover:text-[var(--text)]"
@@ -137,20 +148,26 @@ export function ThreadHeader({
             </button>
           </div>
         )}
-        <p className="text-xs text-[var(--text-muted)]">
-          {presenceLabel(otherOnline, otherLastSeenAt)}
-        </p>
+        {controls.presence ? (
+          <p className="text-xs text-[var(--text-muted)]">{presenceLabel(otherOnline, otherLastSeenAt)}</p>
+        ) : null}
       </div>
 
-      <Badge tone={connectionState === 'connected' ? 'success' : 'neutral'}>
-        {connectionState === 'connected' ? 'En vivo' : 'Conectando…'}
-      </Badge>
-      {conversation?.systemKind === null && conversation.canWrite ? (
+      {controls.realtime ? (
+        <Badge tone={connectionState === 'connected' ? 'success' : 'neutral'}>
+          {connectionState === 'connected' ? 'En vivo' : 'Conectando…'}
+        </Badge>
+      ) : null}
+      {controls.block && conversation ? (
+        <BlockPersonButton conversationId={conversation.conversationId} personName={displayName} />
+      ) : null}
+      {controls.trainTogether && conversation?.systemKind === null && conversation.canWrite ? (
         <CreateTrainingInviteDialog
           recipientId={conversation.otherUserId}
           recipientName={conversation.otherUserName}
         />
       ) : null}
+      {controls.receiptSettings ? (
       <details className="group relative">
         <summary
           aria-label="Más opciones de conversación"
@@ -242,6 +259,7 @@ export function ThreadHeader({
           ) : null}
         </div>
       </details>
+      ) : null}
     </header>
   );
 }

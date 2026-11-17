@@ -9,14 +9,15 @@ const ICONS = {
   index: ['home-outline', 'home'],
   publicaciones: ['pricetags-outline', 'pricetags'],
   pedidos: ['receipt-outline', 'receipt'],
+  mensajes: ['chatbubbles-outline', 'chatbubbles'],
   perfil: ['storefront-outline', 'storefront'],
 } as const satisfies Record<string, readonly [keyof typeof Ionicons.glyphMap, keyof typeof Ionicons.glyphMap]>;
 
 /**
  * Tabs of the business shell (plan §4.2): Inicio · Publicaciones · Pedidos ·
- * Perfil (franjas 8c–8d); Mensajes joins with 8f. «Pedidos» carries the «Por
- * confirmar» count. No person tabs here. Selected in the text tone, never in
- * accent (repp-diseno §2).
+ * Mensajes · Perfil (franjas 8c, 8d, 8f). «Pedidos» carries the «Por confirmar»
+ * count. No person tabs here. Selected in the text tone, never in accent
+ * (repp-diseno §2).
  */
 export default function BusinessTabsLayout() {
   const badge = useQuery({ queryKey: queryKeys.business.ordersBadge, queryFn: () => businessOrdersService.list({ limit: 1 }), refetchInterval: 60_000, staleTime: 30_000 });
@@ -45,6 +46,7 @@ export default function BusinessTabsLayout() {
           tabBarAccessibilityLabel: pending > 0 ? `Pedidos, ${pending} por confirmar` : 'Pedidos',
         }}
       />
+      <Tabs.Screen name="mensajes" options={{ title: 'Mensajes' }} />
       <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
     </Tabs>
   );

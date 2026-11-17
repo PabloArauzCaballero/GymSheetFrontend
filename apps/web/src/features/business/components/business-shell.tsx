@@ -6,9 +6,9 @@ import { BusinessNav } from '@/features/business-listings/components/business-na
 
 /**
  * The business portal's chrome (ADR-0020): brand, account name and sign out.
- * No person navigation at all: Inicio, Publicaciones, Pedidos, Cobro and
- * Perfil (franjas 8c–8d), plus «Socios» for a gym or «Gimnasios» for a coach
- * (franja 7b); Mensajes joins with 8f.
+ * No person navigation at all: Inicio, Publicaciones, Pedidos, Mensajes,
+ * Suscriptores, Cobro and Perfil (franjas 8c, 8d, 8e, 8f), plus «Socios» for a
+ * gym or «Gimnasios» for a coach (franja 7b).
  */
 export function BusinessShell({ accountName, entityType = null, children }: Readonly<{ accountName: string; entityType?: string | null; children: ReactNode }>) {
   return (

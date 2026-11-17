@@ -1,9 +1,9 @@
 import { formatPrice, initials, listingTerms, offerKindName } from '@gymsheet/domain';
-import { Check, MessageCircle } from 'lucide-react';
+import { Check } from 'lucide-react';
 import Link from 'next/link';
 import type { PublicListing } from '@/shared/api/schemas';
+import { WriteToBusinessButton } from '@/features/business-chat/components/write-to-business-button';
 import { DomainImage } from '@/shared/components/media/domain-image';
-import { Button } from '@/shared/components/ui/button';
 import { BuyButton } from '@/features/orders/components/buy-button';
 import { ReportButton, type Viewer } from './report-button';
 import { SellerBadge } from './seller-badge';
@@ -27,9 +27,8 @@ function Carousel({ listing }: Readonly<{ listing: PublicListing }>) {
 
 /**
  * A public listing (plan §4.3): photos, price in BOB, what it includes, the
- * seller and the actions. «Comprar» opens the checkout (franja 8d); writing
- * arrives with the chat (8f) and shows disabled with «Llega pronto», never as
- * a link that leads nowhere.
+ * seller and the actions. «Comprar» opens the checkout (franja 8d) and
+ * «Escribir» the chat with the seller (franja 8f).
  */
 export function ListingDetail({ listing, viewer }: Readonly<{ listing: PublicListing; viewer: Viewer }>) {
   const terms = listingTerms(listing);
@@ -51,13 +50,7 @@ export function ListingDetail({ listing, viewer }: Readonly<{ listing: PublicLis
 
         <div className="grid gap-2">
           <BuyButton listing={listing} viewer={viewer} />
-          <Button aria-describedby="listing-soon" className="w-full" disabled variant="ghost">
-            <MessageCircle aria-hidden className="size-5" />
-            Escribir
-          </Button>
-          <p className="t-footnote text-center text-[var(--text-muted)]" id="listing-soon">
-            Llega pronto: escribirle al negocio desde REPP.
-          </p>
+          <WriteToBusinessButton entityId={seller.id} returnTo={`/publicacion/${listing.id}`} variant="secondary" viewer={viewer} />
         </div>
 
         <section aria-labelledby="listing-includes" className="grid gap-3">

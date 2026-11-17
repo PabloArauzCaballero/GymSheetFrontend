@@ -54,6 +54,9 @@ const allowedCases: Array<[string[], string]> = [
   [['public', 'directory', 'listings'], '/public/directory/listings'],
   [['public', 'directory', 'listings', id], `/public/directory/listings/${id}`],
   [['public', 'directory', 'profiles', '@topfit'], '/public/directory/profiles/%40topfit'],
+  // Franja 8f: a person opens a chat with a business; the business blocks a person.
+  [['me', 'business-conversations'], '/me/business-conversations'],
+  [['business', 'me', 'conversations', id, 'block'], `/business/me/conversations/${id}/block`],
   [['admin', 'business', 'listings'], '/admin/business/listings'],
   [['admin', 'business', 'listings', id, 'reject'], `/admin/business/listings/${id}/reject`],
   [['admin', 'moderation', 'cases', 'BUSINESS_LISTING', id], `/admin/moderation/cases/BUSINESS_LISTING/${id}`],
@@ -189,6 +192,10 @@ const blockedCases: Array<[string[]]> = [
   [['..', 'secrets']],
   [['gateway', 'events']],
   [['admin', 'media', id]],
+  // A block needs a UUID, and the business has no list of its own outside `/me/conversations`.
+  [['business', 'me', 'conversations', 'abc', 'block']],
+  [['business', 'me', 'conversations']],
+  [['me', 'business-conversations', id]],
   // Business routes outside the 8a contract, and a handle with a slash.
   [['business', 'signup']],
   [['business', 'me', 'media', 'GALLERY']],

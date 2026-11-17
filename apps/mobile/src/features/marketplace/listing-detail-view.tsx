@@ -8,11 +8,12 @@ import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
 import { colors, comfortableTouchTarget, iconSizes, radii, spacing } from '@/theme';
+import { WriteToBusiness } from './write-to-business';
 
 /**
  * A public listing (plan §4.3): photos, price in Bs, what it includes, the
- * seller and the actions. «Comprar» opens the checkout (franja 8d); writing
- * (8f) shows disabled with «Llega pronto»: never a button that leads nowhere.
+ * seller and the actions. «Comprar» opens the checkout (franja 8d) and
+ * «Escribir» the chat with the seller (franja 8f).
  */
 export function ListingDetailView({
   listing,
@@ -61,10 +62,7 @@ export function ListingDetailView({
           onPress={onBuy}
           testID="listing-buy"
         />
-        <Button accessibilityHint="Llega pronto" disabled icon="chatbubble-outline" label="Escribir" onPress={() => undefined} variant="ghost" />
-        <Text style={{ textAlign: 'center' }} tone="secondary" variant="footnote">
-          Llega pronto: escribirle al negocio desde REPP.
-        </Text>
+        <WriteToBusiness entityId={seller.id} variant="ghost" />
       </View>
       <View style={{ gap: spacing.sm }}>
         <Text accessibilityRole="header" variant="headline">

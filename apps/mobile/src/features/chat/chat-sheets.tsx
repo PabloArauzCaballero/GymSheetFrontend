@@ -252,6 +252,9 @@ export function ContactInfoSheet({
   disappearingSeconds,
   disappearingPending,
   onChangeDisappearing,
+  showDisappearing = true,
+  showReceipts = true,
+  onBlock = null,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -272,6 +275,12 @@ export function ContactInfoSheet({
   disappearingPending: boolean;
   /** `null` cuando no se puede cambiar (chat de solo lectura). */
   onChangeDisappearing: ((seconds: number | null) => void) | null;
+  /** A BUSINESS chat has no disappearing messages (ADR-0023): the row is not shown at all. */
+  showDisappearing?: boolean;
+  /** Per-chat read receipts are a person setting; a business account has no such route. */
+  showReceipts?: boolean;
+  /** «Bloquear a esta persona», the business side of a BUSINESS chat. */
+  onBlock?: (() => void) | null;
 }) {
   const [draft, setDraft] = useState(nickname ?? '');
   const [timerOpen, setTimerOpen] = useState(false);
@@ -349,15 +358,18 @@ export function ContactInfoSheet({
         </View>
       </View>
 
-      <DisappearingMessagesRows
-        expanded={timerOpen}
-        onChange={onChangeDisappearing}
-        onToggle={() => setTimerOpen((open) => !open)}
-        pending={disappearingPending}
-        seconds={disappearingSeconds}
-      />
+      {showDisappearing ? (
+        <DisappearingMessagesRows
+          expanded={timerOpen}
+          onChange={onChangeDisappearing}
+          onToggle={() => setTimerOpen((open) => !open)}
+          pending={disappearingPending}
+          seconds={disappearingSeconds}
+        />
+      ) : null}
 
       <View style={{ gap: spacing.sm }}>
+        {showReceipts ? (
         <SheetRow
           hint={
             receiptsEnabled
@@ -382,10 +394,12 @@ export function ContactInfoSheet({
             )
           }
         />
+        ) : null}
         {onTrainTogether ? (
           <SheetRow icon="barbell-outline" label="Entrenemos juntos" onPress={onTrainTogether} />
         ) : null}
         {onOpenProfile ? <SheetRow icon="person-circle-outline" label="Ver perfil" onPress={onOpenProfile} /> : null}
+        {onBlock ? <SheetRow icon="ban-outline" label="Bloquear a esta persona" onPress={onBlock} testID="chat-contact-block" tint={colors.danger} /> : null}
       </View>
     </BottomSheet>
   );

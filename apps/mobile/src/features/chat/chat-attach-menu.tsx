@@ -25,10 +25,13 @@ export function ChatAttachMenu({
   open,
   reduceMotion,
   onPick,
+  hidden = [],
 }: {
   open: boolean;
   reduceMotion: boolean;
   onPick: (kind: AttachKind) => void;
+  /** Options this conversation refuses (a BUSINESS chat has no location, ADR-0023). */
+  hidden?: readonly AttachKind[];
 }) {
   if (!open) return null;
   return (
@@ -48,7 +51,7 @@ export function ChatAttachMenu({
       }}
       testID="chat-attach-menu"
     >
-      {ITEMS.map((item) => (
+      {ITEMS.filter((item) => !hidden.includes(item.kind)).map((item) => (
         <PressableScale
           accessibilityHint={item.hint}
           accessibilityLabel={item.label}

@@ -12,6 +12,7 @@ const SECTIONS: readonly Section[] = [
   { href: '/negocio', label: 'Inicio' },
   { href: '/negocio/publicaciones', label: 'Publicaciones' },
   { href: '/negocio/pedidos', label: 'Pedidos' },
+  { href: '/negocio/mensajes', label: 'Mensajes' },
   // Every seller type (franja 8e): who holds a plan and when it ends.
   { href: '/negocio/suscriptores', label: 'Suscriptores' },
   { href: '/negocio/cobro', label: 'Cobro' },
@@ -35,15 +36,17 @@ function Count({ value, label }: Readonly<{ value: number; label: string }>) {
 }
 
 /**
- * Sections of the business portal (plan §4.2). «Pedidos» carries the «Por
- * confirmar» count and a gym's «Socios» its pending requests; Mensajes joins with 8f.
+ * Sections of the business portal (plan §4.2): Mensajes since franja 8f and
+ * «Suscriptores» since 8e. «Pedidos» carries the «Por confirmar» count and a
+ * gym's «Socios» its pending requests.
  */
 export function BusinessNav({ entityType = null }: Readonly<{ entityType?: string | null }>) {
   const pathname = usePathname();
   const pending = usePendingOrdersCount();
   const requests = usePendingAffiliationsCount(entityType === 'GYM');
   const extra = entityType ? BY_TYPE[entityType] : undefined;
-  const sections = extra ? [...SECTIONS.slice(0, 3), extra, ...SECTIONS.slice(3)] : SECTIONS;
+  // The type's own section goes right after «Mensajes».
+  const sections = extra ? [...SECTIONS.slice(0, 4), extra, ...SECTIONS.slice(4)] : SECTIONS;
   return (
     <nav aria-label="Secciones de tu negocio" className="nav-scroll -mx-1 flex gap-1 overflow-x-auto px-1">
       {sections.map((section) => {

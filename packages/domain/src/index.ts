@@ -48,6 +48,7 @@ export * from './business-kyc-review';
 export * from './business-listings';
 export * from './business-listing-status';
 export * from './business-locations';
+export * from './business-chat';
 export * from './marketplace-query';
 export * from './marketplace-reports';
 export * from './orders';
