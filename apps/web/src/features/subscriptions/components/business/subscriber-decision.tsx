@@ -40,7 +40,11 @@ function ReasonForm({ row, mode, onBack }: Readonly<{ row: Subscriber; mode: Mod
         ? businessSubscriptionsService.cancel(row.id, { reasonCode: reasonCode as SubscriptionCancelReason, ...extra })
         : businessSubscriptionsService.suspend(row.id, { reasonCode: reasonCode as SubscriptionSuspendReason, ...extra });
     },
-    onSuccess: (updated) => settle(updated, mode === 'cancel' ? subscriptionCopy.cancelled : subscriptionCopy.suspended),
+    onSuccess: (updated) => {
+      settle(updated, mode === 'cancel' ? subscriptionCopy.cancelled : subscriptionCopy.suspended);
+      // The decision is done: back to the row, which now offers what its new status allows («Reactivar»).
+      onBack();
+    },
   });
   const titleId = `subscriber-reason-${row.id}`;
   return (

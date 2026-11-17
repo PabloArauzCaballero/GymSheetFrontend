@@ -168,4 +168,19 @@ describe('«Mis suscripciones» and «Suscriptores»', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Suspender plan' }));
     await waitFor(() => expect(mocks.suspend).toHaveBeenCalledWith(ID, { reasonCode: 'HEALTH' }));
   });
+
+  it('closes the reason form once the plan is suspended, so the row offers «Reactivar»', async () => {
+    const row = { id: ID, subscriber: { displayName: 'Ana' }, actions: { canCancel: true, canSuspend: true, canReactivate: false } } as unknown as Subscriber;
+    const suspended = { ...row, status: 'SUSPENDED', actions: { canCancel: true, canSuspend: false, canReactivate: true } } as unknown as Subscriber;
+    mocks.suspend.mockResolvedValue(suspended);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const view = (current: Subscriber) => <QueryClientProvider client={client}><SubscriberDecision row={current} /></QueryClientProvider>;
+    const { rerender } = render(view(row));
+    fireEvent.click(screen.getByRole('button', { name: 'Suspender' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Salud' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Suspender plan' }));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Suspender plan' })).toBeNull());
+    rerender(view(suspended));
+    expect(screen.getByRole('button', { name: 'Reactivar' })).toBeTruthy();
+  });
 });
