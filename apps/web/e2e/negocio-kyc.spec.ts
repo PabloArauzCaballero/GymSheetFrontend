@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { signIn } from './fixtures';
+import { openPage, signIn } from './fixtures';
 import { readablePhoto, runDigits } from './kyc-datos';
 import { crearCuenta, promover, sql, type Cuenta } from './rutinas-datos';
 
@@ -164,7 +164,8 @@ test('a REPP moderator opens the case from the queue and approves it', async ({ 
   const context = await browser.newContext();
   const page = await context.newPage();
   await signIn(page, moderator);
-  await page.goto('/moderacion/negocios');
+  // A new moderator gets the welcome tour on the first page: close it like any other spec.
+  await openPage(page, '/moderacion/negocios');
   await expect(page.getByRole('heading', { level: 1, name: 'Negocios' })).toBeVisible({ timeout: 20_000 });
 
   const detail = waitForBff(page, 'GET', `/api/backend/admin/business/kyc/${submissionId}`);
