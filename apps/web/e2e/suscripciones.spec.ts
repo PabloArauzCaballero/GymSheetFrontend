@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openPage, signIn } from './fixtures';
+import { dismissTour, openPage, signIn } from './fixtures';
 import { BACKEND } from './alta-datos';
 import { readablePhoto } from './kyc-datos';
 import { crearNegocioAprobado, type Negocio } from './negocio-datos';
@@ -98,6 +98,8 @@ test('the checkout asks «Hazte socio» and the order carries the SOCIO data', a
   expect(response.request().postDataJSON()).toEqual({ listingId, method: 'QR', affiliation: { locationId: sedeId, ciLast3: CI } });
   orderId = ((await response.json()) as { data: { id: string } }).data.id;
   await expect(page).toHaveURL(new RegExp(`/profile/compras/${orderId}$`, 'u'), { timeout: 20_000 });
+  // The order page is the new person's first portal page: the welcome tour opens there.
+  await dismissTour(page);
 
   await page.getByRole('button', { name: 'Ya pagué' }).click();
   await page.getByLabel('Foto del comprobante', { exact: true }).setInputFiles({ name: 'comprobante.png', mimeType: 'image/png', buffer: readablePhoto(400, 400, 40) });

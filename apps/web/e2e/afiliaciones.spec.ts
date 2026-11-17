@@ -59,10 +59,12 @@ test('a person asks to be a SOCIO from the gym’s @handle', async ({ page }) =>
   const dialog = page.getByRole('dialog', { name: 'Hazte socio' });
   await expect(dialog).toBeVisible();
   // Kind and sede are visually hidden radios inside their cards: tap the card, as a person does.
+  // `has` resolves inside each label, so it takes page-rooted locators, not ones under the dialog.
   const socio = dialog.getByRole('radio', { name: /Socio/u });
-  await dialog.locator('label').filter({ has: socio }).click();
+  await dialog.locator('label').filter({ has: page.getByRole('radio', { name: /Socio/u }) }).click();
+  await expect(socio).toBeChecked();
   const sede = dialog.getByRole('radio', { name: new RegExp(SEDE, 'u') });
-  await dialog.locator('label').filter({ has: sede }).click();
+  await dialog.locator('label').filter({ has: page.getByRole('radio', { name: new RegExp(SEDE, 'u') }) }).click();
   await expect(sede).toBeChecked();
   await dialog.getByLabel('Últimos 3 dígitos de tu CI', { exact: true }).fill(CI);
 
