@@ -23,6 +23,7 @@ import { levelTitle } from '@/components/directory-card';
 import { initialsOf } from '@/lib/format';
 import { notify } from '@/notifications';
 import { alpha, colors, fontSizes, iconSizes, ink, minTouchTarget, overlay, radii, semibold, spacing } from '@/theme';
+import { GymGateState, gymGateOf } from '@/features/affiliations/gym-gate-state';
 
 const AVATAR_SIZE = 48;
 
@@ -217,12 +218,9 @@ export function TopGymModal({
             showsVerticalScrollIndicator={false}
           >
             {leaderboard.isPending ? (
-              <View style={{ gap: spacing.sm }}>
-                <Skeleton height={68} />
-                <Skeleton height={68} />
-                <Skeleton height={68} />
-                <Skeleton height={68} />
-              </View>
+              <View style={{ gap: spacing.sm }}>{[0, 1, 2, 3].map((row) => <Skeleton height={68} key={row} />)}</View>
+            ) : gymGateOf(leaderboard.error) ? (
+              <GymGateState onNavigate={onClose} status={gymGateOf(leaderboard.error) ?? 'NONE'} />
             ) : leaderboard.isError ? (
               <ErrorState error={leaderboard.error} onRetry={() => void leaderboard.refetch()} />
             ) : !leaderboard.data?.length ? (

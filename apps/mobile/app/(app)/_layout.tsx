@@ -83,6 +83,9 @@ export default function AppLayout() {
         {/* «Mis compras» under Perfil and one order (franja 8d). */}
         <Stack.Screen name="compras/index" />
         <Stack.Screen name="compras/[id]" />
+        {/* «Mi gimnasio» by the confirmed SOCIO and «Mis afiliaciones» (franjas 7b–7c). */}
+        <Stack.Screen name="mi-gimnasio" />
+        <Stack.Screen name="afiliaciones" />
         <Stack.Screen name="dispositivos" />
         {/* Privacidad y datos (franja 4): consents, export and account rights. */}
         <Stack.Screen name="datos-privacidad" />

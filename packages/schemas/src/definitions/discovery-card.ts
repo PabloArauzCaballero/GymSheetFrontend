@@ -16,6 +16,8 @@ export const discoveryReasonCodes = [
   'SHARED_INTERESTS',
   'VERIFIED',
   'NEW_HERE',
+  // Both are confirmed members of the same gym (ADR-0027).
+  'SAME_GYM',
 ] as const;
 export type DiscoveryReasonCode = (typeof discoveryReasonCodes)[number];
 

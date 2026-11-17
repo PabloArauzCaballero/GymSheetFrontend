@@ -1,6 +1,7 @@
 import {
   Activity,
   Bell,
+  Building2,
   CalendarCheck,
   ClipboardList,
   Dumbbell,
@@ -55,6 +56,8 @@ export const primaryNavigation: NavigationItem[] = [
   { href: '/routines', label: 'Rutinas', icon: ClipboardList },
   { href: '/exercises', label: 'Ejercicios', icon: Dumbbell },
   { href: '/comunidad', label: 'Comunidad', icon: Users2 },
+  // The confirmed gym (franja 7c): ranking and members, by affiliation.
+  { href: '/mi-gimnasio', label: 'Mi gimnasio', icon: Building2 },
   // Pestaña del móvil (#74): ofertas y tiendas sin salir del portal.
   { href: '/marketplace', label: 'Marketplace', icon: Store },
   { href: '/reels', label: 'Reels', icon: Film },

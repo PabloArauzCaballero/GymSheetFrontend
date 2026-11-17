@@ -31,6 +31,7 @@ import { SocialDiscoverySettingsCard } from '@/features/social/components/social
 import { SocialStatusCard } from '@/features/social/components/social-status-card';
 import { VerificationCta } from '@/features/verification/components/verification-cta';
 import { WeightIncrementField } from '@/features/workouts/components/weight-increment-field';
+import { MyGymBadge, MyGymNavRow } from '@/features/affiliations/components/person/my-gym-profile';
 import { ApiError } from '@/shared/api/api-error';
 import { goalLabels } from '@/features/profile/components/profile-form-schema';
 import { queryKeys } from '@/shared/api/query-keys';
@@ -149,7 +150,7 @@ export function ProfilePageClient({
         <div className="grid gap-8">
           <ProfileHero
             initials={initialsOf(me?.nombreCompleto, me?.email)}
-            meta={me && me.rol !== 'CLIENTE' ? <Badge>{role}</Badge> : null}
+            meta={<>{me && me.rol !== 'CLIENTE' ? <Badge>{role}</Badge> : null}<MyGymBadge /></>}
             name={me?.nombreCompleto ?? 'Tu perfil'}
             photoUrl={avatarUrl}
             rank={progress ? (rank ?? 'Sin empezar') : null}
@@ -223,6 +224,7 @@ export function ProfilePageClient({
           <Section title="Tu actividad">
             <RowGroup>
               {[
+                <MyGymNavRow key="gym" />,
                 <NavRow href="/workouts" key="entrenos" leading={<RowGlyph icon={Dumbbell} />} subtitle="Todas tus sesiones, con sus series" title="Mis entrenos" />,
                 <NavRow href="/exercises" key="ejercicios" leading={<RowGlyph icon={Star} />} subtitle="Tus favoritos ☆ y el catálogo completo" title="Mis ejercicios y favoritos" />,
                 <NavRow href="/chat" key="chat" leading={<RowGlyph icon={MessageCircle} />} subtitle="Habla con tus conexiones" title="Chat" />,

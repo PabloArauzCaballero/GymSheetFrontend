@@ -80,6 +80,8 @@ export const knownRoutes = new Set([
   'interacciones',
   'marketplace',
   'membership',
+  // «Mi gimnasio» by the confirmed SOCIO affiliation (franja 7c).
+  'mi-gimnasio',
   // Public `@handle` profile: `/@topfit` is rewritten here (App Router cannot
   // have an `@` folder: `@` names a parallel route).
   'n',

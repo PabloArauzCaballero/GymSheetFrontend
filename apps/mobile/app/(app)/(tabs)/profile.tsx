@@ -22,6 +22,7 @@ import { WeightIncrementPreference } from '@/components/weight-increment-prefere
 import { completionMessage, profileCompletion } from '@/features/profile-hero/profile-completion';
 import { HeroStats, ProfileHero, plural } from '@/features/profile-hero/profile-hero';
 import { VerificationCta } from '@/features/verification/verification-cta';
+import { MyGymNavRow } from '@/features/affiliations/my-gym-nav-row';
 import { VerificationStatusRow } from '@/features/verification/verification-status-row';
 import { proudStat, shareMyProfile } from '@/features/profile-hero/profile-share';
 import { confirm, notify } from '@/notifications';
@@ -247,13 +248,9 @@ export default function ProfileScreen() {
         <RowGroup>
           {[
             <NavRow key="entrenos" leading={<RowGlyph icon="barbell-outline" />} onPress={() => router.push('/workouts')} subtitle="Todas tus sesiones, con sus series" title="Mis entrenos" />,
-            <NavRow
-              key="ejercicios" leading={<RowGlyph icon="star-outline" />}
-              onPress={() => router.push(routes.exerciseFavorites())}
-              subtitle="Tus favoritos ☆ y el catálogo completo"
-              testID="profile-exercises"
-              title="Mis ejercicios y favoritos"
-            />,
+            <NavRow key="ejercicios" leading={<RowGlyph icon="star-outline" />} onPress={() => router.push(routes.exerciseFavorites())} subtitle="Tus favoritos ☆ y el catálogo completo" testID="profile-exercises" title="Mis ejercicios y favoritos" />,
+            // The confirmed gym (franja 7c): «Socio de X», a pending request or the way to join.
+            <MyGymNavRow key="gym" leading={<RowGlyph icon="business-outline" />} />,
             // Conocer is for members only: staff has no deck.
             ...(offersConocer(principal?.role)
               ? [

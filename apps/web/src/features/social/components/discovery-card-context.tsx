@@ -1,4 +1,4 @@
-import { BadgeCheck, MapPin, Navigation, Repeat, Sparkles, Sprout, Target, type LucideIcon } from 'lucide-react';
+import { BadgeCheck, Building2, MapPin, Navigation, Repeat, Sparkles, Sprout, Target, type LucideIcon } from 'lucide-react';
 import {
   discoveryReasonChips,
   formatDistanceKm,
@@ -13,6 +13,7 @@ export type CardRanking = { reasons: readonly string[]; distanceKm: number | nul
 type Tone = 'overlay' | 'surface';
 
 const REASON_ICON: Record<DiscoveryReasonChipCode, LucideIcon> = {
+  SAME_GYM: Building2,
   SAME_ROUTINE: Repeat,
   SAME_GOAL: Target,
   SHARED_INTERESTS: Sparkles,

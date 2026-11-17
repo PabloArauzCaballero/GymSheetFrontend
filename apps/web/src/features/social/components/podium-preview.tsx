@@ -3,6 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Trophy } from 'lucide-react';
 import Link from 'next/link';
+import { GymGateState } from '@/features/affiliations/components/person/gym-gate-state';
+import { gymGateOf } from '@/features/affiliations/services/affiliations-client';
 import { progressionService } from '@/features/progression/services/progression-service';
 import { Skeleton } from '@/shared/components/feedback/skeleton';
 import { cn } from '@/shared/lib/cn';
@@ -17,6 +19,9 @@ import { cn } from '@/shared/lib/cn';
  * Si la consulta falla o el gimnasio todavía no tiene a nadie con puntos, no se
  * pinta nada: es un avance, no contenido de la página, y un panel de error por
  * un adorno sería ruido sobre algo que el usuario no vino a buscar.
+ *
+ * Without a confirmed gym (ADR-0027) the ranking is 403 GYM_MEMBERSHIP_REQUIRED:
+ * that is not a failure but the way in, so the podium says how to join.
  */
 export function PodiumPreview() {
   const leaderboard = useQuery({
@@ -26,6 +31,14 @@ export function PodiumPreview() {
   });
 
   if (leaderboard.isLoading) return <Skeleton className="h-36 w-full rounded-[var(--radius-lg)]" />;
+  const gate = gymGateOf(leaderboard.error);
+  if (gate) {
+    return (
+      <section aria-label="Podio del gimnasio" className="panel grid gap-3 p-5">
+        <GymGateState compact status={gate} />
+      </section>
+    );
+  }
   if (leaderboard.isError || !leaderboard.data?.length) return null;
 
   return (

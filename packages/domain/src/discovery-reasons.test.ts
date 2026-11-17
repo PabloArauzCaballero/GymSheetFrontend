@@ -165,3 +165,9 @@ describe('single match model', () => {
     expect(connectionOutcomeMessage({ status: 'PENDING' })).toBe('Solicitud enviada.');
   });
 });
+
+describe('SAME_GYM (ADR-0027)', () => {
+  it('leads with «Tu mismo gimnasio» when both are confirmed members of the same gym', () => {
+    expect(discoveryReasonChips({ reasons: ['NEARBY', 'SAME_GYM'], distanceKm: null }).map((chip) => chip.label)).toEqual(['Tu mismo gimnasio', 'Cerca de ti']);
+  });
+});

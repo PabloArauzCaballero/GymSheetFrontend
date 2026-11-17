@@ -11,6 +11,7 @@ import { levelTitle } from './directory-labels';
 import { SocialAboutSection } from './about/social-about-section';
 import { DetailSectionBlock, detailSectionsOf } from './member-detail-sheet';
 import { socialStatusLabels } from './social-status-labels';
+import { GymBadge } from '@/features/affiliations/components/person/gym-badge';
 
 /**
  * La ficha de un socio: identidad, rango, datos y lo que ha conseguido.
@@ -45,6 +46,7 @@ export function MemberProfileBody({
               <span className="ml-2 font-normal text-[var(--text-muted)]">{member.age}</span>
             ) : null}
           </h1>
+          <GymBadge badge={member.gymBadge} />
           {member.levelCode ? (
             <p className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent-ink)]">
               <Trophy aria-hidden className="size-4" />

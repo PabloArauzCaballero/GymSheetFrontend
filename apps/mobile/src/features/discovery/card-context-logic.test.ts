@@ -28,3 +28,9 @@ test('presence is never rendered, even if an older server sends it', () => {
   const text = JSON.stringify(context).toLowerCase();
   assert.equal(text.includes('ahora'), false);
 });
+
+test('two confirmed members of the same gym lead with «Tu mismo gimnasio» (ADR-0027)', () => {
+  const context = cardContextOf({ reasons: ['SAME_ROUTINE', 'SAME_GYM'], distanceKm: null });
+  assert.deepEqual(context.chips.map((chip) => chip.label), ['Tu mismo gimnasio', 'Misma rutina']);
+  assert.equal(context.chips[0]?.icon, 'business-outline');
+});

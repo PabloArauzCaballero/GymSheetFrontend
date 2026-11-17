@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { progressionBadgeSchema } from './progression';
 import { discoveryIntentsSchema, socialAboutSchema } from './social-profile';
+import { gymBadgeSchema } from './affiliations';
 
 /**
  * Contratos de la capa social: solicitudes de conexión entre socios, estado
@@ -129,6 +130,8 @@ export const gymDirectoryEntrySchema = z.object({
   levelCode: z.string().nullable(),
   /** The "Conocer" answers. Absent from older backends. */
   about: socialAboutSchema.optional(),
+  /** «Socio de X» (ADR-0027): a confirmed membership the person shows; absent from older backends. */
+  gymBadge: gymBadgeSchema.nullable().optional(),
 });
 export type GymDirectoryEntry = z.infer<typeof gymDirectoryEntrySchema>;
 
