@@ -229,7 +229,8 @@ const allowedPathPatterns = [
   new RegExp(`^/me/verification/${uuid}/selfie$`, 'u'),
   /^\/admin\/verifications$/u,
   new RegExp(`^/admin/verifications/${uuid}/(selfie|decide)$`, 'u'),
-  // The platform admin closes a legacy staff account (POST; scope decided by the backend).
+  // The platform account search (backend ADR-0026 §11) and the closure of a legacy staff account.
+  /^\/admin\/users$/u,
   new RegExp(`^/admin/users/${uuid}/close$`, 'u'),
   // Social: bloqueos, descubrimiento, mapa y confirmaciones de lectura.
   /^\/me\/blocks$/u,

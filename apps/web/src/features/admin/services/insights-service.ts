@@ -50,15 +50,14 @@ export const insightsService = {
    * que cayera fuera de la página pedida simplemente no existiría para quien
    * busca, y el fallo crece con el tamaño del gimnasio.
    *
-   * Backend franja 8e retired this route along with `/admin/membership/*` and
-   * named no replacement, so the BFF no longer forwards it: until one exists
-   * the user lists (users, permissions, moderators) show their error state.
+   * Since backend franja 8e the platform account search is `GET /admin/users`
+   * (ADR-0026 §11), outside the retired membership module; same response shape.
    */
   users: (search: string, page = 1, pageSize = 50, roles?: string) => {
     const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
     if (search) params.set('q', search);
     if (roles) params.set('roles', roles);
-    return apiRequest(`/admin/membership/users?${params.toString()}`, portalUserPageSchema, {
+    return apiRequest(`/admin/users?${params.toString()}`, portalUserPageSchema, {
       method: 'GET',
     });
   },

@@ -33,6 +33,7 @@ const allowedCases: Array<[string[], string]> = [
   [['business', 'me', 'media', 'COVER'], '/business/me/media/COVER'],
   [['public', 'handles', 'top.fitness_bo'], '/public/handles/top.fitness_bo'],
   [['public', 'handles', '@Top.Fit', 'availability'], '/public/handles/%40Top.Fit/availability'],
+  [['admin', 'users'], '/admin/users'],
   [['admin', 'users', id, 'close'], `/admin/users/${id}/close`],
   // Franja 8b: the business KYC and REPP's console.
   [['business', 'me', 'phone', 'verify', 'request'], '/business/me/phone/verify/request'],
