@@ -17,7 +17,7 @@ import {
   ejercicioAlAzar,
   ejerciciosAlAzar,
   huellaPropia,
-  promoverASistema,
+  promover,
   publicarRutina,
   ejercicioId,
 } from './rutinas-datos';
@@ -41,7 +41,7 @@ for (const combo of combos) {
       ]);
       const a = apiDe(ana);
       const b = apiDe(bruno);
-      const sistema = await promoverASistema(sistemaBase);
+      const sistema = await promover(sistemaBase, 'SYSTEM_ADMIN');
       const s = apiDe(sistema);
 
       // Ana: dos públicas (una de fuerza), una privada y un programa activo.

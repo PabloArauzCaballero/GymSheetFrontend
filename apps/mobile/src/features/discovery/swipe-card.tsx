@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { GestureDetector, type ComposedGesture } from 'react-native-gesture-handler';
 import Animated, { type AnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import type { ViewStyle } from 'react-native';
-import type { GymDirectoryEntry } from '@gymsheet/schemas';
+import type { DiscoveryCard, GymDirectoryEntry } from '@gymsheet/schemas';
 import { initialsOf } from '@/lib/format';
 import { alpha, colors, fontSizes, ink, radii } from '@/theme';
 import { CardInfo } from './card-info';
@@ -51,7 +51,7 @@ export function SwipeCard({
   translateX,
   onOpenDetail,
 }: {
-  entry: GymDirectoryEntry;
+  entry: DiscoveryCard;
   gesture: ComposedGesture;
   style: AnimatedStyle<ViewStyle>;
   photoIndex: number;

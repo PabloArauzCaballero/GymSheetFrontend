@@ -8,7 +8,9 @@ import { onboardingService } from '@/api/services';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { useAuthStore } from '@/state/auth-store';
 import { colors, spacing } from '@/theme';
-import { ONBOARDING_PATH, decideOnboardingGate, onboardingQueryKey } from './onboarding-gate';
+import { CONOCER_PATH, ONBOARDING_PATH, decideOnboardingGate, onboardingQueryKey } from './onboarding-gate';
+
+const REDIRECT_PATH = { onboarding: ONBOARDING_PATH, conocer: CONOCER_PATH, home: authDestination.mobile.afterLogin } as const;
 
 /**
  * Keeps a CLIENTE on `/onboarding` until the API reports it COMPLETED, and sends
@@ -34,10 +36,10 @@ export function OnboardingGuard() {
     role: principal?.role,
     pathname,
     status: query.data?.status,
+    socialStep: query.data?.socialStep,
     failed: query.isError && query.data === undefined,
   });
-  const target =
-    gate.kind === 'redirect' ? (gate.to === 'onboarding' ? ONBOARDING_PATH : authDestination.mobile.afterLogin) : null;
+  const target = gate.kind === 'redirect' ? REDIRECT_PATH[gate.to] : null;
 
   useEffect(() => {
     if (target) router.replace(target);

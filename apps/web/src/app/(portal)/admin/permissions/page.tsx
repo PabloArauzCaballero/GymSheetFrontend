@@ -7,7 +7,7 @@ import { requireRole } from '@/shared/server/session';
 export const metadata: Metadata = { title: 'Permisos de administración' };
 
 export default async function AdminPermissionsPage() {
-  const session = await requireRole(['ADMIN', 'FRONT_DESK']);
+  const session = await requireRole(['SYSTEM_ADMIN']);
   if (!hasPermission(session.permissions, 'admin-access:manage')) {
     redirect('/admin?denied=1');
   }

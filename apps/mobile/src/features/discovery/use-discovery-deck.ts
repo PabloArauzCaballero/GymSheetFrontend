@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { GymDirectoryEntry, SwipeDirection } from '@gymsheet/schemas';
+import type { DiscoveryCard, SwipeDirection } from '@gymsheet/schemas';
 import { ApiError } from '@gymsheet/api-client';
 import { needsDiscoveryPreferences } from '@gymsheet/domain';
 import { queryKeys } from '@gymsheet/hooks';
@@ -14,7 +14,7 @@ export const DECK_SIZE = 15;
 /** Session filters. Gender is not one: saved discovery preferences are the single source. */
 export type DeckFilters = { objetivos: readonly string[]; sucursalId: string | null };
 
-type Decision = { entry: GymDirectoryEntry; direction: SwipeDirection; filterKey: string };
+type Decision = { entry: DiscoveryCard; direction: SwipeDirection; filterKey: string };
 
 /**
  * The discovery deck: cards live in local state as well as in the cache, so a
@@ -41,10 +41,10 @@ export function useDiscoveryDeck(
   // Only accept a deal someone asked for (mount, filter change, retry, redeal).
   const acceptDealRef = useRef(true);
   const [cardsFilterKey, setCardsFilterKey] = useState(deckKey);
-  const [cards, setCards] = useState<GymDirectoryEntry[]>([]);
+  const [cards, setCards] = useState<DiscoveryCard[]>([]);
   // Decided cards, most recent first: what undo can restore.
   const [decided, setDecided] = useState<Decision[]>([]);
-  const [matchedEntry, setMatchedEntry] = useState<GymDirectoryEntry | null>(null);
+  const [matchedEntry, setMatchedEntry] = useState<DiscoveryCard | null>(null);
 
   const deck = useQuery({
     queryKey: ['social', 'discovery', 'deck', objetivosKey, sucursalId ?? '', preferencesVersion],

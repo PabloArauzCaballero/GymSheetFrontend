@@ -18,8 +18,9 @@ function queueRow(kind: string, n: number, overrides: Record<string, unknown> = 
     target_id: uuid(n),
     reported_user_id: uuid(n + 50),
     reported_user_name: 'Ana',
-    // El backend añade columnas que la pantalla no usa; no deben romper nada.
+    // Central queue (ADR-0018): each row names the gym of the content.
     tenant_id: 'default',
+    tenant_name: 'REPP Centro',
     report_count: 3,
     reporter_count: 3,
     reasons: ['EJERCICIO_PELIGROSO', 'INFORMACION_ENGANOSA', 'PLAGIO'],
@@ -48,9 +49,21 @@ function stubBackend(data: unknown) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('moderación: tipos y motivos', () => {
-  it('conoce los cuatro tipos antiguos y los tres nuevos', () => {
+  it('conoce todos los tipos que la cola central puede traer', () => {
     expect([...moderationTargetKinds].sort()).toEqual(
-      ['CHAT_MESSAGE', 'COMMENT', 'EXERCISE', 'PROFILE_PHOTO', 'REEL', 'ROUTINE', 'STORY', 'USER'].sort(),
+      [
+        'BUSINESS_LISTING',
+        'BUSINESS_PROFILE',
+        'CHAT_MESSAGE',
+        'COMMENT',
+        'EXERCISE',
+        'MUSIC_PLAYLIST',
+        'PROFILE_PHOTO',
+        'REEL',
+        'ROUTINE',
+        'STORY',
+        'USER',
+      ].sort(),
     );
   });
 
@@ -67,6 +80,12 @@ describe('moderación: tipos y motivos', () => {
 });
 
 describe('moderación: motivos al denunciar', () => {
+  it('a business listing or profile is reported with the marketplace reasons only', () => {
+    expect(reasonsFor('BUSINESS_LISTING')).toEqual(['SPAM', 'INFORMACION_ENGANOSA', 'PERFIL_FALSO', 'DROGAS', 'CONTENIDO_SEXUAL', 'OTRO']);
+    expect(reasonsFor('BUSINESS_PROFILE')).not.toContain('EJERCICIO_PELIGROSO');
+    expect(reasonsFor('BUSINESS_PROFILE')).not.toContain('MENOR_DE_EDAD');
+  });
+
   it('los motivos de entrenamiento sólo se ofrecen para rutina, ejercicio y comentario', () => {
     expect(reasonsFor('ROUTINE')).toContain('EJERCICIO_PELIGROSO');
     expect(reasonsFor('COMMENT')).toContain('PLAGIO');
@@ -87,6 +106,11 @@ describe('moderación: la cola', () => {
 
     expect(queue.map((item) => item.target_kind)).toEqual([...moderationTargetKinds]);
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('trae el gimnasio de cada caso', () => {
+    const parsed = moderationCaseSchema.parse(queueRow('ROUTINE', 1));
+    expect(parsed).toMatchObject({ tenant_id: 'default', tenant_name: 'REPP Centro' });
   });
 
   it('lee content_hidden null como contenido visible (consulta con LEFT JOIN)', () => {
@@ -115,6 +139,7 @@ describe('moderación: el caso', () => {
     activeStrikes: 0,
     pendingSanction: { kind: 'ADVERTENCIA', days: 0 },
     contentHidden: false,
+    tenantId: 'default',
   });
 
   it.each([
@@ -128,9 +153,19 @@ describe('moderación: el caso', () => {
   });
 
   it('pide ocultar o restaurar con hideContent en resolve', async () => {
-    const fetchMock = stubBackend({ resolved: true, reportsClosed: 3, sanction: null, contentHidden: false });
+    const fetchMock = stubBackend({
+      resolved: true,
+      tenantId: 'default',
+      resolution: 'SIN_ACCION',
+      reportsClosed: 3,
+      sanction: null,
+      contentHidden: false,
+      minorConfirmed: false,
+    });
 
-    await moderationService.resolve('ROUTINE', uuid(1), { hideContent: false, sanction: false });
+    const verdict = await moderationService.resolve('ROUTINE', uuid(1), { hideContent: false, sanction: false });
+
+    expect(verdict).toMatchObject({ tenantId: 'default', resolution: 'SIN_ACCION' });
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe(`/api/backend/admin/moderation/cases/ROUTINE/${uuid(1)}/resolve`);

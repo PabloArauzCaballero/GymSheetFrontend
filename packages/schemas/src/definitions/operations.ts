@@ -7,7 +7,6 @@ import {
   maintenanceStatuses,
   maintenanceTypes,
   membershipStatuses,
-  notificationStatuses,
   planTypes,
   roomTypes,
   staffPositions,
@@ -289,19 +288,6 @@ export const accessEventSchema = z.object({
   recibidoEn: z.string(),
   estadoCola: z.enum(['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'DEAD_LETTER']),
   decision: accessDecisionSchema.nullable(),
-});
-
-export const notificationSchema = z.object({
-  id: z.string().uuid(),
-  membresiaId: z.string().uuid().nullable(),
-  canal: z.enum(['IN_APP', 'HTTP_GATEWAY', 'MOCK']),
-  asunto: z.string(),
-  mensaje: z.string(),
-  diasRestantes: z.number().int().nullable(),
-  estado: z.enum(notificationStatuses),
-  leidoEn: z.string().nullable(),
-  enviadoEn: z.string().nullable(),
-  creadoEn: z.string(),
 });
 
 export const notificationPreferenceSchema = z.object({

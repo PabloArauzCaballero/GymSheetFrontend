@@ -82,6 +82,7 @@ export function PassesPanel({ counts }: Readonly<{ counts: InteractionCounts | n
             : 'Las personas que descartes aparecerán aquí y podrás devolverlas a la baraja.'
         }
         emptyTitle={scope === 'received' ? 'Nadie te dio next' : 'No descartaste a nadie'}
+        error={active.error}
         errorMessage={active.isError ? active.error.message : null}
         loading={active.isLoading}
         onRetry={() => active.refetch()}

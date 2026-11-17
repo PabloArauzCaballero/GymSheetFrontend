@@ -11,13 +11,17 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { formatDateTime } from '@/shared/lib/date';
 import { confirm, notify } from '@/shared/notifications';
 import {
+  isBusinessTarget,
   moderationService,
   REASON_LABEL,
   TARGET_LABEL,
   type ModerationTargetKind,
+  type ModerationVerdict,
 } from '@/features/moderation/services/moderation-service';
 import { ContentPreview } from './moderation-preview';
 import { queueKey, sanctionLabel } from './moderation-labels';
+
+type Verdict = { hideContent: boolean; sanction: boolean; suspendBusiness?: boolean };
 
 /**
  * El expediente y el veredicto.
@@ -30,11 +34,14 @@ import { queueKey, sanctionLabel } from './moderation-labels';
 export function CasePanel({
   targetKind,
   targetId,
+  tenantName,
   onResolved,
 }: Readonly<{
   targetKind: ModerationTargetKind;
   targetId: string;
-  onResolved: () => void;
+  /** Gym of the reported content: the queue mixes every gym (ADR-0018). */
+  tenantName: string | null;
+  onResolved: (verdict: ModerationVerdict) => void;
 }>) {
   const [note, setNote] = useState('');
   const queryClient = useQueryClient();
@@ -44,9 +51,9 @@ export function CasePanel({
     queryFn: () => moderationService.getCase(targetKind, targetId),
   });
 
-  const refresh = async () => {
+  const refresh = async (verdict: ModerationVerdict) => {
     await queryClient.invalidateQueries({ queryKey: queueKey });
-    onResolved();
+    onResolved(verdict);
   };
 
   const claim = useMutation({
@@ -60,7 +67,7 @@ export function CasePanel({
   });
 
   const resolve = useMutation({
-    mutationFn: (input: { hideContent: boolean; sanction: boolean }) =>
+    mutationFn: (input: Verdict) =>
       moderationService.resolve(targetKind, targetId, {
         ...input,
         ...(note.trim() ? { note: note.trim() } : {}),
@@ -72,7 +79,7 @@ export function CasePanel({
           : 'Caso resuelto.',
       );
       setNote('');
-      await refresh();
+      await refresh(result);
     },
     onError: (error: Error) => notify.error(error),
   });
@@ -95,7 +102,18 @@ export function CasePanel({
     data.pendingSanction.days,
   );
 
-  const act = async (input: { hideContent: boolean; sanction: boolean }) => {
+  const business = isBusinessTarget(data.targetKind);
+  const act = async (input: Verdict) => {
+    if (input.suspendBusiness) {
+      const result = await confirm({
+        title: '¿Suspender el negocio?',
+        message: `${data.reportedUser.name} sale del marketplace con todas sus publicaciones.`,
+        description: 'Se suspende por su verificación de negocio y recibe un aviso con el motivo. REPP puede reactivarlo desde «Negocios».',
+        confirmLabel: 'Suspender negocio',
+        severity: 'danger',
+      });
+      if (!result.confirmed) return;
+    }
     if (input.sanction) {
       const result = await confirm({
         title: '¿Aplicar la sanción?',
@@ -117,6 +135,9 @@ export function CasePanel({
         <h2 className="text-xl font-semibold tracking-[-0.02em]">
           {TARGET_LABEL[data.targetKind]} de {data.reportedUser.name}
         </h2>
+        {tenantName ? (
+          <p className="mt-1 text-sm text-[var(--text-muted)]">{tenantName}</p>
+        ) : null}
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {data.contentHidden ? (
             <Badge tone="neutral">Contenido retirado</Badge>
@@ -132,12 +153,12 @@ export function CasePanel({
       </div>
 
       <ContentPreview
-        reportDetails={data.reports.flatMap((report) => (report.details ? [report.details] : []))}
-        targetId={data.targetId}
-        targetKind={data.targetKind}
+        content={data.content}
+        contentUnavailableReason={data.contentUnavailableReason}
       />
 
       {/* El historial y la consecuencia, juntos y antes de los botones. */}
+      {business ? null : (
       <Card>
         <CardContent className="flex flex-col gap-2 p-4">
           <p className="flex items-center gap-2 text-sm font-semibold">
@@ -154,6 +175,7 @@ export function CasePanel({
           </p>
         </CardContent>
       </Card>
+      )}
 
       <div>
         <h3 className="text-sm font-semibold">
@@ -201,24 +223,35 @@ export function CasePanel({
           <ShieldCheck aria-hidden className="mr-1 size-4" />
           {data.contentHidden ? 'Restaurar contenido' : 'Sin infracción'}
         </Button>
-        {data.contentHidden ? null : (
+        {data.contentHidden || data.targetKind === 'BUSINESS_PROFILE' ? null : (
           <Button
             disabled={resolve.isPending}
             onClick={() => act({ hideContent: true, sanction: false })}
             variant="secondary"
           >
             <EyeOff aria-hidden className="mr-1 size-4" />
-            Ocultar contenido
+            {business ? 'Ocultar publicación' : 'Ocultar contenido'}
           </Button>
         )}
-        <Button
-          disabled={resolve.isPending}
-          onClick={() => act({ hideContent: true, sanction: true })}
-          variant="danger"
-        >
-          <TriangleAlert aria-hidden className="mr-1 size-4" />
-          Retirar y sancionar
-        </Button>
+        {business ? (
+          <Button
+            disabled={resolve.isPending}
+            onClick={() => act({ hideContent: data.targetKind === 'BUSINESS_LISTING', sanction: false, suspendBusiness: true })}
+            variant="danger"
+          >
+            <TriangleAlert aria-hidden className="mr-1 size-4" />
+            Suspender negocio
+          </Button>
+        ) : (
+          <Button
+            disabled={resolve.isPending}
+            onClick={() => act({ hideContent: true, sanction: true })}
+            variant="danger"
+          >
+            <TriangleAlert aria-hidden className="mr-1 size-4" />
+            Retirar y sancionar
+          </Button>
+        )}
       </div>
 
       <p className="text-xs text-[var(--text-muted)]">

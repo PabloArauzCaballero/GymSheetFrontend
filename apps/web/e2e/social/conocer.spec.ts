@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { athlete, openPage, signIn } from '../fixtures';
+import { stubDiscoveryReady } from './discovery-ready';
+
+test.beforeEach(async ({ page }) => {
+  await stubDiscoveryReady(page);
+});
 
 const DECK_ROUTE = '**/api/backend/me/discovery/deck*';
 
@@ -40,6 +45,9 @@ function validCandidate() {
     experienceLevel: 'BEGINNER',
     points: 0,
     levelCode: null,
+    // Deck cards always carry their ranking context (backend franja 5).
+    reasons: ['SAME_GOAL', 'VERIFIED'],
+    distanceKm: 2,
   };
 }
 

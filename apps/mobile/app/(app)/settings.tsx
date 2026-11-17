@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { deviceCopy, emailVerificationCopy } from '@gymsheet/domain';
 import { ActivityIndicator, Linking, Switch, Text, View } from 'react-native';
 import { chatService } from '@/api/services';
 import { Card, Divider, Row, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
@@ -25,6 +27,8 @@ const CC_BY_SA_URL = 'https://creativecommons.org/licenses/by-sa/4.0/';
 export default function SettingsScreen() {
   const logout = useAuthStore((state) => state.logout);
   const principal = useAuthStore((state) => state.principal);
+  const emailUnverified = useAuthStore((state) => state.emailVerified === false);
+  const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
   const [chooseChatsOpen, setChooseChatsOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -94,6 +98,31 @@ export default function SettingsScreen() {
           <Divider />
           <Row icon="key-outline" label="Sesión" value="Guardada en el llavero del dispositivo" />
         </Card>
+        <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
+          {emailUnverified ? (
+            <SheetRow
+              hint={emailVerificationCopy.banner}
+              icon="mail-unread-outline"
+              label={emailVerificationCopy.bannerAction}
+              onPress={() => router.push('/verificar-correo')}
+              testID="settings-verify-email"
+            />
+          ) : null}
+          <SheetRow
+            hint="Consentimientos, copia de tus datos, correo y cierre de la cuenta."
+            icon="shield-checkmark-outline"
+            label="Privacidad y datos"
+            onPress={() => router.push('/datos-privacidad')}
+            testID="settings-privacy"
+          />
+          <SheetRow
+            hint={deviceCopy.description}
+            icon="phone-portrait-outline"
+            label={deviceCopy.title}
+            onPress={() => router.push('/dispositivos')}
+            testID="settings-devices"
+          />
+        </View>
       </Section>
 
       <Section icon="chatbubbles-outline" title="Chats">

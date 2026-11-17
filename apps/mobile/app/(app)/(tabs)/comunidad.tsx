@@ -8,7 +8,9 @@ import { TopGymModal } from '@/components/top-gym-sheet';
 import { useScreenTour } from '@/components/tour';
 import { DeckHeader, type DeckCategory } from '@/features/discovery/deck-header';
 import { DiscoveryDeck } from '@/features/discovery/discovery-deck';
+import { EmailVerificationBanner } from '@/features/email-verification/email-verification-banner';
 import { SearchPreferencesSheet } from '@/features/discovery/search-preferences-sheet';
+import { VerificationCta } from '@/features/verification/verification-cta';
 import { colors } from '@/theme';
 
 export default function ComunidadScreen() {
@@ -58,6 +60,9 @@ export default function ComunidadScreen() {
         onOpenFilters={() => setPrefsVisible(true)}
         onOpenMenu={() => setOverflowVisible(true)}
       />
+      {/* Only while the email is unverified; the deck itself answers 403 with the same way out. */}
+      <EmailVerificationBanner inset />
+      <VerificationCta inset />
 
       <DiscoveryDeck filters={filters} onOpenFilters={() => setPrefsVisible(true)} />
 

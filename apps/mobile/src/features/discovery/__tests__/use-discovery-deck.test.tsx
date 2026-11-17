@@ -32,7 +32,7 @@ const card = (n: number, impressionId?: string) => ({
   displayName: `Socio ${n}`,
   objetivo: null, branchId: null, branchName: null, connectionStatus: 'NONE', connectionId: null,
   socialStatus: null, photoUrl: null, photos: [], age: 30, gender: null, experienceLevel: null,
-  points: null, levelCode: null,
+  points: null, levelCode: null, reasons: [], distanceKm: null,
 });
 const ana = card(1, '11111111-1111-4111-8111-111111111111');
 const beto = card(2);

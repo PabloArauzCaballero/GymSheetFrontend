@@ -25,3 +25,12 @@ export * from './programs';
 
 /** La semana de Inicio: días hechos, de entreno y de descanso (sin React). */
 export * from './home';
+
+/** «Conocer»: readiness invalidation and the 409 merge rule (sin React). */
+export * from './social-profile-sync';
+
+/** Business KYC: cache updates after each wizard write (sin React). */
+export * from './kyc-cache';
+
+/** Business listings: cache updates after each panel write (sin React). */
+export * from './listings-cache';

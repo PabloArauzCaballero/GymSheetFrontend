@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Linking, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { isSocialMapDisabled, socialMapDisabledCopy } from '@gymsheet/domain';
 import { socialService } from '@/api/services';
 import { ErrorState } from '@/components/feedback';
 import { PressableScale } from '@/components/motion';
@@ -40,6 +41,8 @@ export function PlacePanel({ place, onClose, onEditPreferences }: {
     queryFn: () => socialService.mapNearby({ latitude: place.latitude, longitude: place.longitude }),
   });
   const people = nearby.data?.people ?? [];
+  // «If you don't share, you don't see»: a 403 the person fixes, not a failure.
+  const closed = nearby.isError && isSocialMapDisabled(nearby.error);
 
   return (
     <Animated.View
@@ -97,7 +100,14 @@ export function PlacePanel({ place, onClose, onEditPreferences }: {
       </View>
       <ScrollView contentContainerStyle={{ paddingBottom: spacing.md }} showsVerticalScrollIndicator={false}>
         {nearby.isLoading ? <PeopleGridSkeleton /> : null}
-        {nearby.isError ? <View style={{ padding: spacing.md }}><ErrorState error={nearby.error} onRetry={() => void nearby.refetch()} /></View> : null}
+        {closed ? (
+          <View style={{ alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.lg }}>
+            <Ionicons color={colors.textMuted} name="eye-off-outline" size={iconSizes.lg} />
+            <Text style={{ color: colors.text, fontSize: fontSizes.callout, fontWeight: semibold, textAlign: 'center' }}>{socialMapDisabledCopy.title}</Text>
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.footnote, lineHeight: 19, textAlign: 'center' }}>{socialMapDisabledCopy.description}</Text>
+            <Button icon="eye-outline" label={socialMapDisabledCopy.action} onPress={onEditPreferences} size="sm" variant="secondary" />
+          </View>
+        ) : nearby.isError ? <View style={{ padding: spacing.md }}><ErrorState error={nearby.error} onRetry={() => void nearby.refetch()} /></View> : null}
         {nearby.isSuccess && people.length === 0 ? (
           <View style={{ alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.lg }}>
             <Ionicons color={colors.textMuted} name="people-outline" size={iconSizes.lg} />

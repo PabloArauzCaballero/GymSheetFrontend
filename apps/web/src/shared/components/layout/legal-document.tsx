@@ -11,14 +11,16 @@ export function LegalDocument({
   title,
   updatedAt,
   children,
-}: Readonly<{ title: string; updatedAt: string; children: ReactNode }>) {
+  backHref = '/register',
+  backLabel = '← Volver al registro',
+}: Readonly<{ title: string; updatedAt: string; children: ReactNode; backHref?: string; backLabel?: string }>) {
   return (
     <main className="mx-auto min-h-dvh max-w-2xl px-5 py-14 sm:px-8">
       <Link
         className="text-sm font-medium text-[var(--text-muted)] underline decoration-[var(--volt)] underline-offset-4"
-        href="/register"
+        href={backHref}
       >
-        ← Volver al registro
+        {backLabel}
       </Link>
       <h1 className="display-title mt-6">
         {title}

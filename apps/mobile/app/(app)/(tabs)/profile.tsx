@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { ApiError } from '@gymsheet/api-client';
+import { offersConocer } from '@gymsheet/domain';
 import { ErrorState, Skeleton } from '@/components/feedback';
 import { GenderPreference } from '@/components/gender-preference';
 import { Badge, Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
@@ -20,6 +21,8 @@ import { Button } from '@/components/ui';
 import { WeightIncrementPreference } from '@/components/weight-increment-preference';
 import { completionMessage, profileCompletion } from '@/features/profile-hero/profile-completion';
 import { HeroStats, ProfileHero, plural } from '@/features/profile-hero/profile-hero';
+import { VerificationCta } from '@/features/verification/verification-cta';
+import { VerificationStatusRow } from '@/features/verification/verification-status-row';
 import { proudStat, shareMyProfile } from '@/features/profile-hero/profile-share';
 import { confirm, notify } from '@/notifications';
 import { membershipService, profilePhotosService, profileService, progressionService } from '@/api/services';
@@ -35,6 +38,7 @@ const ROLE_LABEL: Record<string, string> = {
   ENTRENADOR_EXTERNO: 'Entrenador externo',
   COACH: 'Entrenador',
   FRONT_DESK: 'Recepción',
+  MODERATOR: 'Moderación REPP',
 };
 
 /**
@@ -237,6 +241,8 @@ export default function ProfileScreen() {
         </View>
       ) : null}
 
+      <VerificationCta />
+
       <Section title="Tu actividad">
         <RowGroup>
           {[
@@ -248,6 +254,19 @@ export default function ProfileScreen() {
               testID="profile-exercises"
               title="Mis ejercicios y favoritos"
             />,
+            // Conocer is for members only: staff has no deck.
+            ...(offersConocer(principal?.role)
+              ? [
+                  <NavRow
+                    key="conocer" leading={<RowGlyph icon="compass-outline" />}
+                    onPress={() => router.push({ pathname: '/onboarding-conocer', params: { modo: 'perfil' } })}
+                    subtitle="Qué buscas, tus gustos, tu bio y tus fotos"
+                    testID="profile-conocer"
+                    title="Tu perfil de Conocer"
+                  />,
+                  <VerificationStatusRow key="verificacion" leading={<RowGlyph icon="shield-checkmark-outline" />} />,
+                ]
+              : []),
             <NavRow key="chat" leading={<RowGlyph icon="chatbubbles-outline" />} onPress={() => router.push('/chat')} subtitle="Habla con tus conexiones" title="Chat" />,
             <NavRow key="training-invitations" leading={<RowGlyph icon="people-outline" />} onPress={() => router.push('/training-invitations')} subtitle="Invitaciones recibidas y encuentros" title="Entrenar juntos" />,
           ]}

@@ -11,6 +11,7 @@ import { PersonAvatar } from '@/components/person-avatar';
 import { Button } from '@/components/ui';
 import { PressableScale } from '@/components/motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
+import { EmailVerificationBanner } from '@/features/email-verification/email-verification-banner';
 import { confirm, notify } from '@/notifications';
 import { StoriesBar } from '@/components/stories-bar';
 import { RepiMatchesCard } from '@/features/nudge/repi-card';
@@ -555,6 +556,7 @@ export default function ComunidadMensajesScreen() {
       {/* Quien quiere conectar ya se ve dos veces —el «1» en Solicitudes y en la
           barra inferior—; un aviso aparte empujaba la lista y repetía el dato. */}
       <ScreenHeader title="Mensajes" />
+      <EmailVerificationBanner />
 
       {/* Repi solo aparece si un match espera respuesta: si no, no ocupa sitio. */}
       <RepiMatchesCard />

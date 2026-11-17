@@ -2,7 +2,8 @@ import { readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { config, knownRoutes } from './proxy';
+import { NextRequest } from 'next/server';
+import { config, knownRoutes, proxy } from './proxy';
 
 /**
  * `knownRoutes` decide si una ruta merece el muro de acceso o un 404 (M-4).
@@ -58,5 +59,53 @@ describe('public assets', () => {
       .filter((entry) => entry.isDirectory() && knownRoutes.has(entry.name))
       .map((entry) => entry.name);
     expect(clashing).toEqual([]);
+  });
+});
+
+describe('installation cookie', () => {
+  it('is minted on the first page load and handed to this same render', () => {
+    const response = proxy(new NextRequest('http://localhost:3002/login'));
+    const cookie = response.cookies.get('gymsheet_installation');
+    expect(cookie?.value).toMatch(/^[0-9a-f-]{36}$/u);
+    expect(cookie).toMatchObject({ httpOnly: true, sameSite: 'lax', path: '/' });
+    // The forwarded request carries it, so Server Components send X-Installation-Id now.
+    expect(response.headers.get('x-middleware-request-cookie')).toContain(`gymsheet_installation=${cookie?.value}`);
+  });
+
+  it('is not replaced once the browser has one, even on a redirect', () => {
+    const existing = '2f6d8a3e-4b1c-4d2e-9f00-1a2b3c4d5e6f';
+    const request = new NextRequest('http://localhost:3002/dashboard', {
+      headers: { cookie: `gymsheet_installation=${existing}` },
+    });
+    const response = proxy(request);
+    expect(response.status).toBe(307);
+    expect(response.cookies.get('gymsheet_installation')).toBeUndefined();
+  });
+});
+
+describe('business routes (ADR-0020)', () => {
+  it('rewrites /@handle to the public profile without a session', () => {
+    const response = proxy(new NextRequest('http://localhost:3002/@top.fitness'));
+    expect(response.headers.get('x-middleware-rewrite')).toBe('http://localhost:3002/n/top.fitness');
+  });
+
+  it('also rewrites an encoded @', () => {
+    const response = proxy(new NextRequest('http://localhost:3002/%40topfit'));
+    expect(response.headers.get('x-middleware-rewrite')).toBe('http://localhost:3002/n/topfit');
+  });
+
+  it('opens the business signup without a session', () => {
+    const response = proxy(new NextRequest('http://localhost:3002/negocio/registro'));
+    expect(response.headers.get('location')).toBeNull();
+  });
+
+  it('keeps the business portal behind the login wall', () => {
+    const response = proxy(new NextRequest('http://localhost:3002/negocio'));
+    expect(response.headers.get('location')).toBe('http://localhost:3002/login?returnTo=%2Fnegocio');
+  });
+
+  it('does not treat /notifications as the public /n/ profile', () => {
+    const response = proxy(new NextRequest('http://localhost:3002/notifications'));
+    expect(response.status).toBe(307);
   });
 });

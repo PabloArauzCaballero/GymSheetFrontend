@@ -1,12 +1,13 @@
 import { Redirect } from 'expo-router';
-import { authDestination } from '@gymsheet/domain';
 import { View } from 'react-native';
+import { homeFor } from '@/features/business/business-routing';
 import { useAuthStore } from '@/state/auth-store';
 import { colors } from '@/theme';
 
 /** Entry gate: waits for session hydration, then routes to the right group. */
 export default function Index() {
   const status = useAuthStore((state) => state.status);
+  const principal = useAuthStore((state) => state.principal);
 
   if (status === 'loading') {
     /**
@@ -24,7 +25,7 @@ export default function Index() {
     return <View style={{ flex: 1, backgroundColor: colors.background }} />;
   }
 
-  // Authenticated sessions land on Comunidad; the onboarding guard in
-  // `(app)/_layout.tsx` takes a CLIENTE with unfinished onboarding from there.
-  return <Redirect href={status === 'authenticated' ? authDestination.mobile.afterLogin : '/(auth)/login'} />;
+  // A person lands on Comunidad (the onboarding guard in `(app)/_layout.tsx`
+  // takes a CLIENTE with unfinished onboarding from there); a business on its shell.
+  return <Redirect href={status === 'authenticated' ? homeFor(principal) : '/(auth)/login'} />;
 }

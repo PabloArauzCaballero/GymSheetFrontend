@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/shared/api/api-error';
-import type { GymDirectoryEntry } from '@/shared/api/schemas';
+import type { DiscoveryCard } from '@/shared/api/schemas';
 import { DescubrirClient } from './descubrir-client';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }) }));
@@ -26,8 +26,8 @@ vi.mock('./directory-swipe-deck', () => ({
     onDecide,
     onUndo,
   }: {
-    entries: GymDirectoryEntry[];
-    onDecide: (entry: GymDirectoryEntry, direction: 'LIKE' | 'PASS') => void;
+    entries: DiscoveryCard[];
+    onDecide: (entry: DiscoveryCard, direction: 'LIKE' | 'PASS') => void;
     onUndo: () => void;
   }) => (
     <div>
@@ -48,7 +48,7 @@ vi.mock('./directory-swipe-deck', () => ({
 vi.mock('./match-celebration', () => ({ MatchCelebration: () => null }));
 vi.mock('./member-detail-sheet', () => ({ MemberDetailSheet: () => null }));
 
-function entry(userId: string, displayName: string): GymDirectoryEntry {
+function entry(userId: string, displayName: string): DiscoveryCard {
   return {
     userId,
     displayName,
@@ -65,6 +65,8 @@ function entry(userId: string, displayName: string): GymDirectoryEntry {
     experienceLevel: 'BEGINNER',
     points: 0,
     levelCode: null,
+    reasons: [],
+    distanceKm: null,
   };
 }
 

@@ -1,19 +1,19 @@
-import { isSystemAdmin } from '@gymsheet/domain';
+import { isModerator, isSystemAdmin } from '@gymsheet/domain';
 import type { UserRole } from '@gymsheet/types';
-
-/** Personal que atiende un gimnasio concreto; el `COACH` no, porque entrena. */
-const GYM_STAFF_ROLES: readonly UserRole[] = ['ADMIN', 'FRONT_DESK'];
 
 /**
  * El panel de quien no viene a entrenar, o `null` si la persona entrena.
  *
  * Las pantallas de socio (Comunidad, Inicio) abren con una baraja vacía o
  * «aún no tienes membresía» para una cuenta que no las usa: al `SYSTEM_ADMIN`
- * se le manda a `/sistema` y a quien atiende el gimnasio (`ADMIN`,
- * `FRONT_DESK`) a su operación del día.
+ * se le manda a `/sistema` y al equipo de moderación de REPP (`MODERATOR`,
+ * ADR-0018) a su cola.
+ *
+ * Since franja 7a the gym has no staff surfaces: a legacy ADMIN, FRONT_DESK or
+ * COACH account is a person and lands on the person portal like any member.
  */
 export function staffHomeFor(role: UserRole): string | null {
   if (isSystemAdmin(role)) return '/sistema';
-  if (GYM_STAFF_ROLES.includes(role)) return '/admin/operacion';
+  if (isModerator(role)) return '/moderacion';
   return null;
 }

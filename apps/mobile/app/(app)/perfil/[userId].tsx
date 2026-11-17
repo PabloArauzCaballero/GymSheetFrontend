@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { EarnedBadge, ProgressionBadge } from '@gymsheet/schemas';
 import { chatService, moderationService, profileViewsService, socialService } from '@/api/services';
 import { refreshSocialRelationship } from '@/api/social-cache';
+import { connectionOutcomeMessage, isMatchOutcome } from '@gymsheet/domain';
 import { BackLink } from '@/components/nav';
 import { Card, Row, ScrollScreen, Section } from '@/components/layout';
 import { levelTitle } from '@/components/directory-card';
@@ -13,6 +14,7 @@ import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { BadgeTile } from '@/components/progression';
 import { Button } from '@/components/ui';
 import { HeroStats, ProfileHero, plural } from '@/features/profile-hero/profile-hero';
+import { MemberAbout } from '@/features/social-profile/member-about';
 import { CreateTrainingInviteModal } from '@/features/training-invitations/create-training-invite-modal';
 import { notify } from '@/notifications';
 import { initialsOf } from '@/lib/format';
@@ -107,9 +109,10 @@ export default function PerfilDetailScreen() {
 
   const connect = useMutation({
     mutationFn: (addresseeId: string) => socialService.sendConnection(addresseeId),
-    onSuccess: async () => {
-      await refreshSocial();
-      notify.success('Solicitud enviada.');
+    onSuccess: async (connection) => {
+      // A LIKE back is the match: the backend opened the chat in the same step.
+      await refreshSocialRelationship(queryClient, { conversations: isMatchOutcome(connection) });
+      notify.success(connectionOutcomeMessage(connection));
     },
     onError: (error: Error) => notify.error(error.message),
   });
@@ -291,6 +294,8 @@ export default function PerfilDetailScreen() {
           ) : null}
         </Card>
       ) : null}
+
+      <MemberAbout about={entry.about} />
 
       <Section icon="ribbon-outline" title={`Insignias · ${entry.badges.length}`}>
         {entry.badges.length ? (

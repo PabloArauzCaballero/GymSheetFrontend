@@ -1,3 +1,5 @@
+import { businessReportReasons, businessReportTargetKinds, moderationResolutions } from '@gymsheet/domain';
+import { moderationCaseContentFields } from '@gymsheet/schemas';
 import { z } from 'zod';
 import { apiRequest } from '@/shared/api/api-client';
 
@@ -10,6 +12,12 @@ export const moderationTargetKinds = [
   'ROUTINE',
   'EXERCISE',
   'COMMENT',
+  // Public Spotify link: the central queue mixes it with the rest, and an
+  // unknown kind would make the whole queue fail to parse.
+  'MUSIC_PLAYLIST',
+  // Marketplace (ADR-0022, franja 8c): a public listing and a business profile.
+  'BUSINESS_LISTING',
+  'BUSINESS_PROFILE',
 ] as const;
 export type ModerationTargetKind = (typeof moderationTargetKinds)[number];
 
@@ -30,7 +38,13 @@ export const moderationReasons = [
 export type ModerationReason = (typeof moderationReasons)[number];
 
 const TRAINING_REASONS: ModerationReason[] = ['EJERCICIO_PELIGROSO', 'INFORMACION_ENGANOSA', 'PLAGIO'];
+/** Marketplace cases: no sanction ladder (the business is suspended instead). */
+export function isBusinessTarget(kind: ModerationTargetKind): kind is 'BUSINESS_LISTING' | 'BUSINESS_PROFILE' {
+  return (businessReportTargetKinds as readonly string[]).includes(kind);
+}
+
 export function reasonsFor(kind: ModerationTargetKind): ModerationReason[] {
+  if (isBusinessTarget(kind)) return [...businessReportReasons];
   return kind === 'ROUTINE' || kind === 'EXERCISE' || kind === 'COMMENT'
     ? [...moderationReasons]
     : moderationReasons.filter((reason) => !TRAINING_REASONS.includes(reason));
@@ -61,6 +75,9 @@ export const TARGET_LABEL: Record<ModerationTargetKind, string> = {
   ROUTINE: 'Rutina',
   EXERCISE: 'Ejercicio',
   COMMENT: 'Comentario',
+  MUSIC_PLAYLIST: 'Enlace de música',
+  BUSINESS_LISTING: 'Publicación',
+  BUSINESS_PROFILE: 'Perfil de negocio',
 };
 
 /**
@@ -86,6 +103,9 @@ export const moderationCaseSchema = z.object({
   claimed_by_name: z.string().nullable(),
   claimed_at: z.string().nullable(),
   content_hidden: z.boolean().nullish().transform((value) => value ?? false),
+  // The queue is central (ADR-0018): each case names the gym of the content.
+  tenant_id: z.string().nullish().transform((value) => value ?? null),
+  tenant_name: z.string().nullish().transform((value) => value ?? null),
 });
 
 export type ModerationCase = z.infer<typeof moderationCaseSchema>;
@@ -115,12 +135,17 @@ export const moderationCaseDetailSchema = z.object({
     days: z.number().int().nullable(),
   }),
   contentHidden: z.boolean(),
+  tenantId: z.string().nullish().transform((value) => value ?? null),
+  /** The reported target as it is now, hidden or not (backend ADR-0018 §9). */
+  ...moderationCaseContentFields,
 });
 
 export type ModerationCaseDetail = z.infer<typeof moderationCaseDetailSchema>;
 
 const resolveResultSchema = z.object({
   resolved: z.boolean(),
+  tenantId: z.string().nullish().transform((value) => value ?? null),
+  resolution: z.enum(moderationResolutions),
   reportsClosed: z.number().int(),
   sanction: z.object({ kind: z.string(), days: z.number().int().nullable() }).nullable(),
   contentHidden: z.boolean(),
@@ -136,8 +161,11 @@ function casePath(targetKind: ModerationTargetKind, targetId: string) {
   return `/admin/moderation/cases/${targetKind}/${targetId}`;
 }
 
+export type ModerationVerdict = z.infer<typeof resolveResultSchema>;
+
 export const moderationService = {
-  queue: (page = 1, pageSize = 20) =>
+  // 50 is the backend cap: the queue now mixes every gym.
+  queue: (page = 1, pageSize = 50) =>
     apiRequest(
       `/admin/moderation/queue?page=${page}&pageSize=${pageSize}`,
       z.array(moderationCaseSchema),
@@ -164,7 +192,7 @@ export const moderationService = {
   resolve: (
     targetKind: ModerationTargetKind,
     targetId: string,
-    input: { hideContent: boolean; sanction: boolean; note?: string },
+    input: { hideContent: boolean; sanction: boolean; suspendBusiness?: boolean; note?: string },
   ) =>
     apiRequest(`${casePath(targetKind, targetId)}/resolve`, resolveResultSchema, {
       method: 'POST',

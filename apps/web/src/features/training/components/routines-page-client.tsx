@@ -9,9 +9,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { notify } from '@/shared/notifications';
 import { z } from 'zod';
-import { isStaff } from '@gymsheet/domain';
 import { trainingService } from '@/features/training/services/training-service';
-import { routineVisibilities, trainingGoals, type UserRole } from '@/shared/api/contracts';
+import { routineVisibilities, trainingGoals } from '@/shared/api/contracts';
 import { queryKeys } from '@/shared/api/query-keys';
 import { publicEnv } from '@/shared/config/public-env';
 import { EmptyState } from '@/shared/components/feedback/empty-state';
@@ -43,9 +42,8 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
+export function RoutinesPageClient() {
   const router = useRouter();
-  const staff = isStaff(role);
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const mine = useQuery({ queryKey: queryKeys.routines('mine'), queryFn: () => trainingService.list('mine') });
@@ -142,7 +140,6 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
                         <Select id="routine-visibility" {...form.register('visibilidad')}>
                           <option value="PRIVATE">Privada</option>
                           <option value="SHARED">Compartida</option>
-                          {staff ? <option value="TEMPLATE">Plantilla</option> : null}
                         </Select>
                       </Field>
                       <Field htmlFor="routine-goal" label="Objetivo">
@@ -175,15 +172,11 @@ export function RoutinesPageClient({ role }: Readonly<{ role: UserRole }>) {
             )}
           </div>
         }
-        description={
-          staff
-            ? 'Construye planes reutilizables y asígnalos a tus clientes con programación.'
-            : 'Construye tus planes de entrenamiento reutilizables.'
-        }
+        description="Construye tus planes de entrenamiento reutilizables."
         title="Rutinas"
       />
-      {/* Repi: qué toca hoy (solo a quien entrena; el staff no tiene racha que cuidar). */}
-      {staff ? null : <RepiCard here="routines" />}
+      {/* Repi: qué toca hoy. */}
+      <RepiCard here="routines" />
 
       {/* Como el móvil: sin nada asignado no hay semana que enseñar (y un «Hoy: descanso»
           desmentía a Repi, que con la semana vacía cuenta cualquier día como día de entreno). */}

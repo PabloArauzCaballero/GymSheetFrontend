@@ -22,6 +22,8 @@ import Animated, {
 import type { GymDirectoryEntry } from '@gymsheet/schemas';
 import { Card, Row, Section } from '@/components/layout';
 import { levelTitle } from '@/components/directory-card';
+import { hasAbout } from '@/features/social-profile/about-facts';
+import { MemberAbout } from '@/features/social-profile/member-about';
 import {
   EXPERIENCE_LEVEL_LABEL,
   GENDER_LABEL,
@@ -57,9 +59,9 @@ type DetailSection = {
  * Las secciones que la persona ha rellenado. Nada más.
  *
  * Una sección vacía con un guion dentro no informa de nada y deja la hoja llena
- * de huecos esperando datos que este backend no tiene: aquí no hay biografía,
- * ni ubicación, ni distancia, ni intereses, así que tampoco hay sitios
- * reservados para ellos.
+ * de huecos esperando datos que este backend no tiene: aquí no hay ubicación
+ * ni distancia, así que tampoco hay sitios reservados para ellos.
+ * (Bio, interests and habits come from `about` and render in `MemberAbout`.)
  */
 function sectionsOf(entry: GymDirectoryEntry): DetailSection[] {
   const training: DetailSection['rows'] = [];
@@ -345,6 +347,8 @@ export function ProfileDetailSheet({
               );
             })}
 
+            <MemberAbout about={shown?.about} />
+
             {/* Las secciones que no llegaron a intercalarse —menos fotos que
                 bloques— van seguidas al final, en el mismo orden. */}
             {sections.slice(photos.length).map((section, position) => (
@@ -355,7 +359,7 @@ export function ProfileDetailSheet({
               />
             ))}
 
-            {photos.length === 0 && sections.length === 0 ? (
+            {photos.length === 0 && sections.length === 0 && !hasAbout(shown?.about) ? (
               <Text
                 style={{
                   color: colors.textMuted,

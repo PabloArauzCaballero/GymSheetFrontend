@@ -9,7 +9,7 @@ import { PlanPanel } from './plan-panel';
 import { StaffPanel } from './staff-panel';
 
 export function MembershipAdmin({ role }: Readonly<{ role: UserRole }>) {
-  const admin = role === 'ADMIN';
+  const admin = role === 'SYSTEM_ADMIN';
   return (
     <div className="grid gap-8">
       <PageHeader

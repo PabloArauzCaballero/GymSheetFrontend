@@ -16,7 +16,6 @@ export const CHAT_ROW_TEXT_INSET = AVATAR_SIZE + AVATAR_TEXT_GAP;
 /** `null` para un chat normal — sin distintivo. */
 const SYSTEM_KIND_ICON: Record<NonNullable<ConversationSummary['systemKind']>, keyof typeof Ionicons.glyphMap> = {
   CORPORATE: 'business',
-  TENANT_ADMIN: 'shield-checkmark',
 };
 
 /**

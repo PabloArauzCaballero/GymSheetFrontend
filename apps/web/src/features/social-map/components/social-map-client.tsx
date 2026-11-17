@@ -10,6 +10,12 @@ import { socialService } from '@/features/social/services/social-service';
 import { publicFacilitiesClient } from '@/features/public-facilities/services/public-facilities-client';
 import type { SocialMapBounds } from '@/shared/api/schemas';
 import { mapMarkerColors } from '@/shared/theme/map-marker-colors';
+import { isEmailVerificationRequired } from '@/shared/api/email-verification';
+import { EmailVerificationRequired } from '@/shared/components/feedback/email-verification-required';
+import { connectionOutcomeMessage, isMatchOutcome, isSocialMapDisabled } from '@gymsheet/domain';
+import { notify } from '@/shared/notifications';
+import { queryKeys } from '@/shared/api/query-keys';
+import { SocialMapDisabled } from './social-map-disabled';
 
 type Layer = 'BOTH' | 'PEOPLE' | 'GYMS';
 const MAP_TILE_URL = process.env.NEXT_PUBLIC_MAP_TILE_URL ||
@@ -75,7 +81,15 @@ export function SocialMapClient({ viewerId }: Readonly<{ viewerId: string }>) {
   });
   const connect = useMutation({
     mutationFn: (userId: string) => socialService.sendConnection(userId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['social-map', viewerId, 'people', cellId] }),
+    // A LIKE back is the match: the backend opens the chat in the same step.
+    onSuccess: (connection) => {
+      // Same feedback as the directory and the profile: a match says so.
+      notify.success(connectionOutcomeMessage(connection));
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['social-map', viewerId, 'people', cellId] }),
+        isMatchOutcome(connection) ? queryClient.invalidateQueries({ queryKey: queryKeys.conversations }) : null,
+      ]);
+    },
   });
 
   const visibleGyms = useMemo(() => {
@@ -87,6 +101,14 @@ export function SocialMapClient({ viewerId }: Readonly<{ viewerId: string }>) {
         longitud >= searchedBounds.west && longitud <= searchedBounds.east;
     });
   }, [registeredGyms.data, searchedBounds]);
+
+  // The whole map API is closed until the email is verified: show that step, not three errors.
+  if ([areas, people, cities].some((query) => isEmailVerificationRequired(query.error))) {
+    return <main className="grid gap-5"><EmailVerificationRequired /></main>;
+  }
+
+  // The viewer does not share, so the server shows them nobody; gyms stay visible.
+  const mapClosed = [areas, people].some((query) => isSocialMapDisabled(query.error));
 
   return (
     <main className="grid gap-5">
@@ -165,7 +187,9 @@ export function SocialMapClient({ viewerId }: Readonly<{ viewerId: string }>) {
         </div>
 
         <aside aria-live="polite" className="max-h-[min(68vh,46rem)] overflow-y-auto rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-low)] p-5">
-          {cellId ? (
+          {mapClosed ? (
+            <SocialMapDisabled />
+          ) : cellId ? (
             <>
               <button className="mb-4 text-sm text-[var(--accent-ink)]" onClick={() => setCellId(null)} type="button">← Todas las zonas</button>
               <h2 className="mb-4 text-lg font-semibold">Personas en esta zona</h2>

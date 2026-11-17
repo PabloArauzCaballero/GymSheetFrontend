@@ -7,6 +7,7 @@ import { PressableScale } from '@/components/motion';
 import { profilePhotosService } from '@/api/services';
 import { Card, Section } from '@/components/layout';
 import { ErrorState, Skeleton } from '@/components/feedback';
+import { refreshDiscoveryReadiness } from '@/features/social-profile/query-keys';
 import { notify } from '@/notifications';
 import { colors, iconSizes, ink, overlay, radii, spacing } from '@/theme';
 
@@ -30,7 +31,10 @@ export function ProfilePhotoGallery() {
     mutationFn: (file: { uri: string; name: string; mimeType: string }) =>
       profilePhotosService.upload(file),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['profile', 'photos'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['profile', 'photos'] }),
+        refreshDiscoveryReadiness(queryClient),
+      ]);
       notify.success('Foto agregada.');
     },
     onError: (error: Error) => notify.error(error),
@@ -39,7 +43,10 @@ export function ProfilePhotoGallery() {
   const remove = useMutation({
     mutationFn: (photoId: string) => profilePhotosService.remove(photoId),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['profile', 'photos'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['profile', 'photos'] }),
+        refreshDiscoveryReadiness(queryClient),
+      ]);
       notify.success('Foto eliminada.');
     },
     onError: (error: Error) => notify.error(error),

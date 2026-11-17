@@ -2,7 +2,7 @@
 
 import { motion, useMotionValue, useReducedMotion, useTransform } from 'framer-motion';
 import { useState } from 'react';
-import type { GymDirectoryEntry, SwipeDirection } from '@/shared/api/schemas';
+import type { DiscoveryCard, SwipeDirection } from '@/shared/api/schemas';
 import { DirectoryCardFace, galleryOf } from './directory-card-face';
 
 /** Umbral de arrastre que confirma la decisión, en píxeles. */
@@ -27,7 +27,7 @@ export function SwipeCard({
   onDecide,
   onInfo,
 }: Readonly<{
-  entry: GymDirectoryEntry;
+  entry: DiscoveryCard;
   position: number;
   onDecide: (direction: SwipeDirection) => void;
   onInfo: () => void;
@@ -75,6 +75,7 @@ export function SwipeCard({
           setPhotoIndex((value) => Math.min(Math.max(value + delta, 0), photoCount - 1))
         }
         photoIndex={photoIndex}
+        ranking={entry}
       />
       {isTop ? (
         <>

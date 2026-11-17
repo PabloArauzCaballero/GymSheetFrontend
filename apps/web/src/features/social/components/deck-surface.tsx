@@ -16,6 +16,7 @@ import { DiscoveryPreferencesCard } from './discovery-preferences-card';
 export function DeckSurface({
   children,
   deckError,
+  deckErrorCause,
   empty,
   emptyAction,
   loading,
@@ -24,6 +25,8 @@ export function DeckSurface({
 }: Readonly<{
   children: ReactNode;
   deckError: string | null;
+  /** The deck query error; a 403 EMAIL_VERIFICATION_REQUIRED shows the verify step. */
+  deckErrorCause?: unknown;
   empty: boolean;
   emptyAction: ReactNode;
   loading: boolean;
@@ -59,7 +62,7 @@ export function DeckSurface({
       </section>
     );
   }
-  if (deckError) return <ErrorPanel message={deckError} onRetry={onRefetch} />;
+  if (deckError) return <ErrorPanel error={deckErrorCause} message={deckError} onRetry={onRefetch} />;
   if (empty) {
     return (
       <EmptyState

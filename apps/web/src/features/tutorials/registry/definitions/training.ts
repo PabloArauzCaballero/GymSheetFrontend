@@ -114,42 +114,9 @@ export const routinesAndPlans: TutorialDefinition = {
     {
       id: 'plans',
       title: 'Tus planes',
-      description: 'En “Mis planes” ves las rutinas que un coach te asignó.',
+      description: 'En “Mis planes” ves las rutinas que tienes asignadas.',
       target: 'nav:/plans',
       placement: 'right',
-    },
-  ],
-};
-
-export const coachAssignments: TutorialDefinition = {
-  id: 'coach-assignments',
-  version: '1.0.0',
-  title: 'Asignar rutinas a clientes',
-  description: 'Guía específica para entrenadores.',
-  category: 'TRAINING',
-  difficulty: 'ADVANCED',
-  estimatedMinutes: 3,
-  roles: ['COACH', 'ENTRENADOR_EXTERNO'],
-  prerequisites: ['routines-plans'],
-  route: '/routines',
-  steps: [
-    {
-      id: 'open',
-      title: 'Abre Rutinas',
-      description: 'Como entrenador, gestionas rutinas y sus asignaciones desde aquí.',
-      target: 'nav:/routines',
-      advanceOn: { type: 'click' },
-      expectedAction: 'Abre “Rutinas”.',
-      placement: 'right',
-    },
-    {
-      id: 'assign',
-      title: 'Asigna a un cliente',
-      description:
-        'Crea una rutina y, desde su detalle, asígnala a un cliente. La asignación aparecerá en sus planes.',
-      route: '/routines',
-      target: 'routines:actions',
-      placement: 'bottom',
     },
   ],
 };

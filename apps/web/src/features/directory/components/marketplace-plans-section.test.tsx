@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { EntityPaymentConfig, EntityPlan } from '@gymsheet/schemas';
+import type { PublicPaymentConfig, EntityPlan } from '@gymsheet/schemas';
 import { MarketplacePlansSection } from './marketplace-plans-section';
 
 describe('MarketplacePlansSection', () => {
@@ -21,10 +21,9 @@ describe('MarketplacePlansSection', () => {
     metadata: {},
   };
 
-  const mockPaymentConfig: EntityPaymentConfig = {
+  const mockPaymentConfig: PublicPaymentConfig = {
     bankName: 'Banco Nacional',
     accountHolderName: 'Gimnasio Central SRL',
-    taxId: '1029384756',
     accountNumber: '1234-5678-9012',
     aliasOrPhone: 'gimnasio.central',
     qrImageUrl: 'https://cdn.gymsheet.com/qr/sample.png',

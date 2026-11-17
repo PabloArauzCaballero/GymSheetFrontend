@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchExternalMedia } from './media-proxy';
+import { fetchExternalMedia, fetchTrustedMedia } from './media-proxy';
 
 // La resolución DNS es la guardia anti-SSRF del módulo: se controla desde aquí
 // para poder decidir si un host «externo» apunta a la red interna o no.
@@ -105,5 +105,26 @@ describe('fetchExternalMedia', () => {
       status: 400,
     });
     expect(responder).not.toHaveBeenCalled();
+  });
+
+  it('refuses the backend local media mount as an external URL', async () => {
+    const responder = upstream(null, 200, {});
+    await expect(fetchExternalMedia('http://localhost:3001/media/a.png')).resolves.toEqual({ ok: false, status: 400 });
+    expect(responder).not.toHaveBeenCalled();
+  });
+});
+
+describe('fetchTrustedMedia', () => {
+  it('reads the backend local media mount and keeps the type check', async () => {
+    const responder = upstream(new Uint8Array([7, 8]), 200, { 'content-type': 'image/png' });
+
+    const result = await fetchTrustedMedia(new URL('http://localhost:3001/media/a.png'));
+
+    expect(result).toMatchObject({ ok: true, status: 200, contentType: 'image/png' });
+    expect(lookup).not.toHaveBeenCalled();
+    expect(String(responder.mock.calls[0]?.[0])).toBe('http://localhost:3001/media/a.png');
+
+    upstream('<html>', 200, { 'content-type': 'text/html' });
+    await expect(fetchTrustedMedia(new URL('http://localhost:3001/media/b.png'))).resolves.toEqual({ ok: false, status: 415 });
   });
 });

@@ -8,6 +8,7 @@ import { DomainImage } from '@/shared/components/media/domain-image';
 import { PersonAvatar } from '@/shared/components/media/person-avatar';
 import { chipHeartbeat } from '@/shared/components/ui/badge';
 import { levelTitle } from './directory-labels';
+import { SocialAboutSection } from './about/social-about-section';
 import { DetailSectionBlock, detailSectionsOf } from './member-detail-sheet';
 import { socialStatusLabels } from './social-status-labels';
 
@@ -73,6 +74,8 @@ export function MemberProfileBody({
           ))}
         </div>
       ) : null}
+
+      <SocialAboutSection about={member.about} />
 
       {sections.map((section) => (
         <DetailSectionBlock key={section.key} section={section} />

@@ -5,6 +5,6 @@ import { requireRole } from '@/shared/server/session';
 export const metadata: Metadata = { title: 'Administrar equipamiento' };
 
 export default async function EquipmentAdminPage() {
-  const session = await requireRole(['ADMIN', 'FRONT_DESK']);
-  return <EquipmentAdmin canManage={session.role === 'ADMIN'} />;
+  const session = await requireRole(['SYSTEM_ADMIN']);
+  return <EquipmentAdmin canManage={session.role === 'SYSTEM_ADMIN'} />;
 }

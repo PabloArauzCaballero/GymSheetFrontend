@@ -16,6 +16,7 @@ import {
   crearRutina,
   empujeCuatroDias,
   etiquetaUnica,
+  promover,
   publicarRutina,
   sql,
 } from './rutinas-datos';
@@ -90,15 +91,10 @@ for (const combo of combos) {
       await expect(bruna.page.getByText('Gracias. Lo revisaremos.')).toBeVisible();
       await evidencia(bruna.page, 'RF-12', '04b', 'denuncia-enviada');
 
-      // RF-12 · p05 y p06: el administrador del gimnasio lo ve en la cola y oculta el ejercicio.
-      const admin = await abrirSegundo(browser, baseURL, combo, {
-        id: '',
-        email: process.env.E2E_ADMIN_EMAIL ?? 'admin@gymsheet.local',
-        password: process.env.E2E_ADMIN_PASSWORD ?? 'AdminLocal2026!',
-        nombre: 'Admin',
-        token: '',
-      });
-      await admin.page.goto('/admin/moderacion');
+      // RF-12 · p05 y p06: el equipo de moderación de REPP lo ve en la cola central y oculta el ejercicio.
+      const moderadora = await promover(await crearCuenta('moderadora', `Moderadora ${tag}`), 'MODERATOR');
+      const admin = await abrirSegundo(browser, baseURL, combo, moderadora);
+      await admin.page.goto('/moderacion');
       const filaDelCaso = admin.page.getByRole('button').filter({ hasText: `Ana ${tag}` }).filter({ hasText: 'Ejercicio peligroso' });
       const caso = filaDelCaso.first();
       await expect(caso).toBeVisible();

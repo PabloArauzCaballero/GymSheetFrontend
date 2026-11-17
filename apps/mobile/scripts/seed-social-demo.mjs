@@ -122,6 +122,23 @@ async function login({ email, password }) {
  * y ese es el camino normal de la segunda ejecución: se reutiliza la cuenta en
  * vez de romper la siembra.
  */
+let versionTerminos;
+
+/** Current terms version (`GET /legal/current`): signup requires it and rejects a stale one. */
+async function terminosVigentes() {
+  versionTerminos ??= request("GET", "/legal/current").then((data) => {
+    const terms = data.documents?.find((entry) => entry.document === "TERMS");
+    if (!terms) throw new Error("GET /legal/current no trae la versión de TERMS.");
+    return terms.version;
+  });
+  return versionTerminos;
+}
+
+/** 1 January of the year that gives exactly `edad` today (the backend requires 18–100). */
+function nacimientoPara(edad) {
+  return `${new Date().getFullYear() - edad}-01-01`;
+}
+
 async function registrarOEntrar(socio) {
   try {
     const data = await request("POST", "/auth/register", {
@@ -131,6 +148,8 @@ async function registrarOEntrar(socio) {
         nombreCompleto: socio.nombre,
         tenantId: TENANT_ID,
         genero: socio.genero,
+        fechaNacimiento: nacimientoPara(socio.edad),
+        termsVersion: await terminosVigentes(),
         // Obligatorio y literal `true` en el schema: sin esto el alta no pasa.
         acceptedTerms: true,
       },

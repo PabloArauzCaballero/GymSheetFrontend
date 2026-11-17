@@ -72,4 +72,21 @@ describe('NotificationEngine', () => {
     expect(shown[1]!.severity).toBe('error');
     expect(shown[1]!.message).toBe('No tienes permisos para realizar esta acción.');
   });
+  it('never toasts a legal-acceptance block: the legal screen explains it', () => {
+    const { adapter, shown } = fakeAdapter();
+    const engine = new NotificationEngine(adapter);
+    engine.error(new ApiError({ message: 'x', status: 428, kind: 'unexpected', code: 'LEGAL_ACCEPTANCE_REQUIRED' }));
+    engine.error(new ApiError({ message: 'x', status: 428, kind: 'unexpected' }));
+    expect(shown).toHaveLength(0);
+  });
+
+  it('promise() dismisses its loading toast on a legal block instead of turning it into an error', async () => {
+    const { adapter, shown } = fakeAdapter();
+    const blocked = new ApiError({ message: 'x', status: 428, kind: 'unexpected', code: 'LEGAL_ACCEPTANCE_REQUIRED' });
+    await expect(
+      new NotificationEngine(adapter).promise(Promise.reject(blocked), { loading: 'Guardando…', success: 'Ok.', error: 'Falló.' }),
+    ).rejects.toBe(blocked);
+    expect(shown.map((r) => r.severity)).toEqual(['info']);
+    expect(adapter.dismiss).toHaveBeenCalledWith(shown[0]!.id ?? 1);
+  });
 });

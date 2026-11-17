@@ -68,7 +68,7 @@ export function MemberProfileClient({ userId }: Readonly<{ userId: string }>) {
           <Skeleton className="h-28 w-full rounded-[var(--radius-lg)]" />
         </SkeletonScreen>
       ) : profile.isError ? (
-        <ErrorPanel message={profile.error.message} onRetry={() => profile.refetch()} />
+        <ErrorPanel error={profile.error} message={profile.error.message} onRetry={() => profile.refetch()} />
       ) : profile.data ? (
         <>
           <MemberProfileBody member={profile.data} />

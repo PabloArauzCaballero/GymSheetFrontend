@@ -161,6 +161,7 @@ export function LikesPanel({ counts }: Readonly<{ counts: InteractionCounts | nu
             : 'Entra en Descubrir y desliza a la derecha a quien te interese; tus likes pendientes se listan aquí.'
         }
         emptyTitle={scope === 'received' ? 'Todavía nadie' : 'No enviaste ningún like'}
+        error={active.error}
         errorMessage={active.isError ? active.error.message : null}
         loading={active.isLoading}
         onRetry={() => active.refetch()}

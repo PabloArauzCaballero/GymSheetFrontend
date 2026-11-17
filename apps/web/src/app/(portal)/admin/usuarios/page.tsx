@@ -6,7 +6,13 @@ import { requireRole } from '@/shared/server/session';
 export const metadata: Metadata = { title: 'Usuarios' };
 
 export default async function UsuariosPage() {
-  const session = await requireRole(['ADMIN', 'FRONT_DESK']);
+  const session = await requireRole(['SYSTEM_ADMIN']);
   // El enlace a la ficha de entrenamiento sólo aparece a quien puede abrirla.
-  return <UsersPanel canViewTraining={hasPermission(session.permissions, 'support:read')} />;
+  // Closing a staff account is SYSTEM_ADMIN-only in the backend (franja 7a); the UI only mirrors it.
+  return (
+    <UsersPanel
+      canViewTraining={hasPermission(session.permissions, 'support:read')}
+      closure={session.role === 'SYSTEM_ADMIN' ? { callerId: session.id } : undefined}
+    />
+  );
 }

@@ -7,6 +7,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { LogBox, View } from 'react-native';
 import { BrandIntro, useBrandIntroPending } from '@/components/brand-intro';
+import { LegalGate } from '@/features/legal/legal-gate';
 import { AppProviders } from '@/providers/app-providers';
 import { useAuthStore } from '@/state/auth-store';
 import { colors, useActiveTenant } from '@/theme';
@@ -85,7 +86,11 @@ export default function RootLayout() {
           >
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(app)" />
+            {/* Business accounts (ADR-0020): their own shell, never the person tabs. */}
+            <Stack.Screen name="(business)" />
           </Stack>
+          {/* Above every screen and every role: the API blocks all calls with 428 until accepted. */}
+          <LegalGate />
         </AppProviders>
       ) : null}
 

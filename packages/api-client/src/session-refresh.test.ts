@@ -49,3 +49,37 @@ describe('renovación de sesión tras un 401', () => {
     expect(onUnauthorized).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('cuenta suspendida (401 ACCOUNT_SUSPENDED)', () => {
+  const suspended = () =>
+    new Response(
+      JSON.stringify({
+        code: 'ACCOUNT_SUSPENDED',
+        detail: 'Tu cuenta está suspendida mientras revisamos un reporte.',
+        details: { pendingReview: true },
+      }),
+      { status: 401 },
+    );
+
+  it('no renueva ni cierra como sesión caducada: rechaza con el código y avisa una vez', async () => {
+    const fetchImpl = vi.fn(async () => suspended());
+    const refreshSession = vi.fn(async () => true);
+    const onUnauthorized = vi.fn();
+    const onAccountSuspended = vi.fn();
+    const client = createApiClient({
+      baseUrl: 'https://api.test',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      refreshSession,
+      onUnauthorized,
+      onAccountSuspended,
+    });
+    await expect(client.request('/auth/me', z.unknown())).rejects.toMatchObject({
+      code: 'ACCOUNT_SUSPENDED',
+      details: { pendingReview: true },
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(refreshSession).not.toHaveBeenCalled();
+    expect(onUnauthorized).not.toHaveBeenCalled();
+    expect(onAccountSuspended).toHaveBeenCalledTimes(1);
+  });
+});

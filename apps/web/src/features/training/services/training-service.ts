@@ -41,13 +41,6 @@ export type RoutineExerciseInput = {
   nota?: string | null;
 };
 
-export type AssignRoutineInput = {
-  clienteUsuarioId: string;
-  fechaProgramada?: string | null;
-  diasSemana?: number[];
-  nota?: string | null;
-};
-
 export type ScheduleRoutineInput = {
   diasSemana: number[];
   repiteDesde: string;
@@ -86,11 +79,6 @@ export const trainingService = {
     apiRequest<Routine>(`/routines/exercises/${routineExerciseId}`, routineSchema, {
       method: 'DELETE',
     }),
-  assign: (routineId: string, input: AssignRoutineInput) =>
-    apiRequest<RoutineAssignment>(`/routines/${routineId}/assign`, routineAssignmentSchema, {
-      method: 'POST',
-      body: input,
-    }),
   schedule: (routineId: string, input: ScheduleRoutineInput) =>
     apiRequest<RoutineAssignment>(`/routines/${routineId}/schedule`, routineAssignmentSchema, {
       method: 'POST',
@@ -104,8 +92,6 @@ export const trainingService = {
     }),
   myAssignments: () =>
     apiRequest<RoutineAssignment[]>('/routines/assignments/me', assignmentListSchema),
-  coachAssignments: () =>
-    apiRequest<RoutineAssignment[]>('/routines/assignments/coach', assignmentListSchema),
   import: (rutinas: ImportRoutinePayload[]) =>
     apiRequest<ImportRoutinesResponse>('/routines/import', importRoutinesResponseSchema, {
       method: 'POST',

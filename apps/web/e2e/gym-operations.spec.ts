@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import { admin, signIn } from './fixtures';
+import { signInOperatingGym } from './fixtures';
 
 /**
  * Lo añadido al portal para operar un gimnasio: el panel de operación, el
@@ -29,8 +29,9 @@ async function shot(page: Page, name: string) {
   });
 }
 
+/** Franja 7a: gym administration is the platform admin's, operating the seeded gym. */
 async function loginAsAdmin(page: Page) {
-  await signIn(page, admin);
+  await signInOperatingGym(page);
 }
 
 /**
@@ -140,11 +141,12 @@ test.describe('Operación del gimnasio', () => {
     await shot(page, 'activacion-enlace-invalido');
   });
 
-  test('el tutorial de puesta en marcha está disponible para administración', async ({
+  // Franja 7a: the gym self-setup tour left with the gym staff; REPP's admin has its own.
+  test('el tutorial de operación está disponible para la administración de REPP', async ({
     page,
   }) => {
     await open(page, '/tutorials');
-    await expect(page.getByText('Poner en marcha tu gimnasio')).toBeVisible({
+    await expect(page.getByText('Operar un gimnasio')).toBeVisible({
       timeout: 20_000,
     });
     await shot(page, 'tutorial-onboarding');

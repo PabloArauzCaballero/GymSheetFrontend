@@ -1,10 +1,19 @@
 import { CloudOff, RefreshCw } from 'lucide-react';
+import { isEmailVerificationRequired } from '@/shared/api/email-verification';
 import { Button } from '@/shared/components/ui/button';
+import { EmailVerificationRequired } from './email-verification-required';
 
 export function ErrorPanel({
   message,
   onRetry,
-}: Readonly<{ message: string; onRetry?: () => void }>) {
+  error,
+}: Readonly<{
+  message: string;
+  onRetry?: () => void;
+  /** The failure itself: a 403 EMAIL_VERIFICATION_REQUIRED becomes the «verify» step. */
+  error?: unknown;
+}>) {
+  if (isEmailVerificationRequired(error)) return <EmailVerificationRequired />;
   return (
     // `ErrorState` del móvil: la misma tarjeta centrada que el vacío, con la
     // nube desconectada, y «Reintentar» en secundario —reintentar no es la

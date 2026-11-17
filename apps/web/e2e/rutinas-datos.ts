@@ -8,7 +8,7 @@
  *
  * `BACKEND_API_URL`/`E2E_BACKEND_URL`: la dirección del backend (con `/api/v1`).
  */
-const BACKEND = process.env.E2E_BACKEND_URL ?? process.env.BACKEND_API_URL ?? 'http://localhost:3011/api/v1';
+import { BACKEND, signupBody } from './alta-datos';
 
 export const PASSWORD = 'QaRutinas2026!';
 
@@ -67,12 +67,7 @@ export function apiDe(cuenta: Pick<Cuenta, 'token'>): Api {
 /** Registra una cuenta de socio, termina su alta y devuelve un token. */
 export async function crearCuenta(etiqueta: string, nombre: string): Promise<Cuenta> {
   const email = `qa.${etiqueta}.${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}@gymsheet.local`;
-  const registro = await llamar('POST', '/auth/register', {
-    email,
-    password: PASSWORD,
-    nombreCompleto: nombre,
-    acceptedTerms: true,
-  });
+  const registro = await llamar('POST', '/auth/register', await signupBody({ email, password: PASSWORD, nombreCompleto: nombre }));
   if (registro.status !== 201) throw new Error(`Registro rechazado (${registro.status}).`);
   const login = await llamar<{ accessToken: string; user: { id: string } }>('POST', '/auth/login', {
     email,
@@ -281,12 +276,11 @@ export function empujeCuatroDias(nombre: string, extra: Partial<RutinaSemilla> =
 }
 
 /**
- * Promueve una cuenta a `SYSTEM_ADMIN` directamente en la base (no hay otra forma
- * de crear uno) y vuelve a iniciar sesión para que el token lleve el rol nuevo.
- * Solo para la base desechable de pruebas.
+ * Promueve una cuenta a un rol de plataforma (`SYSTEM_ADMIN` o `MODERATOR`, ADR-0018) en la base
+ * y vuelve a iniciar sesión para que el token lleve el rol nuevo. Solo para la base desechable.
  */
-export async function promoverASistema(cuenta: Cuenta): Promise<Cuenta> {
-  await sql(`UPDATE public.usuarios SET rol='SYSTEM_ADMIN' WHERE id='${cuenta.id}'`);
+export async function promover(cuenta: Cuenta, rol: 'SYSTEM_ADMIN' | 'MODERATOR'): Promise<Cuenta> {
+  await sql(`UPDATE public.usuarios SET rol='${rol}' WHERE id='${cuenta.id}'`);
   const login = await llamar<{ accessToken: string }>('POST', '/auth/login', {
     email: cuenta.email,
     password: cuenta.password,
@@ -455,13 +449,22 @@ export async function sesionDeCardio<T = unknown>(
 }
 
 /**
- * Inicia sesión como el administrador de gimnasio sembrado (`admin@gymsheet.local`). Sirve para
- * las herramientas de soporte (`recompute-week`) y la cola de moderación.
+ * Inicia sesión como el administrador de plataforma sembrado (`SEED_ADMIN_*`, `admin@gymsheet.local`)
+ * y opera el gimnasio indicado (`POST /auth/impersonate-tenant`), como hace «Elegir gimnasio» en
+ * `/sistema`. Sirve para las herramientas de soporte (`recompute-week`): desde la franja 7a el
+ * personal del gimnasio ya no administra nada.
  */
-export async function adminDeGimnasio(): Promise<Api> {
+export async function adminDePlataforma(gimnasio = process.env.E2E_TENANT_ID ?? 'default'): Promise<Api> {
   const login = await llamar<{ accessToken: string }>('POST', '/auth/login', {
     email: process.env.E2E_ADMIN_EMAIL ?? 'admin@gymsheet.local',
     password: process.env.E2E_ADMIN_PASSWORD ?? 'AdminLocal2026!',
   });
-  return apiDe({ token: login.data.accessToken });
+  const operando = await llamar<{ accessToken: string }>(
+    'POST',
+    '/auth/impersonate-tenant',
+    { tenantId: gimnasio },
+    login.data.accessToken,
+  );
+  if (operando.status >= 300) throw new Error(`No se pudo operar el gimnasio ${gimnasio} (${operando.status}).`);
+  return apiDe({ token: operando.data.accessToken });
 }

@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { apiRequest } from '@/shared/api/api-client';
 import type {
-  GymDirectoryEntry,
+  DiscoveryCard,
   SwipeDirection,
   SwipeResult,
   UndoSwipeResult,
 } from '@/shared/api/schemas';
 import {
-  gymDirectoryEntrySchema,
+  discoveryDeckSchema,
   swipeResultSchema,
   undoSwipeResultSchema,
 } from '@/shared/api/schemas';
@@ -31,11 +31,11 @@ export type DeckFilters = Pick<DirectoryFilters, 'objetivo' | 'sucursalId' | 'li
  * se evaporaba al recargar.
  */
 export const discoveryService = {
-  /** Candidatos sin decidir. El backend acota `limit`; por defecto trae 10. */
+  /** Candidatos sin decidir, con sus razones y distancia. El backend acota `limit`; por defecto trae 10. */
   deck: (filters: DeckFilters = {}) =>
-    apiRequest<GymDirectoryEntry[]>(
+    apiRequest<DiscoveryCard[]>(
       `/me/discovery/deck?${directoryQueryString(filters)}`,
-      z.array(gymDirectoryEntrySchema),
+      discoveryDeckSchema,
     ),
   observeImpression: (impressionId: string) =>
     apiRequest<{ observed: true }>(

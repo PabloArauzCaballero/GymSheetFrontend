@@ -2,19 +2,20 @@ import type { TutorialDefinition } from '../../model/types';
 
 export const adminOperations: TutorialDefinition = {
   id: 'admin-operations',
-  version: '1.0.0',
-  title: 'Panel de operaciones',
-  description: 'Guía para administración y recepción.',
+  version: '2.0.0',
+  title: 'Operar un gimnasio',
+  description: 'Guía para la administración de REPP.',
   category: 'ADMIN',
   difficulty: 'INTERMEDIATE',
   estimatedMinutes: 3,
-  roles: ['ADMIN', 'FRONT_DESK'],
+  roles: ['SYSTEM_ADMIN'],
   route: '/admin',
   steps: [
     {
       id: 'open',
       title: 'Abre Operaciones',
-      description: 'El panel de administración reúne equipamiento, clientes, instalaciones y accesos.',
+      description:
+        'Elige en Sistema el gimnasio que vas a operar. Mientras lo operas, la franja de arriba te lo recuerda en cada página.',
       target: 'nav:/admin',
       advanceOn: { type: 'click' },
       expectedAction: 'Abre “Operaciones”.',
@@ -22,9 +23,9 @@ export const adminOperations: TutorialDefinition = {
     },
     {
       id: 'overview',
-      title: 'Superficie por rol',
+      title: 'Los módulos del gimnasio',
       description:
-        'Cada módulo respeta los permisos del backend. FRONT_DESK ve y ejecuta solo lo autorizado; ADMIN gestiona todo.',
+        'Equipamiento, clientes, instalaciones y accesos del gimnasio que operas. Pulsa «Salir» en la franja para volver a toda la plataforma.',
       route: '/admin',
       target: 'page:admin',
       placement: 'bottom',

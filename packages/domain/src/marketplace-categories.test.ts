@@ -1,22 +1,29 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_MARKETPLACE_FILTERS, filterPlans, hasActiveFilters } from './marketplace-categories';
+import { DEFAULT_MARKETPLACE_FILTERS, MARKETPLACE_CATEGORIES, categoryById, filterEntities, hasActiveFilters } from './marketplace-categories';
 
-const plan = (name: string, price: string, type: string, rating: number, path = 'tiendas.nutricion') => ({
-  type,
+const seller = (name: string, entityType: string, rating: number, path = 'tiendas.nutricion', isVerified = true) => ({
   name,
-  description: '',
-  currentPrice: price,
-  entity: { entityType: 'STORE', name: 'T', ratingAverage: rating, isVerified: true, primaryCategory: { path } },
+  entityType,
+  ratingAverage: rating,
+  isVerified,
+  primaryCategory: { path },
 });
 
-describe('filterPlans', () => {
-  const items = [plan('A', '30', 'PRODUCT', 4.8), plan('B', '10', 'PRODUCT', 4.1), plan('C', '20', 'PASS', 4.9, 'gimnasios')];
-  it('ordena por precio y filtra por puntaje', () => {
-    expect(filterPlans(items, { ...DEFAULT_MARKETPLACE_FILTERS, sort: 'price-asc' }).map((p) => p.name)).toEqual(['B', 'C', 'A']);
-    expect(filterPlans(items, { ...DEFAULT_MARKETPLACE_FILTERS, topRated: true }).map((p) => p.name)).toEqual(['A', 'C']);
-  });
-  it('filtra por categoría de vendedor', () => {
-    expect(filterPlans(items, { ...DEFAULT_MARKETPLACE_FILTERS, category: 'supplements' }).map((p) => p.name)).toEqual(['A', 'B']);
+describe('filterEntities', () => {
+  const items = [seller('A', 'STORE', 4.8), seller('B', 'STORE', 4.1, 'tiendas.indumentaria', false), seller('C', 'GYM', 4.9, 'gimnasios')];
+  it('filtra por categoría, puntaje y verificados', () => {
+    expect(filterEntities(items, { ...DEFAULT_MARKETPLACE_FILTERS, category: 'supplements' }).map((s) => s.name)).toEqual(['A']);
+    expect(filterEntities(items, { ...DEFAULT_MARKETPLACE_FILTERS, topRated: true }).map((s) => s.name)).toEqual(['A', 'C']);
+    expect(filterEntities(items, { ...DEFAULT_MARKETPLACE_FILTERS, verifiedOnly: true }).map((s) => s.name)).toEqual(['A', 'C']);
+    expect(filterEntities(items, { ...DEFAULT_MARKETPLACE_FILTERS, sort: 'rating' }).map((s) => s.name)).toEqual(['C', 'A', 'B']);
     expect(hasActiveFilters(DEFAULT_MARKETPLACE_FILTERS)).toBe(false);
+  });
+});
+
+describe('categories aligned with offerKind (ADR-0022)', () => {
+  it('fixes a seller type or an offer kind, never a legacy plan type', () => {
+    expect(categoryById('passes').offerKind).toBe('DAY_PASS');
+    expect(categoryById('gyms').entityType).toBe('GYM');
+    expect(MARKETPLACE_CATEGORIES.every((category) => !('planTypes' in category))).toBe(true);
   });
 });

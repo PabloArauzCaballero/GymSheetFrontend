@@ -1,5 +1,6 @@
 'use client';
 
+import { socialSurfaceOpen } from '@gymsheet/domain';
 import { useQuery } from '@tanstack/react-query';
 import Link, { useLinkStatus } from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -18,12 +19,17 @@ import { navigationFor, type NavigationItem } from './nav-config';
  * revienta, lo correcto es que el punto no aparezca, no que el portal entero
  * salude con un aviso de error en cada carga de página (la red global de
  * `providers.tsx` avisaría de cualquier consulta caída sin datos).
+ *
+ * With an unverified email the API answers 403 EMAIL_VERIFICATION_REQUIRED to
+ * every social route, so the counter is not even asked: the shell shows the
+ * «Verifica tu correo» banner instead.
  */
-export function useInteractionAlerts() {
+export function useInteractionAlerts(session: Pick<SessionPrincipal, 'emailVerified'>) {
   const counts = useQuery({
     queryKey: interactionKeys.counts,
     queryFn: () => interactionsService.counts().catch(() => null),
     staleTime: 60_000,
+    enabled: socialSurfaceOpen(session),
   });
   const data = counts.data;
   return data ? data.likesReceived + data.profileViewsNew : 0;
@@ -98,7 +104,7 @@ export function NavigationList({
   onNavigate,
 }: Readonly<{ session: SessionPrincipal; onNavigate?: () => void }>) {
   const pathname = usePathname();
-  const interactionAlerts = useInteractionAlerts();
+  const interactionAlerts = useInteractionAlerts(session);
   // Cada audiencia recibe su navegación y su orden; la decisión vive en
   // `navigationFor` para que la barra lateral y la de pestañas no discrepen.
   const groups = navigationFor(session.role, session.permissions);

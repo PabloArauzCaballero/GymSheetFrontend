@@ -14,7 +14,7 @@ import { test } from '@playwright/test';
 import { THEME_COOKIE } from '../src/shared/theme/theme-script';
 import { evidencia } from './evidencia';
 import {
-  adminDeGimnasio,
+  adminDePlataforma,
   apiDe,
   crearCuenta,
   crearRutina,
@@ -34,7 +34,7 @@ for (const combo of combos) {
 
     test('RF-18: multiplicador, semana incumplida sin perder puntos, insignia y sin modo', async ({ page, context, baseURL }) => {
       const tag = etiquetaUnica();
-      const admin = await adminDeGimnasio();
+      const admin = await adminDePlataforma();
       const [ana, beto] = await Promise.all([crearCuenta('ana', `Ana ${tag}`), crearCuenta('beto', `Beto ${tag}`)]);
       const a = apiDe(ana);
       const bench = await ejercicioId(a, 'barbell bench press');

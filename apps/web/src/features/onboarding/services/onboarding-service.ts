@@ -29,6 +29,8 @@ export const onboardingService = {
     trainingPreferences: string[];
     physicalConsiderations?: string | null;
     consentHealth: boolean;
+    /** Version of the health consent text shown; the backend defaults to the current one. */
+    consentHealthVersion?: string;
     consentData: boolean;
   }) =>
     apiRequest<OnboardingState>('/me/onboarding/preferences', onboardingSchema, {
@@ -42,6 +44,12 @@ export const onboardingService = {
     }),
   complete: () =>
     apiRequest<OnboardingState>('/me/onboarding/complete', onboardingSchema, { method: 'POST' }),
+  /** Closes the optional "Conocer" step. It never changes the COMPLETED status. */
+  setSocialStep: (action: 'DONE' | 'SKIP') =>
+    apiRequest<OnboardingState>('/me/onboarding/social', onboardingSchema, {
+      method: 'PUT',
+      body: { action },
+    }),
   measurements: () =>
     apiRequest<BodyMeasurement[]>('/me/body-measurements', z.array(bodyMeasurementSchema)),
   addMeasurement: (input: {

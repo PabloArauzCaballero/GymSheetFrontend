@@ -8,6 +8,7 @@ import type {
   SocialStatusState,
   SocialMapBounds,
   SocialMapCoordinates,
+  UpdateDiscoveryPreferencesInput,
 } from '@/shared/api/schemas';
 import {
   connectionSchema,
@@ -98,11 +99,7 @@ export const socialService = {
     body: input,
   }),
   getDiscoveryPreferences: () => apiRequest('/me/discovery/preferences', discoveryPreferencesSchema),
-  updateDiscoveryPreferences: (input: {
-    genders: ('MALE' | 'FEMALE')[]; intents: ('TRAINING' | 'FRIENDSHIP' | 'DATING')[];
-    minAge: number; maxAge: number; radiusKm: number; flexibleAge: boolean;
-    flexibleDistance: boolean; expectedVersion: number;
-  }) => apiRequest('/me/discovery/preferences', discoveryPreferencesSchema, { method: 'PUT', body: input }),
+  updateDiscoveryPreferences: (input: UpdateDiscoveryPreferencesInput) => apiRequest('/me/discovery/preferences', discoveryPreferencesSchema, { method: 'PUT', body: input }),
   saveMapLocation: (location: SocialMapCoordinates) =>
     apiRequest('/me/social-map/location', z.object({ saved: z.literal(true) }), {
       method: 'PATCH', body: location,

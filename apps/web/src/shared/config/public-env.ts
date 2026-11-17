@@ -15,11 +15,17 @@ const publicEnvSchema = z.object({
    * en producción, para poder activarla sin revertir nada.
    */
   NEXT_PUBLIC_ROUTINES_V2: z.enum(['true', 'false']).optional(),
+  /** Cloudflare Turnstile site key. Unset: the signup renders no widget and sends no token. */
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().trim().min(1).optional(),
+  /** Google OAuth web client id. Unset: no «Continuar con Google» anywhere. */
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.string().trim().min(1).optional(),
 });
 
 const parsed = publicEnvSchema.safeParse({
   NEXT_PUBLIC_BACKEND_ORIGIN: process.env.NEXT_PUBLIC_BACKEND_ORIGIN,
   NEXT_PUBLIC_ROUTINES_V2: process.env.NEXT_PUBLIC_ROUTINES_V2 || undefined,
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || undefined,
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || undefined,
 });
 
 if (!parsed.success) {

@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
-import { admin, signIn } from './fixtures';
+import { signInOperatingGym } from './fixtures';
 
 /**
  * Evidencia end-to-end de la consola de administración contra el stack real
@@ -58,8 +58,9 @@ test.beforeAll(() => {
   mkdirSync(EVIDENCE_DIR, { recursive: true });
 });
 
+/** Franja 7a: gym administration is the platform admin's, operating the seeded gym. */
 async function loginAsAdmin(page: Page) {
-  await signIn(page, admin);
+  await signInOperatingGym(page);
 }
 
 /**
