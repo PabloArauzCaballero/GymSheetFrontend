@@ -75,7 +75,7 @@ export function KycPhoneStep({ phone, onNext, onBack }: Readonly<{ phone: PhoneS
           {kycCopy.phone.codeSent(phase.masked)}
         </p>
         <Field error={codeForm.formState.errors.code?.message} htmlFor="kyc-code" label={kycCopy.phone.codeLabel}>
-          <Input autoComplete="one-time-code" id="kyc-code" inputMode="numeric" maxLength={6} pattern="[0-9]*" {...codeForm.register('code')} />
+          <Input autoComplete="one-time-code" id="kyc-code" inputMode="numeric" maxLength={6} pattern="[0-9]*" spellCheck={false} {...codeForm.register('code')} />
         </Field>
         {codeForm.formState.errors.root?.message ? <AuthAlert message={codeForm.formState.errors.root.message} /> : null}
         <Button className="w-full" loading={codeForm.formState.isSubmitting} size="lg" type="submit" variant="primary">
@@ -133,6 +133,7 @@ export function KycPhoneStep({ phone, onNext, onBack }: Readonly<{ phone: PhoneS
             id="kyc-phone"
             inputMode="tel"
             placeholder={kycCopy.phone.placeholder}
+            spellCheck={false}
             type="tel"
             {...phoneForm.register('phone')}
           />

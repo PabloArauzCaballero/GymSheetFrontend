@@ -78,7 +78,13 @@ export function KycDocumentViewer({
           <div className="grid min-h-64 place-items-center overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface-low)]">
             {current && 'url' in current ? (
               // eslint-disable-next-line @next/next/no-img-element -- object URL of an authenticated, no-store fetch; never a remote address.
-              <img alt={kycDocumentKindLabels[open.kind] ?? open.kind} className="max-h-[60vh] w-full object-contain" src={current.url} />
+              <img
+                alt={kycDocumentKindLabels[open.kind] ?? open.kind}
+                className="max-h-[60vh] w-full object-contain"
+                height={open.height ?? undefined}
+                src={current.url}
+                width={open.width ?? undefined}
+              />
             ) : current ? (
               <p className="t-subhead text-[var(--danger-text)]" role="alert">
                 {copy.documentFailed}
@@ -97,7 +103,7 @@ export function KycDocumentViewer({
       {logo ? (
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element -- the listing's public logo. */}
-          <img alt="Logo del negocio" className="size-16 rounded-[var(--radius-md)] border border-[var(--border-subtle)] object-cover" src={logo} />
+          <img alt="Logo del negocio" className="size-16 rounded-[var(--radius-md)] border border-[var(--border-subtle)] object-cover" height={64} src={logo} width={64} />
           <span className="t-footnote text-[var(--text-muted)]">Logo público del negocio</span>
         </div>
       ) : null}

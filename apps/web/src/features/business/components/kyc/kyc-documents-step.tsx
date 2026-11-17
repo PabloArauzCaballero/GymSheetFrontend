@@ -15,6 +15,7 @@ import {
   type KycSlotKey,
 } from '@gymsheet/domain';
 import { queryKeys, withDocument, withoutDocument } from '@/shared/api/query-keys';
+import { confirm } from '@/shared/notifications';
 import type { BusinessMe, KycState } from '@/shared/api/schemas';
 import { useKycCache } from '../../hooks/use-kyc';
 import { businessKycService } from '../../services/business-kyc-client';
@@ -78,6 +79,8 @@ export function KycDocumentsStep({
   }
 
   async function remove(slot: KycDocumentSlot, documentId: string) {
+    const answer = await confirm({ title: kycCopy.documents.removeTitle(slot.title), message: kycCopy.documents.removeMessage, confirmLabel: kycCopy.documents.remove, severity: 'danger' });
+    if (!answer.confirmed) return;
     setBusy(slot.key);
     try {
       await businessKycService.deleteDocument(documentId);
@@ -111,7 +114,7 @@ export function KycDocumentsStep({
               {slot.key === 'SELFIE' ? <KycSelfieGate challenge={challenge} consent={state.consent} /> : null}
               {logoSrc ? (
                 // eslint-disable-next-line @next/next/no-img-element -- the listing's own public logo, served by the backend's media storage.
-                <img alt="" className="size-16 rounded-[var(--radius-md)] border border-[var(--border-subtle)] object-cover" src={logoSrc} />
+                <img alt="" className="size-16 rounded-[var(--radius-md)] border border-[var(--border-subtle)] object-cover" height={64} src={logoSrc} width={64} />
               ) : null}
             </KycPhotoSlot>
           );

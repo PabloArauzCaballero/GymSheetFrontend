@@ -18,7 +18,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Field } from '@/shared/components/ui/field';
 import { InputWithIcon } from '@/shared/components/ui/input';
 import { Select } from '@/shared/components/ui/select';
-import { notify } from '@/shared/notifications';
+import { confirm, notify } from '@/shared/notifications';
 import { businessKycAdminService } from '@/features/business/services/business-kyc-client';
 
 function AccountRow({ account }: Readonly<{ account: BusinessAdminAccount }>) {
@@ -35,6 +35,21 @@ function AccountRow({ account }: Readonly<{ account: BusinessAdminAccount }>) {
     },
     onError: (error: Error) => notify.error(error),
   });
+
+  async function ask() {
+    if (!reason) return;
+    // Suspending hides the listing at once: it is confirmed first. Reinstating is not destructive.
+    if (!suspended) {
+      const answer = await confirm({
+        title: copy.suspendTitle(account.name),
+        message: copy.suspendMessage,
+        confirmLabel: copy.suspend,
+        severity: 'danger',
+      });
+      if (!answer.confirmed) return;
+    }
+    act.mutate(reason);
+  }
 
   return (
     <li className="grid gap-3 border-b border-[var(--border-subtle)] p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
@@ -64,7 +79,7 @@ function AccountRow({ account }: Readonly<{ account: BusinessAdminAccount }>) {
         <Button
           disabled={!reason}
           loading={act.isPending}
-          onClick={() => reason && act.mutate(reason)}
+          onClick={() => void ask()}
           size="sm"
           type="button"
           variant={suspended ? 'secondary' : 'danger'}

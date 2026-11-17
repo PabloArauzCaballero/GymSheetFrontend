@@ -43,6 +43,7 @@ export function KycCompanyForm({
           id="kyc-nit"
           inputMode="numeric"
           placeholder={savedNit ?? kycCopy.legal.nitPlaceholder}
+          spellCheck={false}
           {...form.register('nit')}
         />
       </Field>
@@ -50,7 +51,7 @@ export function KycCompanyForm({
         <Input autoComplete="street-address" id="kyc-address" placeholder={kycCopy.legal.addressPlaceholder} {...form.register('address')} />
       </Field>
       <Field error={errors.seprecNumber?.message} htmlFor="kyc-seprec" label={kycCopy.legal.seprec}>
-        <Input autoComplete="off" id="kyc-seprec" {...form.register('seprecNumber')} />
+        <Input autoComplete="off" id="kyc-seprec" spellCheck={false} {...form.register('seprecNumber')} />
       </Field>
       {errors.root?.message ? <AuthAlert message={errors.root.message} /> : null}
       <KycNav loading={form.formState.isSubmitting} nextType="submit" onBack={onBack} />

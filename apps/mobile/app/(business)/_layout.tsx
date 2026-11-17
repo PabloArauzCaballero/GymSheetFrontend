@@ -6,7 +6,8 @@ import { useAuthStore } from '@/state/auth-store';
 /**
  * The business shell (ADR-0020): mounted only for a business session. A
  * person goes to the person tabs; a signed-out session to login. Above the
- * tabs, «completar» finishes the signup (steps 2–3).
+ * tabs, «completar» finishes the signup (steps 2–3), «verificar» the KYC
+ * (steps 4–7) and «verificacion» shows its status.
  */
 export default function BusinessLayout() {
   const status = useAuthStore((state) => state.status);
@@ -17,6 +18,8 @@ export default function BusinessLayout() {
     <Stack screenOptions={detailStackOptions}>
       <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
       <Stack.Screen name="completar" />
+      <Stack.Screen name="verificar" />
+      <Stack.Screen name="verificacion" />
     </Stack>
   );
 }

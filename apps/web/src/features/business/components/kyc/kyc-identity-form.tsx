@@ -69,6 +69,7 @@ export function KycIdentityForm({
             className="tabular-nums"
             inputMode="numeric"
             placeholder={savedCi ?? '1234567'}
+            spellCheck={false}
             {...form.register('repCiNumber')}
           />
           <Input
@@ -78,6 +79,7 @@ export function KycIdentityForm({
             autoComplete="off"
             maxLength={2}
             placeholder="1A"
+            spellCheck={false}
             {...form.register('repCiComplement')}
           />
           <Select

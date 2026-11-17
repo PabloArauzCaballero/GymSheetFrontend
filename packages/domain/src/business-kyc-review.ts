@@ -134,6 +134,8 @@ export const kycReviewCopy = {
   phoneUnverified: 'sin verificar',
   search: 'Buscar por nombre, correo o @usuario',
   suspend: 'Suspender',
+  suspendTitle: (name: string) => `¿Suspender a ${name}?`,
+  suspendMessage: 'Su ficha deja de verse en REPP al instante y le avisamos por la app y por correo.',
   reinstate: 'Reactivar',
   suspensionReason: 'Motivo',
   suspended: 'Cuenta suspendida.',

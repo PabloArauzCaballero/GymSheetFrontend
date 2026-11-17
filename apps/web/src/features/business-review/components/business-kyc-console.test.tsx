@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/shared/api/api-error';
+import { BusinessAccountsPanel } from './business-accounts-panel';
 import { KycQueuePanel } from './kyc-queue-panel';
 
 const mocks = vi.hoisted(() => ({
@@ -10,16 +11,29 @@ const mocks = vi.hoisted(() => ({
   claim: vi.fn(),
   release: vi.fn(),
   decide: vi.fn(),
+  accounts: vi.fn(),
+  suspend: vi.fn(),
+  reinstate: vi.fn(),
+  confirm: vi.fn(),
   fetchKycDocument: vi.fn(),
   success: vi.fn(),
   info: vi.fn(),
   error: vi.fn(),
 }));
 vi.mock('@/features/business/services/business-kyc-client', () => ({
-  businessKycAdminService: { queue: mocks.queue, detail: mocks.detail, claim: mocks.claim, release: mocks.release, decide: mocks.decide },
+  businessKycAdminService: {
+    queue: mocks.queue,
+    detail: mocks.detail,
+    claim: mocks.claim,
+    release: mocks.release,
+    decide: mocks.decide,
+    accounts: mocks.accounts,
+    suspend: mocks.suspend,
+    reinstate: mocks.reinstate,
+  },
   fetchKycDocument: mocks.fetchKycDocument,
 }));
-vi.mock('@/shared/notifications', () => ({ notify: { success: mocks.success, info: mocks.info, error: mocks.error } }));
+vi.mock('@/shared/notifications', () => ({ notify: { success: mocks.success, info: mocks.info, error: mocks.error }, confirm: mocks.confirm }));
 
 const SUB = '00000000-0000-4000-8000-000000000009';
 const DOC = '00000000-0000-4000-8000-00000000000d';
@@ -149,5 +163,39 @@ describe('REPP KYC console', () => {
     );
     expect(mocks.info).toHaveBeenCalledWith('Otra persona de REPP la tomó. Recargamos la cola.');
     expect(await screen.findByText('Elige una solicitud de la lista.')).toBeInTheDocument();
+  });
+});
+
+describe('business accounts', () => {
+  const account = {
+    accountId: '00000000-0000-4000-8000-000000000001',
+    email: 'top@negocio.bo',
+    entityId: '00000000-0000-4000-8000-000000000002',
+    entityType: 'GYM',
+    name: 'Top Fitness',
+    handle: 'topfit',
+    status: 'ACTIVE',
+    kycStatus: 'APPROVED',
+    entityStatus: 'ACTIVE',
+    isVerified: true,
+    createdAt: '2026-11-16T10:00:00.000Z',
+  };
+
+  it('suspends only after the reviewer confirms, with the chosen reason', async () => {
+    mocks.accounts.mockResolvedValue({ items: [account], nextCursor: null });
+    mocks.suspend.mockResolvedValue({ status: 'SUSPENDED' });
+    mocks.confirm.mockResolvedValueOnce({ confirmed: false }).mockResolvedValueOnce({ confirmed: true });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <BusinessAccountsPanel />
+      </QueryClientProvider>,
+    );
+    fireEvent.change(await screen.findByLabelText('Motivo: Top Fitness'), { target: { value: 'FRAUD_SUSPECTED' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Suspender' }));
+    await waitFor(() => expect(mocks.confirm).toHaveBeenCalledTimes(1));
+    expect(mocks.suspend).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Suspender' }));
+    await waitFor(() => expect(mocks.suspend).toHaveBeenCalledWith(account.accountId, 'FRAUD_SUSPECTED'));
   });
 });

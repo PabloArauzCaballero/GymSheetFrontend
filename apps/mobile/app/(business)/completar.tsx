@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Redirect, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 import { businessDestination, businessResumeStep, businessWizardCopy } from '@gymsheet/domain';
@@ -16,11 +16,12 @@ import { spacing } from '@/theme';
 
 /**
  * Business signup, steps 2–3 (ADR-0020): «Verifica tu correo» and «Tu
- * negocio», resumed from `GET /business/me` `nextSteps`. Done, the shell's
- * Inicio takes over.
+ * negocio», resumed from `GET /business/me` `nextSteps`. Done, the KYC
+ * (steps 4–7, «verificar») follows; `?editar=1` reopens «Tu negocio» from its review.
  */
 export default function BusinessCompletionScreen() {
   const router = useRouter();
+  const { editar } = useLocalSearchParams<{ editar?: string }>();
   const queryClient = useQueryClient();
   const logout = useAuthStore((state) => state.logout);
   const me = useQuery({ queryKey: queryKeys.business.me, queryFn: businessService.me });
@@ -49,7 +50,7 @@ export default function BusinessCompletionScreen() {
     );
   }
   const resume = businessResumeStep(me.data.nextSteps);
-  const step = resume === 2 && verifiedNow ? 3 : resume;
+  const step = resume === 2 && verifiedNow ? 3 : (resume ?? (editar === '1' ? 3 : null));
   if (step === null) return <Redirect href={businessDestination.mobile.home} />;
   const copy = businessWizardCopy.steps[step];
 
@@ -69,9 +70,9 @@ export default function BusinessCompletionScreen() {
             ...(me.data.entity.city ? { city: me.data.entity.city } : {}),
           }}
           onSaved={async () => {
-            // Fresh `nextSteps` first, or Inicio would read the cached ones and send the person back here.
+            // Fresh `nextSteps` first, or the KYC would read the cached ones and send the person back here.
             await queryClient.invalidateQueries({ queryKey: queryKeys.business.me });
-            router.replace(businessDestination.mobile.home);
+            router.replace(businessDestination.mobile.kycWizard);
           }}
         />
       )}
