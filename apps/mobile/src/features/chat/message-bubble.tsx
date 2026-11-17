@@ -38,6 +38,13 @@ export const SWIPE_REPLY_THRESHOLD = 64;
 const BIG = 18;
 const SMALL = 6;
 const TAIL_W = 8;
+/**
+ * Side margin of a message row. The tail hangs `TAIL_W` outside the bubble, so
+ * with the old 4 pt it was clipped by the screen edge. Plus the thread's 4 pt
+ * screen gutter, the tail tip sits 4 pt inside and the bubble body 12 pt in,
+ * like WhatsApp.
+ */
+export const BUBBLE_ROW_INSET = TAIL_W;
 const TAIL_H = 13;
 
 /** `pending`: la burbuja optimista, todavía sin confirmar por el servidor (reloj, como WhatsApp). */
@@ -179,6 +186,12 @@ export function MessageBubble({
   const edited = Boolean(message.editedAt) && !tombstone;
   const temporary = Boolean(message.expiresAt) && !tombstone;
   const showReceipt = mine && !tombstone && receipt;
+  // A voice note leaves free room right of its duration: the time sits there,
+  // as in WhatsApp, instead of adding a whole line (the bubble was ~74 pt tall).
+  // Only the player itself (`ChatAudioMessage`): view-once and unavailable
+  // variants fill their line.
+  const overlayMeta = Boolean(body)
+    || (message.type === 'audio' && !tombstone && !message.viewOnce && Boolean(message.mediaUrl));
 
   const tick = () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   const pan = Gesture.Pan()
@@ -234,7 +247,7 @@ export function MessageBubble({
         alignSelf: 'stretch',
         // Lista invertida: el margen inferior es el hueco que se ve arriba.
         marginBottom: groupedWithOlder ? 2 : spacing.sm,
-        paddingHorizontal: spacing.xs,
+        paddingHorizontal: BUBBLE_ROW_INSET,
         paddingBottom: reactions.length ? 18 : 0,
         backgroundColor: highlighted ? chatColors.focusFlash : 'transparent',
       }}
@@ -290,7 +303,7 @@ export function MessageBubble({
                 <Text style={{ color: 'transparent', fontSize: fontSizes.micro }}>{spacer}</Text>
               </Text>
             ) : null}
-            <View style={body ? { position: 'absolute', right: spacing.sm + 2, bottom: 5 } : { alignSelf: 'flex-end', marginTop: 2 }}>
+            <View style={overlayMeta ? { position: 'absolute', right: spacing.sm + 2, bottom: 5 } : { alignSelf: 'flex-end', marginTop: 2 }}>
               {meta}
             </View>
             {tail ? <Tail color={fill} mine={mine} /> : null}

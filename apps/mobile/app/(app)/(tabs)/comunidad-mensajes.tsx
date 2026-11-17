@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { chatService, profileViewsService, socialService } from '@/api/services';
 import { refreshSocialRelationship } from '@/api/social-cache';
 import { Card, Divider, ScrollScreen, ScreenHeader, Section } from '@/components/layout';
-import { ChatConversationRow } from '@/components/chat-conversation-row';
+import { CHAT_ROW_TEXT_INSET, ChatConversationRow } from '@/components/chat-conversation-row';
 import { PersonAvatar } from '@/components/person-avatar';
 import { Button } from '@/components/ui';
 import { PressableScale } from '@/components/motion';
@@ -260,7 +260,13 @@ function GeneralTab() {
     <View>
       {conversations.data.map((conversation, index) => (
         <View key={conversation.conversationId}>
-          {index > 0 ? <Divider /> : null}
+          {/* Separador alineado con el texto, no con el avatar: el ojo lee
+              filas, y una raya a todo el ancho corta las caras. */}
+          {index > 0 ? (
+            <View style={{ marginLeft: CHAT_ROW_TEXT_INSET }}>
+              <Divider />
+            </View>
+          ) : null}
           <ChatConversationRow
             conversation={conversation}
             onPress={() => router.push({ pathname: '/chat/[id]', params: { id: conversation.conversationId } })}
@@ -555,19 +561,23 @@ export default function ComunidadMensajesScreen() {
       {/* Repi solo aparece si un match espera respuesta: si no, no ocupa sitio. */}
       <RepiMatchesCard />
 
-      {/* Historias y pestañas forman un bloque: entre ellas un respiro corto, no el hueco de sección. */}
+      {/* Historias, pestañas y lista forman un bloque: entre ellas un respiro
+          corto, no el hueco de sección (32) que dejaba la lista flotando lejos
+          de su pestaña. */}
       <View style={{ gap: spacing.sm }}>
         <StoriesBar />
 
-        <TextTabs
-          badges={{ solicitudes: receivedCount }}
-          onChange={setTab}
-          tabs={TABS.map((item) => ({ value: item.value, label: item.label }))}
-          value={tab}
-        />
-      </View>
+        <View style={{ gap: spacing.xs }}>
+          <TextTabs
+            badges={{ solicitudes: receivedCount }}
+            onChange={setTab}
+            tabs={TABS.map((item) => ({ value: item.value, label: item.label }))}
+            value={tab}
+          />
 
-      {tab === 'general' ? <GeneralTab /> : tab === 'solicitudes' ? <SolicitudesTab /> : <ConexionesTab />}
+          {tab === 'general' ? <GeneralTab /> : tab === 'solicitudes' ? <SolicitudesTab /> : <ConexionesTab />}
+        </View>
+      </View>
     </ScrollScreen>
   );
 }
