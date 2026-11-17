@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { athlete, openPage, signIn } from '../fixtures';
+import { stubDiscoveryReady } from './discovery-ready';
+
+test.beforeEach(async ({ page }) => {
+  await stubDiscoveryReady(page);
+});
 
 const DECK_ROUTE = '**/api/backend/me/discovery/deck*';
 
