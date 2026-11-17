@@ -61,7 +61,13 @@ import {
 import { requestId } from '@/lib/request-id';
 import EmojiPicker from 'rn-emoji-keyboard';
 import type { ConversationSummary, Message, MessageReactionsUpdate } from '@gymsheet/schemas';
-import { chatSystemEventMessage, isMessageReadByOther } from '@gymsheet/domain';
+import {
+  BUSINESS_CHAT_POLL_MS,
+  accountKindOf,
+  chatSystemEventMessage,
+  conversationControls,
+  isMessageReadByOther,
+} from '@gymsheet/domain';
 import {
   applyMessageDeleted,
   mergeIncomingMessage,
@@ -99,6 +105,7 @@ import { useReduceMotion } from '@/notifications/use-reduce-motion';
 import { EmptyState, ErrorState, Skeleton } from '@/components/feedback';
 import { notify } from '@/notifications';
 import { useAuthStore } from '@/state/auth-store';
+import { useBlockPerson } from '@/features/business-chat/use-block-person';
 import { presenceLabel } from '@/lib/format';
 import { storyReferenceLabel } from '@/lib/story-reference-presentation';
 import {
@@ -139,6 +146,12 @@ function dedupeById(groups: Message[][]): Message[] {
   return ordered;
 }
 
+/**
+ * The business inbox (franja 8f) mounts this same screen at
+ * `/(business)/conversacion/[id]`: the session's account kind picks the
+ * viewer, and `conversationControls` trims what a business cannot do (no
+ * socket: the history polls; no report, forward, location or disappearing).
+ */
 export default function ChatThreadScreen() {
   const { id: conversationId, storyReplyMessageId: storyReplyMessageIdParam } = useLocalSearchParams<{
     id: string;
@@ -150,6 +163,8 @@ export default function ChatThreadScreen() {
   const currentConversationRef = useRef(conversationId);
   currentConversationRef.current = conversationId;
   const currentUserId = useAuthStore((state) => state.principal?.id);
+  const viewer = useAuthStore((state) => (state.principal && accountKindOf(state.principal) === 'BUSINESS' ? 'business' : 'person'));
+  const realtime = viewer === 'person';
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const { wide, width } = useResponsive();
@@ -172,6 +187,7 @@ export default function ChatThreadScreen() {
     queryKey: ['chat', 'messages', conversationId],
     queryFn: () => chatService.listMessages(conversationId, { limit: PAGE_SIZE }),
     enabled: Boolean(conversationId),
+    refetchInterval: realtime ? false : BUSINESS_CHAT_POLL_MS.thread,
   });
   const conversations = useQuery({
     queryKey: ['chat', 'conversations'],
@@ -180,7 +196,7 @@ export default function ChatThreadScreen() {
   const readReceiptSettings = useQuery({
     queryKey: ['chat', 'read-receipts', conversationId],
     queryFn: () => chatService.getReadReceiptSettings(conversationId),
-    enabled: Boolean(conversationId),
+    enabled: Boolean(conversationId) && realtime,
   });
 
   const [liveMessages, setLiveMessages] = useState<Message[]>([]);
@@ -308,6 +324,8 @@ export default function ChatThreadScreen() {
     historyAccessPending,
   );
   const displayName = otherConversation?.nickname ?? otherName;
+  const controls = conversationControls(otherConversation, viewer);
+  const blockPerson = useBlockPerson(conversationId);
   /** `undefined` mientras la lista de conversaciones carga; un servidor viejo sin el campo cuenta como desactivado. */
   const disappearingSeconds = conversations.data ? (otherConversation?.disappearingSeconds ?? null) : undefined;
 
@@ -487,7 +505,7 @@ export default function ChatThreadScreen() {
       });
       void queryClient.invalidateQueries({ queryKey: ['chat', 'conversations'] });
     },
-    socketExtras,
+    { ...socketExtras, disabled: !realtime },
   );
 
   // Cambiar de hilo sin desmontar la pantalla (la ruta es la misma, sólo cambia
@@ -1357,7 +1375,8 @@ export default function ChatThreadScreen() {
   // burbuja va casi al borde, como en WhatsApp; en pantallas anchas se centra.
   const gutter = Math.max(spacing.xs, (width - (wide ? maxWideContentWidth : maxContentWidth)) / 2);
   const topInset = Math.max(insets.top, StatusBar.currentHeight ?? 0);
-  const canTrainTogether = otherConversation?.systemKind === null && canWrite && Boolean(otherUserId);
+  const canTrainTogether = controls.trainTogether && otherConversation?.systemKind === null && canWrite && Boolean(otherUserId);
+  const presence = controls.presence ? presenceLabel(otherOnline, otherLastSeenAt) : controls.businessBadge ? 'Negocio' : '';
 
   return (
     <>
@@ -1368,16 +1387,16 @@ export default function ChatThreadScreen() {
             disappearingSeconds={disappearingSeconds}
             displayName={displayName}
             name={otherName}
-            onBack={() => (router.canGoBack() ? router.back() : router.replace('/comunidad'))}
+            onBack={() => (router.canGoBack() ? router.back() : router.replace(realtime ? '/comunidad' : '/(business)/(tabs)/mensajes'))}
             onOpenContact={() => setContactOpen(true)}
             onTrainTogether={canTrainTogether ? () => setInviteModalOpen(true) : null}
-            online={otherOnline}
+            online={controls.presence && otherOnline}
             photoUrl={otherPhotoUrl}
-            presence={presenceLabel(otherOnline, otherLastSeenAt)}
+            presence={presence}
             typing={otherTyping}
           />
         </View>
-        {otherConversation?.systemKind === null && otherUserId ? (
+        {controls.trainTogether && otherConversation?.systemKind === null && otherUserId ? (
           <CreateTrainingInviteModal
             onClose={() => setInviteModalOpen(false)}
             recipientId={otherUserId}
@@ -1453,6 +1472,7 @@ export default function ChatThreadScreen() {
           {canWrite ? (
             <View style={{ paddingTop: spacing.xs, paddingHorizontal: spacing.xs }}>
               <ChatComposer
+                attachHidden={controls.location ? undefined : ['location']}
                 attachOpen={attachOpen}
                 busy={sendingMedia}
                 draft={draft}
@@ -1550,7 +1570,7 @@ export default function ChatThreadScreen() {
           ? messageActions(actionMessage, currentUserId, {
             canWrite,
             tombstone: isTombstone(actionMessage, deletedMessageIds),
-          })
+          }).filter((action) => (action !== 'report' || controls.report) && (action !== 'forward' || controls.forward))
           : []}
         onAction={(action) => actionMessage && handleMessageAction(actionMessage, action)}
         onClose={() => setActionMessage(null)}
@@ -1594,7 +1614,11 @@ export default function ChatThreadScreen() {
         name={otherName ?? 'Conversación'}
         nickname={otherConversation?.nickname ?? null}
         onClose={() => setContactOpen(false)}
-        onOpenProfile={otherUserId ? () => {
+        onBlock={controls.block ? () => {
+          setContactOpen(false);
+          blockPerson(otherName ?? 'esta persona');
+        } : null}
+        onOpenProfile={controls.openProfile && otherUserId ? () => {
           setContactOpen(false);
           router.push({ pathname: '/perfil/[userId]', params: { userId: otherUserId } });
         } : null}
@@ -1611,20 +1635,22 @@ export default function ChatThreadScreen() {
             expectedVersion: settings.version,
           });
         }}
-        onTrainTogether={otherConversation?.systemKind === null && canWrite && otherUserId ? () => {
+        onTrainTogether={canTrainTogether ? () => {
           setContactOpen(false);
           setTimeout(() => setInviteModalOpen(true), 350);
         } : null}
-        online={otherOnline}
+        online={controls.presence && otherOnline}
         photoUrl={otherPhotoUrl}
-        presence={presenceLabel(otherOnline, otherLastSeenAt)}
+        presence={presence}
         receiptsEnabled={readReceiptSettings.data?.enabled}
         receiptsPending={updateReadReceiptSettings.isPending}
         disappearingPending={setDisappearing.isPending}
         disappearingSeconds={disappearingSeconds}
-        onChangeDisappearing={canWrite && otherConversation?.systemKind === null
+        onChangeDisappearing={canWrite && controls.disappearing
           ? (seconds) => setDisappearing.mutate(seconds)
           : null}
+        showDisappearing={controls.disappearing}
+        showReceipts={controls.receiptSettings}
         savingNickname={setNickname.isPending}
         visible={contactOpen}
       />

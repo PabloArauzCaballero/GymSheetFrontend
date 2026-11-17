@@ -5,13 +5,13 @@ import { colors, iconSizes } from '@/theme';
 const ICONS = {
   index: ['home-outline', 'home'],
   publicaciones: ['pricetags-outline', 'pricetags'],
+  mensajes: ['chatbubbles-outline', 'chatbubbles'],
   perfil: ['storefront-outline', 'storefront'],
 } as const satisfies Record<string, readonly [keyof typeof Ionicons.glyphMap, keyof typeof Ionicons.glyphMap]>;
 
 /**
- * Tabs of the business shell (plan §4.2): Inicio · Publicaciones · Perfil
- * (franja 8c). Pedidos and Mensajes join with franjas 8d and 8f. No person
- * tabs here. Selected in the text tone, never in accent (repp-diseno §2).
+ * Tabs of the business shell (plan §4.2): Inicio · Publicaciones · Mensajes ·
+ * Perfil (franjas 8c, 8f). Pedidos joins with franja 8d. No person tabs here. Selected in the text tone, never in accent (repp-diseno §2).
  */
 export default function BusinessTabsLayout() {
   return (
@@ -29,6 +29,7 @@ export default function BusinessTabsLayout() {
     >
       <Tabs.Screen name="index" options={{ title: 'Inicio' }} />
       <Tabs.Screen name="publicaciones" options={{ title: 'Publicaciones' }} />
+      <Tabs.Screen name="mensajes" options={{ title: 'Mensajes' }} />
       <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
     </Tabs>
   );

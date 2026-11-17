@@ -8,11 +8,13 @@ import { PressableScale } from '@/components/motion';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui';
 import { colors, comfortableTouchTarget, iconSizes, radii, spacing } from '@/theme';
+import { WriteToBusiness } from './write-to-business';
 
 /**
  * A public listing (plan §4.3): photos, price in Bs, what it includes, the
- * seller and the actions. Buying (franja 8d) and writing (8f) show disabled
- * with «Llega pronto»: never a button that leads nowhere.
+ * seller and the actions. «Escribir» opens the chat with the seller (8f);
+ * buying (franja 8d) shows disabled with «Llega pronto»: never a button that
+ * leads nowhere.
  */
 export function ListingDetailView({ listing, onSeller, onReport }: { listing: PublicListing; onSeller: (handle: string) => void; onReport: () => void }) {
   const { width } = useWindowDimensions();
@@ -44,10 +46,10 @@ export function ListingDetailView({ listing, onSeller, onReport }: { listing: Pu
       </View>
       <View style={{ gap: spacing.sm }}>
         <Button accessibilityHint="Llega pronto" disabled icon="bag-outline" label="Comprar" onPress={() => undefined} />
-        <Button accessibilityHint="Llega pronto" disabled icon="chatbubble-outline" label="Escribir" onPress={() => undefined} variant="ghost" />
         <Text style={{ textAlign: 'center' }} tone="secondary" variant="footnote">
-          Llega pronto: comprar con QR y escribirle al negocio desde REPP.
+          Llega pronto: comprar con QR desde REPP.
         </Text>
+        <WriteToBusiness entityId={seller.id} variant="ghost" />
       </View>
       <View style={{ gap: spacing.sm }}>
         <Text accessibilityRole="header" variant="headline">

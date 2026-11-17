@@ -21,12 +21,15 @@ export function MessageComposer({
   onSendText,
   sending,
   sendingMedia,
+  allowLocation = true,
 }: Readonly<{
   onSendLocation: () => void;
   onSendMedia: (file: File, viewOnce: boolean) => void;
   onSendText: (body: string) => void;
   sending: boolean;
   sendingMedia: boolean;
+  /** A BUSINESS chat refuses locations (422 BUSINESS_CHAT_NO_LOCATION): no button for it. */
+  allowLocation?: boolean;
 }>) {
   const [draft, setDraft] = useState('');
   const [viewOnceNext, setViewOnceNext] = useState(false);
@@ -54,16 +57,18 @@ export function MessageComposer({
         >
           <Paperclip aria-hidden className="size-4" />
         </Button>
-        <Button
-          aria-label="Compartir mi ubicación"
-          disabled={sendingMedia}
-          onClick={onSendLocation}
-          size="icon"
-          type="button"
-          variant="secondary"
-        >
-          <MapPin aria-hidden className="size-4" />
-        </Button>
+        {allowLocation ? (
+          <Button
+            aria-label="Compartir mi ubicación"
+            disabled={sendingMedia}
+            onClick={onSendLocation}
+            size="icon"
+            type="button"
+            variant="secondary"
+          >
+            <MapPin aria-hidden className="size-4" />
+          </Button>
+        ) : null}
         <Input
           aria-label="Mensaje"
           className="flex-1"

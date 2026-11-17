@@ -45,6 +45,7 @@ export function MessageBubble({
   focusedForStoryReply = false,
   viewerId,
   otherName,
+  canReport = true,
 }: Readonly<{
   groupedWithPrevious: boolean;
   message: Message;
@@ -64,6 +65,8 @@ export function MessageBubble({
   viewerId?: string;
   /** Nombre de la otra persona, para el autor de una cita. */
   otherName?: string;
+  /** A business account cannot report (it blocks instead, ADR-0023). */
+  canReport?: boolean;
 }>) {
   const [editMenuOpen, setEditMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -206,7 +209,7 @@ export function MessageBubble({
           />
         ) : null}
       </span>
-      {!mine && !message.deletedAt ? (
+      {canReport && !mine && !message.deletedAt ? (
         <ReportDialog
           subjectName="este mensaje"
           targetId={message.id}

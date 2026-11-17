@@ -24,6 +24,8 @@ export default function BusinessLayout() {
       <Stack.Screen name="publicacion-nueva" />
       <Stack.Screen name="publicacion/[id]" />
       <Stack.Screen name="sede" />
+      {/* Franja 8f: one conversation of «Mensajes». */}
+      <Stack.Screen name="conversacion/[id]" />
     </Stack>
   );
 }

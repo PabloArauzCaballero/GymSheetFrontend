@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { conversationControls, type ChatViewer } from '@gymsheet/domain';
 import type { ConversationSummary } from '@gymsheet/schemas';
 import { PressableScale } from '@/components/motion';
 import { PersonAvatar } from '@/components/person-avatar';
@@ -25,23 +26,29 @@ const SYSTEM_KIND_ICON: Record<NonNullable<ConversationSummary['systemKind']>, k
  * prohibido por `accentPolicy` («nunca volt en avatares de iniciales»)— y la
  * misma persona salía en jade aquí y en su color propio en Conexiones; ahora
  * es `PersonAvatar` en los dos sitios.
+ *
+ * Franja 8f: a chat with a business is marked «Negocio» for the person; the
+ * business inbox reuses the row (`viewer="business"`) without presence.
  */
 export function ChatConversationRow({
   conversation,
   onPress,
+  viewer = 'person',
 }: {
   conversation: ConversationSummary;
   onPress: () => void;
+  viewer?: ChatViewer;
 }) {
+  const controls = conversationControls(conversation, viewer);
   const name = conversation.nickname ?? conversation.otherUserName;
   const preview = conversation.lastMessage ?? 'Todavía sin mensajes.';
   const time = conversation.lastMessageAt ? chatTimestampLabel(conversation.lastMessageAt) : null;
-  const online = conversation.otherUserOnline;
+  const online = controls.presence && conversation.otherUserOnline;
 
   return (
     <PressableScale
       accessibilityHint="Abre el chat"
-      accessibilityLabel={[name, online ? 'en línea' : null, preview, time].filter(Boolean).join('. ')}
+      accessibilityLabel={[name, controls.businessBadge ? 'negocio' : null, online ? 'en línea' : null, preview, time].filter(Boolean).join('. ')}
       onPress={onPress}
       style={{
         flexDirection: 'row',
@@ -95,9 +102,15 @@ export function ChatConversationRow({
       </View>
       <View style={{ flex: 1, gap: spacing.xxs }}>
         <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm }}>
-          <Text numberOfLines={1} style={{ flex: 1 }} variant="headline">
+          <Text numberOfLines={1} style={{ flexShrink: 1 }} variant="headline">
             {name}
           </Text>
+          {controls.businessBadge ? (
+            <Text tone="muted" variant="caption">
+              Negocio
+            </Text>
+          ) : null}
+          <View style={{ flex: 1 }} />
           {time ? (
             <Text tabular tone="muted" variant="caption">
               {time}

@@ -7,10 +7,11 @@ import { cn } from '@/shared/lib/cn';
 const SECTIONS = [
   { href: '/negocio', label: 'Inicio' },
   { href: '/negocio/publicaciones', label: 'Publicaciones' },
+  { href: '/negocio/mensajes', label: 'Mensajes' },
   { href: '/negocio/perfil', label: 'Perfil' },
 ] as const;
 
-/** Sections of the business portal (plan §4.2). Pedidos and Mensajes join with franjas 8d and 8f. */
+/** Sections of the business portal (plan §4.2). Mensajes since franja 8f; Pedidos joins with 8d. */
 export function BusinessNav() {
   const pathname = usePathname();
   return (

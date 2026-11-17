@@ -54,19 +54,26 @@ type ChatSocketHandlers = {
  * `socketOrigin` llega como propiedad desde el servidor y no del bundle: la
  * dirección del backend es un dato del despliegue, no de la imagen. Ver
  * `shared/config/backend-origin.ts`.
+ *
+ * `null` means no socket at all: a business account has none (its ticket is
+ * refused, ADR-0023), so it stays `disconnected`, sends over REST and the
+ * thread polls instead.
  */
-export function useChatSocket(socketOrigin: string, handlers: ChatSocketHandlers) {
+export function useChatSocket(socketOrigin: string | null, handlers: ChatSocketHandlers) {
   const socketRef = useRef<Socket | null>(null);
   const joinedConversationsRef = useRef(new Set<string>());
   const desiredConversationRef = useRef<string | null>(null);
   const handlersRef = useRef(handlers);
-  const [connectionState, setConnectionState] = useState<ChatSocketConnectionState>('connecting');
+  const [connectionState, setConnectionState] = useState<ChatSocketConnectionState>(
+    socketOrigin ? 'connecting' : 'disconnected',
+  );
 
   useEffect(() => {
     handlersRef.current = handlers;
   }, [handlers]);
 
   useEffect(() => {
+    if (!socketOrigin) return;
     const joinedConversations = joinedConversationsRef.current;
     const socket = io(`${socketOrigin}/chat`, {
       transports: ['websocket'],

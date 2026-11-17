@@ -1,7 +1,8 @@
 import { formatPrice, initials, listingTerms, offerKindName } from '@gymsheet/domain';
-import { Check, MessageCircle, ShoppingBag } from 'lucide-react';
+import { Check, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import type { PublicListing } from '@/shared/api/schemas';
+import { WriteToBusinessButton } from '@/features/business-chat/components/write-to-business-button';
 import { DomainImage } from '@/shared/components/media/domain-image';
 import { Button } from '@/shared/components/ui/button';
 import { ReportButton, type Viewer } from './report-button';
@@ -26,9 +27,9 @@ function Carousel({ listing }: Readonly<{ listing: PublicListing }>) {
 
 /**
  * A public listing (plan §4.3): photos, price in BOB, what it includes, the
- * seller and the actions. Buying arrives with the orders (franja 8d) and
- * writing with the chat (8f): both show as disabled with «Llega pronto», never
- * as a link that leads nowhere.
+ * seller and the actions. «Escribir» opens the chat with the seller (franja
+ * 8f); buying arrives with the orders (8d) and shows disabled with «Llega
+ * pronto», never as a link that leads nowhere.
  */
 export function ListingDetail({ listing, viewer }: Readonly<{ listing: PublicListing; viewer: Viewer }>) {
   const terms = listingTerms(listing);
@@ -53,13 +54,10 @@ export function ListingDetail({ listing, viewer }: Readonly<{ listing: PublicLis
             <ShoppingBag aria-hidden className="size-5" />
             Comprar
           </Button>
-          <Button aria-describedby="listing-soon" className="w-full" disabled variant="ghost">
-            <MessageCircle aria-hidden className="size-5" />
-            Escribir
-          </Button>
           <p className="t-footnote text-center text-[var(--text-muted)]" id="listing-soon">
-            Llega pronto: comprar con QR y escribirle al negocio desde REPP.
+            Llega pronto: comprar con QR desde REPP.
           </p>
+          <WriteToBusinessButton entityId={seller.id} returnTo={`/publicacion/${listing.id}`} variant="secondary" viewer={viewer} />
         </div>
 
         <section aria-labelledby="listing-includes" className="grid gap-3">
