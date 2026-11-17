@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/shared/api/api-error';
 import { BusinessSignupWizard, type BusinessWizardStart } from './business-signup-wizard';
@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   claimHandle: vi.fn(),
   updateProfile: vi.fn(),
   handleAvailability: vi.fn(),
+  me: vi.fn(),
+  kycState: vi.fn(),
   replace: vi.fn(),
 }));
 vi.mock('../services/business-client', () => ({
@@ -21,8 +23,10 @@ vi.mock('../services/business-client', () => ({
     claimHandle: mocks.claimHandle,
     updateProfile: mocks.updateProfile,
     handleAvailability: mocks.handleAvailability,
+    me: mocks.me,
   },
 }));
+vi.mock('../services/business-kyc-client', () => ({ businessKycService: { state: mocks.kycState } }));
 vi.mock('@/features/auth/hooks/use-signup-protection', () => ({
   useSignupProtection: () => ({
     evidence: async () => ({ ticket: 'ticket' }),
@@ -67,7 +71,7 @@ beforeEach(() => {
 describe('BusinessSignupWizard', () => {
   it('step 0 asks what you are, and the legal kind only of a service provider', () => {
     renderWizard();
-    expect(screen.getByText('Paso 1 de 4')).toBeInTheDocument();
+    expect(screen.getByText('Paso 1 de 8')).toBeInTheDocument();
     next();
     expect(screen.getByRole('alert')).toHaveTextContent('Elige una opción');
 
@@ -76,7 +80,7 @@ describe('BusinessSignupWizard', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Indica si eres empresa o persona.');
     fireEvent.click(screen.getByRole('radio', { name: /Persona/u }));
     next();
-    expect(screen.getByText('Paso 2 de 4')).toBeInTheDocument();
+    expect(screen.getByText('Paso 2 de 8')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Tu cuenta' })).toBeInTheDocument();
   });
 
@@ -102,7 +106,7 @@ describe('BusinessSignupWizard', () => {
     fillAccount();
     fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta de negocio' }));
 
-    expect(await screen.findByText('Paso 3 de 4')).toBeInTheDocument();
+    expect(await screen.findByText('Paso 3 de 8')).toBeInTheDocument();
     expect(screen.getByText('top@negocio.bo')).toBeInTheDocument();
     expect(mocks.signupBusiness).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -129,10 +133,22 @@ describe('BusinessSignupWizard', () => {
     fillAccount();
     fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta de negocio' }));
     expect(await screen.findByText('Ya hay una cuenta con este correo. Inicia sesión o usa otro.')).toBeInTheDocument();
-    expect(screen.getByText('Paso 2 de 4')).toBeInTheDocument();
+    expect(screen.getByText('Paso 2 de 8')).toBeInTheDocument();
   });
 
-  it('step 3 resumes prefilled, claims the handle, saves the profile and enters the portal', async () => {
+  it('step 3 resumes prefilled, claims the handle, saves the profile and goes on to the phone (KYC)', async () => {
+    mocks.kycState.mockResolvedValue({
+      kycStatus: 'DRAFT',
+      accountStatus: 'ONBOARDING',
+      badge: null,
+      submission: null,
+      missing: [],
+      phone: null,
+      consent: { kind: 'KYC_SELFIE', granted: false, upToDate: false, currentVersion: '2026-11-16' },
+      attempts: { used: 0, max: 3, resubmitAvailableAt: null, canResubmit: false },
+      lastDecision: null,
+    });
+    mocks.me.mockReturnValue(new Promise(() => undefined));
     mocks.categories.mockResolvedValue([
       { id: '6f1c2b3a-4d5e-4f60-8a7b-9c0d1e2f3a4b', slug: 'gym', name: 'Gimnasio', description: null, iconKey: null, path: 'gym', entityScope: 'GYM', children: [] },
     ]);
@@ -141,14 +157,17 @@ describe('BusinessSignupWizard', () => {
     mocks.updateProfile.mockResolvedValue({});
     renderWizard({ step: 3, email: 'top@negocio.bo', entityType: 'GYM', profile: { name: 'Top Fitness' } });
 
-    expect(screen.getByText('Paso 4 de 4')).toBeInTheDocument();
+    expect(screen.getByText('Paso 4 de 8')).toBeInTheDocument();
     expect(screen.getByLabelText('Tu @usuario')).toHaveValue('topfitness');
     expect(await screen.findByText('@topfitness está libre.', {}, { timeout: 2000 })).toBeInTheDocument();
     fireEvent.change(await screen.findByLabelText('Categoría'), { target: { value: '6f1c2b3a-4d5e-4f60-8a7b-9c0d1e2f3a4b' } });
     fireEvent.change(screen.getByLabelText('Ciudad'), { target: { value: 'Santa Cruz' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar y entrar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar y seguir' }));
 
-    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/negocio'));
+    expect(await screen.findByText('Paso 5 de 8')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Tu teléfono' })).toBeInTheDocument();
+    expect(await screen.findByLabelText('Tu celular')).toHaveAttribute('type', 'tel');
+    expect(mocks.replace).not.toHaveBeenCalled();
     expect(mocks.claimHandle).toHaveBeenCalledWith('topfitness');
     expect(mocks.updateProfile).toHaveBeenCalledWith({
       name: 'Top Fitness',
@@ -163,7 +182,7 @@ describe('BusinessSignupWizard', () => {
     mocks.claimHandle.mockRejectedValue(new ApiError({ message: 'x', status: 409, kind: 'conflict', code: 'HANDLE_TAKEN' }));
     renderWizard({ step: 3, entityType: 'GYM', profile: { name: 'Top Fitness', primaryCategoryId: '6f1c2b3a-4d5e-4f60-8a7b-9c0d1e2f3a4b', city: 'La Paz' } });
     expect(await screen.findByText('No pudimos comprobarlo. Lo revisamos al guardar.', {}, { timeout: 2000 })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar y entrar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar y seguir' }));
     expect(await screen.findByText('Ese nombre ya está en uso.')).toBeInTheDocument();
     expect(mocks.updateProfile).not.toHaveBeenCalled();
     expect(mocks.replace).not.toHaveBeenCalled();

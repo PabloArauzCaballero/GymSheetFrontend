@@ -28,3 +28,6 @@ export * from './home';
 
 /** «Conocer»: readiness invalidation and the 409 merge rule (sin React). */
 export * from './social-profile-sync';
+
+/** Business KYC: cache updates after each wizard write (sin React). */
+export * from './kyc-cache';

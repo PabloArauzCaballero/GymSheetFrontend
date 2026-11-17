@@ -155,6 +155,30 @@ export async function apiUpload<T>(
   }
 }
 
+/**
+ * Binary GET through the BFF (e.g. a decrypted KYC photo for the reviewer):
+ * session cookie, never cached by the browser. The caller shows it from an
+ * object URL it revokes.
+ */
+export async function fetchBlobFromApi(path: string, signal?: AbortSignal): Promise<Blob> {
+  const requestController = createRequestController(signal, 30_000);
+  try {
+    const response = await fetch(`/api/backend${path}`, {
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { 'X-Request-ID': randomUuid() },
+      signal: requestController.signal,
+    });
+    if (!response.ok) throw await apiErrorFromResponse(response);
+    return await response.blob();
+  } catch (error: unknown) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError({ message: 'No se pudo cargar el archivo.', status: 0, kind: 'network' });
+  } finally {
+    requestController.dispose();
+  }
+}
+
 export async function downloadFromApi(path: string, filename: string) {
   const requestController = createRequestController(undefined, 60_000);
   try {

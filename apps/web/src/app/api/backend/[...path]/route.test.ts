@@ -63,3 +63,19 @@ describe('/api/backend while operating a gym', () => {
     expect(cookie).toMatch(/^gymsheet_session=;/u);
   });
 });
+
+describe('/api/backend with KYC documents', () => {
+  const id = '0190e2cb-a6d4-7ec3-8f91-a6c735631501';
+  it('streams the decrypted photo and forces no-store even if the backend forgot it', async () => {
+    mocks.backendRequest.mockResolvedValue(
+      new Response(new Uint8Array([0xff, 0xd8, 0xff]), { headers: { 'content-type': 'image/jpeg', 'cache-control': 'public, max-age=600' } }),
+    );
+    const response = await GET(new NextRequest(`http://localhost:3002/api/backend/admin/business/kyc/${id}/documents/${id}`), {
+      params: Promise.resolve({ path: ['admin', 'business', 'kyc', id, 'documents', id] }),
+    });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('private, no-store');
+    expect(response.headers.get('content-type')).toBe('image/jpeg');
+    expect(new Uint8Array(await response.arrayBuffer())).toEqual(new Uint8Array([0xff, 0xd8, 0xff]));
+  });
+});

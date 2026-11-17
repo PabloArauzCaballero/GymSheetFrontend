@@ -10,3 +10,4 @@ export * from './programs-services';
 export * from './cardio-services';
 export * from './recommendation-services';
 export * from './business-services';
+export * from './business-kyc-services';

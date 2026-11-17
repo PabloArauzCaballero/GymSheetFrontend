@@ -23,6 +23,7 @@ const tabLabels: Record<string, string> = {
   '/moderacion': 'Moderación',
   '/moderacion/rutinas': 'Rutinas',
   '/moderacion/verificaciones': 'Selfies',
+  '/moderacion/negocios': 'Negocios',
 };
 
 function withTabLabel(item: NavigationItem): NavigationItem {

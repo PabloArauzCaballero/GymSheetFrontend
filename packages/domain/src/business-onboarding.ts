@@ -15,8 +15,14 @@ export function accountKindOf(principal: { role: UserRole; accountKind?: Account
 }
 
 export const businessDestination = {
-  web: { home: '/negocio', signup: '/negocio/registro' },
-  mobile: { home: '/(business)', signup: '/(auth)/negocio-registro', completion: '/(business)/completar' },
+  web: { home: '/negocio', signup: '/negocio/registro', kyc: '/negocio/verificacion' },
+  mobile: {
+    home: '/(business)',
+    signup: '/(auth)/negocio-registro',
+    completion: '/(business)/completar',
+    kycWizard: '/(business)/verificar',
+    kyc: '/(business)/verificacion',
+  },
 } as const;
 
 export const businessEntryCopy = {
@@ -54,8 +60,9 @@ export function businessKindProblem(type: EntityType | null, legalKind: LegalKin
   return null;
 }
 
-export type BusinessWizardStep = 0 | 1 | 2 | 3;
-export const BUSINESS_WIZARD_STEP_COUNT = 4;
+/** Steps 0–3 create the account (franja 8a); 4–7 verify the business (KYC, franja 8b). */
+export type BusinessWizardStep = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export const BUSINESS_WIZARD_STEP_COUNT = 8;
 
 export const businessWizardCopy = {
   progress: (step: BusinessWizardStep) => `Paso ${step + 1} de ${BUSINESS_WIZARD_STEP_COUNT}`,
@@ -64,13 +71,17 @@ export const businessWizardCopy = {
     { title: 'Tu cuenta', description: 'Con este correo entras a tu panel de negocio.' },
     { title: 'Verifica tu correo', description: 'Te enviamos un código de seis dígitos.' },
     { title: 'Tu negocio', description: 'Así te van a encontrar en REPP.' },
+    { title: 'Tu teléfono', description: 'Te enviamos un código por WhatsApp.' },
+    { title: 'Datos legales', description: 'Los guardamos cifrados. Solo REPP los ve.' },
+    { title: 'Documentos', description: 'Cada foto te dice al instante si se lee bien.' },
+    { title: 'Revisa y envía', description: 'Si todo está bien, publicamos tu negocio en segundos.' },
   ],
   legalKindLegend: '¿Cómo ofreces el servicio?',
   chooseLegalKind: 'Indica si eres empresa o persona.',
   next: 'Seguir',
   back: 'Atrás',
   createAccount: 'Crear cuenta de negocio',
-  saveBusiness: 'Guardar y entrar',
+  saveBusiness: 'Guardar y seguir',
   fields: {
     businessName: { label: 'Nombre de tu negocio', placeholder: 'Top Fitness' },
     category: { label: 'Categoría', placeholder: 'Elige una categoría' },
@@ -86,9 +97,9 @@ export const businessWizardCopy = {
 } as const;
 
 /**
- * Where a signed-in business resumes the wizard, from `GET /business/me`
- * `nextSteps`: verify the email first, then «Tu negocio». Null once the
- * wizard's part (steps 0–3) is done; SUBMIT_KYC belongs to franja 8b.
+ * Where a signed-in business resumes the account part of the wizard, from
+ * `GET /business/me` `nextSteps`: verify the email first, then «Tu negocio».
+ * Null once steps 0–3 are done; the KYC steps resume from `kycPlace`.
  */
 export function businessResumeStep(nextSteps: readonly BusinessNextStep[]): BusinessWizardStep | null {
   if (nextSteps.includes('VERIFY_EMAIL')) return 2;
@@ -134,8 +145,8 @@ export const businessNextStepCopy: Readonly<
   COMPLETE_PROFILE: { title: 'Completa tu negocio', description: 'Categoría y ciudad.', available: true },
   SUBMIT_KYC: {
     title: 'Verifica tu negocio',
-    description: 'Datos legales y documentos. Llega pronto.',
-    available: false,
+    description: 'Teléfono, datos legales y documentos.',
+    available: true,
   },
 };
 
@@ -150,10 +161,30 @@ export const businessHomeCopy = {
   loadFailed: 'No pudimos cargar tu negocio.',
 } as const;
 
-/** The KYC banner of the business home. Only DRAFT exists until franja 8b. */
+export type KycBanner = { text: string; tone: 'success' | 'warning' | 'danger' | 'info'; action: string | null };
+
+/** The KYC banner of the business home, by the account's `kycStatus` (and whether REPP already looked). */
+export function kycBanner(kycStatus: string, accountStatus?: string): KycBanner {
+  if (accountStatus === 'SUSPENDED' || kycStatus === 'SUSPENDED') {
+    return { text: 'Tu negocio está suspendido · no se ve en REPP', tone: 'danger', action: 'Ver detalle' };
+  }
+  switch (kycStatus) {
+    case 'DRAFT':
+      return { text: 'Tu negocio está en borrador · completa la verificación', tone: 'warning', action: 'Continuar' };
+    case 'AUTO_APPROVED':
+      return { text: 'Tu negocio está publicado · REPP revisa tus datos', tone: 'success', action: 'Ver estado' };
+    case 'APPROVED':
+      return { text: 'Tu negocio está publicado · Verificado por REPP', tone: 'success', action: 'Ver estado' };
+    case 'REJECTED':
+      return { text: 'No pudimos verificar tu negocio · mira qué corregir', tone: 'danger', action: 'Ver qué falta' };
+    default:
+      return { text: 'Estamos revisando tu negocio · te avisamos cuando haya novedades', tone: 'info', action: 'Ver estado' };
+  }
+}
+
+/** The banner's text alone (kept for callers that only show it). */
 export function kycBannerCopy(kycStatus: string): string {
-  if (kycStatus === 'DRAFT') return 'Tu negocio está en borrador · completa la verificación (próximamente)';
-  return 'Estamos revisando tu negocio · te avisamos cuando haya novedades';
+  return kycBanner(kycStatus).text;
 }
 
 /** The category tree as select options, parents before children: «Fitness · Gimnasio». */

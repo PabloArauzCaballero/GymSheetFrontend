@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { BusinessMe } from '@/shared/api/schemas';
+import type { BusinessMe, KycState } from '@/shared/api/schemas';
 
 /**
  * Routing by account kind (ADR-0020): a business never renders the person
@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   hasCookie: vi.fn(() => true),
   requireSession: vi.fn(),
   getBusinessMe: vi.fn(),
+  getBusinessKyc: vi.fn(),
   redirect: vi.fn((path: string) => {
     throw new Error(`REDIRECT ${path}`);
   }),
@@ -21,6 +22,7 @@ vi.mock('@/shared/server/session', () => ({ requireSession: mocks.requireSession
 vi.mock('@/shared/server/business-session', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/shared/server/business-session')>()),
   getBusinessMe: mocks.getBusinessMe,
+  getBusinessKyc: mocks.getBusinessKyc,
   requireBusinessSession: async () => {
     const session = await mocks.requireSession();
     if (session.role !== 'NEGOCIO') mocks.redirect('/comunidad');
@@ -71,7 +73,50 @@ function meWith(nextSteps: BusinessMe['nextSteps']): BusinessMe {
   };
 }
 
-type Page = () => Promise<ReactElement<{ start?: { step: number; email?: string } }>>;
+function kycWith(patch: Partial<KycState> = {}): KycState {
+  return {
+    kycStatus: 'DRAFT',
+    accountStatus: 'ONBOARDING',
+    badge: null,
+    submission: null,
+    missing: [],
+    phone: null,
+    consent: { kind: 'KYC_SELFIE', granted: false, upToDate: false, currentVersion: '2026-11-16' },
+    attempts: { used: 0, max: 3, resubmitAvailableAt: null, canResubmit: false },
+    lastDecision: null,
+    ...patch,
+  };
+}
+
+const draft = {
+  id: '00000000-0000-4000-8000-000000000009',
+  version: 1,
+  purpose: 'INITIAL',
+  status: 'DRAFT',
+  legalKind: 'COMPANY' as const,
+  fields: {
+    tradeName: null,
+    primaryCategoryId: null,
+    legalName: null,
+    nitMasked: null,
+    repFullName: null,
+    repCiMasked: null,
+    repCiComplement: null,
+    repCiExtension: null,
+    specialty: null,
+    address: null,
+    seprecNumber: null,
+    phoneMasked: null,
+  },
+  documents: [],
+  selfieChallenge: null,
+  submittedAt: null,
+  decidedAt: null,
+  reviewDueAt: null,
+  postReviewDueAt: null,
+};
+
+type Page = () => Promise<ReactElement<{ start?: { step: number; email?: string; part?: string } }>>;
 let signupPage: Page;
 let homePage: Page;
 let portalLayout: (props: { children: ReactElement }) => Promise<unknown>;
@@ -107,10 +152,21 @@ describe('/negocio/registro', () => {
     expect((await signupPage()).props.start).toMatchObject({ step: 3 });
   });
 
-  it('sends a business that finished steps 0–3 to its portal', async () => {
+  it('resumes a business that finished steps 0–3 at the exact KYC step', async () => {
     mocks.requireSession.mockResolvedValue(business);
     mocks.getBusinessMe.mockResolvedValue(meWith(['SUBMIT_KYC']));
-    await expect(signupPage()).rejects.toThrow('REDIRECT /negocio');
+    mocks.getBusinessKyc.mockResolvedValue(kycWith());
+    expect((await signupPage()).props.start).toMatchObject({ step: 4, entityType: 'GYM' });
+    const phone = { phoneMasked: '+591 •••••567', verified: false, verifiedAt: null };
+    mocks.getBusinessKyc.mockResolvedValue(kycWith({ phone, submission: draft, missing: ['REP_CI', 'DOCUMENT_SELFIE'] }));
+    expect((await signupPage()).props.start).toMatchObject({ step: 5, part: 'representative' });
+  });
+
+  it('sends a business with nothing left to edit to its KYC status', async () => {
+    mocks.requireSession.mockResolvedValue(business);
+    mocks.getBusinessMe.mockResolvedValue(meWith(['SUBMIT_KYC']));
+    mocks.getBusinessKyc.mockResolvedValue(kycWith({ kycStatus: 'IN_REVIEW', submission: { ...draft, status: 'IN_REVIEW' } }));
+    await expect(signupPage()).rejects.toThrow('REDIRECT /negocio/verificacion');
   });
 });
 

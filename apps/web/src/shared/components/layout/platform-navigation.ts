@@ -12,6 +12,7 @@ import {
   Server,
   ShieldAlert,
   ShieldCheck,
+  Store,
   UserCog,
   Users,
 } from 'lucide-react';
@@ -46,6 +47,14 @@ export const moderationNavigation: NavigationItem[] = [
     icon: BadgeCheck,
     roles: ['MODERATOR', 'SYSTEM_ADMIN'],
     description: 'Selfies de todos los gimnasios por comparar con las fotos del perfil.',
+  },
+  {
+    // Business KYC: identity in clear and private documents, audited on every read (ADR-0021).
+    href: '/moderacion/negocios',
+    label: 'Negocios',
+    icon: Store,
+    roles: ['MODERATOR', 'SYSTEM_ADMIN'],
+    description: 'Verificación de negocios: colas de revisión, documentos y suspensiones.',
   },
 ];
 

@@ -75,9 +75,11 @@ describe('business wizard', () => {
     expect(businessResumeStep([])).toBeNull();
   });
 
-  it('counts four steps', () => {
-    expect(businessWizardCopy.progress(0)).toBe('Paso 1 de 4');
-    expect(businessWizardCopy.progress(3)).toBe('Paso 4 de 4');
+  it('counts eight steps: the account (0–3) and the KYC (4–7)', () => {
+    expect(businessWizardCopy.progress(0)).toBe('Paso 1 de 8');
+    expect(businessWizardCopy.progress(3)).toBe('Paso 4 de 8');
+    expect(businessWizardCopy.progress(7)).toBe('Paso 8 de 8');
+    expect(businessWizardCopy.steps).toHaveLength(8);
   });
 
   it('lets step 0 go only with a type, and a legal kind for a service provider', () => {
@@ -99,8 +101,8 @@ describe('business wizard', () => {
     expect(businessSignupErrorMessage(undefined)).toBeNull();
   });
 
-  it('shows the draft banner', () => {
-    expect(kycBannerCopy('DRAFT')).toBe('Tu negocio está en borrador · completa la verificación (próximamente)');
+  it('shows the draft banner, now with a way to continue', () => {
+    expect(kycBannerCopy('DRAFT')).toBe('Tu negocio está en borrador · completa la verificación');
   });
 });
 

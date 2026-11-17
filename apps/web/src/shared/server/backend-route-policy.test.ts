@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveAllowedBackendPath } from './backend-route-policy';
+import { isNoStoreBackendPath, resolveAllowedBackendPath } from './backend-route-policy';
 
 const id = '0190e2cb-a6d4-7ec3-8f91-a6c735631501';
 const allowedCases: Array<[string[], string]> = [
@@ -36,6 +36,15 @@ const allowedCases: Array<[string[], string]> = [
   [['public', 'handles', 'top.fitness_bo'], '/public/handles/top.fitness_bo'],
   [['public', 'handles', '@Top.Fit', 'availability'], '/public/handles/%40Top.Fit/availability'],
   [['admin', 'users', id, 'close'], `/admin/users/${id}/close`],
+  // Franja 8b: the business KYC and REPP's console.
+  [['business', 'me', 'phone', 'verify', 'request'], '/business/me/phone/verify/request'],
+  [['business', 'me', 'kyc'], '/business/me/kyc'],
+  [['business', 'me', 'kyc', 'selfie-challenge'], '/business/me/kyc/selfie-challenge'],
+  [['business', 'me', 'kyc', 'documents', id], `/business/me/kyc/documents/${id}`],
+  [['admin', 'business', 'kyc', 'queue'], '/admin/business/kyc/queue'],
+  [['admin', 'business', 'kyc', id, 'decide'], `/admin/business/kyc/${id}/decide`],
+  [['admin', 'business', 'kyc', id, 'documents', id], `/admin/business/kyc/${id}/documents/${id}`],
+  [['admin', 'business', 'accounts', id, 'reinstate'], `/admin/business/accounts/${id}/reinstate`],
   [['me', 'consents', 'ORIENTATION'], '/me/consents/ORIENTATION'],
   [['me', 'account'], '/me/account'],
   [['me', 'account', 'closure-preview'], '/me/account/closure-preview'],
@@ -169,6 +178,12 @@ const blockedCases: Array<[string[]]> = [
   [['business', 'signup']],
   [['business', 'me', 'media', 'GALLERY']],
   [['public', 'handles', 'a/b']],
+  // KYC: only the declared verbs, documents by UUID, and none of the 8b admin extras yet.
+  [['business', 'me', 'kyc', 'documents', 'not-a-uuid']],
+  [['business', 'me', 'phone', 'verify']],
+  [['admin', 'business', 'kyc', id, 'approve']],
+  [['admin', 'business', 'blocklist']],
+  [['admin', 'business', 'handles', 'reservations']],
   // Only `close` on a UUID under `/admin/users`, nothing else of that prefix.
   [['admin', 'users', id]],
   [['admin', 'users', 'not-a-uuid', 'close']],
@@ -227,5 +242,15 @@ describe('backend route policy', () => {
 
   it.each(blockedCases)('blocks an unapproved route', (parts) => {
     expect(resolveAllowedBackendPath(parts)).toBeNull();
+  });
+});
+
+describe('isNoStoreBackendPath', () => {
+  it('marks the KYC detail, its documents and the business own KYC as never cacheable', () => {
+    expect(isNoStoreBackendPath(`/admin/business/kyc/${id}/documents/${id}`)).toBe(true);
+    expect(isNoStoreBackendPath(`/admin/business/kyc/${id}`)).toBe(true);
+    expect(isNoStoreBackendPath('/business/me/kyc')).toBe(true);
+    expect(isNoStoreBackendPath('/admin/business/kyc/queue')).toBe(true);
+    expect(isNoStoreBackendPath('/business/me')).toBe(false);
   });
 });

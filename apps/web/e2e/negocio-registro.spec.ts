@@ -34,12 +34,12 @@ test('a business signs up, verifies its email, reserves its @handle and lands on
   await expect(page).toHaveURL(/\/negocio\/registro$/u);
 
   // Step 0: one tap on a big card.
-  await expect(page.getByText('Paso 1 de 4')).toBeVisible();
+  await expect(page.getByText('Paso 1 de 8')).toBeVisible();
   await page.getByRole('radio', { name: /Gimnasio/u }).check();
   await page.getByRole('button', { name: 'Seguir' }).click();
 
   // Step 1: four fields, the legal box links the versioned business texts.
-  await expect(page.getByText('Paso 2 de 4')).toBeVisible();
+  await expect(page.getByText('Paso 2 de 8')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Términos para negocios' })).toHaveAttribute('href', '/negocio/terminos');
   await expect(page.getByRole('link', { name: 'Acuerdo de tratamiento de datos' })).toHaveAttribute('href', '/negocio/datos');
   await page.getByLabel('Nombre de tu negocio').fill(account.name);
@@ -57,13 +57,13 @@ test('a business signs up, verifies its email, reserves its @handle and lands on
   expect(JSON.stringify(await signup.json())).not.toMatch(/accessToken/u);
 
   // Step 2: the PIN screen. The mailbox is proven in the database, then a reload resumes at step 3.
-  await expect(page.getByText('Paso 3 de 4')).toBeVisible();
+  await expect(page.getByText('Paso 3 de 8')).toBeVisible();
   await expect(page.getByLabel('Código de verificación')).toHaveAttribute('autocomplete', 'one-time-code');
   await sql(`UPDATE public.usuarios SET email_verified_at = now() WHERE email = '${account.email}'`);
   await page.reload();
 
   // Step 3: the handle comes suggested from the name and is checked live.
-  await expect(page.getByText('Paso 4 de 4')).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText('Paso 4 de 8')).toBeVisible({ timeout: 20_000 });
   const handleInput = page.getByLabel('Tu @usuario');
   const handle = await handleInput.inputValue();
   expect(handle).toMatch(/^topfitness[a-z0-9]+$/u);
@@ -74,14 +74,19 @@ test('a business signs up, verifies its email, reserves its @handle and lands on
   await page.getByLabel('Ciudad').fill('Santa Cruz');
   const claimed = waitForBff(page, 'PUT', '/api/backend/business/me/handle');
   const saved = waitForBff(page, 'PATCH', '/api/backend/business/me/profile');
-  await page.getByRole('button', { name: 'Guardar y entrar' }).click();
+  await page.getByRole('button', { name: 'Guardar y seguir' }).click();
   expect((await claimed).status()).toBe(200);
   expect((await saved).status()).toBe(200);
 
-  // The portal: draft banner and the KYC step still to come, after a reload too.
-  await expect(page).toHaveURL(/\/negocio$/u, { timeout: 20_000 });
+  // Franja 8b: the wizard goes on with the KYC (step 5 of 8, the phone); negocio-kyc.spec covers it.
+  await expect(page.getByText('Paso 5 de 8')).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole('heading', { name: 'Tu teléfono' })).toBeVisible();
+
+  // The portal: draft banner with the way back to the KYC, after a reload too.
+  await page.goto('/negocio');
   const banner = page.getByRole('status', { name: 'Estado de tu negocio' });
-  await expect(banner).toHaveText('Tu negocio está en borrador · completa la verificación (próximamente)');
+  await expect(banner).toContainText('Tu negocio está en borrador · completa la verificación');
+  await expect(banner.getByRole('link', { name: 'Continuar' })).toHaveAttribute('href', '/negocio/registro');
   await expect(page.getByText(`@${handle} · reservado hasta que verifiquemos tu negocio`)).toBeVisible();
   await page.reload();
   await expect(banner).toBeVisible();

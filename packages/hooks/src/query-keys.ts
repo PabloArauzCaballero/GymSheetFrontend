@@ -45,6 +45,8 @@ export const queryKeys = {
     categories: (entityType: string) => ['business', 'categories', entityType] as const,
     handleAvailability: (handle: string) => ['business', 'handle-availability', handle] as const,
     publicHandle: (handle: string) => ['public', 'handle', handle] as const,
+    /** `GET /business/me/kyc` (ADR-0021, franja 8b): where the wizard resumes. */
+    kyc: ['business', 'me', 'kyc'] as const,
   },
   admin: {
     branches: (page: number) => ['admin', 'branches', page] as const,
@@ -60,5 +62,12 @@ export const queryKeys = {
     accessDevices: ['admin', 'access-devices'] as const,
     accessHistory: (page: number) => ['admin', 'access-history', page] as const,
     verifications: ['admin', 'verifications'] as const,
+    /** REPP's KYC console (franja 8b); the queue keys share a prefix so one invalidation refreshes both queues. */
+    businessKyc: {
+      all: ['admin', 'business-kyc'] as const,
+      queue: (queue: string, overdue: boolean) => ['admin', 'business-kyc', 'queue', queue, overdue] as const,
+      detail: (submissionId: string) => ['admin', 'business-kyc', 'detail', submissionId] as const,
+      accounts: (search: string) => ['admin', 'business-accounts', search] as const,
+    },
   },
 };

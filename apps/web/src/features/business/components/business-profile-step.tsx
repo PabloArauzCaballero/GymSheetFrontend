@@ -9,6 +9,7 @@ import {
   businessWizardCopy,
   categoryOptions,
   handleErrorMessages,
+  kycFailure,
   normalizeHandleInput,
   suggestHandles,
 } from '@gymsheet/domain';
@@ -23,6 +24,12 @@ import { Select } from '@/shared/components/ui/select';
 import { useHandleAvailability } from '../hooks/use-handle-availability';
 import { businessService } from '../services/business-client';
 import { HandleField } from './handle-field';
+
+/** The 409s of a locked profile (in review, approved: material change) say what to do; anything else is generic. */
+function profileRefusal(error: unknown): string {
+  const failure = kycFailure(error);
+  return failure.code ? failure.message : businessWizardCopy.saveFailed;
+}
 
 /**
  * Step 3, «Tu negocio»: name, `@handle` (suggested from the name, checked
@@ -63,13 +70,16 @@ export function BusinessProfileStep({
       await businessService.claimHandle(normalizeHandleInput(values.handle));
     } catch (error: unknown) {
       const message = error instanceof ApiError && error.code ? handleErrorMessages[error.code] : undefined;
-      return form.setError(message ? 'handle' : 'root', { message: message ?? businessWizardCopy.saveFailed }, { shouldFocus: true });
+      return form.setError(message ? 'handle' : 'root', { message: message ?? profileRefusal(error) }, { shouldFocus: true });
     }
     try {
       await businessService.updateProfile({ name: values.name, primaryCategoryId: values.primaryCategoryId, city: values.city });
       onSaved();
-    } catch {
-      form.setError('root', { message: businessWizardCopy.saveFailed });
+    } catch (error: unknown) {
+      const failure = kycFailure(error);
+      // A new name during DRAFT passes the name checks; past DRAFT a material change goes through REPP (409).
+      if (failure.field === 'tradeName') return form.setError('name', { message: failure.message }, { shouldFocus: true });
+      form.setError('root', { message: profileRefusal(error) });
     }
   }
 
